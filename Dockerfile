@@ -1,19 +1,41 @@
-# Stage 1: Build the dependencies
+# =================================================================
+# 1-BOSQICH: "Builder" - Bog'liqliklarni o'rnatish uchun
+# =================================================================
+# Biz yengil python:3.11-slim obrazidan boshlaymiz va unga "builder" deb nom beramiz
 FROM python:3.11-slim as builder
 
-WORKDIR /opt/poetry
-RUN pip install poetry==1.8.2
-
+# Ishchi papkani o'rnatamiz
 WORKDIR /app
-COPY pyproject.toml poetry.lock* ./
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-# Stage 2: Build the final application image
+# Poetry o'rnatuvchisini o'rnatamiz, bu bog'liqliklarni boshqarish uchun kerak
+RUN pip install poetry
+
+# Virtual muhit yaratishni o'chirib qo'yamiz
+RUN poetry config virtualenvs.create false
+
+# Bog'liqliklar fayllarini nusxalaymiz
+COPY poetry.lock pyproject.toml ./
+
+# === MUHIM O'ZGARISH MANA SHU YERDA ===
+# Bog'liqliklarni o'rnatamiz. --only main faqat production uchun kerakli kutubxonalarni o'rnatadi.
+# Bu eski --no-dev komandasining yangi ko'rinishi.
+RUN poetry install --only main --no-root
+
+
+# =================================================================
+# 2-BOSQICH: "Final" - Yakuniy, yengil obrazni yaratish
+# =================================================================
+# Yana o'sha toza va yengil python:3.11-slim obrazidan boshlaymiz
 FROM python:3.11-slim
 
+# Ishchi papkani o'rnatamiz
 WORKDIR /app
-COPY --from=builder /app/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# "builder" bosqichidan faqatgina o'rnatilgan kutubxonalarni nusxalab olamiz
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Dasturning qolgan barcha kodlarini nusxalaymiz
 COPY . .
-# This command now correctly installs your 'bot' package
-RUN pip install -e .
+
+# Konteyner ishga tushganda bajariladigan komanda
+CMD ["python", "run_bot.py"]

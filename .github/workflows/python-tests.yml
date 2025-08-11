@@ -27,9 +27,9 @@ jobs:
       run: |
         pip install poetry
 
-    - name: Install dependencies with Poetry
-      run: |
-        poetry install --no-root --without dev
+   - name: Install dependencies with Poetry
+  run: to pyproject.toml first. |
+    poetry install --no-root
 
     - name: Run tests with pytest
       run: |

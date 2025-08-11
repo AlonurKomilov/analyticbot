@@ -1,170 +1,223 @@
 import logging
-import sentry_sdk
-import asyncio
-import json
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional, Dict
-from datetime import datetime
-
+from typing import Annotated
 from aiogram import Bot
-from aiogram.enums import ChatMemberStatus
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError
+from fastapi import FastAPI, Depends, HTTPException, Header, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-# Loyihadagi kerakli modullarni import qilamiz
-from src.bot.config import settings
-from src.bot.database.db import create_pool
-from src.bot.database.repositories import ChannelRepository, SchedulerRepository
-from src.bot.services.scheduler_service import SchedulerService
+# Imports updated for the new project structure (without 'src')
+from bot.config import settings, Settings
+from bot.container import container
+from bot.database.models import Channel, ScheduledPost, User, Plan
+from bot.database.repositories import (
+    UserRepository,
+    ChannelRepository,
+    SchedulerRepository,
+    PlanRepository,
+)
+from bot.models.twa import (
+    InitialDataResponse,
+    AddChannelRequest,
+    SchedulePostRequest,
+    ValidationErrorResponse,
+    MessageResponse,
+)
+from bot.services import (
+    GuardService,
+    SubscriptionService,
+)
+from bot.services.auth_service import validate_init_data
 
-# --- Sentry Sozlamasi ---
-if settings.SENTRY_DSN:
-    sentry_sdk.init(dsn=settings.SENTRY_DSN, traces_sample_rate=1.0)
-
-# --- Asosiy sozlamalar ---
-app = FastAPI()
-bot = Bot(token=settings.BOT_TOKEN.get_secret_value())
-db_pool = None
-
+# Logging setup
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
-# --- Event Handlers (Faqat DB uchun) ---
-@app.on_event("startup")
-async def startup_event():
-    global db_pool
-    db_pool = await create_pool()
-    logger.info("FastAPI: Database pool created.")
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    if db_pool:
-        await db_pool.close()
-    logger.info("FastAPI: Database pool closed.")
+# --- FastAPI Dependencies ---
 
-# --- CORS Middleware ---
-origins = [
-    "https://fuzzy-adventure-5vgrx54q557f7vww-5173.app.github.dev",
-]
+def get_settings() -> Settings:
+    """Returns the application settings instance."""
+    return settings
+
+def get_user_repo() -> UserRepository:
+    return container.resolve(UserRepository)
+
+def get_channel_repo() -> ChannelRepository:
+    return container.resolve(ChannelRepository)
+
+def get_plan_repo() -> PlanRepository:
+    return container.resolve(PlanRepository)
+
+def get_scheduler_repo() -> SchedulerRepository:
+    return container.resolve(SchedulerRepository)
+
+def get_subscription_service() -> SubscriptionService:
+    return container.resolve(SubscriptionService)
+
+def get_guard_service() -> GuardService:
+    return container.resolve(GuardService)
+
+async def get_validated_user_data(
+    authorization: Annotated[str, Header()],
+    current_settings: Annotated[Settings, Depends(get_settings)]
+) -> dict:
+    """
+    Validates the initData string from a TWA and returns the user data.
+    """
+    if not authorization or not authorization.startswith("TWA "):
+        raise HTTPException(status_code=401, detail="Invalid authorization scheme.")
+    
+    init_data = authorization.split("TWA ", 1)[1]
+    if not init_data:
+        raise HTTPException(status_code=401, detail="initData is missing.")
+
+    try:
+        user_data = validate_init_data(init_data, current_settings.BOT_TOKEN.get_secret_value())
+        return user_data
+    except Exception as e:
+        log.error(f"Could not validate initData: {e}")
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid initData.")
+
+
+# --- FastAPI Application ---
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info("API is starting up...")
+    yield
+    log.info("API is shutting down...")
+
+app = FastAPI(
+    lifespan=lifespan,
+    responses={422: {"description": "Validation Error", "model": ValidationErrorResponse}},
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# --- Pydantic Modellar ---
-class AddChannelRequest(BaseModel):
-    channel_name: str
-    user_id: int
-
-class Button(BaseModel):
-    text: str
-    url: str
-
-class CreatePostRequest(BaseModel):
-    channel_id: int
-    text: Optional[str] = None
-    schedule_time: datetime
-    file_id: Optional[str] = None
-    file_type: Optional[str] = None
-    inline_buttons: Optional[List[Dict[str, str]]] = []
 
 # --- API Endpoints ---
-@app.post("/api/v1/channels")
-async def add_channel_endpoint(request: AddChannelRequest):
-    if not db_pool:
-        raise HTTPException(status_code=503, detail="Database not initialized")
 
-    channel_repo = ChannelRepository(db_pool)
+@app.post("/api/v1/media/upload", tags=["Media"])
+async def upload_media_file(
+    # --- SYNTAXERROR TUZATILDI: Argumentlar tartibi to'g'rilandi ---
+    current_settings: Annotated[Settings, Depends(get_settings)],
+    file: UploadFile = File(...)
+):
+    bot = Bot(token=current_settings.BOT_TOKEN.get_secret_value())
     
-    # --- YECHIM: try...except blokini to'g'rilaymiz ---
     try:
-        if not request.channel_name or not request.channel_name.startswith('@'):
-            raise HTTPException(status_code=400, detail="Invalid format. Channel username must start with @")
+        if content_type and content_type.startswith("image/"):
+            media_type = "photo"
+            sent_message = await bot.send_photo(chat_id=current_settings.STORAGE_CHANNEL_ID, photo=file.file)
+            file_id = sent_message.photo[-1].file_id
+        elif content_type and content_type.startswith("video/"):
+            media_type = "video"
+            sent_message = await bot.send_video(chat_id=current_settings.STORAGE_CHANNEL_ID, video=file.file)
+            file_id = sent_message.video.file_id
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported file type: {content_type}")
+        
+        return {"ok": True, "file_id": file_id, "media_type": media_type}
+    except TelegramAPIError as e:
+        log.error(f"Telegram API error while uploading file: {e}")
+        raise HTTPException(status_code=500, detail=f"Telegram API error: {e.args[0]}")
+    finally:
+        await bot.session.close()
 
-        # Telegram API'ga 10 soniyalik timeout bilan so'rov
-        chat = await bot.get_chat(chat_id=request.channel_name, request_timeout=10)
-        bot_member = await bot.get_chat_member(chat_id=chat.id, user_id=bot.id, request_timeout=10)
+@app.get("/api/v1/initial-data", response_model=InitialDataResponse)
+async def get_initial_data(
+    user_data: Annotated[dict, Depends(get_validated_user_data)],
+    user_repo: Annotated[UserRepository, Depends(get_user_repo)],
+    channel_repo: Annotated[ChannelRepository, Depends(get_channel_repo)],
+    scheduler_repo: Annotated[SchedulerRepository, Depends(get_scheduler_repo)],
+    plan_repo: Annotated[PlanRepository, Depends(get_plan_repo)],
+):
+    user_id = user_data['id']
+    user: User = await user_repo.get_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found. Please restart the bot.")
 
-        if bot_member.status != ChatMemberStatus.ADMINISTRATOR:
-            raise HTTPException(status_code=403, detail=f"Bot is not an admin in {request.channel_name}.")
+    channels: list[Channel] = await channel_repo.get_user_channels(user_id)
+    scheduled_posts: list[ScheduledPost] = await scheduler_repo.get_user_scheduled_posts(user_id)
+    plan: Plan = await plan_repo.get_plan_by_id(user.plan_id)
 
-        # Ma'lumotlar bazasiga yozish
-        await channel_repo.create_channel(
-            channel_id=chat.id,
-            channel_name=chat.title,
-            admin_id=request.user_id
-        )
-        return {"success": True, "message": f"Channel '{chat.title}' added successfully!"}
+    return InitialDataResponse(
+        user=user,
+        plan=plan,
+        channels=channels,
+        scheduled_posts=scheduled_posts,
+    )
+
+@app.post("/api/v1/channels", response_model=Channel)
+async def add_channel(
+    request_data: AddChannelRequest,
+    user_data: Annotated[dict, Depends(get_validated_user_data)],
+    guard_service: Annotated[GuardService, Depends(get_guard_service)],
+    subscription_service: Annotated[SubscriptionService, Depends(get_subscription_service)],
+):
+    user_id = user_data['id']
+    channel_username = request_data.channel_username.strip()
+
+    if not channel_username.startswith("@"):
+        channel_username = f"@{channel_username}"
+
+    await subscription_service.check_channel_limit(user_id)
+    channel = await guard_service.check_bot_is_admin(channel_username, user_id)
     
-    except HTTPException:
-        # FastAPI tomonidan yaratilgan xatoliklarni qayta ushlamaymiz,
-        # ularni o'zgartirmasdan to'g'ridan-to'g'ri foydalanuvchiga yuboramiz
-        raise
-    except asyncio.TimeoutError:
-        logger.error(f"API add_channel: Telegram API timed out for '{request.channel_name}'")
-        raise HTTPException(status_code=504, detail="Could not connect to Telegram servers.")
-    except TelegramBadRequest:
-        logger.warning(f"API add_channel: Channel '{request.channel_name}' not found.")
-        raise HTTPException(status_code=404, detail=f"Channel '{request.channel_name}' not found.")
-    except Exception as e:
-        logger.error(f"API Error in add_channel_endpoint: {e}", exc_info=True)
-        sentry_sdk.capture_exception(e)
-        raise HTTPException(status_code=500, detail="An unexpected internal error occurred.")
+    return channel
 
-@app.get("/api/v1/initial-data/{user_id}")
-async def get_initial_data(user_id: int):
-    if not db_pool:
-        raise HTTPException(status_code=503, detail="Database not initialized")
+@app.post("/api/v1/schedule-post", response_model=ScheduledPost)
+async def schedule_post(
+    request: SchedulePostRequest,
+    user_data: Annotated[dict, Depends(get_validated_user_data)],
+    scheduler_repo: Annotated[SchedulerRepository, Depends(get_scheduler_repo)],
+    subscription_service: Annotated[SubscriptionService, Depends(get_subscription_service)],
+):
+    user_id = user_data['id']
+    await subscription_service.check_post_limit(user_id)
     
-    channel_repo = ChannelRepository(db_pool)
-    scheduler_repo = SchedulerRepository(db_pool)
-    
-    user_channels = await channel_repo.get_user_channels(user_id)
-    pending_posts = await scheduler_repo.get_pending_posts_by_user(user_id)
-    
-    return {
-        "channels": [{"id": str(ch["channel_id"]), "name": ch["channel_name"]} for ch in user_channels],
-        "posts": [
-            {
-                "id": post["post_id"], "text": post["text"] or "",
-                "schedule_time": post["schedule_time"].isoformat(),
-                "channel_name": post["channel_name"],
-                "file_id": post["file_id"], "file_type": post["file_type"],
-                "inline_buttons": json.loads(post["inline_buttons"]) if post["inline_buttons"] else []
-            } for post in pending_posts
-        ]
-    }
-
-@app.post("/api/v1/posts")
-async def create_post_endpoint(request: CreatePostRequest):
-    if not db_pool:
-        raise HTTPException(status_code=503, detail="Scheduler not initialized")
-
-    scheduler_repo = SchedulerRepository(db_pool)
-    scheduler_service = SchedulerService(scheduler_repo)
-    
-    await scheduler_service.schedule_post(
+    post = await scheduler_repo.create_scheduled_post(
+        user_id=user_id,
         channel_id=request.channel_id,
         text=request.text,
-        schedule_time=request.schedule_time,
-        file_id=request.file_id,
-        file_type=request.file_type,
-        inline_buttons=request.inline_buttons
+        media_type=request.media_type,
+        media_id=request.media_id,
+        scheduled_at=request.scheduled_at,
+        buttons=request.buttons
     )
-    return {"success": True, "message": "Post scheduled successfully!"}
+    return post
 
-@app.delete("/api/v1/posts/{post_id}")
-async def delete_post_endpoint(post_id: int):
-    if not db_pool:
-        raise HTTPException(status_code=503, detail="Scheduler not initialized")
+@app.delete("/api/v1/posts/{post_id}", response_model=MessageResponse)
+async def delete_post(
+    post_id: int,
+    user_data: Annotated[dict, Depends(get_validated_user_data)],
+    scheduler_repo: Annotated[SchedulerRepository, Depends(get_scheduler_repo)],
+):
+    user_id = user_data['id']
+    post = await scheduler_repo.get_scheduled_post(post_id)
+    if not post or post.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Post not found or you don't have permission.")
+    
+    await scheduler_repo.delete_scheduled_post(post_id)
+    return MessageResponse(message="Post deleted successfully")
 
-    scheduler_repo = SchedulerRepository(db_pool)
-    scheduler_service = SchedulerService(scheduler_repo)
-        
-    await scheduler_service.delete_post(post_id)
-    return {"success": True, "message": "Post deleted successfully!"}
+@app.delete("/api/v1/channels/{channel_id}", response_model=MessageResponse)
+async def delete_channel(
+    channel_id: int,
+    user_data: Annotated[dict, Depends(get_validated_user_data)],
+    channel_repo: Annotated[ChannelRepository, Depends(get_channel_repo)],
+):
+    user_id = user_data['id']
+    channel = await channel_repo.get_channel_by_id(channel_id)
+    if not channel or channel.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Channel not found or you don't have permission.")
+    
+    await channel_repo.delete_channel(channel_id)
+    return MessageResponse(message="Channel deleted successfully")

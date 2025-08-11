@@ -1,0 +1,38 @@
+# Git va versiyalarni boshqarish
+.git
+.gitignore
+
+# Python bilan bog'liq kesh va virtual muhitlar
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+
+# Muhit o'zgaruvchilari fayllari (xavfsizlik uchun)
+.env
+*.env.local
+
+# IDE va muharrirlar sozlamalari
+.idea/
+.vscode/
+*.swp
+
+# Testlash bilan bog'liq keshlar
+.pytest_cache/
+
+# Frontend (twa-frontend) papkasidagi keraksiz fayllar
+twa-frontend/node_modules/
+twa-frontend/dist/
+twa-frontend/.env
+twa-frontend/.env.local
+
+# Celery va boshqa vaqtinchalik fayllar
+celerybeat-schedule
+
+# Docker'ning o'ziga tegishli fayllar (odatda qo'shilmaydi)
+Dockerfile
+.dockerignore
+docker-compose.yml

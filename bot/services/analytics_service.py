@@ -78,3 +78,21 @@ class AnalyticsService:
     async def get_post_views(self, channel_id: int, message_id: int) -> int | None:
         """Return stored view count for a specific post (placeholder)."""
         return None
+
+    async def get_total_users_count(self) -> int:
+        """
+        Retrieves the total number of users from the repository.
+        """
+        return await self.analytics_repository.get_total_users_count()
+
+    async def get_total_channels_count(self) -> int:
+        """
+        Retrieves the total number of channels from the repository.
+        """
+        return await self.analytics_repository.get_total_channels_count()
+
+    async def get_total_posts_count(self) -> int:
+        """
+        Retrieves the total number of posts from the repository.
+        """
+        return await self.analytics_repository.get_total_posts_count()

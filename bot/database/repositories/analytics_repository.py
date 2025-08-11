@@ -71,3 +71,33 @@ class AnalyticsRepository:
         """
         rows = await self._pool.fetch(query, channel_id)
         return [dict(row) for row in rows]
+
+    async def get_total_users_count(self) -> int:
+        """
+        Retrieves the total count of users from the database.
+        This is a placeholder and assumes a 'users' table exists.
+        """
+        # This query is a placeholder and might need adjustment based on the actual schema.
+        query = "SELECT COUNT(id) FROM users;"
+        count = await self._pool.fetchval(query)
+        return count or 0
+
+    async def get_total_channels_count(self) -> int:
+        """
+        Retrieves the total count of channels from the database.
+        This is a placeholder and assumes a 'channels' table exists.
+        """
+        # This query is a placeholder and might need adjustment based on the actual schema.
+        query = "SELECT COUNT(id) FROM channels;"
+        count = await self._pool.fetchval(query)
+        return count or 0
+
+    async def get_total_posts_count(self) -> int:
+        """
+        Retrieves the total count of scheduled posts from the database.
+        This is a placeholder.
+        """
+        # This query is a placeholder and might need adjustment based on the actual schema.
+        query = "SELECT COUNT(id) FROM scheduled_posts;"
+        count = await self._pool.fetchval(query)
+        return count or 0

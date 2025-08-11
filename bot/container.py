@@ -45,13 +45,13 @@ def get_container() -> punq.Container:
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
 
+    # Asosiy resurslarni registratsiya qilamiz
+    container.register(Settings, instance=config)
+
     # ...keyin uni 'factory' sifatida to'g'ridan-to'g'ri metod orqali registratsiya qilamiz.
     # Bu 'punq'ga 'settings' obyektini avtomatik topib, funksiyaga uzatish imkonini beradi.
     container.register(Bot, factory=get_bot_instance, scope=punq.Scope.singleton)
     # --------------------------------------------------------------
-
-    # Asosiy resurslarni registratsiya qilamiz
-    container.register(Settings, instance=config)
     container.register(async_sessionmaker, instance=pool)
 
     # Repozitoriy'larni registratsiya qilamiz

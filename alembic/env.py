@@ -20,7 +20,8 @@ if config.config_file_name is not None:
 # --- LOYIHAMIZGA MOSLASHTIRILGAN QISM ---
 # 2. Ma'lumotlar bazasiga ulanish manzilini to'g'ridan-to'g'ri
 #    loyihaning asosiy sozlamalaridan (.env faylidan) olamiz.
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.unicode_string())
+sync_db_url = settings.db_url.replace("+asyncpg", "+psycopg2")
+config.set_main_option("sqlalchemy.url", sync_db_url)
 
 # 3. Bizning modellarimizdagi "metadata" obyektini ko'rsatamiz.
 #    Alembic shu orqali jadvallarni topadi.

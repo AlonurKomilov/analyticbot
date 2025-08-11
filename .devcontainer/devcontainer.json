@@ -1,0 +1,17 @@
+{
+  "name": "Analytic Bot Codespace",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  // Bu qism Codespace yaratilgandan so'ng avtomatik ishga tushadi
+  "postCreateCommand": "pip install poetry",
+
+  // Qo'shimcha sozlamalar (VS Code uchun)
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  }
+}

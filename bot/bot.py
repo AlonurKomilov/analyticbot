@@ -1,9 +1,9 @@
 import asyncio
 import logging
-from asyncpg import Pool
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
+from asyncpg import Pool
 
 from bot.config import settings
 from bot.database.db import create_pool
@@ -17,13 +17,14 @@ from bot.middlewares.i18n import i18n_middleware
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def main():
     """
     Botni ishga tushiruvchi asosiy funksiya.
     """
     # Ma'lumotlar bazasi bilan ulanish (connection pool)
     pool: Pool = await create_pool()
-    
+
     # Redis'ga ulanish (FSM holatlari uchun)
     storage = RedisStorage.from_url(
         settings.REDIS_DSN,
@@ -42,13 +43,12 @@ async def main():
     # 2. IKKINCHI bo'lib, bog'liqliklar mavjud bo'lgandan so'ng, lokalizatsiya (i18n) ishlaydi.
     dp.update.outer_middleware(i18n_middleware)
 
-
     # Handlers (buyruqlarga javob beruvchilar) ro'yxatdan o'tkaziladi
     dp.include_router(admin_handlers.router)
     dp.include_router(user_handlers.router)
 
     logger.info("Bot ishga tushirildi.")
-    
+
     try:
         # Botni ishga tushirish
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
@@ -57,6 +57,7 @@ async def main():
         await dp.storage.close()
         await bot.session.close()
         await pool.close()
+
 
 if __name__ == "__main__":
     try:

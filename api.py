@@ -1,19 +1,20 @@
 import logging
+from contextlib import asynccontextmanager
 from typing import Annotated
+
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from fastapi import FastAPI, Depends, HTTPException, Header, UploadFile, File
+from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
 # Imports updated for the new project structure (without 'src')
-from bot.config import settings, Settings
+from bot.config import Settings, settings
 from bot.container import container
 from bot.database.repositories import (
-    UserRepository,
     ChannelRepository,
-    SchedulerRepository,
     PlanRepository,
+    SchedulerRepository,
+    UserRepository,
 )
 from bot.models.twa import (
     AddChannelRequest,
@@ -21,15 +22,12 @@ from bot.models.twa import (
     InitialDataResponse,
     MessageResponse,
     Plan,
-    SchedulePostRequest,
     ScheduledPost,
+    SchedulePostRequest,
     User,
     ValidationErrorResponse,
 )
-from bot.services import (
-    GuardService,
-    SubscriptionService,
-)
+from bot.services import GuardService, SubscriptionService
 from bot.services.auth_service import validate_init_data
 
 # Logging setup
@@ -39,44 +37,54 @@ log = logging.getLogger(__name__)
 
 # --- FastAPI Dependencies ---
 
+
 def get_settings() -> Settings:
     """Returns the application settings instance."""
     return settings
 
+
 def get_user_repo() -> UserRepository:
     return container.resolve(UserRepository)
+
 
 def get_channel_repo() -> ChannelRepository:
     return container.resolve(ChannelRepository)
 
+
 def get_plan_repo() -> PlanRepository:
     return container.resolve(PlanRepository)
+
 
 def get_scheduler_repo() -> SchedulerRepository:
     return container.resolve(SchedulerRepository)
 
+
 def get_subscription_service() -> SubscriptionService:
     return container.resolve(SubscriptionService)
+
 
 def get_guard_service() -> GuardService:
     return container.resolve(GuardService)
 
+
 async def get_validated_user_data(
     authorization: Annotated[str, Header()],
-    current_settings: Annotated[Settings, Depends(get_settings)]
+    current_settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict:
     """
     Validates the initData string from a TWA and returns the user data.
     """
     if not authorization or not authorization.startswith("TWA "):
         raise HTTPException(status_code=401, detail="Invalid authorization scheme.")
-    
+
     init_data = authorization.split("TWA ", 1)[1]
     if not init_data:
         raise HTTPException(status_code=401, detail="initData is missing.")
 
     try:
-        user_data = validate_init_data(init_data, current_settings.BOT_TOKEN.get_secret_value())
+        user_data = validate_init_data(
+            init_data, current_settings.BOT_TOKEN.get_secret_value()
+        )
         return user_data
     except Exception as e:
         log.error(f"Could not validate initData: {e}")
@@ -85,15 +93,19 @@ async def get_validated_user_data(
 
 # --- FastAPI Application ---
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("API is starting up...")
     yield
     log.info("API is shutting down...")
 
+
 app = FastAPI(
     lifespan=lifespan,
-    responses={422: {"description": "Validation Error", "model": ValidationErrorResponse}},
+    responses={
+        422: {"description": "Validation Error", "model": ValidationErrorResponse}
+    },
 )
 
 app.add_middleware(
@@ -107,11 +119,12 @@ app.add_middleware(
 
 # --- API Endpoints ---
 
+
 @app.post("/api/v1/media/upload", tags=["Media"])
 async def upload_media_file(
     # --- SYNTAXERROR TUZATILDI: Argumentlar tartibi to'g'rilandi ---
     current_settings: Annotated[Settings, Depends(get_settings)],
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
 ):
     bot = Bot(token=current_settings.BOT_TOKEN.get_secret_value())
 
@@ -119,21 +132,28 @@ async def upload_media_file(
         content_type = file.content_type
         if content_type and content_type.startswith("image/"):
             media_type = "photo"
-            sent_message = await bot.send_photo(chat_id=current_settings.STORAGE_CHANNEL_ID, photo=file.file)
+            sent_message = await bot.send_photo(
+                chat_id=current_settings.STORAGE_CHANNEL_ID, photo=file.file
+            )
             file_id = sent_message.photo[-1].file_id
         elif content_type and content_type.startswith("video/"):
             media_type = "video"
-            sent_message = await bot.send_video(chat_id=current_settings.STORAGE_CHANNEL_ID, video=file.file)
+            sent_message = await bot.send_video(
+                chat_id=current_settings.STORAGE_CHANNEL_ID, video=file.file
+            )
             file_id = sent_message.video.file_id
         else:
-            raise HTTPException(status_code=400, detail=f"Unsupported file type: {content_type}")
-        
+            raise HTTPException(
+                status_code=400, detail=f"Unsupported file type: {content_type}"
+            )
+
         return {"ok": True, "file_id": file_id, "media_type": media_type}
     except TelegramAPIError as e:
         log.error(f"Telegram API error while uploading file: {e}")
         raise HTTPException(status_code=500, detail=f"Telegram API error: {e.args[0]}")
     finally:
         await bot.session.close()
+
 
 @app.get("/api/v1/initial-data", response_model=InitialDataResponse)
 async def get_initial_data(
@@ -193,14 +213,17 @@ async def get_initial_data(
         scheduled_posts=scheduled_posts,
     )
 
+
 @app.post("/api/v1/channels", response_model=Channel)
 async def add_channel(
     request_data: AddChannelRequest,
     user_data: Annotated[dict, Depends(get_validated_user_data)],
     guard_service: Annotated[GuardService, Depends(get_guard_service)],
-    subscription_service: Annotated[SubscriptionService, Depends(get_subscription_service)],
+    subscription_service: Annotated[
+        SubscriptionService, Depends(get_subscription_service)
+    ],
 ):
-    user_id = user_data['id']
+    user_id = user_data["id"]
     channel_username = request_data.channel_username.strip()
 
     if not channel_username.startswith("@"):
@@ -215,24 +238,31 @@ async def add_channel(
         username=channel_data.get("username"),
     )
 
+
 @app.post("/api/v1/schedule-post", response_model=ScheduledPost)
 async def schedule_post(
     request: SchedulePostRequest,
     user_data: Annotated[dict, Depends(get_validated_user_data)],
     scheduler_repo: Annotated[SchedulerRepository, Depends(get_scheduler_repo)],
-    subscription_service: Annotated[SubscriptionService, Depends(get_subscription_service)],
+    subscription_service: Annotated[
+        SubscriptionService, Depends(get_subscription_service)
+    ],
 ):
-    user_id = user_data['id']
+    user_id = user_data["id"]
     await subscription_service.check_post_limit(user_id)
-    
+
     post_id = await scheduler_repo.create_scheduled_post(
         user_id=user_id,
         channel_id=request.channel_id,
-        post_text=request.text,
+        post_text=request.text or "",
         schedule_time=request.scheduled_at,
         media_id=request.media_id,
         media_type=request.media_type,
-        inline_buttons=[button.model_dump() for button in request.buttons] if request.buttons else None,
+        inline_buttons=(
+            [button.model_dump() for button in request.buttons]
+            if request.buttons
+            else None
+        ),
     )
 
     return ScheduledPost(
@@ -245,18 +275,22 @@ async def schedule_post(
         buttons=request.buttons,
     )
 
+
 @app.delete("/api/v1/posts/{post_id}", response_model=MessageResponse)
 async def delete_post(
     post_id: int,
     user_data: Annotated[dict, Depends(get_validated_user_data)],
     scheduler_repo: Annotated[SchedulerRepository, Depends(get_scheduler_repo)],
 ):
-    user_id = user_data['id']
+    user_id = user_data["id"]
     success = await scheduler_repo.delete_scheduled_post(post_id, user_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Post not found or you don't have permission.")
+        raise HTTPException(
+            status_code=404, detail="Post not found or you don't have permission."
+        )
 
     return MessageResponse(message="Post deleted successfully")
+
 
 @app.delete("/api/v1/channels/{channel_id}", response_model=MessageResponse)
 async def delete_channel(
@@ -264,13 +298,17 @@ async def delete_channel(
     user_data: Annotated[dict, Depends(get_validated_user_data)],
     channel_repo: Annotated[ChannelRepository, Depends(get_channel_repo)],
 ):
-    user_id = user_data['id']
+    user_id = user_data["id"]
     channel_row = await channel_repo.get_channel_by_id(channel_id)
     if not channel_row or channel_row["user_id"] != user_id:
-        raise HTTPException(status_code=404, detail="Channel not found or you don't have permission.")
+        raise HTTPException(
+            status_code=404, detail="Channel not found or you don't have permission."
+        )
 
     success = await channel_repo.delete_channel(channel_id)
     if not success:
-        raise HTTPException(status_code=404, detail="Channel not found or you don't have permission.")
+        raise HTTPException(
+            status_code=404, detail="Channel not found or you don't have permission."
+        )
 
     return MessageResponse(message="Channel deleted successfully")

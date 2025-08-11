@@ -1,6 +1,8 @@
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from asyncpg import Pool
-from typing import List, Dict, Any, Optional
+
 
 class SchedulerRepository:
     def __init__(self, pool: Pool):
@@ -14,7 +16,7 @@ class SchedulerRepository:
         schedule_time: datetime,
         media_id: Optional[str] = None,
         media_type: Optional[str] = None,
-        inline_buttons: Optional[Dict[str, Any]] = None
+        inline_buttons: Optional[Any] = None,
     ) -> int:
         """Ma'lumotlar bazasiga yangi rejalashtirilgan post yaratadi."""
         query = """
@@ -23,7 +25,14 @@ class SchedulerRepository:
             RETURNING id;
         """
         post_id = await self._pool.fetchval(
-            query, user_id, channel_id, post_text, schedule_time, media_id, media_type, inline_buttons
+            query,
+            user_id,
+            channel_id,
+            post_text,
+            schedule_time,
+            media_id,
+            media_type,
+            inline_buttons,
         )
         return post_id
 
@@ -37,7 +46,7 @@ class SchedulerRepository:
         """Rejalashtirilgan postni o'chiradi."""
         query = "DELETE FROM scheduled_posts WHERE id = $1 AND user_id = $2;"
         result = await self._pool.execute(query, post_id, user_id)
-        return result != 'DELETE 0'
+        return result != "DELETE 0"
 
     async def update_post_status(self, post_id: int, status: str):
         """Postning statusini yangilaydi ('pending', 'sent', 'error')."""

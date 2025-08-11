@@ -1,4 +1,5 @@
 from aiogram.i18n.middleware import I18nMiddleware
+
 from bot.locales.i18n_hub import I18N_HUB
 
 # I18nMiddleware obyektini yaratish va eksport qilish

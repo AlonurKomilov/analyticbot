@@ -1,11 +1,15 @@
+from typing import Any, Dict, List
+
 from asyncpg import Pool
-from typing import List, Dict, Any
+
 
 class AnalyticsRepository:
     def __init__(self, pool: Pool):
         self._pool = pool
 
-    async def log_sent_post(self, scheduled_post_id: int, channel_id: int, message_id: int):
+    async def log_sent_post(
+        self, scheduled_post_id: int, channel_id: int, message_id: int
+    ):
         """
         Kanalga yuborilgan post haqidagi ma'lumotni 'sent_posts' jadvaliga yozadi.
         """
@@ -15,7 +19,9 @@ class AnalyticsRepository:
         """
         await self._pool.execute(query, scheduled_post_id, channel_id, message_id)
 
-    async def get_all_trackable_posts(self, interval_days: int = 7) -> List[Dict[str, Any]]:
+    async def get_all_trackable_posts(
+        self, interval_days: int = 7
+    ) -> List[Dict[str, Any]]:
         """
         Ko'rishlar sonini tekshirish kerak bo'lgan barcha postlarni oladi.
         Masalan, oxirgi 7 kun ichida yuborilganlar.
@@ -32,7 +38,6 @@ class AnalyticsRepository:
         """
         records = await self._pool.fetch(query, interval_days)
         return [dict(record) for record in records]
-
 
     async def update_post_views(self, scheduled_post_id: int, views: int):
         """
@@ -54,4 +59,15 @@ class AnalyticsRepository:
             WHERE sp.status = 'sent'
         """
         rows = await self._pool.fetch(query)
+        return [dict(row) for row in rows]
+
+    async def get_posts_ordered_by_views(self, channel_id: int) -> List[Dict[str, Any]]:
+        """Return posts for a channel ordered by view count."""
+        query = """
+            SELECT id, views, message_id
+            FROM scheduled_posts
+            WHERE channel_id = $1
+            ORDER BY views DESC
+        """
+        rows = await self._pool.fetch(query, channel_id)
         return [dict(row) for row in rows]

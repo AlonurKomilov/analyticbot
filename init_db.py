@@ -1,7 +1,8 @@
 import asyncio
 import logging
+
 from asyncpg import Pool
-from bot.config import settings
+
 from bot.database import db
 
 logging.basicConfig(level=logging.INFO)
@@ -57,7 +58,7 @@ CREATE_TABLES_COMMANDS = [
         message_id BIGINT NOT NULL,
         sent_at TIMESTAMP WITH TIME ZONE DEFAULT now()
     );
-    """
+    """,
 ]
 
 # --- STEP 2: Add all the foreign key constraints AFTER the tables exist ---
@@ -67,7 +68,7 @@ ADD_CONSTRAINTS_COMMANDS = [
     "ALTER TABLE scheduled_posts ADD CONSTRAINT fk_scheduled_posts_user_id FOREIGN KEY (user_id) REFERENCES users(id);",
     "ALTER TABLE scheduled_posts ADD CONSTRAINT fk_scheduled_posts_channel_id FOREIGN KEY (channel_id) REFERENCES channels(id);",
     "ALTER TABLE sent_posts ADD CONSTRAINT fk_sent_posts_scheduled_post_id FOREIGN KEY (scheduled_post_id) REFERENCES scheduled_posts(id);",
-    "ALTER TABLE sent_posts ADD CONSTRAINT fk_sent_posts_channel_id FOREIGN KEY (channel_id) REFERENCES channels(id);"
+    "ALTER TABLE sent_posts ADD CONSTRAINT fk_sent_posts_channel_id FOREIGN KEY (channel_id) REFERENCES channels(id);",
 ]
 
 
@@ -89,10 +90,13 @@ async def main():
             logger.info("✅ All foreign key constraints added successfully!")
 
     except Exception as e:
-        logger.error(f"❌ An error occurred during database initialization: {e}", exc_info=True)
+        logger.error(
+            f"❌ An error occurred during database initialization: {e}", exc_info=True
+        )
     finally:
         await db_pool.close()
         logger.info("Database connection closed.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

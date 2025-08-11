@@ -1,18 +1,21 @@
 import asyncio
 import logging
+
 import sentry_sdk
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_i18n import I18nMiddleware
 from aiogram_i18n.cores import FluentRuntimeCore
 
+from bot.config import settings
+
 # Imports are now direct, without 'src'
 from bot.container import container
-from bot.config import settings
+from bot.database.repositories import UserRepository
 from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
 from bot.utils.language_manager import LanguageManager
-from bot.database.repositories import UserRepository
+
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -33,7 +36,7 @@ async def main():
     i18n_middleware = I18nMiddleware(
         core=FluentRuntimeCore(path="bot/locales/{locale}/LC_MESSAGES"),
         default_locale=config.DEFAULT_LOCALE,
-        manager=language_manager
+        manager=language_manager,
     )
     i18n_middleware.setup(dp)
 
@@ -48,6 +51,7 @@ async def main():
         logger.info("Bot is shutting down.")
         await dp.storage.close()
         await bot.session.close()
+
 
 if __name__ == "__main__":
     try:

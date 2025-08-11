@@ -1,13 +1,15 @@
 from typing import Optional
+
 from bot.config import Settings
-from bot.database.repositories import (
-    PlanRepository,
-    ChannelRepository,
-    SchedulerRepository,
-    UserRepository
-)
+
 # Import the new dataclass
 from bot.database.models import SubscriptionStatus
+from bot.database.repositories import (
+    ChannelRepository,
+    PlanRepository,
+    SchedulerRepository,
+    UserRepository,
+)
 
 
 class SubscriptionService:
@@ -35,13 +37,13 @@ class SubscriptionService:
         # Metod nomini get_user_plan_name ga o'zgartiramiz
         user_plan_name = await self.user_repo.get_user_plan_name(user_id)
         if not user_plan_name:
-            return False # Should not happen for existing users
+            return False  # Should not happen for existing users
 
         plan_details = await self.plan_repo.get_plan_by_name(user_plan_name)
         if not plan_details:
-            return False # Plan does not exist in DB
+            return False  # Plan does not exist in DB
 
-        max_channels = plan_details['max_channels']
+        max_channels = plan_details["max_channels"]
         # -1 means unlimited
         if max_channels == -1:
             return True
@@ -53,7 +55,7 @@ class SubscriptionService:
         """Checks if a user can schedule a new post based on their plan."""
         if not self.settings.ENFORCE_PLAN_LIMITS:
             return True
-            
+
         # --- TUZATISH ---
         # Metod nomini get_user_plan_name ga o'zgartiramiz
         user_plan_name = await self.user_repo.get_user_plan_name(user_id)
@@ -64,15 +66,19 @@ class SubscriptionService:
         if not plan_details:
             return False
 
-        max_posts = plan_details['max_posts_per_month']
+        max_posts = plan_details["max_posts_per_month"]
         if max_posts == -1:
             return True
 
-        posts_this_month = await self.scheduler_repo.count_user_posts_this_month(user_id)
+        posts_this_month = await self.scheduler_repo.count_user_posts_this_month(
+            user_id
+        )
         return posts_this_month < max_posts
 
     # --- NEW METHOD FOR /myplan COMMAND ---
-    async def get_user_subscription_status(self, user_id: int) -> Optional[SubscriptionStatus]:
+    async def get_user_subscription_status(
+        self, user_id: int
+    ) -> Optional[SubscriptionStatus]:
         """
         Gathers all information about the user's current plan, limits, and usage.
         Returns a dataclass object or None if the user/plan is not found.
@@ -85,7 +91,7 @@ class SubscriptionService:
 
         plan_details = await self.plan_repo.get_plan_by_name(user_plan_name)
         if not plan_details:
-            return None # Should not happen if DB is consistent
+            return None  # Should not happen if DB is consistent
 
         # Get current usage stats
         current_channels = await self.channel_repo.count_user_channels(user_id)
@@ -95,9 +101,9 @@ class SubscriptionService:
 
         # Create and return the status object
         return SubscriptionStatus(
-            plan_name=plan_details['plan_name'],
-            max_channels=plan_details['max_channels'],
+            plan_name=plan_details["plan_name"],
+            max_channels=plan_details["max_channels"],
             current_channels=current_channels,
-            max_posts_per_month=plan_details['max_posts_per_month'],
+            max_posts_per_month=plan_details["max_posts_per_month"],
             current_posts_this_month=current_posts,
         )

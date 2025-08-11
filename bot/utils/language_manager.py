@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from aiogram.types import TelegramObject, User
 from aiogram_i18n.managers import BaseManager
 
@@ -16,12 +18,13 @@ class LanguageManager(BaseManager):
         from_user: User | None = data.get("event_from_user")
 
         if from_user:
-            user = await self.user_repo.get_user(from_user.id)
+            repo = cast(Any, self.user_repo)
+            user = await repo.get_user(from_user.id)
             if not user:
-                user = await self.user_repo.create_user(
+                user = await repo.create_user(
                     user_id=from_user.id,
                     username=from_user.username,
-                    language_code=from_user.language_code
+                    language_code=from_user.language_code,
                 )
 
             lang_code = user.get("language_code")
@@ -33,4 +36,5 @@ class LanguageManager(BaseManager):
     async def set_locale(self, locale: str, data: dict) -> None:
         from_user: User | None = data.get("event_from_user")
         if from_user:
-            await self.user_repo.update_user_language(from_user.id, locale)
+            repo = cast(Any, self.user_repo)
+            await repo.update_user_language(from_user.id, locale)

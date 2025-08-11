@@ -41,7 +41,7 @@ const apiFetch = async (endpoint, options = {}) => {
 };
 
 
-export const useAppStore = create((set, get) => ({
+export const useAppStore = create((set) => ({
   user: null,
   plan: null,
   channels: [],

@@ -1,4 +1,4 @@
-name: Run Python Tests
+name: Run Python Tests and Checks
 
 on:
   push:
@@ -34,7 +34,22 @@ jobs:
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies with Poetry
-        run: poetry install --no-root
+        run: poetry install --no-root --with dev
+
+      - name: Run security check for vulnerabilities in dependencies
+        run: poetry run pip-audit
+
+      - name: Run static analysis with flake8
+        run: poetry run flake8
+
+      - name: Run type checking with mypy
+        run: poetry run mypy .
+
+      - name: Run import sorting check with isort
+        run: poetry run isort --check .
+
+      - name: Run formatting check with black
+        run: poetry run black --check .
 
       - name: Run tests with pytest
         run: poetry run pytest

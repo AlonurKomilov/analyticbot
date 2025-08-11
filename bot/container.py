@@ -67,7 +67,7 @@ class Container(punq.Container):
 
     db_session = Singleton(create_async_session, dsn=config.provided.DB_DSN)
 
-    i18n = Singleton(I18n, core=locales.provided.get_fluent_runtime_core())
+    i18n = Singleton(I18nManager, core=locales.provided.get_fluent_runtime_core())
 
     user_repository = Singleton(UserRepository, session=db_session)
     plan_repository = Singleton(PlanRepository, session=db_session)

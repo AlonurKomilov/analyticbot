@@ -31,10 +31,12 @@ FROM python:3.11-slim
 # Ishchi papkani o'rnatamiz
 WORKDIR /app
 
-# "builder" bosqichidan faqatgina o'rnatilgan kutubxonalarni nusxalab olamiz
+# Copy installed packages from the builder stage
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
-# Dasturning qolgan barcha kodlarini nusxalaymiz
+# Also copy the executables
+COPY --from=builder /usr/local/bin /usr/local/bin
+
 COPY . .
 
 # Konteyner ishga tushganda bajariladigan komanda

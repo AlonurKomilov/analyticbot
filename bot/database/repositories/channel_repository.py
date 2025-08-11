@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
+
 import asyncpg
-from typing import Optional, Dict, Any, List
+
 
 class ChannelRepository:
     def __init__(self, pool: asyncpg.Pool):
@@ -32,7 +34,9 @@ class ChannelRepository:
         """Retrieve a single channel by its ID."""
 
         async with self.pool.acquire() as conn:
-            record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)
+            record = await conn.fetchrow(
+                "SELECT * FROM channels WHERE id = $1", channel_id
+            )
             return dict(record) if record else None
 
     async def count_user_channels(self, user_id: int) -> int:
@@ -57,5 +61,7 @@ class ChannelRepository:
         """Delete a channel by its ID."""
 
         async with self.pool.acquire() as conn:
-            result = await conn.execute("DELETE FROM channels WHERE id = $1", channel_id)
+            result = await conn.execute(
+                "DELETE FROM channels WHERE id = $1", channel_id
+            )
             return result != "DELETE 0"

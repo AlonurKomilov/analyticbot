@@ -1,5 +1,7 @@
-import redis.asyncio as redis
 from typing import Set
+
+import redis.asyncio as redis
+
 
 class GuardService:
     def __init__(self, redis_conn: redis.Redis):
@@ -17,16 +19,20 @@ class GuardService:
     async def list_words(self, channel_id: int) -> Set[str]:
         words = await self.redis.smembers(self._key(channel_id))
         # Decode bytes from Redis into strings
-        return {word.decode('utf-8') for word in words}
+        return {word.decode("utf-8") for word in words}
 
     async def is_blocked(self, channel_id: int, text: str) -> bool:
         blocked_words = await self.list_words(channel_id)
         if not blocked_words:
             return False
-        
+
         text_lower = text.lower()
         # Check each word in the message
         for word in text_lower.split():
             if word in blocked_words:
                 return True
         return False
+
+    async def check_bot_is_admin(self, channel_username: str, user_id: int) -> dict:
+        """Placeholder admin check returning minimal channel info."""
+        return {"id": 0, "channel_id": 0, "title": "", "username": channel_username}

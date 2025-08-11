@@ -1,5 +1,7 @@
-import asyncpg
 from typing import Optional
+
+import asyncpg
+
 
 class UserRepository:
     def __init__(self, pool: asyncpg.Pool):

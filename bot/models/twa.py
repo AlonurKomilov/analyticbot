@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Pydantic models used by the FastAPI layer.
 
 The original project referenced a number of classes that were removed
@@ -9,10 +7,12 @@ the repositories.  These models are intentionally minimal and are not
 backed by any ORM.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Button(BaseModel):
@@ -96,4 +96,3 @@ class ValidationErrorResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
-

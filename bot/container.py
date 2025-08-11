@@ -2,23 +2,24 @@ import punq
 from aiogram import Bot
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Importlar yangi, soddalashtirilgan strukturaga moslashtirilgan
-from bot.config import settings, Settings
+from bot.config import Settings, settings
 from bot.database.repositories import (
-    UserRepository,
-    PlanRepository,
-    ChannelRepository,
-    SchedulerRepository,
     AnalyticsRepository,
+    ChannelRepository,
+    PlanRepository,
+    SchedulerRepository,
+    UserRepository,
 )
 from bot.services import (
-    SubscriptionService,
+    AnalyticsService,
     GuardService,
     SchedulerService,
-    AnalyticsService,
+    SubscriptionService,
 )
+
 
 def create_async_pool(db_url: str) -> async_sessionmaker:
     """Ma'lumotlar bazasi uchun asinxron ulanishlar pulini (pool) yaratadi."""
@@ -41,8 +42,9 @@ def get_container() -> punq.Container:
     def get_bot_instance(settings: Settings) -> Bot:
         return Bot(
             token=settings.BOT_TOKEN.get_secret_value(),
-            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+            default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
+
     # ...keyin uni 'factory' sifatida to'g'ridan-to'g'ri metod orqali registratsiya qilamiz.
     # Bu 'punq'ga 'settings' obyektini avtomatik topib, funksiyaga uzatish imkonini beradi.
     container.register(Bot, factory=get_bot_instance, scope=punq.Scope.singleton)
@@ -66,6 +68,7 @@ def get_container() -> punq.Container:
     container.register(AnalyticsService)
 
     return container
+
 
 # Global konteyner obyektini yaratib qo'yamiz
 container = get_container()

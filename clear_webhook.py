@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from aiogram import Bot
 
 # Loyihaning asosiy sozlamalarini import qilamiz
@@ -13,8 +14,10 @@ logger = logging.getLogger(__name__)
 async def main():
     """Asosiy asinxron funksiya."""
     bot_token = settings.BOT_TOKEN.get_secret_value()
-    logger.info(f"Attempting to clear webhook for bot with token ending in ...{bot_token[-6:]}")
-    
+    logger.info(
+        f"Attempting to clear webhook for bot with token ending in ...{bot_token[-6:]}"
+    )
+
     bot = Bot(token=bot_token)
     try:
         # Webhook'ni o'chiramiz va kutilayotgan yangilanishlarni tozalaymiz

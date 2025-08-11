@@ -1,22 +1,23 @@
+from typing import Any, Awaitable, Callable, Dict
+
 import punq
-from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 # Repozitoriy va Servislarni type hinting uchun import qilamiz
 from bot.database.repositories import (
-    UserRepository,
-    PlanRepository,
-    ChannelRepository,
-    SchedulerRepository,
     AnalyticsRepository,
+    ChannelRepository,
+    PlanRepository,
+    SchedulerRepository,
+    UserRepository,
 )
 from bot.services import (
-    SubscriptionService,
+    AnalyticsService,
     GuardService,
     SchedulerService,
-    AnalyticsService,
+    SubscriptionService,
 )
 
 
@@ -26,6 +27,7 @@ class DependencyMiddleware(BaseMiddleware):
     kerakli qaramliklarni (servis va repozitoriylarni) yaratadi va ularni
     handler'larga `data` lug'ati orqali uzatadi.
     """
+
     def __init__(self, container: punq.Container):
         self.container = container
 

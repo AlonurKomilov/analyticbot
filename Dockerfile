@@ -1,43 +1,64 @@
-# =================================================================
-# 1-BOSQICH: "Builder" - Bog'liqliklarni o'rnatish uchun
-# =================================================================
-# Biz yengil python:3.11-slim obrazidan boshlaymiz va unga "builder" deb nom beramiz
-FROM python:3.11-slim as builder
+# 1-qism: Bog'liqliklarni o'rnatish uchun "builder"
+# Bu qism faqat kutubxonalarni o'rnatish uchun ishlatiladi va oxirgi image'ga kirmaydi.
+# Bu image hajmini kichik saqlashga yordam beradi.
+FROM python:3.11-slim AS builder
 
-# Ishchi papkani o'rnatamiz
+# Tizimga kerakli paketlarni o'rnatamiz
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev
+
+# Ishchi papkani yaratamiz
 WORKDIR /app
 
-# Poetry o'rnatuvchisini o'rnatamiz, bu bog'liqliklarni boshqarish uchun kerak
+# Poetry o'rnatamiz
 RUN pip install poetry
 
-# Virtual muhit yaratishni o'chirib qo'yamiz
+# Poetry'ga virtual muhit yaratmaslikni buyuramiz
 RUN poetry config virtualenvs.create false
 
 # Bog'liqliklar fayllarini nusxalaymiz
 COPY poetry.lock pyproject.toml ./
 
-# === MUHIM O'ZGARISH MANA SHU YERDA ===
 # Bog'liqliklarni o'rnatamiz. --only main faqat production uchun kerakli kutubxonalarni o'rnatadi.
 # Bu eski --no-dev komandasining yangi ko'rinishi.
 RUN poetry install --only main --no-root
 
 
-# =================================================================
-# 2-BOSQICH: "Final" - Yakuniy, yengil obrazni yaratish
-# =================================================================
-# Yana o'sha toza va yengil python:3.11-slim obrazidan boshlaymiz
-FROM python:3.11-slim
+# 2-qism: Development uchun
+FROM builder AS development
 
-# Ishchi papkani o'rnatamiz
+RUN poetry install
+
+
+# 3-qism: Production uchun optimallashtirilgan "final" image
+# Bu yerdan boshlab oxirgi, ishchi image'lar yasaladi
+FROM python:3.11-slim AS final
+
 WORKDIR /app
 
-# Copy installed packages from the builder stage
+# O'rnatilgan kutubxonalarni "builder"dan nusxalaymiz
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-
-# Also copy the executables
 COPY --from=builder /usr/local/bin /usr/local/bin
 
+# Loyiha fayllarini nusxalaymiz
 COPY . .
 
-# Konteyner ishga tushganda bajariladigan komanda
+
+# 4-qism: Har bir servis uchun alohida ishga tushirish buyruqlari
+
+# BOTTING O'ZI UCHUN BOSQICH
+FROM final AS bot
 CMD ["python", "run_bot.py"]
+
+# API UCHUN BOSQICH
+FROM final AS api
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# CELERY WORKER UCHUN BOSQICH
+FROM final AS celery_worker
+CMD ["celery", "-A", "bot.celery_app", "worker", "--loglevel=info"]
+
+# CELERY BEAT UCHUN BOSQICH
+FROM final AS celery_beat
+CMD ["celery", "-A", "

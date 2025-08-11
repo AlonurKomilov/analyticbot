@@ -26,18 +26,19 @@ services:
     restart: always
 
   bot:
-    container_name: analytic_bot
     build:
       context: .
-      dockerfile: Dockerfile
-    command: python run_bot.py
-    env_file: .env
+      target: bot # <--- THIS IS THE FIX (was 'development')
+    container_name: analytic_bot
     depends_on:
-      postgres: { condition: service_healthy }
-      redis: { condition: service_started }
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file: .env
+    restart: always
     volumes:
       - .:/app
-    restart: always
 
   api:
     container_name: analytic_bot_api

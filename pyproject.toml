@@ -45,7 +45,7 @@ pydantic-settings = "^2.3.4"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.30"}
 asyncpg = "^0.29.0"
 alembic = "^1.13.1"
-punq = "^0.6.0"
+punq = "^0.7.0"
 celery = "^5.4.0"
 redis = "^5.0.4"
 fluent-runtime = "^0.4.0"

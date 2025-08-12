@@ -4,7 +4,7 @@ import punq
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram_i18n.managers import I18nManager
+from aiogram_i18n.middleware import I18nManager
 from aiogram_i18n.cores import FluentRuntimeCore
 from fluent_compiler.bundle import FluentBundle
 from fluent_compiler.resource import FluentResource

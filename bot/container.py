@@ -11,14 +11,13 @@ from fluent_compiler.resource import FluentResource
 from punctuated import Singleton
 
 from bot.config import Settings
-from bot.database.db import create_async_session
+from bot.database.db import create_pool
 from bot.database.repositories.analytics_repository import AnalyticsRepository
 from bot.database.repositories.channel_repository import ChannelRepository
 from bot.database.repositories.plan_repository import PlanRepository
 from bot.database.repositories.scheduler_repository import SchedulerRepository
 from bot.database.repositories.user_repository import UserRepository
 from bot.services.analytics_service import AnalyticsService
-from bot.services.auth_service import AuthService
 from bot.services.guard_service import GuardService
 from bot.services.scheduler_service import SchedulerService
 from bot.services.subscription_service import SubscriptionService
@@ -65,7 +64,7 @@ class Container(punq.Container):
         storage=MemoryStorage(),
     )
 
-    db_session = Singleton(create_async_session, dsn=config.provided.DB_DSN)
+    db_session = Singleton(create_pool)
 
     i18n = Singleton(I18nManager, core=locales.provided.get_fluent_runtime_core())
 
@@ -75,7 +74,6 @@ class Container(punq.Container):
     scheduler_repository = Singleton(SchedulerRepository, session=db_session)
     analytics_repository = Singleton(AnalyticsRepository, session=db_session)
 
-    auth_service = Singleton(AuthService, repository=user_repository)
     guard_service = Singleton(GuardService, repository=channel_repository)
     subscription_service = Singleton(SubscriptionService, repository=channel_repository)
     scheduler_service = Singleton(

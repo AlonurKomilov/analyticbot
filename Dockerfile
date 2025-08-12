@@ -22,6 +22,7 @@ COPY poetry.lock pyproject.toml ./
 
 # Bog'liqliklarni o'rnatamiz. --only main faqat production uchun kerakli kutubxonalarni o'rnatadi.
 # Bu eski --no-dev komandasining yangi ko'rinishi.
+RUN poetry lock
 RUN poetry install --only main --no-root
 
 

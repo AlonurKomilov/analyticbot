@@ -1045,24 +1045,6 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.6.10)", "diff-cover (>=9.2.1)",
 typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
-name = "fluent-compiler"
-version = "0.4"
-description = "Blazing fast implementation of Fluent localization language."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "fluent_compiler-0.4-py3-none-any.whl", hash = "sha256:192600f9a82b94e34ef3614d318ddb157a6162c27a49ca8cc12cf0e9828eee72"},
-    {file = "fluent_compiler-0.4.tar.gz", hash = "sha256:0c09122cd53847b7882c328d72ed1f8ec6025373bc656bb9636436df2a013ff0"},
-]
-
-[package.dependencies]
-attrs = ">=19.3.0"
-babel = ">=2.8.0"
-"fluent.syntax" = ">=0.14"
-pytz = "*"
-
-[[package]]
 name = "fluent-runtime"
 version = "0.4.0"
 description = "Localization library for expressive translations."
@@ -3860,4 +3842,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "fb474be83501bed7f6c96c5550733f8a3afc664acb608d26e942ee90d94a5157"
+content-hash = "79880a806ba0443779b2811397e06de90e4d70bdea6be63dcfc548621285da2f"

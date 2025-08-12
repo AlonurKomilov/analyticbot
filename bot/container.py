@@ -64,7 +64,7 @@ class Container(punq.Container):
         storage=MemoryStorage(),
     )
 
-    db_session = Singleton(create_pool, dsn=config.provided.DB_DSN)
+    db_session = Singleton(create_pool)
 
     i18n = Singleton(I18nManager, core=locales.provided.get_fluent_runtime_core())
 

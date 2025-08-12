@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock
 from aiogram import Bot
 from bot.services.analytics_service import AnalyticsService
 from bot.database.repositories.analytics_repository import AnalyticsRepository

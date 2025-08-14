@@ -151,3 +151,6 @@ docker-compose.override.yml
 
 # Personal files
 .idea/
+
+# Environment variables
+.env

@@ -120,6 +120,12 @@ app.add_middleware(
 # --- API Endpoints ---
 
 
+@app.get("/health", tags=["Health"])
+async def health_check():
+    """A simple health check endpoint."""
+    return {"status": "ok"}
+
+
 @app.post("/api/v1/media/upload", tags=["Media"])
 async def upload_media_file(
     # --- SYNTAXERROR TUZATILDI: Argumentlar tartibi to'g'rilandi ---

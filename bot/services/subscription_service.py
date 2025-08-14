@@ -1,8 +1,8 @@
+# bot/services/subscription_service.py
 from typing import Optional
 
-from bot.config import Settings
+from fastapi import HTTPException
 
-# Import the new dataclass
 from bot.database.models import SubscriptionStatus
 from bot.database.repositories import (
     ChannelRepository,
@@ -10,100 +10,88 @@ from bot.database.repositories import (
     SchedulerRepository,
     UserRepository,
 )
+# Lazily resolve other repos via container to keep current DI untouched
+from bot.container import container
 
 
 class SubscriptionService:
-    def __init__(
-        self,
-        settings: Settings,
-        user_repo: UserRepository,
-        plan_repo: PlanRepository,
-        channel_repo: ChannelRepository,
-        scheduler_repo: SchedulerRepository,
-    ):
-        self.settings = settings
-        self.user_repo = user_repo
-        self.plan_repo = plan_repo
-        self.channel_repo = channel_repo
-        self.scheduler_repo = scheduler_repo
+    """
+    Subscription limits & usage checks.
+    Constructor MUST match container wiring:
+        subscription_service = Singleton(SubscriptionService, repository=channel_repository)
+    """
 
-    async def check_channel_limit(self, user_id: int) -> bool:
-        """Checks if a user can add a new channel based on their plan."""
-        # If enforcement is turned off, always allow
-        if not self.settings.ENFORCE_PLAN_LIMITS:
-            return True
+    def __init__(self, repository: ChannelRepository):
+        # Keep the param name 'repository' to match Container; expose as channel_repo
+        self.channel_repo = repository
 
-        # --- TUZATISH ---
-        # Metod nomini get_user_plan_name ga o'zgartiramiz
-        user_plan_name = await self.user_repo.get_user_plan_name(user_id)
-        if not user_plan_name:
-            return False  # Should not happen for existing users
+    async def _get_plan_row(self, user_id: int) -> Optional[dict]:
+        """Return the plan row for the user, or None if not set."""
+        user_repo = container.resolve(UserRepository)
+        plan_repo = container.resolve(PlanRepository)
 
-        plan_details = await self.plan_repo.get_plan_by_name(user_plan_name)
-        if not plan_details:
-            return False  # Plan does not exist in DB
+        plan_name = await user_repo.get_user_plan_name(user_id)
+        if not plan_name:
+            return None
+        # plan table has columns like: name/plan_name, max_channels, max_posts_per_month
+        return await plan_repo.get_plan_by_name(plan_name)
 
-        max_channels = plan_details["max_channels"]
-        # -1 means unlimited
-        if max_channels == -1:
-            return True
+    async def check_channel_limit(self, user_id: int) -> None:
+        """
+        Ensure the user has not exceeded max channels allowed by their plan.
+        Raise HTTPException(403) on limit breach.
+        """
+        plan_row = await self._get_plan_row(user_id)
+        if not plan_row:
+            # No plan associated -> no limit enforced (or treat as Free with defaults).
+            return
+
+        max_channels = plan_row.get("max_channels")
+        if max_channels is None:
+            return
 
         current_channels = await self.channel_repo.count_user_channels(user_id)
-        return current_channels < max_channels
+        if current_channels >= max_channels:
+            raise HTTPException(status_code=403, detail="Channel limit reached")
 
-    async def check_post_limit(self, user_id: int) -> bool:
-        """Checks if a user can schedule a new post based on their plan."""
-        if not self.settings.ENFORCE_PLAN_LIMITS:
-            return True
-
-        # --- TUZATISH ---
-        # Metod nomini get_user_plan_name ga o'zgartiramiz
-        user_plan_name = await self.user_repo.get_user_plan_name(user_id)
-        if not user_plan_name:
-            return False
-
-        plan_details = await self.plan_repo.get_plan_by_name(user_plan_name)
-        if not plan_details:
-            return False
-
-        max_posts = plan_details["max_posts_per_month"]
-        if max_posts == -1:
-            return True
-
-        posts_this_month = await self.scheduler_repo.count_user_posts_this_month(
-            user_id
-        )
-        return posts_this_month < max_posts
-
-    # --- NEW METHOD FOR /myplan COMMAND ---
-    async def get_user_subscription_status(
-        self, user_id: int
-    ) -> Optional[SubscriptionStatus]:
+    async def check_post_limit(self, user_id: int) -> None:
         """
-        Gathers all information about the user's current plan, limits, and usage.
-        Returns a dataclass object or None if the user/plan is not found.
+        Ensure the user has not exceeded max monthly posts allowed by their plan.
+        Raise HTTPException(403) on limit breach.
         """
-        # --- TUZATISH ---
-        # Metod nomini get_user_plan_name ga o'zgartiramiz
-        user_plan_name = await self.user_repo.get_user_plan_name(user_id)
-        if not user_plan_name:
+        plan_row = await self._get_plan_row(user_id)
+        if not plan_row:
+            return
+
+        max_posts = plan_row.get("max_posts_per_month")
+        if max_posts is None:
+            return
+
+        scheduler_repo = container.resolve(SchedulerRepository)
+        current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
+        if current_posts >= max_posts:
+            raise HTTPException(status_code=403, detail="Monthly post limit reached")
+
+    async def get_usage_status(self, user_id: int) -> Optional[SubscriptionStatus]:
+        """
+        Optional helper used by dashboards: summarize usage & limits.
+        Not required by API right now but kept for completeness.
+        """
+        plan_row = await self._get_plan_row(user_id)
+        if not plan_row:
             return None
 
-        plan_details = await self.plan_repo.get_plan_by_name(user_plan_name)
-        if not plan_details:
-            return None  # Should not happen if DB is consistent
-
-        # Get current usage stats
+        scheduler_repo = container.resolve(SchedulerRepository)
+        current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
         current_channels = await self.channel_repo.count_user_channels(user_id)
-        # BU YERDA XATOLIK BO'LISHI MUMKIN: count_user_posts_this_month mavjud emas
-        # Buni keyingi qadamda scheduler_repository.py da qo'shamiz
-        current_posts = await self.scheduler_repo.count_user_posts_this_month(user_id)
 
-        # Create and return the status object
+        # plan name can be 'name' or 'plan_name' depending on the SELECT
+        plan_name = plan_row.get("plan_name") or plan_row.get("name") or "Unknown"
+
         return SubscriptionStatus(
-            plan_name=plan_details["plan_name"],
-            max_channels=plan_details["max_channels"],
+            plan_name=plan_name,
+            max_channels=plan_row.get("max_channels", 0),
             current_channels=current_channels,
-            max_posts_per_month=plan_details["max_posts_per_month"],
+            max_posts_per_month=plan_row.get("max_posts_per_month", 0),
             current_posts_this_month=current_posts,
         )

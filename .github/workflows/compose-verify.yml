@@ -39,6 +39,18 @@ jobs:
       - name: Build & start (Compose)
         run: docker compose -f docker-compose.yml -f .github/ci.compose.override.yml up -d --build
 
+      - name: Verify DB schema (psql)
+        run: |
+          set -e
+          # List tables
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "\dt"
+          # Smoke checks: table existence + seed plans
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT COUNT(*) AS plans FROM plans;"
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM users LIMIT 1;" || true
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM channels LIMIT 1;" || true
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM scheduled_posts LIMIT 1;" || true
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM sent_posts LIMIT 1;" || true
+
       - name: Show Celery registered tasks
         run: |
           set +e

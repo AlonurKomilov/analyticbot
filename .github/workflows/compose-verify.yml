@@ -52,6 +52,16 @@ jobs:
           docker compose ps
           docker compose logs --no-color --tail=200
 
+      - name: Inspect API container (if exists)
+        if: always()
+        run: |
+          set +e
+          api_id=$(docker compose ps -q api)
+          if [ -n "$api_id" ]; then
+            docker inspect "$api_id" | head -n 200 || true
+          fi
+          set -e
+
       - name: Tear down
         if: always()
         run: docker compose down -v

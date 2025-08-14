@@ -8,7 +8,7 @@ from bot.container import container
 @celery_app.task(name="bot.tasks.send_post_task")
 def send_post_task(scheduler_id: int):
     async def _run():
-        bot = container.bot()
+        container.bot()
         try:
             scheduler_repository = container.scheduler_repository()
             scheduler = await scheduler_repository.get_scheduler_by_id(scheduler_id)

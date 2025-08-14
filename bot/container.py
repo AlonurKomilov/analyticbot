@@ -4,11 +4,10 @@ import punq
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram_i18n.managers import I18nManager
 from aiogram_i18n.cores import FluentRuntimeCore
+from aiogram_i18n.managers import I18nManager
 from fluent_compiler.bundle import FluentBundle
 from fluent_compiler.resource import FluentResource
-from punctuated import Singleton
 
 from bot.config import Settings
 from bot.database.db import create_pool
@@ -21,6 +20,7 @@ from bot.services.analytics_service import AnalyticsService
 from bot.services.guard_service import GuardService
 from bot.services.scheduler_service import SchedulerService
 from bot.services.subscription_service import SubscriptionService
+from punctuated import Singleton
 
 
 class Locales:
@@ -37,9 +37,7 @@ class Locales:
 
             for ftl_file in (locales_path / locale.name).iterdir():
                 with open(ftl_file, "r", encoding="utf-8") as f:
-                    self.locales_map[locale.name].add_resource(
-                        FluentResource(f.read())
-                    )
+                    self.locales_map[locale.name].add_resource(FluentResource(f.read()))
 
     def get_fluent_runtime_core(self) -> FluentRuntimeCore:
         return FluentRuntimeCore(

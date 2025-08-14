@@ -1,8 +1,10 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from aiogram import Bot
-from bot.services.analytics_service import AnalyticsService
+
 from bot.database.repositories.analytics_repository import AnalyticsRepository
+from bot.services.analytics_service import AnalyticsService
 
 
 # Pytest bizga testlarni sodda funksiyalar sifatida yozish imkonini beradi.
@@ -61,9 +63,7 @@ async def test_get_total_channels_count(
     """
     # 1. TAYYORGARLIK (Arrange)
     expected_channel_count = 42
-    mock_analytics_repo.get_total_channels_count.return_value = (
-        expected_channel_count
-    )
+    mock_analytics_repo.get_total_channels_count.return_value = expected_channel_count
 
     # 2. HARAKAT (Act)
     actual_channel_count = await analytics_service.get_total_channels_count()

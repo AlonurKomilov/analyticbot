@@ -109,6 +109,34 @@ jobs:
       - name: Run type checking with mypy
         run: poetry run mypy --install-types --non-interactive .
 
+      - name: Generate OpenAPI (fallback to health_app)
+        run: |
+          python - <<'PY'
+          import json, importlib
+          try:
+              api = importlib.import_module("api")
+              app = getattr(api, "app", None)
+              if app is None:
+                  raise ImportError("api.app not found")
+          except Exception:
+              health = importlib.import_module("health_app")
+              app = health.app
+          with open("openapi.json","w") as f:
+              json.dump(app.openapi(), f, indent=2)
+          print("openapi.json written")
+          PY
+
+      - name: Validate OpenAPI
+        run: |
+          pipx install openapi-spec-validator
+          openapi-spec-validator openapi.json
+
+      - name: Upload OpenAPI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi
+          path: openapi.json
+
       - name: Run import sorting check with isort
         run: poetry run isort --check .
 

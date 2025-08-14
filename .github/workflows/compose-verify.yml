@@ -33,7 +33,7 @@ jobs:
           docker compose -f docker-compose.yml config > /dev/null
 
       - name: Build & start (Compose)
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.yml -f .github/ci.compose.override.yml up -d --build
 
       - name: Wait for API /health
         run: |

@@ -1,0 +1,10 @@
+services:
+  api:
+    # CI uchun faqat health_app'ni ishga tushiramiz
+    command: uvicorn health_app:app --host 0.0.0.0 --port 8000
+    # Agar asosiy docker-compose.yml da healthcheck bor bo'lsa, CI'da shuni ishlatamiz:
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 30

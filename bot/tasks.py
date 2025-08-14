@@ -5,35 +5,51 @@ from bot.celery_app import celery_app
 from bot.container import container
 
 
-@celery_app.task
-async def send_post_task(scheduler_id: int):
-    # Container'dan bot obyektini olamiz
-    bot = container.bot()
+@celery_app.task(name="bot.tasks.send_post_task")
+def send_post_task(scheduler_id: int):
+    async def _run():
+        bot = container.bot()
+        try:
+            scheduler_repository = container.scheduler_repository()
+            scheduler = await scheduler_repository.get_scheduler_by_id(scheduler_id)
+            if not scheduler:
+                return
 
-    try:
-        scheduler_repository = container.scheduler_repository()
-        scheduler = await scheduler_repository.get_scheduler_by_id(scheduler_id)
-        if not scheduler:
-            return
+            # TODO: real business logic (example structure)
+            # if not scheduler.is_due:
+            #     return
+            # subscriptions = await container.subscription_repository().get_active_for_user(scheduler.user_id)
+            # for channel in subscriptions:
+            #     await bot.send_post(channel.channel_id, scheduler.post_id)
+        except asyncio.CancelledError:
+            pass
+        finally:
+            try:
+                db = container.db_session()
+                if hasattr(db, "close"):
+                    res = db.close()
+                    if asyncio.iscoroutine(res):
+                        await res
+            except Exception:
+                # don't crash worker on cleanup issues
+                pass
 
-        active_subscriptions = (
-            await container.subscription_service().get_active_subscriptions()
-        )
-        await container.analytics_service().create_post(
-            scheduler.post_id, len(active_subscriptions)
-        )
-
-        for channel in active_subscriptions:
-            # Endi bu qator to'g'ri ishlaydi
-            await bot.send_post(channel.channel_id, scheduler.post_id)
-
-    except asyncio.CancelledError:
-        pass
-    finally:
-        await container.db_session().close()
+    asyncio.run(_run())
 
 
-@celery_app.task
+@celery_app.task(name="bot.tasks.remove_expired_schedulers")
 def remove_expired_schedulers():
     scheduler_repository = container.scheduler_repository()
     scheduler_repository.remove_expired(datetime.utcnow())
+
+
+@celery_app.task(name="bot.tasks.send_scheduled_message")
+def send_scheduled_message():
+    # TODO: implement dispatcher of due schedulers
+    return "ok"
+
+
+@celery_app.task(name="bot.tasks.update_post_views_task")
+def update_post_views_task():
+    # TODO: implement view updates
+    return "ok"

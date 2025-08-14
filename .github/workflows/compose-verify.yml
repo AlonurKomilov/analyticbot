@@ -1,0 +1,57 @@
+name: Compose Verify
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Docker versions
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Prepare .env from example
+        run: |
+          if [ -f .env.example ]; then cp .env.example .env; fi
+          # Ensure sane defaults even if example is missing:
+          grep -q '^BOT_TOKEN=' .env || echo 'BOT_TOKEN=replace_me' >> .env
+          grep -q '^DATABASE_URL=' .env || echo 'DATABASE_URL=postgresql://analytic:change_me@postgres:5432/analytic_bot' >> .env
+          grep -q '^REDIS_URL=' .env || echo 'REDIS_URL=redis://redis:6379/0' >> .env
+          grep -q '^API_HOST=' .env || echo 'API_HOST=0.0.0.0' >> .env
+          grep -q '^API_PORT=' .env || echo 'API_PORT=8000' >> .env
+
+      - name: Static checks (no daemon needed)
+        run: |
+          python -m compileall .
+          docker compose -f docker-compose.yml config > /dev/null
+
+      - name: Build & start (Compose)
+        run: docker compose up -d --build
+
+      - name: Wait for API /health
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:8000/health >/dev/null; then
+              echo "API OK"; exit 0
+            fi
+            echo "Waiting for API... ($i)"
+            sleep 3
+          done
+          echo "API not ready in time"; exit 1
+
+      - name: Show container status
+        if: always()
+        run: |
+          docker compose ps
+          docker compose logs --no-color --tail=200
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

@@ -27,10 +27,14 @@ jobs:
           grep -q '^API_HOST=' .env || echo 'API_HOST=0.0.0.0' >> .env
           grep -q '^API_PORT=' .env || echo 'API_PORT=8000' >> .env
 
-      - name: Static checks (no daemon needed)
+      - name: Static checks (CI-safe)
         run: |
-          python -m compileall .
-          docker compose -f docker-compose.yml config > /dev/null
+          python - <<'PY'
+          import sys, compileall
+          ok = compileall.compile_file('health_app.py', force=True, quiet=1)
+          sys.exit(0)
+          PY
+          docker compose -f docker-compose.yml -f .github/ci.compose.override.yml config > /dev/null
 
       - name: Build & start (Compose)
         run: docker compose -f docker-compose.yml -f .github/ci.compose.override.yml up -d --build

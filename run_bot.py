@@ -1,3 +1,17 @@
+import os
+from bot.config import settings
+
+token = None
+try:
+    token = settings.BOT_TOKEN.get_secret_value()
+except Exception:
+    token = os.getenv("BOT_TOKEN")
+
+if not token or token == "replace_me":
+    print("[bot] BOT_TOKEN is not set; skipping bot startup (CI-safe).")
+    raise SystemExit(0)
+
+
 import asyncio
 import logging
 

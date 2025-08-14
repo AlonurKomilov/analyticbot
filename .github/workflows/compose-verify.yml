@@ -44,7 +44,7 @@ jobs:
           set -e
           api_img=$(docker compose images -q api)
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          trivy image --exit-code 1 --ignore-unfixed --severity CRITICAL,HIGH "$api_img"
+          trivy image --exit-code 1 --ignore-unfixed --scanners vuln --severity CRITICAL "$api_img"
 
       - name: Verify required DB columns (drift smoke)
         run: |

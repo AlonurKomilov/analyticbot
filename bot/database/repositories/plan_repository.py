@@ -11,5 +11,17 @@ class PlanRepository:
         """Retrieves the limits for a specific plan by its name."""
         async with self.pool.acquire() as conn:
             return await conn.fetchrow(
-                "SELECT * FROM plans WHERE plan_name = $1", plan_name
+                """
+                SELECT
+                    id,
+                    name,
+                    /* backward compatibility for callers expecting 'plan_name' */
+                    name AS plan_name,
+                    max_channels,
+                    max_posts_per_month
+                FROM plans
+                WHERE name = $1
+                LIMIT 1
+                """,
+                plan_name,
             )

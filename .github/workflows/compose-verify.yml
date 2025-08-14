@@ -51,6 +51,14 @@ jobs:
           docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM scheduled_posts LIMIT 1;" || true
           docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM sent_posts LIMIT 1;" || true
 
+      - name: Verify PlanRepository queries (smoke)
+        run: |
+          set -e
+          # SELECT by name ishlashi kerak
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT id,name,max_channels,max_posts_per_month FROM plans WHERE name='free' LIMIT 1;"
+          # Alias plan_name mavjud (SELECT ... name AS plan_name)
+          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT name AS plan_name FROM plans LIMIT 1;"
+
       - name: Show Celery registered tasks
         run: |
           set +e

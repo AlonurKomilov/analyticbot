@@ -27,7 +27,7 @@ class UserRepository:
 
     async def get_user_plan_name(self, user_id: int) -> Optional[str]:
         """
-        Retrieves the name of the user's current subscription plan.
+        Retrieves the name of the user's current subscription plan. Returns plan name.
         """
         query = """
             SELECT p.name

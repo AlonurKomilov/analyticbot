@@ -74,32 +74,13 @@ jobs:
               - '!**/__init__.py'
 
       - name: Prepare .env for tests
+        run: cp .env.example .env
+      - name: Inject optional secrets into .env (fallback-safe)
         run: |
-          if [ -f .env ]; then
-            echo ".env already exists"
-          elif [ -f .env.example ]; then
-            cp .env.example .env
-          else
-            cat > .env <<'EOF'
-      BOT_TOKEN=replace_me
-      ADMIN_IDS=8034732332,1527638770
-      DEFAULT_LOCALE=en
-      STORAGE_CHANNEL_ID=12345
-      POSTGRES_HOST=postgres
-      POSTGRES_PORT=5432
-      POSTGRES_USER=analytic
-      POSTGRES_PASSWORD=change_me
-      POSTGRES_DB=analytic_bot
-      DATABASE_URL=postgresql://analytic:change_me@postgres:5432/analytic_bot
-      REDIS_URL=redis://redis:6379/0
-      API_HOST=0.0.0.0
-      API_PORT=8000
-      API_HOST_URL=http://localhost:8000
-      TWA_HOST_URL=http://localhost
-      ENFORCE_PLAN_LIMITS=True
-      SENTRY_DSN=
-      EOF
-          fi
+          BOT="${{ secrets.BOT_TOKEN }}"
+          STORAGE="${{ secrets.STORAGE_CHANNEL_ID }}"
+          sed -i "s|^BOT_TOKEN=.*$|BOT_TOKEN=${BOT:-replace_me}|" .env
+          sed -i "s|^STORAGE_CHANNEL_ID=.*$|STORAGE_CHANNEL_ID=${STORAGE:-12345}|" .env
       - name: Run security check for vulnerabilities in dependencies
         run: poetry run pip-audit
 

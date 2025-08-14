@@ -36,6 +36,29 @@ jobs:
       - name: Install dependencies with Poetry
         run: poetry install --no-root --with dev
 
+      - name: Lint Dockerfile with hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Lint YAML
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: ".github/workflows docker-compose.yml"
+
+      - name: Bandit security scan
+        run: pipx run bandit -q -r .
+
+      - name: Gitleaks (secrets scan)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --no-banner --redact --verbose
+
+      - name: Lint SQL (sqlfluff)
+        run: |
+          pipx install sqlfluff
+          sqlfluff lint postgres-init/*.sql --dialect postgres
+
       - name: Detect changed files
         id: filter
         uses: dorny/paths-filter@v3

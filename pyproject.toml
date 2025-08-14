@@ -39,6 +39,7 @@ black = "^24.4.2"
 fakeredis="^2.21.0"
 pytest-cov="^4.1.0"
 pip-audit = "^2.9.0"
+flake8 = "^7.3.0"
 
 
 [build-system]

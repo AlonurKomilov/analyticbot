@@ -3,6 +3,8 @@ from typing import Optional
 
 from fastapi import HTTPException
 
+# Lazily resolve other repos via container to keep current DI untouched
+from bot.container import container
 from bot.database.models import SubscriptionStatus
 from bot.database.repositories import (
     ChannelRepository,
@@ -10,8 +12,6 @@ from bot.database.repositories import (
     SchedulerRepository,
     UserRepository,
 )
-# Lazily resolve other repos via container to keep current DI untouched
-from bot.container import container
 
 
 class SubscriptionService:

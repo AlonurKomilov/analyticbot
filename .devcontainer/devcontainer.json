@@ -1,17 +1,24 @@
 {
   "name": "Analytic Bot Codespace",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-
-  // Bu qism Codespace yaratilgandan so'ng avtomatik ishga tushadi
-  "postCreateCommand": "pip install poetry",
-
-  // Qo'shimcha sozlamalar (VS Code uchun)
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    }
+  },
+  "postCreateCommand": "pipx install poetry && poetry --version",
+  "postStartCommand": "poetry install",
   "customizations": {
     "vscode": {
       "extensions": [
+        "ms-azuretools.vscode-docker",
         "ms-python.python",
         "ms-python.vscode-pylance"
       ]
     }
+  },
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": { "label": "API", "onAutoForward": "openBrowser" }
   }
 }

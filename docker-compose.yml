@@ -1,101 +1,93 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: analyticbot-postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
       POSTGRES_USER: ${POSTGRES_USER:-analytic}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
-    ports:
-      - "5432:5432"
-    restart: always
+      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      timeout: 5s
+      retries: 10
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    restart: always
+    container_name: analyticbot-redis
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 20
+      retries: 10
+    ports:
+      - "6379:6379"
 
   api:
     build:
       context: .
       dockerfile: Dockerfile
       target: api
-    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    container_name: analyticbot-api
     env_file: .env
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
       interval: 5s
       timeout: 3s
-      retries: 30
-    restart: always
-    volumes:
-      - .:/app
+      retries: 10
+    restart: unless-stopped
 
   bot:
     build:
       context: .
       dockerfile: Dockerfile
       target: bot
-    command: python run_bot.py
+    container_name: analyticbot-bot
     env_file: .env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+        condition: service_healthy
+    # Bot polling rejimida ishlaydi
+    restart: unless-stopped
 
   celery_worker:
     build:
       context: .
       dockerfile: Dockerfile
       target: celery_worker
-    command: celery -A bot.celery_app worker --loglevel=info
+    container_name: analyticbot-celery_worker
     env_file: .env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+        condition: service_healthy
+    restart: unless-stopped
 
   celery_beat:
     build:
       context: .
       dockerfile: Dockerfile
       target: celery_beat
-    command: celery -A bot.celery_app beat --loglevel=info
+    container_name: analyticbot-celery_beat
     env_file: .env
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  db_data:

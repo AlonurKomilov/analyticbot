@@ -7,6 +7,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+.build/
 .venv/
 env/
 venv/
@@ -14,6 +16,8 @@ venv/
 # Muhit o'zgaruvchilari fayllari (xavfsizlik uchun)
 .env
 *.env.local
+.venv/
+.envrc
 
 # IDE va muharrirlar sozlamalari
 .idea/
@@ -31,6 +35,11 @@ twa-frontend/.env.local
 
 # Celery va boshqa vaqtinchalik fayllar
 celerybeat-schedule
+
+# GitHub & tests artifacts
+.github/
+.coverage
+htmlcov/
 
 # Docker'ning o'ziga tegishli fayllar (odatda qo'shilmaydi)
 Dockerfile

@@ -1,0 +1,5 @@
+[bandit]
+exclude_dirs: tests
+# testlar odatda assert ishlatadi; testlarni umuman skandan chiqaramiz
+severity-level = MEDIUM
+confidence-level = HIGH

@@ -1,8 +1,11 @@
 import asyncio
+import logging
 from datetime import datetime
 
 from bot.celery_app import celery_app
 from bot.container import container
+
+logger = logging.getLogger(__name__)
 
 
 @celery_app.task(name="bot.tasks.send_post_task")
@@ -30,9 +33,9 @@ def send_post_task(scheduler_id: int):
                     res = db.close()
                     if asyncio.iscoroutine(res):
                         await res
-            except Exception:
+            except Exception as e:
                 # don't crash worker on cleanup issues
-                pass
+                logger.exception("cleanup error in send_post_task", exc_info=e)
 
     asyncio.run(_run())
 

@@ -40,6 +40,9 @@ fakeredis="^2.21.0"
 pytest-cov="^4.1.0"
 pip-audit = "^2.9.0"
 flake8 = "^7.3.0"
+pytest-dotenv = "^0.5.2"
+pytest-env = "^1.1.5"
+pytest-asyncio = "^1.1.0"
 
 
 [build-system]

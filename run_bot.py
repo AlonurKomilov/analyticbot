@@ -8,7 +8,8 @@ try:
 except Exception:
     token = os.getenv("BOT_TOKEN")
 
-if not token or token == "replace_me":
+PLACEHOLDER = "replace_me"  # nosec B105
+if not token or token == PLACEHOLDER:
     print("[bot] BOT_TOKEN is not set; skipping bot startup (CI-safe).")
     raise SystemExit(0)
 

@@ -1,8 +1,8 @@
+from typing import cast
 import punq
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-
 from bot.config import Settings
 from bot.database.db import create_pool
 from bot.database.repositories.analytics_repository import AnalyticsRepository
@@ -14,13 +14,12 @@ from punctuated import Singleton
 
 
 class Container(punq.Container):
-    # Settings
+    # Settings (Singleton)
     config = Singleton(Settings)
 
-    # Aiogram Bot
     @Singleton
     def bot(self) -> Bot:
-        cfg = self.resolve(Settings)
+        cfg: Settings = cast(Settings, self.resolve(Settings))
         return Bot(
             token=cfg.BOT_TOKEN.get_secret_value(),
             parse_mode=ParseMode.HTML,

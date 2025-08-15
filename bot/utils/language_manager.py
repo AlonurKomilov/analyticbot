@@ -2,15 +2,18 @@ from typing import Any, cast
 
 from aiogram.types import TelegramObject
 from aiogram_i18n.managers import BaseManager   # sizda qanday import bo‘lsa, o‘sha qoladi
+from inspect import signature
 
 class LanguageManager(BaseManager):
     def __init__(self, user_repo, config):
-        # YANGI: default -> default_locale
-        try:
-            super().__init__(default_locale=config.DEFAULT_LOCALE)
-        except TypeError:
-            # Agar eski versiya bo‘lsa, orqaga moslik
-            super().__init__(default=config.DEFAULT_LOCALE)
+        # Versiyaga qarab to‘g‘ri nomni tanlaymiz
+        sig = signature(BaseManager.__init__)
+        kwargs = (
+            {"default_locale": config.DEFAULT_LOCALE}
+            if "default_locale" in sig.parameters
+            else {"default": config.DEFAULT_LOCALE}
+        )
+        super().__init__(**kwargs)  # Pylance ham jim
 
         self.user_repo = user_repo
         self.config = config

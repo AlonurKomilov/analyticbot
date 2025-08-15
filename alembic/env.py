@@ -1,59 +1,59 @@
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config, pool
+import os
+from typing import Any
 
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+from logging.config import fileConfig
 
-# --- LOYIHAMIZGA MOSLASHTIRILGAN QISM ---
-# 1. Loyihamizdagi sozlamalar va modellarni import qilamiz
-#    DIQQAT: 'metadata_obj' o'rniga to'g'ri nom 'metadata' ishlatilgan
-from bot.config import settings
-from bot.database.models import metadata
-
-# ------------------------------------
+from bot.config import settings  # <— bizning pydantic settings
 
 config = context.config
-
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# --- LOYIHAMIZGA MOSLASHTIRILGAN QISM ---
-# 2. Ma'lumotlar bazasiga ulanish manzilini to'g'ridan-to'g'ri
-#    loyihaning asosiy sozlamalaridan (.env faylidan) olamiz.
-sync_db_url = settings.db_url.replace("+asyncpg", "+psycopg2")
-config.set_main_option("sqlalchemy.url", sync_db_url)
 
-# 3. Bizning modellarimizdagi "metadata" obyektini ko'rsatamiz.
-#    Alembic shu orqali jadvallarni topadi.
-target_metadata = metadata
-# ------------------------------------
-
-
-def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-    )
-    with context.begin_transaction():
-        context.run_migrations()
+def _secret_to_str(v: Any) -> str | None:
+    # SecretStr bo‘lsa ham odiy strga aylantiramiz
+    if v is None:
+        return None
+    try:
+        return v.get_secret_value()  # pydantic SecretStr
+    except Exception:
+        return str(v)
 
 
-def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
-        with context.begin_transaction():
-            context.run_migrations()
+def get_db_url() -> str:
+    """
+    DSN ni settings yoki ENVdan oladi.
+    App asyncpg ishlatishi mumkin, Alembic esa sync driver bilan yuradi —
+    shuning uchun +asyncpg bo‘lsa, olib tashlaymiz.
+    """
+    candidates = [
+        getattr(settings, "DATABASE_URL", None),
+        getattr(settings, "DB_URL", None),
+        getattr(settings, "DB_DSN", None),
+        os.getenv("DATABASE_URL"),
+        os.getenv("DB_URL"),
+        os.getenv("POSTGRES_DSN"),
+    ]
+    for c in candidates:
+        dsn = _secret_to_str(c)
+        if dsn:
+            break
+    else:
+        # oxirgi chora — ENV komponentlaridan yig'amiz
+        user = os.getenv("POSTGRES_USER", "postgres")
+        pwd  = os.getenv("POSTGRES_PASSWORD", "postgres")
+        host = os.getenv("POSTGRES_HOST", "localhost")
+        port = os.getenv("POSTGRES_PORT", "5432")
+        db   = os.getenv("POSTGRES_DB", "postgres")
+        dsn  = f"postgresql://{user}:{pwd}@{host}:{port}/{db}"
+
+    # Alembic sync driverga muhtoj: +asyncpg bo'lsa olib tashlaymiz
+    if "+asyncpg" in dsn:
+        dsn = dsn.replace("+asyncpg", "")
+    return dsn
 
 
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()
+# Alembic configga DSN ni beramiz
+config.set_main_option("sqlalchemy.url", get_db_url())

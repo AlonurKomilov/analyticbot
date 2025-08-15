@@ -11,6 +11,9 @@ from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_i18n import I18nMiddleware
+from aiogram_i18n.managers.base import BaseManager
+from aiogram_i18n.cores import FluentRuntimeCore
+from typing import cast
 from bot.utils.safe_i18n_core import SafeFluentRuntimeCore
 import redis.asyncio as redis
 
@@ -122,11 +125,10 @@ async def main():
 
     # --- i18n middleware (AVVAL qo'yiladi) ---
     i18n_middleware = I18nMiddleware(
-        core=SafeFluentRuntimeCore(path="bot/locales/{locale}"),
-        default_locale=getattr(config, "DEFAULT_LOCALE", "en"),
-        manager=language_manager,
-    )
-    i18n_middleware.setup(dp)
+    core=FluentRuntimeCore(path="bot/locales/{locale}"),
+    default_locale=getattr(config, "DEFAULT_LOCALE", "en"),
+    manager=cast(BaseManager, language_manager),  # <-- shu
+)
 
     # --- DI middleware (i18n’dan KEYIN) ---
     dp.update.middleware(DependencyMiddleware(container=container))

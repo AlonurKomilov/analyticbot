@@ -1,12 +1,26 @@
 name: Nightly Security
+
 on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
 
+# <<< MUHIM: TOKEN RUXSATLARI
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 jobs:
   security:
     runs-on: ubuntu-latest
+
+    # (ixtiyoriy) job darajasida ham takrorlab qo‘yish mumkin
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,6 +39,10 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: python
+          # cleanup-level parametriasini olib tashladik
 
       - name: CodeQL analyze
         uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"   # ixtiyoriy, lekin foydali
+          upload: true                   # default true, aniq ko‘rsatish zarar qilmaydi

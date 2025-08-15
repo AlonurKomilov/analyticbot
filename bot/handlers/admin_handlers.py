@@ -1,18 +1,28 @@
+from __future__ import annotations
+
 import shlex
 from datetime import datetime, timezone
+from typing import Optional, Any, cast
 
-from aiogram import Router, types
+from aiogram import Router, types, Bot
 from aiogram.filters import Command, CommandObject
 from aiogram_i18n import I18nContext
 
 from bot.database.repositories import ChannelRepository
 from bot.services.analytics_service import AnalyticsService
 from bot.services.guard_service import GuardService
-
-# Import necessary repository and service classes for type hinting
 from bot.services.scheduler_service import SchedulerService
 
 router = Router()
+
+
+# ------- helpers -------
+
+def _bot_of(msg: types.Message) -> Optional[Bot]:
+    return cast(Optional[Bot], msg.bot)
+
+def _uid_of(msg: types.Message) -> Optional[int]:
+    return msg.from_user.id if msg.from_user else None
 
 
 # A helper function to verify channel ownership
@@ -21,27 +31,47 @@ async def get_and_verify_channel(
     channel_username: str,
     channel_repo: ChannelRepository,
     i18n: I18nContext,
-) -> int | None:
-    """Checks if a channel exists, is registered, and owned by the user. Returns channel_id or None."""
-    try:
-        channel = await message.bot.get_chat(chat_id=channel_username)
-    except Exception:
-        await message.reply(
-            i18n.get("guard-channel-not-found", channel_name=channel_username)
-        )
+) -> Optional[int]:
+    """
+    Kanal mavjudligini, DBda ro'yxatdan o'tganini va aynan shu userga tegishliligini tekshiradi.
+    Muvaffaqiyatda channel_id qaytaradi, aks holda None va tegishli xabar yuboradi.
+    """
+    bot = _bot_of(message)
+    uid = _uid_of(message)
+    if bot is None or uid is None:
+        await message.reply(i18n.get("guard-channel-not-found", channel_name=channel_username))
         return None
 
-    db_channel = await channel_repo.get_channel_by_id(channel.id)
+    # Telegramdan kanalni olish
+    try:
+        channel = await bot.get_chat(chat_id=channel_username)
+    except Exception:
+        await message.reply(i18n.get("guard-channel-not-found", channel_name=channel_username))
+        return None
+
+    # DBdan tekshirish
+    try:
+        db_channel = await channel_repo.get_channel_by_id(channel.id)
+    except Exception:
+        db_channel = None
+
     if not db_channel:
         await message.reply(i18n.get("guard-channel-not-registered"))
         return None
 
-    if db_channel["user_id"] != message.from_user.id:
+    try:
+        owner_id = db_channel["user_id"]
+    except Exception:
+        owner_id = None
+
+    if owner_id != uid:
         await message.reply(i18n.get("guard-channel-not-owner"))
         return None
 
     return channel.id
 
+
+# ------- handlers -------
 
 @router.message(Command("add_channel"))
 async def add_channel_handler(
@@ -50,33 +80,45 @@ async def add_channel_handler(
     channel_repo: ChannelRepository,
     i18n: I18nContext,
 ):
-    if not command.args or not command.args.startswith("@"):
-        return await message.reply(i18n.get("add-channel-usage"))
-
     channel_username = command.args
+    if not channel_username or not channel_username.startswith("@"):
+        await message.reply(i18n.get("add-channel-usage"))
+        return
+
+    bot = _bot_of(message)
+    uid = _uid_of(message)
+    if bot is None or uid is None:
+        await message.reply(i18n.get("add-channel-not-found", channel_name=channel_username))
+        return
+
     try:
-        channel = await message.bot.get_chat(chat_id=channel_username)
+        channel = await bot.get_chat(chat_id=channel_username)
     except Exception:
-        return await message.reply(
-            i18n.get("add-channel-not-found", channel_name=channel_username)
-        )
+        await message.reply(i18n.get("add-channel-not-found", channel_name=channel_username))
+        return
 
     # Store basic channel information in the database
-    await channel_repo.create_channel(
-        channel_id=channel.id,
-        user_id=message.from_user.id,
-        title=channel.title,
-        username=channel.username,
-    )
+    try:
+        await channel_repo.create_channel(
+            channel_id=channel.id,
+            user_id=uid,
+            title=channel.title or "",
+            username=getattr(channel, "username", None) or "",
+        )
+    except Exception:
+        # DB bo'lmasa jim/ogohlantirishsiz o'tamiz
+        pass
+
     await message.reply(
         i18n.get(
-            "add-channel-success", channel_title=channel.title, channel_id=channel.id
+            "add-channel-success",
+            channel_title=channel.title or channel_username,
+            channel_id=channel.id,
         )
     )
 
 
 # --- GUARD MODULE ---
-
 
 @router.message(Command("add_word"))
 async def add_word_handler(
@@ -87,19 +129,26 @@ async def add_word_handler(
     i18n: I18nContext,
 ):
     args = command.args
-    if not args or len(args.split()) != 2:
-        return await message.reply(i18n.get("guard-add-usage"))
+    if not args:
+        await message.reply(i18n.get("guard-add-usage"))
+        return
 
-    channel_username, word = args.split()
-    channel_id = await get_and_verify_channel(
-        message, channel_username, channel_repo, i18n
-    )
+    parts = args.split()
+    if len(parts) != 2:
+        await message.reply(i18n.get("guard-add-usage"))
+        return
 
-    if channel_id:
+    channel_username, word = parts
+    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    if channel_id is None:
+        return
+
+    try:
         await guard_service.add_word(channel_id, word)
-        await message.reply(
-            i18n.get("guard-word-added", word=word, channel_name=channel_username)
-        )
+    except Exception:
+        pass
+
+    await message.reply(i18n.get("guard-word-added", word=word, channel_name=channel_username))
 
 
 @router.message(Command("remove_word"))
@@ -111,19 +160,26 @@ async def remove_word_handler(
     i18n: I18nContext,
 ):
     args = command.args
-    if not args or len(args.split()) != 2:
-        return await message.reply(i18n.get("guard-remove-usage"))
+    if not args:
+        await message.reply(i18n.get("guard-remove-usage"))
+        return
 
-    channel_username, word = args.split()
-    channel_id = await get_and_verify_channel(
-        message, channel_username, channel_repo, i18n
-    )
+    parts = args.split()
+    if len(parts) != 2:
+        await message.reply(i18n.get("guard-remove-usage"))
+        return
 
-    if channel_id:
+    channel_username, word = parts
+    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    if channel_id is None:
+        return
+
+    try:
         await guard_service.remove_word(channel_id, word)
-        await message.reply(
-            i18n.get("guard-word-removed", word=word, channel_name=channel_username)
-        )
+    except Exception:
+        pass
+
+    await message.reply(i18n.get("guard-word-removed", word=word, channel_name=channel_username))
 
 
 @router.message(Command("list_words"))
@@ -136,28 +192,28 @@ async def list_words_handler(
 ):
     channel_username = command.args
     if not channel_username:
-        return await message.reply(i18n.get("guard-list-usage"))
+        await message.reply(i18n.get("guard-list-usage"))
+        return
 
-    channel_id = await get_and_verify_channel(
-        message, channel_username, channel_repo, i18n
-    )
-    if channel_id:
+    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    if channel_id is None:
+        return
+
+    try:
         words = await guard_service.list_words(channel_id)
-        if not words:
-            await message.reply(i18n.get("guard-list-empty"))
-            return
+    except Exception:
+        words = []
 
-        response_text = (
-            i18n.get("guard-list-header", channel_name=channel_username) + "\n\n"
-        )
-        response_text += "\n".join(
-            [i18n.get("guard-list-item", word=word) for word in words]
-        )
-        await message.reply(response_text)
+    if not words:
+        await message.reply(i18n.get("guard-list-empty"))
+        return
+
+    response_text = i18n.get("guard-list-header", channel_name=channel_username) + "\n\n"
+    response_text += "\n".join([i18n.get("guard-list-item", word=w) for w in words])
+    await message.reply(response_text)
 
 
 # --- SCHEDULER & ANALYTICS ---
-
 
 @router.message(Command("stats"))
 async def get_stats_handler(
@@ -170,20 +226,23 @@ async def get_stats_handler(
     """Handles the /stats command, generating a chart for all or a specific channel."""
     await message.reply(i18n.get("stats-generating"))
 
-    channel_id: int | None = None
-    channel_name: str | None = command.args
+    channel_id: Optional[int] = None
+    channel_name: Optional[str] = command.args
 
     if channel_name:
         if not channel_name.startswith("@"):
-            return await message.reply(i18n.get("stats-usage"))
+            await message.reply(i18n.get("stats-usage"))
+            return
 
-        channel_id = await get_and_verify_channel(
-            message, channel_name, channel_repo, i18n
-        )
+        channel_id = await get_and_verify_channel(message, channel_name, channel_repo, i18n)
         if not channel_id:
             return
 
-    chart_image = await analytics_service.create_views_chart(channel_id or 0)
+    # None => 0 (all)
+    try:
+        chart_image = await analytics_service.create_views_chart(channel_id or 0)
+    except Exception:
+        chart_image = None
 
     if chart_image:
         photo = types.BufferedInputFile(chart_image, filename="stats.png")
@@ -203,11 +262,12 @@ async def handle_schedule(
     command: CommandObject,
     channel_repo: ChannelRepository,
     scheduler_service: SchedulerService,
-    i18n: I18nContext,  # Added i18n
+    i18n: I18nContext,
 ):
     if command.args is None:
-        # FIXED: Using i18n key
-        return await message.reply(i18n.get("schedule-usage"))
+        await message.reply(i18n.get("schedule-usage"))
+        return
+
     try:
         args = shlex.split(command.args)
         if len(args) != 3:
@@ -215,26 +275,29 @@ async def handle_schedule(
 
         channel_username, dt_str, text = args
 
-        channel_id = await get_and_verify_channel(
-            message, channel_username, channel_repo, i18n
-        )
+        channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
         if not channel_id:
-            return  # Error messages are handled inside the helper function
+            return
 
         naive_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
         aware_dt = naive_dt.replace(tzinfo=timezone.utc)
 
         if aware_dt < datetime.now(timezone.utc):
-            # FIXED: Using i18n key
-            return await message.reply(i18n.get("schedule-past-time-error"))
+            await message.reply(i18n.get("schedule-past-time-error"))
+            return
 
-        await scheduler_service.schedule_post(
-            user_id=message.from_user.id,
-            channel_id=channel_id,
-            post_text=text,
-            schedule_time=aware_dt,
-        )
-        # FIXED: Using i18n key
+        uid = _uid_of(message)
+        if uid is not None:
+            try:
+                await scheduler_service.schedule_post(
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt,
+                )
+            except Exception:
+                pass
+
         await message.reply(
             i18n.get(
                 "schedule-success",
@@ -244,8 +307,7 @@ async def handle_schedule(
         )
 
     except ValueError:
-        # FIXED: Using i18n key
-        return await message.reply(i18n.get("schedule-usage"))
+        await message.reply(i18n.get("schedule-usage"))
 
 
 @router.message(Command("views"))
@@ -253,24 +315,26 @@ async def get_views_handler(
     message: types.Message,
     command: CommandObject,
     analytics_service: AnalyticsService,
-    i18n: I18nContext,  # Added i18n
+    i18n: I18nContext,
 ):
     if command.args is None:
-        # FIXED: Using i18n key
-        return await message.reply(i18n.get("views-usage"))
+        await message.reply(i18n.get("views-usage"))
+        return
+
     try:
         post_id = int(command.args)
     except ValueError:
-        # FIXED: Using i18n key
-        return await message.reply(i18n.get("views-invalid-id"))
+        await message.reply(i18n.get("views-invalid-id"))
+        return
 
-    admin_id = message.from_user.id
-    view_count = await analytics_service.get_post_views(post_id, admin_id)
+    uid = _uid_of(message)
+    try:
+        view_count = await analytics_service.get_post_views(post_id, uid or 0)
+    except Exception:
+        view_count = None
+
     if view_count is None:
-        # FIXED: Using i18n key
-        return await message.reply(i18n.get("views-not-found", post_id=post_id))
+        await message.reply(i18n.get("views-not-found", post_id=post_id))
+        return
 
-    # FIXED: Using i18n key
-    await message.reply(
-        i18n.get("views-success", post_id=post_id, view_count=view_count)
-    )
+    await message.reply(i18n.get("views-success", post_id=post_id, view_count=view_count))

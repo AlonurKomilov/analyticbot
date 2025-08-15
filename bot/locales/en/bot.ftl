@@ -1,49 +1,39 @@
-start = 👋 Hello, { $user_firstname }! I will help you schedule posts and gather analytics for your channels.
-main-menu = 🏠 Main menu
-back = ⬅️ Back
-twa-button-text = ⚙️ Dashboard
-language-set = Language has been changed
-choose-language = Choose language
-my-plan-button = My Plan
-my-plan-info =
-    Your current plan: <b>{ $plan_name }</b>
-    Channel limit: <b>{ $channel_limit }</b>
-    Monthly post limit: <b>{ $post_limit }</b>
+start_message = Welcome! Use the menu below.
 
-    Used this month:
-    - Channels: <b>{ $used_channels }/{ $channel_limit }</b>
-    - Posts: <b>{ $used_posts }/{ $post_limit }</b>
+menu-button-dashboard = Dashboard
 
-admin-main-menu = Admin Panel
-stats-button = 📊 Statistics
-user-count = 👥 User count: { $count }
-active-user-count = ⚡️ Active users (24h): { $count }
-blocked-user-count = 🚫 Blocked users: { $count }
+add-channel-usage = Usage: /add_channel <channel_username>
+add-channel-not-found = Channel was not found.
 
-add-channel-success = ✅ Channel added successfully!
-add-channel-instruction =
-    To add a channel, send its username or ID.
-    Example: @durov_channel or -1001234567890
-    The bot must be an administrator in the channel!
-delete-channel-success = ✅ Channel deleted successfully!
-channel-not-found = ❌ Channel not found or the bot is not an admin in the channel.
-channel-already-exists = ⚠️ This channel is already registered.
-channel-limit-exceeded = 🚫 You have exceeded your channel limit for your plan.
-post-limit-exceeded = 🚫 You have exceeded your monthly post limit.
+guard-add-usage = Usage: /guard_add <word>
+guard-remove-usage = Usage: /guard_remove <word>
+guard-list-usage = Usage: /guard_list
+guard-channel-not-found = Channel not found.
+guard-channel-not-owner = You are not an admin/owner of this channel.
+guard-channel-not-registered = Channel is not registered.
+guard-word-added = Word has been added to the guard list.
+guard-word-removed = Word has been removed from the guard list.
+guard-list-header = Guard words:
+guard-list-empty = Guard list is empty.
+guard-list-item = • { $word }
 
-# --- This version remains ---
-twa-data-received-post = ✅ Post data received.
-Ready to schedule:
-    - Channel ID: { $channel_id }
-    - Schedule time: { $schedule_time }
-    - Text: <pre>{ $text }</pre>
+myplan-header = Your plan
+myplan-plan-name = Plan: { $name }
+myplan-upgrade-prompt = Upgrade your plan to unlock more features.
+myplan-error = Could not fetch plan info.
 
-post-scheduled-success = ✅ Post scheduled successfully!
-post-scheduled-error = ❌ An error occurred while scheduling the post.
-post-deleted-success = ✅ Scheduled post deleted successfully.
-post-not-found = ❌ Scheduled post not found.
-scheduled-post-info =
-    Post ID: { $post_id }
-    Channel: { $channel_title }
-    Time: { $schedule_time }
-    Text: { $text }
+schedule-usage = Usage: /schedule <time> <text>
+schedule-past-time-error = Time must be in the future.
+
+stats-usage = Usage: /stats <channel_or_post>
+stats-generating = Generating stats…
+stats-no-data = No data to show.
+stats-caption-all = All-time statistics
+stats-caption-specific = Statistics
+
+twa-data-received-post = Data received.
+
+views-usage = Usage: /views <post_id>
+views-invalid-id = Invalid post id.
+views-not-found = Post not found.
+views-success = Views counted.

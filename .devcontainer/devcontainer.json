@@ -1,24 +1,25 @@
 {
   "name": "Analytic Bot Codespace",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest"
-    }
-  },
-  "postCreateCommand": "pipx install poetry && poetry --version",
-  "postStartCommand": "poetry install",
+
+  // Codespace ochilgach avtomatik ishlaydigan buyruqlar:
+  "postCreateCommand": "pipx install poetry && poetry config virtualenvs.in-project true && poetry install --no-root",
+
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-azuretools.vscode-docker",
         "ms-python.python",
         "ms-python.vscode-pylance"
-      ]
+      ],
+      "settings": {
+        // VS Code to‘g‘ri interpreterni oladi
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+
+        // Intellisense yaxshilash
+        "python.analysis.autoImportCompletions": true,
+        "python.analysis.extraPaths": ["${workspaceFolder}"]
+      }
     }
-  },
-  "forwardPorts": [8000],
-  "portsAttributes": {
-    "8000": { "label": "API", "onAutoForward": "openBrowser" }
   }
 }

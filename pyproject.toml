@@ -14,7 +14,7 @@ pydantic-settings = "^2.3.4"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.31"}
 asyncpg = "^0.29.0"
 alembic = "^1.13.2"
-punq = "^0.7.0"
+punq = "^0.6.2"
 celery = {extras = ["redis"], version = "^5.4.0"}
 redis = "^5.0.7"
 fluent-runtime = "^0.4.0"
@@ -28,7 +28,7 @@ fluent-syntax = "^0.19.0"
 matplotlib = "^3.9.1"
 python-dotenv = "^1.0.1"
 sentry-sdk = "^2.9.0"
-
+fluent-compiler = "^0.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"

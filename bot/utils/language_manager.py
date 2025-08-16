@@ -1,40 +1,76 @@
-from typing import Any, cast
+from __future__ import annotations
 
-from aiogram.types import TelegramObject, User
-from aiogram_i18n.managers import BaseManager
+from typing import Any, Optional
+from aiogram.types import TelegramObject, Message, CallbackQuery
 
-# Nisbiy import va to'g'ri 'Settings' klassini ishlatamiz
-from ..config import Settings
-from ..database.repositories import UserRepository
+# aiogram-i18n 1.4: public yo'l – managers.base
+try:
+    from aiogram_i18n.managers.base import BaseManager as _BaseManager  # type: ignore
+except Exception:
+    # Fallback stub (Pylance uchun), runtime-da ishlatilmaydi
+    class _BaseManager:  # type: ignore[override]
+        default_locale: Optional[str] = None
+        async def get_locale(self, *args: Any, **kwargs: Any) -> str: ...
+        async def set_locale(self, *args: Any, **kwargs: Any) -> None: ...
 
+def _extract_user_id(event: TelegramObject) -> Optional[int]:
+    if isinstance(event, Message) and event.from_user is not None:
+        return event.from_user.id
+    if isinstance(event, CallbackQuery):
+        user = getattr(event, "from_user", None)
+        if user is not None:
+            return user.id
+    msg = getattr(event, "message", None)
+    if isinstance(msg, Message) and msg.from_user is not None:
+        return msg.from_user.id
+    return None
 
-class LanguageManager(BaseManager):
-    def __init__(self, user_repo: UserRepository, config: Settings):
-        super().__init__(default=config.DEFAULT_LOCALE)
+class LanguageManager(_BaseManager):
+    """
+    DB'dan locale o'qiydi/yozadi.
+    aiogram-i18n (>=1.4) chaqiruvlari:
+      - get_locale(event=..., **data)
+      - set_locale(event=..., locale=..., **data)
+    """
+
+    def __init__(self, user_repo: Any, config: Any) -> None:
+        # public API: default_locale parametri
+        try:
+            super().__init__(default_locale=getattr(config, "DEFAULT_LOCALE", "en"))  # type: ignore[misc]
+        except Exception:
+            # stub holatida:
+            self.default_locale = getattr(config, "DEFAULT_LOCALE", "en")
         self.user_repo = user_repo
-        self.config = config
 
-    async def get_locale(self, event: TelegramObject, data: dict) -> str:
-        from_user: User | None = data.get("event_from_user")
+    async def get_locale(self, event: TelegramObject, **_: Any) -> str:  # type: ignore[override]
+        user_id = _extract_user_id(event)
+        if user_id:
+            for method in ("get_locale", "get_user_locale", "get_language", "get_user_language"):
+                if hasattr(self.user_repo, method):
+                    try:
+                        loc = await getattr(self.user_repo, method)(user_id)
+                        if loc:
+                            return str(loc)
+                    except Exception:
+                        pass
+            if hasattr(self.user_repo, "get_user"):
+                try:
+                    user = await self.user_repo.get_user(user_id)
+                    loc = getattr(user, "locale", None)
+                    if loc:
+                        return str(loc)
+                except Exception:
+                    pass
+        return (getattr(self, "default_locale", None) or "en")
 
-        if from_user:
-            repo = cast(Any, self.user_repo)
-            user = await repo.get_user(from_user.id)
-            if not user:
-                user = await repo.create_user(
-                    user_id=from_user.id,
-                    username=from_user.username,
-                    language_code=from_user.language_code,
-                )
-
-            lang_code = user.get("language_code")
-            if lang_code and lang_code in self.config.SUPPORTED_LOCALES:
-                return lang_code
-
-        return self.default
-
-    async def set_locale(self, locale: str, data: dict) -> None:
-        from_user: User | None = data.get("event_from_user")
-        if from_user:
-            repo = cast(Any, self.user_repo)
-            await repo.update_user_language(from_user.id, locale)
+    async def set_locale(self, event: TelegramObject, locale: str, **_: Any) -> None:  # type: ignore[override]
+        user_id = _extract_user_id(event)
+        if not user_id:
+            return
+        for method in ("set_locale", "set_user_locale", "save_locale", "update_locale", "set_language", "update_language"):
+            if hasattr(self.user_repo, method):
+                try:
+                    await getattr(self.user_repo, method)(user_id, locale)
+                except Exception:
+                    pass
+                return

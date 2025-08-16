@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 
     # Pydantic'ga .env faylini o'qishni buyuramiz
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"  # <-- ADD THIS
+        env_file="../.env", env_file_encoding="utf-8", extra="ignore"
     )
 
 

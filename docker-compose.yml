@@ -1,103 +1,118 @@
-version: "3.9"
+# Compose v2 (version: mayli, kerak emas)
+# .env dagi qiymatlar BARCHA servislar uchun yuklanadi
+
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+
+x-app-env: &app-env
+  env_file:
+    - .env
+  environment:
+    # Agar DATABASE_URL .env da bo'lmasa, quyidagi default ishlaydi (asyncpg)
+    DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}}
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
+    container_name: analyticbot-postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
-      POSTGRES_USER: ${POSTGRES_USER:-analytic}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
+    container_name: analyticbot-redis
+    command: ["redis-server", "--appendonly", "yes"]
     ports:
       - "6379:6379"
-    restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 20
 
+  # --- API (FastAPI/Uvicorn) ---
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: api
-    command: uvicorn api:app --host 0.0.0.0 --port 8000
-    env_file: .env
+    build: *app-build
+    container_name: analyticbot-api
+    <<: *app-env
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     ports:
       - "8000:8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-    restart: always
-    volumes:
-      - .:/app
+    command: >
+      uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
+  # --- Telegram bot ---
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: bot
+    build: *app-build
+    container_name: analyticbot-bot
+    <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: python run_bot.py
-    env_file: .env
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+    restart: unless-stopped
 
+  # --- Celery worker ---
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: celery_worker
-    command: celery -A bot.celery_app worker --loglevel=info
-    env_file: .env
+    build: *app-build
+    container_name: analyticbot-celery-worker
+    <<: *app-env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+        condition: service_healthy
+    command: celery -A bot.celery_app worker -l info
+    restart: unless-stopped
 
+  # --- Celery beat (scheduler) ---
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: celery_beat
-    command: celery -A bot.celery_app beat --loglevel=info
-    env_file: .env
+    build: *app-build
+    container_name: analyticbot-celery_beat
+    <<: *app-env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-    restart: always
-    volumes:
-      - .:/app
+        condition: service_healthy
+    command: celery -A bot.celery_app beat -l info
+    restart: unless-stopped
+
+  # --- Alembic migration runner (qo'lda chaqiriladi) ---
+  migrate:
+    build: *app-build
+    container_name: analyticbot-migrate
+    <<: *app-env
+    # Alembic sync driver talab qiladi; agar .env da async bo'lsa ham bu yerda sync'ga majburlaymiz
+    environment:
+      DATABASE_URL: ${ALEMBIC_DATABASE_URL:-postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+    restart: "no"
+    profiles: ["migrate"]  # default 'up' da ishlamaydi
 
 volumes:
-  postgres_data:
+  pgdata:

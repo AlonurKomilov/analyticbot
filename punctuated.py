@@ -6,6 +6,7 @@ class Singleton:
         my_dep = Singleton(MyClass, arg1, kw=value)
         inst = my_dep()  # returns single instance
     """
+
     def __init__(self, cls, *args, **kwargs):
         self._cls = cls
         self._args = args

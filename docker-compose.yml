@@ -1,39 +1,54 @@
+# Compose v2 (version: mayli, kerak emas)
+# .env dagi qiymatlar BARCHA servislar uchun yuklanadi
+
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+
+x-app-env: &app-env
+  env_file:
+    - .env
+  environment:
+    # Agar DATABASE_URL .env da bo'lmasa, quyidagi default ishlaydi (asyncpg)
+    DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}}
+
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     container_name: analyticbot-postgres
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-analytic}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
-      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 10
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   redis:
     image: redis:7-alpine
     container_name: analyticbot-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 10
-    ports:
-      - "6379:6379"
+      retries: 20
 
+  # --- API (FastAPI/Uvicorn) ---
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: api
+    build: *app-build
     container_name: analyticbot-api
-    env_file: .env
+    <<: *app-env
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,53 +56,63 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+    command: >
+      uvicorn api:app --host 0.0.0.0 --port 8000 --reload
     restart: unless-stopped
 
+  # --- Telegram bot ---
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: bot
+    build: *app-build
     container_name: analyticbot-bot
-    env_file: .env
+    <<: *app-env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Bot polling rejimida ishlaydi
+    command: python run_bot.py
     restart: unless-stopped
 
+  # --- Celery worker ---
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: celery_worker
-    container_name: analyticbot-celery_worker
-    env_file: .env
+    build: *app-build
+    container_name: analyticbot-celery-worker
+    <<: *app-env
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    command: celery -A bot.celery_app worker -l info
     restart: unless-stopped
 
+  # --- Celery beat (scheduler) ---
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: celery_beat
+    build: *app-build
     container_name: analyticbot-celery_beat
-    env_file: .env
+    <<: *app-env
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
+    command: celery -A bot.celery_app beat -l info
     restart: unless-stopped
+
+  # --- Alembic migration runner (qo'lda chaqiriladi) ---
+  migrate:
+    build: *app-build
+    container_name: analyticbot-migrate
+    <<: *app-env
+    # Alembic sync driver talab qiladi; agar .env da async bo'lsa ham bu yerda sync'ga majburlaymiz
+    environment:
+      DATABASE_URL: ${ALEMBIC_DATABASE_URL:-postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB}}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: alembic upgrade head
+    restart: "no"
+    profiles: ["migrate"]  # default 'up' da ishlamaydi
 
 volumes:
-  db_data:
+  pgdata:

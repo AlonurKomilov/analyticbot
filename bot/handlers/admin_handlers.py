@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shlex
 from datetime import datetime, timezone
-from typing import Optional, Any, cast
+from typing import Optional, cast
 
 from aiogram import Router, types, Bot
 from aiogram.filters import Command, CommandObject

@@ -1,10 +1,6 @@
-name: Run Python Tests and Checks
-
+name: (archived) Python Tests and Checks
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   build:

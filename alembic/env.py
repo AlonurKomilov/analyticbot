@@ -16,14 +16,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Metadata (agar ORM modeli bo‘lsa, shu yerda ularni import qilasiz)
-target_metadata = None
-try:
-    # ixtiyoriy: agar sizda declarative Base bo‘lsa
-    # from bot.database.models import Base
-    # target_metadata = Base.metadata
-    pass
-except Exception:
-    pass
+# at top with other imports:
+from bot.database.models import metadata  # ruff: noqa: E402  # required by Alembic
+target_metadata = metadata
 
 def _sync_db_url() -> str:
     """

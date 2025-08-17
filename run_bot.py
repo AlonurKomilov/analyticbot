@@ -1,21 +1,18 @@
-import os
 import asyncio
 import logging
+import os
 from typing import cast
-
-from sqlalchemy.ext.asyncio import async_sessionmaker  # qolsa ham zarar qilmaydi
-import sentry_sdk
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_i18n import I18nMiddleware
-from aiogram_i18n.managers.base import BaseManager
 from aiogram_i18n.cores import FluentRuntimeCore
-from typing import cast
-from bot.utils.safe_i18n_core import SafeFluentRuntimeCore
+from aiogram_i18n.managers.base import BaseManager
 import redis.asyncio as redis
+import sentry_sdk
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from bot.config import settings
 from bot.container import container
@@ -124,11 +121,11 @@ async def main():
     language_manager = LanguageManager(user_repo=user_repo, config=config)
 
     # --- i18n middleware (AVVAL qo'yiladi) ---
-    i18n_middleware = I18nMiddleware(
-    core=FluentRuntimeCore(path="bot/locales/{locale}"),
-    default_locale=getattr(config, "DEFAULT_LOCALE", "en"),
-    manager=cast(BaseManager, language_manager),  # <-- shu
-)
+    _i18n_middleware = I18nMiddleware(
+        core=FluentRuntimeCore(path="bot/locales/{locale}"),
+        default_locale=getattr(config, "DEFAULT_LOCALE", "en"),
+        manager=cast(BaseManager, language_manager),  # <-- shu
+    )
 
     # --- DI middleware (i18n’dan KEYIN) ---
     dp.update.middleware(DependencyMiddleware(container=container))

@@ -1,6 +1,15 @@
+import asyncio
+import logging
 import os
 
+from aiogram import Bot
+
 from bot.config import settings
+
+# Logger sozlamasi
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 token = None
 try:
@@ -10,21 +19,8 @@ except Exception:
 
 PLACEHOLDER = "replace_me"  # nosec B105
 if not token or token == PLACEHOLDER:
-    print("[clear_webhook] BOT_TOKEN is not set; skipping (CI-safe).")
+    logger.info("[clear_webhook] BOT_TOKEN is not set; skipping (CI-safe).")
     raise SystemExit(0)
-
-
-import asyncio
-import logging
-
-from aiogram import Bot
-
-# Loyihaning asosiy sozlamalarini import qilamiz
-from bot.config import settings
-
-# Logger sozlamasi
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def main():

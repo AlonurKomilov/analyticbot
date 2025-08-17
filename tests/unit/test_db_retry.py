@@ -1,7 +1,5 @@
-import asyncio
 from unittest.mock import patch, AsyncMock
 
-import asyncpg
 import pytest
 
 from bot.database.db import create_pool

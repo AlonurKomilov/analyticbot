@@ -1,6 +1,11 @@
-import os, socket, urllib.parse as up, pytest
+import os
+import socket
+import urllib.parse as up
+
+import pytest
 from alembic import command
 from alembic.config import Config
+
 
 @pytest.mark.integration
 def test_alembic_upgrade_head():

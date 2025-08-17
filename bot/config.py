@@ -52,4 +52,4 @@ class Settings(BaseSettings):
 
 # Sozlamalarning yagona nusxasini yaratamiz
 # Loyihadagi boshqa barcha modullar shu 'settings' obyektini import qiladi
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()

@@ -14,23 +14,23 @@ x-app-env: &app-env
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:15-alpine
     container_name: analyticbot-postgres
     env_file:
       - .env
     environment:
-      POSTGRES_DB: analyticbot
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-analytic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d analyticbot"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} || exit 1"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -49,8 +49,6 @@ services:
     build: *app-build
     container_name: analyticbot-api
     <<: *app-env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/analyticbot
     depends_on:
       postgres:
         condition: service_healthy
@@ -67,8 +65,6 @@ services:
     build: *app-build
     container_name: analyticbot-bot
     <<: *app-env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/analyticbot
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,8 +78,6 @@ services:
     build: *app-build
     container_name: analyticbot-celery-worker
     <<: *app-env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/analyticbot
     depends_on:
       postgres:
         condition: service_healthy
@@ -97,8 +91,6 @@ services:
     build: *app-build
     container_name: analyticbot-celery_beat
     <<: *app-env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/analyticbot
     depends_on:
       postgres:
         condition: service_healthy

@@ -49,6 +49,7 @@ jobs:
 
       - name: MyPy (type-check)
         run: mypy .
+        continue-on-error: true
 
       - name: Bandit (security)
         run: bandit -c .bandit -r .

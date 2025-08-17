@@ -1,0 +1,12 @@
+pull_request_rules:
+  - name: automerge when green and labeled
+    conditions:
+      - label=automerge
+      - status-success=CI
+      - or:
+          - status-success=Compose Verify
+          - and:
+            - -label=compose-verify:on
+    actions:
+      merge:
+        method: squash

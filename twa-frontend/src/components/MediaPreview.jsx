@@ -27,10 +27,10 @@ const MediaPreview = () => {
                     <CloseIcon sx={{ color: 'white', fontSize: '1rem' }} />
                 </IconButton>
             </Tooltip>
-            <img 
-                src={pendingMedia.previewUrl} 
-                alt="Media Preview" 
-                style={{ width: '100%', display: 'block' }} 
+            <img
+                src={pendingMedia.previewUrl}
+                alt="Media Preview"
+                style={{ width: '100%', display: 'block' }}
             />
         </Box>
     );

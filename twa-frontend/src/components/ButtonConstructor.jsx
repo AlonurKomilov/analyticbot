@@ -23,7 +23,7 @@ const ButtonConstructor = ({ onAddButton }) => {
                 return; // Agar URL noto'g'ri bo'lsa, funksiyadan chiqib ketamiz
             }
         }
-        
+
         onAddButton({ text: buttonText, url: buttonUrl });
         setButtonText('');
         setButtonUrl('');

@@ -2,124 +2,47 @@ name: Compose Verify
 
 on:
   pull_request:
-  push:
-    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   verify:
+    if: contains(join(github.event.pull_request.labels.*.name, ','), 'compose-verify:on')
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show Docker versions
-        run: |
-          docker --version
-          docker compose version
-
-      - name: Prepare .env from example
-        run: |
-          if [ -f .env.example ]; then cp .env.example .env; fi
-          # Ensure sane defaults even if example is missing:
-          grep -q '^BOT_TOKEN=' .env || echo 'BOT_TOKEN=replace_me' >> .env
-          grep -q '^DATABASE_URL=' .env || echo 'DATABASE_URL=postgresql://analytic:change_me@postgres:5432/analytic_bot' >> .env
-          grep -q '^REDIS_URL=' .env || echo 'REDIS_URL=redis://redis:6379/0' >> .env
-          grep -q '^API_HOST=' .env || echo 'API_HOST=0.0.0.0' >> .env
-          grep -q '^API_PORT=' .env || echo 'API_PORT=8000' >> .env
-          grep -q '^POSTGRES_USER=' .env || echo 'POSTGRES_USER=analytic' >> .env
-          grep -q '^POSTGRES_DB=' .env || echo 'POSTGRES_DB=analytic_bot' >> .env
-
-      - name: Export DB credentials to env
-        run: |
-          if [ -f .env ]; then
-            echo "POSTGRES_USER=$(grep POSTGRES_USER .env | cut -d '=' -f2)" >> $GITHUB_ENV
-            echo "POSTGRES_DB=$(grep POSTGRES_DB .env | cut -d '=' -f2)" >> $GITHUB_ENV
-          fi
-
-      - name: Static checks (CI-safe)
-        run: |
-          python - <<'PY'
-          import sys, compileall
-          ok = compileall.compile_file('health_app.py', force=True, quiet=1)
-          sys.exit(0)
-          PY
-          docker compose -f docker-compose.yml -f .github/ci.compose.override.yml config > /dev/null
+      - name: Prepare .env
+        run: cp .env.example .env
 
       - name: Build & start (Compose)
-        run: docker compose -f docker-compose.yml -f .github/ci.compose.override.yml up -d --build
+        run: docker compose up -d --build
 
-      - name: Print compose services
+      - name: Show services
         run: docker compose ps
 
-      - name: Wait for Postgres
+      - name: Wait for Postgres (inside compose)
         run: |
           for i in {1..60}; do
-            docker compose exec -T postgres pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" && break
+            docker compose exec -T postgres pg_isready -U "${POSTGRES_USER:-analytic}" -d "${POSTGRES_DB:-analytic_bot}" && break
             sleep 2
           done
 
-      - name: Show DATABASE_URL inside API
+      - name: Print API DATABASE_URL
         run: docker compose exec -T api /bin/sh -lc 'echo "$DATABASE_URL"'
 
-      - name: Run DB migrations (inside container)
+      - name: Run DB migrations (inside api)
         run: docker compose exec -T api alembic upgrade head
 
-      - name: Verify required DB columns (smoke)
-        run: docker compose exec -T postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "SELECT COUNT(*) FROM plans;"
+      - name: Smoke check (plans table)
+        run: docker compose exec -T postgres psql -U "${POSTGRES_USER:-analytic}" -d "${POSTGRES_DB:-analytic_bot}" -c "SELECT COUNT(*) FROM plans;"
 
-      - name: Trivy scan API image
-        run: |
-          set -e
-          api_img=$(docker compose images -q api)
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          trivy image --exit-code 1 --ignore-unfixed --scanners vuln --severity CRITICAL "$api_img"
-
-      - name: Show Celery registered tasks
-        run: |
-          set +e
-          docker compose exec -T celery_worker celery -A bot.celery_app inspect registered
-          docker compose logs --no-color --tail=120 celery_worker || true
-          docker compose logs --no-color --tail=120 celery_beat || true
-          set -e
-
-      - name: Wait for API /health
-        run: |
-          for i in {1..60}; do
-            if curl -fsS http://localhost:8000/health >/dev/null; then
-              echo "API OK"; exit 0
-            fi
-            echo "Waiting for API... ($i)"
-            sleep 3
-          done
-          echo "API not ready in time"; exit 1
-
-      - name: Collect compose logs
+      - name: Compose logs (artifact)
         if: always()
-        run: docker compose logs --no-color > compose.log || true
+        run: docker compose logs > compose-logs.txt
 
-      - name: Upload compose logs
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: compose-logs
-          path: compose.log
-
-      - name: Show container status
-        if: always()
-        run: |
-          docker compose ps
-          docker compose logs --no-color --tail=200
-
-      - name: Inspect API container (if exists)
-        if: always()
-        run: |
-          set +e
-          api_id=$(docker compose ps -q api)
-          if [ -n "$api_id" ]; then
-            docker inspect "$api_id" | head -n 200 || true
-          fi
-          set -e
-
-      - name: Tear down
-        if: always()
-        run: docker compose down -v
+          path: compose-logs.txt

@@ -18,8 +18,10 @@ router = Router()
 
 # ------- helpers -------
 
+
 def _bot_of(msg: types.Message) -> Optional[Bot]:
     return cast(Optional[Bot], msg.bot)
+
 
 def _uid_of(msg: types.Message) -> Optional[int]:
     return msg.from_user.id if msg.from_user else None
@@ -39,14 +41,18 @@ async def get_and_verify_channel(
     bot = _bot_of(message)
     uid = _uid_of(message)
     if bot is None or uid is None:
-        await message.reply(i18n.get("guard-channel-not-found", channel_name=channel_username))
+        await message.reply(
+            i18n.get("guard-channel-not-found", channel_name=channel_username)
+        )
         return None
 
     # Telegramdan kanalni olish
     try:
         channel = await bot.get_chat(chat_id=channel_username)
     except Exception:
-        await message.reply(i18n.get("guard-channel-not-found", channel_name=channel_username))
+        await message.reply(
+            i18n.get("guard-channel-not-found", channel_name=channel_username)
+        )
         return None
 
     # DBdan tekshirish
@@ -73,6 +79,7 @@ async def get_and_verify_channel(
 
 # ------- handlers -------
 
+
 @router.message(Command("add_channel"))
 async def add_channel_handler(
     message: types.Message,
@@ -88,13 +95,17 @@ async def add_channel_handler(
     bot = _bot_of(message)
     uid = _uid_of(message)
     if bot is None or uid is None:
-        await message.reply(i18n.get("add-channel-not-found", channel_name=channel_username))
+        await message.reply(
+            i18n.get("add-channel-not-found", channel_name=channel_username)
+        )
         return
 
     try:
         channel = await bot.get_chat(chat_id=channel_username)
     except Exception:
-        await message.reply(i18n.get("add-channel-not-found", channel_name=channel_username))
+        await message.reply(
+            i18n.get("add-channel-not-found", channel_name=channel_username)
+        )
         return
 
     # Store basic channel information in the database
@@ -120,6 +131,7 @@ async def add_channel_handler(
 
 # --- GUARD MODULE ---
 
+
 @router.message(Command("add_word"))
 async def add_word_handler(
     message: types.Message,
@@ -139,7 +151,9 @@ async def add_word_handler(
         return
 
     channel_username, word = parts
-    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    channel_id = await get_and_verify_channel(
+        message, channel_username, channel_repo, i18n
+    )
     if channel_id is None:
         return
 
@@ -148,7 +162,9 @@ async def add_word_handler(
     except Exception:
         pass
 
-    await message.reply(i18n.get("guard-word-added", word=word, channel_name=channel_username))
+    await message.reply(
+        i18n.get("guard-word-added", word=word, channel_name=channel_username)
+    )
 
 
 @router.message(Command("remove_word"))
@@ -170,7 +186,9 @@ async def remove_word_handler(
         return
 
     channel_username, word = parts
-    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    channel_id = await get_and_verify_channel(
+        message, channel_username, channel_repo, i18n
+    )
     if channel_id is None:
         return
 
@@ -179,7 +197,9 @@ async def remove_word_handler(
     except Exception:
         pass
 
-    await message.reply(i18n.get("guard-word-removed", word=word, channel_name=channel_username))
+    await message.reply(
+        i18n.get("guard-word-removed", word=word, channel_name=channel_username)
+    )
 
 
 @router.message(Command("list_words"))
@@ -195,7 +215,9 @@ async def list_words_handler(
         await message.reply(i18n.get("guard-list-usage"))
         return
 
-    channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+    channel_id = await get_and_verify_channel(
+        message, channel_username, channel_repo, i18n
+    )
     if channel_id is None:
         return
 
@@ -208,12 +230,15 @@ async def list_words_handler(
         await message.reply(i18n.get("guard-list-empty"))
         return
 
-    response_text = i18n.get("guard-list-header", channel_name=channel_username) + "\n\n"
+    response_text = (
+        i18n.get("guard-list-header", channel_name=channel_username) + "\n\n"
+    )
     response_text += "\n".join([i18n.get("guard-list-item", word=w) for w in words])
     await message.reply(response_text)
 
 
 # --- SCHEDULER & ANALYTICS ---
+
 
 @router.message(Command("stats"))
 async def get_stats_handler(
@@ -234,7 +259,9 @@ async def get_stats_handler(
             await message.reply(i18n.get("stats-usage"))
             return
 
-        channel_id = await get_and_verify_channel(message, channel_name, channel_repo, i18n)
+        channel_id = await get_and_verify_channel(
+            message, channel_name, channel_repo, i18n
+        )
         if not channel_id:
             return
 
@@ -275,7 +302,9 @@ async def handle_schedule(
 
         channel_username, dt_str, text = args
 
-        channel_id = await get_and_verify_channel(message, channel_username, channel_repo, i18n)
+        channel_id = await get_and_verify_channel(
+            message, channel_username, channel_repo, i18n
+        )
         if not channel_id:
             return
 
@@ -337,4 +366,6 @@ async def get_views_handler(
         await message.reply(i18n.get("views-not-found", post_id=post_id))
         return
 
-    await message.reply(i18n.get("views-success", post_id=post_id, view_count=view_count))
+    await message.reply(
+        i18n.get("views-success", post_id=post_id, view_count=view_count)
+    )

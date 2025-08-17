@@ -10,8 +10,10 @@ except Exception:
     # Fallback stub (Pylance uchun), runtime-da ishlatilmaydi
     class _BaseManager:  # type: ignore[override]
         default_locale: Optional[str] = None
+
         async def get_locale(self, *args: Any, **kwargs: Any) -> str: ...
         async def set_locale(self, *args: Any, **kwargs: Any) -> None: ...
+
 
 def _extract_user_id(event: TelegramObject) -> Optional[int]:
     if isinstance(event, Message) and event.from_user is not None:
@@ -24,6 +26,7 @@ def _extract_user_id(event: TelegramObject) -> Optional[int]:
     if isinstance(msg, Message) and msg.from_user is not None:
         return msg.from_user.id
     return None
+
 
 class LanguageManager(_BaseManager):
     """
@@ -45,7 +48,12 @@ class LanguageManager(_BaseManager):
     async def get_locale(self, event: TelegramObject, **_: Any) -> str:  # type: ignore[override]
         user_id = _extract_user_id(event)
         if user_id:
-            for method in ("get_locale", "get_user_locale", "get_language", "get_user_language"):
+            for method in (
+                "get_locale",
+                "get_user_locale",
+                "get_language",
+                "get_user_language",
+            ):
                 if hasattr(self.user_repo, method):
                     try:
                         loc = await getattr(self.user_repo, method)(user_id)
@@ -61,13 +69,20 @@ class LanguageManager(_BaseManager):
                         return str(loc)
                 except Exception:
                     pass
-        return (getattr(self, "default_locale", None) or "en")
+        return getattr(self, "default_locale", None) or "en"
 
     async def set_locale(self, event: TelegramObject, locale: str, **_: Any) -> None:  # type: ignore[override]
         user_id = _extract_user_id(event)
         if not user_id:
             return
-        for method in ("set_locale", "set_user_locale", "save_locale", "update_locale", "set_language", "update_language"):
+        for method in (
+            "set_locale",
+            "set_user_locale",
+            "save_locale",
+            "update_locale",
+            "set_language",
+            "update_language",
+        ):
             if hasattr(self.user_repo, method):
                 try:
                     await getattr(self.user_repo, method)(user_id, locale)

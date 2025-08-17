@@ -35,10 +35,13 @@ from bot.config import settings as app_settings
 async def _noop(*args: Any, **kwargs: Any) -> None:
     return None
 
+
 class _Null:
     """Har qanday atributga async no-op qaytaradi."""
+
     def __getattr__(self, name: str):
         return _noop
+
 
 class _NullUserRepository(_Null):
     async def create_user(self, *args: Any, **kwargs: Any) -> None:
@@ -63,7 +66,9 @@ class DependencyMiddleware(BaseMiddleware):
         self.container = container
         self._fallback_core = SafeFluentRuntimeCore(path="bot/locales/{locale}")
         # *har doim* non-empty bo'lsin
-        self._fallback_locale: str = (getattr(app_settings, "DEFAULT_LOCALE", None) or "en")
+        self._fallback_locale: str = (
+            getattr(app_settings, "DEFAULT_LOCALE", None) or "en"
+        )
 
     async def __call__(
         self,

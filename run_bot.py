@@ -59,7 +59,8 @@ async def _build_storage(config) -> BaseStorage:
         return RedisStorage(redis=r)
     except Exception as e:
         logging.getLogger(__name__).warning(
-            "RedisStorage(redis=...) init failed (%s). Falling back to MemoryStorage.", e
+            "RedisStorage(redis=...) init failed (%s). Falling back to MemoryStorage.",
+            e,
         )
         return MemoryStorage()
 
@@ -71,7 +72,9 @@ async def _warmup_db_session() -> None:
     """
     ds = container.db_session  # punctuated.Singleton
     try:
-        val = ds() if callable(ds) else ds  # coroutine | async_sessionmaker | asyncpg.Pool
+        val = (
+            ds() if callable(ds) else ds
+        )  # coroutine | async_sessionmaker | asyncpg.Pool
     except Exception:
         return
 

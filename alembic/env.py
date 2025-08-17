@@ -22,6 +22,7 @@ if config.config_file_name is not None:
 # at top with other imports:
 target_metadata = metadata
 
+
 def _sync_db_url() -> str:
     """
     Migratsiya uchun sinxron URL (psycopg2) qaytaradi.
@@ -31,14 +32,15 @@ def _sync_db_url() -> str:
     url = os.getenv("DATABASE_URL", "")
     if not url:
         user = os.getenv("POSTGRES_USER", "analytic")
-        pwd  = os.getenv("POSTGRES_PASSWORD", "change_me")
+        pwd = os.getenv("POSTGRES_PASSWORD", "change_me")
         host = os.getenv("POSTGRES_HOST", "postgres")
         port = os.getenv("POSTGRES_PORT", "5432")
-        db   = os.getenv("POSTGRES_DB", "analytic_bot")
-        url  = f"postgresql://{user}:{pwd}@{host}:{port}/{db}"
+        db = os.getenv("POSTGRES_DB", "analytic_bot")
+        url = f"postgresql://{user}:{pwd}@{host}:{port}/{db}"
     if url.startswith("postgresql+asyncpg://"):
         url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
     return url
+
 
 def run_migrations_offline() -> None:
     url = _sync_db_url()
@@ -51,6 +53,7 @@ def run_migrations_offline() -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     url = _sync_db_url()
@@ -69,6 +72,7 @@ def run_migrations_online() -> None:
         )
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

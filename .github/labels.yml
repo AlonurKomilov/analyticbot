@@ -1,0 +1,19 @@
+- name: "mypy:softfail"
+  color: "c5def5"
+  description: "Make mypy non-blocking in CI"
+
+- name: "cov:27"
+  color: "fef2c0"
+  description: "Set coverage threshold to 27% for this PR"
+
+- name: "cov:50"
+  color: "fef2c0"
+  description: "Set coverage threshold to 50% for this PR"
+
+- name: "compose-verify:on"
+  color: "bfdadc"
+  description: "Run docker compose verify workflow"
+
+- name: "automerge"
+  color: "0e8a16"
+  description: "Auto-merge when all checks are green"

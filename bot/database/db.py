@@ -24,7 +24,7 @@ async def create_pool(max_retries: int = 5, backoff_factor: float = 0.5):
             return pool
         except (OSError, asyncpg.exceptions.CannotConnectNowError) as e:
             last_exception = e
-            wait_time = backoff_factor * (2 ** attempt)
+            wait_time = backoff_factor * (2**attempt)
             logger.warning(
                 "DB connection attempt %d/%d failed. Retrying in %.2f seconds...",
                 attempt + 1,

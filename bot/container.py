@@ -37,10 +37,12 @@ from bot.database.repositories.user_repository import UserRepository
 # ---------- helper: lazy singleton factory ----------
 def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
     _cache: dict[str, object] = {}
+
     def _wrapper() -> object:
         if "v" not in _cache:
             _cache["v"] = factory()
         return _cache["v"]
+
     return _wrapper
 
 
@@ -64,20 +66,24 @@ def _build_bot() -> _AioBot:
         token = cfg.BOT_TOKEN.get_secret_value()
     except Exception:
         import os
+
         token = os.getenv("BOT_TOKEN")
     if not token or token == "replace_me":
         raise RuntimeError("BOT_TOKEN is missing or placeholder")
     return _AioBot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
+
 def _build_dispatcher() -> _AioDispatcher:
     from aiogram.fsm.storage.memory import MemoryStorage
+
     return _AioDispatcher(storage=MemoryStorage())
 
-_bot_singleton = as_singleton(_build_bot)
-_dp_singleton  = as_singleton(_build_dispatcher)
 
-container.register(_AioBot,        factory=_bot_singleton)
-container.register(_ClientBot,     factory=_bot_singleton)
+_bot_singleton = as_singleton(_build_bot)
+_dp_singleton = as_singleton(_build_dispatcher)
+
+container.register(_AioBot, factory=_bot_singleton)
+container.register(_ClientBot, factory=_bot_singleton)
 container.register(_AioDispatcher, factory=_dp_singleton)
 
 
@@ -86,6 +92,7 @@ def _val(x: Any) -> Any:
     """punctuated.Singleton bo'lsa, instansiyani qaytaradi (cache bilan)."""
     return x() if callable(x) else x
 
+
 def _pool_or_none() -> Optional[Any]:
     """DB (asyncpg Pool yoki async_sessionmaker) ni qaytaradi; bo'lmasa None."""
     try:
@@ -93,6 +100,7 @@ def _pool_or_none() -> Optional[Any]:
     except Exception:
         return None
     return v  # coroutine bo'lsa ham – servis/repo factory ichida handle qilamiz
+
 
 def _make_repo(RepoCls: type) -> object:
     """
@@ -110,7 +118,15 @@ def _make_repo(RepoCls: type) -> object:
         pass
 
     # 2) Muqobil keyword nomlar
-    for kw in ("session_pool", "session", "pool", "db", "database", "redis", "redis_client"):
+    for kw in (
+        "session_pool",
+        "session",
+        "pool",
+        "db",
+        "database",
+        "redis",
+        "redis_client",
+    ):
         try:
             return RepoCls(**{kw: pool})
         except TypeError:
@@ -172,15 +188,27 @@ def _make_service(ServiceCls: type) -> object:
 
 
 # ---------- DB aliaslar (DependencyMiddleware uchun) ----------
-container.register(AsyncPGPool,        factory=lambda: cast(AsyncPGPool,        _pool_or_none()))
-container.register(async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none()))
+container.register(AsyncPGPool, factory=lambda: cast(AsyncPGPool, _pool_or_none()))
+container.register(
+    async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none())
+)
 
 # ---------- Repository factory'lari (punq) ----------
-container.register(UserRepository,       factory=as_singleton(lambda: _make_repo(UserRepository)))
-container.register(PlanRepository,       factory=as_singleton(lambda: _make_repo(PlanRepository)))
-container.register(ChannelRepository,    factory=as_singleton(lambda: _make_repo(ChannelRepository)))
-container.register(SchedulerRepository,  factory=as_singleton(lambda: _make_repo(SchedulerRepository)))
-container.register(AnalyticsRepository,  factory=as_singleton(lambda: _make_repo(AnalyticsRepository)))
+container.register(
+    UserRepository, factory=as_singleton(lambda: _make_repo(UserRepository))
+)
+container.register(
+    PlanRepository, factory=as_singleton(lambda: _make_repo(PlanRepository))
+)
+container.register(
+    ChannelRepository, factory=as_singleton(lambda: _make_repo(ChannelRepository))
+)
+container.register(
+    SchedulerRepository, factory=as_singleton(lambda: _make_repo(SchedulerRepository))
+)
+container.register(
+    AnalyticsRepository, factory=as_singleton(lambda: _make_repo(AnalyticsRepository))
+)
 
 # ---------- Service factory'lari (punq) ----------
 try:
@@ -189,10 +217,19 @@ try:
     from bot.services.scheduler_service import SchedulerService
     from bot.services.analytics_service import AnalyticsService
 
-    container.register(GuardService,        factory=as_singleton(lambda: _make_service(GuardService)))
-    container.register(SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService)))
-    container.register(SchedulerService,    factory=as_singleton(lambda: _make_service(SchedulerService)))
-    container.register(AnalyticsService,    factory=as_singleton(lambda: _make_service(AnalyticsService)))
+    container.register(
+        GuardService, factory=as_singleton(lambda: _make_service(GuardService))
+    )
+    container.register(
+        SubscriptionService,
+        factory=as_singleton(lambda: _make_service(SubscriptionService)),
+    )
+    container.register(
+        SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))
+    )
+    container.register(
+        AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
+    )
 except Exception:
     # optional import failures allowed
     pass
@@ -200,5 +237,7 @@ except Exception:
 
 # -------- Typed helper (Pylance uchun) --------
 _T = TypeVar("_T")
+
+
 def _resolve(key: Type[_T]) -> _T:
     return cast(_T, container.resolve(key))

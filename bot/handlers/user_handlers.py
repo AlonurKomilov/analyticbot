@@ -84,7 +84,9 @@ async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None
 
     async def _set_default():
         try:
-            await bot.set_chat_menu_button(chat_id=chat_id, menu_button=MenuButtonDefault())
+            await bot.set_chat_menu_button(
+                chat_id=chat_id, menu_button=MenuButtonDefault()
+            )
         except Exception as e:
             log.warning("set_chat_menu_button (default) failed: %s", e)
 
@@ -125,7 +127,9 @@ async def cmd_start(
     # Xabar ichiga ham tugma qo'yamiz (faqat public HTTPS bo'lsa)
     kb, _ = _build_dashboard_kb(i18n)
     full_name = message.from_user.full_name if message.from_user else "there"
-    await message.answer(i18n.get("start_message", user_name=full_name), reply_markup=kb)
+    await message.answer(
+        i18n.get("start_message", user_name=full_name), reply_markup=kb
+    )
 
 
 @router.message(F.web_app_data)
@@ -144,9 +148,13 @@ async def cmd_myplan(
     if uid is not None:
         try:
             if hasattr(subscription_service, "get_user_subscription_status"):
-                status = await getattr(subscription_service, "get_user_subscription_status")(uid)
+                status = await getattr(
+                    subscription_service, "get_user_subscription_status"
+                )(uid)
             elif hasattr(subscription_service, "get_subscription_status"):
-                status = await getattr(subscription_service, "get_subscription_status")(uid)
+                status = await getattr(subscription_service, "get_subscription_status")(
+                    uid
+                )
             elif hasattr(subscription_service, "get_user_plan"):
                 status = await getattr(subscription_service, "get_user_plan")(uid)
         except Exception as e:
@@ -162,8 +170,12 @@ async def cmd_myplan(
     cur_posts = int(getattr(status, "current_posts_this_month", 0) or 0)
     max_posts = int(getattr(status, "max_posts_per_month", -1) or -1)
 
-    channels_line = f"• Channels: {cur_channels}/" + ("∞" if max_channels == -1 else str(max_channels))
-    posts_line = f"• Posts (this month): {cur_posts}/" + ("∞" if max_posts == -1 else str(max_posts))
+    channels_line = f"• Channels: {cur_channels}/" + (
+        "∞" if max_channels == -1 else str(max_channels)
+    )
+    posts_line = f"• Posts (this month): {cur_posts}/" + (
+        "∞" if max_posts == -1 else str(max_posts)
+    )
 
     lines = [
         i18n.get("myplan-header"),
@@ -189,4 +201,3 @@ async def cmd_dashboard(message: types.Message, i18n: I18nContext):
         await message.answer(msg)
         return
     await message.answer(i18n.get("menu-button-dashboard"), reply_markup=kb)
-

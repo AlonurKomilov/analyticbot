@@ -27,9 +27,9 @@ const AddChannel = () => {
                     onChange={(e) => setChannelName(e.target.value)}
                     disabled={isLoading} // So'rov paytida nofaol
                 />
-                <Button 
-                    variant="contained" 
-                    onClick={handleAdd} 
+                <Button
+                    variant="contained"
+                    onClick={handleAdd}
                     disabled={isLoading} // So'rov paytida nofaol
                     sx={{ minWidth: '80px' }} // Tugma o'lchami o'zgarib ketmasligi uchun
                 >

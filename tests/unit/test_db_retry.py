@@ -60,7 +60,7 @@ async def test_create_pool_backoff_timing(mock_create_pool, mock_sleep):
         await create_pool(max_retries=4, backoff_factor=backoff_factor)
 
     assert mock_sleep.call_count == 4
-    mock_sleep.assert_any_call(backoff_factor * (2 ** 0))  # 0.05
-    mock_sleep.assert_any_call(backoff_factor * (2 ** 1))  # 0.10
-    mock_sleep.assert_any_call(backoff_factor * (2 ** 2))  # 0.20
-    mock_sleep.assert_any_call(backoff_factor * (2 ** 3))  # 0.40
+    mock_sleep.assert_any_call(backoff_factor * (2**0))  # 0.05
+    mock_sleep.assert_any_call(backoff_factor * (2**1))  # 0.10
+    mock_sleep.assert_any_call(backoff_factor * (2**2))  # 0.20
+    mock_sleep.assert_any_call(backoff_factor * (2**3))  # 0.40

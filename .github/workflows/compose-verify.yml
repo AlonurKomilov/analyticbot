@@ -26,6 +26,15 @@ jobs:
           grep -q '^REDIS_URL=' .env || echo 'REDIS_URL=redis://redis:6379/0' >> .env
           grep -q '^API_HOST=' .env || echo 'API_HOST=0.0.0.0' >> .env
           grep -q '^API_PORT=' .env || echo 'API_PORT=8000' >> .env
+          grep -q '^POSTGRES_USER=' .env || echo 'POSTGRES_USER=analytic' >> .env
+          grep -q '^POSTGRES_DB=' .env || echo 'POSTGRES_DB=analytic_bot' >> .env
+
+      - name: Export DB credentials to env
+        run: |
+          if [ -f .env ]; then
+            echo "POSTGRES_USER=$(grep POSTGRES_USER .env | cut -d '=' -f2)" >> $GITHUB_ENV
+            echo "POSTGRES_DB=$(grep POSTGRES_DB .env | cut -d '=' -f2)" >> $GITHUB_ENV
+          fi
 
       - name: Static checks (CI-safe)
         run: |
@@ -45,7 +54,7 @@ jobs:
       - name: Wait for Postgres
         run: |
           for i in {1..60}; do
-            docker compose exec -T postgres pg_isready -U postgres -d analyticbot && break
+            docker compose exec -T postgres pg_isready -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" && break
             sleep 2
           done
 
@@ -55,38 +64,15 @@ jobs:
       - name: Run DB migrations (inside container)
         run: docker compose exec -T api alembic upgrade head
 
+      - name: Verify required DB columns (smoke)
+        run: docker compose exec -T postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -c "SELECT COUNT(*) FROM plans;"
+
       - name: Trivy scan API image
         run: |
           set -e
           api_img=$(docker compose images -q api)
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
           trivy image --exit-code 1 --ignore-unfixed --scanners vuln --severity CRITICAL "$api_img"
-
-      - name: Verify required DB columns (drift smoke)
-        run: |
-          set -e
-          q="SELECT table_name,column_name FROM information_schema.columns WHERE table_schema='public' AND table_name IN ('plans','users','channels','scheduled_posts','sent_posts') ORDER BY table_name,column_name;"
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "$q"
-
-      - name: Verify DB schema (psql)
-        run: |
-          set -e
-          # List tables
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "\dt"
-          # Smoke checks: table existence + seed plans
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT COUNT(*) AS plans FROM plans;"
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM users LIMIT 1;" || true
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM channels LIMIT 1;" || true
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM scheduled_posts LIMIT 1;" || true
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT 1 FROM sent_posts LIMIT 1;" || true
-
-      - name: Verify PlanRepository queries (smoke)
-        run: |
-          set -e
-          # SELECT by name ishlashi kerak
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT id,name,max_channels,max_posts_per_month FROM plans WHERE name='free' LIMIT 1;"
-          # Alias plan_name mavjud (SELECT ... name AS plan_name)
-          docker compose exec -T postgres psql -U analytic -d analytic_bot -c "SELECT name AS plan_name FROM plans LIMIT 1;"
 
       - name: Show Celery registered tasks
         run: |

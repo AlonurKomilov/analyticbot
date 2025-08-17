@@ -29,6 +29,10 @@ This project uses GitHub labels to control the behavior of the Continuous Integr
   - `mypy:softfail` + `cov:27` + `compose-verify:on`
   - *Result:* MyPy won't block the merge, the coverage requirement is low, and the full Docker Compose stack is verified.
 
+- `autofix`:
+  - **Function:** Add `autofix` label to a PR → CI runs `ruff --fix` & `ruff format`, auto-commits to the PR branch.
+  - **Use Case:** Automatically fix linting and formatting issues in a pull request.
+
 - **PR with a strict policy (default behavior):**
   - *(No labels)*
   - *Result:* MyPy is a required check, and the coverage threshold is 70%.

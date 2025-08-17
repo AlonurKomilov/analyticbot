@@ -17,3 +17,7 @@
 - name: "automerge"
   color: "0e8a16"
   description: "Auto-merge when all checks are green"
+
+- name: "autofix"
+  color: "a2eeef"
+  description: "Automatically run ruff --fix and format in CI"

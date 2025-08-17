@@ -40,9 +40,15 @@ jobs:
       - name: Compose logs (artifact)
         if: always()
         run: docker compose logs > compose-logs.txt
+        
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: compose-logs
           path: compose-logs.txt
+
+      - name: Compose down
+        if: always()
+        run: docker compose down -v --remove-orphans
+

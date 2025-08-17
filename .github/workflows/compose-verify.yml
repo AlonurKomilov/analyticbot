@@ -39,10 +39,21 @@ jobs:
       - name: Build & start (Compose)
         run: docker compose -f docker-compose.yml -f .github/ci.compose.override.yml up -d --build
 
-      - name: Run DB migrations (inside container)
+      - name: Print compose services
+        run: docker compose ps
+
+      - name: Wait for Postgres
         run: |
-          docker compose ps
-          docker compose exec -T api alembic upgrade head
+          for i in {1..60}; do
+            docker compose exec -T postgres pg_isready -U postgres -d analyticbot && break
+            sleep 2
+          done
+
+      - name: Show DATABASE_URL inside API
+        run: docker compose exec -T api /bin/sh -lc 'echo "$DATABASE_URL"'
+
+      - name: Run DB migrations (inside container)
+        run: docker compose exec -T api alembic upgrade head
 
       - name: Trivy scan API image
         run: |

@@ -8,6 +8,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from bot.database.models import metadata  # noqa: E402
+
+
 # Alembic Config obyekti
 config = context.config
 
@@ -17,7 +20,6 @@ if config.config_file_name is not None:
 
 # Metadata (agar ORM modeli bo‘lsa, shu yerda ularni import qilasiz)
 # at top with other imports:
-from bot.database.models import metadata  # ruff: noqa: E402  # required by Alembic
 target_metadata = metadata
 
 def _sync_db_url() -> str:

@@ -10,23 +10,58 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: analytic
+          POSTGRES_PASSWORD: change_me
+          POSTGRES_DB: analyticbot_db_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install deps
         run: |
           python -m pip install -U pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install ruff mypy pytest bandit yamllint
+          pip install ruff mypy pytest bandit yamllint setuptools pytest-env
+
       - name: Ruff (lint)
         run: ruff check .
+
       - name: MyPy (type-check)
         run: mypy .
-      - name: Pytest
-        run: pytest -q
+
       - name: Bandit (security)
         run: bandit -c .bandit -r .
+
+      - name: Run Migrations
+        run: alembic upgrade head
+        env:
+          DATABASE_URL: postgresql://analytic:change_me@localhost:5432/analyticbot_db_test
+
+      - name: Pytest
+        run: pytest -q --maxfail=1 --disable-warnings --cov=bot --cov-report=term-missing --cov-fail-under=${{ env.COV_FAIL_UNDER }}
+        env:
+          DATABASE_URL: postgresql://analytic:change_me@localhost:5432/analyticbot_db_test
+          # Prevent tests from trying to connect to a real Redis
+          REDIS_URL: ""
+          COV_FAIL_UNDER: 27
+
+      - name: Docker Build
+        run: docker build -t analyticbot:ci -f Dockerfile .
+
       - name: YAML Lint
         run: yamllint -c .yamllint .

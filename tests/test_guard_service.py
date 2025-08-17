@@ -48,3 +48,17 @@ async def test_is_blocked(guard_service: GuardService):
     assert await guard_service.is_blocked(channel_id, "Bu yerda SPAM bor")
     assert await guard_service.is_blocked(channel_id, "Eng yaxshi reklama bizda")
     assert not await guard_service.is_blocked(channel_id, "Boshqa kanaldagi xabar")
+
+
+@pytest.mark.asyncio
+async def test_is_blocked_no_words(guard_service: GuardService):
+    """Test is_blocked when no words are blacklisted."""
+    channel_id = 1111
+    assert not await guard_service.is_blocked(channel_id, "Any message")
+
+
+@pytest.mark.asyncio
+async def test_check_bot_is_admin(guard_service: GuardService):
+    """Test the placeholder admin check."""
+    result = await guard_service.check_bot_is_admin("test_channel", 123)
+    assert result["username"] == "test_channel"

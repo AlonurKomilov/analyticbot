@@ -72,12 +72,49 @@ class AnalyticsService:
         return await self.analytics_repository.get_posts_ordered_by_views(channel_id)
 
     async def create_views_chart(self, channel_id: int, limit: int = 10) -> bytes:
-        """Generate a chart for post views (placeholder)."""
-        return b""
+        """Generate a simple bar chart of top N posts by views.
 
-    async def get_post_views(self, channel_id: int, message_id: int) -> int | None:
-        """Return stored view count for a specific post (placeholder)."""
-        return None
+        Returns PNG bytes or empty bytes on failure / no data.
+        """
+        try:
+            posts = await self.analytics_repository.get_posts_ordered_by_views(
+                channel_id
+            )
+            if not posts:
+                return b""
+            top = posts[:limit]
+            ids = [str(p["id"]) for p in top]
+            views = [int(p.get("views") or 0) for p in top]
+            # Lazy import matplotlib (heavy) only when needed
+            import matplotlib.pyplot as plt
+            from io import BytesIO
+
+            fig, ax = plt.subplots(figsize=(min(12, 1.2 * len(ids)), 4))
+            ax.bar(ids, views, color="#4C72B0")
+            ax.set_title("Top post views")
+            ax.set_xlabel("Post ID")
+            ax.set_ylabel("Views")
+            for i, v in enumerate(views):
+                ax.text(i, v, str(v), ha="center", va="bottom", fontsize=8)
+            fig.tight_layout()
+            buf = BytesIO()
+            fig.savefig(buf, format="png")
+            plt.close(fig)
+            buf.seek(0)
+            return buf.read()
+        except Exception:
+            return b""
+
+    async def get_post_views(self, scheduled_post_id: int, _unused_user_id: int) -> int | None:
+        """Return stored view count for a scheduled post.
+
+        Note: handler passes (post_id, user_id). User ID is not currently
+        used for authorization; could be extended later to verify ownership.
+        """
+        try:
+            return await self.analytics_repository.get_post_views(scheduled_post_id)
+        except Exception:
+            return None
 
     async def get_total_users_count(self) -> int:
         """

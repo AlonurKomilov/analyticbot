@@ -54,5 +54,23 @@ def send_scheduled_message():
 
 @celery_app.task(name="bot.tasks.update_post_views_task")
 def update_post_views_task():
-    # TODO: implement view updates
+    async def _run():
+        # Ensure bot + repos/services are initialised
+        container.bot()
+        try:
+            analytics_service = container.analytics_service()
+            await analytics_service.update_all_post_views()
+        except Exception as e:
+            logger.exception("update_post_views_task failed", exc_info=e)
+        finally:
+            try:
+                db = container.db_session()
+                if hasattr(db, "close"):
+                    res = db.close()
+                    if asyncio.iscoroutine(res):
+                        await res
+            except Exception:
+                pass
+
+    asyncio.run(_run())
     return "ok"

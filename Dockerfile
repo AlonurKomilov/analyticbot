@@ -31,20 +31,26 @@ ENV PATH="/opt/venv/bin:${PATH}"
 
 # project code
 COPY . .
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # --- API image ---
 FROM final AS api
 EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # --- Bot image ---
 FROM final AS bot
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "run_bot.py"]
 
 # --- Celery worker image ---
 FROM final AS celery_worker
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["celery", "-A", "bot.celery_app", "worker", "--loglevel=info"]
 
 # --- Celery beat image ---
 FROM final AS celery_beat
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["celery", "-A", "bot.celery_app", "beat", "--loglevel=info"]

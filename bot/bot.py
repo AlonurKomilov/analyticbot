@@ -3,14 +3,12 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
-from asyncpg import Pool
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.config import settings
-from bot.database.db import create_pool
+from bot.container import container
 from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
-
-# i18n middleware'ni import qilamiz
 from bot.middlewares.i18n import i18n_middleware
 
 # Logger sozlamalari
@@ -22,14 +20,18 @@ async def main():
     """
     Botni ishga tushiruvchi asosiy funksiya.
     """
-    # Ma'lumotlar bazasi bilan ulanish (connection pool)
-    pool: Pool = await create_pool()
+    # DB pool konteyner orqali lazy yaratiladi (bir marta yaratiladi)
+    pool = await container.db_session()  # type: ignore[func-returns-value]
 
-    # Redis'ga ulanish (FSM holatlari uchun)
-    storage = RedisStorage.from_url(
-        settings.REDIS_DSN,
-        key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
-    )
+    # Redis (FSM holatlari) – to'g'ri konfiguratsiya nomi REDIS_URL; fallback Memory
+    try:
+        storage = RedisStorage.from_url(
+            str(settings.REDIS_URL),
+            key_builder=DefaultKeyBuilder(with_bot_id=True, with_destiny=True),
+        )
+    except Exception:
+        logger.warning("Redis not available – falling back to in-memory FSM storage")
+        storage = MemoryStorage()
 
     # Bot va Dispatcher obyektlarini yaratish
     bot = Bot(token=settings.BOT_TOKEN.get_secret_value(), parse_mode="HTML")
@@ -38,7 +40,8 @@ async def main():
     # YAKUNIY TUZATISH: Middleware'larni to'g'ri tartibda ulaymiz
 
     # 1. BIRINCHI bo'lib, har bir xabarga kerakli bog'liqliklar (masalan, DB ulanishi) qo'shiladi.
-    dp.update.outer_middleware(DependencyMiddleware(pool=pool))
+    # DI middleware konteynerni oladi (oldingi noto'g'ri 'pool=' param o'chirildi)
+    dp.update.outer_middleware(DependencyMiddleware(container))
 
     # 2. IKKINCHI bo'lib, bog'liqliklar mavjud bo'lgandan so'ng, lokalizatsiya (i18n) ishlaydi.
     dp.update.outer_middleware(i18n_middleware)
@@ -56,7 +59,10 @@ async def main():
         # To'xtatilganda ulanishlarni yopish
         await dp.storage.close()
         await bot.session.close()
-        await pool.close()
+        try:
+            await pool.close()  # type: ignore[attr-defined]
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

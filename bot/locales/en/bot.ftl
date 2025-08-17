@@ -4,6 +4,7 @@ menu-button-dashboard = Dashboard
 
 add-channel-usage = Usage: /add_channel <channel_username>
 add-channel-not-found = Channel was not found.
+add-channel-success = Channel registered: { $channel_title } (ID { $channel_id }).
 
 guard-add-usage = Usage: /guard_add <word>
 guard-remove-usage = Usage: /guard_remove <word>
@@ -24,6 +25,7 @@ myplan-error = Could not fetch plan info.
 
 schedule-usage = Usage: /schedule <time> <text>
 schedule-past-time-error = Time must be in the future.
+schedule-success = Scheduled for { $channel_name } at { $schedule_time }.
 
 stats-usage = Usage: /stats <channel_or_post>
 stats-generating = Generating stats…
@@ -37,3 +39,4 @@ views-usage = Usage: /views <post_id>
 views-invalid-id = Invalid post id.
 views-not-found = Post not found.
 views-success = Views counted.
+views-success = Post { $post_id } has { $view_count } views.

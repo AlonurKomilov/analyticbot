@@ -41,7 +41,10 @@ celerybeat-schedule
 .coverage
 htmlcov/
 
-# Docker'ning o'ziga tegishli fayllar (odatda qo'shilmaydi)
-Dockerfile
-.dockerignore
-docker-compose.yml
+# Docker config files SHOULD be included for builds; don't ignore them.
+# Keep this section empty intentionally.
+
+# Node modules generic (in case other folders appear)
+node_modules/
+dist/
+build/

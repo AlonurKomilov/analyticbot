@@ -101,3 +101,9 @@ class AnalyticsRepository:
         query = "SELECT COUNT(id) FROM scheduled_posts;"
         count = await self._pool.fetchval(query)
         return count or 0
+
+    async def get_post_views(self, scheduled_post_id: int) -> int | None:
+        """Return the current stored views for a scheduled post or None if missing."""
+        query = "SELECT views FROM scheduled_posts WHERE id = $1;"
+        val = await self._pool.fetchval(query, scheduled_post_id)
+        return int(val) if val is not None else None

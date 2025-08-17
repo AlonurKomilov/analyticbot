@@ -1,5 +1,5 @@
 from typing import Set
-
+import re
 import redis.asyncio as redis
 
 
@@ -26,12 +26,9 @@ class GuardService:
         if not blocked_words:
             return False
 
-        text_lower = text.lower()
-        # Check each word in the message
-        for word in text_lower.split():
-            if word in blocked_words:
-                return True
-        return False
+        # Normalize text: take alphanumeric word tokens
+        tokens = re.findall(r"[\w']+", text.lower())
+        return any(tok in blocked_words for tok in tokens)
 
     async def check_bot_is_admin(self, channel_username: str, user_id: int) -> dict:
         """Placeholder admin check returning minimal channel info."""

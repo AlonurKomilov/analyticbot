@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 from urllib.parse import unquote
+from time import time
 
 from fastapi import HTTPException
 
@@ -56,6 +57,17 @@ def validate_init_data(init_data: str, bot_token: str) -> dict:
         # Ikkala hash'ni solishtiramiz
         if calculated_hash != received_hash:
             raise ValueError("Hash mismatch")
+
+        # auth_date yangiligini tekshiramiz (default 1 soat)
+        try:
+            auth_date_str = next(
+                v for k, v in data_params if k == "auth_date"
+            )
+            auth_date = int(auth_date_str)
+            if time() - auth_date > 3600:  # 1 soatlik oynadan oshsa
+                raise ValueError("Auth date expired")
+        except StopIteration:
+            raise ValueError("auth_date missing")
 
         # Foydalanuvchi ma'lumotlarini ajratib olamiz
         user_data_str = [x for x in init_data.split("&") if x.startswith("user=")][0]

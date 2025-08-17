@@ -4,6 +4,7 @@ menu-button-dashboard = Bosh sahifa
 
 add-channel-usage = Foydalanish: /add_channel <kanal_username>
 add-channel-not-found = Kanal topilmadi.
+add-channel-success = Kanal ro'yxatga qo'shildi: { $channel_title } (ID { $channel_id }).
 
 guard-add-usage = Foydalanish: /guard_add <so'z>
 guard-remove-usage = Foydalanish: /guard_remove <so'z>
@@ -24,6 +25,7 @@ myplan-error = Tarif ma’lumoti olinmadi.
 
 schedule-usage = Foydalanish: /schedule <vaqt> <matn>
 schedule-past-time-error = Vaqt kelajakda bo‘lishi kerak.
+schedule-success = { $channel_name } kanali uchun { $schedule_time } ga rejalashtirildi.
 
 stats-usage = Foydalanish: /stats <kanal_yoki_post>
 stats-generating = Statistika tayyorlanmoqda…
@@ -37,3 +39,4 @@ views-usage = Foydalanish: /views <post_id>
 views-invalid-id = Post ID noto‘g‘ri.
 views-not-found = Post topilmadi.
 views-success = Ko‘rishlar hisoblandi.
+views-success = Post { $post_id } ko‘rishlari: { $view_count }.

@@ -1,0 +1,392 @@
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+    Paper,
+    Typography,
+    Box,
+    CircularProgress,
+    Alert,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Chip,
+    Grid,
+    Card,
+    CardContent
+} from '@mui/material';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    Legend,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from 'recharts';
+import {
+    TrendingUp as TrendingUpIcon,
+    Speed as SpeedIcon,
+    Visibility as ViewsIcon,
+    ShowChart as ChartIcon
+} from '@mui/icons-material';
+import { useAppStore } from '../store/appStore.js';
+
+const PostViewDynamicsChart = () => {
+    const [timeRange, setTimeRange] = useState('24h');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [data, setData] = useState([]);
+    const [autoRefresh] = useState(true); // setAutoRefresh olib tashlandi
+    const [refreshInterval, setRefreshInterval] = useState('30s');
+    
+    // Store method'larini olamiz
+    const { fetchPostDynamics, isLoading, getError, analytics } = useAppStore();
+
+    // Analytics data loading function with useCallback to prevent unnecessary re-renders
+    const loadDynamics = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Try to use store method first, fallback to direct API call
+            try {
+                const result = await fetchPostDynamics(timeRange);
+                setData(result.data || []);
+            } catch {
+                // Fallback to direct API call if store method fails
+                const response = await fetch(`http://localhost:8001/api/analytics/post-dynamics?period=${timeRange}`);
+                if (!response.ok) throw new Error('Analytics data olishda xatolik');
+                
+                const result = await response.json();
+                setData(result.data || []);
+            }
+        } catch (err) {
+            setError(err.message);
+            console.error('Analytics malumotlarini olishda xatolik:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [timeRange, fetchPostDynamics]); // fetchPostDynamics ham dependency qo'shildi
+
+    // Component mount va timeRange o'zgarganda ma'lumot yuklash
+    useEffect(() => {
+        loadDynamics();
+    }, [loadDynamics]); // loadDynamics'ga dependency qo'shildi
+
+    // Auto-refresh functionality
+    useEffect(() => {
+        if (!autoRefresh || refreshInterval === 'disabled') return;
+
+        const intervalMs = refreshInterval === '30s' ? 30000 : 
+                          refreshInterval === '1m' ? 60000 : 
+                          refreshInterval === '5m' ? 300000 : 30000;
+
+        const interval = setInterval(loadDynamics, intervalMs);
+        return () => clearInterval(interval);
+    }, [autoRefresh, refreshInterval, loadDynamics]);
+
+    // Chart data transformatsiyasi
+    const chartData = useMemo(() => {
+        if (!data || !Array.isArray(data)) return [];
+        
+        return data.map(point => ({
+            time: new Date(point.timestamp).toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            }),
+            views: point.views || 0,
+            likes: point.likes || 0,
+            shares: point.shares || 0,
+            comments: point.comments || 0,
+            timestamp: point.timestamp
+        }));
+    }, [data]);
+
+    // Summary statistics
+    const summaryStats = useMemo(() => {
+        if (!data || data.length === 0) return null;
+
+        const latest = data[data.length - 1] || {};
+        const previous = data[data.length - 2] || {};
+        const total = data.reduce((sum, item) => sum + (item.views || 0), 0);
+        const avgViews = Math.round(total / data.length);
+        const growth = latest.views && previous.views ? 
+            ((latest.views - previous.views) / previous.views * 100).toFixed(1) : 0;
+
+        return {
+            totalViews: total,
+            currentViews: latest.views || 0,
+            averageViews: avgViews,
+            growthRate: parseFloat(growth),
+            peakViews: Math.max(...data.map(d => d.views || 0)),
+            dataPoints: data.length
+        };
+    }, [data]);
+
+    // Tooltip formatter
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <Paper sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        {label}
+                    </Typography>
+                    {payload.map((entry, index) => (
+                        <Typography 
+                            key={index} 
+                            variant="body2" 
+                            sx={{ color: entry.color }}
+                        >
+                            {entry.name}: {entry.value.toLocaleString()}
+                        </Typography>
+                    ))}
+                </Paper>
+            );
+        }
+        return null;
+    };
+
+    if (error) {
+        return (
+            <Paper sx={{ p: 3 }}>
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    Ma'lumotlarni yuklashda xatolik: {error}
+                </Alert>
+            </Paper>
+        );
+    }
+
+    return (
+        <Paper sx={{ p: 3 }}>
+            {/* Header */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ChartIcon color="primary" />
+                    <Typography variant="h6">
+                        Post View Dynamics
+                    </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    {/* Time Range Selector */}
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>Vaqt oralig'i</InputLabel>
+                        <Select
+                            value={timeRange}
+                            label="Vaqt oralig'i"
+                            onChange={(e) => setTimeRange(e.target.value)}
+                        >
+                            <MenuItem value="1h">1 soat</MenuItem>
+                            <MenuItem value="6h">6 soat</MenuItem>
+                            <MenuItem value="24h">24 soat</MenuItem>
+                            <MenuItem value="7d">7 kun</MenuItem>
+                            <MenuItem value="30d">30 kun</MenuItem>
+                        </Select>
+                    </FormControl>
+
+                    {/* Refresh Interval */}
+                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                        <InputLabel>Yangilash</InputLabel>
+                        <Select
+                            value={refreshInterval}
+                            label="Yangilash"
+                            onChange={(e) => setRefreshInterval(e.target.value)}
+                        >
+                            <MenuItem value="30s">30 soniya</MenuItem>
+                            <MenuItem value="1m">1 daqiqa</MenuItem>
+                            <MenuItem value="5m">5 daqiqa</MenuItem>
+                            <MenuItem value="disabled">O'chirilgan</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Box>
+            </Box>
+
+            {/* Summary Stats Cards */}
+            {summaryStats && (
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                    <Grid item xs={6} sm={3}>
+                        <Card variant="outlined">
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <ViewsIcon color="primary" fontSize="small" />
+                                    <Typography variant="caption" color="text.secondary">
+                                        Jami Ko'rishlar
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6">
+                                    {summaryStats.totalViews.toLocaleString()}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    
+                    <Grid item xs={6} sm={3}>
+                        <Card variant="outlined">
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <SpeedIcon color="secondary" fontSize="small" />
+                                    <Typography variant="caption" color="text.secondary">
+                                        O'rtacha
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6">
+                                    {summaryStats.averageViews.toLocaleString()}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={6} sm={3}>
+                        <Card variant="outlined">
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <TrendingUpIcon color="success" fontSize="small" />
+                                    <Typography variant="caption" color="text.secondary">
+                                        O'sish %
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ 
+                                    color: summaryStats.growthRate >= 0 ? 'success.main' : 'error.main' 
+                                }}>
+                                    {summaryStats.growthRate > 0 ? '+' : ''}{summaryStats.growthRate}%
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    <Grid item xs={6} sm={3}>
+                        <Card variant="outlined">
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <ChartIcon color="warning" fontSize="small" />
+                                    <Typography variant="caption" color="text.secondary">
+                                        Eng yuqori
+                                    </Typography>
+                                </Box>
+                                <Typography variant="h6">
+                                    {summaryStats.peakViews.toLocaleString()}
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                    <CircularProgress />
+                    <Typography variant="body2" sx={{ ml: 2 }}>
+                        Ma'lumotlar yuklanmoqda...
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Chart */}
+            {!loading && chartData.length > 0 && (
+                <Box sx={{ height: 400, mt: 2 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                                dataKey="time" 
+                                tick={{ fontSize: 12 }}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis 
+                                tick={{ fontSize: 12 }}
+                                tickFormatter={(value) => value.toLocaleString()}
+                            />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend />
+                            <Area
+                                type="monotone"
+                                dataKey="views"
+                                stackId="1"
+                                stroke="#8884d8"
+                                fill="#8884d8"
+                                fillOpacity={0.6}
+                                name="Ko'rishlar"
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="likes"
+                                stackId="1"
+                                stroke="#82ca9d"
+                                fill="#82ca9d"
+                                fillOpacity={0.6}
+                                name="Yoqtirishlar"
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="shares"
+                                stackId="1"
+                                stroke="#ffc658"
+                                fill="#ffc658"
+                                fillOpacity={0.6}
+                                name="Ulashishlar"
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </Box>
+            )}
+
+            {/* Empty State */}
+            {!loading && chartData.length === 0 && (
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    height: 300,
+                    color: 'text.secondary'
+                }}>
+                    <ChartIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                    <Typography variant="h6" gutterBottom>
+                        Ma'lumot topilmadi
+                    </Typography>
+                    <Typography variant="body2">
+                        Tanlangan vaqt oralig'ida post faolligi ma'lumotlari yo'q
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Status indicator */}
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                mt: 2, 
+                pt: 2, 
+                borderTop: '1px solid', 
+                borderColor: 'divider' 
+            }}>
+                <Typography variant="caption" color="text.secondary">
+                    So'ngi yangilash: {new Date().toLocaleTimeString()}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    {autoRefresh && refreshInterval !== 'disabled' && (
+                        <Chip 
+                            size="small" 
+                            label="🔄 Avtomatik yangilash" 
+                            color="primary" 
+                            variant="outlined"
+                        />
+                    )}
+                    {summaryStats && summaryStats.growthRate > 10 && (
+                        <Chip 
+                            size="small" 
+                            label="📈 Yuqori o'sish" 
+                            color="success" 
+                        />
+                    )}
+                </Box>
+            </Box>
+        </Paper>
+    );
+};
+
+export default PostViewDynamicsChart;

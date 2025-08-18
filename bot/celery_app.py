@@ -83,7 +83,7 @@ def resilient_task(**opts):
         
         def monitored_apply_async(*args, **kwargs):
             task_name = task.name
-            metrics.record_metric(f"celery_task_queued", 1.0, {"task": task_name})
+            metrics.record_metric("celery_task_queued", 1.0, {"task": task_name})
             return original_apply_async(*args, **kwargs)
         
         task.apply_async = monitored_apply_async

@@ -10,16 +10,15 @@ Features:
 - Automated recommendations
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
 from pydantic import BaseModel, Field
 import uvicorn
 
 # Import our ML services
-from bot.services.ml.prediction_service import PredictionService, ContentMetrics
+from bot.services.ml.prediction_service import PredictionService
 from bot.services.ml.content_optimizer import ContentOptimizer
 from bot.services.ml.churn_predictor import ChurnPredictor  
 from bot.services.ml.engagement_analyzer import EngagementAnalyzer

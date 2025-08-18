@@ -9,11 +9,10 @@ Features:
 - Performance prediction
 """
 
-import asyncio
 import logging
 import sys
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import List
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import uvicorn

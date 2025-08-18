@@ -4,13 +4,11 @@
 This is a completely independent AI/ML API without any project dependencies.
 """
 
-import asyncio
 import logging
-import json
 import re
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Tuple
+from dataclasses import dataclass
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import uvicorn

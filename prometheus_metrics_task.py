@@ -1,4 +1,18 @@
 # Prometheus metrics task - append to tasks.py
+import asyncio
+import logging
+from bot.celery_app import celery_app, resilient_task
+from bot.utils.error_handler import ErrorHandler, ErrorContext
+
+logger = logging.getLogger(__name__)
+
+async def cleanup_resources():
+    """Clean up resources after task completion"""
+    try:
+        # Add any cleanup logic here
+        pass
+    except Exception as e:
+        logger.error(f"Error during cleanup: {e}")
 
 @resilient_task(name="bot.tasks.update_prometheus_metrics", bind=True)
 def update_prometheus_metrics(self):  # type: ignore[override]

@@ -6,7 +6,7 @@ Full-featured security API with comprehensive authentication, authorization,
 and security monitoring capabilities.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Request, status, Response
+from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -15,8 +15,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import redis
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from datetime import datetime
+from typing import Optional, Dict, Any
 import logging
 import uvicorn
 

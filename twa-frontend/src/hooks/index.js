@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAppStore } from '../store/appStore.js';
 
 /**
@@ -119,22 +119,27 @@ export const useOptimizedList = (items, keyExtractor) => {
 };
 
 /**
- * Custom hook for managing media uploads
+ * Custom hook for managing media uploads (Enhanced for TWA Phase 2.1)
  */
 export const useMediaUpload = () => {
-    const { uploadMedia, pendingMedia, clearPendingMedia } = useAppStore();
+    const { uploadMedia, uploadMediaDirect, pendingMedia, clearPendingMedia } = useAppStore();
     const [uploadProgress, setUploadProgress] = useState(0);
     const { loading, error } = useLoadingState('uploadMedia');
 
-    const handleUpload = useCallback(async (file) => {
+    // Enhanced upload handler with direct upload support
+    const handleUpload = useCallback(async (file, channelId = null) => {
         if (!file) return;
 
         // Validate file
-        const maxSize = 10 * 1024 * 1024; // 10MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4'];
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm', 'video/mov',
+            'application/pdf', 'text/plain'
+        ];
 
         if (file.size > maxSize) {
-            throw new Error('File size must be less than 10MB');
+            throw new Error('File size must be less than 50MB');
         }
 
         if (!allowedTypes.includes(file.type)) {
@@ -142,20 +147,51 @@ export const useMediaUpload = () => {
         }
 
         setUploadProgress(0);
-        return uploadMedia(file);
-    }, [uploadMedia]);
+        
+        // Use direct upload if channel specified, otherwise use regular upload
+        if (channelId) {
+            return uploadMediaDirect(file, channelId);
+        } else {
+            return uploadMedia(file);
+        }
+    }, [uploadMedia, uploadMediaDirect]);
+
+    // Enhanced upload with progress tracking
+    const handleUploadWithProgress = useCallback(async (file, channelId = null, onProgress = null) => {
+        if (!file) return;
+
+        try {
+            const result = await handleUpload(file, channelId);
+            
+            // Update progress state if callback provided
+            if (onProgress && pendingMedia.uploadProgress !== undefined) {
+                setUploadProgress(pendingMedia.uploadProgress);
+                onProgress(pendingMedia.uploadProgress);
+            }
+            
+            return result;
+        } catch (error) {
+            setUploadProgress(0);
+            throw error;
+        }
+    }, [handleUpload, pendingMedia.uploadProgress]);
 
     useEffect(() => {
-        setUploadProgress(pendingMedia.uploadProgress);
+        setUploadProgress(pendingMedia.uploadProgress || 0);
     }, [pendingMedia.uploadProgress]);
 
     return {
         handleUpload,
+        handleUploadWithProgress,
         uploadProgress,
         pendingMedia,
         clearPendingMedia,
         loading,
-        error
+        error,
+        // Enhanced metadata
+        uploadSpeed: pendingMedia.uploadSpeed || 0,
+        uploadType: pendingMedia.uploadType || 'storage',
+        metadata: pendingMedia.metadata || {}
     };
 };
 

@@ -1,128 +1,143 @@
-import * as Sentry from "@sentry/react";
+/**
+ * Enhanced Error Handler for TWA Phase 2.1
+ */
 
-export class ErrorHandler {
+class ErrorHandler {
     /**
-     * Centralized error handling for the application
+     * Handle API errors with context
+     */
+    static handleApiError(error, endpoint, context = {}) {
+        console.error(`API Error [${endpoint}]:`, {
+            error: error.message,
+            context,
+            timestamp: new Date().toISOString()
+        });
+
+        // Return user-friendly error message
+        if (error.response) {
+            const { status } = error.response;
+            switch (status) {
+                case 400:
+                    return 'Invalid request. Please check your input.';
+                case 401:
+                    return 'Authentication failed. Please try again.';
+                case 403:
+                    return 'Access denied. Check your permissions.';
+                case 404:
+                    return 'Resource not found.';
+                case 413:
+                    return 'File too large. Maximum size exceeded.';
+                case 429:
+                    return 'Too many requests. Please wait and try again.';
+                case 500:
+                    return 'Server error. Please try again later.';
+                default:
+                    return `Request failed with status ${status}`;
+            }
+        }
+
+        // Network or other errors
+        if (error.message.includes('timeout')) {
+            return 'Request timeout. Please check your connection.';
+        }
+
+        if (error.message.includes('network')) {
+            return 'Network error. Please check your connection.';
+        }
+
+        return error.message || 'An unexpected error occurred.';
+    }
+
+    /**
+     * Handle general application errors
      */
     static handleError(error, context = {}) {
-        // Log to console for development
         console.error('Application Error:', {
-            message: error.message,
+            error: error.message,
             stack: error.stack,
             context,
             timestamp: new Date().toISOString()
         });
 
-        // Report to Sentry
-        Sentry.captureException(error, {
-            tags: {
-                component: context.component || 'unknown',
-                action: context.action || 'unknown'
-            },
-            extra: context
+        // In development, you might want to show more details
+        if (import.meta.env?.DEV) {
+            console.groupCollapsed('Error Details');
+            console.error('Error object:', error);
+            console.error('Context:', context);
+            console.groupEnd();
+        }
+
+        return error.message || 'An error occurred';
+    }
+
+    /**
+     * Handle file upload errors
+     */
+    static handleUploadError(error, file = null) {
+        console.error('Upload Error:', {
+            error: error.message,
+            fileName: file?.name,
+            fileSize: file?.size,
+            fileType: file?.type,
+            timestamp: new Date().toISOString()
         });
 
-        // Show user-friendly error message
-        this.showUserError(error, context);
-    }
-
-    /**
-     * Handle API errors specifically
-     */
-    static handleApiError(error, endpoint, context = {}) {
-        const apiContext = {
-            ...context,
-            endpoint,
-            errorType: 'api_error',
-            status: error.response?.status,
-            statusText: error.response?.statusText
-        };
-
-        this.handleError(error, apiContext);
-
-        // Return structured error for UI handling
-        return {
-            type: 'api_error',
-            message: this.getErrorMessage(error),
-            status: error.response?.status,
-            canRetry: this.canRetry(error)
-        };
-    }
-
-    /**
-     * Show user-friendly error notifications
-     */
-    static showUserError(error, context = {}) {
-        const message = this.getErrorMessage(error);
-        
-        // Use browser notification API if available
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Error occurred', {
-                body: message,
-                icon: '/favicon.ico'
-            });
-        } else {
-            // Fallback to alert (you might want to use a toast library)
-            alert(`Error: ${message}`);
+        // Specific upload error messages
+        if (error.message.includes('File too large')) {
+            return 'File is too large. Please choose a smaller file.';
         }
+
+        if (error.message.includes('File type not supported')) {
+            return 'File type not supported. Please choose a different file format.';
+        }
+
+        if (error.message.includes('Upload timeout')) {
+            return 'Upload timed out. Please check your connection and try again.';
+        }
+
+        return this.handleApiError(error, '/upload', { fileName: file?.name });
     }
 
     /**
-     * Get user-friendly error message
+     * Validate file before upload
      */
-    static getErrorMessage(error) {
-        if (error.response?.data?.detail) {
-            return error.response.data.detail;
+    static validateFile(file) {
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        const allowedTypes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm', 'video/mov',
+            'application/pdf', 'text/plain'
+        ];
+
+        if (!file) {
+            throw new Error('No file selected');
         }
-        
+
+        if (file.size > maxSize) {
+            throw new Error('File too large. Maximum size is 50MB.');
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            throw new Error(`File type not supported: ${file.type}`);
+        }
+
+        return true;
+    }
+
+    /**
+     * Format error for user display
+     */
+    static formatErrorMessage(error) {
+        if (typeof error === 'string') {
+            return error;
+        }
+
         if (error.message) {
             return error.message;
         }
-        
-        return 'An unexpected error occurred';
-    }
 
-    /**
-     * Determine if operation can be retried
-     */
-    static canRetry(error) {
-        const retryableStatuses = [408, 429, 500, 502, 503, 504];
-        return retryableStatuses.includes(error.response?.status);
+        return 'An unexpected error occurred';
     }
 }
 
-/**
- * Higher-order component for error boundary
- */
-export const withErrorBoundary = (Component, fallbackComponent = null) => {
-    return Sentry.withErrorBoundary(Component, {
-        fallback: fallbackComponent || (({ error, resetError }) => (
-            <div style={{ padding: '20px', textAlign: 'center' }}>
-                <h2>Something went wrong</h2>
-                <p>{error.message}</p>
-                <button onClick={resetError}>Try again</button>
-            </div>
-        )),
-        beforeCapture: (scope) => {
-            scope.setTag('errorBoundary', true);
-        }
-    });
-};
-
-/**
- * Hook for handling async operations with error handling
- */
-export const useErrorHandler = () => {
-    const handleAsyncError = (asyncFn, context = {}) => {
-        return async (...args) => {
-            try {
-                return await asyncFn(...args);
-            } catch (error) {
-                ErrorHandler.handleError(error, context);
-                throw error; // Re-throw for component handling
-            }
-        };
-    };
-
-    return { handleAsyncError };
-};
+export { ErrorHandler };

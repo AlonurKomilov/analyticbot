@@ -116,7 +116,7 @@ async def audit_logging(request: Request, call_next):
         
         logger.info(
             f"Security API: {request.method} {request.url.path} "
-            f"from {client_ip} - {response.status_code} ({duration:.3f}s)"
+            f"from {client_ip} ({user_agent[:50]}...) - {response.status_code} ({duration:.3f}s)"
         )
     
     return response
@@ -235,7 +235,8 @@ async def register(
         # Generate verification token
         verification_token = user.generate_verification_token()
         
-        # TODO: Send verification email
+        # TODO: Send verification email with token
+        logger.info(f"Generated verification token for user {user.username}: {verification_token[:8]}...")
         
         logger.info(f"New user registered: {user.username}")
         

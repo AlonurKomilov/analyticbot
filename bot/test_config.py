@@ -39,9 +39,11 @@ class TestSettings(BaseSettings):
         """Build Redis URL from components"""
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore"  # Ignore extra fields from .env
+    }
 
 
 # Create test settings instance

@@ -216,6 +216,106 @@ class ApiClient {
             xhr.send(formData);
         });
     }
+
+    /**
+     * Enhanced direct upload with channel targeting (NEW for TWA Phase 2.1)
+     */
+    async uploadFileDirect(file, channelId = null, onProgress = null) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Add channel_id if provided
+            if (channelId) {
+                formData.append('channel_id', channelId.toString());
+            }
+
+            // Progress tracking with enhanced metadata
+            if (onProgress) {
+                xhr.upload.addEventListener('progress', (event) => {
+                    if (event.lengthComputable) {
+                        const progress = (event.loaded / event.total) * 100;
+                        onProgress({
+                            progress,
+                            loaded: event.loaded,
+                            total: event.total,
+                            speed: event.loaded / ((Date.now() - startTime) / 1000) // bytes per second
+                        });
+                    }
+                });
+            }
+
+            const startTime = Date.now();
+
+            // Success handler with enhanced response
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        // Enhanced response with upload metadata
+                        resolve({
+                            ...response,
+                            upload_duration: Date.now() - startTime,
+                            upload_speed: file.size / ((Date.now() - startTime) / 1000)
+                        });
+                    } catch (error) {
+                        reject(new Error('Invalid JSON response'));
+                    }
+                } else {
+                    const error = new Error(`Direct upload failed: ${xhr.statusText}`);
+                    error.response = {
+                        status: xhr.status,
+                        statusText: xhr.statusText
+                    };
+                    reject(ErrorHandler.handleApiError(error, '/api/v1/media/upload-direct', {
+                        component: 'ApiClient',
+                        action: 'uploadFileDirect',
+                        channelId
+                    }));
+                }
+            });
+
+            // Error handler
+            xhr.addEventListener('error', () => {
+                const error = new Error('Direct upload failed');
+                reject(ErrorHandler.handleApiError(error, '/api/v1/media/upload-direct', {
+                    component: 'ApiClient',
+                    action: 'uploadFileDirect',
+                    channelId
+                }));
+            });
+
+            // Timeout handler
+            xhr.addEventListener('timeout', () => {
+                const error = new Error('Direct upload timeout');
+                error.response = { status: 408 };
+                reject(ErrorHandler.handleApiError(error, '/api/v1/media/upload-direct', {
+                    component: 'ApiClient',
+                    action: 'uploadFileDirect',
+                    channelId
+                }));
+            });
+
+            // Set timeout and headers
+            xhr.timeout = REQUEST_TIMEOUT;
+            
+            // Set auth header
+            const twaInitData = window.Telegram?.WebApp?.initData || '';
+            xhr.setRequestHeader('Authorization', `TWA ${twaInitData}`);
+
+            // Start upload to enhanced direct endpoint
+            xhr.open('POST', `${this.baseURL}/api/v1/media/upload-direct`);
+            xhr.send(formData);
+        });
+    }
+
+    /**
+     * Get storage files for media browser (NEW for TWA Phase 2.1)
+     */
+    async getStorageFiles(limit = 20, offset = 0) {
+        return this.get(`/api/v1/media/storage-files?limit=${limit}&offset=${offset}`);
+    }
 }
 
 // Create singleton instance

@@ -6,9 +6,15 @@ and production-ready defaults.
 """
 
 import os
+import secrets
+import warnings
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
+
+def generate_secure_key() -> str:
+    """Generate a cryptographically secure random key"""
+    return secrets.token_urlsafe(32)
 
 class SecurityConfig(BaseSettings):
     """
@@ -17,9 +23,9 @@ class SecurityConfig(BaseSettings):
     All security-related settings with production defaults
     """
     
-    # JWT Configuration
-    SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-super-secret-key-change-in-production")
-    REFRESH_SECRET_KEY: str = os.getenv("JWT_REFRESH_SECRET_KEY", "your-refresh-secret-key-change-in-production") 
+    # JWT Configuration - Generate secure defaults if not provided
+    SECRET_KEY: str = os.getenv("JWT_SECRET_KEY") or generate_secure_key()
+    REFRESH_SECRET_KEY: str = os.getenv("JWT_REFRESH_SECRET_KEY") or generate_secure_key()
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
@@ -94,8 +100,10 @@ class SecurityConfig(BaseSettings):
     @classmethod
     def validate_secret_keys(cls, v):
         """Validate secret keys are properly set"""
+        # Only warn if using old default values, not auto-generated ones
         if v in ["your-super-secret-key-change-in-production", "your-refresh-secret-key-change-in-production"]:
-            print("⚠️  WARNING: Using default secret keys! Change in production!")
+            warnings.warn("⚠️  WARNING: Using default secret keys! Set JWT_SECRET_KEY and JWT_REFRESH_SECRET_KEY environment variables for production!", 
+                         category=RuntimeWarning, stacklevel=2)
         if len(v) < 32:
             raise ValueError("Secret keys must be at least 32 characters long")
         return v

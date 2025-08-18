@@ -254,7 +254,7 @@ class PerformanceAwareContainer:
             ]
             
             for service_name in services:
-                service = getattr(self.container, service_name)()
+                service = getattr(self.container, service_name)()  # noqa: F841 - Service warmup
                 logger.debug(f"📝 Initialized {service_name}")
             
             # Initialize ML services (Phase 2.5)
@@ -281,12 +281,12 @@ class PerformanceAwareContainer:
             await churn_predictor.initialize_model()
             logger.debug("✅ Churn predictor initialized")
             
-            # Initialize content optimizer (no async init needed)
-            content_optimizer = self.container.content_optimizer()
+            # Initialize content optimizer (service warmup)
+            content_optimizer = self.container.content_optimizer()  # noqa: F841 - Service warmup
             logger.debug("✅ Content optimizer initialized")
             
-            # Initialize engagement analyzer (orchestrator)
-            engagement_analyzer = self.container.engagement_analyzer()
+            # Initialize engagement analyzer (orchestrator - service warmup)
+            engagement_analyzer = self.container.engagement_analyzer()  # noqa: F841 - Service warmup
             logger.debug("✅ Engagement analyzer initialized")
             
             logger.info("🚀 ML/AI services initialized successfully")

@@ -1,0 +1,399 @@
+"""
+🔒 Multi-Factor Authentication (MFA) - TOTP Implementation
+
+Enterprise-grade MFA system with TOTP (Time-based One-Time Password)
+support, backup codes, and QR code generation.
+"""
+
+from typing import Optional, List, Tuple
+import secrets
+import pyotp
+import qrcode
+from io import BytesIO
+import base64
+import json
+import redis
+from datetime import datetime, timedelta
+import logging
+
+from .config import SecurityConfig
+from .models import User, MFASetupResponse
+
+logger = logging.getLogger(__name__)
+
+class MFAManager:
+    """
+    🔐 Multi-Factor Authentication Manager
+    
+    Provides comprehensive MFA functionality:
+    - TOTP token generation and validation
+    - QR code generation for authenticator apps
+    - Backup codes for account recovery
+    - MFA enforcement policies
+    - Rate limiting for MFA attempts
+    """
+    
+    def __init__(self):
+        self.config = SecurityConfig()
+        self.redis_client = redis.Redis(
+            host=self.config.REDIS_HOST,
+            port=self.config.REDIS_PORT,
+            db=self.config.REDIS_DB,
+            decode_responses=True
+        )
+    
+    def generate_secret(self, user: User) -> str:
+        """
+        Generate TOTP secret for user
+        
+        Args:
+            user: User object
+            
+        Returns:
+            Base32 encoded secret string
+        """
+        # Generate random secret
+        secret = pyotp.random_base32()
+        
+        logger.info(f"Generated MFA secret for user {user.username}")
+        return secret
+    
+    def generate_qr_code(self, user: User, secret: str) -> str:
+        """
+        Generate QR code for TOTP setup
+        
+        Args:
+            user: User object
+            secret: TOTP secret
+            
+        Returns:
+            Base64 encoded QR code image
+        """
+        # Create TOTP URL
+        totp_url = pyotp.totp.TOTP(secret).provisioning_uri(
+            name=user.email,
+            issuer_name=self.config.MFA_ISSUER
+        )
+        
+        # Generate QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(totp_url)
+        qr.make(fit=True)
+        
+        # Create QR code image
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64
+        buffered = BytesIO()
+        img.save(buffered)
+        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+        
+        logger.info(f"Generated QR code for user {user.username}")
+        return f"data:image/png;base64,{img_base64}"
+    
+    def generate_backup_codes(self, count: int = 10) -> List[str]:
+        """
+        Generate backup codes for account recovery
+        
+        Args:
+            count: Number of backup codes to generate
+            
+        Returns:
+            List of backup codes
+        """
+        backup_codes = []
+        for _ in range(count):
+            # Generate 8-character alphanumeric code
+            code = ''.join(secrets.choice('ABCDEFGHJKMNPQRSTUVWXYZ23456789') for _ in range(8))
+            backup_codes.append(code)
+        
+        logger.info(f"Generated {count} backup codes")
+        return backup_codes
+    
+    def setup_mfa(self, user: User) -> MFASetupResponse:
+        """
+        Setup MFA for user
+        
+        Args:
+            user: User object
+            
+        Returns:
+            MFA setup response with secret, QR code, and backup codes
+        """
+        # Generate secret
+        secret = self.generate_secret(user)
+        
+        # Generate QR code
+        qr_code = self.generate_qr_code(user, secret)
+        
+        # Generate backup codes
+        backup_codes = self.generate_backup_codes()
+        
+        # Store in Redis temporarily (user needs to verify before enabling)
+        setup_data = {
+            "secret": secret,
+            "backup_codes": backup_codes,
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        self.redis_client.setex(
+            f"mfa_setup:{user.id}",
+            3600,  # 1 hour expiration
+            json.dumps(setup_data)
+        )
+        
+        logger.info(f"MFA setup initiated for user {user.username}")
+        
+        return MFASetupResponse(
+            secret=secret,
+            qr_code=qr_code,
+            backup_codes=backup_codes
+        )
+    
+    def verify_setup_token(self, user: User, token: str) -> bool:
+        """
+        Verify TOTP token during MFA setup
+        
+        Args:
+            user: User object
+            token: TOTP token to verify
+            
+        Returns:
+            Verification success status
+        """
+        # Check rate limiting
+        if not self._check_mfa_rate_limit(user.id):
+            logger.warning(f"MFA verification rate limited for user {user.username}")
+            return False
+        
+        # Get setup data from Redis
+        setup_data_str = self.redis_client.get(f"mfa_setup:{user.id}")
+        if not setup_data_str:
+            logger.warning(f"No MFA setup data found for user {user.username}")
+            return False
+        
+        try:
+            setup_data = json.loads(setup_data_str)
+            secret = setup_data["secret"]
+            
+            # Verify TOTP token
+            totp = pyotp.TOTP(secret)
+            is_valid = totp.verify(token, valid_window=1)  # Allow 1 step tolerance
+            
+            if is_valid:
+                logger.info(f"MFA setup verification successful for user {user.username}")
+                
+                # Update user with MFA settings
+                user.mfa_secret = secret
+                user.is_mfa_enabled = True
+                
+                # Store backup codes securely
+                self._store_backup_codes(user.id, setup_data["backup_codes"])
+                
+                # Clean up setup data
+                self.redis_client.delete(f"mfa_setup:{user.id}")
+                
+                return True
+            else:
+                logger.warning(f"Invalid MFA setup token for user {user.username}")
+                self._record_mfa_attempt(user.id)
+                return False
+                
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Error verifying MFA setup token: {e}")
+            return False
+    
+    def verify_mfa_token(self, user: User, token: str) -> bool:
+        """
+        Verify TOTP token for authentication
+        
+        Args:
+            user: User object
+            token: TOTP token to verify
+            
+        Returns:
+            Verification success status
+        """
+        if not user.is_mfa_enabled or not user.mfa_secret:
+            return False
+        
+        # Check rate limiting
+        if not self._check_mfa_rate_limit(user.id):
+            logger.warning(f"MFA verification rate limited for user {user.username}")
+            return False
+        
+        # Check if token was recently used (replay protection)
+        token_key = f"used_mfa_token:{user.id}:{token}"
+        if self.redis_client.exists(token_key):
+            logger.warning(f"MFA token replay attempt for user {user.username}")
+            return False
+        
+        # Verify TOTP token
+        totp = pyotp.TOTP(user.mfa_secret)
+        is_valid = totp.verify(token, valid_window=1)
+        
+        if is_valid:
+            # Mark token as used (prevent replay attacks)
+            self.redis_client.setex(token_key, 60, "used")  # Valid for 1 minute
+            
+            logger.info(f"MFA token verification successful for user {user.username}")
+            return True
+        else:
+            logger.warning(f"Invalid MFA token for user {user.username}")
+            self._record_mfa_attempt(user.id)
+            return False
+    
+    def verify_backup_code(self, user: User, backup_code: str) -> bool:
+        """
+        Verify backup code for account recovery
+        
+        Args:
+            user: User object
+            backup_code: Backup code to verify
+            
+        Returns:
+            Verification success status
+        """
+        if not user.is_mfa_enabled:
+            return False
+        
+        # Check rate limiting
+        if not self._check_mfa_rate_limit(user.id):
+            logger.warning(f"Backup code verification rate limited for user {user.username}")
+            return False
+        
+        # Get backup codes from Redis
+        backup_codes_str = self.redis_client.get(f"backup_codes:{user.id}")
+        if not backup_codes_str:
+            logger.warning(f"No backup codes found for user {user.username}")
+            return False
+        
+        try:
+            backup_codes = json.loads(backup_codes_str)
+            
+            # Check if backup code exists and is unused
+            normalized_code = backup_code.upper().replace("-", "").replace(" ", "")
+            
+            for i, stored_code in enumerate(backup_codes):
+                if stored_code == normalized_code:
+                    # Mark backup code as used (remove from list)
+                    backup_codes.pop(i)
+                    
+                    # Update stored backup codes
+                    self.redis_client.setex(
+                        f"backup_codes:{user.id}",
+                        int(timedelta(days=365).total_seconds()),  # 1 year expiration
+                        json.dumps(backup_codes)
+                    )
+                    
+                    logger.info(f"Backup code used successfully for user {user.username}")
+                    return True
+            
+            logger.warning(f"Invalid backup code for user {user.username}")
+            self._record_mfa_attempt(user.id)
+            return False
+            
+        except json.JSONDecodeError:
+            logger.error(f"Error decoding backup codes for user {user.username}")
+            return False
+    
+    def disable_mfa(self, user: User) -> bool:
+        """
+        Disable MFA for user
+        
+        Args:
+            user: User object
+            
+        Returns:
+            Success status
+        """
+        user.is_mfa_enabled = False
+        user.mfa_secret = None
+        
+        # Remove backup codes
+        self.redis_client.delete(f"backup_codes:{user.id}")
+        
+        # Clear MFA rate limiting
+        self.redis_client.delete(f"mfa_attempts:{user.id}")
+        
+        logger.info(f"MFA disabled for user {user.username}")
+        return True
+    
+    def regenerate_backup_codes(self, user: User) -> List[str]:
+        """
+        Regenerate backup codes for user
+        
+        Args:
+            user: User object
+            
+        Returns:
+            New list of backup codes
+        """
+        if not user.is_mfa_enabled:
+            raise ValueError("MFA must be enabled to regenerate backup codes")
+        
+        # Generate new backup codes
+        new_backup_codes = self.generate_backup_codes()
+        
+        # Store new backup codes
+        self._store_backup_codes(user.id, new_backup_codes)
+        
+        logger.info(f"Backup codes regenerated for user {user.username}")
+        return new_backup_codes
+    
+    def get_remaining_backup_codes_count(self, user_id: str) -> int:
+        """
+        Get number of remaining backup codes
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Number of remaining backup codes
+        """
+        backup_codes_str = self.redis_client.get(f"backup_codes:{user_id}")
+        if not backup_codes_str:
+            return 0
+        
+        try:
+            backup_codes = json.loads(backup_codes_str)
+            return len(backup_codes)
+        except json.JSONDecodeError:
+            return 0
+    
+    def _store_backup_codes(self, user_id: str, backup_codes: List[str]) -> None:
+        """Store backup codes in Redis"""
+        self.redis_client.setex(
+            f"backup_codes:{user_id}",
+            int(timedelta(days=365).total_seconds()),  # 1 year expiration
+            json.dumps(backup_codes)
+        )
+    
+    def _check_mfa_rate_limit(self, user_id: str) -> bool:
+        """Check MFA attempt rate limiting"""
+        attempts_key = f"mfa_attempts:{user_id}"
+        attempts = self.redis_client.get(attempts_key)
+        
+        if attempts and int(attempts) >= 5:  # Max 5 attempts per window
+            return False
+        
+        return True
+    
+    def _record_mfa_attempt(self, user_id: str) -> None:
+        """Record MFA attempt for rate limiting"""
+        attempts_key = f"mfa_attempts:{user_id}"
+        
+        # Increment attempts counter
+        self.redis_client.incr(attempts_key)
+        
+        # Set expiration if it's the first attempt
+        if not self.redis_client.ttl(attempts_key) or self.redis_client.ttl(attempts_key) == -1:
+            self.redis_client.expire(attempts_key, 300)  # 5 minutes window
+
+# Global MFA manager instance
+mfa_manager = MFAManager()

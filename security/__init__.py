@@ -1,0 +1,33 @@
+"""
+🔒 PHASE 3.5: SECURITY ENHANCEMENT
+Authentication & Authorization Framework
+
+This module provides comprehensive security services including:
+- OAuth 2.0 integration (Google, GitHub)
+- JWT token management with refresh tokens
+- Multi-factor authentication (TOTP)
+- Role-based access control (RBAC)
+- Session management
+- Password security
+"""
+
+from .auth import SecurityManager, create_access_token, verify_token
+from .models import User, UserRole, UserSession
+from .oauth import OAuthManager
+from .mfa import MFAManager
+from .rbac import RBACManager
+
+__all__ = [
+    "SecurityManager",
+    "create_access_token", 
+    "verify_token",
+    "User",
+    "UserRole", 
+    "UserSession",
+    "OAuthManager",
+    "MFAManager",
+    "RBACManager"
+]
+
+__version__ = "3.5.0"
+__author__ = "AnalyticBot Security Team"

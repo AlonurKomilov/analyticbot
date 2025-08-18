@@ -12,6 +12,7 @@ from bot.database.repositories import ChannelRepository
 from bot.services.analytics_service import AnalyticsService
 from bot.services.guard_service import GuardService
 from bot.services.scheduler_service import SchedulerService
+from bot.services.prometheus_service import prometheus_service
 
 router = Router()
 
@@ -87,6 +88,7 @@ async def add_channel_handler(
     channel_repo: ChannelRepository,
     i18n: I18nContext,
 ):
+    prometheus_service.record_telegram_update("add_channel")
     channel_username = command.args
     if not channel_username or not channel_username.startswith("@"):
         await message.reply(i18n.get("add-channel-usage"))
@@ -291,6 +293,7 @@ async def handle_schedule(
     scheduler_service: SchedulerService,
     i18n: I18nContext,
 ):
+    prometheus_service.record_telegram_update("schedule_post")
     if command.args is None:
         await message.reply(i18n.get("schedule-usage"))
         return

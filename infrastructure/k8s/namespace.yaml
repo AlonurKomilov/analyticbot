@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: analyticbot
+  labels:
+    environment: production
+    app: analyticbot
+    managed-by: kubernetes

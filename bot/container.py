@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from typing import TypeVar, Type, cast, Optional, Callable, Any
 import inspect
+import logging
 
 import punq
 from punctuated import Singleton
 
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+
+# Logging setup
+logger = logging.getLogger(__name__)
 
 # Aiogram identity (v3)
 try:
@@ -94,12 +98,24 @@ def _val(x: Any) -> Any:
 
 
 def _pool_or_none() -> Optional[Any]:
-    """DB (asyncpg Pool yoki async_sessionmaker) ni qaytaradi; bo'lmasa None."""
+    """
+    Get database pool with improved error handling.
+    Returns DB (asyncpg Pool or async_sessionmaker) or None if not available.
+    """
     try:
-        v = _val(container.db_session)
-    except Exception:
+        pool_value = _val(container.db_session)
+        
+        # If it's a coroutine and warmup hasn't happened, return None
+        if hasattr(pool_value, "__await__"):
+            logger.warning("Database pool not initialized (warmup required)")
+            return None
+            
+        return pool_value
+    except Exception as e:
+        from bot.utils.error_handler import ErrorHandler, ErrorContext
+        context = ErrorContext().add("operation", "get_database_pool")
+        ErrorHandler.handle_database_error(e, context)
         return None
-    return v  # coroutine bo'lsa ham – servis/repo factory ichida handle qilamiz
 
 
 def _make_repo(RepoCls: type) -> object:

@@ -1,0 +1,55 @@
+{
+  "system_baseline": {
+    "cpu_cores": 2,
+    "cpu_freq_mhz": 3233.3675,
+    "memory_total_gb": 7.758457183837891,
+    "memory_available_gb": 2.1539955139160156,
+    "disk_total_gb": 31.32598876953125,
+    "disk_free_gb": 26.145984649658203
+  },
+  "async_performance": {
+    "single_task_time": 0.0011234069997954066,
+    "batch_time": 0.0022804580003139563,
+    "concurrent_time": 0.0016182620001927717,
+    "concurrency_speedup": 1.4092019710295998
+  },
+  "memory_performance": {
+    "small_alloc_time": 0.00035134599966113456,
+    "large_alloc_time": 0.03183024600002682,
+    "memory_used_mb": 28.625,
+    "memory_freed_mb": 26.359375,
+    "allocation_rate": 3141665.9487933503
+  },
+  "cpu_performance": {
+    "math_time": 0.00516391100063629,
+    "string_time": 0.000982425000074727,
+    "sort_time": 0.0062038029991526855,
+    "math_throughput": 19365167.212927982
+  },
+  "concurrent_io": {
+    "concurrency_results": {
+      "1": {
+        "time": 0.001225368000632443,
+        "throughput": 816.0813726846752
+      },
+      "2": {
+        "time": 0.0011594039997362415,
+        "throughput": 1725.0242369829582
+      },
+      "5": {
+        "time": 0.0012363880005068495,
+        "throughput": 4044.037954064809
+      },
+      "10": {
+        "time": 0.0014224380001905956,
+        "throughput": 7030.183388421905
+      },
+      "20": {
+        "time": 0.0014185189993440872,
+        "throughput": 14099.21193106885
+      }
+    },
+    "optimal_concurrency": 20,
+    "max_throughput": 14099.21193106885
+  }
+}

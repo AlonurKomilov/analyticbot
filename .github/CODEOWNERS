@@ -1,0 +1,150 @@
+# Global Code Owners Configuration
+# This file defines who should review code changes in different parts of the repository
+# Users listed here will be automatically requested for reviews when files in their areas are modified
+
+# Default owners for everything in the repo
+# These owners will be requested for review unless more specific rules apply
+*       @lead-maintainer @project-lead
+
+# Root configuration files - require admin approval
+/.github/                    @admin-team @devops-lead
+/docker-compose.yml          @devops-lead @backend-lead
+/Dockerfile                  @devops-lead @backend-lead  
+/pyproject.toml              @backend-lead @lead-maintainer
+/poetry.lock                 @backend-lead
+/requirements.txt            @backend-lead
+/alembic.ini                 @backend-lead @database-admin
+/Makefile                    @devops-lead @backend-lead
+
+# Database related files - require database admin approval
+/alembic/                    @database-admin @backend-lead
+/postgres-init/              @database-admin @devops-lead
+**/models.py                 @database-admin @backend-lead
+**/repositories/             @database-admin @backend-lead
+/bot/database/               @database-admin @backend-lead
+
+# Backend core application
+/bot/                        @backend-lead @backend-team
+/api.py                      @backend-lead @api-team
+/run_bot.py                  @backend-lead
+/health_app.py               @backend-lead @devops-lead
+/init_db.py                  @database-admin @backend-lead
+
+# Authentication and security - require security review
+/bot/services/auth_service.py     @security-team @backend-lead
+/bot/services/guard_service.py    @security-team @backend-lead
+/bot/handlers/admin_handlers.py   @security-team @backend-lead
+
+# External integrations and services
+/bot/services/analytics_service.py    @data-team @backend-lead
+/bot/services/scheduler_service.py    @backend-lead @devops-lead
+/bot/services/subscription_service.py @backend-lead @business-team
+
+# Frontend application - require frontend team approval
+/twa-frontend/               @frontend-lead @frontend-team
+/twa-frontend/src/           @frontend-team
+/twa-frontend/package.json   @frontend-lead @devops-lead
+/twa-frontend/vite.config.js @frontend-lead @devops-lead
+
+# Frontend core components
+/twa-frontend/src/App*       @frontend-lead
+/twa-frontend/src/components/ @frontend-team
+/twa-frontend/src/hooks/     @frontend-team
+/twa-frontend/src/services/  @frontend-team @backend-team
+/twa-frontend/src/utils/     @frontend-team
+
+# Testing infrastructure - require testing team approval  
+/tests/                      @qa-team @backend-lead
+/twa-frontend/src/**/*.test.* @qa-team @frontend-team
+/pytest.ini                 @qa-team @backend-lead
+/twa-frontend/vitest.config.js @qa-team @frontend-lead
+
+# Performance and load testing
+/tests/test_performance.py   @performance-team @qa-team
+/scripts/                    @devops-team @backend-lead
+
+# CI/CD and DevOps
+/.github/workflows/          @devops-lead @admin-team
+/.github/actions/            @devops-lead
+/entrypoint.sh              @devops-lead
+/.github/dependabot.yml     @devops-lead @security-team
+
+# Security workflows and configurations
+/.github/workflows/security-*.yml @security-team @devops-lead
+/.github/workflows/codeql.yml     @security-team
+/mypy.ini                         @backend-lead @qa-team
+
+# Documentation - require technical writing approval
+/README.md                   @docs-team @lead-maintainer
+/CHANGELOG.md               @docs-team @lead-maintainer
+/docs/                      @docs-team
+/bot/locales/               @i18n-team @docs-team
+
+# Internationalization
+/bot/locales/en/            @i18n-team @docs-team
+/bot/locales/uz/            @i18n-team @docs-team
+/bot/locales/i18n_hub.py    @i18n-team @backend-team
+
+# Configuration and environment files
+/bot/config.py              @devops-lead @backend-lead
+**/settings*.py             @devops-lead @backend-lead
+*.env.example               @devops-lead @security-team
+
+# Utility and helper files
+/bot/utils/                 @backend-team
+/punctuated.py              @backend-team @data-team
+
+# Monitoring and observability
+/bot/utils/monitoring.py    @devops-team @backend-lead
+/bot/utils/error_handler.py @backend-team @qa-team
+
+# Dependency injection and architecture
+/bot/container.py           @backend-lead @architecture-team
+
+# Middleware and request handling
+/bot/middlewares/           @backend-team @security-team
+
+# Task queue and background processing
+/bot/celery_app.py          @backend-lead @devops-lead
+/bot/tasks.py               @backend-team @devops-lead
+
+# Webhooks and external API integrations
+/clear_webhook.py           @backend-lead @security-team
+
+# Critical files that require multiple approvals
+/pyproject.toml             @backend-lead @devops-lead @lead-maintainer
+/.github/workflows/ci*.yml  @devops-lead @qa-team @backend-lead
+/docker-compose.yml         @devops-lead @backend-lead @lead-maintainer
+
+# Emergency override - only for critical hotfixes
+# /hotfix/                  @admin-team
+
+# Branch protection bypass (only for repository admins)
+# This doesn't go in CODEOWNERS but serves as documentation
+# Repository admins can bypass branch protection in true emergencies
+
+#
+# Team Definitions (for reference - configured in GitHub organization settings):
+#
+# @admin-team: Repository administrators with full access
+# @lead-maintainer: Primary maintainer responsible for project direction  
+# @project-lead: Technical project lead
+#
+# @backend-team: Backend developers
+# @backend-lead: Backend team lead
+# @frontend-team: Frontend/UI developers  
+# @frontend-lead: Frontend team lead
+#
+# @devops-team: DevOps/Infrastructure team
+# @devops-lead: DevOps team lead
+# @qa-team: Quality assurance team
+# @security-team: Security specialists
+# @performance-team: Performance optimization specialists
+#
+# @database-admin: Database administrators
+# @api-team: API design and development specialists
+# @docs-team: Technical documentation team
+# @i18n-team: Internationalization specialists
+# @data-team: Data analytics team
+# @architecture-team: Software architecture specialists
+# @business-team: Business/product stakeholders

@@ -1,0 +1,28 @@
+# Production requirements for Kubernetes deployment
+prometheus-client==0.17.1
+psutil==5.9.5
+gunicorn==21.2.0
+uvicorn[standard]==0.23.2
+
+# Health monitoring
+httpx==0.24.1
+
+# Performance monitoring
+py-spy==0.3.14
+
+# Security
+cryptography>=41.0.0
+
+# Production logging
+python-json-logger==2.0.7
+structlog==23.1.0
+
+# Database optimizations
+psycopg2-binary==2.9.7
+asyncpg[speedups]==0.28.0
+
+# Redis optimizations
+redis[hiredis]==4.6.0
+
+# Memory profiling
+memory-profiler==0.60.0

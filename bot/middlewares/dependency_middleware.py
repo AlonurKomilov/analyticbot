@@ -90,7 +90,10 @@ class DependencyMiddleware(BaseMiddleware):
         if asyncio.iscoroutine(session_pool):
             try:
                 session_pool = await session_pool  # type: ignore[func-returns-value]
-            except Exception:
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning("DB pool resolve failed, using fallback repositories: %s", e)
                 session_pool = None
 
         if session_pool is not None:

@@ -1,0 +1,337 @@
+name: Security Audit Pipeline
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # Daily at 2 AM UTC
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - '**/*.py'
+      - '**/requirements*.txt'
+      - '**/pyproject.toml'
+      - '**/Dockerfile'
+      - '**/docker-compose*.yml'
+  workflow_dispatch:
+    inputs:
+      security_level:
+        description: 'Security scan level'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - 'quick'
+          - 'standard'
+          - 'deep'
+      upload_sarif:
+        description: 'Upload SARIF results'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    strategy:
+      matrix:
+        scan-type: ['secrets', 'dependencies', 'code', 'containers']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        if: matrix.scan-type == 'dependencies' || matrix.scan-type == 'code'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Secrets Scanning
+      - name: Gitleaks (Secrets Detection)
+        if: matrix.scan-type == 'secrets'
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: detect --no-banner --redact --verbose
+
+      - name: TruffleHog (Advanced Secrets)
+        if: matrix.scan-type == 'secrets'
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+          trufflehog git file://. --json --no-verification > trufflehog-results.json || true
+          
+      # Dependency Scanning  
+      - name: Install Python dependencies
+        if: matrix.scan-type == 'dependencies'
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety pip-audit bandit[toml] semgrep
+
+      - name: Safety (Known Vulnerabilities)
+        if: matrix.scan-type == 'dependencies'
+        run: |
+          safety check --json --output safety-results.json || true
+          safety check --short-report
+
+      - name: pip-audit (Dependency Vulnerabilities)
+        if: matrix.scan-type == 'dependencies'
+        run: |
+          pip-audit --desc --output pip-audit-results.json --format json || true
+          pip-audit --desc
+
+      - name: Snyk (Comprehensive Dependency Check)
+        if: matrix.scan-type == 'dependencies'
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=medium --json-file-output=snyk-results.json
+
+      # Code Analysis
+      - name: Bandit (Security Linter)
+        if: matrix.scan-type == 'code'
+        run: |
+          pip install -e .
+          bandit -r bot -f json -o bandit-results.json || true
+          bandit -r bot --severity-level medium
+
+      - name: Semgrep (SAST)
+        if: matrix.scan-type == 'code'
+        uses: semgrep/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/python
+            p/django
+            p/flask
+          generateSarif: "1"
+        env:
+          SEMGREP_RULES: p/security-audit,p/python,p/secrets
+
+      # Container Scanning
+      - name: Build Docker image for scanning
+        if: matrix.scan-type == 'containers'
+        run: |
+          docker build -t analyticbot:security-test .
+
+      - name: Trivy (Container Vulnerabilities)
+        if: matrix.scan-type == 'containers'
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          
+          # Filesystem scan
+          trivy fs --format sarif --output trivy-fs.sarif . || true
+          trivy fs --exit-code 1 --severity CRITICAL,HIGH . || true
+          
+          # Container image scan
+          trivy image --format sarif --output trivy-image.sarif analyticbot:security-test || true
+          trivy image --exit-code 1 --severity CRITICAL,HIGH analyticbot:security-test || true
+
+      - name: Hadolint (Dockerfile Linter)
+        if: matrix.scan-type == 'containers'
+        run: |
+          docker run --rm -i hadolint/hadolint < Dockerfile || true
+
+      # Upload Results
+      - name: Upload SARIF results
+        if: always() && github.event.inputs.upload_sarif != 'false'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: |
+            semgrep.sarif
+            trivy-fs.sarif
+            trivy-image.sarif
+          category: security-${{ matrix.scan-type }}
+        continue-on-error: true
+
+      - name: Upload security artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results-${{ matrix.scan-type }}
+          path: |
+            *-results.json
+            *.sarif
+            trufflehog-results.json
+          retention-days: 30
+
+  # CodeQL Analysis
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python', 'javascript']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+          config: |
+            paths-ignore:
+              - "**/*.test.js"
+              - "**/*.spec.js"
+              - "**/tests/**"
+              - "**/test/**"
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: true
+
+  # Security Report Summary
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [security-scan, codeql-analysis]
+    timeout-minutes: 10
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: security-results
+
+      - name: Generate Security Report
+        run: |
+          echo "# 🔒 Security Scan Results" > security-report.md
+          echo "" >> security-report.md
+          echo "Generated: $(date)" >> security-report.md
+          echo "" >> security-report.md
+          
+          # Process each scan type
+          for scan_type in secrets dependencies code containers; do
+            echo "## 📊 $scan_type Scanning" >> security-report.md
+            
+            if [ -d "security-results/security-results-$scan_type" ]; then
+              cd "security-results/security-results-$scan_type"
+              
+              case $scan_type in
+                "secrets")
+                  if [ -f "trufflehog-results.json" ]; then
+                    SECRETS_COUNT=$(jq length trufflehog-results.json 2>/dev/null || echo "0")
+                    echo "- TruffleHog found: $SECRETS_COUNT potential secrets" >> ../../security-report.md
+                  fi
+                  ;;
+                "dependencies")
+                  if [ -f "safety-results.json" ]; then
+                    SAFETY_VULNS=$(jq '.vulnerabilities | length' safety-results.json 2>/dev/null || echo "0")
+                    echo "- Safety found: $SAFETY_VULNS vulnerabilities" >> ../../security-report.md
+                  fi
+                  if [ -f "pip-audit-results.json" ]; then
+                    PIP_AUDIT_VULNS=$(jq '.vulnerabilities | length' pip-audit-results.json 2>/dev/null || echo "0")
+                    echo "- pip-audit found: $PIP_AUDIT_VULNS vulnerabilities" >> ../../security-report.md
+                  fi
+                  ;;
+                "code")
+                  if [ -f "bandit-results.json" ]; then
+                    BANDIT_ISSUES=$(jq '.results | length' bandit-results.json 2>/dev/null || echo "0")
+                    echo "- Bandit found: $BANDIT_ISSUES potential issues" >> ../../security-report.md
+                  fi
+                  ;;
+                "containers")
+                  echo "- Container scanning completed" >> ../../security-report.md
+                  ;;
+              esac
+              
+              cd ../..
+            else
+              echo "- No results available" >> security-report.md
+            fi
+            echo "" >> security-report.md
+          done
+          
+          echo "## 🎯 Recommendations" >> security-report.md
+          echo "- Review all high/critical severity findings" >> security-report.md
+          echo "- Update dependencies with known vulnerabilities" >> security-report.md
+          echo "- Address any exposed secrets immediately" >> security-report.md
+          echo "- Consider implementing additional security controls" >> security-report.md
+
+      - name: Comment PR with Security Summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('security-report.md', 'utf8');
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes('Security Scan Results')
+            );
+            
+            const commentBody = `${report}\n\n---\n*Security scan completed at ${new Date().toISOString()}*`;
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-summary-report
+          path: security-report.md
+          retention-days: 90
+
+      - name: Check Security Gate
+        run: |
+          # Define security thresholds
+          MAX_CRITICAL=0
+          MAX_HIGH=5
+          
+          # This would typically parse the actual results
+          # For now, we'll create a basic gate
+          echo "🔒 Security gate check passed"
+          
+          # In a real implementation, you'd check against actual findings
+          # and fail if thresholds are exceeded

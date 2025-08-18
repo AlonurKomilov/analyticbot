@@ -8,6 +8,12 @@ class SchedulerRepository:
     def __init__(self, pool: Pool):
         self._pool = pool
 
+    async def get_scheduler_by_id(self, post_id: int) -> Optional[Dict[str, Any]]:
+        """Return a scheduled post row by id or None."""
+        query = "SELECT * FROM scheduled_posts WHERE id = $1;"
+        rec = await self._pool.fetchrow(query, post_id)
+        return dict(rec) if rec else None
+
     async def create_scheduled_post(
         self,
         user_id: int,
@@ -59,6 +65,39 @@ class SchedulerRepository:
         records = await self._pool.fetch(query)
         return [dict(record) for record in records]
 
+    async def claim_due_posts(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Atomically 'claim' pending due posts by switching status to 'sending'.
+
+        This reduces race condition risk when multiple workers poll.
+        Returns claimed rows.
+        """
+        # Use CTE with UPDATE ... RETURNING for atomic claim
+        query = f"""
+        WITH cte AS (
+            SELECT id FROM scheduled_posts
+            WHERE schedule_time <= NOW() AND status='pending'
+            ORDER BY schedule_time ASC
+            LIMIT $1
+            FOR UPDATE SKIP LOCKED
+        )
+        UPDATE scheduled_posts sp
+        SET status='sending'
+        FROM cte
+        WHERE sp.id = cte.id
+        RETURNING sp.*;
+        """
+        rows = await self._pool.fetch(query, limit)
+        return [dict(r) for r in rows]
+
+    async def remove_expired(self, now: datetime) -> int:
+        """Remove pending posts whose schedule_time is in the past beyond now (simple clean-up).
+
+        Returns number of deleted rows. (Could be extended with retention window.)
+        """
+        query = "DELETE FROM scheduled_posts WHERE status='pending' AND schedule_time < $1 RETURNING id;"
+        rows = await self._pool.fetch(query, now)
+        return len(rows)
+
     async def count_user_posts_this_month(self, user_id: int) -> int:
         """Foydalanuvchining joriy oyda yaratgan postlari sonini hisoblaydi."""
         query = """
@@ -68,3 +107,37 @@ class SchedulerRepository:
         """
         count = await self._pool.fetchval(query, user_id)
         return count or 0
+
+    async def requeue_stuck_sending_posts(self, max_age_minutes: int = 15) -> int:
+        """Reset 'sending' posts older than max_age_minutes back to 'pending'.
+        
+        Returns count of requeued posts.
+        """
+        query = """
+        UPDATE scheduled_posts 
+        SET status = 'pending'
+        WHERE status = 'sending' 
+          AND schedule_time <= NOW() - INTERVAL '%s minutes'
+        RETURNING id;
+        """
+        rows = await self._pool.fetch(query % max_age_minutes)
+        return len(rows)
+
+    async def cleanup_old_posts(self, days_old: int = 30) -> int:
+        """Archive or delete old completed posts.
+        
+        Returns count of cleaned posts.
+        """
+        query = """
+        DELETE FROM scheduled_posts
+        WHERE status IN ('sent', 'error') 
+          AND created_at < NOW() - INTERVAL '%s days'
+        RETURNING id;
+        """
+        rows = await self._pool.fetch(query % days_old)
+        return len(rows)
+
+    async def get_scheduled_count(self) -> int:
+        """Get total number of scheduled posts (pending)."""
+        query = "SELECT COUNT(*) FROM scheduled_posts WHERE status = 'pending'"
+        return await self._pool.fetchval(query)

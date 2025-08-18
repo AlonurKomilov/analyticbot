@@ -38,5 +38,4 @@ twa-data-received-post = Ma’lumot qabul qilindi.
 views-usage = Foydalanish: /views <post_id>
 views-invalid-id = Post ID noto‘g‘ri.
 views-not-found = Post topilmadi.
-views-success = Ko‘rishlar hisoblandi.
 views-success = Post { $post_id } ko‘rishlari: { $view_count }.

@@ -15,7 +15,8 @@ class AnalyticsRepository:
         """
         query = """
             INSERT INTO sent_posts (scheduled_post_id, channel_id, message_id)
-            VALUES ($1, $2, $3);
+            VALUES ($1, $2, $3)
+            ON CONFLICT (channel_id, message_id) DO NOTHING;
         """
         await self._pool.execute(query, scheduled_post_id, channel_id, message_id)
 

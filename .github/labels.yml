@@ -10,6 +10,10 @@
   color: "fef2c0"
   description: "Set coverage threshold to 50% for this PR"
 
+- name: "cov:80"
+  color: "fef2c0"
+  description: "Set coverage threshold to 80% for this PR"
+
 - name: "compose-verify:on"
   color: "bfdadc"
   description: "Run docker compose verify workflow"
@@ -21,3 +25,111 @@
 - name: "ai-fix"
   color: "c5def5"
   description: "Auto-run AI Fixer on this PR"
+
+- name: "performance"
+  color: "ff9500"
+  description: "Run performance tests and benchmarks"
+
+- name: "security-scan"
+  color: "d73a4a"
+  description: "Run comprehensive security scanning"
+
+- name: "breaking-change"
+  color: "b60205"
+  description: "Contains breaking changes - requires careful review"
+
+- name: "database-migration"
+  color: "1d76db"
+  description: "Contains database migration changes"
+
+- name: "dependency-update"
+  color: "0366d6"
+  description: "Updates project dependencies"
+
+- name: "documentation"
+  color: "0075ca"
+  description: "Improvements or additions to documentation"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "question"
+  color: "d876e3"
+  description: "Further information is requested"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "This will not be worked on"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or pull request already exists"
+
+- name: "invalid"
+  color: "e4e669"
+  description: "This doesn't seem right"
+
+- name: "hotfix"
+  color: "b60205"
+  description: "Critical fix that needs immediate attention"
+
+- name: "refactor"
+  color: "f9d0c4"
+  description: "Code refactoring without functional changes"
+
+- name: "testing"
+  color: "b4a7d6"
+  description: "Related to testing infrastructure or test cases"
+
+- name: "ci/cd"
+  color: "0052cc"
+  description: "Changes to CI/CD pipeline or automation"
+
+- name: "frontend"
+  color: "1f77d0"
+  description: "Frontend/UI related changes"
+
+- name: "backend"
+  color: "d4c5f9"
+  description: "Backend/API related changes"
+
+- name: "high-priority"
+  color: "d93f0b"
+  description: "High priority issue or PR"
+
+- name: "low-priority"
+  color: "fbca04"
+  description: "Low priority issue or PR"
+
+- name: "blocked"
+  color: "b60205"
+  description: "Blocked by other issues or external dependencies"
+
+- name: "in-progress"
+  color: "ededed"
+  description: "Currently being worked on"
+
+- name: "ready-for-review"
+  color: "0e8a16"
+  description: "Ready for code review"
+
+- name: "needs-testing"
+  color: "fbca04"
+  description: "Requires additional testing"
+
+- name: "needs-documentation"
+  color: "c5def5"
+  description: "Requires documentation updates"

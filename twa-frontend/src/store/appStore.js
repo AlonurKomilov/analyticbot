@@ -1,120 +1,279 @@
 import { create } from 'zustand';
+import { subscribeWithSelector } from 'zustand/middleware';
+import { apiClient } from '../utils/apiClient.js';
+import { ErrorHandler } from '../utils/errorHandler.js';
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+// Loading states interface
+const createLoadingState = () => ({
+    isLoading: false,
+    error: null,
+    lastUpdated: null
+});
 
-/**
- * Har bir so'rov uchun autentifikatsiya sarlavhalarini (headers) tayyorlaydi.
- * @returns {HeadersInit}
- */
-const getAuthHeaders = () => {
-  // Telegram Web App'dan initData'ni olamiz. Agar mavjud bo'lmasa, bo'sh satr qaytaramiz.
-  const twaInitData = window.Telegram?.WebApp?.initData || '';
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `TWA ${twaInitData}` // initData'ni "TWA" prefiksi bilan yuboramiz
-  };
-};
+export const useAppStore = create(
+    subscribeWithSelector((set, get) => ({
+        // Data state
+        user: null,
+        plan: null,
+        channels: [],
+        scheduledPosts: [],
+        
+        // UI state
+        ui: {
+            global: createLoadingState(),
+            fetchData: createLoadingState(),
+            addChannel: createLoadingState(),
+            schedulePost: createLoadingState(),
+            deletePost: createLoadingState(),
+            deleteChannel: createLoadingState(),
+            uploadMedia: createLoadingState()
+        },
+        
+        // Media state
+        pendingMedia: {
+            file_id: null,
+            file_type: null,
+            previewUrl: null,
+            uploadProgress: 0
+        },
 
-/**
- * API so'rovlarini yuborish uchun markazlashtirilgan funksiya.
- * @param {string} endpoint - API endpoint (masalan, '/initial-data')
- * @param {RequestInit} options - Fetch uchun qo'shimcha opsiyalar (method, body, etc.)
- * @returns {Promise<any>}
- */
-const apiFetch = async (endpoint, options = {}) => {
-    const response = await fetch(`${VITE_API_URL}${endpoint}`, {
-        ...options,
-        headers: getAuthHeaders(),
-    });
+        
+        // Helper functions for UI state management
+        setLoading: (operation, isLoading) => set(state => ({
+            ui: {
+                ...state.ui,
+                [operation]: {
+                    ...state.ui[operation],
+                    isLoading,
+                    ...(isLoading ? {} : { lastUpdated: Date.now() })
+                }
+            }
+        })),
+        
+        setError: (operation, error) => set(state => ({
+            ui: {
+                ...state.ui,
+                [operation]: {
+                    ...state.ui[operation],
+                    error,
+                    isLoading: false
+                }
+            }
+        })),
+        
+        clearError: (operation) => set(state => ({
+            ui: {
+                ...state.ui,
+                [operation]: {
+                    ...state.ui[operation],
+                    error: null
+                }
+            }
+        })),
 
-    const responseData = await response.json();
+        // Boshlang'ich ma'lumotlarni backend'dan yuklash
+        fetchData: async () => {
+            const operation = 'fetchData';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                const data = await apiClient.get('/initial-data');
+                
+                set({
+                    channels: data.channels || [],
+                    scheduledPosts: data.scheduled_posts || [],
+                    plan: data.plan,
+                    user: data.user,
+                });
+                
+                get().setLoading(operation, false);
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'fetchData'
+                });
+                get().setError(operation, error.message);
+            }
+        },
 
-    if (!response.ok) {
-        // Xatolikni serverdan kelgan xabar bilan birga chiqarish
-        const errorMessage = responseData.detail || 'An unknown error occurred.';
-        console.error(`API Error on ${endpoint}:`, errorMessage);
-        alert(`Error: ${errorMessage}`); // Foydalanuvchiga xatolik haqida xabar berish
-        throw new Error(errorMessage);
-    }
+        // Yangi kanal qo'shish
+        addChannel: async (channelUsername) => {
+            const operation = 'addChannel';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                const newChannel = await apiClient.post('/channels', {
+                    channel_username: channelUsername
+                });
+                
+                set((state) => ({
+                    channels: [...state.channels, newChannel]
+                }));
+                
+                get().setLoading(operation, false);
+                return newChannel;
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'addChannel',
+                    channelUsername
+                });
+                get().setError(operation, error.message);
+                throw error;
+            }
+        },
 
-    return responseData;
-};
+        // Media yuklash
+        uploadMedia: async (file) => {
+            const operation = 'uploadMedia';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                // Create preview URL
+                const previewUrl = URL.createObjectURL(file);
+                
+                set(state => ({
+                    pendingMedia: {
+                        ...state.pendingMedia,
+                        previewUrl,
+                        uploadProgress: 0
+                    }
+                }));
+                
+                const response = await apiClient.uploadFile('/upload-media', file, (progress) => {
+                    set(state => ({
+                        pendingMedia: {
+                            ...state.pendingMedia,
+                            uploadProgress: progress
+                        }
+                    }));
+                });
+                
+                set(state => ({
+                    pendingMedia: {
+                        ...state.pendingMedia,
+                        file_id: response.file_id,
+                        file_type: response.file_type,
+                        uploadProgress: 100
+                    }
+                }));
+                
+                get().setLoading(operation, false);
+                return response;
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'uploadMedia',
+                    fileType: file.type,
+                    fileSize: file.size
+                });
+                get().setError(operation, error.message);
+                get().clearPendingMedia();
+                throw error;
+            }
+        },
+        
+        // Media tozalash
+        clearPendingMedia: () => set(state => {
+            if (state.pendingMedia.previewUrl) {
+                URL.revokeObjectURL(state.pendingMedia.previewUrl);
+            }
+            return {
+                pendingMedia: {
+                    file_id: null,
+                    file_type: null,
+                    previewUrl: null,
+                    uploadProgress: 0
+                }
+            };
+        }),
 
+        // Postni rejalashtirish
+        schedulePost: async (postData) => {
+            const operation = 'schedulePost';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                const newPost = await apiClient.post('/schedule-post', postData);
+                
+                set(state => ({
+                    scheduledPosts: [...state.scheduledPosts, newPost]
+                        .sort((a, b) => new Date(a.schedule_time) - new Date(b.schedule_time))
+                }));
+                
+                // Clear pending media after successful scheduling
+                get().clearPendingMedia();
+                
+                get().setLoading(operation, false);
+                return newPost;
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'schedulePost',
+                    postData: JSON.stringify(postData)
+                });
+                get().setError(operation, error.message);
+                throw error;
+            }
+        },
 
-export const useAppStore = create((set) => ({
-  user: null,
-  plan: null,
-  channels: [],
-  scheduledPosts: [],
+        // Rejalashtirilgan postni o'chirish
+        deletePost: async (postId) => {
+            const operation = 'deletePost';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                await apiClient.delete(`/posts/${postId}`);
+                
+                set(state => ({
+                    scheduledPosts: state.scheduledPosts.filter(post => post.id !== postId)
+                }));
+                
+                get().setLoading(operation, false);
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'deletePost',
+                    postId
+                });
+                get().setError(operation, error.message);
+                throw error;
+            }
+        },
 
-  // Boshlang'ich ma'lumotlarni backend'dan yuklash
-  fetchData: async () => {
-    try {
-      const data = await apiFetch('/initial-data');
-      set({
-        channels: data.channels,
-        scheduledPosts: data.scheduled_posts,
-        plan: data.plan,
-        user: data.user,
-      });
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-    }
-  },
+        // Kanalni o'chirish
+        deleteChannel: async (channelId) => {
+            const operation = 'deleteChannel';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+                
+                await apiClient.delete(`/channels/${channelId}`);
+                
+                set(state => ({
+                    channels: state.channels.filter(channel => channel.id !== channelId)
+                }));
+                
+                get().setLoading(operation, false);
+            } catch (error) {
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'deleteChannel',
+                    channelId
+                });
+                get().setError(operation, error.message);
+                throw error;
+            }
+        },
 
-  // Yangi kanal qo'shish
-  addChannel: async (channelUsername) => {
-    try {
-      const newChannel = await apiFetch('/channels', {
-        method: 'POST',
-        body: JSON.stringify({ channel_username: channelUsername }),
-      });
-      set((state) => ({ channels: [...state.channels, newChannel] }));
-    } catch (error) {
-      console.error("Error adding channel:", error);
-    }
-  },
-
-  // Postni rejalashtirish
-  schedulePost: async (postData) => {
-    try {
-        const newPost = await apiFetch('/schedule-post', {
-            method: 'POST',
-            body: JSON.stringify(postData)
-        });
-        set(state => ({
-            scheduledPosts: [...state.scheduledPosts, newPost].sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
-        }));
-    } catch (error) {
-        console.error('Error scheduling post:', error);
-    }
-  },
-
-  // Rejalashtirilgan postni o'chirish
-  deletePost: async (postId) => {
-    try {
-        await apiFetch(`/posts/${postId}`, {
-            method: 'DELETE'
-        });
-        set(state => ({
-            scheduledPosts: state.scheduledPosts.filter(post => post.id !== postId)
-        }));
-    } catch (error) {
-        console.error('Error deleting post:', error);
-    }
-  },
-
-  // Kanalni o'chirish
-  deleteChannel: async (channelId) => {
-    try {
-      await apiFetch(`/channels/${channelId}`, {
-        method: 'DELETE'
-      });
-      set(state => ({
-        channels: state.channels.filter(channel => channel.id !== channelId)
-      }));
-    } catch (error) {
-      console.error('Error deleting channel:', error);
-    }
-  }
-}));
+        // Selectors for easier access to loading states
+        isLoading: (operation) => get().ui[operation]?.isLoading || false,
+        getError: (operation) => get().ui[operation]?.error || null,
+        isGlobalLoading: () => Object.values(get().ui).some(state => state.isLoading),
+    }))
+);

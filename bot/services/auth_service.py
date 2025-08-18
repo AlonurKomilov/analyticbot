@@ -4,6 +4,7 @@ from urllib.parse import unquote
 from time import time
 
 from fastapi import HTTPException
+from bot.config import settings
 
 
 def validate_init_data(init_data: str, bot_token: str) -> dict:
@@ -64,7 +65,8 @@ def validate_init_data(init_data: str, bot_token: str) -> dict:
                 v for k, v in data_params if k == "auth_date"
             )
             auth_date = int(auth_date_str)
-            if time() - auth_date > 3600:  # 1 soatlik oynadan oshsa
+            max_age = getattr(settings, "WEBAPP_AUTH_MAX_AGE", 3600)
+            if time() - auth_date > max_age:  # dynamic freshness window
                 raise ValueError("Auth date expired")
         except StopIteration:
             raise ValueError("auth_date missing")

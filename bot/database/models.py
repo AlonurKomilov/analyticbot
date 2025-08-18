@@ -99,6 +99,9 @@ sent_posts = sa.Table(
     sa.Column("sent_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
 )
 
+# NOTE: Alembic revision 0004 adds a composite unique constraint on (channel_id, message_id)
+# to protect against duplicate log entries when retrying sends.
+
 
 # This dataclass does not affect the database schema
 @dataclass

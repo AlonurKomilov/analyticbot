@@ -1,15 +1,43 @@
-name: AI Fixer (project-aware)
+name: 🤖 Smart Auto-Fixer (Enhanced)
 
 on:
   pull_request:
     types: [opened, reopened, synchronize, labeled]
   issue_comment:
     types: [created]
+  schedule:
+    # Run daily quality check at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to fix (default: current branch)'
+        required: false
+        default: ''
+      fix_type:
+        description: 'Type of fixes to apply'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'formatting'
+          - 'imports'
+          - 'type-hints'
+          - 'security'
+          - 'performance'
+        default: 'all'
+      create_pr:
+        description: 'Create PR with fixes'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
   pull-requests: write
-  issues: read
+  issues: write
+  checks: write
+  actions: read
 
 jobs:
   ai-fix:

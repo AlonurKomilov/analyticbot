@@ -38,5 +38,4 @@ twa-data-received-post = Data received.
 views-usage = Usage: /views <post_id>
 views-invalid-id = Invalid post id.
 views-not-found = Post not found.
-views-success = Views counted.
 views-success = Post { $post_id } has { $view_count } views.

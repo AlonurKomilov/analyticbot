@@ -1,0 +1,54 @@
+{
+  "total_tests": 8,
+  "passed_tests": 8,
+  "failed_tests": 0,
+  "test_details": [
+    {
+      "test": "Root endpoint",
+      "success": true,
+      "response_time_ms": 4.944801330566406
+    },
+    {
+      "test": "Health check",
+      "success": true,
+      "response_time_ms": 0.8487701416015625
+    },
+    {
+      "test": "Comprehensive content analysis",
+      "success": true,
+      "response_time_ms": 2.1810531616210938
+    },
+    {
+      "test": "Real-time scoring - Short positive",
+      "success": true,
+      "response_time_ms": 0.9636878967285156
+    },
+    {
+      "test": "Real-time scoring - Long technical",
+      "success": true,
+      "response_time_ms": 0.9057521820068359
+    },
+    {
+      "test": "Real-time scoring - Optimal content",
+      "success": true,
+      "response_time_ms": 1.9879341125488281
+    },
+    {
+      "test": "Demo analysis",
+      "success": true,
+      "response_time_ms": 0.8976459503173828
+    },
+    {
+      "test": "API stats",
+      "success": true,
+      "response_time_ms": 0.7865428924560547
+    }
+  ],
+  "performance_metrics": {
+    "avg_response_time": 1.689523458480835,
+    "min_response_time": 0.7865428924560547,
+    "max_response_time": 4.944801330566406,
+    "total_test_time": 13.51618766784668
+  },
+  "verdict": "EXCELLENT"
+}

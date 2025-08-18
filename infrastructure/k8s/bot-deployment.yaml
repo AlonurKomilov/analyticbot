@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot
+  namespace: analyticbot
+  labels:
+    app: bot
+    tier: backend
+spec:
+  replicas: 1  # Bot should run as single instance
+  selector:
+    matchLabels:
+      app: bot
+  template:
+    metadata:
+      labels:
+        app: bot
+        tier: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: bot
+        image: analyticbot/bot:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: metrics
+        env:
+        # Configuration from ConfigMap
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_LEVEL
+        - name: LOG_FORMAT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: LOG_FORMAT
+        - name: DEBUG_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DEBUG_MODE
+        - name: TELEGRAM_API_DELAY
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: TELEGRAM_API_DELAY
+        # Secrets
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: REDIS_URL
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: BOT_TOKEN
+        - name: STORAGE_CHANNEL_ID
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: STORAGE_CHANNEL_ID
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

@@ -36,3 +36,10 @@ class UserRepository:
             WHERE u.id = $1
         """
         return await self._pool.fetchval(query, user_id)
+
+    async def count(self) -> int:
+        """
+        Get total number of users.
+        """
+        query = "SELECT COUNT(*) FROM users"
+        return await self._pool.fetchval(query)

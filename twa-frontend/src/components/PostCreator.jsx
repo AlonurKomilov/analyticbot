@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
     Box,
     TextField,
@@ -11,140 +11,230 @@ import {
     CircularProgress,
     List,
     ListItem,
-    ListItemText,
-    Chip
+    Chip,
+    Alert
 } from '@mui/material';
 import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAppStore } from '../store/appStore';
+import { useLoadingState, useFormState, useTelegramWebApp } from '../hooks';
 import ButtonConstructor from './ButtonConstructor';
 import MediaPreview from "./MediaPreview.jsx";
 
-const PostCreator = () => {
+// Form validation
+const validatePostForm = (values) => {
+    const errors = {};
+    
+    if (!values.text?.trim() && !values.hasMedia) {
+        errors.text = 'Post text or media is required';
+    }
+    
+    if (!values.selectedChannel) {
+        errors.selectedChannel = 'Channel selection is required';
+    }
+    
+    if (!values.scheduleTime) {
+        errors.scheduleTime = 'Schedule time is required';
+    } else if (new Date(values.scheduleTime) <= new Date()) {
+        errors.scheduleTime = 'Schedule time must be in the future';
+    }
+    
+    return errors;
+};
+
+const PostCreator = React.memo(() => {
     const {
         channels,
         schedulePost,
-        uploadMedia,
-        isLoading,
-        error,
         pendingMedia,
         clearPendingMedia,
     } = useAppStore();
 
-    const [text, setText] = useState('');
-    const [selectedChannel, setSelectedChannel] = useState('');
-    const [scheduleTime, setScheduleTime] = useState(null);
-    const [buttons, setButtons] = useState([]); // Tugmalar uchun state
+    const { hapticFeedback } = useTelegramWebApp();
+    const { loading, error } = useLoadingState('schedulePost');
 
-    // --- YANGI FUNKSIYA ---
-    // ButtonConstructor'dan kelgan yangi tugmani state'ga qo'shadi
-    const handleAddButton = (newButton) => {
+    const [buttons, setButtons] = useState([]);
+
+    // Enhanced form state management
+    const {
+        state: formState,
+        errors: formErrors,
+        updateField,
+        validateForm,
+        resetForm,
+        isValid
+    } = useFormState({
+        text: '',
+        selectedChannel: '',
+        scheduleTime: null,
+        hasMedia: false
+    }, validatePostForm);
+
+    // Update hasMedia when pendingMedia changes
+    React.useEffect(() => {
+        updateField('hasMedia', !!pendingMedia.file_id);
+    }, [pendingMedia.file_id, updateField]);
+
+    // Memoized channel options
+    const channelOptions = useMemo(() => 
+        channels.map((channel) => ({
+            value: channel.id,
+            label: `${channel.title} (@${channel.username})`
+        })), [channels]
+    );
+
+    // Optimized button handlers
+    const handleAddButton = useCallback((newButton) => {
         setButtons(prevButtons => [...prevButtons, newButton]);
-    };
+        hapticFeedback('light');
+    }, [hapticFeedback]);
 
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            uploadMedia(file);
-        }
-    };
+    const handleRemoveButton = useCallback((index) => {
+        setButtons(buttons.filter((_, i) => i !== index));
+        hapticFeedback('light');
+    }, [buttons, hapticFeedback]);
 
-    const handleSchedulePost = () => {
-        if ((text || pendingMedia.file_id) && selectedChannel && scheduleTime) {
-            // Tugmalarni to'g'ri formatga o'tkazish
-            const inline_buttons = buttons.length > 0 ? { inline_keyboard: [buttons] } : null;
+    const handleSchedulePost = useCallback(async () => {
+        if (!validateForm()) return;
 
-            schedulePost({
-                text: text,
-                channel_id: selectedChannel,
-                schedule_time: scheduleTime.toISOString(),
+        try {
+            hapticFeedback('medium');
+            
+            const inline_buttons = buttons.length > 0 
+                ? { inline_keyboard: [buttons] } 
+                : null;
+
+            await schedulePost({
+                text: formState.text,
+                channel_id: formState.selectedChannel,
+                schedule_time: formState.scheduleTime.toISOString(),
                 media_file_id: pendingMedia.file_id,
                 media_type: pendingMedia.file_type,
-                inline_buttons: inline_buttons // Formatlangan tugmalarni yuborish
+                inline_buttons
             });
-            setText('');
-            setSelectedChannel('');
-            setScheduleTime(null);
-            setButtons([]); // Tugmalarni tozalash
-            clearPendingMedia(); // Mediani tozalash
+
+            // Reset form on success
+            resetForm();
+            setButtons([]);
+            clearPendingMedia();
+            
+            hapticFeedback('success');
+        } catch (err) {
+            hapticFeedback('error');
         }
-    };
+    }, [
+        validateForm, hapticFeedback, buttons, schedulePost, 
+        formState, pendingMedia, resetForm, clearPendingMedia
+    ]);
+
+    // Determine if form can be submitted
+    const canSubmit = useMemo(() => {
+        return isValid && 
+               (formState.text.trim() || pendingMedia.file_id) && 
+               formState.selectedChannel && 
+               formState.scheduleTime &&
+               !loading;
+    }, [isValid, formState, pendingMedia.file_id, loading]);
 
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Typography variant="h6">Post Yaratish</Typography>
+                
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+                
                 <TextField
                     label="Post matni"
                     multiline
                     rows={4}
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    value={formState.text}
+                    onChange={(e) => updateField('text', e.target.value)}
                     variant="outlined"
                     fullWidth
+                    error={!!formErrors.text}
+                    helperText={formErrors.text}
                 />
-                <FormControl fullWidth>
+                
+                <FormControl fullWidth error={!!formErrors.selectedChannel}>
                     <InputLabel id="channel-select-label">Kanalni tanlang</InputLabel>
                     <Select
                         labelId="channel-select-label"
-                        value={selectedChannel}
+                        value={formState.selectedChannel}
                         label="Kanalni tanlang"
-                        onChange={(e) => setSelectedChannel(e.target.value)}
+                        onChange={(e) => updateField('selectedChannel', e.target.value)}
                     >
-                        {channels.map((channel) => (
-                            <MenuItem key={channel.id} value={channel.id}>
-                                {channel.title} (@{channel.username})
+                        {channelOptions.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
                             </MenuItem>
                         ))}
                     </Select>
+                    {formErrors.selectedChannel && (
+                        <Typography variant="caption" color="error">
+                            {formErrors.selectedChannel}
+                        </Typography>
+                    )}
                 </FormControl>
+                
                 <DateTimePicker
                     label="Yuborish vaqti"
-                    value={scheduleTime}
-                    onChange={(newValue) => setScheduleTime(newValue)}
-                    renderInput={(params) => <TextField {...params} />}
+                    value={formState.scheduleTime}
+                    onChange={(newValue) => updateField('scheduleTime', newValue)}
+                    slotProps={{
+                        textField: {
+                            error: !!formErrors.scheduleTime,
+                            helperText: formErrors.scheduleTime
+                        }
+                    }}
                 />
 
-                <Button variant="contained" component="label">
-                    Media Yuklash
-                    <input type="file" hidden onChange={handleFileChange} />
-                </Button>
+                {pendingMedia.file_id && (
+                    <MediaPreview 
+                        media={pendingMedia} 
+                        onClear={clearPendingMedia}
+                    />
+                )}
 
-                {pendingMedia.file_id && <MediaPreview media={pendingMedia} onClear={clearPendingMedia}/>}
-
-                {/* --- O'ZGARTIRILGAN QATOR --- */}
-                {/* ButtonConstructor'ga onAddButton funksiyasini uzatamiz */}
                 <ButtonConstructor onAddButton={handleAddButton} />
 
-                {/* Qo'shilgan tugmalarni ko'rsatish */}
                 {buttons.length > 0 && (
                     <Box>
                         <Typography variant="subtitle2">Qo'shilgan tugmalar:</Typography>
                         <List dense>
                             {buttons.map((button, index) => (
                                 <ListItem key={index}>
-                                    <Chip label={`${button.text} -> ${button.url}`} onDelete={() => {
-                                        setButtons(buttons.filter((_, i) => i !== index));
-                                    }}/>
+                                    <Chip 
+                                        label={`${button.text} -> ${button.url}`} 
+                                        onDelete={() => handleRemoveButton(index)}
+                                    />
                                 </ListItem>
                             ))}
                         </List>
                     </Box>
                 )}
 
-
                 <Button
                     variant="contained"
                     color="primary"
                     onClick={handleSchedulePost}
-                    disabled={isLoading || !selectedChannel || !scheduleTime || (!text && !pendingMedia.file_id)}
+                    disabled={!canSubmit}
+                    sx={{ minHeight: 48 }}
                 >
-                    {isLoading ? <CircularProgress size={24} /> : 'Postni Rejalashtirish'}
+                    {loading ? (
+                        <CircularProgress size={24} />
+                    ) : (
+                        'Postni Rejalashtirish'
+                    )}
                 </Button>
-                {error && <Typography color="error">{error}</Typography>}
             </Box>
         </LocalizationProvider>
     );
-};
+});
+
+PostCreator.displayName = 'PostCreator';
 
 export default PostCreator;

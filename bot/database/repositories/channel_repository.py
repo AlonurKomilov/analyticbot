@@ -65,3 +65,8 @@ class ChannelRepository:
                 "DELETE FROM channels WHERE id = $1", channel_id
             )
             return result != "DELETE 0"
+
+    async def count(self) -> int:
+        """Get total number of channels."""
+        async with self.pool.acquire() as conn:
+            return await conn.fetchval("SELECT COUNT(*) FROM channels")

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import json
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
@@ -11,8 +12,28 @@ from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
 from bot.middlewares.i18n import i18n_middleware
 
+from bot.config import settings as app_settings
+
 # Logger sozlamalari
-logging.basicConfig(level=logging.INFO)
+if app_settings.LOG_FORMAT == "json":
+    class _JsonFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
+            base = {
+                "level": record.levelname,
+                "name": record.name,
+                "message": record.getMessage(),
+            }
+            if record.exc_info:
+                base["exc_info"] = self.formatException(record.exc_info)
+            return json.dumps(base, ensure_ascii=False)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(_JsonFormatter())
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.handlers[:] = [handler]
+else:
+    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 

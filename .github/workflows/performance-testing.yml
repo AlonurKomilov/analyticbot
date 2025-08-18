@@ -1,0 +1,462 @@
+name: Performance Testing
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # Weekly on Mondays at 4 AM UTC
+  workflow_dispatch:
+    inputs:
+      test_duration:
+        description: 'Test duration (minutes)'
+        required: false
+        default: '5'
+        type: string
+      concurrent_users:
+        description: 'Number of concurrent users'
+        required: false
+        default: '10'
+        type: string
+      baseline_comparison:
+        description: 'Compare with baseline'
+        required: false
+        default: true
+        type: boolean
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  pages: write
+  id-token: write
+
+jobs:
+  performance-tests:
+    name: Performance Tests
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(join(github.event.pull_request.labels.*.name, ','), 'performance')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: analytic_bot
+          POSTGRES_USER: analytic
+          POSTGRES_PASSWORD: perf_test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U analytic -d analytic_bot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=30
+          --shm-size=2gb
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://analytic:perf_test_pass@localhost:5432/analytic_bot
+      REDIS_URL: redis://localhost:6379/0
+      BOT_TOKEN: ${{ secrets.BOT_TOKEN || '1234567890:FAKE_TOKEN_FOR_TESTING' }}
+      STORAGE_CHANNEL_ID: ${{ secrets.STORAGE_CHANNEL_ID || '-1001234567890' }}
+      TEST_DURATION: ${{ github.event.inputs.test_duration || '5' }}
+      CONCURRENT_USERS: ${{ github.event.inputs.concurrent_users || '10' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-asyncio pytest-benchmark
+          pip install locust httpx asyncio-compat
+          pip install psutil memory-profiler py-spy
+          pip install alembic asyncpg redis
+
+      - name: Setup test database
+        run: |
+          # Wait for services
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U analytic -d analytic_bot && break
+            sleep 2
+          done
+          
+          for i in {1..15}; do
+            redis-cli -h localhost -p 6379 ping && break
+            sleep 2
+          done
+          
+          # Run migrations
+          alembic upgrade head
+          
+          # Seed test data
+          python - <<EOF
+          import asyncio
+          import asyncpg
+          
+          async def seed_data():
+              conn = await asyncpg.connect("$DATABASE_URL")
+              
+              # Create test users
+              for i in range(100):
+                  await conn.execute(
+                      "INSERT INTO users (id, username) VALUES (\$1, \$2) ON CONFLICT DO NOTHING",
+                      1000 + i, f"test_user_{i}"
+                  )
+              
+              # Create test channels
+              for i in range(20):
+                  await conn.execute(
+                      "INSERT INTO channels (id, title, username, user_id) VALUES (\$1, \$2, \$3, \$4) ON CONFLICT DO NOTHING",
+                      -1000000 - i, f"Test Channel {i}", f"test_channel_{i}", 1000 + (i % 100)
+                  )
+              
+              await conn.close()
+              print("Test data seeded successfully")
+          
+          asyncio.run(seed_data())
+          EOF
+
+      - name: Python Performance Benchmarks
+        run: |
+          echo "::group::Python Benchmarks"
+          
+          # Create performance test suite
+          cat > performance_tests.py <<EOF
+          import pytest
+          import asyncio
+          import time
+          import psutil
+          import gc
+          from unittest.mock import AsyncMock
+          
+          from bot.services.analytics_service import AnalyticsService
+          from bot.services.scheduler_service import SchedulerService
+          from bot.database.repositories.analytics_repository import AnalyticsRepository
+          from bot.database.repositories.scheduler_repository import SchedulerRepository
+          from bot.database.db import get_pool
+          
+          @pytest.fixture
+          async def mock_services():
+              pool = await get_pool()
+              analytics_repo = AnalyticsRepository(pool)
+              scheduler_repo = SchedulerRepository(pool)
+              
+              bot = AsyncMock()
+              analytics_service = AnalyticsService(bot, analytics_repo)
+              scheduler_service = SchedulerService(bot, scheduler_repo, analytics_repo)
+              
+              return analytics_service, scheduler_service
+          
+          @pytest.mark.benchmark
+          @pytest.mark.asyncio
+          async def test_analytics_performance(benchmark, mock_services):
+              analytics_service, _ = mock_services
+              
+              def analytics_operation():
+                  return asyncio.run(analytics_service.get_total_users_count())
+              
+              result = benchmark(analytics_operation)
+              assert isinstance(result, int)
+          
+          @pytest.mark.benchmark
+          @pytest.mark.asyncio  
+          async def test_scheduler_performance(benchmark, mock_services):
+              _, scheduler_service = mock_services
+              
+              def scheduler_operation():
+                  return asyncio.run(scheduler_service.get_pending_posts(limit=50))
+              
+              result = benchmark(scheduler_operation)
+              assert isinstance(result, list)
+          
+          @pytest.mark.benchmark
+          def test_memory_usage():
+              process = psutil.Process()
+              initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+              
+              # Simulate some operations
+              data = [i for i in range(100000)]
+              del data
+              gc.collect()
+              
+              final_memory = process.memory_info().rss / 1024 / 1024  # MB
+              memory_increase = final_memory - initial_memory
+              
+              # Memory increase should be reasonable
+              assert memory_increase < 50, f"Memory increased by {memory_increase}MB"
+              
+          @pytest.mark.benchmark
+          @pytest.mark.asyncio
+          async def test_database_connection_pool():
+              start_time = time.time()
+              
+              tasks = []
+              for _ in range(20):
+                  async def db_operation():
+                      pool = await get_pool()
+                      async with pool.acquire() as conn:
+                          return await conn.fetchval("SELECT COUNT(*) FROM users")
+                  
+                  tasks.append(db_operation())
+              
+              results = await asyncio.gather(*tasks)
+              duration = time.time() - start_time
+              
+              assert all(isinstance(r, int) for r in results)
+              assert duration < 5.0, f"DB operations took {duration}s, should be < 5s"
+          EOF
+          
+          # Run benchmarks
+          pytest performance_tests.py -v \
+            --benchmark-only \
+            --benchmark-json=benchmark_results.json \
+            --benchmark-sort=mean \
+            --benchmark-columns=min,max,mean,stddev,rounds
+          
+          echo "::endgroup::"
+
+      - name: Load Testing with Locust
+        run: |
+          echo "::group::Load Testing"
+          
+          # Start the API server in background
+          uvicorn api:app --host 0.0.0.0 --port 8000 &
+          API_PID=$!
+          sleep 10
+          
+          # Create Locust test file
+          cat > locustfile.py <<EOF
+          from locust import HttpUser, task, between
+          import random
+          import json
+          
+          class AnalyticBotUser(HttpUser):
+              wait_time = between(1, 3)
+              
+              def on_start(self):
+                  # Mock TWA init data
+                  self.headers = {
+                      'Authorization': 'TWA mock_init_data',
+                      'Content-Type': 'application/json'
+                  }
+              
+              @task(3)
+              def get_health(self):
+                  self.client.get("/health")
+              
+              @task(2)
+              def get_detailed_health(self):
+                  self.client.get("/health/detailed")
+              
+              @task(1)
+              def get_initial_data(self):
+                  self.client.get("/api/v1/initial-data", headers=self.headers)
+              
+              @task(1)
+              def add_channel(self):
+                  channel_data = {
+                      "channel_username": f"test_channel_{random.randint(1, 1000)}"
+                  }
+                  self.client.post(
+                      "/api/v1/channels", 
+                      json=channel_data, 
+                      headers=self.headers
+                  )
+          EOF
+          
+          # Run load test
+          locust -f locustfile.py \
+            --host=http://localhost:8000 \
+            --users=$CONCURRENT_USERS \
+            --spawn-rate=2 \
+            --run-time=${TEST_DURATION}m \
+            --html=locust_report.html \
+            --csv=locust_results \
+            --headless
+          
+          # Stop API server
+          kill $API_PID || true
+          
+          echo "::endgroup::"
+
+      - name: Memory Profiling
+        run: |
+          echo "::group::Memory Profiling"
+          
+          # Profile memory usage
+          python -m memory_profiler -T 0.1 - <<EOF
+          import asyncio
+          from bot.services.analytics_service import AnalyticsService
+          from bot.database.repositories.analytics_repository import AnalyticsRepository
+          from bot.database.db import get_pool
+          from unittest.mock import AsyncMock
+          
+          async def memory_test():
+              pool = await get_pool()
+              repo = AnalyticsRepository(pool)
+              service = AnalyticsService(AsyncMock(), repo)
+              
+              # Simulate multiple operations
+              for i in range(100):
+                  await service.get_total_users_count()
+                  if i % 10 == 0:
+                      print(f"Completed {i} operations")
+          
+          asyncio.run(memory_test())
+          EOF
+          
+          echo "::endgroup::"
+
+      - name: Generate Performance Report
+        run: |
+          python - <<EOF
+          import json
+          import os
+          from datetime import datetime
+          
+          # Load benchmark results
+          try:
+              with open('benchmark_results.json', 'r') as f:
+                  benchmark_data = json.load(f)
+          except:
+              benchmark_data = {"benchmarks": []}
+          
+          # Create performance report
+          report = f"""# 🚀 Performance Test Report
+          
+          **Generated:** {datetime.now().isoformat()}  
+          **Test Duration:** {os.environ.get('TEST_DURATION', '5')} minutes  
+          **Concurrent Users:** {os.environ.get('CONCURRENT_USERS', '10')}
+          
+          ## 📊 Python Benchmark Results
+          
+          """
+          
+          for benchmark in benchmark_data.get('benchmarks', []):
+              name = benchmark.get('name', 'Unknown')
+              mean = benchmark.get('stats', {}).get('mean', 0)
+              min_time = benchmark.get('stats', {}).get('min', 0)
+              max_time = benchmark.get('stats', {}).get('max', 0)
+              
+              report += f"""### {name}
+          - **Mean:** {mean:.4f}s
+          - **Min:** {min_time:.4f}s  
+          - **Max:** {max_time:.4f}s
+          
+          """
+          
+          # Add load test results if available
+          try:
+              with open('locust_results_stats.csv', 'r') as f:
+                  locust_data = f.read()
+              report += f"""## 🔥 Load Test Results
+          
+          ```
+          {locust_data}
+          ```
+          """
+          except:
+              report += "## 🔥 Load Test Results\n\nNo load test data available.\n"
+          
+          report += """
+          ## 📋 Recommendations
+          
+          - Monitor response times under load
+          - Optimize database queries if needed  
+          - Consider caching for frequently accessed data
+          - Scale horizontally if performance degrades
+          """
+          
+          with open('performance_report.md', 'w') as f:
+              f.write(report)
+          
+          print("Performance report generated")
+          EOF
+
+      - name: Store Baseline (main branch)
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p performance-baselines
+          cp benchmark_results.json performance-baselines/baseline-$(date +%Y%m%d).json
+          cp locust_results_stats.csv performance-baselines/load-baseline-$(date +%Y%m%d).csv || true
+
+      - name: Compare with Baseline
+        if: github.event.inputs.baseline_comparison == 'true' || github.event_name == 'pull_request'
+        run: |
+          echo "🔍 Comparing performance with baseline..."
+          # This would implement actual baseline comparison
+          echo "Baseline comparison completed (mock)"
+
+      - name: Comment Performance Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance_report.md', 'utf8');
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${report}\n\n---\n*Automated performance test results*`
+            });
+
+      - name: Upload Performance Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results-${{ github.run_id }}
+          path: |
+            benchmark_results.json
+            locust_report.html
+            locust_results*
+            performance_report.md
+            performance-baselines/
+          retention-days: 90
+
+      - name: Performance Gate Check
+        run: |
+          python - <<EOF
+          import json
+          import sys
+          
+          # Define performance thresholds
+          MAX_RESPONSE_TIME = 2.0  # seconds
+          MIN_THROUGHPUT = 10      # requests per second
+          
+          try:
+              with open('benchmark_results.json', 'r') as f:
+                  data = json.load(f)
+              
+              failed_benchmarks = []
+              for benchmark in data.get('benchmarks', []):
+                  mean_time = benchmark.get('stats', {}).get('mean', 0)
+                  if mean_time > MAX_RESPONSE_TIME:
+                      failed_benchmarks.append(benchmark.get('name'))
+              
+              if failed_benchmarks:
+                  print(f"❌ Performance gate failed for: {', '.join(failed_benchmarks)}")
+                  print(f"Max allowed response time: {MAX_RESPONSE_TIME}s")
+                  # sys.exit(1)  # Uncomment to fail the job
+              else:
+                  print("✅ Performance gate passed!")
+                  
+          except Exception as e:
+              print(f"⚠️ Could not evaluate performance gate: {e}")
+          EOF

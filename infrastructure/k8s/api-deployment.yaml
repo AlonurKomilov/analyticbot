@@ -1,0 +1,192 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analyticbot-api
+  namespace: analyticbot
+  labels:
+    app: analyticbot-api
+    tier: backend
+    version: optimized-v1.5
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: analyticbot-api
+  template:
+    metadata:
+      labels:
+        app: analyticbot-api
+        tier: backend
+        version: optimized-v1.5
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: api
+        image: analyticbot:optimized-latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        - containerPort: 8001
+          name: performance
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: analyticbot-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: analyticbot-secrets
+              key: redis-url
+        - name: BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: analyticbot-secrets
+              key: bot-token
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: PERFORMANCE_OPTIMIZATION
+          value: "enabled"
+        - name: CACHE_ENABLED
+          value: "true"
+        # Performance tuning environment variables
+        - name: DB_POOL_MIN_SIZE
+          value: "10"
+        - name: DB_POOL_MAX_SIZE
+          value: "50"
+        - name: CACHE_TTL_DEFAULT
+          value: "300"
+        - name: MAX_CONCURRENT_QUERIES
+          value: "20"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        # Performance monitoring probe
+        startupProbe:
+          httpGet:
+            path: /metrics/system
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 5
+        volumeMounts:
+        - name: cache-volume
+          mountPath: /app/cache
+      volumes:
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 1Gi
+      # Performance optimizations
+      nodeSelector:
+        performance-tier: "high"
+      tolerations:
+      - key: "performance"
+        operator: "Equal"
+        value: "optimized"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values: ["analyticbot-api"]
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analyticbot-api-service
+  namespace: analyticbot
+  labels:
+    app: analyticbot-api
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8000"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: performance
+  selector:
+    app: analyticbot-api
+
+---
+# Performance monitoring service
+apiVersion: v1
+kind: Service
+metadata:
+  name: analyticbot-performance-monitor
+  namespace: analyticbot
+  labels:
+    app: analyticbot-performance
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: performance-api
+  selector:
+    app: analyticbot-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: analyticbot
+  labels:
+    app: api
+    tier: backend
+spec:
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  type: ClusterIP

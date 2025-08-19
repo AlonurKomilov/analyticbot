@@ -40,7 +40,7 @@ app = FastAPI(
 
 # Add middleware
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # Commented out - handler not defined
 app.add_middleware(SlowAPIMiddleware)
 
 # CORS middleware

@@ -119,7 +119,7 @@ const PostCreator = React.memo(() => {
             clearPendingMedia();
             
             hapticFeedback('success');
-        } catch (err) {
+        } catch {
             hapticFeedback('error');
         }
     }, [

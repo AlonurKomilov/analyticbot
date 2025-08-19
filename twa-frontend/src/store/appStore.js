@@ -85,7 +85,7 @@ export const useAppStore = create(
             }
         })),
 
-        // Boshlang'ich ma'lumotlarni backend'dan yuklash
+        // Boshlang'ich ma'lumotlarni backend'dan loading
         fetchData: async () => {
             const operation = 'fetchData';
             try {
@@ -139,7 +139,7 @@ export const useAppStore = create(
             }
         },
 
-        // Media yuklash
+        // Media loading
         uploadMedia: async (file) => {
             const operation = 'uploadMedia';
             try {
@@ -355,7 +355,7 @@ export const useAppStore = create(
 
         // ANALYTICS METHODS - NEW for Phase 2.1 Week 2
 
-        // Post dynamics ma'lumotlarini olish
+        // Post dynamics datani getting
         fetchPostDynamics: async (period = '24h') => {
             const operation = 'fetchPostDynamics';
             try {
@@ -385,7 +385,7 @@ export const useAppStore = create(
             }
         },
 
-        // Top posts ma'lumotlarini olish
+        // Top posts datani getting
         fetchTopPosts: async (period = 'today', sortBy = 'views') => {
             const operation = 'fetchTopPosts';
             try {
@@ -416,7 +416,7 @@ export const useAppStore = create(
             }
         },
 
-        // Best time recommendations olish
+        // Best time recommendations getting
         fetchBestTime: async (timeframe = 'week', contentType = 'all') => {
             const operation = 'fetchBestTime';
             try {
@@ -447,7 +447,7 @@ export const useAppStore = create(
             }
         },
 
-        // Engagement metrics olish
+        // Engagement metrics getting
         fetchEngagementMetrics: async (period = '7d') => {
             const operation = 'fetchEngagementMetrics';
             try {

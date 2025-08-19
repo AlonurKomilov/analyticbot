@@ -1,0 +1,66 @@
+# 🛠️ PHASE 5.0: Development-Optimized Dockerfile
+# Fast builds and hot-reload for development environment
+
+FROM python:3.11-slim as development
+
+# Environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    git \
+    curl \
+    vim \
+    htop \
+    postgresql-client \
+    redis-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies
+COPY requirements.txt requirements.prod.txt ./
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.prod.txt && \
+    pip install -r requirements.txt && \
+    pip install \
+        pytest \
+        pytest-asyncio \
+        pytest-cov \
+        black \
+        flake8 \
+        mypy \
+        pre-commit \
+        ipython \
+        jupyter
+
+# Copy application code (will be mounted in development)
+COPY . /app/
+
+# Create non-root user
+RUN groupadd -r devuser && useradd -r -g devuser -u 1000 devuser
+RUN chown -R devuser:devuser /app /opt/venv
+
+# Switch to non-root user
+USER devuser
+
+# Health check for development
+HEALTHCHECK --interval=60s --timeout=5s --start-period=10s --retries=2 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Expose ports
+EXPOSE 8000 8001 8002 8003 5678
+
+# Default command for development
+CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]

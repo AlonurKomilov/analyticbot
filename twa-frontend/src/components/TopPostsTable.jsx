@@ -43,7 +43,7 @@ const TopPostsTable = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedPostId, setSelectedPostId] = useState(null);
 
-    // Top posts ma'lumotlarini yuklash
+    // Top posts loading data
     const loadTopPosts = useCallback(async () => {
         try {
             setLoading(true);
@@ -62,7 +62,7 @@ const TopPostsTable = () => {
         }
     }, [timeFilter, sortBy]);
 
-    // Component mount va filter o'zgarganda ma'lumot yuklash
+    // Component mount and filter when changes load data
     useEffect(() => {
         loadTopPosts();
     }, [loadTopPosts]);
@@ -108,14 +108,14 @@ const TopPostsTable = () => {
         }
     };
 
-    // Engagement rate hisoblash
+    // Calculate engagement rate calculation
     const calculateEngagementRate = (post) => {
         const totalEngagement = (post.likes || 0) + (post.shares || 0) + (post.comments || 0);
         const views = post.views || 1;
         return ((totalEngagement / views) * 100).toFixed(1);
     };
 
-    // Performance badge olish
+    // Get performance badge getting
     const getPerformanceBadge = (post) => {
         const engagementRate = parseFloat(calculateEngagementRate(post));
         const views = post.views || 0;

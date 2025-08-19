@@ -1,23 +1,14 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import PostViewDynamicsChart from '../components/PostViewDynamicsChart';
 
-// Create mock component
-const MockPostViewDynamicsChart = () => (
-  <div>
-    <h6>Ko'rishlar Dinamikasi</h6>
-    <p>Ko'rishlar dinamikasi yuklanmoqda...</p>
-  </div>
-);
-
-// Mock recharts completely
+// Mock recharts components completely
 vi.mock('recharts', () => ({
   __esModule: true,
-  default: {},
   ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
   LineChart: ({ children, data }) => (
-    <div data-testid="line-chart" data-chart-data={JSON.stringify(data || [])}>
+    <div data-testid="line-chart" data-chart-data={JSON.stringify(data)}>
       {children}
     </div>
   ),
@@ -66,23 +57,23 @@ describe('PostViewDynamicsChart', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders chart title correctly', async () => {
+  it('renders chart title correctly', () => {
     render(
       <TestWrapper>
-        <MockPostViewDynamicsChart />
+        <PostViewDynamicsChart />
       </TestWrapper>
     );
 
-    expect(screen.getByText('Ko\'rishlar Dinamikasi')).toBeInTheDocument();
+    expect(screen.getByText('Post View Dynamics')).toBeInTheDocument();
   });
 
-  it('shows loading state initially', async () => {
+  it('shows loading state initially', () => {
     render(
       <TestWrapper>
-        <MockPostViewDynamicsChart />
+        <PostViewDynamicsChart />
       </TestWrapper>
     );
 
-    expect(screen.getByText('Ko\'rishlar dinamikasi yuklanmoqda...')).toBeInTheDocument();
+    expect(screen.getByText('Ma\'lumotlar yuklanmoqda...')).toBeInTheDocument();
   });
 });

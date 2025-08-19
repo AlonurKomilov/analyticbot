@@ -130,7 +130,7 @@ describe('TopPostsTable', () => {
       expect(screen.getByText('Post')).toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('Ko\'rishlar')).toHaveLength(2); // table header and select
+    expect(screen.getAllByText('Ko\'rishlar')).toHaveLength(2); // select and table header
     expect(screen.getByText('Yoqtirishlar')).toBeInTheDocument();
     expect(screen.getByText('Izohlar')).toBeInTheDocument();
     expect(screen.getByText('Faollik %')).toBeInTheDocument();

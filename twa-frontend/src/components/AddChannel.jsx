@@ -31,7 +31,7 @@ const AddChannel = () => {
                     variant="contained"
                     onClick={handleAdd}
                     disabled={isLoading} // So'rov paytida nofaol
-                    sx={{ minWidth: '80px' }} // Tugma o'lchami o'zgarib ketmasligi uchun
+                    sx={{ minWidth: '80px' }} // Tugma o'lchami o'zgarib ketmasligi for
                 >
                     {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Add'}
                 </Button>

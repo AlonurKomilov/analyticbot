@@ -52,7 +52,7 @@ export class ErrorHandler {
     /**
      * Show user-friendly error notifications
      */
-    static showUserError(error, context = {}) {
+    static showUserError(error) {
         const message = this.getErrorMessage(error);
         
         // Use browser notification API if available

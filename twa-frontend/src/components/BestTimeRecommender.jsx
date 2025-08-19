@@ -44,7 +44,7 @@ const BestTimeRecommender = () => {
     const [recommendations, setRecommendations] = useState(null);
     const [aiInsights, setAiInsights] = useState([]);
 
-    // Best time recommendations'ni yuklash
+    // Load best time recommendations loading
     const loadRecommendations = useCallback(async () => {
         try {
             setLoading(true);
@@ -56,7 +56,7 @@ const BestTimeRecommender = () => {
             const result = await response.json();
             setRecommendations(result);
             
-            // AI insights'ni ham yuklash
+            // Load AI insights ham loading
             if (result.ai_recommendations) {
                 setAiInsights(result.ai_recommendations);
             }
@@ -68,15 +68,15 @@ const BestTimeRecommender = () => {
         }
     }, [timeFrame, contentType]);
 
-    // Component mount va filter o'zgarganda ma'lumot yuklash
+    // Component mount and filter when changes load data
     useEffect(() => {
         loadRecommendations();
     }, [loadRecommendations]);
 
-    // Haftaning kunlari
+    // Days of week
     const daysOfWeek = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
     
-    // Soat formatini o'zgartirish
+    // Soat format conversion
     const formatHour = (hour) => {
         if (hour === 0) return '12:00 AM';
         if (hour < 12) return `${hour}:00 AM`;
@@ -84,14 +84,14 @@ const BestTimeRecommender = () => {
         return `${hour - 12}:00 PM`;
     };
 
-    // Confidence level rangini olish
+    // Confidence level range getting
     const getConfidenceColor = (confidence) => {
         if (confidence >= 80) return 'success';
         if (confidence >= 60) return 'warning';
         return 'error';
     };
 
-    // Heat map uchun rang olish
+    // Heat map for rang getting
     const getHeatmapColor = (value, max) => {
         const intensity = value / max;
         if (intensity > 0.8) return '#2e7d32'; // Dark green
@@ -101,7 +101,7 @@ const BestTimeRecommender = () => {
         return '#e8f5e8'; // Almost white green
     };
 
-    // AI tavsiyalarni formatlash
+    // AI recommendations formatting
     const formatAIInsight = (insight) => {
         const icons = {
             time: '⏰',
@@ -114,7 +114,7 @@ const BestTimeRecommender = () => {
         return icons[insight.type] || '🤖';
     };
 
-    // Heatmap ma'lumotlari
+    // Heatmap data
     const heatmapData = useMemo(() => {
         if (!recommendations?.hourly_performance) return [];
         

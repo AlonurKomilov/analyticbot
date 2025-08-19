@@ -39,11 +39,11 @@ const PostViewDynamicsChart = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState([]);
-    const [autoRefresh] = useState(true); // setAutoRefresh olib tashlandi
+    const [autoRefresh] = useState(true); // setAutoRefresh removed
     const [refreshInterval, setRefreshInterval] = useState('30s');
     
-    // Store method'larini olamiz
-    const { fetchPostDynamics, isLoading, getError, analytics } = useAppStore();
+    // Get store methods
+    const { fetchPostDynamics } = useAppStore();
 
     // Analytics data loading function with useCallback to prevent unnecessary re-renders
     const loadDynamics = useCallback(async () => {
@@ -69,12 +69,12 @@ const PostViewDynamicsChart = () => {
         } finally {
             setLoading(false);
         }
-    }, [timeRange, fetchPostDynamics]); // fetchPostDynamics ham dependency qo'shildi
+    }, [timeRange, fetchPostDynamics]); // fetchPostDynamics also added to dependencies
 
-    // Component mount va timeRange o'zgarganda ma'lumot yuklash
+    // Load data when component mounts and timeRange changes
     useEffect(() => {
         loadDynamics();
-    }, [loadDynamics]); // loadDynamics'ga dependency qo'shildi
+    }, [loadDynamics]); // loadDynamics added to dependencies
 
     // Auto-refresh functionality
     useEffect(() => {
@@ -88,7 +88,7 @@ const PostViewDynamicsChart = () => {
         return () => clearInterval(interval);
     }, [autoRefresh, refreshInterval, loadDynamics]);
 
-    // Chart data transformatsiyasi
+    // Chart data transformation
     const chartData = useMemo(() => {
         if (!data || !Array.isArray(data)) return [];
         

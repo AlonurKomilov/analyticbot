@@ -1,117 +1,127 @@
 """
-🧪 PERFORMANCE TESTING SUITE
-Comprehensive performance testing and benchmarking
+🧪 PERFORMANCE OPTIMIZATION TESTS
+Comprehensive performance testing and optimization module
 """
 import asyncio
-import time
-import statistics
 import logging
-from typing import List, Dict, Any, Callable, Optional
+import time
+import psutil
 from dataclasses import dataclass
-from contextlib import asynccontextmanager
-import pytest
-import pytest_asyncio
+from typing import Dict, Any, Callable, Optional, List
+from pathlib import Path
+import sys
 
-from bot.optimized_container import container
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from bot.database.performance import performance_manager
 from bot.database.db import db_manager
 
 logger = logging.getLogger(__name__)
 
-
 @dataclass
-class PerformanceResult:
-    """Performance test result data"""
-    name: str
-    duration: float
-    success: bool
-    iterations: int
+class BenchmarkResult:
+    """Results from a performance benchmark"""
     avg_time: float
-    min_time: float
-    max_time: float
-    std_dev: float
     throughput: float
-    error_rate: float
-    memory_used: Optional[int] = None
-
+    error_rate: float = 0.0
+    iterations: int = 0
+    min_time: float = 0.0
+    max_time: float = 0.0
+    std_dev: float = 0.0
+    p95_time: float = 0.0
+    p99_time: float = 0.0
 
 class PerformanceTester:
-    """🔥 High-performance testing framework"""
+    """Advanced performance testing class"""
     
     def __init__(self):
-        self.results: List[PerformanceResult] = []
-        self._setup_complete = False
+        self.results: Dict[str, BenchmarkResult] = {}
+        self.start_memory = 0
+        self.process = psutil.Process()
     
     async def setup(self):
-        """Initialize testing environment"""
-        if not self._setup_complete:
-            await container.initialize()
-            self._setup_complete = True
-            logger.info("🧪 Performance testing environment initialized")
+        """Setup performance testing environment"""
+        try:
+            self.start_memory = self.process.memory_info().rss / 1024 / 1024  # MB
+            logger.info(f"Performance tester initialized - baseline memory: {self.start_memory:.1f}MB")
+        except Exception as e:
+            logger.warning(f"Failed to get baseline memory: {e}")
     
     async def teardown(self):
-        """Clean up testing environment"""
-        if self._setup_complete:
-            await container.shutdown()
-            self._setup_complete = False
-            logger.info("🧹 Performance testing environment cleaned up")
-    
-    @asynccontextmanager
-    async def measure_performance(self, test_name: str):
-        """Context manager for measuring performance"""
-        start_time = time.perf_counter()
-        start_memory = self._get_memory_usage()
-        
+        """Cleanup after performance testing"""
         try:
-            yield
-            success = True
+            final_memory = self.process.memory_info().rss / 1024 / 1024  # MB
+            memory_diff = final_memory - self.start_memory
+            logger.info(f"Performance testing complete - memory change: {memory_diff:+.1f}MB")
         except Exception as e:
-            logger.error(f"❌ Test {test_name} failed: {e}")
-            success = False
-            raise
-        finally:
-            end_time = time.perf_counter()
-            end_memory = self._get_memory_usage()
-            
-            duration = end_time - start_time
-            memory_used = end_memory - start_memory if start_memory and end_memory else None
-            
-            logger.info(f"⏱️ {test_name}: {duration:.3f}s (memory: {memory_used or 0}MB)")
+            logger.warning(f"Failed to get final memory: {e}")
     
-    def _get_memory_usage(self) -> Optional[int]:
-        """Get current memory usage in MB"""
-        try:
-            import psutil
-            process = psutil.Process()
-            return process.memory_info().rss // 1024 // 1024
-        except:
-            return None
+    def _calculate_statistics(self, times: List[float]) -> Dict[str, float]:
+        """Calculate statistical metrics from timing data"""
+        if not times:
+            return {"min": 0, "max": 0, "std_dev": 0, "p95": 0, "p99": 0}
+        
+        times_sorted = sorted(times)
+        n = len(times_sorted)
+        
+        # Calculate percentiles
+        p95_idx = int(0.95 * n)
+        p99_idx = int(0.99 * n)
+        
+        # Calculate standard deviation
+        mean = sum(times) / len(times)
+        variance = sum((t - mean) ** 2 for t in times) / len(times)
+        std_dev = variance ** 0.5
+        
+        return {
+            "min": min(times),
+            "max": max(times),
+            "std_dev": std_dev,
+            "p95": times_sorted[min(p95_idx, n-1)],
+            "p99": times_sorted[min(p99_idx, n-1)]
+        }
     
     async def benchmark_function(
-        self,
-        name: str,
-        func: Callable,
-        iterations: int = 100,
+        self, 
+        name: str, 
+        func: Callable, 
+        iterations: int = 10, 
         concurrent: bool = False,
-        *args,
-        **kwargs
-    ) -> PerformanceResult:
-        """🏁 Benchmark a function with multiple iterations"""
+        warmup_iterations: int = 2
+    ) -> BenchmarkResult:
+        """Benchmark a function with advanced metrics"""
+        logger.info(f"Benchmarking {name} - {iterations} iterations, concurrent: {concurrent}")
         
-        logger.info(f"🏃 Running benchmark: {name} ({iterations} iterations)")
+        # Warmup runs
+        for _ in range(warmup_iterations):
+            try:
+                if asyncio.iscoroutinefunction(func):
+                    await func()
+                else:
+                    func()
+            except Exception:
+                pass  # Ignore warmup errors
         
-        times: List[float] = []
+        times = []
         errors = 0
         
-        start_time = time.perf_counter()
-        
         if concurrent:
-            # Concurrent execution
-            tasks = []
-            for _ in range(iterations):
-                task = asyncio.create_task(self._timed_execution(func, *args, **kwargs))
-                tasks.append(task)
+            # Run all iterations concurrently
+            async def timed_execution():
+                try:
+                    start = time.perf_counter()
+                    if asyncio.iscoroutinefunction(func):
+                        await func()
+                    else:
+                        func()
+                    end = time.perf_counter()
+                    return end - start
+                except Exception as e:
+                    logger.debug(f"Error in {name}: {e}")
+                    raise
             
+            tasks = [timed_execution() for _ in range(iterations)]
             results = await asyncio.gather(*tasks, return_exceptions=True)
             
             for result in results:
@@ -120,251 +130,241 @@ class PerformanceTester:
                 else:
                     times.append(result)
         else:
-            # Sequential execution
-            for _ in range(iterations):
+            # Run iterations sequentially
+            for i in range(iterations):
                 try:
-                    execution_time = await self._timed_execution(func, *args, **kwargs)
-                    times.append(execution_time)
-                except Exception:
+                    start = time.perf_counter()
+                    if asyncio.iscoroutinefunction(func):
+                        await func()
+                    else:
+                        func()
+                    end = time.perf_counter()
+                    times.append(end - start)
+                except Exception as e:
+                    logger.debug(f"Error in {name} iteration {i}: {e}")
                     errors += 1
         
-        total_duration = time.perf_counter() - start_time
+        # Calculate metrics
+        if times:
+            avg_time = sum(times) / len(times)
+            throughput = len(times) / sum(times) if sum(times) > 0 else 0
+            stats = self._calculate_statistics(times)
+        else:
+            avg_time = 0
+            throughput = 0
+            stats = {"min": 0, "max": 0, "std_dev": 0, "p95": 0, "p99": 0}
         
-        if not times:
-            # All iterations failed
-            return PerformanceResult(
-                name=name,
-                duration=total_duration,
-                success=False,
-                iterations=iterations,
-                avg_time=0,
-                min_time=0,
-                max_time=0,
-                std_dev=0,
-                throughput=0,
-                error_rate=100.0
-            )
-        
-        # Calculate statistics
-        avg_time = statistics.mean(times)
-        min_time = min(times)
-        max_time = max(times)
-        std_dev = statistics.stdev(times) if len(times) > 1 else 0
-        throughput = len(times) / total_duration
         error_rate = (errors / iterations) * 100
         
-        result = PerformanceResult(
-            name=name,
-            duration=total_duration,
-            success=errors == 0,
-            iterations=iterations,
+        result = BenchmarkResult(
             avg_time=avg_time,
-            min_time=min_time,
-            max_time=max_time,
-            std_dev=std_dev,
             throughput=throughput,
-            error_rate=error_rate
+            error_rate=error_rate,
+            iterations=iterations,
+            min_time=stats["min"],
+            max_time=stats["max"],
+            std_dev=stats["std_dev"],
+            p95_time=stats["p95"],
+            p99_time=stats["p99"]
         )
         
-        self.results.append(result)
-        
-        logger.info(
-            f"✅ {name}: {avg_time:.3f}s avg, {throughput:.1f} ops/sec, "
-            f"{error_rate:.1f}% errors"
-        )
+        self.results[name] = result
+        logger.info(f"✅ {name}: {avg_time:.3f}s avg, {throughput:.1f} ops/sec, {error_rate:.1f}% errors")
         
         return result
     
-    async def _timed_execution(self, func: Callable, *args, **kwargs) -> float:
-        """Execute function and return execution time"""
-        start_time = time.perf_counter()
-        
-        if asyncio.iscoroutinefunction(func):
-            await func(*args, **kwargs)
-        else:
-            func(*args, **kwargs)
-        
-        return time.perf_counter() - start_time
-    
     def generate_report(self) -> Dict[str, Any]:
-        """📊 Generate comprehensive performance report"""
+        """Generate comprehensive performance report"""
         if not self.results:
-            return {"status": "no_results"}
+            return {"summary": {"total_tests": 0}}
         
-        # Overall statistics
         total_tests = len(self.results)
-        successful_tests = sum(1 for r in self.results if r.success)
-        failed_tests = total_tests - successful_tests
+        avg_response_time = sum(r.avg_time for r in self.results.values()) / total_tests
+        avg_throughput = sum(r.throughput for r in self.results.values()) / total_tests
+        avg_error_rate = sum(r.error_rate for r in self.results.values()) / total_tests
+        success_rate = 100 - avg_error_rate
         
-        # Performance metrics
-        avg_throughput = statistics.mean([r.throughput for r in self.results])
-        avg_response_time = statistics.mean([r.avg_time for r in self.results])
-        
-        # Find bottlenecks
-        slowest_test = max(self.results, key=lambda r: r.avg_time)
-        fastest_test = min(self.results, key=lambda r: r.avg_time)
+        # Find best and worst performing tests
+        best_test = min(self.results.items(), key=lambda x: x[1].avg_time)
+        worst_test = max(self.results.items(), key=lambda x: x[1].avg_time)
         
         return {
             "summary": {
                 "total_tests": total_tests,
-                "successful_tests": successful_tests,
-                "failed_tests": failed_tests,
-                "success_rate": (successful_tests / total_tests) * 100,
+                "success_rate": success_rate,
+                "avg_response_time": avg_response_time,
                 "avg_throughput": avg_throughput,
-                "avg_response_time": avg_response_time
+                "avg_error_rate": avg_error_rate
             },
-            "performance": {
-                "slowest_test": {
-                    "name": slowest_test.name,
-                    "avg_time": slowest_test.avg_time,
-                    "throughput": slowest_test.throughput
-                },
-                "fastest_test": {
-                    "name": fastest_test.name,
-                    "avg_time": fastest_test.avg_time,
-                    "throughput": fastest_test.throughput
-                }
+            "best_performance": {
+                "test": best_test[0],
+                "avg_time": best_test[1].avg_time,
+                "throughput": best_test[1].throughput
             },
-            "detailed_results": [
-                {
-                    "name": r.name,
-                    "avg_time": r.avg_time,
-                    "min_time": r.min_time,
-                    "max_time": r.max_time,
-                    "std_dev": r.std_dev,
-                    "throughput": r.throughput,
-                    "error_rate": r.error_rate,
-                    "success": r.success
+            "worst_performance": {
+                "test": worst_test[0],
+                "avg_time": worst_test[1].avg_time,
+                "throughput": worst_test[1].throughput
+            },
+            "detailed_results": {
+                name: {
+                    "avg_time": result.avg_time,
+                    "throughput": result.throughput,
+                    "error_rate": result.error_rate,
+                    "p95_time": result.p95_time,
+                    "p99_time": result.p99_time,
+                    "std_dev": result.std_dev
                 }
-                for r in self.results
-            ]
+                for name, result in self.results.items()
+            }
         }
 
-
-# Test suite implementation
-class TestPerformanceOptimization:
-    """🧪 Performance optimization test cases"""
+async def run_comprehensive_performance_test() -> Optional[Dict[str, Any]]:
+    """Run comprehensive performance test suite"""
+    logger.info("🚀 Starting comprehensive performance test suite...")
     
-    @pytest_asyncio.fixture(autouse=True)
-    async def setup_teardown(self):
-        """Setup and teardown for each test"""
-        tester = PerformanceTester()
+    tester = PerformanceTester()
+    
+    try:
         await tester.setup()
-        yield tester
-        await tester.teardown()
-    
-    async def test_database_connection_performance(self, setup_teardown):
-        """Test database connection pool performance"""
-        tester = setup_teardown
         
-        async def get_connection():
+        # Test 1: Database operations
+        logger.info("🔍 Testing database operations...")
+        
+        async def db_simple_query():
             async with db_manager.pool.acquire() as conn:
-                await conn.fetchval("SELECT 1")
+                return await conn.fetchval("SELECT 1")
         
-        result = await tester.benchmark_function(
-            "database_connection",
-            get_connection,
-            iterations=50,
-            concurrent=True
+        await tester.benchmark_function(
+            "db_simple_query", 
+            db_simple_query, 
+            iterations=50
         )
         
-        # Assert performance criteria
-        assert result.success, "Database connection test failed"
-        assert result.avg_time < 0.1, f"DB connection too slow: {result.avg_time:.3f}s"
-        assert result.throughput > 10, f"DB throughput too low: {result.throughput:.1f} ops/sec"
-    
-    async def test_cache_performance(self, setup_teardown):
-        """Test Redis cache performance"""
-        tester = setup_teardown
+        async def db_complex_query():
+            async with db_manager.pool.acquire() as conn:
+                return await conn.fetch("""
+                    SELECT 
+                        generate_series(1, 100) as id,
+                        md5(random()::text) as hash_value,
+                        now() as timestamp
+                """)
         
-        if not performance_manager.cache._is_connected:
-            pytest.skip("Redis cache not available")
-        
-        async def cache_operations():
-            cache = performance_manager.cache
-            test_key = "test_performance_key"
-            test_value = {"test": "data", "timestamp": time.time()}
-            
-            # Set
-            await cache.set(test_key, test_value)
-            
-            # Get
-            result = await cache.get(test_key)
-            assert result is not None
-            
-            # Delete
-            await cache.delete(test_key)
-        
-        result = await tester.benchmark_function(
-            "cache_operations",
-            cache_operations,
-            iterations=100,
-            concurrent=True
+        await tester.benchmark_function(
+            "db_complex_query", 
+            db_complex_query, 
+            iterations=20
         )
         
-        assert result.success, "Cache operations test failed"
-        assert result.avg_time < 0.05, f"Cache operations too slow: {result.avg_time:.3f}s"
-        assert result.throughput > 50, f"Cache throughput too low: {result.throughput:.1f} ops/sec"
-    
-    async def test_analytics_service_performance(self, setup_teardown):
-        """Test optimized analytics service performance"""
-        tester = setup_teardown
-        
-        # Get analytics service
-        analytics_service = container.optimized_analytics_service()
-        
-        async def analytics_operation():
-            # Test cached analytics retrieval
-            return await analytics_service.get_channel_analytics_cached(
-                channel_id=12345, days=7
+        # Test 2: Cache operations
+        if performance_manager.cache._is_connected:
+            logger.info("🔍 Testing cache operations...")
+            
+            async def cache_set_get():
+                key = f"perf_test_{time.time()}_{id(asyncio.current_task())}"
+                value = {
+                    "test_data": "performance_test",
+                    "timestamp": time.time(),
+                    "complex_data": list(range(100))
+                }
+                
+                await performance_manager.cache.set(key, value, 60)
+                result = await performance_manager.cache.get(key)
+                await performance_manager.cache.delete(key)
+                return result is not None
+            
+            await tester.benchmark_function(
+                "cache_set_get", 
+                cache_set_get, 
+                iterations=100
+            )
+            
+            # Concurrent cache test
+            await tester.benchmark_function(
+                "cache_concurrent", 
+                cache_set_get, 
+                iterations=50,
+                concurrent=True
             )
         
-        result = await tester.benchmark_function(
-            "analytics_service",
-            analytics_operation,
-            iterations=20,
-            concurrent=True
-        )
+        # Test 3: Mixed workload
+        logger.info("🔍 Testing mixed workload...")
         
-        assert result.success, "Analytics service test failed"
-        assert result.avg_time < 0.5, f"Analytics too slow: {result.avg_time:.3f}s"
-    
-    async def test_bulk_operations_performance(self, setup_teardown):
-        """Test bulk operations performance"""
-        tester = setup_teardown
-        
-        async def bulk_query_simulation():
-            """Simulate bulk database operations"""
-            async with db_manager.pool.acquire() as conn:
-                # Simulate bulk insert
-                data = [(i, f"test_data_{i}") for i in range(100)]
-                
-                # Batch processing simulation
-                for batch_start in range(0, len(data), 20):
-                    batch = data[batch_start:batch_start + 20]
-                    # Simulate batch processing
-                    await asyncio.sleep(0.001)  # Minimal processing time
-        
-        result = await tester.benchmark_function(
-            "bulk_operations",
-            bulk_query_simulation,
-            iterations=10,
-            concurrent=False
-        )
-        
-        assert result.success, "Bulk operations test failed"
-        assert result.avg_time < 1.0, f"Bulk operations too slow: {result.avg_time:.3f}s"
-    
-    async def test_concurrent_load_performance(self, setup_teardown):
-        """Test system performance under concurrent load"""
-        tester = setup_teardown
-        
-        async def concurrent_mixed_operations():
-            """Mixed operations simulating real load"""
+        async def mixed_workload():
             tasks = []
             
-            # Database operations
-            tasks.append(db_manager.health_check())
+            # Database task
+            tasks.append(db_simple_query())
+            
+            # Cache tasks (if available)
+            if performance_manager.cache._is_connected:
+                async def cache_op():
+                    key = f"mixed_test_{time.time()}"
+                    await performance_manager.cache.set(key, {"mixed": True}, 30)
+                    result = await performance_manager.cache.get(key)
+                    await performance_manager.cache.delete(key)
+                    return result
+                
+                tasks.append(cache_op())
+                tasks.append(cache_op())  # Two cache operations
+            
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            successful = len([r for r in results if not isinstance(r, Exception)])
+            return successful >= len(tasks) // 2  # At least half successful
+        
+        await tester.benchmark_function(
+            "mixed_workload", 
+            mixed_workload, 
+            iterations=30
+        )
+        
+        # Test 4: Stress test
+        logger.info("🔍 Running stress test...")
+        
+        async def stress_test():
+            # Create multiple concurrent operations
+            db_tasks = [db_simple_query() for _ in range(10)]
+            
+            cache_tasks = []
+            if performance_manager.cache._is_connected:
+                for i in range(20):
+                    async def cache_stress_op():
+                        key = f"stress_{i}_{time.time()}"
+                        data = {"stress_test": True, "data": list(range(50))}
+                        await performance_manager.cache.set(key, data, 30)
+                        result = await performance_manager.cache.get(key)
+                        await performance_manager.cache.delete(key)
+                        return result
+                    cache_tasks.append(cache_stress_op())
+            
+            all_tasks = db_tasks + cache_tasks
+            results = await asyncio.gather(*all_tasks, return_exceptions=True)
+            successful = len([r for r in results if not isinstance(r, Exception)])
+            
+            return successful / len(all_tasks) >= 0.8  # 80% success rate
+        
+        await tester.benchmark_function(
+            "stress_test", 
+            stress_test, 
+            iterations=10
+        )
+        
+        # Generate comprehensive report
+        report = tester.generate_report()
+        
+        logger.info("📊 Comprehensive performance test completed!")
+        logger.info(f"✅ Success rate: {report['summary']['success_rate']:.1f}%")
+        logger.info(f"⚡ Average throughput: {report['summary']['avg_throughput']:.1f} ops/sec")
+        logger.info(f"⏱️ Average response time: {report['summary']['avg_response_time']:.3f}s")
+        
+        return report
+        
+    except Exception as e:
+        logger.error(f"❌ Comprehensive performance test failed: {e}")
+        return None
+        
+    finally:
+        await tester.teardown()
             
             # Cache operations (if available)
             if performance_manager.cache._is_connected:

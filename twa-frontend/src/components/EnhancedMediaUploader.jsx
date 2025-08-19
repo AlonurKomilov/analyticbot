@@ -33,8 +33,6 @@ const EnhancedMediaUploader = () => {
         pendingMedia,
         clearPendingMedia,
         channels,
-        getStorageFiles,
-        storageFiles,
         isLoading
     } = useAppStore();
     

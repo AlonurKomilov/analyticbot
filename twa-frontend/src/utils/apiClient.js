@@ -169,7 +169,7 @@ class ApiClient {
                     try {
                         const response = JSON.parse(xhr.responseText);
                         resolve(response);
-                    } catch (error) {
+                    } catch {
                         reject(new Error('Invalid JSON response'));
                     }
                 } else {
@@ -259,7 +259,7 @@ class ApiClient {
                             upload_duration: Date.now() - startTime,
                             upload_speed: file.size / ((Date.now() - startTime) / 1000)
                         });
-                    } catch (error) {
+                    } catch {
                         reject(new Error('Invalid JSON response'));
                     }
                 } else {

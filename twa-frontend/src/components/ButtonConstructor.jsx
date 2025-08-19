@@ -5,7 +5,7 @@ const ButtonConstructor = ({ onAddButton }) => {
     const [buttonText, setButtonText] = useState('');
     const [buttonUrl, setButtonUrl] = useState('');
     const [buttonType, setButtonType] = useState('url');
-    // Xatolik holatini saqlash uchun yangi state
+    // Xatolik holatini saqlash for yangi state
     const [urlError, setUrlError] = useState('');
 
     const validateUrl = (url) => {
@@ -62,7 +62,7 @@ const ButtonConstructor = ({ onAddButton }) => {
                     onChange={handleUrlChange} // O'zgartirilgan handler
                     size="small"
                     required
-                    // Xatolikni ko'rsatish uchun props'lar
+                    // Xatolikni ko'rsatish for props'lar
                     error={!!urlError} // Agar urlError'da matn bo'lsa, 'true' bo'ladi
                     helperText={urlError} // Xatolik matnini ko'rsatish
                 />

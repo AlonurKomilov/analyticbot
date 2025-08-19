@@ -1,6 +1,6 @@
 import { createTheme } from '@mui/material/styles';
 
-// Ilovamiz uchun qorong'u (dark) tema
+// Ilovamiz for qorong'u (dark) tema
 const theme = createTheme({
   palette: {
     mode: 'dark',

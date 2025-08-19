@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from asyncpg import Pool
 
@@ -22,7 +22,7 @@ class AnalyticsRepository:
 
     async def get_all_trackable_posts(
         self, interval_days: int = 7
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Ko'rishlar sonini tekshirish kerak bo'lgan barcha postlarni oladi.
         Masalan, oxirgi 7 kun ichida yuborilganlar.
@@ -48,7 +48,7 @@ class AnalyticsRepository:
         await self._pool.execute(query, views, scheduled_post_id)
 
     # --- YANGI QO'SHILGAN FUNKSIYA ---
-    async def get_all_posts_to_track_views(self) -> List[Dict[str, Any]]:
+    async def get_all_posts_to_track_views(self) -> list[dict[str, Any]]:
         """
         Yuborilgan (`sent`) statusidagi va ko'rishlarni kuzatish kerak bo'lgan
         barcha postlarni ma'lumotlar bazasidan oladi.
@@ -62,7 +62,7 @@ class AnalyticsRepository:
         rows = await self._pool.fetch(query)
         return [dict(row) for row in rows]
 
-    async def get_posts_ordered_by_views(self, channel_id: int) -> List[Dict[str, Any]]:
+    async def get_posts_ordered_by_views(self, channel_id: int) -> list[dict[str, Any]]:
         """Return posts for a channel ordered by view count."""
         query = """
             SELECT id, views, message_id

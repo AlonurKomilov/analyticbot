@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import asyncpg
 
@@ -30,7 +30,7 @@ class ChannelRepository:
                 username,
             )
 
-    async def get_channel_by_id(self, channel_id: int) -> Optional[Dict[str, Any]]:
+    async def get_channel_by_id(self, channel_id: int) -> dict[str, Any] | None:
         """Retrieve a single channel by its ID."""
 
         async with self.pool.acquire() as conn:
@@ -47,7 +47,7 @@ class ChannelRepository:
                 "SELECT COUNT(*) FROM channels WHERE user_id = $1", user_id
             )
 
-    async def get_user_channels(self, user_id: int) -> List[Dict[str, Any]]:
+    async def get_user_channels(self, user_id: int) -> list[dict[str, Any]]:
         """Retrieve all channels registered by a user."""
 
         async with self.pool.acquire() as conn:

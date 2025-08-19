@@ -1,44 +1,45 @@
 import asyncio
 import logging
-from typing import Optional
 
 import asyncpg
 from asyncpg.pool import Pool
 
 from bot.config import settings
-from bot.utils.error_handler import ErrorHandler, ErrorContext
-from bot.database.performance import performance_manager, PerformanceConfig
+from bot.database.performance import PerformanceConfig, performance_manager
+from bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
 
 
 class DatabaseManager:
     """🚀 Enhanced database manager with performance optimization and monitoring"""
-    
+
     def __init__(self):
-        self._pool: Optional[Pool] = None
+        self._pool: Pool | None = None
         self._is_healthy = False
         self._performance_enabled = True
-    
+
     @property
-    def pool(self) -> Optional[Pool]:
+    def pool(self) -> Pool | None:
         return self._pool
-    
+
     @property
     def is_healthy(self) -> bool:
         return self._is_healthy and self._pool is not None
-    
-    async def create_pool(self, max_retries: int = 5, backoff_factor: float = 0.5) -> Pool:
+
+    async def create_pool(
+        self, max_retries: int = 5, backoff_factor: float = 0.5
+    ) -> Pool:
         """
         🔥 Creates high-performance connection pool with optimization features.
-        
+
         Features:
         - Enhanced connection pooling with performance tuning
         - Automatic index creation for query optimization
         - Health monitoring and auto-recovery
         - Performance metrics collection
         """
-        
+
         # Use optimized performance manager if available
         if self._performance_enabled:
             try:
@@ -48,50 +49,59 @@ class DatabaseManager:
                 logger.info("🚀 Using optimized performance pool")
                 return self._pool
             except Exception as e:
-                logger.warning(f"⚠️ Performance optimization failed, using standard pool: {e}")
+                logger.warning(
+                    f"⚠️ Performance optimization failed, using standard pool: {e}"
+                )
                 self._performance_enabled = False
-        
+
         # Fallback to standard pool creation
         dsn_string = str(settings.DATABASE_URL.unicode_string())
         last_exception = None
-        
+
         for attempt in range(max_retries):
             try:
                 # Create pool with enhanced connection parameters
                 self._pool = await asyncpg.create_pool(
                     dsn=dsn_string,
-                    min_size=PerformanceConfig.DB_POOL_MIN_SIZE // 2,  # Conservative fallback
+                    min_size=PerformanceConfig.DB_POOL_MIN_SIZE
+                    // 2,  # Conservative fallback
                     max_size=PerformanceConfig.DB_POOL_MAX_SIZE // 2,
                     command_timeout=PerformanceConfig.DB_POOL_COMMAND_TIMEOUT,
                     server_settings={
-                        'application_name': 'analyticbot_enhanced',
-                        'tcp_keepalives_idle': '600',
-                        'tcp_keepalives_interval': '30',
-                        'tcp_keepalives_count': '3',
-                        'log_min_duration_statement': '1000',
-                        'checkpoint_completion_target': '0.9',
-                        'effective_cache_size': '1GB'
-                    }
+                        "application_name": "analyticbot_enhanced",
+                        "tcp_keepalives_idle": "600",
+                        "tcp_keepalives_interval": "30",
+                        "tcp_keepalives_count": "3",
+                        "log_min_duration_statement": "1000",
+                        "checkpoint_completion_target": "0.9",
+                        "effective_cache_size": "1GB",
+                    },
                 )
-                
+
                 # Test the connection with enhanced health check
                 async with self._pool.acquire() as conn:
-                    await conn.execute('SELECT 1')
+                    await conn.execute("SELECT 1")
                     # Check database performance
-                    result = await conn.fetchval('SELECT version()')
+                    result = await conn.fetchval("SELECT version()")
                     logger.debug(f"📊 Connected to: {result}")
-                
+
                 self._is_healthy = True
-                logger.info(f"✅ Enhanced database pool created: {self._pool.get_size()} connections")
+                logger.info(
+                    f"✅ Enhanced database pool created: {self._pool.get_size()} connections"
+                )
                 return self._pool
-                
+
             except (OSError, asyncpg.exceptions.PostgresError) as e:
                 last_exception = e
                 wait_time = backoff_factor * (2**attempt)
-                
-                context = ErrorContext().add("attempt", attempt + 1).add("max_retries", max_retries)
+
+                context = (
+                    ErrorContext()
+                    .add("attempt", attempt + 1)
+                    .add("max_retries", max_retries)
+                )
                 ErrorHandler.handle_database_error(e, context)
-                
+
                 if attempt < max_retries - 1:
                     logger.warning(
                         "🔄 DB connection attempt %d/%d failed. Retrying in %.2f seconds...",
@@ -100,52 +110,54 @@ class DatabaseManager:
                         wait_time,
                     )
                     await asyncio.sleep(wait_time)
-        
+
         self._is_healthy = False
-        logger.error("❌ Could not connect to the database after %d attempts.", max_retries)
+        logger.error(
+            "❌ Could not connect to the database after %d attempts.", max_retries
+        )
         raise last_exception
-    
+
     async def health_check(self) -> bool:
         """🩺 Enhanced health check with performance monitoring"""
         if not self._pool:
             self._is_healthy = False
             return False
-        
+
         try:
             async with self._pool.acquire(timeout=5) as conn:
                 # Basic connectivity test
-                await conn.execute('SELECT 1')
-                
+                await conn.execute("SELECT 1")
+
                 # Performance test
                 start_time = asyncio.get_event_loop().time()
-                await conn.fetchval('SELECT COUNT(*) FROM information_schema.tables')
+                await conn.fetchval("SELECT COUNT(*) FROM information_schema.tables")
                 query_time = asyncio.get_event_loop().time() - start_time
-                
+
                 if query_time > 1.0:  # Warn if queries are slow
                     logger.warning(f"⚠️ Slow database query detected: {query_time:.3f}s")
-                
+
             self._is_healthy = True
             return True
-            
+
         except Exception as e:
             self._is_healthy = False
             context = ErrorContext().add("operation", "enhanced_health_check")
             ErrorHandler.handle_database_error(e, context)
             return False
-    
+
     async def get_performance_stats(self) -> dict:
         """📊 Get database performance statistics"""
         if not self._pool:
             return {"status": "no_pool"}
-        
+
         stats = {
             "pool_size": self._pool.get_size(),
             "pool_free": self._pool.get_idle_size(),
             "pool_used": self._pool.get_size() - self._pool.get_idle_size(),
             "is_healthy": self._is_healthy,
-            "performance_mode": self._performance_enabled
+            "performance_mode": self._performance_enabled,
         }
-        
+
         # Get performance manager stats if available
         if self._performance_enabled:
             try:
@@ -153,48 +165,48 @@ class DatabaseManager:
                 stats.update(perf_stats)
             except Exception:
                 pass
-        
+
         return stats
-    
+
     async def optimize_database(self):
         """🛠️ Run database optimization procedures"""
         if not self._pool:
             return
-        
+
         try:
             async with self._pool.acquire() as conn:
                 # Update table statistics
-                await conn.execute('ANALYZE;')
-                
+                await conn.execute("ANALYZE;")
+
                 # Basic maintenance
-                await conn.execute('VACUUM (ANALYZE);')
-                
+                await conn.execute("VACUUM (ANALYZE);")
+
                 logger.info("✅ Database optimization completed")
-                
+
         except Exception as e:
             logger.error(f"❌ Database optimization failed: {e}")
-    
+
     async def close_pool(self):
         """🏁 Close the database pool gracefully with cleanup"""
         cleanup_tasks = []
-        
+
         # Close performance manager if enabled
         if self._performance_enabled:
             cleanup_tasks.append(performance_manager.close())
-        
+
         # Close main pool
         if self._pool:
             cleanup_tasks.append(self._pool.close())
-        
+
         try:
             if cleanup_tasks:
                 await asyncio.gather(*cleanup_tasks, return_exceptions=True)
             logger.info("✅ Enhanced database pool closed successfully")
-            
+
         except Exception as e:
             context = ErrorContext().add("operation", "enhanced_close_pool")
             ErrorHandler.handle_database_error(e, context)
-            
+
         finally:
             self._pool = None
             self._is_healthy = False
@@ -212,7 +224,7 @@ async def create_pool(max_retries: int = 5, backoff_factor: float = 0.5) -> Pool
     return await db_manager.create_pool(max_retries, backoff_factor)
 
 
-async def get_pool() -> Optional[Pool]:
+async def get_pool() -> Pool | None:
     """Get the current database pool"""
     return db_manager.pool
 

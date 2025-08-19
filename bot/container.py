@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from typing import TypeVar, Type, cast, Optional, Callable, Any
 import inspect
 import logging
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 import punq
-from punctuated import Singleton
-
-from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+
+from punctuated import Singleton
 
 # Logging setup
 logger = logging.getLogger(__name__)
@@ -21,10 +22,10 @@ except Exception:  # pragma: no cover
 
 from aiogram import Bot as _ClientBot
 from aiogram import Dispatcher as _AioDispatcher
+from asyncpg.pool import Pool as AsyncPGPool
 
 # DB turlari
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from asyncpg.pool import Pool as AsyncPGPool
 
 # Project config & DB
 from bot.config import Settings
@@ -65,7 +66,7 @@ container = Container()
 # ---------- Aiogram Bot/Dispatcher ----------
 def _build_bot() -> _AioBot:
     cfg: Settings = cast(Settings, container.config)
-    token: Optional[str]
+    token: str | None
     try:
         token = cfg.BOT_TOKEN.get_secret_value()
     except Exception:
@@ -97,22 +98,23 @@ def _val(x: Any) -> Any:
     return x() if callable(x) else x
 
 
-def _pool_or_none() -> Optional[Any]:
+def _pool_or_none() -> Any | None:
     """
     Get database pool with improved error handling.
     Returns DB (asyncpg Pool or async_sessionmaker) or None if not available.
     """
     try:
         pool_value = _val(container.db_session)
-        
+
         # If it's a coroutine and warmup hasn't happened, return None
         if hasattr(pool_value, "__await__"):
             logger.warning("Database pool not initialized (warmup required)")
             return None
-            
+
         return pool_value
     except Exception as e:
-        from bot.utils.error_handler import ErrorHandler, ErrorContext
+        from bot.utils.error_handler import ErrorContext, ErrorHandler
+
         context = ErrorContext().add("operation", "get_database_pool")
         ErrorHandler.handle_database_error(e, context)
         return None
@@ -228,10 +230,10 @@ container.register(
 
 # ---------- Service factory'lari (punq) ----------
 try:
-    from bot.services.guard_service import GuardService
-    from bot.services.subscription_service import SubscriptionService
-    from bot.services.scheduler_service import SchedulerService
     from bot.services.analytics_service import AnalyticsService
+    from bot.services.guard_service import GuardService
+    from bot.services.scheduler_service import SchedulerService
+    from bot.services.subscription_service import SubscriptionService
 
     container.register(
         GuardService, factory=as_singleton(lambda: _make_service(GuardService))
@@ -255,5 +257,5 @@ except Exception:
 _T = TypeVar("_T")
 
 
-def _resolve(key: Type[_T]) -> _T:
+def _resolve(key: type[_T]) -> _T:
     return cast(_T, container.resolve(key))

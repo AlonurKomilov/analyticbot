@@ -1,9 +1,9 @@
 # health_app.py
-from typing import Dict
-
-from fastapi import FastAPI
-import asyncpg
 import os
+
+import asyncpg
+from fastapi import FastAPI
+
 try:
     import redis.asyncio as redis
 except Exception:  # pragma: no cover
@@ -13,12 +13,12 @@ app = FastAPI()
 
 
 @app.get("/health")
-async def health(full: bool = False) -> Dict[str, str]:
+async def health(full: bool = False) -> dict[str, str]:
     # Default legacy contract
     if not full:
         return {"status": "ok"}
 
-    resp: Dict[str, str] = {"status": "ok"}
+    resp: dict[str, str] = {"status": "ok"}
     dsn = os.getenv("DATABASE_URL")
     if dsn:
         try:

@@ -40,8 +40,7 @@ async def test_data_processor():
     """Test basic data processing functionality"""
     try:
         print("🧪 Testing Data Processor...")
-        
-        from advanced_analytics.data_processor import AdvancedDataProcessor
+        from analytics.data_processor import AdvancedDataProcessor
         
         processor = AdvancedDataProcessor()
         test_df = create_simple_test_data()
@@ -64,8 +63,7 @@ async def test_predictive_engine():
     """Test basic predictive analytics"""
     try:
         print("🧪 Testing Predictive Engine...")
-        
-        from advanced_analytics.predictive_engine import PredictiveAnalyticsEngine
+        from analytics.predictive_engine import PredictiveAnalyticsEngine
         
         engine = PredictiveAnalyticsEngine()
         test_df = create_simple_test_data().dropna()
@@ -91,8 +89,7 @@ async def test_visualization():
     """Test visualization capabilities"""
     try:
         print("🧪 Testing Visualization Engine...")
-        
-        from advanced_analytics.dashboard import VisualizationEngine
+        from analytics.dashboard import VisualizationEngine
         
         viz_engine = VisualizationEngine()
         test_df = create_simple_test_data().dropna()
@@ -126,8 +123,7 @@ async def test_ai_insights():
     """Test AI insights generation"""
     try:
         print("🧪 Testing AI Insights Generator...")
-        
-        from advanced_analytics.ai_insights import AIInsightsGenerator
+        from analytics.ai_insights import AIInsightsGenerator
         
         insights_gen = AIInsightsGenerator()
         test_df = create_simple_test_data()
@@ -152,8 +148,7 @@ async def test_reporting():
     """Test reporting system"""
     try:
         print("🧪 Testing Reporting System...")
-        
-        from advanced_analytics.reporting_system import AutomatedReportingSystem
+        from analytics.reporting_system import AutomatedReportingSystem
         
         reporting_system = AutomatedReportingSystem(output_directory="/tmp/quick_test_reports")
         test_df = create_simple_test_data()

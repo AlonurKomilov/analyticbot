@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, '/workspaces/analyticbot')
 
 # Import the main app
-from pure_ai_api import app
+from apis.pure_ai_api import app
 
 if __name__ == "__main__":
     import uvicorn

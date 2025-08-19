@@ -51,7 +51,7 @@ Comprehensive performance optimization across all system components, resulting i
   - Optimization recommendations
 
 ### 3. Environment-Specific Optimization Profiles
-**Component:** `bot/config/performance.py`  
+**Component:** `bot/database/performance.py` (unified location; former `bot/config/performance.py` removed)
 **Profiles Available:**
 - **Development:** Optimized for rapid iteration
 - **Testing:** Balanced for test execution

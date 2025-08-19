@@ -38,12 +38,12 @@ RUN chmod +x /entrypoint.sh
 FROM final AS api
 EXPOSE 8000
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "apis.main_api:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # --- Bot image ---
 FROM final AS bot
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["python", "run_bot.py"]
+CMD ["python", "scripts/run_bot.py"]
 
 # --- Celery worker image ---
 FROM final AS celery_worker

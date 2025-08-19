@@ -29,35 +29,35 @@ def test_imports():
     print("🧪 Testing Module Imports...")
     
     try:
-        from advanced_analytics.data_processor import AdvancedDataProcessor
+        from analytics.data_processor import AdvancedDataProcessor
         print("   ✅ Data Processor imported")
     except Exception as e:
         print(f"   ❌ Data Processor import failed: {str(e)}")
         return False
     
     try:
-        from advanced_analytics.predictive_engine import PredictiveAnalyticsEngine
+        from analytics.predictive_engine import PredictiveAnalyticsEngine
         print("   ✅ Predictive Engine imported")
     except Exception as e:
         print(f"   ❌ Predictive Engine import failed: {str(e)}")
         return False
     
     try:
-        from advanced_analytics.dashboard import VisualizationEngine
+        from analytics.dashboard import VisualizationEngine
         print("   ✅ Visualization Engine imported")
     except Exception as e:
         print(f"   ❌ Visualization Engine import failed: {str(e)}")
         return False
     
     try:
-        from advanced_analytics.ai_insights import AIInsightsGenerator
+        from analytics.ai_insights import AIInsightsGenerator
         print("   ✅ AI Insights Generator imported")
     except Exception as e:
         print(f"   ❌ AI Insights Generator import failed: {str(e)}")
         return False
     
     try:
-        from advanced_analytics.reporting_system import AutomatedReportingSystem
+        from analytics.reporting_system import AutomatedReportingSystem
         print("   ✅ Reporting System imported")
     except Exception as e:
         print(f"   ❌ Reporting System import failed: {str(e)}")
@@ -70,8 +70,8 @@ def test_basic_functionality():
     print("\n🧪 Testing Basic Functionality...")
     
     try:
-        from advanced_analytics.data_processor import AdvancedDataProcessor
-        from advanced_analytics.dashboard import VisualizationEngine
+        from analytics.data_processor import AdvancedDataProcessor
+        from analytics.dashboard import VisualizationEngine
         
         # Test data processor initialization
         processor = AdvancedDataProcessor()
@@ -111,13 +111,13 @@ def test_main_module():
     print("\n🧪 Testing Main Module...")
     
     try:
-        import advanced_analytics
-        print(f"   ✅ Advanced Analytics module version: {advanced_analytics.__version__}")
-        print(f"   ✅ Available components: {len(advanced_analytics.__all__)}")
+        import analytics
+        print(f"   ✅ Advanced Analytics module version: {analytics.__version__}")
+        print(f"   ✅ Available components: {len(analytics.__all__)}")
         
         # Test individual imports
-        from advanced_analytics import AdvancedDataProcessor
-        from advanced_analytics import VisualizationEngine
+        from analytics import AdvancedDataProcessor
+        from analytics import VisualizationEngine
         
         print("   ✅ Main module imports working")
         return True
@@ -164,11 +164,11 @@ def main():
         print("✅ Module 4.5: Automated Reporting System")
         print("\n🚀 ENTERPRISE DATA SCIENCE PLATFORM READY FOR USE!")
         print("\n📖 USAGE EXAMPLES:")
-        print("   from advanced_analytics import AdvancedDataProcessor")
-        print("   from advanced_analytics import PredictiveAnalyticsEngine")
-        print("   from advanced_analytics import VisualizationEngine")
-        print("   from advanced_analytics import AIInsightsGenerator")
-        print("   from advanced_analytics import AutomatedReportingSystem")
+        print("   from analytics import AdvancedDataProcessor")
+        print("   from analytics import PredictiveAnalyticsEngine")
+        print("   from analytics import VisualizationEngine")
+        print("   from analytics import AIInsightsGenerator")
+        print("   from analytics import AutomatedReportingSystem")
     else:
         print(f"\n⚠️  {total_tests - passed_tests} TEST(S) FAILED")
     

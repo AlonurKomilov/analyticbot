@@ -32,6 +32,7 @@ from bot.models.twa import (
 )
 from bot.services import GuardService, SubscriptionService
 from bot.services.auth_service import validate_init_data
+from apis.analytics_api import router as analytics_router
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -124,6 +125,9 @@ app.add_middleware(setup_prometheus_middleware())
 
 # Set app info for Prometheus metrics
 prometheus_service.set_app_info(version="1.1.0", environment="production")
+
+# Mount analytics router (lightweight status endpoint for now)
+app.include_router(analytics_router)
 
 
 # --- API Endpoints ---

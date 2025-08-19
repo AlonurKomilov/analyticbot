@@ -43,7 +43,7 @@ Status: COMPLETE ✅
   - Thread-safe continuous monitoring
 
 ### 2. Environment-Specific Optimization Profiles ✅
-- **Component**: bot/config/performance.py
+- **Component**: bot/database/performance.py (path updated after consolidation)
 - **Profiles**: Development, Testing, Production, High-Load
 - **Settings**:
   - Database connection pooling (5-100 connections)

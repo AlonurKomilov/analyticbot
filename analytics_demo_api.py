@@ -1,42 +1,12 @@
-#!/usr/bin/env python3
+"""Legacy shim for analytics demo API.
+
+Original implementation moved to `apis.analytics_demo_api`.
+This file is kept for backward compatibility only.
 """
-PHASE 2.1 Week 2 - Analytics API Demo Server
-Simple FastAPI server for testing analytics components
-"""
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
-import random
-from datetime import datetime, timedelta
-import uvicorn
+from apis.analytics_demo_api import *  # type: ignore F401,F403
 
-# Pydantic models
-class PostDynamic(BaseModel):
-    timestamp: datetime
-    views: int
-    likes: int
-    shares: int
-    comments: int
-
-class TopPost(BaseModel):
-    id: str
-    title: str
-    content: str
-    views: int
-    likes: int
-    shares: int
-    comments: int
-    created_at: datetime
-    type: str = "text"
-    thumbnail: Optional[str] = None
-
-class BestTimeRecommendation(BaseModel):
-    day: int
-    hour: int
-    confidence: float
-    avg_engagement: int
+__all__ = [name for name in globals().keys() if not name.startswith("_")]
 
 class AIRecommendation(BaseModel):
     type: str

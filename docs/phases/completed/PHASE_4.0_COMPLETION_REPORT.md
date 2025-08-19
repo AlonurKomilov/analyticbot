@@ -23,7 +23,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 ## ✅ COMPLETED MODULES
 
 ### 📊 Module 4.1: Advanced Data Processing Engine
-**File:** `advanced_analytics/data_processor.py` (527 lines)  
+**File:** `analytics/data_processor.py` (527 lines)  
 **Status:** ✅ COMPLETE
 
 **Key Features:**
@@ -40,7 +40,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 - `detect_outliers()`, `apply_transformations()`, `generate_statistical_summary()`
 
 ### 🤖 Module 4.2: Predictive Analytics & Forecasting
-**File:** `advanced_analytics/predictive_engine.py` (1,065 lines)  
+**File:** `analytics/predictive_engine.py` (1,065 lines)  
 **Status:** ✅ COMPLETE
 
 **Key Features:**
@@ -58,7 +58,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 - **Time Series:** ARIMA, Prophet, Exponential Smoothing with trend analysis
 
 ### 📈 Module 4.3: Real-time Analytics Dashboard
-**File:** `advanced_analytics/dashboard.py` (814 lines)  
+**File:** `analytics/dashboard.py` (814 lines)  
 **Status:** ✅ COMPLETE
 
 **Key Features:**
@@ -77,7 +77,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 - Distribution plots and box plots
 
 ### 🧠 Module 4.4: AI-Powered Insights Generator
-**File:** `advanced_analytics/ai_insights.py` (906 lines)  
+**File:** `analytics/ai_insights.py` (906 lines)  
 **Status:** ✅ COMPLETE
 
 **Key Features:**
@@ -96,7 +96,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 - Automated narrative summaries
 
 ### 📋 Module 4.5: Automated Reporting System
-**File:** `advanced_analytics/reporting_system.py` (987 lines)  
+**File:** `analytics/reporting_system.py` (987 lines)  
 **Status:** ✅ COMPLETE
 
 **Key Features:**
@@ -131,7 +131,7 @@ Phase 4.0 has been successfully implemented, transforming AnalyticBot into a com
 ### 📦 Installation
 ```python
 # Import the complete analytics platform
-from advanced_analytics import (
+from analytics import (
     AdvancedDataProcessor,
     PredictiveAnalyticsEngine,
     VisualizationEngine,

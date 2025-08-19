@@ -1,42 +1,13 @@
+"""Legacy shim for security API.
+
+Implementation lives in `apis.security_api`.
+This module exists only for backward compatibility with imports like
+`security_api:app`. Remove once callers are updated.
 """
-🔒 PHASE 3.5: SECURITY ENHANCEMENT API
-Enterprise-Grade Security System
 
-Full-featured security API with comprehensive authentication, authorization,
-and security monitoring capabilities.
-"""
+from apis.security_api import *  # type: ignore F401,F403
 
-from fastapi import FastAPI, HTTPException, Depends, Request, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-import redis
-from datetime import datetime
-from typing import Optional, Dict, Any
-import logging
-import uvicorn
-
-# Import security modules
-from security.auth import SecurityManager, get_current_user, require_role
-from security.models import (
-    User, UserRole, LoginRequest, RegisterRequest, 
-    TokenResponse, MFASetupResponse, PermissionMatrix
-)
-from security.oauth import OAuthManager
-from security.mfa import MFAManager
-from security.rbac import RBACManager, Permission
-from security.config import SecurityConfig
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+__all__ = [name for name in globals().keys() if not name.startswith("_")]
 
 # Initialize components
 config = SecurityConfig()

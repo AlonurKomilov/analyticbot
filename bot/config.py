@@ -1,4 +1,3 @@
-from typing import Optional, List
 from enum import Enum
 
 from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, SecretStr, field_validator
@@ -7,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class LogLevel(str, Enum):
     """Supported log levels"""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -16,6 +16,7 @@ class LogLevel(str, Enum):
 
 class LogFormat(str, Enum):
     """Supported log formats"""
+
     TEXT = "text"
     JSON = "json"
 
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     TWA_HOST_URL: AnyHttpUrl
 
     # Sentry DSN for error tracking
-    SENTRY_DSN: Optional[str] = None
+    SENTRY_DSN: str | None = None
 
     # Plan limit enforcement
     ENFORCE_PLAN_LIMITS: bool = True
@@ -57,7 +58,7 @@ class Settings(BaseSettings):
     STORAGE_CHANNEL_ID: int
 
     # I18n (Localization) settings
-    SUPPORTED_LOCALES: List[str] = ["en", "uz"]
+    SUPPORTED_LOCALES: list[str] = ["en", "uz"]
     DEFAULT_LOCALE: str = "uz"
 
     @field_validator("DEFAULT_LOCALE")
@@ -100,7 +101,12 @@ class Settings(BaseSettings):
 
     # Media upload settings
     MAX_MEDIA_SIZE_MB: int = 20
-    ALLOWED_MEDIA_TYPES: List[str] = ["image/jpeg", "image/png", "video/mp4", "image/gif"]
+    ALLOWED_MEDIA_TYPES: list[str] = [
+        "image/jpeg",
+        "image/png",
+        "video/mp4",
+        "image/gif",
+    ]
 
     # Rate limiting for API endpoints
     API_RATE_LIMIT_REQUESTS: int = 100
@@ -109,14 +115,15 @@ class Settings(BaseSettings):
     # Security settings
     CSRF_PROTECTION_ENABLED: bool = True
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOWED_ORIGINS: List[str] = ["*"]
+    CORS_ALLOWED_ORIGINS: list[str] = ["*"]
 
     @field_validator("CORS_ALLOWED_ORIGINS")
     @classmethod
-    def validate_cors_origins(cls, v: List[str]) -> List[str]:
+    def validate_cors_origins(cls, v: list[str]) -> list[str]:
         """Warn about wildcard CORS in production"""
         if "*" in v:
             import logging
+
             logging.getLogger(__name__).warning(
                 "CORS is set to allow all origins (*). This is not recommended for production."
             )

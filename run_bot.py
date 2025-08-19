@@ -3,6 +3,8 @@ import logging
 import os
 from typing import cast
 
+import redis.asyncio as redis
+import sentry_sdk
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -10,8 +12,6 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_i18n import I18nMiddleware
 from aiogram_i18n.cores import FluentRuntimeCore
 from aiogram_i18n.managers.base import BaseManager
-import redis.asyncio as redis
-import sentry_sdk
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from bot.config import settings
@@ -20,7 +20,6 @@ from bot.database.repositories import UserRepository
 from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
 from bot.utils.language_manager import LanguageManager
-
 
 # --- CI-safe BOT_TOKEN check ---
 token = None
@@ -128,12 +127,15 @@ async def main():
         core=FluentRuntimeCore(path="bot/locales/{locale}"),
         default_locale=getattr(config, "DEFAULT_LOCALE", "en"),
         import asyncio
+
 import logging
 import os
 import signal
 import sys
 from typing import cast
 
+import redis.asyncio as redis
+import sentry_sdk
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -141,8 +143,6 @@ from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_i18n import I18nMiddleware
 from aiogram_i18n.cores import FluentRuntimeCore
 from aiogram_i18n.managers.base import BaseManager
-import redis.asyncio as redis
-import sentry_sdk
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from bot.config import settings
@@ -150,9 +150,10 @@ from bot.container import container
 from bot.database.repositories import UserRepository
 from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
+from bot.utils.error_handler import ErrorContext, ErrorHandler
 from bot.utils.language_manager import LanguageManager
-from bot.utils.error_handler import ErrorHandler, ErrorContext
-from bot.utils.monitoring import metrics, health_monitor
+from bot.utils.monitoring import health_monitor, metrics
+
 
 # Setup logging with improved configuration
 def setup_logging(config):
@@ -188,7 +189,6 @@ async def _build_storage(config) -> BaseStorage:
     try:
         redis_url = config.REDIS_URL.unicode_string()
     except Exception:
-        pass
 
     if not redis_url:
         logging.getLogger(__name__).info("Using MemoryStorage (no Redis URL configured)")
@@ -246,13 +246,11 @@ async def _warmup_db_session() -> bool:
             try:
                 ds._instance = real  # type: ignore[attr-defined]
             except Exception:
-                pass
                 
             # Update punq container
             try:
                 container.register(async_sessionmaker, factory=lambda: real)
             except Exception:
-                pass
             
             logger.info("Database connection pool initialized successfully")
             metrics.record_metric("database_warmup", 1.0, {"status": "success"})

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import os
 import logging
+import os
 from typing import Any, Optional, cast
 
-from aiogram import F, Router, types, Bot
-from aiogram.filters import CommandStart, Command
+from aiogram import Bot, F, Router, types
+from aiogram.filters import Command, CommandStart
 from aiogram.types import (
-    WebAppInfo,
-    MenuButtonWebApp,
-    MenuButtonDefault,
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    MenuButtonDefault,
+    MenuButtonWebApp,
+    WebAppInfo,
 )
 from aiogram_i18n import I18nContext
 
@@ -23,7 +23,7 @@ router = Router()
 log = logging.getLogger(__name__)
 
 
-def _chat_id_of(msg: types.Message) -> Optional[int]:
+def _chat_id_of(msg: types.Message) -> int | None:
     if msg.chat:
         return msg.chat.id
     if msg.from_user:
@@ -31,7 +31,7 @@ def _chat_id_of(msg: types.Message) -> Optional[int]:
     return None
 
 
-def _get_webapp_url() -> Optional[str]:
+def _get_webapp_url() -> str | None:
     """TWA URL ni settings yoki env dan oladi."""
     try:
         twa = getattr(settings, "TWA_HOST_URL", None)

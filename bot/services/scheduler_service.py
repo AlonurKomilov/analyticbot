@@ -1,16 +1,15 @@
 import logging
 from datetime import datetime
-from typing import Dict, Optional
 
 from aiogram import Bot
-from pydantic import BaseModel, HttpUrl, ValidationError, field_validator
 from aiogram.exceptions import TelegramAPIError
+from pydantic import BaseModel, HttpUrl, ValidationError, field_validator
 
 from bot.database.repositories import (
     AnalyticsRepository,
     SchedulerRepository,
 )
-from bot.utils.error_handler import ErrorHandler, ErrorContext
+from bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class InlineButtonsPayload(BaseModel):
 
 class SchedulerService:
     """Enhanced scheduler service with improved error handling and monitoring"""
-    
+
     def __init__(
         self,
         bot: Bot,
@@ -52,20 +51,24 @@ class SchedulerService:
         self.scheduler_repo = scheduler_repo
         self.analytics_repo = analytics_repository
 
-    def _build_reply_markup(self, raw: Dict | None):
+    def _build_reply_markup(self, raw: dict | None):
         """Build inline keyboard markup from raw button data with error handling"""
         if not raw:
             return None
-        
+
         try:
             payload = InlineButtonsPayload(**raw)
         except ValidationError as e:
-            context = ErrorContext().add("operation", "build_reply_markup").add("raw_data", raw)
+            context = (
+                ErrorContext()
+                .add("operation", "build_reply_markup")
+                .add("raw_data", raw)
+            )
             ErrorHandler.log_error(e, context, level=logging.WARNING)
             return None  # silently ignore invalid structure
-        
+
         try:
-            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+            from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
             rows = []
             for row in payload.buttons:
@@ -73,27 +76,33 @@ class SchedulerService:
                 for btn in row:
                     # Validate button configuration
                     if btn.url and btn.callback_data:
-                        logger.warning(f"Button '{btn.text}' has both URL and callback_data, using URL only")
-                    
+                        logger.warning(
+                            f"Button '{btn.text}' has both URL and callback_data, using URL only"
+                        )
+
                     button = InlineKeyboardButton(
                         text=btn.text,
                         url=str(btn.url) if btn.url else None,
-                        callback_data=btn.callback_data if (btn.callback_data and not btn.url) else None,
+                        callback_data=(
+                            btn.callback_data
+                            if (btn.callback_data and not btn.url)
+                            else None
+                        ),
                     )
                     button_row.append(button)
                 rows.append(button_row)
-            
+
             return InlineKeyboardMarkup(inline_keyboard=rows) if rows else None
-            
+
         except Exception as e:
             context = ErrorContext().add("operation", "create_keyboard_markup")
             ErrorHandler.log_error(e, context)
             return None
 
-    async def send_post_to_channel(self, post_data: Dict) -> Dict[str, any]:
+    async def send_post_to_channel(self, post_data: dict) -> dict[str, any]:
         """
         Send scheduled post to channel with enhanced error handling and monitoring.
-        
+
         Returns:
             Dict with operation results and statistics
         """
@@ -101,32 +110,34 @@ class SchedulerService:
             "success": False,
             "message_id": None,
             "error": None,
-            "post_id": post_data.get("id")
+            "post_id": post_data.get("id"),
         }
-        
-        context = (ErrorContext()
-                  .add("operation", "send_post_to_channel")
-                  .add("post_id", post_data.get("id"))
-                  .add("channel_id", post_data.get("channel_id")))
-        
+
+        context = (
+            ErrorContext()
+            .add("operation", "send_post_to_channel")
+            .add("post_id", post_data.get("id"))
+            .add("channel_id", post_data.get("channel_id"))
+        )
+
         try:
             # Validate required data
             if not post_data.get("channel_id"):
                 raise ValueError("Channel ID is required")
-            
+
             if not post_data.get("post_text") and not post_data.get("media_id"):
                 raise ValueError("Either post text or media is required")
-            
+
             # Build keyboard markup
             reply_markup = self._build_reply_markup(post_data.get("inline_buttons"))
-            
+
             sent_message = None
-            
+
             # Send message based on content type
             if post_data.get("media_id"):
                 # Send media post
                 media_type = post_data.get("media_type", "photo").lower()
-                
+
                 if media_type == "photo":
                     sent_message = await self.bot.send_photo(
                         chat_id=post_data["channel_id"],
@@ -180,17 +191,21 @@ class SchedulerService:
 
                 # Update post status to sent
                 try:
-                    await self.scheduler_repo.update_post_status(post_data["id"], "sent")
+                    await self.scheduler_repo.update_post_status(
+                        post_data["id"], "sent"
+                    )
                 except Exception as e:
                     # Don't fail the whole operation if status update fails
                     status_context = context.add("sub_operation", "update_post_status")
                     ErrorHandler.handle_database_error(e, status_context)
 
-                result.update({
-                    "success": True,
-                    "message_id": sent_message.message_id,
-                })
-                
+                result.update(
+                    {
+                        "success": True,
+                        "message_id": sent_message.message_id,
+                    }
+                )
+
                 logger.info(
                     f"Successfully sent post {post_data['id']} to channel {post_data['channel_id']} "
                     f"(message_id: {sent_message.message_id})"
@@ -199,7 +214,7 @@ class SchedulerService:
         except TelegramAPIError as e:
             error_id = ErrorHandler.handle_telegram_api_error(e, context)
             result["error"] = f"Telegram API error: {str(e)} (ID: {error_id})"
-            
+
             # Update post status to error
             try:
                 await self.scheduler_repo.update_post_status(post_data["id"], "error")
@@ -210,7 +225,7 @@ class SchedulerService:
         except Exception as e:
             error_id = ErrorHandler.log_error(e, context)
             result["error"] = f"Unexpected error: {str(e)} (ID: {error_id})"
-            
+
             # Update post status to error
             try:
                 await self.scheduler_repo.update_post_status(post_data["id"], "error")
@@ -224,38 +239,40 @@ class SchedulerService:
         self,
         user_id: int,
         channel_id: int,
-        post_text: Optional[str],
+        post_text: str | None,
         schedule_time: datetime,
-        media_id: Optional[str] = None,
-        media_type: Optional[str] = None,
-        inline_buttons: Optional[Dict] = None,
-    ) -> Optional[int]:
+        media_id: str | None = None,
+        media_type: str | None = None,
+        inline_buttons: dict | None = None,
+    ) -> int | None:
         """
         Create a scheduled post with error handling.
-        
+
         Returns:
             Post ID if successful, None if failed
         """
-        context = (ErrorContext()
-                  .add("operation", "schedule_post")
-                  .add("user_id", user_id)
-                  .add("channel_id", channel_id))
-        
+        context = (
+            ErrorContext()
+            .add("operation", "schedule_post")
+            .add("user_id", user_id)
+            .add("channel_id", channel_id)
+        )
+
         try:
             # Validate input
             if not post_text and not media_id:
                 raise ValueError("Either post_text or media_id must be provided")
-            
+
             if schedule_time <= datetime.utcnow():
                 raise ValueError("Schedule time must be in the future")
-            
+
             # Validate inline buttons if provided
             if inline_buttons:
                 try:
                     InlineButtonsPayload(**inline_buttons)
                 except ValidationError as e:
                     raise ValueError(f"Invalid inline buttons format: {str(e)}")
-            
+
             post_id = await self.scheduler_repo.create_scheduled_post(
                 user_id=user_id,
                 channel_id=channel_id,
@@ -265,19 +282,21 @@ class SchedulerService:
                 media_type=media_type,
                 inline_buttons=inline_buttons,
             )
-            
+
             logger.info(f"Successfully scheduled post {post_id} for {schedule_time}")
             return post_id
-            
+
         except Exception as e:
             ErrorHandler.log_error(e, context)
             return None
-    
+
     async def get_pending_posts(self, limit: int = 50) -> list:
         """Get pending posts that need to be sent"""
         try:
             return await self.scheduler_repo.get_pending_posts(limit=limit)
         except Exception as e:
-            context = ErrorContext().add("operation", "get_pending_posts").add("limit", limit)
+            context = (
+                ErrorContext().add("operation", "get_pending_posts").add("limit", limit)
+            )
             ErrorHandler.handle_database_error(e, context)
             return []

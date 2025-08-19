@@ -17,6 +17,12 @@ from .models import UserRole, User, PermissionMatrix
 
 logger = logging.getLogger(__name__)
 
+# Import settings
+try:
+    from bot.config import settings
+except ImportError:
+    settings = None
+
 class Permission(str, Enum):
     """System permissions enumeration"""
     # User management
@@ -82,14 +88,25 @@ class RBACManager:
     - Audit logging for access control
     """
     
-    def __init__(self):
-        self.config = SecurityConfig()
-        self.redis_client = redis.Redis(
-            host=self.config.REDIS_HOST,
-            port=self.config.REDIS_PORT,
-            db=self.config.REDIS_DB,
-            decode_responses=True
-        )
+    def __init__(self, config=None):
+        self.config = config or settings
+        
+        # Initialize Redis client with connection error handling
+        try:
+            self.redis_client = redis.Redis(
+                host=self.config.REDIS_HOST,
+                port=self.config.REDIS_PORT,
+                db=self.config.REDIS_DB,
+                decode_responses=True
+            )
+            # Test connection
+            self.redis_client.ping()
+            self._redis_available = True
+        except Exception as e:
+            logger.warning(f"Redis connection failed, using memory cache: {e}")
+            self._redis_available = False
+            self.redis_client = None
+            self._memory_cache = {}
         
         # Initialize role hierarchy and permissions
         self._setup_default_permissions()
@@ -175,14 +192,30 @@ class RBACManager:
         self._cache_default_permissions()
     
     def _cache_default_permissions(self) -> None:
-        """Cache default role permissions in Redis"""
+        """Cache default role permissions in Redis or memory"""
         for role, permissions in self.default_permissions.items():
             permission_list = [perm.value for perm in permissions]
-            self.redis_client.setex(
-                f"role_permissions:{role.value}",
-                int(timedelta(hours=24).total_seconds()),
-                json.dumps(permission_list)
-            )
+            cache_key = f"role_permissions:{role.value}"
+            cache_value = json.dumps(permission_list)
+            
+            if self._redis_available:
+                try:
+                    self.redis_client.setex(
+                        cache_key,
+                        int(timedelta(hours=24).total_seconds()),
+                        cache_value
+                    )
+                except Exception as e:
+                    logger.warning(f"Redis cache failed, using memory: {e}")
+                    self._redis_available = False
+                    if not hasattr(self, '_memory_cache'):
+                        self._memory_cache = {}
+                    self._memory_cache[cache_key] = cache_value
+            else:
+                # Use memory cache as fallback
+                if not hasattr(self, '_memory_cache'):
+                    self._memory_cache = {}
+                self._memory_cache[cache_key] = cache_value
     
     def has_permission(self, user: User, permission: Permission, resource_id: Optional[str] = None) -> bool:
         """

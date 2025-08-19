@@ -5,7 +5,7 @@ import inspect
 import logging
 
 import punq
-from punctuated import Singleton
+from bot.utils.punctuated import Singleton
 
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties

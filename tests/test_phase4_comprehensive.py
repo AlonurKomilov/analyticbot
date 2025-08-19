@@ -502,7 +502,7 @@ async def run_integration_tests():
         print("\n🔗 INTEGRATION TESTS: CROSS-MODULE FUNCTIONALITY")
         print("=" * 60)
         
-    from analytics import (
+        from analytics import (
             AdvancedDataProcessor, PredictiveAnalyticsEngine,
             VisualizationEngine, AIInsightsGenerator, AutomatedReportingSystem
         )

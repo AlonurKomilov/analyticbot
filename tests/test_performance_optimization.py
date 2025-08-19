@@ -365,26 +365,7 @@ async def run_comprehensive_performance_test() -> Optional[Dict[str, Any]]:
         
     finally:
         await tester.teardown()
-            
-            # Cache operations (if available)
-            if performance_manager.cache._is_connected:
-                cache_key = f"load_test_{time.time()}"
-                tasks.append(performance_manager.cache.set(cache_key, {"test": True}))
-                tasks.append(performance_manager.cache.get(cache_key))
-            
-            # Wait for all operations
-            await asyncio.gather(*tasks, return_exceptions=True)
-        
-        result = await tester.benchmark_function(
-            "concurrent_load",
-            concurrent_mixed_operations,
-            iterations=50,
-            concurrent=True
-        )
-        
-        assert result.success, "Concurrent load test failed"
-        assert result.error_rate < 5.0, f"Too many errors: {result.error_rate:.1f}%"
-    
+
     async def test_memory_efficiency(self, setup_teardown):
         """Test memory usage efficiency"""
         tester = setup_teardown

@@ -1,5 +1,6 @@
-from typing import Set, Optional
 import re
+from typing import Optional
+
 try:
     import redis.asyncio as redis  # type: ignore
 except Exception:  # pragma: no cover
@@ -24,7 +25,7 @@ class GuardService:
             return
         await self.redis.srem(self._key(channel_id), word.lower())
 
-    async def list_words(self, channel_id: int) -> Set[str]:
+    async def list_words(self, channel_id: int) -> set[str]:
         if not self.redis:
             return set()
         words = await self.redis.smembers(self._key(channel_id))

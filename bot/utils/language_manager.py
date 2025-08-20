@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Optional
-from aiogram.types import TelegramObject, Message, CallbackQuery
+from typing import Any
+
+from aiogram.types import CallbackQuery, Message, TelegramObject
 
 # aiogram-i18n 1.4: public yo'l – managers.base
 try:
@@ -9,13 +10,13 @@ try:
 except Exception:
     # Fallback stub (Pylance uchun), runtime-da ishlatilmaydi
     class _BaseManager:  # type: ignore[override]
-        default_locale: Optional[str] = None
+        default_locale: str | None = None
 
         async def get_locale(self, *args: Any, **kwargs: Any) -> str: ...
         async def set_locale(self, *args: Any, **kwargs: Any) -> None: ...
 
 
-def _extract_user_id(event: TelegramObject) -> Optional[int]:
+def _extract_user_id(event: TelegramObject) -> int | None:
     if isinstance(event, Message) and event.from_user is not None:
         return event.from_user.id
     if isinstance(event, CallbackQuery):

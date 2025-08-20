@@ -1,5 +1,4 @@
 # bot/services/subscription_service.py
-from typing import Optional
 
 from fastapi import HTTPException
 
@@ -25,7 +24,7 @@ class SubscriptionService:
         # Keep the param name 'repository' to match Container; expose as channel_repo
         self.channel_repo = repository
 
-    async def _get_plan_row(self, user_id: int) -> Optional[dict]:
+    async def _get_plan_row(self, user_id: int) -> dict | None:
         """Return the plan row for the user, or None if not set."""
         user_repo = container.resolve(UserRepository)
         plan_repo = container.resolve(PlanRepository)
@@ -72,7 +71,7 @@ class SubscriptionService:
         if current_posts >= max_posts:
             raise HTTPException(status_code=403, detail="Monthly post limit reached")
 
-    async def get_usage_status(self, user_id: int) -> Optional[SubscriptionStatus]:
+    async def get_usage_status(self, user_id: int) -> SubscriptionStatus | None:
         """
         Optional helper used by dashboards: summarize usage & limits.
         Not required by API right now but kept for completeness.

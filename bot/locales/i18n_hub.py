@@ -6,13 +6,16 @@ Fallback: minimal wrapper using SafeFluentRuntimeCore already present.
 If you upgrade aiogram and gain native I18n support, you can replace this
 file with a thin adapter around the official class.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict
 
 from bot.utils.safe_i18n_core import SafeFluentRuntimeCore
+
 try:  # settings may fail if env variables are absent during tooling
     from bot.config import settings  # type: ignore
+
     _default_locale = settings.DEFAULT_LOCALE
 except Exception:  # pragma: no cover
     _default_locale = "en"
@@ -26,7 +29,7 @@ class _MiniI18n:
         self.default_locale = default_locale
         self.core = SafeFluentRuntimeCore(path=f"{path}/{{locale}}")
         self._loaded: bool = False
-        self.locales: Dict[str, Dict[str, str]] = {}
+        self.locales: dict[str, dict[str, str]] = {}
 
     def _ensure(self):
         if self._loaded:

@@ -4,15 +4,15 @@ import shlex
 from datetime import datetime, timezone
 from typing import Optional, cast
 
-from aiogram import Router, types, Bot
+from aiogram import Bot, Router, types
 from aiogram.filters import Command, CommandObject
 from aiogram_i18n import I18nContext
 
 from bot.database.repositories import ChannelRepository
 from bot.services.analytics_service import AnalyticsService
 from bot.services.guard_service import GuardService
-from bot.services.scheduler_service import SchedulerService
 from bot.services.prometheus_service import prometheus_service
+from bot.services.scheduler_service import SchedulerService
 
 router = Router()
 
@@ -20,11 +20,11 @@ router = Router()
 # ------- helpers -------
 
 
-def _bot_of(msg: types.Message) -> Optional[Bot]:
+def _bot_of(msg: types.Message) -> Bot | None:
     return cast(Optional[Bot], msg.bot)
 
 
-def _uid_of(msg: types.Message) -> Optional[int]:
+def _uid_of(msg: types.Message) -> int | None:
     return msg.from_user.id if msg.from_user else None
 
 
@@ -34,7 +34,7 @@ async def get_and_verify_channel(
     channel_username: str,
     channel_repo: ChannelRepository,
     i18n: I18nContext,
-) -> Optional[int]:
+) -> int | None:
     """
     Kanal mavjudligini, DBda ro'yxatdan o'tganini va aynan shu userga tegishliligini tekshiradi.
     Muvaffaqiyatda channel_id qaytaradi, aks holda None va tegishli xabar yuboradi.
@@ -253,8 +253,8 @@ async def get_stats_handler(
     """Handles the /stats command, generating a chart for all or a specific channel."""
     await message.reply(i18n.get("stats-generating"))
 
-    channel_id: Optional[int] = None
-    channel_name: Optional[str] = command.args
+    channel_id: int | None = None
+    channel_name: str | None = command.args
 
     if channel_name:
         if not channel_name.startswith("@"):

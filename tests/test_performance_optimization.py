@@ -2,26 +2,31 @@
 🧪 PERFORMANCE OPTIMIZATION TESTS
 Comprehensive performance testing and optimization module
 """
+
 import asyncio
 import logging
-import time
-import psutil
-from dataclasses import dataclass
-from typing import Dict, Any, Callable, Optional, List
-from pathlib import Path
 import sys
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import psutil
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bot.database.performance import performance_manager
 from bot.database.db import db_manager
+from bot.database.performance import performance_manager
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class BenchmarkResult:
     """Results from a performance benchmark"""
+
     avg_time: float
     throughput: float
     error_rate: float = 0.0
@@ -32,67 +37,74 @@ class BenchmarkResult:
     p95_time: float = 0.0
     p99_time: float = 0.0
 
+
 class PerformanceTester:
     """Advanced performance testing class"""
-    
+
     def __init__(self):
-        self.results: Dict[str, BenchmarkResult] = {}
+        self.results: dict[str, BenchmarkResult] = {}
         self.start_memory = 0
         self.process = psutil.Process()
-    
+
     async def setup(self):
         """Setup performance testing environment"""
         try:
             self.start_memory = self.process.memory_info().rss / 1024 / 1024  # MB
-            logger.info(f"Performance tester initialized - baseline memory: {self.start_memory:.1f}MB")
+            logger.info(
+                f"Performance tester initialized - baseline memory: {self.start_memory:.1f}MB"
+            )
         except Exception as e:
             logger.warning(f"Failed to get baseline memory: {e}")
-    
+
     async def teardown(self):
         """Cleanup after performance testing"""
         try:
             final_memory = self.process.memory_info().rss / 1024 / 1024  # MB
             memory_diff = final_memory - self.start_memory
-            logger.info(f"Performance testing complete - memory change: {memory_diff:+.1f}MB")
+            logger.info(
+                f"Performance testing complete - memory change: {memory_diff:+.1f}MB"
+            )
         except Exception as e:
             logger.warning(f"Failed to get final memory: {e}")
-    
-    def _calculate_statistics(self, times: List[float]) -> Dict[str, float]:
+
+    def _calculate_statistics(self, times: list[float]) -> dict[str, float]:
         """Calculate statistical metrics from timing data"""
         if not times:
             return {"min": 0, "max": 0, "std_dev": 0, "p95": 0, "p99": 0}
-        
+
         times_sorted = sorted(times)
         n = len(times_sorted)
-        
+
         # Calculate percentiles
         p95_idx = int(0.95 * n)
         p99_idx = int(0.99 * n)
-        
+
         # Calculate standard deviation
         mean = sum(times) / len(times)
         variance = sum((t - mean) ** 2 for t in times) / len(times)
-        std_dev = variance ** 0.5
-        
+        std_dev = variance**0.5
+
         return {
             "min": min(times),
             "max": max(times),
             "std_dev": std_dev,
-            "p95": times_sorted[min(p95_idx, n-1)],
-            "p99": times_sorted[min(p99_idx, n-1)]
+            "p95": times_sorted[min(p95_idx, n - 1)],
+            "p99": times_sorted[min(p99_idx, n - 1)],
         }
-    
+
     async def benchmark_function(
-        self, 
-        name: str, 
-        func: Callable, 
-        iterations: int = 10, 
+        self,
+        name: str,
+        func: Callable,
+        iterations: int = 10,
         concurrent: bool = False,
-        warmup_iterations: int = 2
+        warmup_iterations: int = 2,
     ) -> BenchmarkResult:
         """Benchmark a function with advanced metrics"""
-        logger.info(f"Benchmarking {name} - {iterations} iterations, concurrent: {concurrent}")
-        
+        logger.info(
+            f"Benchmarking {name} - {iterations} iterations, concurrent: {concurrent}"
+        )
+
         # Warmup runs
         for _ in range(warmup_iterations):
             try:
@@ -102,10 +114,10 @@ class PerformanceTester:
                     func()
             except Exception:
                 pass  # Ignore warmup errors
-        
+
         times = []
         errors = 0
-        
+
         if concurrent:
             # Run all iterations concurrently
             async def timed_execution():
@@ -120,10 +132,10 @@ class PerformanceTester:
                 except Exception as e:
                     logger.debug(f"Error in {name}: {e}")
                     raise
-            
+
             tasks = [timed_execution() for _ in range(iterations)]
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             for result in results:
                 if isinstance(result, Exception):
                     errors += 1
@@ -143,7 +155,7 @@ class PerformanceTester:
                 except Exception as e:
                     logger.debug(f"Error in {name} iteration {i}: {e}")
                     errors += 1
-        
+
         # Calculate metrics
         if times:
             avg_time = sum(times) / len(times)
@@ -153,9 +165,9 @@ class PerformanceTester:
             avg_time = 0
             throughput = 0
             stats = {"min": 0, "max": 0, "std_dev": 0, "p95": 0, "p99": 0}
-        
+
         error_rate = (errors / iterations) * 100
-        
+
         result = BenchmarkResult(
             avg_time=avg_time,
             throughput=throughput,
@@ -165,46 +177,48 @@ class PerformanceTester:
             max_time=stats["max"],
             std_dev=stats["std_dev"],
             p95_time=stats["p95"],
-            p99_time=stats["p99"]
+            p99_time=stats["p99"],
         )
-        
+
         self.results[name] = result
-        logger.info(f"✅ {name}: {avg_time:.3f}s avg, {throughput:.1f} ops/sec, {error_rate:.1f}% errors")
-        
+        logger.info(
+            f"✅ {name}: {avg_time:.3f}s avg, {throughput:.1f} ops/sec, {error_rate:.1f}% errors"
+        )
+
         return result
-    
-    def generate_report(self) -> Dict[str, Any]:
+
+    def generate_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report"""
         if not self.results:
             return {"summary": {"total_tests": 0}}
-        
+
         total_tests = len(self.results)
         avg_response_time = sum(r.avg_time for r in self.results.values()) / total_tests
         avg_throughput = sum(r.throughput for r in self.results.values()) / total_tests
         avg_error_rate = sum(r.error_rate for r in self.results.values()) / total_tests
         success_rate = 100 - avg_error_rate
-        
+
         # Find best and worst performing tests
         best_test = min(self.results.items(), key=lambda x: x[1].avg_time)
         worst_test = max(self.results.items(), key=lambda x: x[1].avg_time)
-        
+
         return {
             "summary": {
                 "total_tests": total_tests,
                 "success_rate": success_rate,
                 "avg_response_time": avg_response_time,
                 "avg_throughput": avg_throughput,
-                "avg_error_rate": avg_error_rate
+                "avg_error_rate": avg_error_rate,
             },
             "best_performance": {
                 "test": best_test[0],
                 "avg_time": best_test[1].avg_time,
-                "throughput": best_test[1].throughput
+                "throughput": best_test[1].throughput,
             },
             "worst_performance": {
                 "test": worst_test[0],
                 "avg_time": worst_test[1].avg_time,
-                "throughput": worst_test[1].throughput
+                "throughput": worst_test[1].throughput,
             },
             "detailed_results": {
                 name: {
@@ -213,121 +227,113 @@ class PerformanceTester:
                     "error_rate": result.error_rate,
                     "p95_time": result.p95_time,
                     "p99_time": result.p99_time,
-                    "std_dev": result.std_dev
+                    "std_dev": result.std_dev,
                 }
                 for name, result in self.results.items()
-            }
+            },
         }
 
-async def run_comprehensive_performance_test() -> Optional[Dict[str, Any]]:
+
+async def run_comprehensive_performance_test() -> dict[str, Any] | None:
     """Run comprehensive performance test suite"""
     logger.info("🚀 Starting comprehensive performance test suite...")
-    
+
     tester = PerformanceTester()
-    
+
     try:
         await tester.setup()
-        
+
         # Test 1: Database operations
         logger.info("🔍 Testing database operations...")
-        
+
         async def db_simple_query():
             async with db_manager.pool.acquire() as conn:
                 return await conn.fetchval("SELECT 1")
-        
+
         await tester.benchmark_function(
-            "db_simple_query", 
-            db_simple_query, 
-            iterations=50
+            "db_simple_query", db_simple_query, iterations=50
         )
-        
+
         async def db_complex_query():
             async with db_manager.pool.acquire() as conn:
-                return await conn.fetch("""
+                return await conn.fetch(
+                    """
                     SELECT 
                         generate_series(1, 100) as id,
                         md5(random()::text) as hash_value,
                         now() as timestamp
-                """)
-        
+                """
+                )
+
         await tester.benchmark_function(
-            "db_complex_query", 
-            db_complex_query, 
-            iterations=20
+            "db_complex_query", db_complex_query, iterations=20
         )
-        
+
         # Test 2: Cache operations
         if performance_manager.cache._is_connected:
             logger.info("🔍 Testing cache operations...")
-            
+
             async def cache_set_get():
                 key = f"perf_test_{time.time()}_{id(asyncio.current_task())}"
                 value = {
                     "test_data": "performance_test",
                     "timestamp": time.time(),
-                    "complex_data": list(range(100))
+                    "complex_data": list(range(100)),
                 }
-                
+
                 await performance_manager.cache.set(key, value, 60)
                 result = await performance_manager.cache.get(key)
                 await performance_manager.cache.delete(key)
                 return result is not None
-            
+
             await tester.benchmark_function(
-                "cache_set_get", 
-                cache_set_get, 
-                iterations=100
+                "cache_set_get", cache_set_get, iterations=100
             )
-            
+
             # Concurrent cache test
             await tester.benchmark_function(
-                "cache_concurrent", 
-                cache_set_get, 
-                iterations=50,
-                concurrent=True
+                "cache_concurrent", cache_set_get, iterations=50, concurrent=True
             )
-        
+
         # Test 3: Mixed workload
         logger.info("🔍 Testing mixed workload...")
-        
+
         async def mixed_workload():
             tasks = []
-            
+
             # Database task
             tasks.append(db_simple_query())
-            
+
             # Cache tasks (if available)
             if performance_manager.cache._is_connected:
+
                 async def cache_op():
                     key = f"mixed_test_{time.time()}"
                     await performance_manager.cache.set(key, {"mixed": True}, 30)
                     result = await performance_manager.cache.get(key)
                     await performance_manager.cache.delete(key)
                     return result
-                
+
                 tasks.append(cache_op())
                 tasks.append(cache_op())  # Two cache operations
-            
+
             results = await asyncio.gather(*tasks, return_exceptions=True)
             successful = len([r for r in results if not isinstance(r, Exception)])
             return successful >= len(tasks) // 2  # At least half successful
-        
-        await tester.benchmark_function(
-            "mixed_workload", 
-            mixed_workload, 
-            iterations=30
-        )
-        
+
+        await tester.benchmark_function("mixed_workload", mixed_workload, iterations=30)
+
         # Test 4: Stress test
         logger.info("🔍 Running stress test...")
-        
+
         async def stress_test():
             # Create multiple concurrent operations
             db_tasks = [db_simple_query() for _ in range(10)]
-            
+
             cache_tasks = []
             if performance_manager.cache._is_connected:
                 for i in range(20):
+
                     async def cache_stress_op():
                         key = f"stress_{i}_{time.time()}"
                         data = {"stress_test": True, "data": list(range(50))}
@@ -335,102 +341,112 @@ async def run_comprehensive_performance_test() -> Optional[Dict[str, Any]]:
                         result = await performance_manager.cache.get(key)
                         await performance_manager.cache.delete(key)
                         return result
+
                     cache_tasks.append(cache_stress_op())
-            
+
             all_tasks = db_tasks + cache_tasks
             results = await asyncio.gather(*all_tasks, return_exceptions=True)
             successful = len([r for r in results if not isinstance(r, Exception)])
-            
+
             return successful / len(all_tasks) >= 0.8  # 80% success rate
-        
-        await tester.benchmark_function(
-            "stress_test", 
-            stress_test, 
-            iterations=10
-        )
-        
+
+        await tester.benchmark_function("stress_test", stress_test, iterations=10)
+
         # Generate comprehensive report
         report = tester.generate_report()
-        
+
         logger.info("📊 Comprehensive performance test completed!")
         logger.info(f"✅ Success rate: {report['summary']['success_rate']:.1f}%")
-        logger.info(f"⚡ Average throughput: {report['summary']['avg_throughput']:.1f} ops/sec")
-        logger.info(f"⏱️ Average response time: {report['summary']['avg_response_time']:.3f}s")
-        
+        logger.info(
+            f"⚡ Average throughput: {report['summary']['avg_throughput']:.1f} ops/sec"
+        )
+        logger.info(
+            f"⏱️ Average response time: {report['summary']['avg_response_time']:.3f}s"
+        )
+
         return report
-        
+
     except Exception as e:
         logger.error(f"❌ Comprehensive performance test failed: {e}")
         return None
-        
+
     finally:
         await tester.teardown()
 
     async def test_memory_efficiency(self, setup_teardown):
         """Test memory usage efficiency"""
         tester = setup_teardown
-        
+
         initial_memory = tester._get_memory_usage()
-        
+
         # Perform memory-intensive operations
         large_data = []
         for i in range(1000):
-            large_data.append({
-                "id": i,
-                "data": f"test_data_{i}" * 10,
-                "timestamp": time.time()
-            })
-        
+            large_data.append(
+                {"id": i, "data": f"test_data_{i}" * 10, "timestamp": time.time()}
+            )
+
         # Clear data
         del large_data
-        
+
         final_memory = tester._get_memory_usage()
-        
+
         if initial_memory and final_memory:
             memory_increase = final_memory - initial_memory
-            assert memory_increase < 50, f"Memory leak detected: {memory_increase}MB increase"
-        
+            assert memory_increase < 50, (
+                f"Memory leak detected: {memory_increase}MB increase"
+            )
+
         logger.info("✅ Memory efficiency test completed")
 
 
 async def run_comprehensive_performance_test():
     """🚀 Run comprehensive performance test suite"""
     tester = PerformanceTester()
-    
+
     try:
         await tester.setup()
-        
+
         logger.info("🧪 Starting comprehensive performance tests...")
-        
+
         # Test database performance
         async def db_test():
             async with db_manager.pool.acquire() as conn:
-                return await conn.fetchval("SELECT COUNT(*) FROM information_schema.tables")
-        
+                return await conn.fetchval(
+                    "SELECT COUNT(*) FROM information_schema.tables"
+                )
+
         await tester.benchmark_function("database_query", db_test, iterations=50)
-        
+
         # Test cache performance (if available)
         if performance_manager.cache._is_connected:
+
             async def cache_test():
                 await performance_manager.cache.set("test_key", {"test": True})
                 result = await performance_manager.cache.get("test_key")
                 await performance_manager.cache.delete("test_key")
                 return result
-            
-            await tester.benchmark_function("cache_operations", cache_test, iterations=100)
-        
+
+            await tester.benchmark_function(
+                "cache_operations", cache_test, iterations=100
+            )
+
         # Generate and display report
         report = tester.generate_report()
-        
+
         logger.info("📊 PERFORMANCE TEST REPORT")
         logger.info("=" * 50)
         logger.info(f"Total Tests: {report['summary']['total_tests']}")
         logger.info(f"Success Rate: {report['summary']['success_rate']:.1f}%")
-        logger.info(f"Average Throughput: {report['summary']['avg_throughput']:.1f} ops/sec")
-        logger.info(f"Average Response Time: {report['summary']['avg_response_time']:.3f}s")
-        
+        logger.info(
+            f"Average Throughput: {report['summary']['avg_throughput']:.1f} ops/sec"
+        )
+        logger.info(
+            f"Average Response Time: {report['summary']['avg_response_time']:.3f}s"
+        )
+
         return report
-        
+
     finally:
         await tester.teardown()
 

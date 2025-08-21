@@ -84,7 +84,7 @@ Comprehensive performance optimization across all system components, resulting i
   - High-Load: Batch size 128
 
 ### 4. Service Container Optimization
-**Component:** `bot/optimized_container.py`  
+**Component:** `bot/container.py`  
 **Optimizations:**
 - Service warmup with proper error handling
 - Connection pooling for database operations

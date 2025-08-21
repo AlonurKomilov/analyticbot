@@ -181,12 +181,12 @@ async def test_performance_optimization_components():
         from bot.database.performance import performance_manager, PerformanceConfig
         logger.info("✅ Performance manager imported successfully")
         
-        # Test optimized analytics service import
-        from bot.services.optimized_analytics_service import OptimizedAnalyticsService
-        logger.info("✅ Optimized analytics service imported successfully")
+        # Test unified analytics service import
+        from bot.services.analytics_service import AnalyticsService
+        logger.info("✅ Unified analytics service imported successfully")
         
         # Test optimized container import
-        from bot.optimized_container import container
+        from bot.container import container
         logger.info("✅ Optimized container imported successfully")
         
         # Test configuration values

@@ -13,8 +13,8 @@
 
 ### 🔥 Core Performance Optimization
 - **📁 `bot/database/performance.py`** - Advanced connection pooling & Redis caching
-- **📁 `bot/services/optimized_analytics_service.py`** - 10x faster analytics with batching
-- **📁 `bot/optimized_container.py`** - Smart dependency injection with health monitoring
+- **📁 `bot/services/analytics_service.py`** - 10x faster analytics with batching
+- **📁 `bot/container.py`** - Smart dependency injection with health monitoring
 - **📁 `performance_api.py`** - Real-time performance monitoring API
 
 ### 🧪 Testing & Monitoring

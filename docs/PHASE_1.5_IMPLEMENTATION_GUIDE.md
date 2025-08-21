@@ -18,8 +18,8 @@ docker-compose up postgres redis -d
 
 #### Core Components
 - **`bot/database/performance.py`** - Database connection pooling and optimization
-- **`bot/services/optimized_analytics_service.py`** - High-performance analytics service
-- **`bot/optimized_container.py`** - Optimized dependency injection container
+- **`bot/services/analytics_service.py`** - High-performance analytics service
+- **`bot/container.py`** - Optimized dependency injection container
 - **`performance_api.py`** - Real-time performance monitoring API
 
 #### Test Components  

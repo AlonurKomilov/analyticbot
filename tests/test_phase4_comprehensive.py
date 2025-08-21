@@ -78,7 +78,7 @@ async def test_module_4_1_data_processor():
         print("\n🧪 TESTING MODULE 4.1: ADVANCED DATA PROCESSING ENGINE")
         print("=" * 60)
         
-        from analytics import AdvancedDataProcessor
+        from bot.analytics import AdvancedDataProcessor
         
         # Initialize processor
         processor = AdvancedDataProcessor()
@@ -144,7 +144,7 @@ async def test_module_4_2_predictive_engine():
         print("\n🧪 TESTING MODULE 4.2: PREDICTIVE ANALYTICS ENGINE")
         print("=" * 60)
         
-        from analytics import PredictiveAnalyticsEngine
+        from bot.analytics import PredictiveAnalyticsEngine
         
         # Initialize engine
         engine = PredictiveAnalyticsEngine()
@@ -219,7 +219,7 @@ async def test_module_4_3_dashboard():
         print("\n🧪 TESTING MODULE 4.3: ANALYTICS DASHBOARD")
         print("=" * 60)
         
-        from analytics import VisualizationEngine, RealTimeDashboard, DashboardFactory
+        from bot.analytics import VisualizationEngine, RealTimeDashboard, DashboardFactory
         
         # Initialize visualization engine
         viz_engine = VisualizationEngine()
@@ -328,7 +328,7 @@ async def test_module_4_4_ai_insights():
         print("\n🧪 TESTING MODULE 4.4: AI INSIGHTS GENERATOR")
         print("=" * 60)
         
-        from analytics import AIInsightsGenerator
+        from bot.analytics import AIInsightsGenerator
         
         # Initialize insights generator
         insights_gen = AIInsightsGenerator()
@@ -409,7 +409,7 @@ async def test_module_4_5_reporting():
         print("\n🧪 TESTING MODULE 4.5: AUTOMATED REPORTING SYSTEM")
         print("=" * 60)
         
-        from analytics import AutomatedReportingSystem, ReportTemplate
+        from bot.analytics import AutomatedReportingSystem, ReportTemplate
         
         # Initialize reporting system
         reporting_system = AutomatedReportingSystem(output_directory="/tmp/test_reports")
@@ -502,7 +502,7 @@ async def run_integration_tests():
         print("\n🔗 INTEGRATION TESTS: CROSS-MODULE FUNCTIONALITY")
         print("=" * 60)
         
-        from analytics import (
+        from bot.analytics import (
             AdvancedDataProcessor, PredictiveAnalyticsEngine,
             VisualizationEngine, AIInsightsGenerator, AutomatedReportingSystem
         )

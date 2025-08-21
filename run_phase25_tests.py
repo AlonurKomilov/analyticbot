@@ -245,7 +245,7 @@ async def test_ml_services():
     # Test 9: Container Integration
     print("\n📦 Testing container integration...")
     try:
-        from bot.optimized_container import OptimizedContainer
+        from bot.container import OptimizedContainer
         
         container = OptimizedContainer()
         

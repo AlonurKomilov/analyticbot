@@ -857,3 +857,8 @@ if __name__ == "__main__":
     asyncio.run(test_engine())
     
     print("✅ Predictive Analytics Engine test complete!")
+
+# Convenience function for easy integration with bot services
+async def create_predictive_engine():
+    """Factory function to create and initialize predictive engine"""
+    return PredictiveAnalyticsEngine()

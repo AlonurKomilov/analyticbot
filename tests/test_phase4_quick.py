@@ -40,7 +40,7 @@ async def test_data_processor():
     """Test basic data processing functionality"""
     try:
         print("🧪 Testing Data Processor...")
-        from analytics.data_processor import AdvancedDataProcessor
+        from bot.utils.data_processor import AdvancedDataProcessor
         
         processor = AdvancedDataProcessor()
         test_df = create_simple_test_data()
@@ -63,7 +63,7 @@ async def test_predictive_engine():
     """Test basic predictive analytics"""
     try:
         print("🧪 Testing Predictive Engine...")
-        from analytics.predictive_engine import PredictiveAnalyticsEngine
+        from bot.services.ml.predictive_engine import PredictiveAnalyticsEngine
         
         engine = PredictiveAnalyticsEngine()
         test_df = create_simple_test_data().dropna()
@@ -89,7 +89,7 @@ async def test_visualization():
     """Test visualization capabilities"""
     try:
         print("🧪 Testing Visualization Engine...")
-        from analytics.dashboard import VisualizationEngine
+        from bot.services.dashboard_service import VisualizationEngine
         
         viz_engine = VisualizationEngine()
         test_df = create_simple_test_data().dropna()
@@ -123,7 +123,7 @@ async def test_ai_insights():
     """Test AI insights generation"""
     try:
         print("🧪 Testing AI Insights Generator...")
-        from analytics.ai_insights import AIInsightsGenerator
+        from bot.services.ml.ai_insights import AIInsightsGenerator
         
         insights_gen = AIInsightsGenerator()
         test_df = create_simple_test_data()
@@ -148,7 +148,7 @@ async def test_reporting():
     """Test reporting system"""
     try:
         print("🧪 Testing Reporting System...")
-        from analytics.reporting_system import AutomatedReportingSystem
+        from bot.services.reporting_service import AutomatedReportingSystem
         
         reporting_system = AutomatedReportingSystem(output_directory="/tmp/quick_test_reports")
         test_df = create_simple_test_data()

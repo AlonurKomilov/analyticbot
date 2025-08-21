@@ -1,68 +1,72 @@
 """
 Centralized error handling utilities.
 """
+
 import logging
-import traceback
-from typing import Any, Dict, Optional
 from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorContext:
     """Error context for better debugging"""
-    
+
     def __init__(self):
-        self.context: Dict[str, Any] = {}
-    
-    def add(self, key: str, value: Any) -> 'ErrorContext':
+        self.context: dict[str, Any] = {}
+
+    def add(self, key: str, value: Any) -> "ErrorContext":
         """Add context information"""
         self.context[key] = value
         return self
-    
-    def get_context(self) -> Dict[str, Any]:
+
+    def get_context(self) -> dict[str, Any]:
         """Get all context information"""
         return self.context.copy()
 
 
 class ErrorHandler:
     """Centralized error handling"""
-    
+
     @staticmethod
     def log_error(
         error: Exception,
-        context: Optional[ErrorContext] = None,
+        context: ErrorContext | None = None,
         level: int = logging.ERROR,
-        exc_info: bool = True
+        exc_info: bool = True,
     ) -> str:
         """
         Log error with context information.
         Returns error ID for tracking.
         """
         error_id = f"ERR_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{id(error)}"
-        
+
         log_data = {
             "error_id": error_id,
             "error_type": type(error).__name__,
             "error_message": str(error),
             "timestamp": datetime.now().isoformat(),
         }
-        
+
         if context:
             log_data["context"] = context.get_context()
-        
-        logger.log(level, f"Error {error_id}: {error}", extra=log_data, exc_info=exc_info)
-        
+
+        logger.log(
+            level, f"Error {error_id}: {error}", extra=log_data, exc_info=exc_info
+        )
+
         return error_id
-    
+
     @staticmethod
-    def handle_telegram_api_error(error: Exception, context: Optional[ErrorContext] = None) -> str:
+    def handle_telegram_api_error(
+        error: Exception, context: ErrorContext | None = None
+    ) -> str:
         """Handle Telegram API specific errors"""
         if context is None:
             context = ErrorContext()
-        
+
         context.add("error_source", "telegram_api")
-        
+
         # Check for specific Telegram errors
         error_msg = str(error).lower()
         if "bot was kicked" in error_msg:
@@ -73,17 +77,19 @@ class ErrorHandler:
             context.add("error_category", "rate_limit")
         else:
             context.add("error_category", "unknown_telegram_error")
-        
+
         return ErrorHandler.log_error(error, context)
-    
+
     @staticmethod
-    def handle_database_error(error: Exception, context: Optional[ErrorContext] = None) -> str:
+    def handle_database_error(
+        error: Exception, context: ErrorContext | None = None
+    ) -> str:
         """Handle database specific errors"""
         if context is None:
             context = ErrorContext()
-        
+
         context.add("error_source", "database")
-        
+
         # Check for specific database errors
         error_msg = str(error).lower()
         if "connection" in error_msg:
@@ -94,7 +100,7 @@ class ErrorHandler:
             context.add("error_category", "constraint_violation")
         else:
             context.add("error_category", "unknown_database_error")
-        
+
         return ErrorHandler.log_error(error, context)
 
 

@@ -11,24 +11,26 @@ Features:
 
 import logging
 import sys
+import traceback
 from datetime import datetime
-from typing import List
+
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-import uvicorn
-import traceback
 
 # Set up path
-sys.path.insert(0, '/workspaces/analyticbot')
+sys.path.insert(0, "/workspaces/analyticbot")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Pydantic models for API
 class ContentAnalysisRequest(BaseModel):
     text: str = Field(..., description="Content text to analyze", max_length=5000)
     target_audience: str = Field("general", description="Target audience type")
+
 
 class ContentScoreResponse(BaseModel):
     overall_score: float
@@ -37,12 +39,14 @@ class ContentScoreResponse(BaseModel):
     readability_score: float
     word_count: int
     hashtag_count: int
-    optimization_tips: List[str]
-    hashtag_suggestions: List[str]
+    optimization_tips: list[str]
+    hashtag_suggestions: list[str]
     timestamp: datetime
+
 
 class RealTimeScoreRequest(BaseModel):
     text: str = Field(..., description="Content text for real-time scoring")
+
 
 class RealTimeScoreResponse(BaseModel):
     overall_score: float
@@ -52,36 +56,41 @@ class RealTimeScoreResponse(BaseModel):
     emoji_score: float
     timestamp: datetime
 
+
 # Initialize FastAPI app
 app = FastAPI(
     title="🤖 Standalone AI/ML API",
     description="Independent AI-powered content analysis and optimization",
     version="2.5.0-standalone",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # ML service instances (initialized on startup)
 ml_services = {}
+
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize standalone ML services"""
     try:
         logger.info("🚀 Starting standalone AI/ML API...")
-        
+
         # Import and initialize standalone services
-        from bot.services.ml.standalone_content_optimizer import StandaloneContentOptimizer
-        
+        from bot.services.ml.standalone_content_optimizer import (
+            StandaloneContentOptimizer,
+        )
+
         content_optimizer = StandaloneContentOptimizer()
-        
-        ml_services['content_optimizer'] = content_optimizer
-        
+
+        ml_services["content_optimizer"] = content_optimizer
+
         logger.info("✅ Standalone ML services initialized")
-        
+
     except Exception as e:
         logger.error(f"❌ Failed to initialize ML services: {e}")
         # Continue with limited functionality
+
 
 @app.get("/")
 async def root():
@@ -95,15 +104,16 @@ async def root():
             "Real-time content optimization",
             "Sentiment analysis",
             "Hashtag optimization",
-            "Readability assessment"
+            "Readability assessment",
         ],
         "endpoints": {
             "health": "/health",
             "docs": "/docs",
             "analyze": "/analyze/content",
-            "score": "/score/realtime"
-        }
+            "score": "/score/realtime",
+        },
     }
+
 
 @app.get("/health")
 async def health_check():
@@ -112,11 +122,11 @@ async def health_check():
         health_status = {
             "status": "healthy",
             "timestamp": datetime.now(),
-            "services": {}
+            "services": {},
         }
-        
+
         # Check content optimizer
-        content_optimizer = ml_services.get('content_optimizer')
+        content_optimizer = ml_services.get("content_optimizer")
         if content_optimizer:
             try:
                 optimizer_health = await content_optimizer.health_check()
@@ -124,32 +134,32 @@ async def health_check():
             except Exception as e:
                 health_status["services"]["content_optimizer"] = {
                     "status": "error",
-                    "error": str(e)
+                    "error": str(e),
                 }
-        
+
         # Check dependencies
         try:
-            import numpy, pandas, sklearn, textstat, emoji
             health_status["dependencies"] = {
                 "numpy": "available",
-                "pandas": "available", 
+                "pandas": "available",
                 "sklearn": "available",
                 "textstat": "available",
-                "emoji": "available"
+                "emoji": "available",
             }
         except ImportError as e:
             health_status["dependencies"] = {"error": str(e)}
-        
+
         return health_status
-        
+
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Health check failed: {str(e)}")
+
 
 @app.post("/analyze/content", response_model=ContentScoreResponse)
 async def analyze_content(request: ContentAnalysisRequest):
     """
     🎯 Comprehensive content analysis
-    
+
     Provides:
     - Content scoring and optimization
     - Sentiment analysis
@@ -159,17 +169,18 @@ async def analyze_content(request: ContentAnalysisRequest):
     """
     try:
         logger.info(f"📝 Analyzing content: {len(request.text)} characters")
-        
-        content_optimizer = ml_services.get('content_optimizer')
+
+        content_optimizer = ml_services.get("content_optimizer")
         if not content_optimizer:
-            raise HTTPException(status_code=503, detail="Content optimizer not available")
-        
+            raise HTTPException(
+                status_code=503, detail="Content optimizer not available"
+            )
+
         # Perform content analysis
         analysis = await content_optimizer.analyze_content(
-            text=request.text,
-            target_audience=request.target_audience
+            text=request.text, target_audience=request.target_audience
         )
-        
+
         return ContentScoreResponse(
             overall_score=analysis.overall_score,
             sentiment_score=analysis.sentiment_score,
@@ -179,9 +190,9 @@ async def analyze_content(request: ContentAnalysisRequest):
             hashtag_count=analysis.hashtag_count,
             optimization_tips=analysis.optimization_tips,
             hashtag_suggestions=analysis.suggested_hashtags,
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -189,11 +200,12 @@ async def analyze_content(request: ContentAnalysisRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
-@app.post("/score/realtime", response_model=RealTimeScoreResponse)  
+
+@app.post("/score/realtime", response_model=RealTimeScoreResponse)
 async def score_content_realtime(request: RealTimeScoreRequest):
     """
     ⚡ Real-time content scoring for live editing
-    
+
     Provides instant feedback on:
     - Overall content quality
     - Length optimization
@@ -202,27 +214,30 @@ async def score_content_realtime(request: RealTimeScoreRequest):
     - Emoji usage
     """
     try:
-        content_optimizer = ml_services.get('content_optimizer')
+        content_optimizer = ml_services.get("content_optimizer")
         if not content_optimizer:
-            raise HTTPException(status_code=503, detail="Content optimizer not available")
-        
+            raise HTTPException(
+                status_code=503, detail="Content optimizer not available"
+            )
+
         # Get real-time scores
         scores = await content_optimizer.score_content_realtime(request.text)
-        
+
         return RealTimeScoreResponse(
-            overall_score=scores.get('overall_score', 0.5),
-            length_score=scores.get('length_score', 0.5),
-            hashtag_score=scores.get('hashtag_score', 0.5),
-            sentiment_score=scores.get('sentiment_score', 0.5),
-            emoji_score=scores.get('emoji_score', 0.5),
-            timestamp=datetime.now()
+            overall_score=scores.get("overall_score", 0.5),
+            length_score=scores.get("length_score", 0.5),
+            hashtag_score=scores.get("hashtag_score", 0.5),
+            sentiment_score=scores.get("sentiment_score", 0.5),
+            emoji_score=scores.get("emoji_score", 0.5),
+            timestamp=datetime.now(),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Real-time scoring failed: {e}")
         raise HTTPException(status_code=500, detail=f"Scoring failed: {str(e)}")
+
 
 @app.get("/demo/analyze")
 async def demo_analysis():
@@ -241,19 +256,16 @@ async def demo_analysis():
         
         #AI #analytics #socialmedia #engagement #optimization #growth
         """
-        
+
         # Analyze sample content
         request = ContentAnalysisRequest(text=sample_content, target_audience="tech")
         result = await analyze_content(request)
-        
-        return {
-            "demo": True,
-            "sample_content": sample_content,
-            "analysis": result
-        }
-        
+
+        return {"demo": True, "sample_content": sample_content, "analysis": result}
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Demo failed: {str(e)}")
+
 
 @app.get("/stats")
 async def get_api_stats():
@@ -266,18 +278,17 @@ async def get_api_stats():
             "real_time_scoring": True,
             "sentiment_analysis": True,
             "hashtag_optimization": True,
-            "readability_assessment": True
+            "readability_assessment": True,
         },
-        "supported_audiences": [
-            "general", "tech", "business", "lifestyle", "social"
-        ],
+        "supported_audiences": ["general", "tech", "business", "lifestyle", "social"],
         "performance": {
             "avg_analysis_time": "< 100ms",
             "real_time_scoring": "< 50ms",
-            "accuracy": "75-85%"
+            "accuracy": "75-85%",
         },
-        "generated_at": datetime.now().isoformat()
+        "generated_at": datetime.now().isoformat(),
     }
+
 
 # Error handlers
 @app.exception_handler(404)
@@ -286,28 +297,35 @@ async def not_found_handler(request, exc):
         "error": "Not Found",
         "message": "The requested endpoint does not exist",
         "available_endpoints": [
-            "/", "/health", "/analyze/content", "/score/realtime", "/demo/analyze", "/stats"
-        ]
+            "/",
+            "/health",
+            "/analyze/content",
+            "/score/realtime",
+            "/demo/analyze",
+            "/stats",
+        ],
     }
+
 
 @app.exception_handler(500)
 async def internal_error_handler(request, exc):
     return {
-        "error": "Internal Server Error", 
+        "error": "Internal Server Error",
         "message": "An unexpected error occurred",
-        "suggestion": "Check /health endpoint for service status"
+        "suggestion": "Check /health endpoint for service status",
     }
+
 
 if __name__ == "__main__":
     # Run the standalone API
     print("🤖 Starting Standalone AI/ML API...")
     print("📖 Documentation available at: http://localhost:8002/docs")
     print("🎬 Demo analysis at: http://localhost:8002/demo/analyze")
-    
+
     uvicorn.run(
         "standalone_ai_api:app",
         host="0.0.0.0",
         port=8002,
         reload=False,
-        log_level="info"
+        log_level="info",
     )

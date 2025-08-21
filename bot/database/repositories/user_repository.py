@@ -1,5 +1,3 @@
-from typing import Optional
-
 import asyncpg
 
 
@@ -7,7 +5,7 @@ class UserRepository:
     def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 
-    async def create_user(self, user_id: int, username: Optional[str]):
+    async def create_user(self, user_id: int, username: str | None):
         """
         Creates a new user in the database if they don't already exist.
         """
@@ -25,7 +23,7 @@ class UserRepository:
         query = "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)"
         return await self._pool.fetchval(query, user_id)
 
-    async def get_user_plan_name(self, user_id: int) -> Optional[str]:
+    async def get_user_plan_name(self, user_id: int) -> str | None:
         """
         Retrieves the name of the user's current subscription plan. Returns plan name.
         """

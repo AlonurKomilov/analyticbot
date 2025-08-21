@@ -32,21 +32,21 @@ This module provides comprehensive advanced analytics capabilities:
 IMPLEMENTATION COMPLETE: 1000+ methods across 5 specialized modules
 """
 
+from .ai_insights import AIInsightsGenerator
+from .dashboard import DashboardFactory, RealTimeDashboard, VisualizationEngine
 from .data_processor import AdvancedDataProcessor
 from .predictive_engine import PredictiveAnalyticsEngine
-from .ai_insights import AIInsightsGenerator
-from .dashboard import VisualizationEngine, RealTimeDashboard, DashboardFactory
 from .reporting_system import AutomatedReportingSystem, ReportTemplate
 
 __all__ = [
     "AdvancedDataProcessor",
-    "PredictiveAnalyticsEngine", 
+    "PredictiveAnalyticsEngine",
     "AIInsightsGenerator",
     "VisualizationEngine",
     "RealTimeDashboard",
     "DashboardFactory",
     "AutomatedReportingSystem",
-    "ReportTemplate"
+    "ReportTemplate",
 ]
 
 __version__ = "4.0.0"

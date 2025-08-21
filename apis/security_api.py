@@ -20,6 +20,15 @@ from typing import Optional, Dict, Any
 import logging
 import uvicorn
 
+
+def sanitize_log_input(value: str) -> str:
+    """
+    Remove newline and carriage return characters from log input.
+    """
+    if not isinstance(value, str):
+        value = str(value)
+    return value.replace('\r\n', '').replace('\n', '').replace('\r', '')
+
 # Import security modules
 from security.auth import SecurityManager, get_current_user, require_role
 from security.models import (
@@ -570,7 +579,9 @@ async def update_user_role(
         # Clear user's permission cache
         rbac_manager.clear_user_permissions_cache(user_id)
         
-        logger.info(f"User {user_id} role updated to {new_role.value} by admin {current_user['username']}")
+        safe_user_id = sanitize_log_input(user_id)
+        safe_admin_username = sanitize_log_input(current_user['username'])
+        logger.info(f"User {safe_user_id} role updated to {new_role.value} by admin {safe_admin_username}")
         
         return {"message": f"User role updated to {new_role.value}"}
         

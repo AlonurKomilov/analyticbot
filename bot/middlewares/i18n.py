@@ -1,4 +1,4 @@
-from aiogram.i18n.middleware import I18nMiddleware
+from aiogram_i18n import I18nMiddleware
 
 from bot.locales.i18n_hub import I18N_HUB
 

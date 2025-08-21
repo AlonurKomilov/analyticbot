@@ -28,7 +28,7 @@ from asyncpg.pool import Pool as AsyncPGPool
 
 # Project config & DB
 from bot.config import Settings
-from bot.database.db import create_pool
+from bot.database.sqlite_engine import init_db, get_session
 
 # Repositories
 from bot.database.repositories.analytics_repository import AnalyticsRepository
@@ -55,7 +55,7 @@ class Container(punq.Container):
     config = Singleton(Settings)
 
     # DB pool (punctuated) – create_pool async bo‘lishi mumkin
-    db_session = Singleton(create_pool)
+    db_session = Singleton(init_db)
 
 
 # Global container

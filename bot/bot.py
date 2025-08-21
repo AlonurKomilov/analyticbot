@@ -3,6 +3,8 @@ import logging
 import json
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 
@@ -55,7 +57,10 @@ async def main():
         storage = MemoryStorage()
 
     # Bot va Dispatcher obyektlarini yaratish
-    bot = Bot(token=settings.BOT_TOKEN.get_secret_value(), parse_mode="HTML")
+    bot = Bot(
+        token=settings.BOT_TOKEN.get_secret_value(), 
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+    )
     dp = Dispatcher(storage=storage)
 
     # YAKUNIY TUZATISH: Middleware'larni to'g'ri tartibda ulaymiz

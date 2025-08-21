@@ -6,6 +6,47 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from './theme.js';
 import * as Sentry from "@sentry/react";
 
+// Development mode TWA Mock
+if (!window.Telegram) {
+  window.Telegram = {
+    WebApp: {
+      ready: () => console.log('TWA: Ready (mocked)'),
+      expand: () => console.log('TWA: Expand (mocked)'),
+      colorScheme: 'dark',
+      initData: '',
+      showAlert: (msg) => alert(msg),
+      HapticFeedback: {
+        impactOccurred: () => console.log('TWA: Haptic feedback (mocked)')
+      }
+    }
+  }
+}
+import * as Sentry from "@sentry/react";
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import theme from './theme.js';
+import * as Sentry from "@sentry/react";
+
+// Development mode TWA Mock
+if (!window.Telegram) {
+  window.Telegram = {
+    WebApp: {
+      ready: () => console.log('TWA: Ready (mocked)'),
+      expand: () => console.log('TWA: Expand (mocked)'),
+      colorScheme: 'dark',
+      initData: '',
+      showAlert: (msg) => alert(msg),
+      HapticFeedback: {
+        impactOccurred: () => console.log('TWA: Haptic feedback (mocked)')
+      }
+    }
+  }
+}
+
 // Sentry'ni sizning yangi DSN kalitingiz bilan ishga tushiramiz
 Sentry.init({
   dsn: "https://ee3c1d2017b9bd97f484190782d92e01@o4509801364324352.ingest.us.sentry.io/4509801367732224",

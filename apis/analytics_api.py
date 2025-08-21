@@ -18,6 +18,10 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
 @router.get("/status")
 async def analytics_status():
-	"""Return basic status for analytics subsystem."""
-	from analytics import __version__, __all__  # lazy import to avoid heavy load on startup
-	return {"module": "analytics", "version": __version__, "components": len(__all__)}
+    """Return basic status for analytics subsystem."""
+    from analytics import (  # lazy import to avoid heavy load on startup
+        __all__,
+        __version__,
+    )
+
+    return {"module": "analytics", "version": __version__, "components": len(__all__)}

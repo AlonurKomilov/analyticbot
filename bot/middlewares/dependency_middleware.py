@@ -1,15 +1,18 @@
-from typing import Any, Awaitable, Callable, Dict, Optional
 import asyncio
+from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
+from typing import Any
 
 import punq
-from punq import MissingDependencyError
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
 # DB pool turlari
 from asyncpg.pool import Pool as AsyncPGPool
+from punq import MissingDependencyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from bot.config import settings as app_settings
 
 # Repozitoriy va Servislar (type hint/resolve uchun)
 from bot.database.repositories import (
@@ -28,7 +31,6 @@ from bot.services import (
 
 # i18n fallback
 from bot.utils.safe_i18n_core import SafeFluentRuntimeCore
-from bot.config import settings as app_settings
 
 
 # ---------- Null (no-op) obyektlar ----------
@@ -47,7 +49,7 @@ class _NullUserRepository(_Null):
     async def create_user(self, *args: Any, **kwargs: Any) -> None:
         return None
 
-    async def get_locale(self, *args: Any, **kwargs: Any) -> Optional[str]:
+    async def get_locale(self, *args: Any, **kwargs: Any) -> str | None:
         return None
 
     async def get_user(self, *args: Any, **kwargs: Any):
@@ -72,12 +74,12 @@ class DependencyMiddleware(BaseMiddleware):
 
     async def __call__(
         self,
-        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
         event: TelegramObject,
-        data: Dict[str, Any],
+        data: dict[str, Any],
     ) -> Any:
         # --- DB session pool ---
-        session_pool: Optional[Any] = None
+        session_pool: Any | None = None
         try:
             session_pool = self.container.resolve(AsyncPGPool)
         except Exception:
@@ -92,8 +94,11 @@ class DependencyMiddleware(BaseMiddleware):
                 session_pool = await session_pool  # type: ignore[func-returns-value]
             except Exception as e:
                 import logging
+
                 logger = logging.getLogger(__name__)
-                logger.warning("DB pool resolve failed, using fallback repositories: %s", e)
+                logger.warning(
+                    "DB pool resolve failed, using fallback repositories: %s", e
+                )
                 session_pool = None
 
         if session_pool is not None:

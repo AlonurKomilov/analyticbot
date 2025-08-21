@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from asyncpg import Pool
 
@@ -8,7 +8,7 @@ class SchedulerRepository:
     def __init__(self, pool: Pool):
         self._pool = pool
 
-    async def get_scheduler_by_id(self, post_id: int) -> Optional[Dict[str, Any]]:
+    async def get_scheduler_by_id(self, post_id: int) -> dict[str, Any] | None:
         """Return a scheduled post row by id or None."""
         query = "SELECT * FROM scheduled_posts WHERE id = $1;"
         rec = await self._pool.fetchrow(query, post_id)
@@ -20,9 +20,9 @@ class SchedulerRepository:
         channel_id: int,
         post_text: str,
         schedule_time: datetime,
-        media_id: Optional[str] = None,
-        media_type: Optional[str] = None,
-        inline_buttons: Optional[Any] = None,
+        media_id: str | None = None,
+        media_type: str | None = None,
+        inline_buttons: Any | None = None,
     ) -> int:
         """Ma'lumotlar bazasiga yangi rejalashtirilgan post yaratadi."""
         query = """
@@ -42,7 +42,7 @@ class SchedulerRepository:
         )
         return post_id
 
-    async def get_scheduled_posts_by_user(self, user_id: int) -> List[Dict[str, Any]]:
+    async def get_scheduled_posts_by_user(self, user_id: int) -> list[dict[str, Any]]:
         """Foydalanuvchining barcha 'pending' statusidagi postlarini oladi."""
         query = "SELECT * FROM scheduled_posts WHERE user_id = $1 AND status = 'pending' ORDER BY schedule_time ASC;"
         records = await self._pool.fetch(query, user_id)
@@ -59,20 +59,20 @@ class SchedulerRepository:
         query = "UPDATE scheduled_posts SET status = $1 WHERE id = $2;"
         await self._pool.execute(query, status, post_id)
 
-    async def get_pending_posts_to_send(self) -> List[Dict[str, Any]]:
+    async def get_pending_posts_to_send(self) -> list[dict[str, Any]]:
         """Yuborish vaqti kelgan barcha postlarni oladi."""
         query = "SELECT * FROM scheduled_posts WHERE schedule_time <= NOW() AND status = 'pending';"
         records = await self._pool.fetch(query)
         return [dict(record) for record in records]
 
-    async def claim_due_posts(self, limit: int = 20) -> List[Dict[str, Any]]:
+    async def claim_due_posts(self, limit: int = 20) -> list[dict[str, Any]]:
         """Atomically 'claim' pending due posts by switching status to 'sending'.
 
         This reduces race condition risk when multiple workers poll.
         Returns claimed rows.
         """
         # Use CTE with UPDATE ... RETURNING for atomic claim
-        query = f"""
+        query = """
         WITH cte AS (
             SELECT id FROM scheduled_posts
             WHERE schedule_time <= NOW() AND status='pending'
@@ -110,7 +110,7 @@ class SchedulerRepository:
 
     async def requeue_stuck_sending_posts(self, max_age_minutes: int = 15) -> int:
         """Reset 'sending' posts older than max_age_minutes back to 'pending'.
-        
+
         Returns count of requeued posts.
         """
         query = """
@@ -125,7 +125,7 @@ class SchedulerRepository:
 
     async def cleanup_old_posts(self, days_old: int = 30) -> int:
         """Archive or delete old completed posts.
-        
+
         Returns count of cleaned posts.
         """
         query = """

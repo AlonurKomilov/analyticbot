@@ -1,12 +1,12 @@
-from typing import Optional, List
 from enum import Enum
 
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, SecretStr, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, SecretStr
+from pydantic_settings import BaseSettings
 
 
 class LogLevel(str, Enum):
     """Supported log levels"""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -16,6 +16,7 @@ class LogLevel(str, Enum):
 
 class LogFormat(str, Enum):
     """Supported log formats"""
+
     TEXT = "text"
     JSON = "json"
 
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     TWA_HOST_URL: AnyHttpUrl
 
     # Sentry DSN for error tracking
-    SENTRY_DSN: Optional[str] = None
+    SENTRY_DSN: str | None = None
 
     # Plan limit enforcement
     ENFORCE_PLAN_LIMITS: bool = True
@@ -57,8 +58,10 @@ class Settings(BaseSettings):
     STORAGE_CHANNEL_ID: int
 
     # I18n (Localization) settings
-    SUPPORTED_LOCALES: List[str] = ["en", "uz"]
+    SUPPORTED_LOCALES: list[str] = ["en", "uz"]
     DEFAULT_LOCALE: str = "uz"
+
+
 """Configuration package bootstrap.
 
 This stub remains for backward compatibility (legacy imports: `from bot.config import settings`).
@@ -67,8 +70,7 @@ Actual configuration objects now live in `bot/config/__init__.py` which defines
 `bot.database.performance.PerformanceConfig` to avoid duplicate class names.
 """
 
-from bot.config import settings, Settings  # type: ignore  # re-export
+from bot.config import Settings, settings  # type: ignore  # re-export
 
 __all__ = ["settings", "Settings"]
- # NOTE: real implementation moved; this file stays minimal.
-
+# NOTE: real implementation moved; this file stays minimal.

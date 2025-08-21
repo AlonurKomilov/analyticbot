@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
 
-    # Main connection URL for Python application
-    DATABASE_URL: PostgresDsn
+    # Main connection URL for Python application (supports SQLite and PostgreSQL)
+    DATABASE_URL: str
 
     # Redis connection URL
     REDIS_URL: RedisDsn

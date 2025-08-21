@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
     POSTGRES_PORT: int = 5432
-    DATABASE_URL: PostgresDsn
-    REDIS_URL: RedisDsn
+    DATABASE_URL: str
+    REDIS_URL: str
     TWA_HOST_URL: AnyHttpUrl
     SENTRY_DSN: Optional[str] = None
     ENFORCE_PLAN_LIMITS: bool = True

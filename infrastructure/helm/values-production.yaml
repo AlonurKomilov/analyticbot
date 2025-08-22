@@ -1,0 +1,184 @@
+# Production Values for AnalyticBot
+# Override default values for production deployment
+
+# Global settings
+global:
+  environment: production
+  
+# Image settings
+image:
+  tag: "v1.0.0"
+  pullPolicy: IfNotPresent
+
+# API Configuration
+api:
+  replicaCount: 3
+  workers: 4
+  
+  image:
+    repository: analyticbot/api
+    tag: "v1.0.0"
+    
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+      
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+    
+  service:
+    type: ClusterIP
+    port: 8000
+
+# Bot Configuration
+bot:
+  replicaCount: 2
+  
+  image:
+    repository: analyticbot/bot
+    tag: "v1.0.0"
+    
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Database Configuration
+postgresql:
+  enabled: true
+  auth:
+    username: analyticbot_prod
+    database: analyticbot_prod
+    existingSecret: analyticbot-postgresql-secret
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+      requests:
+        cpu: 1000m
+        memory: 1Gi
+
+# Redis Configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: analyticbot-redis-secret
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: fast-ssd
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: fast-ssd
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: api.analyticbot.production.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: analyticbot-tls
+      hosts:
+        - api.analyticbot.production.com
+
+# Environment Variables
+env:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  DEBUG: "false"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  CORS_ORIGINS: "https://bot.analyticbot.production.com,https://analyticbot.production.com"
+  
+  # AI/ML Configuration
+  OPENAI_MODEL: "gpt-4"
+  MAX_TOKENS: "4000"
+  TEMPERATURE: "0.7"
+  
+  # Analytics Configuration
+  ANALYTICS_RETENTION_DAYS: "365"
+  BATCH_SIZE: "1000"
+  
+  # Monitoring Configuration
+  PROMETHEUS_PORT: "9090"
+  JAEGER_ENDPOINT: "http://jaeger-collector:14268/api/traces"
+  
+  # Feature Flags
+  ENABLE_ANALYTICS: "true"
+  ENABLE_AI_FEATURES: "true"
+  ENABLE_CACHING: "true"
+  ENABLE_RATE_LIMITING: "true"
+  
+  # Performance Configuration
+  WORKER_PROCESSES: "4"
+  CONNECTION_POOL_SIZE: "20"
+  RATE_LIMIT_PER_MINUTE: "60"
+  SESSION_TIMEOUT: "3600"
+  
+  # Backup Configuration
+  BACKUP_RETENTION_DAYS: "90"
+
+# Security Configuration
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  capabilities:
+    drop:
+      - ALL
+
+# Network Policies
+networkPolicies:
+  enabled: true
+  
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 30s
+  scrapeTimeout: 10s

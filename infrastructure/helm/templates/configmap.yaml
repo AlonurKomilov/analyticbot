@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "analyticbot.fullname" . }}-config
+  labels:
+    {{- include "analyticbot.labels" . | nindent 4 }}
+data:
+  # Application Configuration
+  ENVIRONMENT: {{ .Values.env.ENVIRONMENT | quote }}
+  LOG_LEVEL: {{ .Values.env.LOG_LEVEL | quote }}
+  DEBUG: {{ .Values.env.DEBUG | quote }}
+  
+  # API Configuration
+  API_HOST: {{ .Values.env.API_HOST | quote }}
+  API_PORT: {{ .Values.env.API_PORT | quote }}
+  CORS_ORIGINS: {{ .Values.env.CORS_ORIGINS | quote }}
+  
+  # Database Configuration (non-sensitive)
+  {{- if not .Values.postgresql.enabled }}
+  POSTGRES_HOST: {{ .Values.env.POSTGRES_HOST | quote }}
+  POSTGRES_PORT: {{ .Values.env.POSTGRES_PORT | quote }}
+  POSTGRES_DB: {{ .Values.env.POSTGRES_DB | quote }}
+  POSTGRES_USER: {{ .Values.env.POSTGRES_USER | quote }}
+  {{- end }}
+  
+  # Redis Configuration (non-sensitive)
+  {{- if not .Values.redis.enabled }}
+  REDIS_HOST: {{ .Values.env.REDIS_HOST | quote }}
+  REDIS_PORT: {{ .Values.env.REDIS_PORT | quote }}
+  REDIS_DB: {{ .Values.env.REDIS_DB | quote }}
+  {{- end }}
+  
+  # AI/ML Configuration
+  OPENAI_MODEL: {{ .Values.env.OPENAI_MODEL | quote }}
+  MAX_TOKENS: {{ .Values.env.MAX_TOKENS | quote }}
+  TEMPERATURE: {{ .Values.env.TEMPERATURE | quote }}
+  
+  # Analytics Configuration
+  ANALYTICS_RETENTION_DAYS: {{ .Values.env.ANALYTICS_RETENTION_DAYS | quote }}
+  BATCH_SIZE: {{ .Values.env.BATCH_SIZE | quote }}
+  
+  # Monitoring Configuration
+  PROMETHEUS_PORT: {{ .Values.env.PROMETHEUS_PORT | quote }}
+  JAEGER_ENDPOINT: {{ .Values.env.JAEGER_ENDPOINT | quote }}
+  
+  # Feature Flags
+  ENABLE_ANALYTICS: {{ .Values.env.ENABLE_ANALYTICS | quote }}
+  ENABLE_AI_FEATURES: {{ .Values.env.ENABLE_AI_FEATURES | quote }}
+  ENABLE_CACHING: {{ .Values.env.ENABLE_CACHING | quote }}
+  ENABLE_RATE_LIMITING: {{ .Values.env.ENABLE_RATE_LIMITING | quote }}
+  
+  # Security Configuration (non-sensitive)
+  RATE_LIMIT_PER_MINUTE: {{ .Values.env.RATE_LIMIT_PER_MINUTE | quote }}
+  SESSION_TIMEOUT: {{ .Values.env.SESSION_TIMEOUT | quote }}
+  
+  # Performance Configuration
+  WORKER_PROCESSES: {{ .Values.env.WORKER_PROCESSES | quote }}
+  CONNECTION_POOL_SIZE: {{ .Values.env.CONNECTION_POOL_SIZE | quote }}
+  
+  # Backup Configuration
+  BACKUP_RETENTION_DAYS: {{ .Values.env.BACKUP_RETENTION_DAYS | quote }}

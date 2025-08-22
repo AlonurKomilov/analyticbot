@@ -4,6 +4,12 @@ psutil==5.9.5
 gunicorn==21.2.0
 uvicorn[standard]==0.23.2
 
+# Phase 0.0 Infrastructure Monitoring
+grafana-api==1.0.3
+prometheus-api-client==0.5.3
+kubernetes==28.1.0
+pyyaml>=6.0.0
+
 # Health monitoring
 httpx==0.24.1
 

@@ -1,0 +1,75 @@
+{
+  "test_results": [
+    {
+      "test_name": "Grafana Dashboard - business-metrics.json",
+      "status": "PASS",
+      "details": "Valid dashboard with 7 panels (100.0% valid)",
+      "duration": 0.0006270408630371094,
+      "timestamp": "2025-08-22T11:38:51.479412"
+    },
+    {
+      "test_name": "Grafana Dashboard - infrastructure.json",
+      "status": "PASS",
+      "details": "Valid dashboard with 8 panels (100.0% valid)",
+      "duration": 0.0003979206085205078,
+      "timestamp": "2025-08-22T11:38:51.479850"
+    },
+    {
+      "test_name": "Grafana Dashboard - sla-slo.json",
+      "status": "PASS",
+      "details": "Valid dashboard with 8 panels (100.0% valid)",
+      "duration": 0.0002532005310058594,
+      "timestamp": "2025-08-22T11:38:51.480134"
+    },
+    {
+      "test_name": "Prometheus Alerts",
+      "status": "PASS",
+      "details": "23/23 rules valid (100.0%)",
+      "duration": 0.019603490829467773,
+      "timestamp": "2025-08-22T11:38:51.600261"
+    },
+    {
+      "test_name": "CI/CD Workflows",
+      "status": "FAIL",
+      "details": "Missing workflow keys: ['on']",
+      "duration": 0,
+      "timestamp": "2025-08-22T11:38:51.716400"
+    },
+    {
+      "test_name": "Backup System",
+      "status": "PASS",
+      "details": "Script syntax, help, and health check functions working",
+      "duration": 0.028961658477783203,
+      "timestamp": "2025-08-22T11:38:51.845943"
+    },
+    {
+      "test_name": "Monitoring Integration",
+      "status": "PASS",
+      "details": "Integration score: 100.0%",
+      "duration": 0.0004935264587402344,
+      "timestamp": "2025-08-22T11:38:51.946884"
+    },
+    {
+      "test_name": "Kubernetes Resources",
+      "status": "PASS",
+      "details": "Resource optimization score: 100.0%",
+      "duration": 0.015451192855834961,
+      "timestamp": "2025-08-22T11:38:52.062683"
+    },
+    {
+      "test_name": "Module Integration",
+      "status": "PASS",
+      "details": "Integration score: 100.0%",
+      "duration": 0.0008220672607421875,
+      "timestamp": "2025-08-22T11:38:52.164092"
+    }
+  ],
+  "start_time": "2025-08-22T11:38:51.378411",
+  "module": "Phase 0.0 Module 3 - Advanced DevOps & Observability",
+  "total_tests": 9,
+  "passed_tests": 8,
+  "failed_tests": 1,
+  "end_time": "2025-08-22T11:38:52.164132",
+  "total_duration": 0.7856183052062988,
+  "success_rate": 88.88888888888889
+}

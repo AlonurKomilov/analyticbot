@@ -1,0 +1,345 @@
+# Default values for AnalyticBot
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Application image settings
+image:
+  registry: docker.io
+  repository: analyticbot
+  tag: "2.1.0"
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+# API Configuration
+api:
+  replicaCount: 1
+  workers: 2
+  
+  image:
+    repository: analyticbot/api
+    tag: ""
+    pullPolicy: IfNotPresent
+    
+  service:
+    type: ClusterIP
+    port: 8000
+    
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+      
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+    
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 65534
+    capabilities:
+      drop:
+        - ALL
+    
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Bot Configuration
+bot:
+  replicaCount: 1
+  
+  image:
+    repository: analyticbot/bot
+    tag: ""
+    pullPolicy: IfNotPresent
+    
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    fsGroup: 65534
+    
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 65534
+    capabilities:
+      drop:
+        - ALL
+    
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Environment configuration
+env:
+  # Bot configuration
+  ENVIRONMENT: "development"
+  LOG_LEVEL: "DEBUG"
+  DEBUG: "true"
+  
+  # API configuration
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  CORS_ORIGINS: "*"
+
+# Service configurations
+services:
+  api:
+    enabled: true
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+    annotations: {}
+    
+  bot:
+    enabled: true
+    
+  celery:
+    enabled: true
+    worker:
+      replicas: 2
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: analyticbot.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - secretName: analyticbot-tls
+    #   hosts:
+    #     - analyticbot.local
+
+# PostgreSQL configuration (using Bitnami chart)
+postgresql:
+  enabled: true
+  auth:
+    username: "analytic"
+    password: "change_me"
+    database: "analytic_bot"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+# Redis configuration (using Bitnami chart)
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  bot:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+
+# Resource configurations
+resources:
+  api:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  bot:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Security contexts
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 8000
+    path: /metrics
+  grafana:
+    enabled: true
+    
+# Health checks
+healthCheck:
+  enabled: true
+  api:
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 8000
+      initialDelaySeconds: 5
+      periodSeconds: 5
+
+# Persistence
+persistence:
+  enabled: false
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Network policies
+networkPolicy:
+  enabled: false
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: analyticbot.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Persistence
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 8Gi
+
+# Network Policies
+networkPolicies:
+  enabled: false
+
+# Service Monitor
+serviceMonitor:
+  enabled: false
+  namespace: ""
+  interval: 30s
+  scrapeTimeout: 10s
+
+# Prometheus Rule
+prometheusRule:
+  enabled: false
+
+# Secrets (these should be set via --set or separate values file)
+secrets:
+  BOT_TOKEN: ""
+  WEBHOOK_SECRET: ""
+  POSTGRES_PASSWORD: ""
+  REDIS_PASSWORD: ""
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  GOOGLE_AI_API_KEY: ""
+  JWT_SECRET_KEY: ""
+  ENCRYPTION_KEY: ""
+  SENTRY_DSN: ""
+  DATADOG_API_KEY: ""
+  GITHUB_CLIENT_SECRET: ""
+  GOOGLE_CLIENT_SECRET: ""
+  GITHUB_WEBHOOK_SECRET: ""
+  SLACK_WEBHOOK_URL: ""
+  BACKUP_ENCRYPTION_KEY: ""
+  S3_ACCESS_KEY: ""
+  S3_SECRET_KEY: ""

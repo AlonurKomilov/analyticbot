@@ -10,7 +10,6 @@ backed by any ORM.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -46,10 +45,10 @@ class SchedulePostRequest(BaseModel):
 
     channel_id: int
     scheduled_at: datetime
-    text: Optional[str] = None
-    media_id: Optional[str] = None
-    media_type: Optional[str] = None
-    buttons: Optional[List[Button]] = None
+    text: str | None = None
+    media_id: str | None = None
+    media_type: str | None = None
+    buttons: list[Button] | None = None
 
 
 class Channel(BaseModel):
@@ -57,7 +56,7 @@ class Channel(BaseModel):
 
     id: int
     title: str
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class ScheduledPost(BaseModel):
@@ -66,15 +65,15 @@ class ScheduledPost(BaseModel):
     id: int
     channel_id: int
     scheduled_at: datetime
-    text: Optional[str] = None
-    media_id: Optional[str] = None
-    media_type: Optional[str] = None
-    buttons: Optional[List[Button]] = None
+    text: str | None = None
+    media_id: str | None = None
+    media_type: str | None = None
+    buttons: list[Button] | None = None
 
 
 class User(BaseModel):
     id: int
-    username: Optional[str] = None
+    username: str | None = None
 
 
 class Plan(BaseModel):
@@ -85,9 +84,9 @@ class Plan(BaseModel):
 
 class InitialDataResponse(BaseModel):
     user: User
-    plan: Optional[Plan] = None
-    channels: List[Channel] = Field(default_factory=list)
-    scheduled_posts: List[ScheduledPost] = Field(default_factory=list)
+    plan: Plan | None = None
+    channels: list[Channel] = Field(default_factory=list)
+    scheduled_posts: list[ScheduledPost] = Field(default_factory=list)
 
 
 class ValidationErrorResponse(BaseModel):

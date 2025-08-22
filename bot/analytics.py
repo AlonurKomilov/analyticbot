@@ -36,47 +36,56 @@ RELOCATED IMPLEMENTATION: Analytics modules properly organized in bot structure
 - Web Services: bot/services/
 """
 
+# Web Services
+from bot.services.dashboard_service import (
+    DashboardFactory,
+    RealTimeDashboard,
+    VisualizationEngine,
+    create_dashboard,
+    create_visualization_engine,
+)
+from bot.services.ml.ai_insights import (
+    AIInsightsGenerator,
+    create_ai_insights_generator,
+)
+
 # ML Services
-from bot.services.ml.predictive_engine import PredictiveAnalyticsEngine, create_predictive_engine
-from bot.services.ml.ai_insights import AIInsightsGenerator, create_ai_insights_generator
+from bot.services.ml.predictive_engine import (
+    PredictiveAnalyticsEngine,
+    create_predictive_engine,
+)
+from bot.services.reporting_service import (
+    AutomatedReportingSystem,
+    ReportTemplate,
+    create_report_template,
+    create_reporting_system,
+)
 
 # Data Utilities
 from bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
-
-# Web Services
-from bot.services.dashboard_service import (
-    VisualizationEngine, RealTimeDashboard, DashboardFactory,
-    create_visualization_engine, create_dashboard
-)
-from bot.services.reporting_service import (
-    AutomatedReportingSystem, ReportTemplate,
-    create_reporting_system, create_report_template
-)
 
 __all__ = [
     # ML Services
     "PredictiveAnalyticsEngine",
     "create_predictive_engine",
-    "AIInsightsGenerator", 
+    "AIInsightsGenerator",
     "create_ai_insights_generator",
-    
     # Data Utilities
     "AdvancedDataProcessor",
     "create_data_processor",
-    
     # Dashboard Services
     "VisualizationEngine",
     "RealTimeDashboard",
-    "DashboardFactory", 
+    "DashboardFactory",
     "create_visualization_engine",
     "create_dashboard",
-    
     # Reporting Services
     "AutomatedReportingSystem",
     "ReportTemplate",
     "create_reporting_system",
-    "create_report_template"
+    "create_report_template",
 ]
+
 
 # Convenience factory function for complete analytics suite
 async def create_analytics_suite():
@@ -84,13 +93,14 @@ async def create_analytics_suite():
     🚀 Create complete analytics suite with all components
     """
     return {
-        'data_processor': await create_data_processor(),
-        'predictive_engine': await create_predictive_engine(),
-        'ai_insights': await create_ai_insights_generator(),
-        'visualization_engine': await create_visualization_engine(),
-        'dashboard': await create_dashboard(),
-        'reporting_system': await create_reporting_system()
+        "data_processor": await create_data_processor(),
+        "predictive_engine": await create_predictive_engine(),
+        "ai_insights": await create_ai_insights_generator(),
+        "visualization_engine": await create_visualization_engine(),
+        "dashboard": await create_dashboard(),
+        "reporting_system": await create_reporting_system(),
     }
+
 
 # Health check for all analytics components
 async def analytics_health_check():
@@ -99,42 +109,42 @@ async def analytics_health_check():
     """
     try:
         health_results = {}
-        
+
         # Check data processor
         data_processor = await create_data_processor()
-        health_results['data_processor'] = await data_processor.health_check()
-        
+        health_results["data_processor"] = await data_processor.health_check()
+
         # Check predictive engine
         predictive_engine = await create_predictive_engine()
-        health_results['predictive_engine'] = await predictive_engine.health_check()
-        
+        health_results["predictive_engine"] = await predictive_engine.health_check()
+
         # Check AI insights
         ai_insights = await create_ai_insights_generator()
-        health_results['ai_insights'] = await ai_insights.health_check()
-        
+        health_results["ai_insights"] = await ai_insights.health_check()
+
         # Check dashboard service
         from bot.services.dashboard_service import health_check as dashboard_health
-        health_results['dashboard_service'] = await dashboard_health()
-        
+
+        health_results["dashboard_service"] = await dashboard_health()
+
         # Check reporting system
         reporting_system = await create_reporting_system()
-        health_results['reporting_system'] = await reporting_system.health_check()
-        
+        health_results["reporting_system"] = await reporting_system.health_check()
+
         # Overall health assessment
         all_healthy = all(
-            result.get('status') == 'healthy' 
-            for result in health_results.values()
+            result.get("status") == "healthy" for result in health_results.values()
         )
-        
+
         return {
-            'overall_status': 'healthy' if all_healthy else 'degraded',
-            'components': health_results,
-            'timestamp': __import__('datetime').datetime.now().isoformat()
+            "overall_status": "healthy" if all_healthy else "degraded",
+            "components": health_results,
+            "timestamp": __import__("datetime").datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         return {
-            'overall_status': 'error',
-            'error': str(e),
-            'timestamp': __import__('datetime').datetime.now().isoformat()
+            "overall_status": "error",
+            "error": str(e),
+            "timestamp": __import__("datetime").datetime.now().isoformat(),
         }

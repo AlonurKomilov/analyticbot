@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import asyncpg
 
@@ -7,7 +7,7 @@ class PlanRepository:
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
-    async def get_plan_by_name(self, plan_name: str) -> Optional[Dict[str, Any]]:
+    async def get_plan_by_name(self, plan_name: str) -> dict[str, Any] | None:
         """Retrieves the limits for a specific plan by its name."""
         async with self.pool.acquire() as conn:
             return await conn.fetchrow(

@@ -1,7 +1,9 @@
-from typing import Optional, List
 from enum import Enum
-from pydantic import AnyHttpUrl, PostgresDsn, RedisDsn, SecretStr, field_validator
+from typing import List, Optional
+
+from pydantic import AnyHttpUrl, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class LogLevel(str, Enum):
     DEBUG = "DEBUG"
@@ -10,9 +12,11 @@ class LogLevel(str, Enum):
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
 
+
 class LogFormat(str, Enum):
     TEXT = "text"
     JSON = "json"
+
 
 class Settings(BaseSettings):
     BOT_TOKEN: SecretStr
@@ -23,10 +27,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     REDIS_URL: str
     TWA_HOST_URL: AnyHttpUrl
-    SENTRY_DSN: Optional[str] = None
+    SENTRY_DSN: str | None = None
     ENFORCE_PLAN_LIMITS: bool = True
     STORAGE_CHANNEL_ID: int
-    SUPPORTED_LOCALES: List[str] = ["en", "uz"]
+    SUPPORTED_LOCALES: list[str] = ["en", "uz"]
     DEFAULT_LOCALE: str = "uz"
 
     @field_validator("DEFAULT_LOCALE")
@@ -52,20 +56,27 @@ class Settings(BaseSettings):
     TASK_MAX_RETRIES: int = 3
     TASK_RETRY_DELAY: int = 60
     MAX_MEDIA_SIZE_MB: int = 20
-    ALLOWED_MEDIA_TYPES: List[str] = ["image/jpeg", "image/png", "video/mp4", "image/gif"]
+    ALLOWED_MEDIA_TYPES: list[str] = [
+        "image/jpeg",
+        "image/png",
+        "video/mp4",
+        "image/gif",
+    ]
     API_RATE_LIMIT_REQUESTS: int = 100
     API_RATE_LIMIT_WINDOW: int = 60
     CSRF_PROTECTION_ENABLED: bool = True
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOWED_ORIGINS: List[str] = ["*"]
+    CORS_ALLOWED_ORIGINS: list[str] = ["*"]
 
     @field_validator("CORS_ALLOWED_ORIGINS")
     @classmethod
-    def validate_cors_origins(cls, v: List[str]) -> List[str]:
+    def validate_cors_origins(cls, v: list[str]) -> list[str]:
         if "*" in v:
             import logging
+
             logging.getLogger(__name__).warning(
-                "CORS is set to allow all origins (*). Not recommended for production.")
+                "CORS is set to allow all origins (*). Not recommended for production."
+            )
         return v
 
     DEBUG_MODE: bool = False
@@ -121,6 +132,7 @@ class Settings(BaseSettings):
                 "handlers": ["console"],
             },
         }
+
 
 settings = Settings()
 

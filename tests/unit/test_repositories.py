@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from bot.database.repositories.plan_repository import PlanRepository
 from bot.database.repositories.user_repository import UserRepository

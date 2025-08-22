@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Container, Box, Typography, Skeleton, Stack, Tabs, Tab, Paper } from '@mui/material';
+import { 
+    Container, 
+    Box, 
+    Typography, 
+    Skeleton, 
+    Stack, 
+    Tabs, 
+    Tab, 
+    Paper,
+    Grid,
+    Card,
+    CardContent,
+    Chip
+} from '@mui/material';
 import PostCreator from './components/PostCreator';
 import ScheduledPostsList from './components/ScheduledPostsList';
 import MediaPreview from './components/MediaPreview';
@@ -41,12 +54,27 @@ function App() {
     return (
         <Container maxWidth="xl">
             <Box sx={{ my: 2, textAlign: 'center' }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Bot Dashboard - Phase 2.1
+                <Typography variant="h4" component="h1" gutterBottom sx={{ 
+                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', 
+                    backgroundClip: 'text', 
+                    WebkitBackgroundClip: 'text', 
+                    color: 'transparent',
+                    fontWeight: 'bold' 
+                }}>
+                    🤖 AnalyticBot Dashboard
                 </Typography>
-                <Typography variant="subtitle1" color="text.secondary">
-                    Enhanced TWA with Analytics & AI Recommendations
+                <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                    To'liq Telegram Bot Boshqaruv Tizimi
                 </Typography>
+                
+                {/* Service Status Cards */}
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap', mb: 2 }}>
+                    <Chip icon={<span>🤖</span>} label="Bot Active" color="success" size="small" />
+                    <Chip icon={<span>🔍</span>} label="Analytics" color="primary" size="small" />
+                    <Chip icon={<span>🛡️</span>} label="Security" color="secondary" size="small" />
+                    <Chip icon={<span>🧠</span>} label="AI/ML" color="warning" size="small" />
+                    <Chip icon={<span>📊</span>} label="Dashboard" color="info" size="small" />
+                </Box>
             </Box>
 
             {isLoading ? (
@@ -61,8 +89,27 @@ function App() {
                             sx={{ borderBottom: 1, borderColor: 'divider' }}
                             variant="fullWidth"
                         >
-                            <Tab label="📝 Post Management" />
-                            <Tab label="📊 Analytics Dashboard" />
+                            <Tab 
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        📝 <span>Post Boshqaruvi</span>
+                                    </Box>
+                                } 
+                            />
+                            <Tab 
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        📊 <span>Analytics Dashboard</span>
+                                    </Box>
+                                } 
+                            />
+                            <Tab 
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        🧠 <span>AI Xizmatlari</span>
+                                    </Box>
+                                } 
+                            />
                         </Tabs>
                     </Paper>
 
@@ -81,6 +128,111 @@ function App() {
                     {/* Analytics Dashboard Tab */}
                     <TabPanel value={activeTab} index={1}>
                         <AnalyticsDashboard /> {/* NEW Week 2 Analytics Dashboard */}
+                    </TabPanel>
+
+                    {/* AI Services Tab */}
+                    <TabPanel value={activeTab} index={2}>
+                        <Container maxWidth="lg">
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        🧠 AI & Machine Learning Xizmatlari
+                                    </Typography>
+                                </Grid>
+                                
+                                {/* AI Service Cards */}
+                                <Grid item xs={12} md={6}>
+                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                                                🎯 Content Optimizer
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                Matn va hashtag optimallashtirish, sentiment analysis
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                <Chip label="✅ Sentiment Analysis" size="small" color="success" />
+                                                <Chip label="✅ Hashtag AI" size="small" color="success" />
+                                                <Chip label="✅ Readability" size="small" color="success" />
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom sx={{ color: 'success.main' }}>
+                                                📈 Predictive Analytics
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                ML algoritmlari orqali post performance prediction
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                <Chip label="✅ Engagement Prediction" size="small" color="success" />
+                                                <Chip label="✅ Best Time AI" size="small" color="success" />
+                                                <Chip label="✅ Audience Analysis" size="small" color="success" />
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom sx={{ color: 'warning.main' }}>
+                                                🔮 Churn Predictor
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                Obunachilar aktivligini bashorat qilish va saqlash
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                <Chip label="✅ Risk Assessment" size="small" color="success" />
+                                                <Chip label="✅ Retention AI" size="small" color="success" />
+                                                <Chip label="✅ User Behavior" size="small" color="success" />
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+
+                                <Grid item xs={12} md={6}>
+                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom sx={{ color: 'error.main' }}>
+                                                🛡️ Security & Monitoring
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                OAuth 2.0, MFA, RBAC va xavfsizlik monitoring
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                <Chip label="✅ OAuth 2.0" size="small" color="success" />
+                                                <Chip label="✅ Multi-Factor Auth" size="small" color="success" />
+                                                <Chip label="✅ Role-Based Access" size="small" color="success" />
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+
+                                {/* Technology Stack */}
+                                <Grid item xs={12}>
+                                    <Paper sx={{ p: 3, mt: 2 }}>
+                                        <Typography variant="h6" gutterBottom>
+                                            🔧 Technology Stack
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            <Chip label="Python 3.11" color="primary" />
+                                            <Chip label="scikit-learn" color="primary" />
+                                            <Chip label="pandas" color="primary" />
+                                            <Chip label="numpy" color="primary" />
+                                            <Chip label="MLflow" color="primary" />
+                                            <Chip label="FastAPI" color="secondary" />
+                                            <Chip label="aiogram 3.22" color="secondary" />
+                                            <Chip label="Redis" color="secondary" />
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </Container>
                     </TabPanel>
                 </Box>
             )}

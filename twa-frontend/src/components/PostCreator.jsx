@@ -220,7 +220,7 @@ const PostCreator = React.memo(() => {
                 <Button
                     variant="contained"
                     onClick={handleSchedulePost}
-                    disabled={loading || !isValid}
+                    disabled={loading || !canSubmit}
                     sx={{ mt: 2 }}
                 >
                     {loading ? <CircularProgress size={24} /> : 'Joylashtirish'}

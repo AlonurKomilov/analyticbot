@@ -9,6 +9,8 @@ including visualization engine, real-time updates, and web-based interfaces.
 """
 
 import asyncio
+import base64
+import io
 import json
 import logging
 import time

@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 # alembic/env.py
 # pyright: reportMissingImports=false, reportAttributeAccessIssue=false
 
@@ -21,7 +19,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Metadata (agar ORM modeli bo‘lsa, shu yerda ularni import qilasiz)
+# Metadata (agar ORM modeli bo'lsa, shu yerda ularni import qilasiz)
 # at top with other imports:
 target_metadata = metadata
 
@@ -29,8 +27,8 @@ target_metadata = metadata
 def _sync_db_url() -> str:
     """
     Migratsiya uchun sinxron URL (psycopg2) qaytaradi.
-    DATABASE_URL bo‘lsa — undan olamiz; agar async bo‘lsa, sync’ga o‘girib yuboramiz.
-    Bo‘lmasa POSTGRES_* bo‘laklaridan yasaymiz.
+    DATABASE_URL bo'lsa — undan olamiz; agar async bo'lsa, sync'ga o'girib yuboramiz.
+    Bo'lmasa POSTGRES_* bo'laklaridan yasaymiz.
     """
     url = os.getenv("DATABASE_URL", "")
     if not url:
@@ -81,4 +79,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
->>>>>>> 23485487a6f40c49c97d721aabd0d119da21eddc

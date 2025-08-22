@@ -14,8 +14,6 @@ import {
     Chip,
     Alert
 } from '@mui/material';
-import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useAppStore } from '../store/appStore';
 import { useLoadingState, useFormState, useTelegramWebApp } from '../hooks';
 import ButtonConstructor from './ButtonConstructor';
@@ -137,15 +135,14 @@ const PostCreator = React.memo(() => {
     }, [isValid, formState, pendingMedia.file_id, loading]);
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Typography variant="h6">Post Yaratish</Typography>
-                
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="h6">Post Yaratish</Typography>
+            
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
                 
                 <TextField
                     label="Post matni"
@@ -180,16 +177,16 @@ const PostCreator = React.memo(() => {
                     )}
                 </FormControl>
                 
-                <DateTimePicker
+                                
+                <TextField
                     label="Yuborish vaqti"
-                    value={formState.scheduleTime}
-                    onChange={(newValue) => updateField('scheduleTime', newValue)}
-                    slotProps={{
-                        textField: {
-                            error: !!formErrors.scheduleTime,
-                            helperText: formErrors.scheduleTime
-                        }
-                    }}
+                    type="datetime-local"
+                    value={formState.scheduleTime ? 
+                        new Date(formState.scheduleTime).toISOString().slice(0, 16) : ''}
+                    onChange={(e) => updateField('scheduleTime', e.target.value ? new Date(e.target.value) : null)}
+                    InputLabelProps={{ shrink: true }}
+                    error={!!formErrors.scheduleTime}
+                    helperText={formErrors.scheduleTime}
                 />
 
                 {pendingMedia.file_id && (
@@ -201,15 +198,18 @@ const PostCreator = React.memo(() => {
 
                 <ButtonConstructor onAddButton={handleAddButton} />
 
-                {buttons.length > 0 && (
-                    <Box>
-                        <Typography variant="subtitle2">Qo'shilgan tugmalar:</Typography>
+                {formState.buttons.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                            Qo'shilgan tugmalar:
+                        </Typography>
                         <List dense>
-                            {buttons.map((button, index) => (
-                                <ListItem key={index}>
-                                    <Chip 
-                                        label={`${button.text} -> ${button.url}`} 
+                            {formState.buttons.map((button, index) => (
+                                <ListItem key={index} sx={{ px: 0 }}>
+                                    <Chip
+                                        label={`${button.text} (${button.type})`}
                                         onDelete={() => handleRemoveButton(index)}
+                                        size="small"
                                     />
                                 </ListItem>
                             ))}
@@ -219,19 +219,13 @@ const PostCreator = React.memo(() => {
 
                 <Button
                     variant="contained"
-                    color="primary"
                     onClick={handleSchedulePost}
-                    disabled={!canSubmit}
-                    sx={{ minHeight: 48 }}
+                    disabled={loading || !isValid}
+                    sx={{ mt: 2 }}
                 >
-                    {loading ? (
-                        <CircularProgress size={24} />
-                    ) : (
-                        'Postni Rejalashtirish'
-                    )}
+                    {loading ? <CircularProgress size={24} /> : 'Joylashtirish'}
                 </Button>
             </Box>
-        </LocalizationProvider>
     );
 });
 

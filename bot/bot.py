@@ -1,23 +1,23 @@
 import asyncio
-import logging
 import json
+import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 
 from bot.config import settings
+from bot.config import settings as app_settings
 from bot.container import container
 from bot.handlers import admin_handlers, user_handlers
 from bot.middlewares.dependency_middleware import DependencyMiddleware
 from bot.middlewares.i18n import i18n_middleware
 
-from bot.config import settings as app_settings
-
 # Logger sozlamalari
 if app_settings.LOG_FORMAT == "json":
+
     class _JsonFormatter(logging.Formatter):
         def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
             base = {
@@ -35,7 +35,9 @@ if app_settings.LOG_FORMAT == "json":
     root.setLevel(logging.INFO)
     root.handlers[:] = [handler]
 else:
-    logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s"
+    )
 logger = logging.getLogger(__name__)
 
 
@@ -58,8 +60,8 @@ async def main():
 
     # Bot va Dispatcher obyektlarini yaratish
     bot = Bot(
-        token=settings.BOT_TOKEN.get_secret_value(), 
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        token=settings.BOT_TOKEN.get_secret_value(),
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=storage)
 

@@ -8,6 +8,4 @@ and can be easily included in the main FastAPI application.
 
 from .analytics_router import router as analytics_router
 
-__all__ = [
-    "analytics_router"
-]
+__all__ = ["analytics_router"]

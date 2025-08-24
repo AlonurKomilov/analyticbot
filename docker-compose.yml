@@ -1,10 +1,11 @@
-# Compose v2 (version: mayli, kerak emas)
-# .env dagi qiymatlar BARCHA servislar uchun yuklanadi
+# AnalyticBot - Unified Docker Compose
+# Development and local testing environment
 
 services:
-  postgres:
+  # ---------- Database ----------
+  db:
     image: postgres:16
-    container_name: analyticbot-postgres
+    container_name: analyticbot-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
       POSTGRES_USER: ${POSTGRES_USER:-analytic}
@@ -16,108 +17,118 @@ services:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ---------- Redis ----------
   redis:
     image: redis:7-alpine
     container_name: analyticbot-redis
     command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
     ports:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # --- API (FastAPI/Uvicorn) ---
+  # ---------- API Service ----------
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: infra/docker/Dockerfile
       target: api
     container_name: analyticbot-api
-    env_file: .env
     environment:
-      # Explicit override / fallback if not set in .env
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-analytic_bot}}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
+      REDIS_URL: redis://redis:6379/0
+    env_file: 
+      - .env
+    ports:
+      - "8000:8000"
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "8000:8000"
-    command: >
-      uvicorn apis.main_api:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
-  # --- Telegram bot ---
+  # ---------- Bot Service ----------
   bot:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: infra/docker/Dockerfile
       target: bot
     container_name: analyticbot-bot
-    env_file: .env
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-analytic_bot}}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["python", "scripts/run_bot.py"]
     restart: unless-stopped
 
-  # --- Celery worker ---
-  celery_worker:
+  # ---------- Celery Worker (optional) ----------
+  worker:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: celery_worker
-    container_name: analyticbot-celery-worker
-    env_file: .env
+      dockerfile: infra/docker/Dockerfile
+      target: worker
+    container_name: analyticbot-worker
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-analytic_bot}}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A bot.celery_app worker -l info
     restart: unless-stopped
+    profiles:
+      - full
 
-  # --- Celery beat (scheduler) ---
-  celery_beat:
+  # ---------- Celery Beat (optional) ----------
+  beat:
     build:
       context: .
-      dockerfile: Dockerfile
-      target: celery_beat
-    container_name: analyticbot-celery_beat
-    env_file: .env
+      dockerfile: infra/docker/Dockerfile
+      target: beat
+    container_name: analyticbot-beat
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-analytic_bot}}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - .env
     depends_on:
-      postgres:
+      db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A bot.celery_app beat -l info
     restart: unless-stopped
-
-  # --- Migrate helper (run manually) ---
-  migrate:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: api
-    env_file: .env
-    entrypoint: ["/entrypoint.sh"]
-    command: ["alembic", "upgrade", "head"]
-
+    profiles:
+      - full
 
 volumes:
   pgdata:
+    name: analyticbot_pgdata
+  redisdata:
+    name: analyticbot_redisdata
+
+networks:
+  default:
+    name: analyticbot_network

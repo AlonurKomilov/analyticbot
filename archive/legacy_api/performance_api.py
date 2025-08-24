@@ -9,9 +9,10 @@ from datetime import datetime
 from typing import Any
 
 import psutil
-from bot.database.db import db_manager
-from bot.database.performance import performance_manager
 from fastapi import FastAPI, HTTPException
+
+from apps.bot.database.db import db_manager
+from apps.bot.database.performance import performance_manager
 
 app = FastAPI(title="AnalyticBot Performance Monitor", version="1.5.0")
 
@@ -52,37 +53,33 @@ class PerformanceMonitor:
         """Get database performance metrics"""
         try:
             stats = await db_manager.get_performance_stats()
-
-            # Add database-specific metrics
             if db_manager.pool:
                 async with db_manager.pool.acquire() as conn:
-                    # Query performance stats
-                    slow_queries = await conn.fetch("""
+                    slow_queries = await conn.fetch(
+                        """
                         SELECT query, calls, mean_time, total_time 
                         FROM pg_stat_statements 
                         WHERE mean_time > 100 
                         ORDER BY mean_time DESC 
                         LIMIT 10
-                    """)
-
-                    # Connection stats
-                    connections = await conn.fetchrow("""
+                    """
+                    )
+                    connections = await conn.fetchrow(
+                        """
                         SELECT 
                             count(*) as total,
                             count(*) FILTER (WHERE state = 'active') as active,
                             count(*) FILTER (WHERE state = 'idle') as idle
                         FROM pg_stat_activity
-                    """)
-
+                    """
+                    )
                     stats.update(
                         {
                             "slow_queries": [dict(row) for row in slow_queries],
                             "connections": dict(connections) if connections else {},
                         }
                     )
-
             return stats
-
         except Exception as e:
             return {"error": str(e), "status": "unavailable"}
 
@@ -92,7 +89,6 @@ class PerformanceMonitor:
         try:
             if performance_manager.cache._is_connected:
                 redis_info = await performance_manager.cache._redis.info()
-
                 return {
                     "connected": True,
                     "memory_used": redis_info.get("used_memory", 0),
@@ -109,7 +105,6 @@ class PerformanceMonitor:
                 }
             else:
                 return {"connected": False, "status": "disconnected"}
-
         except Exception as e:
             return {"connected": False, "error": str(e)}
 
@@ -117,15 +112,12 @@ class PerformanceMonitor:
     async def get_application_metrics() -> dict[str, Any]:
         """Get application-specific metrics"""
         try:
-            # Get last analytics run stats
             analytics_stats = await performance_manager.cache.get("performance:analytics:last_run")
-
             return {
                 "analytics": analytics_stats or {"status": "no_recent_runs"},
                 "performance_mode": getattr(db_manager, "_performance_enabled", False),
                 "uptime": time.time() - getattr(app.state, "start_time", time.time()),
             }
-
         except Exception as e:
             return {"error": str(e)}
 
@@ -145,9 +137,7 @@ async def health_check():
     try:
         db_healthy = await db_manager.health_check()
         cache_healthy = performance_manager.cache._is_connected
-
         status = "healthy" if db_healthy and cache_healthy else "degraded"
-
         return {
             "status": status,
             "timestamp": datetime.now().isoformat(),
@@ -207,7 +197,6 @@ async def get_all_metrics():
             monitor.get_application_metrics(),
             return_exceptions=True,
         )
-
         return {
             "timestamp": datetime.now().isoformat(),
             "system": results[0]
@@ -254,47 +243,32 @@ async def optimize_database():
 async def get_performance_report():
     """📋 Comprehensive performance report"""
     try:
-        # Get all metrics
         all_metrics = await get_all_metrics()
-
-        # Generate performance analysis
         analysis = {
             "overall_status": "good",
             "recommendations": [],
             "warnings": [],
             "critical_issues": [],
         }
-
-        # Analyze system metrics
         if "system" in all_metrics and "error" not in all_metrics["system"]:
             system = all_metrics["system"]
-
             if system["cpu"]["usage_percent"] > 80:
                 analysis["warnings"].append("High CPU usage detected")
                 analysis["overall_status"] = "warning"
-
             if system["memory"]["percent"] > 85:
                 analysis["warnings"].append("High memory usage detected")
                 analysis["overall_status"] = "warning"
-
             if system["disk"]["percent"] > 90:
                 analysis["critical_issues"].append("Disk space critically low")
                 analysis["overall_status"] = "critical"
-
-        # Analyze database metrics
         if "database" in all_metrics and "error" not in all_metrics["database"]:
             db = all_metrics["database"]
-
             if db.get("pool_used", 0) / max(db.get("pool_size", 1), 1) > 0.8:
                 analysis["warnings"].append("Database connection pool usage high")
-
             if "slow_queries" in db and len(db["slow_queries"]) > 5:
                 analysis["recommendations"].append("Consider optimizing slow queries")
-
-        # Analyze cache metrics
         if "cache" in all_metrics and "error" not in all_metrics["cache"]:
             cache = all_metrics["cache"]
-
             if cache.get("connected", False):
                 hit_rate = cache.get("hit_rate", 0)
                 if hit_rate < 70:
@@ -302,13 +276,11 @@ async def get_performance_report():
             else:
                 analysis["critical_issues"].append("Cache is not connected")
                 analysis["overall_status"] = "critical"
-
         return {
             "timestamp": datetime.now().isoformat(),
             "analysis": analysis,
             "metrics": all_metrics,
         }
-
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to generate performance report: {str(e)}"

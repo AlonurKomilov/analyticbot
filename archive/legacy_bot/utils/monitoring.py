@@ -39,14 +39,14 @@ class PerformanceStats:
         """Calculate success rate percentage"""
         if self.total_requests == 0:
             return 0.0
-        return (self.successful_requests / self.total_requests) * 100
+        return self.successful_requests / self.total_requests * 100
 
     @property
     def error_rate(self) -> float:
         """Calculate error rate percentage"""
         if self.total_requests == 0:
             return 0.0
-        return (self.failed_requests / self.total_requests) * 100
+        return self.failed_requests / self.total_requests * 100
 
     @property
     def avg_response_time(self) -> float:
@@ -66,7 +66,7 @@ class MetricsCollector:
         self._lock = threading.RLock()
         self._start_time = datetime.now()
 
-    def record_metric(self, name: str, value: float, labels: dict[str, str] | None = None):
+    def record_metric(self, name: str, value: float, labels: (dict[str, str] | None) = None):
         """Record a metric value"""
         with self._lock:
             metric_data = MetricData(timestamp=datetime.now(), value=value, labels=labels or {})
@@ -77,7 +77,6 @@ class MetricsCollector:
         with self._lock:
             stats = self._performance_stats[endpoint]
             stats.total_requests += 1
-
             if success:
                 stats.successful_requests += 1
                 stats.total_response_time += response_time
@@ -86,20 +85,17 @@ class MetricsCollector:
             else:
                 stats.failed_requests += 1
 
-    def get_metric_values(self, name: str, since: datetime | None = None) -> list[MetricData]:
+    def get_metric_values(self, name: str, since: (datetime | None) = None) -> list[MetricData]:
         """Get metric values, optionally filtered by time"""
         with self._lock:
             if name not in self._metrics:
                 return []
-
             metrics = list(self._metrics[name])
-
             if since:
                 metrics = [m for m in metrics if m.timestamp >= since]
-
             return metrics
 
-    def get_performance_stats(self, endpoint: str | None = None) -> dict[str, PerformanceStats]:
+    def get_performance_stats(self, endpoint: (str | None) = None) -> dict[str, PerformanceStats]:
         """Get performance statistics"""
         with self._lock:
             if endpoint:
@@ -111,16 +107,13 @@ class MetricsCollector:
         with self._lock:
             now = datetime.now()
             uptime = now - self._start_time
-
-            # Calculate overall stats
             total_requests = sum(stats.total_requests for stats in self._performance_stats.values())
             total_errors = sum(stats.failed_requests for stats in self._performance_stats.values())
-
             return {
                 "uptime_seconds": uptime.total_seconds(),
                 "total_requests": total_requests,
                 "total_errors": total_errors,
-                "overall_error_rate": (total_errors / total_requests * 100)
+                "overall_error_rate": total_errors / total_requests * 100
                 if total_requests > 0
                 else 0,
                 "endpoints": len(self._performance_stats),
@@ -131,15 +124,12 @@ class MetricsCollector:
     def cleanup_old_metrics(self):
         """Remove old metrics to prevent memory leaks"""
         cutoff_time = datetime.now() - self._max_age
-
         with self._lock:
             for metric_name, metrics in self._metrics.items():
-                # Remove old metrics
                 while metrics and metrics[0].timestamp < cutoff_time:
                     metrics.popleft()
 
 
-# Global metrics collector instance
 metrics = MetricsCollector()
 
 
@@ -209,30 +199,22 @@ class HealthMonitor:
             "checks": {},
             "timestamp": datetime.now().isoformat(),
         }
-
         unhealthy_count = 0
-
         for name, check_config in self._checks.items():
             try:
-                # Run check with timeout
                 check_func = check_config["function"]
                 timeout = check_config["timeout"]
-
                 if asyncio.iscoroutinefunction(check_func):
                     result = await asyncio.wait_for(check_func(), timeout=timeout)
                 else:
-                    # Run sync function in thread pool
                     result = await asyncio.get_event_loop().run_in_executor(None, check_func)
-
                 results["checks"][name] = {
                     "status": "healthy",
                     "result": result,
-                    "response_time": timeout,  # This would need actual timing
+                    "response_time": timeout,
                 }
-
                 check_config["last_result"] = result
                 check_config["last_check"] = datetime.now()
-
             except TimeoutError:
                 unhealthy_count += 1
                 results["checks"][name] = {
@@ -241,24 +223,17 @@ class HealthMonitor:
                 }
             except Exception as e:
                 unhealthy_count += 1
-                results["checks"][name] = {
-                    "status": "unhealthy",
-                    "error": str(e),
-                }
+                results["checks"][name] = {"status": "unhealthy", "error": str(e)}
                 logger.error(f"Health check '{name}' failed: {e}")
-
-        # Determine overall status
         if unhealthy_count > 0:
             if unhealthy_count == len(self._checks):
                 results["overall_status"] = "unhealthy"
             else:
                 results["overall_status"] = "degraded"
-
         self._last_check_time = datetime.now()
         return results
 
 
-# Global health monitor instance
 health_monitor = HealthMonitor()
 
 
@@ -268,7 +243,7 @@ def setup_default_health_checks():
     async def check_database():
         """Check database connectivity"""
         try:
-            from bot.database.db import is_db_healthy
+            from apps.bot.database.db import is_db_healthy
 
             return await is_db_healthy()
         except Exception as e:
@@ -286,10 +261,8 @@ def setup_default_health_checks():
         except ImportError:
             return {"message": "Memory monitoring not available (psutil required)"}
 
-    # Register default checks
     health_monitor.register_check("database", check_database)
     health_monitor.register_check("memory", check_memory_usage)
 
 
-# Initialize default health checks
 setup_default_health_checks()

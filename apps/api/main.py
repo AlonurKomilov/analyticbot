@@ -2,17 +2,17 @@
 AnalyticBot API - Main Entry Point
 Unified FastAPI application with layered architecture and secure configuration
 """
-from contextlib import asynccontextmanager
-from typing import List
-from uuid import UUID
-from datetime import datetime
 
-from fastapi import FastAPI, Depends, HTTPException
+from contextlib import asynccontextmanager
+from datetime import datetime
+from uuid import UUID
+
+from fastapi import Depends, FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 
+from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
 from config import settings
-from core import ScheduleService, DeliveryService, ScheduledPost
-from apps.api.deps import get_schedule_service, get_delivery_service, cleanup_db_pool
+from core import DeliveryService, ScheduleService
 
 
 @asynccontextmanager
@@ -24,29 +24,20 @@ async def lifespan(app: FastAPI):
     await cleanup_db_pool()
 
 
-app = FastAPI(
-    title="AnalyticBot API", 
-    version="v1",
-    debug=settings.DEBUG,
-    lifespan=lifespan
-)
+app = FastAPI(title="AnalyticBot API", version="v1", debug=settings.DEBUG, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.api.CORS_ORIGINS,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 
 @app.get("/health")
 def health():
     """Health check endpoint"""
-    return {
-        "status": "ok",
-        "environment": settings.ENVIRONMENT,
-        "debug": settings.DEBUG
-    }
+    return {"status": "ok", "environment": settings.ENVIRONMENT, "debug": settings.DEBUG}
 
 
 # Schedule endpoints using dependency injection
@@ -57,8 +48,8 @@ async def create_scheduled_post(
     channel_id: str,
     user_id: str,
     scheduled_at: datetime,
-    tags: List[str] = None,
-    schedule_service: ScheduleService = Depends(get_schedule_service)
+    tags: list[str] = None,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """Create a new scheduled post"""
     try:
@@ -68,14 +59,14 @@ async def create_scheduled_post(
             channel_id=channel_id,
             user_id=user_id,
             scheduled_at=scheduled_at,
-            tags=tags
+            tags=tags,
         )
-        
+
         return {
             "id": str(post.id),
             "title": post.title,
             "scheduled_at": post.scheduled_at.isoformat(),
-            "status": post.status.value
+            "status": post.status.value,
         }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -83,15 +74,14 @@ async def create_scheduled_post(
 
 @app.get("/schedule/{post_id}")
 async def get_scheduled_post(
-    post_id: UUID,
-    schedule_service: ScheduleService = Depends(get_schedule_service)
+    post_id: UUID, schedule_service: ScheduleService = Depends(get_schedule_service)
 ):
     """Get a scheduled post by ID"""
     post = await schedule_service.get_post(post_id)
-    
+
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    
+
     return {
         "id": str(post.id),
         "title": post.title,
@@ -101,7 +91,7 @@ async def get_scheduled_post(
         "scheduled_at": post.scheduled_at.isoformat(),
         "status": post.status.value,
         "tags": post.tags,
-        "created_at": post.created_at.isoformat()
+        "created_at": post.created_at.isoformat(),
     }
 
 
@@ -110,33 +100,28 @@ async def get_user_posts(
     user_id: str,
     limit: int = 50,
     offset: int = 0,
-    schedule_service: ScheduleService = Depends(get_schedule_service)
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """Get all scheduled posts for a user"""
-    posts = await schedule_service.get_user_posts(
-        user_id=user_id,
-        limit=limit,
-        offset=offset
-    )
-    
+    posts = await schedule_service.get_user_posts(user_id=user_id, limit=limit, offset=offset)
+
     return {
         "posts": [
             {
                 "id": str(post.id),
                 "title": post.title,
                 "scheduled_at": post.scheduled_at.isoformat(),
-                "status": post.status.value
+                "status": post.status.value,
             }
             for post in posts
         ],
-        "total": len(posts)
+        "total": len(posts),
     }
 
 
 @app.delete("/schedule/{post_id}")
 async def cancel_scheduled_post(
-    post_id: UUID,
-    schedule_service: ScheduleService = Depends(get_schedule_service)
+    post_id: UUID, schedule_service: ScheduleService = Depends(get_schedule_service)
 ):
     """Cancel a scheduled post"""
     try:
@@ -151,8 +136,7 @@ async def cancel_scheduled_post(
 
 @app.get("/delivery/stats")
 async def get_delivery_stats(
-    channel_id: str = None,
-    delivery_service: DeliveryService = Depends(get_delivery_service)
+    channel_id: str = None, delivery_service: DeliveryService = Depends(get_delivery_service)
 ):
     """Get delivery statistics"""
     stats = await delivery_service.get_delivery_stats(channel_id=channel_id)

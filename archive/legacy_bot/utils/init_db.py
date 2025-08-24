@@ -2,12 +2,11 @@ import asyncio
 import logging
 
 from asyncpg import Pool
-from bot.database import db
+
+from apps.bot.database import db
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# --- STEP 1: Create all tables WITHOUT any foreign key constraints ---
 CREATE_TABLES_COMMANDS = [
     """
     CREATE TABLE IF NOT EXISTS plans (
@@ -59,8 +58,6 @@ CREATE_TABLES_COMMANDS = [
     );
     """,
 ]
-
-# --- STEP 2: Add all the foreign key constraints AFTER the tables exist ---
 ADD_CONSTRAINTS_COMMANDS = [
     "ALTER TABLE users ADD CONSTRAINT fk_users_plan_id FOREIGN KEY (plan_id) REFERENCES plans(id);",
     "ALTER TABLE channels ADD CONSTRAINT fk_channels_user_id FOREIGN KEY (user_id) REFERENCES users(id);",
@@ -75,19 +72,16 @@ async def main():
     """Manually creates all tables first, then adds all foreign key constraints."""
     logger.info("Connecting to the database...")
     db_pool: Pool = await db.create_pool()
-
     try:
         async with db_pool.acquire() as connection:
             logger.info("--- Step 1: Creating tables without constraints ---")
             for statement in CREATE_TABLES_COMMANDS:
                 await connection.execute(statement)
             logger.info("✅ All tables created successfully.")
-
             logger.info("--- Step 2: Adding foreign key constraints ---")
             for statement in ADD_CONSTRAINTS_COMMANDS:
                 await connection.execute(statement)
             logger.info("✅ All foreign key constraints added successfully!")
-
     except Exception as e:
         logger.error(f"❌ An error occurred during database initialization: {e}", exc_info=True)
     finally:

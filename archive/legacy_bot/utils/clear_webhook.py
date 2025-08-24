@@ -3,20 +3,17 @@ import logging
 import os
 
 from aiogram import Bot
-from bot.config import settings
 
-# Logger sozlamasi
+from apps.bot.config import settings
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
 token = None
 try:
     token = settings.BOT_TOKEN.get_secret_value()
 except Exception:
     token = os.getenv("BOT_TOKEN")
-
-PLACEHOLDER = "replace_me"  # nosec B105
+PLACEHOLDER = "replace_me"
 if not token or token == PLACEHOLDER:
     logger.info("[clear_webhook] BOT_TOKEN is not set; skipping (CI-safe).")
     raise SystemExit(0)
@@ -26,10 +23,8 @@ async def main():
     """Asosiy asinxron funksiya."""
     bot_token = settings.BOT_TOKEN.get_secret_value()
     logger.info(f"Attempting to clear webhook for bot with token ending in ...{bot_token[-6:]}")
-
     bot = Bot(token=bot_token)
     try:
-        # Webhook'ni o'chiramiz va kutilayotgan yangilanishlarni tozalaymiz
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("✅ Webhook was successfully deleted.")
         logger.info("You can now run the bot in polling mode.")

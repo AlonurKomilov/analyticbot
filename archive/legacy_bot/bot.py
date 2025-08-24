@@ -7,23 +7,19 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
-from bot.config import settings
-from bot.config import settings as app_settings
-from bot.container import container
-from bot.handlers import admin_handlers, user_handlers
-from bot.middlewares.dependency_middleware import DependencyMiddleware
-from bot.middlewares.i18n import i18n_middleware
 
-# Logger sozlamalari
+from apps.bot.config import settings
+from apps.bot.config import settings as app_settings
+from apps.bot.container import container
+from apps.bot.handlers import admin_handlers, user_handlers
+from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
+from apps.bot.middlewares.i18n import i18n_middleware
+
 if app_settings.LOG_FORMAT == "json":
 
     class _JsonFormatter(logging.Formatter):
-        def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
-            base = {
-                "level": record.levelname,
-                "name": record.name,
-                "message": record.getMessage(),
-            }
+        def format(self, record: logging.LogRecord) -> str:
+            base = {"level": record.levelname, "name": record.name, "message": record.getMessage()}
             if record.exc_info:
                 base["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(base, ensure_ascii=False)
@@ -42,10 +38,7 @@ async def main():
     """
     Botni ishga tushiruvchi asosiy funksiya.
     """
-    # DB pool konteyner orqali lazy yaratiladi (bir marta yaratiladi)
-    pool = await container.db_session()  # type: ignore[func-returns-value]
-
-    # Redis (FSM holatlari) – to'g'ri konfiguratsiya nomi REDIS_URL; fallback Memory
+    pool = await container.db_session()
     try:
         storage = RedisStorage.from_url(
             str(settings.REDIS_URL),
@@ -54,38 +47,23 @@ async def main():
     except Exception:
         logger.warning("Redis not available – falling back to in-memory FSM storage")
         storage = MemoryStorage()
-
-    # Bot va Dispatcher obyektlarini yaratish
     bot = Bot(
         token=settings.BOT_TOKEN.get_secret_value(),
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dp = Dispatcher(storage=storage)
-
-    # YAKUNIY TUZATISH: Middleware'larni to'g'ri tartibda ulaymiz
-
-    # 1. BIRINCHI bo'lib, har bir xabarga kerakli bog'liqliklar (masalan, DB ulanishi) qo'shiladi.
-    # DI middleware konteynerni oladi (oldingi noto'g'ri 'pool=' param o'chirildi)
     dp.update.outer_middleware(DependencyMiddleware(container))
-
-    # 2. IKKINCHI bo'lib, bog'liqliklar mavjud bo'lgandan so'ng, lokalizatsiya (i18n) ishlaydi.
     dp.update.outer_middleware(i18n_middleware)
-
-    # Handlers (buyruqlarga javob beruvchilar) ro'yxatdan o'tkaziladi
     dp.include_router(admin_handlers.router)
     dp.include_router(user_handlers.router)
-
     logger.info("Bot ishga tushirildi.")
-
     try:
-        # Botni ishga tushirish
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
-        # To'xtatilganda ulanishlarni yopish
         await dp.storage.close()
         await bot.session.close()
         try:
-            await pool.close()  # type: ignore[attr-defined]
+            await pool.close()
         except Exception:
             pass
 

@@ -6,8 +6,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 
-from bot.database.repositories.payment_repository import PaymentRepository
-from bot.models.payment import (
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi.security import HTTPBearer
+from pydantic import BaseModel, Field
+
+from apps.bot.database.repositories.payment_repository import PaymentRepository
+from apps.bot.models.payment import (
     BillingCycle,
     PaymentCreate,
     PaymentMethodCreate,
@@ -18,10 +22,7 @@ from bot.models.payment import (
     SubscriptionResponse,
     SubscriptionStatus,
 )
-from bot.services.payment_service import PaymentService
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
-from fastapi.security import HTTPBearer
-from pydantic import BaseModel, Field
+from apps.bot.services.payment_service import PaymentService
 
 
 class PaymentStats(BaseModel):
@@ -76,7 +77,6 @@ class PlanWithPricing(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        # Calculate yearly savings (monthly * 12 - yearly)
         monthly_yearly_cost = self.price_monthly * 12
         self.savings_yearly = monthly_yearly_cost - self.price_yearly
 
@@ -90,39 +90,30 @@ class WebhookRequest(BaseModel):
     webhook_secret: str
 
 
-# Router setup
 payment_router = APIRouter(prefix="/payment", tags=["payments"])
 security = HTTPBearer()
 
 
-# Mock dependency functions - replace with real authentication
 async def get_current_user_id(token: str = Depends(security)) -> int:
     """Get current user ID from JWT token"""
-    # TODO: Implement real JWT validation
-    return 1  # Mock user ID
+    return 1
 
 
 async def get_payment_service() -> PaymentService:
     """Get payment service instance"""
-    # TODO: Implement proper dependency injection
-    from bot.database.connection import get_db_pool
+    from apps.bot.database.connection import get_db_pool
 
     pool = await get_db_pool()
     repository = PaymentRepository(pool)
     service = PaymentService(repository)
+    from apps.bot.services.payment_service import ClickAdapter, PaymeAdapter, StripeAdapter
 
-    # Register adapters - TODO: get from config
-    from bot.services.payment_service import ClickAdapter, PaymeAdapter, StripeAdapter
-
-    # Mock configurations - replace with real config
     service.register_adapter(StripeAdapter("sk_test_...", "whsec_..."))
     service.register_adapter(PaymeAdapter("merchant_123", "secret_key"))
     service.register_adapter(ClickAdapter("merchant_456", "service_789", "secret"))
-
     return service
 
 
-# Payment Method Endpoints
 @payment_router.post("/methods", response_model=PaymentMethodResponse)
 async def create_payment_method(
     payment_method_data: PaymentMethodCreate,
@@ -157,25 +148,20 @@ async def delete_payment_method(
     payment_service: PaymentService = Depends(get_payment_service),
 ):
     """Delete a payment method"""
-    # Verify ownership
     methods = await payment_service.get_user_payment_methods(user_id)
     method_exists = any(method.id == method_id for method in methods)
-
     if not method_exists:
         raise HTTPException(status_code=404, detail="Payment method not found")
-
     success = await payment_service.repository.delete_payment_method(method_id)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete payment method")
-
     return {"message": "Payment method deleted successfully"}
 
 
-# Payment Processing Endpoints
 @payment_router.post("/process", response_model=PaymentResponse)
 async def process_payment(
     payment_data: PaymentCreate,
-    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
+    idempotency_key: (str | None) = Header(None, alias="Idempotency-Key"),
     user_id: int = Depends(get_current_user_id),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -200,7 +186,6 @@ async def get_payment_history(
     """Get user's payment history"""
     if limit > 100:
         raise HTTPException(status_code=400, detail="Limit cannot exceed 100")
-
     payments = await payment_service.repository.get_user_payments(user_id, limit, offset)
     return [PaymentResponse(**payment) for payment in payments]
 
@@ -215,15 +200,11 @@ async def get_payment(
     payment = await payment_service.repository.get_payment(payment_id)
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
-
-    # Verify ownership
     if payment["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Access denied")
-
     return PaymentResponse(**payment)
 
 
-# Subscription Endpoints
 @payment_router.post("/subscriptions", response_model=SubscriptionResponse)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
@@ -250,7 +231,6 @@ async def get_current_subscription(
     subscription = await payment_service.repository.get_user_active_subscription(user_id)
     if not subscription:
         return None
-
     return SubscriptionResponse(
         id=subscription["id"],
         user_id=subscription["user_id"],
@@ -276,22 +256,16 @@ async def cancel_subscription(
     subscription = await payment_service.repository.get_user_active_subscription(user_id)
     if not subscription:
         raise HTTPException(status_code=404, detail="No active subscription found")
-
     success = await payment_service.repository.update_subscription_status(
         subscription_id=subscription["id"],
         status=SubscriptionStatus.CANCELED,
         canceled_at=datetime.utcnow(),
     )
-
     if not success:
         raise HTTPException(status_code=500, detail="Failed to cancel subscription")
-
-    # TODO: Cancel with payment provider if provider_subscription_id exists
-
     return {"message": "Subscription canceled successfully"}
 
 
-# Plan Endpoints
 @payment_router.get("/plans", response_model=list[PlanWithPricing])
 async def get_pricing_plans(payment_service: PaymentService = Depends(get_payment_service)):
     """Get all available pricing plans"""
@@ -305,11 +279,9 @@ async def get_plan(plan_id: int, payment_service: PaymentService = Depends(get_p
     plan = await payment_service.repository.get_plan_with_pricing(plan_id)
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
-
     return PlanWithPricing(**plan)
 
 
-# Webhook Endpoints
 @payment_router.post("/webhooks/{provider}")
 async def handle_payment_webhook(
     provider: PaymentProvider,
@@ -320,34 +292,27 @@ async def handle_payment_webhook(
     """Handle payment provider webhooks"""
     try:
         payload = await request.body()
-
-        # Get webhook secret from config - TODO: implement proper config
         webhook_secrets = {
             PaymentProvider.STRIPE: "whsec_test_secret",
             PaymentProvider.PAYME: "payme_webhook_secret",
             PaymentProvider.CLICK: "click_webhook_secret",
         }
-
         webhook_secret = webhook_secrets.get(provider)
         if not webhook_secret:
             raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider}")
-
         result = await payment_service.handle_webhook(
             provider=provider.value,
             payload=payload,
             signature=signature,
             webhook_secret=webhook_secret,
         )
-
         return {"message": "Webhook processed", "result": result}
-
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 
 
-# Analytics Endpoints
 @payment_router.get("/analytics/revenue", response_model=PaymentStats)
 async def get_revenue_analytics(
     days: int = 30, payment_service: PaymentService = Depends(get_payment_service)
@@ -355,10 +320,8 @@ async def get_revenue_analytics(
     """Get revenue analytics for specified period"""
     if days > 365:
         raise HTTPException(status_code=400, detail="Maximum 365 days allowed")
-
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
-
     stats = await payment_service.repository.get_revenue_stats(start_date, end_date)
     return PaymentStats(**stats)
 
@@ -372,7 +335,6 @@ async def get_subscription_analytics(
     return SubscriptionStats(**stats)
 
 
-# Health Check
 @payment_router.get("/health")
 async def payment_health_check():
     """Health check for payment system"""

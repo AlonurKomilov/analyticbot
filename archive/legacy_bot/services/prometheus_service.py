@@ -7,7 +7,6 @@ import logging
 import time
 from functools import wraps
 
-from bot.utils.error_handler import ErrorContext, ErrorHandler
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -17,138 +16,111 @@ from prometheus_client import (
     generate_latest,
 )
 
+from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+
 logger = logging.getLogger(__name__)
 
 
 class PrometheusService:
     """Service for Prometheus metrics collection and exposition"""
 
-    def __init__(self, registry: CollectorRegistry | None = None):
+    def __init__(self, registry: (CollectorRegistry | None) = None):
         self.registry = registry or CollectorRegistry()
         self._setup_metrics()
 
     def _setup_metrics(self):
         """Initialize Prometheus metrics"""
-
-        # Application metrics
         self.app_info = Gauge(
             "app_info",
             "Application information",
             ["version", "environment"],
             registry=self.registry,
         )
-
-        # Request metrics
         self.http_requests_total = Counter(
             "http_requests_total",
             "Total HTTP requests",
             ["method", "endpoint", "status_code"],
             registry=self.registry,
         )
-
         self.http_request_duration_seconds = Histogram(
             "http_request_duration_seconds",
             "HTTP request duration in seconds",
             ["method", "endpoint"],
             registry=self.registry,
         )
-
-        # Telegram Bot metrics
         self.telegram_api_requests_total = Counter(
             "telegram_api_requests_total",
             "Total Telegram API requests",
             ["method", "status"],
             registry=self.registry,
         )
-
         self.telegram_api_request_duration_seconds = Histogram(
             "telegram_api_request_duration_seconds",
             "Telegram API request duration in seconds",
             ["method"],
             registry=self.registry,
         )
-
         self.telegram_updates_processed_total = Counter(
             "telegram_updates_processed_total",
             "Total Telegram updates processed",
             ["handler_type"],
             registry=self.registry,
         )
-
-        # Database metrics
         self.database_connections_active = Gauge(
             "database_connections_active", "Active database connections", registry=self.registry
         )
-
         self.database_query_duration_seconds = Histogram(
             "database_query_duration_seconds",
             "Database query duration in seconds",
             ["operation"],
             registry=self.registry,
         )
-
         self.database_queries_total = Counter(
             "database_queries_total",
             "Total database queries",
             ["operation", "status"],
             registry=self.registry,
         )
-
-        # Celery task metrics
         self.celery_tasks_total = Counter(
             "celery_tasks_total",
             "Total Celery tasks",
             ["task_name", "status"],
             registry=self.registry,
         )
-
         self.celery_task_duration_seconds = Histogram(
             "celery_task_duration_seconds",
             "Celery task duration in seconds",
             ["task_name"],
             registry=self.registry,
         )
-
         self.celery_workers_active = Gauge(
             "celery_workers_active", "Active Celery workers", registry=self.registry
         )
-
-        # Business metrics
         self.channels_total = Gauge(
             "channels_total", "Total number of channels", registry=self.registry
         )
-
         self.users_total = Gauge("users_total", "Total number of users", registry=self.registry)
-
         self.posts_scheduled = Gauge(
             "posts_scheduled", "Number of scheduled posts", registry=self.registry
         )
-
         self.posts_sent_total = Counter(
             "posts_sent_total", "Total posts sent", ["channel_id"], registry=self.registry
         )
-
         self.post_views_updated_total = Counter(
             "post_views_updated_total", "Total post views updated", registry=self.registry
         )
-
-        # System metrics
         self.system_memory_usage = Gauge(
             "system_memory_usage_percent", "System memory usage percentage", registry=self.registry
         )
-
         self.system_cpu_usage = Gauge(
             "system_cpu_usage_percent", "System CPU usage percentage", registry=self.registry
         )
-
-        # Health metrics
         self.health_check_status = Gauge(
             "health_check_status",
             "Health check status (1=healthy, 0=unhealthy)",
             ["check_name"],
             registry=self.registry,
         )
-
         logger.info("Prometheus metrics initialized")
 
     def record_http_request(self, method: str, endpoint: str, status_code: int, duration: float):
@@ -156,7 +128,6 @@ class PrometheusService:
         self.http_requests_total.labels(
             method=method, endpoint=endpoint, status_code=status_code
         ).inc()
-
         self.http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(
             duration
         )
@@ -224,11 +195,10 @@ class PrometheusService:
         return CONTENT_TYPE_LATEST
 
 
-# Global Prometheus service instance
 prometheus_service = PrometheusService()
 
 
-def prometheus_timer(metric_name: str, labels: dict[str, str] | None = None):
+def prometheus_timer(metric_name: str, labels: (dict[str, str] | None) = None):
     """Decorator to time function execution and record in Prometheus"""
 
     def decorator(func):
@@ -246,7 +216,6 @@ def prometheus_timer(metric_name: str, labels: dict[str, str] | None = None):
                     raise
                 finally:
                     duration = time.time() - start_time
-
                     if metric_name == "telegram_api":
                         prometheus_service.record_telegram_api_request(
                             func.__name__, status, duration
@@ -271,7 +240,6 @@ def prometheus_timer(metric_name: str, labels: dict[str, str] | None = None):
                     raise
                 finally:
                     duration = time.time() - start_time
-
                     if metric_name == "telegram_api":
                         prometheus_service.record_telegram_api_request(
                             func.__name__, status, duration
@@ -289,52 +257,39 @@ def prometheus_timer(metric_name: str, labels: dict[str, str] | None = None):
 async def collect_system_metrics():
     """Collect system metrics for Prometheus"""
     try:
-        # Try to get system metrics
         try:
             import psutil
 
             memory = psutil.virtual_memory()
             cpu = psutil.cpu_percent(interval=1)
-
             prometheus_service.update_system_metrics(memory.percent, cpu)
-
         except ImportError:
             logger.warning("psutil not available, system metrics disabled")
-
-        # Collect database metrics
         try:
-            from bot.database.db import db_manager
+            from apps.bot.database.db import db_manager
 
             if db_manager.pool:
-                # Get pool size if available
                 pool_size = getattr(db_manager.pool, "get_size", lambda: 0)()
                 prometheus_service.update_database_connections(pool_size)
         except Exception as e:
             context = ErrorContext().add("operation", "collect_database_metrics")
             ErrorHandler.log_error(e, context)
-
-        # Collect business metrics
         try:
-            from bot.container import Container
+            from apps.bot.container import Container
 
             container = Container()
-
             channel_repo = await container.channel_repository()
             user_repo = await container.user_repository()
             scheduler_repo = await container.scheduler_repository()
-
             channels_count = await channel_repo.count()
             users_count = await user_repo.count()
             scheduled_posts_count = await scheduler_repo.get_scheduled_count()
-
             prometheus_service.update_business_metrics(
                 channels_count, users_count, scheduled_posts_count
             )
-
         except Exception as e:
             context = ErrorContext().add("operation", "collect_business_metrics")
             ErrorHandler.log_error(e, context)
-
     except Exception as e:
         context = ErrorContext().add("operation", "collect_system_metrics")
         ErrorHandler.log_error(e, context)
@@ -350,9 +305,7 @@ def setup_prometheus_middleware():
     class PrometheusMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request: Request, call_next):
             start_time = time.time()
-
             response = await call_next(request)
-
             duration = time.time() - start_time
             prometheus_service.record_http_request(
                 method=request.method,
@@ -360,7 +313,6 @@ def setup_prometheus_middleware():
                 status_code=response.status_code,
                 duration=duration,
             )
-
             return response
 
     return PrometheusMiddleware

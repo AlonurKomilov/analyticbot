@@ -15,21 +15,18 @@ from datetime import datetime
 from typing import Any
 
 import uvicorn
-from bot.services.ml.churn_predictor import ChurnPredictor
-from bot.services.ml.content_optimizer import ContentOptimizer
-from bot.services.ml.engagement_analyzer import EngagementAnalyzer
-
-# Import our ML services
-from bot.services.ml.prediction_service import PredictionService
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-# Configure logging
+from apps.bot.services.ml.churn_predictor import ChurnPredictor
+from apps.bot.services.ml.content_optimizer import ContentOptimizer
+from apps.bot.services.ml.engagement_analyzer import EngagementAnalyzer
+from apps.bot.services.ml.prediction_service import PredictionService
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Pydantic models for API
 class ContentAnalysisRequest(BaseModel):
     text: str = Field(..., description="Content text to analyze", max_length=5000)
     media_urls: list[str] | None = Field(None, description="List of media URLs")
@@ -87,7 +84,6 @@ class HealthResponse(BaseModel):
     version: str = "2.5.0"
 
 
-# Initialize FastAPI app
 app = FastAPI(
     title="🤖 AnalyticBot AI/ML API",
     description="Advanced analytics and AI-powered insights for AnalyticBot",
@@ -95,8 +91,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
-
-# Global services (will be initialized on startup)
 ml_services = {}
 
 
@@ -112,24 +106,16 @@ async def startup_event():
     """Initialize ML services on startup"""
     try:
         logger.info("🚀 Starting AI/ML API services...")
-
-        # Initialize core ML services
         prediction_service = PredictionService()
         content_optimizer = ContentOptimizer()
         churn_predictor = ChurnPredictor()
-
-        # Initialize models
         await prediction_service.initialize_models()
         await churn_predictor.initialize_model()
-
-        # Create engagement analyzer (orchestrator)
         engagement_analyzer = EngagementAnalyzer(
             prediction_service=prediction_service,
             content_optimizer=content_optimizer,
             churn_predictor=churn_predictor,
         )
-
-        # Store services globally
         ml_services.update(
             {
                 "prediction_service": prediction_service,
@@ -138,9 +124,7 @@ async def startup_event():
                 "engagement_analyzer": engagement_analyzer,
             }
         )
-
         logger.info("✅ AI/ML services initialized successfully")
-
     except Exception as e:
         logger.error(f"❌ Failed to initialize ML services: {e}")
         raise
@@ -168,24 +152,18 @@ async def root():
 async def health_check(services: dict = Depends(get_ml_services)):
     """🏥 Comprehensive health check for all ML services"""
     try:
-        # Check all services
         service_health = {}
-
         for service_name, service in services.items():
             if hasattr(service, "health_check"):
                 service_health[service_name] = await service.health_check()
             else:
                 service_health[service_name] = {"status": "available"}
-
-        # Overall health
         all_healthy = all(health.get("status") == "healthy" for health in service_health.values())
-
         return HealthResponse(
             status="healthy" if all_healthy else "degraded",
             services=service_health,
             timestamp=datetime.now(),
         )
-
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail=f"Health check failed: {str(e)}")
@@ -207,20 +185,15 @@ async def analyze_content(
     """
     try:
         logger.info(f"📝 Analyzing content: {len(request.text)} characters")
-
         engagement_analyzer = services["engagement_analyzer"]
-
-        # Perform comprehensive analysis
         analysis = await engagement_analyzer.analyze_content_before_publishing(
             content_text=request.text,
             media_urls=request.media_urls,
             channel_id=request.channel_id,
             scheduled_time=request.scheduled_time,
         )
-
         if "error" in analysis:
             raise HTTPException(status_code=422, detail=analysis["error"])
-
         return ContentAnalysisResponse(
             overall_score=analysis["publishing_score"]["overall_score"],
             content_analysis=analysis["content_analysis"],
@@ -231,7 +204,6 @@ async def analyze_content(
             publishing_score=analysis["publishing_score"],
             timestamp=datetime.now(),
         )
-
     except HTTPException:
         raise
     except Exception as e:
@@ -253,16 +225,12 @@ async def analyze_churn_risk(request: ChurnRiskRequest, services: dict = Depends
     """
     try:
         logger.info(f"⚠️ Analyzing churn risk for user {request.user_id}")
-
         churn_predictor = services["churn_predictor"]
-
-        # Predict churn risk
         assessment = await churn_predictor.predict_churn_risk(
             user_id=request.user_id,
             channel_id=request.channel_id,
             force_refresh=request.force_refresh,
         )
-
         return ChurnRiskResponse(
             user_id=assessment.user_id,
             churn_probability=assessment.churn_probability,
@@ -275,7 +243,6 @@ async def analyze_churn_risk(request: ChurnRiskRequest, services: dict = Depends
             user_segment=assessment.user_segment,
             analysis_date=assessment.analysis_date,
         )
-
     except Exception as e:
         logger.error(f"❌ Churn analysis failed: {e}")
         raise HTTPException(status_code=500, detail=f"Churn analysis failed: {str(e)}")
@@ -300,17 +267,13 @@ async def generate_performance_report(
     """
     try:
         logger.info(f"📊 Generating performance report for channel {request.channel_id}")
-
         engagement_analyzer = services["engagement_analyzer"]
-
-        # Generate report
         report = await engagement_analyzer.generate_performance_report(
             channel_id=request.channel_id,
             period_days=request.period_days,
             include_predictions=request.include_predictions,
             include_churn_analysis=request.include_churn_analysis,
         )
-
         return {
             "report_id": f"report_{request.channel_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             "channel_id": report.channel_id,
@@ -355,7 +318,6 @@ async def generate_performance_report(
                 "generated_at": report.generated_at.isoformat(),
             },
         }
-
     except Exception as e:
         logger.error(f"❌ Performance report generation failed: {e}")
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
@@ -377,14 +339,10 @@ async def get_real_time_insights(
     """
     try:
         logger.info(f"⚡ Getting real-time insights for channel {request.channel_id}")
-
         engagement_analyzer = services["engagement_analyzer"]
-
-        # Get real-time insights
         insights = await engagement_analyzer.get_real_time_insights(
             channel_id=request.channel_id, lookback_hours=request.lookback_hours
         )
-
         return {
             "channel_id": request.channel_id,
             "lookback_hours": request.lookback_hours,
@@ -409,7 +367,6 @@ async def get_real_time_insights(
             },
             "generated_at": datetime.now().isoformat(),
         }
-
     except Exception as e:
         logger.error(f"❌ Real-time insights failed: {e}")
         raise HTTPException(status_code=500, detail=f"Insights generation failed: {str(e)}")
@@ -420,29 +377,24 @@ async def optimize_content_real_time(text: str, services: dict = Depends(get_ml_
     """⚡ Real-time content optimization for live editing"""
     try:
         content_optimizer = services["content_optimizer"]
-
-        # Get real-time scores
         scores = await content_optimizer.score_content_realtime(text)
-
         return {
             "scores": scores,
             "recommendations": await content_optimizer._generate_optimization_tips(
                 await content_optimizer._extract_content_metrics(text),
-                scores.get("sentiment_score", 0.5) * 2 - 1,  # Convert to -1 to 1 range
-                70.0,  # Default readability
+                scores.get("sentiment_score", 0.5) * 2 - 1,
+                70.0,
                 scores.get("overall_score", 0.5) * 100,
             )
             if hasattr(content_optimizer, "_generate_optimization_tips")
             else [],
             "timestamp": datetime.now().isoformat(),
         }
-
     except Exception as e:
         logger.error(f"❌ Real-time optimization failed: {e}")
         raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
 
 
-# Error handlers
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     return {

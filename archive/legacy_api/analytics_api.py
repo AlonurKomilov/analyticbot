@@ -19,6 +19,6 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/status")
 async def analytics_status():
     """Return basic status for analytics subsystem."""
-    from bot.analytics import __all__  # lazy import to avoid heavy load on startup
+    from apps.bot.analytics import __all__
 
     return {"module": "bot.analytics", "version": "2.0.0", "components": len(__all__)}

@@ -10,35 +10,24 @@ import random
 from datetime import datetime, timedelta
 from typing import Any
 
-# Import analytics components from new bot structure
-from bot.analytics import (
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
+
+from apps.bot.analytics import (
     AdvancedDataProcessor,
     AIInsightsGenerator,
     DashboardFactory,
     PredictiveAnalyticsEngine,
 )
+from apps.bot.container import container
+from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from apps.bot.database.repositories.channel_repository import ChannelRepository
+from apps.bot.services.analytics_service import AnalyticsService
 
-# Import bot services
-from bot.container import container
-from bot.database.repositories.analytics_repository import AnalyticsRepository
-from bot.database.repositories.channel_repository import ChannelRepository
-from bot.services.analytics_service import AnalyticsService
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
-
-# Initialize logger
 logger = logging.getLogger(__name__)
-
-# Create router instance
 router = APIRouter(
-    prefix="/analytics",
-    tags=["Analytics"],
-    responses={404: {"description": "Not found"}},
+    prefix="/analytics", tags=["Analytics"], responses={(404): {"description": "Not found"}}
 )
-
-# =============================================================================
-# PYDANTIC MODELS
-# =============================================================================
 
 
 class ChannelCreate(BaseModel):
@@ -120,11 +109,6 @@ class PredictionRequest(BaseModel):
     parameters: dict[str, Any] | None = None
 
 
-# =============================================================================
-# DEPENDENCY INJECTION
-# =============================================================================
-
-
 async def get_analytics_service() -> AnalyticsService:
     """Get analytics service from container"""
     return container.resolve(AnalyticsService)
@@ -160,35 +144,24 @@ async def get_dashboard_factory() -> DashboardFactory:
     return DashboardFactory()
 
 
-# =============================================================================
-# MOCK DATA GENERATORS (for demo/testing purposes)
-# =============================================================================
-
-
 def generate_post_dynamics(hours_back: int = 24) -> list[PostDynamic]:
     """Generate mock post dynamics data"""
     data = []
     base_views = random.randint(1000, 5000)
-
     for i in range(hours_back):
         timestamp = datetime.now() - timedelta(hours=hours_back - i)
-
-        # Simulate realistic engagement patterns
         hour = timestamp.hour
-        day_factor = 1.2 if 9 <= hour <= 21 else 0.8  # More active during day
+        day_factor = 1.2 if 9 <= hour <= 21 else 0.8
         weekend_factor = 1.3 if timestamp.weekday() in [5, 6] else 1.0
-
         views = int(base_views * day_factor * weekend_factor * random.uniform(0.7, 1.3))
         likes = int(views * random.uniform(0.02, 0.08))
         shares = int(views * random.uniform(0.005, 0.02))
         comments = int(views * random.uniform(0.001, 0.01))
-
         data.append(
             PostDynamic(
                 timestamp=timestamp, views=views, likes=likes, shares=shares, comments=comments
             )
         )
-
     return data
 
 
@@ -208,13 +181,11 @@ def generate_top_posts(count: int = 10) -> list[TopPost]:
         "Technical update",
         "Special offer",
     ]
-
     for i in range(count):
         views = random.randint(500, 50000)
         likes = int(views * random.uniform(0.02, 0.12))
         shares = int(views * random.uniform(0.005, 0.03))
         comments = int(views * random.uniform(0.001, 0.02))
-
         posts.append(
             TopPost(
                 id=f"post_{i + 1}",
@@ -231,34 +202,28 @@ def generate_top_posts(count: int = 10) -> list[TopPost]:
                 else None,
             )
         )
-
-    # Sort by views descending
     return sorted(posts, key=lambda x: x.views, reverse=True)
 
 
 def generate_best_time_recommendations() -> list[BestTimeRecommendation]:
     """Generate mock best posting time recommendations"""
     recommendations = []
-
-    # Generate recommendations for different days and hours
     best_times = [
-        (1, 9, 0.85, 1250),  # Monday 9 AM
-        (1, 18, 0.92, 1450),  # Monday 6 PM
-        (2, 12, 0.78, 980),  # Tuesday noon
-        (3, 20, 0.88, 1320),  # Wednesday 8 PM
-        (4, 15, 0.82, 1100),  # Thursday 3 PM
-        (5, 19, 0.95, 1680),  # Friday 7 PM
-        (6, 14, 0.75, 890),  # Saturday 2 PM
-        (0, 16, 0.80, 1050),  # Sunday 4 PM
+        (1, 9, 0.85, 1250),
+        (1, 18, 0.92, 1450),
+        (2, 12, 0.78, 980),
+        (3, 20, 0.88, 1320),
+        (4, 15, 0.82, 1100),
+        (5, 19, 0.95, 1680),
+        (6, 14, 0.75, 890),
+        (0, 16, 0.8, 1050),
     ]
-
     for day, hour, confidence, engagement in best_times:
         recommendations.append(
             BestTimeRecommendation(
                 day=day, hour=hour, confidence=confidence, avg_engagement=engagement
             )
         )
-
     return recommendations
 
 
@@ -290,13 +255,7 @@ def generate_ai_recommendations() -> list[AIRecommendation]:
             confidence=0.83,
         ),
     ]
-
     return recommendations
-
-
-# =============================================================================
-# HEALTH AND STATUS ENDPOINTS
-# =============================================================================
 
 
 @router.get("/health", status_code=200)
@@ -315,7 +274,7 @@ async def analytics_health_check():
 async def analytics_status():
     """Return detailed status for analytics subsystem"""
     try:
-        from bot.analytics import __all__
+        from apps.bot.analytics import __all__
 
         return {
             "module": "bot.analytics",
@@ -331,11 +290,6 @@ async def analytics_status():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get analytics status",
         )
-
-
-# =============================================================================
-# CHANNEL MANAGEMENT ENDPOINTS
-# =============================================================================
 
 
 @router.get("/channels", response_model=list[ChannelResponse])
@@ -371,20 +325,17 @@ async def create_channel(
 ):
     """Create a new channel"""
     try:
-        # Check if channel with this telegram_id already exists
         existing_channel = await channel_repo.get_channel_by_telegram_id(channel_data.telegram_id)
         if existing_channel:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Channel with telegram_id {channel_data.telegram_id} already exists",
             )
-
         channel = await channel_repo.create_channel(
             name=channel_data.name,
             telegram_id=channel_data.telegram_id,
             description=channel_data.description,
         )
-
         return ChannelResponse(
             id=channel.id,
             name=channel.name,
@@ -414,7 +365,6 @@ async def get_channel(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Channel with ID {channel_id} not found",
             )
-
         return ChannelResponse(
             id=channel.id,
             name=channel.name,
@@ -432,29 +382,21 @@ async def get_channel(
         )
 
 
-# =============================================================================
-# ANALYTICS METRICS ENDPOINTS
-# =============================================================================
-
-
 @router.get("/metrics", response_model=list[AnalyticsMetrics])
 async def get_analytics_metrics(
-    channel_id: int | None = Query(None),
-    start_date: datetime | None = Query(None),
-    end_date: datetime | None = Query(None),
+    channel_id: (int | None) = Query(None),
+    start_date: (datetime | None) = Query(None),
+    end_date: (datetime | None) = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Get analytics metrics with optional filtering"""
     try:
-        # Set default date range if not provided
         end_date = end_date or datetime.utcnow()
-        start_date = start_date or (end_date - timedelta(days=30))
-
+        start_date = start_date or end_date - timedelta(days=30)
         metrics = await analytics_service.get_analytics_data(
             channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
-
         return [
             AnalyticsMetrics(
                 channel_id=metric.channel_id,
@@ -478,30 +420,25 @@ async def get_analytics_metrics(
 @router.get("/channels/{channel_id}/metrics", response_model=list[AnalyticsMetrics])
 async def get_channel_metrics(
     channel_id: int,
-    start_date: datetime | None = Query(None),
-    end_date: datetime | None = Query(None),
+    start_date: (datetime | None) = Query(None),
+    end_date: (datetime | None) = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
     channel_repo: ChannelRepository = Depends(get_channel_repository),
 ):
     """Get analytics metrics for a specific channel"""
     try:
-        # Verify channel exists
         channel = await channel_repo.get_channel(channel_id)
         if not channel:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Channel with ID {channel_id} not found",
             )
-
-        # Set default date range if not provided
         end_date = end_date or datetime.utcnow()
-        start_date = start_date or (end_date - timedelta(days=30))
-
+        start_date = start_date or end_date - timedelta(days=30)
         metrics = await analytics_service.get_analytics_data(
             channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
-
         return [
             AnalyticsMetrics(
                 channel_id=metric.channel_id,
@@ -524,15 +461,8 @@ async def get_channel_metrics(
         )
 
 
-# =============================================================================
-# DEMO/MOCK DATA ENDPOINTS (for testing and demonstration)
-# =============================================================================
-
-
 @router.get("/demo/post-dynamics", response_model=list[PostDynamic])
-async def get_demo_post_dynamics(
-    hours: int = Query(24, ge=1, le=168),  # Max 1 week
-):
+async def get_demo_post_dynamics(hours: int = Query(24, ge=1, le=168)):
     """Get demo post dynamics data for testing"""
     try:
         return generate_post_dynamics(hours)
@@ -579,18 +509,12 @@ async def get_demo_ai_recommendations():
         )
 
 
-# =============================================================================
-# ADVANCED ANALYTICS ENDPOINTS
-# =============================================================================
-
-
 @router.post("/data-processing/analyze")
 async def analyze_data(
     request: DataProcessingRequest, processor: AdvancedDataProcessor = Depends(get_data_processor)
 ):
     """Process and analyze data using advanced analytics engine"""
     try:
-        # This would integrate with the actual AdvancedDataProcessor
         result = {
             "status": "processed",
             "data_source": request.data_source,
@@ -598,7 +522,7 @@ async def analyze_data(
             "parameters": request.parameters,
             "timestamp": datetime.utcnow(),
             "result_summary": {
-                "records_processed": 1000,  # Mock data
+                "records_processed": 1000,
                 "quality_score": 0.92,
                 "anomalies_detected": 3,
                 "processing_time_ms": 245,
@@ -618,16 +542,11 @@ async def make_prediction(
 ):
     """Make predictions using ML models"""
     try:
-        # This would integrate with the actual PredictiveAnalyticsEngine
         result = {
             "status": "predicted",
             "model_type": request.model_type,
             "features_count": len(request.features),
-            "prediction": {
-                "value": 0.85,  # Mock prediction
-                "confidence": 0.78,
-                "model_accuracy": 0.92,
-            },
+            "prediction": {"value": 0.85, "confidence": 0.78, "model_accuracy": 0.92},
             "timestamp": datetime.utcnow(),
         }
         return result
@@ -644,7 +563,6 @@ async def get_ai_insights(
 ):
     """Generate AI-powered insights for a channel"""
     try:
-        # This would integrate with the actual AIInsightsGenerator
         insights = {
             "channel_id": channel_id,
             "insights": [
@@ -721,11 +639,9 @@ async def get_analytics_summary(
     try:
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
-
         summary = await analytics_service.get_analytics_summary(
             channel_id=channel_id, start_date=start_date, end_date=end_date
         )
-
         return {
             "channel_id": channel_id,
             "period_days": days,

@@ -5,6 +5,6 @@ Kept only for backward compatibility with imports expecting `standalone_performa
 Safe to remove after external references are updated.
 """
 
-from apis.standalone_performance_api import *  # type: ignore F401,F403
+from apps.api.standalone_performance_api import *
 
 __all__ = [name for name in globals().keys() if not name.startswith("_")]

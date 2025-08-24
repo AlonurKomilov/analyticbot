@@ -12,8 +12,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from bot.database.repositories.payment_repository import PaymentRepository
-from bot.models.payment import (
+from apps.bot.database.repositories.payment_repository import PaymentRepository
+from apps.bot.models.payment import (
     BillingCycle,
     PaymentCreate,
     PaymentMethodCreate,
@@ -51,8 +51,8 @@ class PaymentGatewayAdapter(ABC):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        description: (str | None) = None,
+        metadata: (dict[str, Any] | None) = None,
     ) -> dict[str, Any]:
         """Charge a payment method"""
         pass
@@ -64,7 +64,7 @@ class PaymentGatewayAdapter(ABC):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: int | None = None,
+        trial_days: (int | None) = None,
     ) -> dict[str, Any]:
         """Create recurring subscription"""
         pass
@@ -100,7 +100,6 @@ class StripeAdapter(PaymentGatewayAdapter):
         self, user_id: int, method_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Create Stripe payment method"""
-        # Simulate Stripe API call
         return {
             "id": f"pm_{uuid4().hex[:24]}",
             "type": "card",
@@ -118,15 +117,14 @@ class StripeAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        description: (str | None) = None,
+        metadata: (dict[str, Any] | None) = None,
     ) -> dict[str, Any]:
         """Process Stripe payment"""
-        # Simulate Stripe API call
         payment_intent_id = f"pi_{uuid4().hex[:24]}"
         return {
             "id": payment_intent_id,
-            "amount": int(amount * 100),  # Stripe uses cents
+            "amount": int(amount * 100),
             "currency": currency.lower(),
             "status": "succeeded",
             "payment_method": method_id,
@@ -141,12 +139,11 @@ class StripeAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: int | None = None,
+        trial_days: (int | None) = None,
     ) -> dict[str, Any]:
         """Create Stripe subscription"""
         subscription_id = f"sub_{uuid4().hex[:24]}"
         now = datetime.utcnow()
-
         return {
             "id": subscription_id,
             "status": "active",
@@ -174,30 +171,22 @@ class StripeAdapter(PaymentGatewayAdapter):
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify Stripe webhook signature"""
         try:
-            # Extract timestamp and signature from header
             elements = signature.split(",")
             timestamp = None
             signatures = []
-
             for element in elements:
                 key, value = element.split("=")
                 if key == "t":
                     timestamp = value
                 elif key.startswith("v"):
                     signatures.append(value)
-
             if not timestamp or not signatures:
                 return False
-
-            # Create expected signature
             payload_str = f"{timestamp}.{payload.decode()}"
             expected_sig = hmac.new(
                 secret.encode(), payload_str.encode(), hashlib.sha256
             ).hexdigest()
-
-            # Compare signatures
             return any(hmac.compare_digest(expected_sig, sig) for sig in signatures)
-
         except Exception as e:
             logger.error(f"Stripe webhook verification error: {e}")
             return False
@@ -205,12 +194,11 @@ class StripeAdapter(PaymentGatewayAdapter):
     async def handle_webhook_event(self, event_data: dict[str, Any]) -> dict[str, Any]:
         """Handle Stripe webhook events"""
         event_type = event_data.get("type")
-
         if event_type == "payment_intent.succeeded":
             return {
                 "action": "payment_succeeded",
                 "payment_id": event_data["data"]["object"]["id"],
-                "amount": event_data["data"]["object"]["amount"] / 100,  # Convert from cents
+                "amount": event_data["data"]["object"]["amount"] / 100,
                 "currency": event_data["data"]["object"]["currency"],
             }
         elif event_type == "payment_intent.payment_failed":
@@ -230,7 +218,6 @@ class StripeAdapter(PaymentGatewayAdapter):
                 "subscription_id": event_data["data"]["object"]["subscription"],
                 "amount": event_data["data"]["object"]["amount_paid"] / 100,
             }
-
         return {"action": "ignored", "event_type": event_type}
 
 
@@ -262,16 +249,16 @@ class PaymeAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        description: (str | None) = None,
+        metadata: (dict[str, Any] | None) = None,
     ) -> dict[str, Any]:
         """Process Payme payment"""
         transaction_id = f"txn_{uuid4().hex[:16]}"
         return {
             "id": transaction_id,
-            "amount": int(amount * 100),  # Payme uses tiyin (1/100 som)
+            "amount": int(amount * 100),
             "currency": "UZS",
-            "state": 2,  # Payme success state
+            "state": 2,
             "create_time": int(datetime.utcnow().timestamp() * 1000),
             "perform_time": int(datetime.utcnow().timestamp() * 1000),
             "reason": None,
@@ -283,7 +270,7 @@ class PaymeAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: int | None = None,
+        trial_days: (int | None) = None,
     ) -> dict[str, Any]:
         """Payme doesn't support subscriptions directly - simulate with recurring payments"""
         return {
@@ -305,7 +292,6 @@ class PaymeAdapter(PaymentGatewayAdapter):
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify Payme webhook signature"""
         try:
-            # Payme uses HMAC-SHA256
             expected_signature = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
             return hmac.compare_digest(expected_signature, signature)
         except Exception as e:
@@ -315,7 +301,6 @@ class PaymeAdapter(PaymentGatewayAdapter):
     async def handle_webhook_event(self, event_data: dict[str, Any]) -> dict[str, Any]:
         """Handle Payme webhook events"""
         method = event_data.get("method")
-
         if method == "CheckPerformTransaction":
             return {"action": "check_transaction"}
         elif method == "CreateTransaction":
@@ -330,7 +315,6 @@ class PaymeAdapter(PaymentGatewayAdapter):
                 "transaction_id": event_data.get("params", {}).get("id"),
                 "amount": event_data.get("params", {}).get("amount", 0) / 100,
             }
-
         return {"action": "ignored", "method": method}
 
 
@@ -362,8 +346,8 @@ class ClickAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        description: (str | None) = None,
+        metadata: (dict[str, Any] | None) = None,
     ) -> dict[str, Any]:
         """Process Click payment"""
         click_trans_id = f"click_{uuid4().hex[:12]}"
@@ -371,7 +355,7 @@ class ClickAdapter(PaymentGatewayAdapter):
             "click_trans_id": click_trans_id,
             "amount": float(amount),
             "currency": "UZS",
-            "error": 0,  # Click success code
+            "error": 0,
             "error_note": "Success",
             "datetime": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         }
@@ -382,7 +366,7 @@ class ClickAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: int | None = None,
+        trial_days: (int | None) = None,
     ) -> dict[str, Any]:
         """Click subscription simulation"""
         return {
@@ -404,7 +388,6 @@ class ClickAdapter(PaymentGatewayAdapter):
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify Click webhook signature"""
         try:
-            # Click uses MD5 hash
             expected_signature = hashlib.md5(f"{payload.decode()}{secret}".encode()).hexdigest()
             return hmac.compare_digest(expected_signature, signature)
         except Exception as e:
@@ -414,20 +397,18 @@ class ClickAdapter(PaymentGatewayAdapter):
     async def handle_webhook_event(self, event_data: dict[str, Any]) -> dict[str, Any]:
         """Handle Click webhook events"""
         action = event_data.get("action")
-
-        if action == "0":  # Click prepare
+        if action == "0":
             return {
                 "action": "payment_prepared",
                 "click_trans_id": event_data.get("click_trans_id"),
                 "amount": event_data.get("amount"),
             }
-        elif action == "1":  # Click complete
+        elif action == "1":
             return {
                 "action": "payment_succeeded",
                 "click_trans_id": event_data.get("click_trans_id"),
                 "amount": event_data.get("amount"),
             }
-
         return {"action": "ignored", "click_action": action}
 
 
@@ -451,29 +432,22 @@ class PaymentService:
             raise ValueError(f"Payment provider '{provider}' not supported")
         return adapter
 
-    # Payment Methods
     async def create_payment_method(
         self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str = None
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
         adapter = self.get_adapter(provider)
-
         try:
-            # Create payment method with provider
             provider_response = await adapter.create_payment_method(
                 user_id, payment_method_data.provider_data
             )
-
-            # Extract expiration date if available
             expires_at = None
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
                     year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
                 )
-
-            # Store in database
             method_id = await self.repository.create_payment_method(
                 user_id=user_id,
                 provider=provider,
@@ -485,7 +459,6 @@ class PaymentService:
                 is_default=payment_method_data.is_default,
                 metadata={"provider_response": provider_response, **payment_method_data.metadata},
             )
-
             return PaymentMethodResponse(
                 id=method_id,
                 provider=provider,
@@ -497,7 +470,6 @@ class PaymentService:
                 is_active=True,
                 created_at=datetime.utcnow(),
             )
-
         except Exception as e:
             logger.error(f"Failed to create payment method: {e}")
             raise
@@ -520,28 +492,20 @@ class PaymentService:
             for method in methods
         ]
 
-    # Payments
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self, user_id: int, payment_data: PaymentCreate, idempotency_key: (str | None) = None
     ) -> PaymentResponse:
         """Process a one-time payment"""
         idempotency_key = idempotency_key or str(uuid4())
-
-        # Check for duplicate payment
         existing_payment = await self.repository.get_payment_by_idempotency_key(idempotency_key)
         if existing_payment:
             return PaymentResponse(**existing_payment)
-
-        # Get payment method
         payment_method = await self.repository.get_payment_method(payment_data.payment_method_id)
         if not payment_method:
             raise ValueError("Payment method not found")
-
         provider = payment_method["provider"]
         adapter = self.get_adapter(provider)
-
         try:
-            # Create payment record
             payment_id = await self.repository.create_payment(
                 user_id=user_id,
                 subscription_id=payment_data.subscription_id,
@@ -555,8 +519,6 @@ class PaymentService:
                 description=payment_data.description,
                 metadata=payment_data.metadata,
             )
-
-            # Process with provider
             provider_response = await adapter.charge_payment_method(
                 method_id=payment_method["provider_method_id"],
                 amount=payment_data.amount,
@@ -564,62 +526,46 @@ class PaymentService:
                 description=payment_data.description,
                 metadata=payment_data.metadata,
             )
-
-            # Update payment status based on provider response
             status = (
                 PaymentStatus.SUCCEEDED
                 if provider_response.get("status") == "succeeded"
                 else PaymentStatus.FAILED
             )
-
             await self.repository.update_payment_status(
                 payment_id=payment_id,
                 status=status,
                 provider_payment_id=provider_response.get("id"),
             )
-
-            # Get updated payment
             payment = await self.repository.get_payment(payment_id)
             return PaymentResponse(**payment)
-
         except Exception as e:
             logger.error(f"Payment processing failed: {e}")
-            # Update payment status to failed
             if "payment_id" in locals():
                 await self.repository.update_payment_status(
                     payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
                 )
             raise
 
-    # Subscriptions
     async def create_subscription(
         self, user_id: int, subscription_data: SubscriptionCreate
     ) -> SubscriptionResponse:
         """Create a subscription"""
-        # Get plan details
         plan = await self.repository.get_plan_with_pricing(subscription_data.plan_id)
         if not plan:
             raise ValueError("Plan not found")
-
-        # Calculate pricing based on billing cycle
         if subscription_data.billing_cycle == BillingCycle.MONTHLY:
             amount = plan["price_monthly"]
             period_days = 30
         else:
             amount = plan["price_yearly"]
             period_days = 365
-
-        # Calculate period dates
         now = datetime.utcnow()
         current_period_start = now
         current_period_end = now + timedelta(days=period_days)
         trial_ends_at = None
-
         if subscription_data.trial_days and subscription_data.trial_days > 0:
             trial_ends_at = now + timedelta(days=subscription_data.trial_days)
             current_period_end = trial_ends_at + timedelta(days=period_days)
-
-        # Create subscription in database
         subscription_id = await self.repository.create_subscription(
             user_id=user_id,
             plan_id=subscription_data.plan_id,
@@ -633,8 +579,6 @@ class PaymentService:
             trial_ends_at=trial_ends_at,
             metadata=subscription_data.metadata,
         )
-
-        # If payment method provided, set up with provider
         if subscription_data.payment_method_id:
             payment_method = await self.repository.get_payment_method(
                 subscription_data.payment_method_id
@@ -642,7 +586,6 @@ class PaymentService:
             if payment_method:
                 provider = payment_method["provider"]
                 adapter = self.get_adapter(provider)
-
                 try:
                     provider_response = await adapter.create_subscription(
                         customer_id=str(user_id),
@@ -651,19 +594,12 @@ class PaymentService:
                         billing_cycle=subscription_data.billing_cycle,
                         trial_days=subscription_data.trial_days,
                     )
-
-                    # Update subscription with provider ID
                     await self.repository.update_subscription_status(
                         subscription_id=subscription_id, status=SubscriptionStatus.ACTIVE
                     )
-
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")
-                    # Keep local subscription but mark as unpaid
-
-        # Get created subscription
         subscription = await self.repository.get_user_active_subscription(user_id)
-
         return SubscriptionResponse(
             id=subscription["id"],
             user_id=subscription["user_id"],
@@ -679,22 +615,16 @@ class PaymentService:
             created_at=subscription["created_at"],
         )
 
-    # Webhook handling
     async def handle_webhook(
         self, provider: str, payload: bytes, signature: str, webhook_secret: str
     ) -> dict[str, Any]:
         """Handle webhook from payment provider"""
         adapter = self.get_adapter(provider)
-
-        # Verify webhook signature
         if not adapter.verify_webhook_signature(payload, signature, webhook_secret):
             logger.warning(f"Invalid webhook signature from {provider}")
             raise ValueError("Invalid webhook signature")
-
         try:
             event_data = json.loads(payload.decode())
-
-            # Store webhook event
             event_id = await self.repository.create_webhook_event(
                 provider=provider,
                 event_type=event_data.get("type") or event_data.get("method") or "unknown",
@@ -703,16 +633,10 @@ class PaymentService:
                 payload=event_data,
                 signature=signature,
             )
-
-            # Process webhook event
             result = await adapter.handle_webhook_event(event_data)
-
-            # Update processing status
             if result.get("action") != "ignored":
                 await self.repository.mark_webhook_processed(event_id, True)
-
             return result
-
         except Exception as e:
             logger.error(f"Webhook processing failed: {e}")
             if "event_id" in locals():

@@ -4,7 +4,6 @@ SQLite database engine for development
 
 import logging
 
-from bot.config import settings
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -13,12 +12,10 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import declarative_base
 
+from apps.bot.config import settings
+
 logger = logging.getLogger(__name__)
-
-# SQLAlchemy Base
 Base = declarative_base()
-
-# SQLAlchemy Engine
 engine: AsyncEngine = None
 async_session: async_sessionmaker[AsyncSession] = None
 
@@ -26,21 +23,11 @@ async_session: async_sessionmaker[AsyncSession] = None
 async def init_db():
     """Initialize SQLite database"""
     global engine, async_session
-
     try:
-        # Create async engine
-        engine = create_async_engine(
-            settings.DATABASE_URL,
-            echo=False,  # Set to True for SQL logging
-            future=True,
-        )
-
-        # Create session factory
+        engine = create_async_engine(settings.DATABASE_URL, echo=False, future=True)
         async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
         logger.info("✅ SQLite database initialized")
         return engine
-
     except Exception as e:
         logger.error(f"❌ Database initialization failed: {e}")
         raise

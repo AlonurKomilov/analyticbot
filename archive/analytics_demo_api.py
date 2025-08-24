@@ -4,7 +4,7 @@ Original implementation moved to `apis.analytics_demo_api`.
 This file is kept for backward compatibility only.
 """
 
-from apis.analytics_demo_api import *  # type: ignore F401,F403
+from apps.api.analytics_demo_api import *
 
 __all__ = [name for name in globals().keys() if not name.startswith("_")]
 
@@ -16,48 +16,38 @@ class AIRecommendation(BaseModel):
     confidence: float
 
 
-# FastAPI app
 app = FastAPI(
     title="Analytics API Demo",
     description="Phase 2.1 Week 2 - Analytics Dashboard Demo API",
     version="1.0.0",
 )
-
-# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Demo uchun
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Mock data generators
 def generate_post_dynamics(hours_back: int = 24) -> List[PostDynamic]:
     """Generate mock post dynamics data"""
     data = []
     base_views = random.randint(1000, 5000)
-
     for i in range(hours_back):
         timestamp = datetime.now() - timedelta(hours=hours_back - i)
-
-        # Simulate realistic engagement patterns
         hour = timestamp.hour
-        day_factor = 1.2 if 9 <= hour <= 21 else 0.8  # More active during day
+        day_factor = 1.2 if 9 <= hour <= 21 else 0.8
         weekend_factor = 1.3 if timestamp.weekday() in [5, 6] else 1.0
-
         views = int(base_views * day_factor * weekend_factor * random.uniform(0.7, 1.3))
         likes = int(views * random.uniform(0.02, 0.08))
         shares = int(views * random.uniform(0.005, 0.02))
         comments = int(views * random.uniform(0.001, 0.01))
-
         data.append(
             PostDynamic(
                 timestamp=timestamp, views=views, likes=likes, shares=shares, comments=comments
             )
         )
-
     return data
 
 
@@ -77,13 +67,11 @@ def generate_top_posts(count: int = 10) -> List[TopPost]:
         "Texnik yangilanish",
         "Maxsus taklif",
     ]
-
     for i in range(count):
         views = random.randint(500, 50000)
         likes = int(views * random.uniform(0.02, 0.12))
         shares = int(views * random.uniform(0.005, 0.03))
         comments = int(views * random.uniform(0.001, 0.02))
-
         posts.append(
             TopPost(
                 id=f"post_{i + 1}",
@@ -100,31 +88,19 @@ def generate_top_posts(count: int = 10) -> List[TopPost]:
                 else None,
             )
         )
-
-    # Sort by views descending
     return sorted(posts, key=lambda x: x.views, reverse=True)
 
 
 def generate_best_times() -> List[BestTimeRecommendation]:
     """Generate mock best posting times"""
     recommendations = []
-
-    # Generate best times for different days/hours
-    best_combinations = [
-        (1, 14, 85.5),  # Tuesday 2 PM
-        (4, 19, 82.3),  # Friday 7 PM
-        (0, 12, 79.8),  # Monday noon
-        (3, 16, 77.2),  # Thursday 4 PM
-        (6, 10, 74.9),  # Sunday 10 AM
-    ]
-
+    best_combinations = [(1, 14, 85.5), (4, 19, 82.3), (0, 12, 79.8), (3, 16, 77.2), (6, 10, 74.9)]
     for day, hour, confidence in best_combinations:
         recommendations.append(
             BestTimeRecommendation(
                 day=day, hour=hour, confidence=confidence, avg_engagement=random.randint(150, 400)
             )
         )
-
     return recommendations
 
 
@@ -159,9 +135,6 @@ def generate_ai_recommendations() -> List[AIRecommendation]:
     return recommendations
 
 
-# API Endpoints
-
-
 @app.get("/")
 async def root():
     """Root endpoint"""
@@ -181,12 +154,9 @@ async def root():
 async def get_post_dynamics(period: str = "24h"):
     """Get post view dynamics data"""
     try:
-        # Parse period
         hours_map = {"1h": 1, "6h": 6, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
         hours = hours_map.get(period, 24)
-
-        data = generate_post_dynamics(min(hours, 168))  # Max 1 week for demo
-
+        data = generate_post_dynamics(min(hours, 168))
         return {
             "success": True,
             "period": period,
@@ -202,22 +172,18 @@ async def get_top_posts(period: str = "today", sort: str = "views"):
     """Get top performing posts"""
     try:
         posts = generate_top_posts(20)
-
-        # Apply sorting
         if sort == "likes":
             posts = sorted(posts, key=lambda x: x.likes, reverse=True)
         elif sort == "engagement":
-            posts = sorted(posts, key=lambda x: (x.likes + x.shares + x.comments), reverse=True)
+            posts = sorted(posts, key=lambda x: x.likes + x.shares + x.comments, reverse=True)
         elif sort == "date":
             posts = sorted(posts, key=lambda x: x.created_at, reverse=True)
-        # Default is views (already sorted)
-
         return {
             "success": True,
             "period": period,
             "sort_by": sort,
             "total": len(posts),
-            "posts": [post.dict() for post in posts[:15]],  # Return top 15
+            "posts": [post.dict() for post in posts[:15]],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -229,23 +195,17 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
     try:
         best_times = generate_best_times()
         ai_recommendations = generate_ai_recommendations()
-
-        # Generate hourly performance data
         hourly_performance = {}
         for hour in range(24):
-            # Simulate engagement levels throughout the day
-            if 9 <= hour <= 12:  # Morning peak
+            if 9 <= hour <= 12:
                 performance = random.randint(300, 500)
-            elif 14 <= hour <= 16:  # Afternoon peak
+            elif 14 <= hour <= 16:
                 performance = random.randint(400, 600)
-            elif 19 <= hour <= 21:  # Evening peak
+            elif 19 <= hour <= 21:
                 performance = random.randint(350, 550)
-            else:  # Off-peak hours
+            else:
                 performance = random.randint(100, 300)
-
             hourly_performance[hour] = performance
-
-        # Weekly summary
         weekly_summary = {}
         days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
         for i, day in enumerate(days):
@@ -253,7 +213,6 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
                 "best_hour": random.randint(9, 21),
                 "performance": random.randint(45, 90),
             }
-
         return {
             "success": True,
             "timeframe": timeframe,
@@ -273,14 +232,11 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
 async def get_engagement_metrics(period: str = "7d"):
     """Get engagement analytics"""
     try:
-        # Generate mock engagement data
         total_views = random.randint(10000, 100000)
         total_likes = int(total_views * 0.05)
         total_shares = int(total_views * 0.01)
         total_comments = int(total_views * 0.005)
-
-        engagement_rate = ((total_likes + total_shares + total_comments) / total_views) * 100
-
+        engagement_rate = (total_likes + total_shares + total_comments) / total_views * 100
         return {
             "success": True,
             "period": period,
@@ -307,5 +263,4 @@ if __name__ == "__main__":
     print("📊 Analytics Dashboard: http://localhost:3000")
     print("🔗 API Documentation: http://localhost:8001/docs")
     print("🎯 Phase 2.1 Week 2 - Rich Analytics & AI Recommendations")
-
     uvicorn.run(app, host="0.0.0.0", port=8001, reload=True, access_log=True)

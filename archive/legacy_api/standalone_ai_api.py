@@ -18,15 +18,11 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-# Set up path
 sys.path.insert(0, "/workspaces/analyticbot")
-
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Pydantic models for API
 class ContentAnalysisRequest(BaseModel):
     text: str = Field(..., description="Content text to analyze", max_length=5000)
     target_audience: str = Field("general", description="Target audience type")
@@ -57,7 +53,6 @@ class RealTimeScoreResponse(BaseModel):
     timestamp: datetime
 
 
-# Initialize FastAPI app
 app = FastAPI(
     title="🤖 Standalone AI/ML API",
     description="Independent AI-powered content analysis and optimization",
@@ -65,8 +60,6 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
-
-# ML service instances (initialized on startup)
 ml_services = {}
 
 
@@ -75,19 +68,13 @@ async def startup_event():
     """Initialize standalone ML services"""
     try:
         logger.info("🚀 Starting standalone AI/ML API...")
-
-        # Import and initialize standalone services
-        from bot.services.ml.standalone_content_optimizer import StandaloneContentOptimizer
+        from apps.bot.services.ml.standalone_content_optimizer import StandaloneContentOptimizer
 
         content_optimizer = StandaloneContentOptimizer()
-
         ml_services["content_optimizer"] = content_optimizer
-
         logger.info("✅ Standalone ML services initialized")
-
     except Exception as e:
         logger.error(f"❌ Failed to initialize ML services: {e}")
-        # Continue with limited functionality
 
 
 @app.get("/")
@@ -118,8 +105,6 @@ async def health_check():
     """🏥 Health check for standalone ML API"""
     try:
         health_status = {"status": "healthy", "timestamp": datetime.now(), "services": {}}
-
-        # Check content optimizer
         content_optimizer = ml_services.get("content_optimizer")
         if content_optimizer:
             try:
@@ -130,8 +115,6 @@ async def health_check():
                     "status": "error",
                     "error": str(e),
                 }
-
-        # Check dependencies
         try:
             import emoji
             import numpy
@@ -148,9 +131,7 @@ async def health_check():
             }
         except ImportError as e:
             health_status["dependencies"] = {"error": str(e)}
-
         return health_status
-
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Health check failed: {str(e)}")
 
@@ -169,16 +150,12 @@ async def analyze_content(request: ContentAnalysisRequest):
     """
     try:
         logger.info(f"📝 Analyzing content: {len(request.text)} characters")
-
         content_optimizer = ml_services.get("content_optimizer")
         if not content_optimizer:
             raise HTTPException(status_code=503, detail="Content optimizer not available")
-
-        # Perform content analysis
         analysis = await content_optimizer.analyze_content(
             text=request.text, target_audience=request.target_audience
         )
-
         return ContentScoreResponse(
             overall_score=analysis.overall_score,
             sentiment_score=analysis.sentiment_score,
@@ -190,7 +167,6 @@ async def analyze_content(request: ContentAnalysisRequest):
             hashtag_suggestions=analysis.suggested_hashtags,
             timestamp=datetime.now(),
         )
-
     except HTTPException:
         raise
     except Exception as e:
@@ -215,10 +191,7 @@ async def score_content_realtime(request: RealTimeScoreRequest):
         content_optimizer = ml_services.get("content_optimizer")
         if not content_optimizer:
             raise HTTPException(status_code=503, detail="Content optimizer not available")
-
-        # Get real-time scores
         scores = await content_optimizer.score_content_realtime(request.text)
-
         return RealTimeScoreResponse(
             overall_score=scores.get("overall_score", 0.5),
             length_score=scores.get("length_score", 0.5),
@@ -227,7 +200,6 @@ async def score_content_realtime(request: RealTimeScoreRequest):
             emoji_score=scores.get("emoji_score", 0.5),
             timestamp=datetime.now(),
         )
-
     except HTTPException:
         raise
     except Exception as e:
@@ -252,13 +224,9 @@ async def demo_analysis():
         
         #AI #analytics #socialmedia #engagement #optimization #growth
         """
-
-        # Analyze sample content
         request = ContentAnalysisRequest(text=sample_content, target_audience="tech")
         result = await analyze_content(request)
-
         return {"demo": True, "sample_content": sample_content, "analysis": result}
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Demo failed: {str(e)}")
 
@@ -286,7 +254,6 @@ async def get_api_stats():
     }
 
 
-# Error handlers
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     return {
@@ -313,9 +280,7 @@ async def internal_error_handler(request, exc):
 
 
 if __name__ == "__main__":
-    # Run the standalone API
     print("🤖 Starting Standalone AI/ML API...")
     print("📖 Documentation available at: http://localhost:8002/docs")
     print("🎬 Demo analysis at: http://localhost:8002/demo/analyze")
-
     uvicorn.run("standalone_ai_api:app", host="0.0.0.0", port=8002, reload=False, log_level="info")

@@ -11,17 +11,17 @@ from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
-from bot.database.performance import (
+
+from apps.bot.database.performance import (
     PerformanceConfig,
     cache_result,
     performance_manager,
     performance_timer,
 )
-from bot.database.repositories.analytics_repository import AnalyticsRepository
-from bot.services.prometheus_service import prometheus_service, prometheus_timer
-from bot.utils.error_handler import ErrorContext, ErrorHandler
+from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
+from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
-# Logger configurations
 logger = logging.getLogger(__name__)
 
 
@@ -31,13 +31,10 @@ class AnalyticsService:
     def __init__(self, bot: Bot, analytics_repository: AnalyticsRepository):
         self.analytics_repository = analytics_repository
         self.bot = bot
-        # Optimized configuration
-        self._rate_limit_delay = 0.1  # Optimized delay
+        self._rate_limit_delay = 0.1
         self._batch_size = getattr(PerformanceConfig, "TASK_BATCH_SIZE", 50)
-        self._concurrent_limit = 10  # Concurrent API calls
+        self._concurrent_limit = 10
         self._semaphore = asyncio.Semaphore(self._concurrent_limit)
-
-        # Legacy support for older batch size
         if not hasattr(PerformanceConfig, "TASK_BATCH_SIZE"):
             self._batch_size = 50
 
@@ -56,53 +53,32 @@ class AnalyticsService:
             "cached": 0,
             "duration": 0,
         }
-
         start_time = asyncio.get_event_loop().time()
-
         try:
-            # Get posts to track with caching (optimized path)
             posts = await self._get_posts_to_track_cached()
-
             if not posts:
                 logger.info("📊 No posts found for view tracking.")
                 return stats
-
             logger.info(f"🚀 Starting unified view update for {len(posts)} posts")
-
-            # Use smart grouping if performance manager available, fallback to simple grouping
             if hasattr(self, "_smart_group_posts"):
                 grouped = await self._smart_group_posts(posts)
             else:
                 grouped = self._simple_group_posts(posts)
-
-            # Process channels with optimal concurrency
             if self._concurrent_limit > 1:
-                # Concurrent processing for better performance
                 await self._process_channels_concurrent(grouped, stats)
             else:
-                # Sequential processing for reliability
                 await self._process_channels_sequential(grouped, stats)
-
             stats["duration"] = asyncio.get_event_loop().time() - start_time
-
             logger.info(
-                f"⚡ Unified view update completed in {stats['duration']:.2f}s. "
-                f"Processed: {stats['processed']}, Updated: {stats['updated']}, "
-                f"Cached: {stats['cached']}, Errors: {stats['errors']}"
+                f"⚡ Unified view update completed in {stats['duration']:.2f}s. Processed: {stats['processed']}, Updated: {stats['updated']}, Cached: {stats['cached']}, Errors: {stats['errors']}"
             )
-
-            # Record Prometheus metrics
             prometheus_service.record_post_views_update(stats["updated"])
-
-            # Cache performance stats if available
             if hasattr(self, "_cache_performance_stats"):
                 await self._cache_performance_stats(stats)
-
         except Exception as e:
             context = ErrorContext().add("operation", "update_all_post_views")
             ErrorHandler.log_error(e, context)
             stats["errors"] += 1
-
         return stats
 
     @cache_result("posts_to_track", ttl=getattr(PerformanceConfig, "CACHE_ANALYTICS_TTL", 300))
@@ -111,7 +87,6 @@ class AnalyticsService:
         try:
             return await self.analytics_repository.get_all_posts_to_track_views()
         except Exception:
-            # Fallback if cache_result decorator fails
             return await self.analytics_repository.get_all_posts_to_track_views()
 
     def _simple_group_posts(self, posts: list[dict]) -> dict[int, list[dict]]:
@@ -124,30 +99,21 @@ class AnalyticsService:
     async def _smart_group_posts(self, posts: list[dict]) -> dict[int, list[dict]]:
         """🧠 Intelligent post grouping with priority optimization"""
         grouped = defaultdict(list)
-
-        # Group by channel with metadata
         for post in posts:
             channel_id = post["channel_id"]
-
-            # Add processing priority based on last update
             last_update = post.get("updated_at")
             if last_update:
                 hours_since_update = (datetime.now() - last_update).total_seconds() / 3600
-                post["_priority"] = min(hours_since_update, 24)  # Max 24 hours priority
+                post["_priority"] = min(hours_since_update, 24)
             else:
-                post["_priority"] = 24  # High priority for never updated
-
+                post["_priority"] = 24
             grouped[channel_id].append(post)
-
-        # Sort channels by total priority (most urgent first)
         sorted_grouped = {}
         for channel_id, channel_posts in grouped.items():
             total_priority = sum(post["_priority"] for post in channel_posts)
             sorted_grouped[channel_id] = sorted(
                 channel_posts, key=lambda x: x["_priority"], reverse=True
             )
-
-        # Return channels sorted by urgency
         return dict(
             sorted(
                 sorted_grouped.items(),
@@ -169,15 +135,11 @@ class AnalyticsService:
             else:
                 task = asyncio.create_task(self._process_channel_posts(channel_id, channel_posts))
             tasks.append(task)
-
-            # Limit concurrent channel processing
             if len(tasks) >= self._concurrent_limit:
                 completed_stats = await asyncio.gather(*tasks, return_exceptions=True)
                 await self._merge_stats(stats, completed_stats)
                 tasks = []
                 await asyncio.sleep(self._rate_limit_delay)
-
-        # Process remaining tasks
         if tasks:
             completed_stats = await asyncio.gather(*tasks, return_exceptions=True)
             await self._merge_stats(stats, completed_stats)
@@ -188,12 +150,8 @@ class AnalyticsService:
         """Process channels sequentially for maximum reliability"""
         for channel_id, channel_posts in grouped.items():
             channel_stats = await self._process_channel_posts(channel_id, channel_posts)
-
-            # Update overall stats
             for key in stats:
                 stats[key] += channel_stats.get(key, 0)
-
-            # Rate limiting between channels
             await asyncio.sleep(self._rate_limit_delay)
 
     async def _process_channel_optimized(
@@ -202,75 +160,51 @@ class AnalyticsService:
         """⚡ High-performance channel processing with concurrency control"""
         async with self._semaphore:
             stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "cached": 0}
-
-            # Check if channel is cached as problematic (if performance manager available)
             if hasattr(performance_manager, "cache"):
                 cache_key = f"channel_problems:{channel_id}"
                 if await performance_manager.cache.get(cache_key):
                     logger.debug(f"⚠️ Skipping problematic channel {channel_id}")
                     stats["skipped"] = len(posts)
                     return stats
-
             try:
-                # Process in optimized micro-batches
                 micro_batch_size = min(10, len(posts) // 4 + 1)
-
                 for i in range(0, len(posts), micro_batch_size):
                     micro_batch = posts[i : i + micro_batch_size]
-
                     if hasattr(self, "_process_micro_batch"):
                         batch_stats = await self._process_micro_batch(channel_id, micro_batch)
                     else:
                         batch_stats = await self._process_post_batch(channel_id, micro_batch)
-
-                    # Merge stats
                     for key in stats:
                         stats[key] += batch_stats.get(key, 0)
-
-                    # Adaptive delay based on success rate
                     success_rate = (
                         batch_stats.get("updated", 0) / len(micro_batch) if micro_batch else 1
                     )
-                    delay = self._rate_limit_delay * (
-                        2 - success_rate
-                    )  # Less delay for successful batches
+                    delay = self._rate_limit_delay * (2 - success_rate)
                     await asyncio.sleep(delay)
-
             except Exception as e:
-                # Cache problematic channels temporarily (if performance manager available)
                 if hasattr(performance_manager, "cache"):
                     cache_key = f"channel_problems:{channel_id}"
-                    await performance_manager.cache.set(cache_key, True, 300)  # 5 minute cooldown
+                    await performance_manager.cache.set(cache_key, True, 300)
                 logger.error(f"❌ Channel {channel_id} processing failed: {e}")
                 stats["errors"] += len(posts)
-
             return stats
 
     async def _process_channel_posts(self, channel_id: int, posts: list[dict]) -> dict[str, int]:
         """Process posts for a specific channel (legacy reliable method)"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
-
-        # Process in batches to avoid rate limits
         for i in range(0, len(posts), self._batch_size):
             batch = posts[i : i + self._batch_size]
             batch_stats = await self._process_post_batch(channel_id, batch)
-
-            # Update stats
             for key in stats:
                 stats[key] += batch_stats.get(key, 0)
-
-            # Rate limiting between batches
             if i + self._batch_size < len(posts):
                 await asyncio.sleep(self._rate_limit_delay)
-
         return stats
 
     async def _process_micro_batch(self, channel_id: int, batch: list[dict]) -> dict[str, int]:
         """⚡ Ultra-fast micro-batch processing"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "cached": 0}
-
         try:
-            # Prepare concurrent view fetching
             view_tasks = []
             for post in batch:
                 if hasattr(self, "_get_post_views_with_cache"):
@@ -278,28 +212,19 @@ class AnalyticsService:
                 else:
                     task = self._get_single_post_views(channel_id, post)
                 view_tasks.append(task)
-
-            # Execute all view fetches concurrently
             view_results = await asyncio.gather(*view_tasks, return_exceptions=True)
-
-            # Batch database updates
             updates_to_execute = []
             for post, view_result in zip(batch, view_results, strict=False):
                 stats["processed"] += 1
-
                 if isinstance(view_result, Exception):
                     stats["errors"] += 1
                     continue
-
                 if view_result is None:
                     stats["skipped"] += 1
                     continue
-
-                if view_result == -1:  # From cache
+                if view_result == -1:
                     stats["cached"] += 1
                     continue
-
-                # Prepare batch update
                 if view_result != post.get("view_count", 0):
                     updates_to_execute.append(
                         {
@@ -309,53 +234,38 @@ class AnalyticsService:
                             "channel_id": post["channel_id"],
                         }
                     )
-
-            # Execute batch database update
             if updates_to_execute:
                 if hasattr(self, "_batch_update_views"):
                     updated_count = await self._batch_update_views(updates_to_execute)
                 else:
                     updated_count = await self._sequential_update_views(updates_to_execute)
                 stats["updated"] = updated_count
-
         except Exception as e:
             logger.error(f"❌ Micro-batch processing failed for channel {channel_id}: {e}")
             stats["errors"] += len(batch)
-
         return stats
 
     async def _process_post_batch(self, channel_id: int, batch: list[dict]) -> dict[str, int]:
         """Process a batch of posts from the same channel (legacy reliable method)"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
-
         message_ids = [post["message_id"] for post in batch]
-
         try:
-            # Get messages from Telegram
             messages = await self.bot.get_messages(chat_id=channel_id, message_ids=message_ids)
-
-            # Create mapping for quick lookup
             msg_map = {m.message_id: m for m in messages if m}
-
-            # Update view counts
             for post in batch:
                 stats["processed"] += 1
-
                 message = msg_map.get(post["message_id"])
                 if not message:
                     stats["skipped"] += 1
                     continue
-
                 if message.views is None:
                     stats["skipped"] += 1
                     continue
-
                 try:
                     await self.analytics_repository.update_post_views(
                         scheduled_post_id=post["id"], views=message.views
                     )
                     stats["updated"] += 1
-
                 except Exception as e:
                     context = (
                         ErrorContext()
@@ -365,7 +275,6 @@ class AnalyticsService:
                     )
                     ErrorHandler.handle_database_error(e, context)
                     stats["errors"] += 1
-
         except TelegramBadRequest as e:
             context = (
                 ErrorContext()
@@ -375,60 +284,43 @@ class AnalyticsService:
             )
             ErrorHandler.handle_telegram_api_error(e, context)
             stats["errors"] += len(batch)
-
         except TelegramAPIError as e:
             context = (
                 ErrorContext().add("operation", "get_messages_batch").add("channel_id", channel_id)
             )
             ErrorHandler.handle_telegram_api_error(e, context)
             stats["errors"] += len(batch)
-
         except Exception as e:
             context = (
                 ErrorContext().add("operation", "process_post_batch").add("channel_id", channel_id)
             )
             ErrorHandler.log_error(e, context)
             stats["errors"] += len(batch)
-
         return stats
 
     async def _get_post_views_with_cache(self, channel_id: int, post: dict) -> int | None:
         """📦 Get post views with intelligent caching"""
         if not hasattr(performance_manager, "cache"):
             return await self._get_single_post_views(channel_id, post)
-
         message_id = post["message_id"]
         post_id = post["id"]
-
-        # Check cache first
         cache_key = f"post_views:{channel_id}:{message_id}"
         cached_views = await performance_manager.cache.get(cache_key)
-
         if cached_views is not None:
-            return -1  # Indicate cached result
-
+            return -1
         try:
-            # Fetch from Telegram API
             message = await self.bot.forward_message(
                 chat_id=channel_id, from_chat_id=channel_id, message_id=message_id
             )
-
-            # Get views
             views = getattr(message, "views", 0) or 0
-
-            # Cache the result
-            cache_ttl = 300 if views > 0 else 60  # Cache hits longer than misses
+            cache_ttl = 300 if views > 0 else 60
             await performance_manager.cache.set(cache_key, views, cache_ttl)
-
             return views
-
         except TelegramBadRequest as e:
             if "message not found" in str(e).lower():
-                # Cache negative result
-                await performance_manager.cache.set(cache_key, 0, 3600)  # 1 hour for not found
+                await performance_manager.cache.set(cache_key, 0, 3600)
                 return 0
             raise
-
         except Exception as e:
             logger.debug(f"⚠️ Failed to get views for post {post_id}: {e}")
             return None
@@ -446,21 +338,15 @@ class AnalyticsService:
         """📊 High-performance batch database updates"""
         if not updates:
             return 0
-
         try:
-            # Use optimized pool if available
             if hasattr(performance_manager, "pool"):
                 async with performance_manager.pool.acquire_connection() as conn:
-                    # Prepare batch update query
                     query = """
                         UPDATE analytics 
                         SET view_count = $2, updated_at = NOW()
                         WHERE id = $1 AND view_count != $2
                     """
-
-                    # Execute batch update
                     update_params = [(update["post_id"], update["new_views"]) for update in updates]
-
                     if hasattr(performance_manager, "query_optimizer"):
                         results = await performance_manager.query_optimizer.execute_batched(
                             performance_manager.pool._pool, query, update_params, batch_size=50
@@ -471,16 +357,11 @@ class AnalyticsService:
                     else:
                         await conn.executemany(query, update_params)
                         successful_updates = len(updates)
-
-                    # Invalidate related caches
                     if hasattr(self, "_invalidate_analytics_cache"):
                         await self._invalidate_analytics_cache(updates)
-
                     return successful_updates
             else:
-                # Fallback to sequential updates
                 return await self._sequential_update_views(updates)
-
         except Exception as e:
             logger.error(f"❌ Batch update failed: {e}")
             return 0
@@ -488,7 +369,6 @@ class AnalyticsService:
     async def _sequential_update_views(self, updates: list[dict]) -> int:
         """Sequential view updates as fallback"""
         successful_updates = 0
-
         for update in updates:
             try:
                 await self.analytics_repository.update_post_views(
@@ -497,23 +377,17 @@ class AnalyticsService:
                 successful_updates += 1
             except Exception as e:
                 logger.debug(f"Failed to update post {update['post_id']}: {e}")
-
         return successful_updates
 
     async def _invalidate_analytics_cache(self, updates: list[dict]):
         """🗑️ Smart cache invalidation"""
         if not hasattr(performance_manager, "cache"):
             return
-
         cache_patterns = set()
-
         for update in updates:
             channel_id = update["channel_id"]
-            # Invalidate channel-related caches
             cache_patterns.add(f"analytics:{channel_id}:*")
             cache_patterns.add(f"channel_stats:{channel_id}:*")
-
-        # Flush matching patterns
         for pattern in cache_patterns:
             await performance_manager.cache.flush_pattern(pattern)
 
@@ -529,11 +403,7 @@ class AnalyticsService:
         """📈 Cache performance metrics for monitoring"""
         if hasattr(performance_manager, "cache"):
             cache_key = "performance:analytics:last_run"
-            await performance_manager.cache.set(cache_key, stats, 3600)  # 1 hour
-
-    # =========================================================================
-    # CACHED ANALYTICS METHODS (Performance Optimized)
-    # =========================================================================
+            await performance_manager.cache.set(cache_key, stats, 3600)
 
     @cache_result("channel_analytics", ttl=getattr(PerformanceConfig, "CACHE_ANALYTICS_TTL", 300))
     async def get_channel_analytics_cached(self, channel_id: int, days: int = 7) -> dict[str, Any]:
@@ -541,7 +411,6 @@ class AnalyticsService:
         try:
             return await self.analytics_repository.get_channel_analytics(channel_id, days)
         except Exception:
-            # Fallback if cache fails
             return await self.analytics_repository.get_channel_analytics(channel_id, days)
 
     @cache_result("top_posts", ttl=getattr(PerformanceConfig, "CACHE_ANALYTICS_TTL", 300))
@@ -550,12 +419,7 @@ class AnalyticsService:
         try:
             return await self.analytics_repository.get_top_posts(channel_id, limit)
         except Exception:
-            # Fallback if cache fails
             return await self.analytics_repository.get_top_posts(channel_id, limit)
-
-    # =========================================================================
-    # LEGACY SUPPORT METHODS (Maintained for backward compatibility)
-    # =========================================================================
 
     async def get_posts_ordered_by_views(self, channel_id: int) -> list[dict] | None:
         """
@@ -579,12 +443,9 @@ class AnalyticsService:
             if not posts:
                 logger.info(f"No posts found for channel {channel_id} to create chart")
                 return b""
-
             top_posts = posts[:limit]
             post_ids = [str(p["id"]) for p in top_posts]
             views = [int(p.get("views") or 0) for p in top_posts]
-
-            # Lazy import matplotlib (heavy) only when needed
             from io import BytesIO
 
             import matplotlib.pyplot as plt
@@ -594,22 +455,15 @@ class AnalyticsService:
             ax.set_title(f"Top {limit} Posts by Views")
             ax.set_xlabel("Post ID")
             ax.set_ylabel("Views")
-
-            # Add value labels on bars
             for i, v in enumerate(views):
                 ax.text(i, v, str(v), ha="center", va="bottom", fontsize=8)
-
             fig.tight_layout()
-
-            # Save to bytes
             buf = BytesIO()
             fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
             plt.close(fig)
             buf.seek(0)
-
             logger.info(f"Chart created for channel {channel_id} with {len(top_posts)} posts")
             return buf.read()
-
         except ImportError:
             logger.warning("matplotlib not available for chart generation")
             return b""
@@ -624,7 +478,7 @@ class AnalyticsService:
             return b""
 
     async def get_post_views(
-        self, scheduled_post_id: int, user_id: int | None = None
+        self, scheduled_post_id: int, user_id: (int | None) = None
     ) -> int | None:
         """
         Return stored view count for a scheduled post with error handling.
@@ -672,15 +526,11 @@ class AnalyticsService:
             ErrorHandler.handle_database_error(e, context)
             return 0
 
-    # =========================================================================
-    # ADVANCED ANALYTICS METHODS (From optimized service)
-    # =========================================================================
-
     async def get_analytics_data(
         self,
-        channel_id: int | None = None,
-        start_date: datetime | None = None,
-        end_date: datetime | None = None,
+        channel_id: (int | None) = None,
+        start_date: (datetime | None) = None,
+        end_date: (datetime | None) = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Get analytics data with filtering"""
@@ -726,15 +576,11 @@ class AnalyticsService:
     async def refresh_channel_analytics(self, channel_id: int):
         """Manually trigger analytics refresh for a channel"""
         try:
-            # Invalidate caches for the channel
             if hasattr(self, "_invalidate_analytics_cache"):
                 await self._invalidate_analytics_cache([{"channel_id": channel_id}])
-
-            # Trigger a fresh analytics collection
             posts = await self.analytics_repository.get_channel_posts_for_tracking(channel_id)
             if posts:
                 await self._process_channel_posts(channel_id, posts)
-
         except Exception as e:
             context = (
                 ErrorContext()
@@ -747,22 +593,16 @@ class AnalyticsService:
     async def process_bulk_analytics(self, data: list[dict]) -> dict[str, int]:
         """⚡ Bulk analytics processing with optimization"""
         stats = {"processed": 0, "inserted": 0, "errors": 0}
-
         try:
-            # Use query optimizer for batch processing if available
             if hasattr(performance_manager, "query_optimizer"):
                 batches = performance_manager.query_optimizer.batch_queries(data, 100)
-
                 for batch in batches:
                     batch_stats = await self._process_analytics_batch(batch)
                     for key in stats:
                         stats[key] += batch_stats.get(key, 0)
-
-                # Invalidate related caches
                 if hasattr(performance_manager, "cache"):
                     await performance_manager.cache.flush_pattern("analytics:*")
             else:
-                # Fallback to sequential processing
                 for item in data:
                     try:
                         await self.analytics_repository.insert_analytics_data(item)
@@ -770,28 +610,23 @@ class AnalyticsService:
                     except Exception:
                         stats["errors"] += 1
                     stats["processed"] += 1
-
         except Exception as e:
             logger.error(f"❌ Bulk analytics processing failed: {e}")
             stats["errors"] += len(data)
-
         return stats
 
     async def _process_analytics_batch(self, batch: list[dict]) -> dict[str, int]:
         """Process a batch of analytics data"""
         stats = {"processed": len(batch), "inserted": 0, "errors": 0}
-
         try:
             if hasattr(performance_manager, "pool"):
                 async with performance_manager.pool.acquire_connection() as conn:
-                    # Batch insert query
                     query = """
                         INSERT INTO analytics (channel_id, message_id, view_count, created_at)
                         VALUES ($1, $2, $3, $4)
                         ON CONFLICT (channel_id, message_id) 
                         DO UPDATE SET view_count = EXCLUDED.view_count, updated_at = NOW()
                     """
-
                     insert_params = [
                         (
                             item["channel_id"],
@@ -801,51 +636,36 @@ class AnalyticsService:
                         )
                         for item in batch
                     ]
-
                     await conn.executemany(query, insert_params)
                     stats["inserted"] = len(batch)
             else:
-                # Fallback to repository method
                 for item in batch:
                     await self.analytics_repository.insert_analytics_data(item)
                     stats["inserted"] += 1
-
         except Exception as e:
             logger.error(f"❌ Analytics batch processing failed: {e}")
             stats["errors"] = len(batch)
-
         return stats
         """Process a batch of posts from the same channel"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
-
         message_ids = [post["message_id"] for post in batch]
-
         try:
-            # Get messages from Telegram
             messages = await self.bot.get_messages(chat_id=channel_id, message_ids=message_ids)
-
-            # Create mapping for quick lookup
             msg_map = {m.message_id: m for m in messages if m}
-
-            # Update view counts
             for post in batch:
                 stats["processed"] += 1
-
                 message = msg_map.get(post["message_id"])
                 if not message:
                     stats["skipped"] += 1
                     continue
-
                 if message.views is None:
                     stats["skipped"] += 1
                     continue
-
                 try:
                     await self.analytics_repository.update_post_views(
                         scheduled_post_id=post["id"], views=message.views
                     )
                     stats["updated"] += 1
-
                 except Exception as e:
                     context = (
                         ErrorContext()
@@ -855,7 +675,6 @@ class AnalyticsService:
                     )
                     ErrorHandler.handle_database_error(e, context)
                     stats["errors"] += 1
-
         except TelegramBadRequest as e:
             context = (
                 ErrorContext()
@@ -865,21 +684,18 @@ class AnalyticsService:
             )
             ErrorHandler.handle_telegram_api_error(e, context)
             stats["errors"] += len(batch)
-
         except TelegramAPIError as e:
             context = (
                 ErrorContext().add("operation", "get_messages_batch").add("channel_id", channel_id)
             )
             ErrorHandler.handle_telegram_api_error(e, context)
             stats["errors"] += len(batch)
-
         except Exception as e:
             context = (
                 ErrorContext().add("operation", "process_post_batch").add("channel_id", channel_id)
             )
             ErrorHandler.log_error(e, context)
             stats["errors"] += len(batch)
-
         return stats
 
     async def get_posts_ordered_by_views(self, channel_id: int) -> list[dict] | None:
@@ -904,12 +720,9 @@ class AnalyticsService:
             if not posts:
                 logger.info(f"No posts found for channel {channel_id} to create chart")
                 return b""
-
             top_posts = posts[:limit]
             post_ids = [str(p["id"]) for p in top_posts]
             views = [int(p.get("views") or 0) for p in top_posts]
-
-            # Lazy import matplotlib (heavy) only when needed
             from io import BytesIO
 
             import matplotlib.pyplot as plt
@@ -919,22 +732,15 @@ class AnalyticsService:
             ax.set_title(f"Top {limit} Posts by Views")
             ax.set_xlabel("Post ID")
             ax.set_ylabel("Views")
-
-            # Add value labels on bars
             for i, v in enumerate(views):
                 ax.text(i, v, str(v), ha="center", va="bottom", fontsize=8)
-
             fig.tight_layout()
-
-            # Save to bytes
             buf = BytesIO()
             fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
             plt.close(fig)
             buf.seek(0)
-
             logger.info(f"Chart created for channel {channel_id} with {len(top_posts)} posts")
             return buf.read()
-
         except ImportError:
             logger.warning("matplotlib not available for chart generation")
             return b""
@@ -949,7 +755,7 @@ class AnalyticsService:
             return b""
 
     async def get_post_views(
-        self, scheduled_post_id: int, user_id: int | None = None
+        self, scheduled_post_id: int, user_id: (int | None) = None
     ) -> int | None:
         """
         Return stored view count for a scheduled post with error handling.

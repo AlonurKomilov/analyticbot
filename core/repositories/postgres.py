@@ -2,16 +2,20 @@
 PostgreSQL implementation of repository interfaces
 Concrete implementation using asyncpg and SQL
 """
-from typing import List, Optional, Dict, Any
-from uuid import UUID
-from datetime import datetime
+
 import json
+from datetime import datetime
+from uuid import UUID
 
 from core.models import (
-    ScheduledPost, Delivery, ScheduleFilter, DeliveryFilter,
-    PostStatus, DeliveryStatus
+    Delivery,
+    DeliveryFilter,
+    DeliveryStatus,
+    PostStatus,
+    ScheduledPost,
+    ScheduleFilter,
 )
-from core.repositories import ScheduleRepository, DeliveryRepository
+from core.repositories import DeliveryRepository, ScheduleRepository
 
 
 class PgScheduleRepository(ScheduleRepository):
@@ -19,11 +23,11 @@ class PgScheduleRepository(ScheduleRepository):
     PostgreSQL implementation of ScheduleRepository
     Uses asyncpg connection for database operations
     """
-    
+
     def __init__(self, db_connection):
         """Initialize with database connection (asyncpg connection or pool)"""
         self.db = db_connection
-    
+
     async def create(self, post: ScheduledPost) -> ScheduledPost:
         """Create a new scheduled post in PostgreSQL"""
         query = """
@@ -35,30 +39,38 @@ class PgScheduleRepository(ScheduleRepository):
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
         ) RETURNING *
         """
-        
+
         result = await self.db.fetchrow(
             query,
-            post.id, post.title, post.content, post.channel_id, post.user_id,
-            post.scheduled_at, post.created_at, post.status.value,
-            post.tags, json.dumps(post.metadata),
-            post.media_urls, post.media_types
+            post.id,
+            post.title,
+            post.content,
+            post.channel_id,
+            post.user_id,
+            post.scheduled_at,
+            post.created_at,
+            post.status.value,
+            post.tags,
+            json.dumps(post.metadata),
+            post.media_urls,
+            post.media_types,
         )
-        
+
         return self._row_to_scheduled_post(result)
-    
-    async def get_by_id(self, post_id: UUID) -> Optional[ScheduledPost]:
+
+    async def get_by_id(self, post_id: UUID) -> ScheduledPost | None:
         """Get scheduled post by ID"""
         query = "SELECT * FROM scheduled_posts WHERE id = $1"
         result = await self.db.fetchrow(query, post_id)
-        
+
         if result:
             return self._row_to_scheduled_post(result)
         return None
-    
+
     async def update(self, post: ScheduledPost) -> ScheduledPost:
         """Update an existing scheduled post"""
         post.updated_at = datetime.utcnow()
-        
+
         query = """
         UPDATE scheduled_posts SET
             title = $2, content = $3, channel_id = $4, user_id = $5,
@@ -67,137 +79,141 @@ class PgScheduleRepository(ScheduleRepository):
         WHERE id = $1
         RETURNING *
         """
-        
+
         result = await self.db.fetchrow(
             query,
-            post.id, post.title, post.content, post.channel_id, post.user_id,
-            post.scheduled_at, post.updated_at, post.status.value,
-            post.tags, json.dumps(post.metadata),
-            post.media_urls, post.media_types
+            post.id,
+            post.title,
+            post.content,
+            post.channel_id,
+            post.user_id,
+            post.scheduled_at,
+            post.updated_at,
+            post.status.value,
+            post.tags,
+            json.dumps(post.metadata),
+            post.media_urls,
+            post.media_types,
         )
-        
+
         return self._row_to_scheduled_post(result)
-    
+
     async def delete(self, post_id: UUID) -> bool:
         """Delete a scheduled post"""
         query = "DELETE FROM scheduled_posts WHERE id = $1"
         result = await self.db.execute(query, post_id)
         return result.split()[-1] == "1"  # Returns "DELETE 1" if successful
-    
-    async def find(self, filter_criteria: ScheduleFilter) -> List[ScheduledPost]:
+
+    async def find(self, filter_criteria: ScheduleFilter) -> list[ScheduledPost]:
         """Find scheduled posts by filter criteria"""
         query = "SELECT * FROM scheduled_posts WHERE 1=1"
         params = []
         param_count = 0
-        
+
         # Build dynamic WHERE clause
         if filter_criteria.user_id:
             param_count += 1
             query += f" AND user_id = ${param_count}"
             params.append(filter_criteria.user_id)
-        
+
         if filter_criteria.channel_id:
             param_count += 1
             query += f" AND channel_id = ${param_count}"
             params.append(filter_criteria.channel_id)
-        
+
         if filter_criteria.status:
             param_count += 1
             query += f" AND status = ${param_count}"
             params.append(filter_criteria.status.value)
-        
+
         if filter_criteria.from_date:
             param_count += 1
             query += f" AND scheduled_at >= ${param_count}"
             params.append(filter_criteria.from_date)
-        
+
         if filter_criteria.to_date:
             param_count += 1
             query += f" AND scheduled_at <= ${param_count}"
             params.append(filter_criteria.to_date)
-        
+
         if filter_criteria.tags:
             param_count += 1
             query += f" AND tags && ${param_count}"
             params.append(filter_criteria.tags)
-        
+
         # Add ordering and pagination
         query += " ORDER BY scheduled_at DESC"
-        
+
         if filter_criteria.limit:
             param_count += 1
             query += f" LIMIT ${param_count}"
             params.append(filter_criteria.limit)
-        
+
         if filter_criteria.offset:
             param_count += 1
             query += f" OFFSET ${param_count}"
             params.append(filter_criteria.offset)
-        
+
         results = await self.db.fetch(query, *params)
         return [self._row_to_scheduled_post(row) for row in results]
-    
-    async def get_ready_for_delivery(self) -> List[ScheduledPost]:
+
+    async def get_ready_for_delivery(self) -> list[ScheduledPost]:
         """Get all posts that are ready for delivery"""
         query = """
         SELECT * FROM scheduled_posts 
         WHERE status = $1 AND scheduled_at <= $2
         ORDER BY scheduled_at ASC
         """
-        
-        results = await self.db.fetch(
-            query, 
-            PostStatus.SCHEDULED.value,
-            datetime.utcnow()
-        )
-        
+
+        results = await self.db.fetch(query, PostStatus.SCHEDULED.value, datetime.utcnow())
+
         return [self._row_to_scheduled_post(row) for row in results]
-    
+
     async def count(self, filter_criteria: ScheduleFilter) -> int:
         """Count scheduled posts matching filter criteria"""
         query = "SELECT COUNT(*) FROM scheduled_posts WHERE 1=1"
         params = []
         param_count = 0
-        
+
         # Build same WHERE clause as find()
         if filter_criteria.user_id:
             param_count += 1
             query += f" AND user_id = ${param_count}"
             params.append(filter_criteria.user_id)
-        
+
         if filter_criteria.channel_id:
             param_count += 1
             query += f" AND channel_id = ${param_count}"
             params.append(filter_criteria.channel_id)
-        
+
         if filter_criteria.status:
             param_count += 1
             query += f" AND status = ${param_count}"
             params.append(filter_criteria.status.value)
-        
+
         # ... (similar filter conditions as find())
-        
+
         result = await self.db.fetchval(query, *params)
         return result or 0
-    
+
     def _row_to_scheduled_post(self, row) -> ScheduledPost:
         """Convert database row to ScheduledPost domain model"""
-        metadata = json.loads(row['metadata']) if row['metadata'] else {}
-        
+        metadata = json.loads(row["metadata"]) if row["metadata"] else {}
+
         return ScheduledPost(
-            id=row['id'],
-            title=row['title'],
-            content=row['content'],
-            channel_id=row['channel_id'],
-            user_id=row['user_id'],
-            scheduled_at=row['scheduled_at'],
-            created_at=row['created_at'],
-            updated_at=row['updated_at'],
-            status=PostStatus(row['status']),
-            tags=row['tags'] or [],
+            id=row["id"],
+            title=row["title"],
+            content=row["content"],
+            channel_id=row["channel_id"],
+            user_id=row["user_id"],
+            scheduled_at=row["scheduled_at"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            status=PostStatus(row["status"]),
+            tags=row["tags"] or [],
             metadata=metadata,
-            media_urls=row['media_urls'] or [],
-            media_types=row['media_types'] or []
+            media_urls=row["media_urls"] or [],
+            media_types=row["media_types"] or [],
         )
 
 
@@ -206,11 +222,11 @@ class PgDeliveryRepository(DeliveryRepository):
     PostgreSQL implementation of DeliveryRepository
     Uses asyncpg connection for database operations
     """
-    
+
     def __init__(self, db_connection):
         """Initialize with database connection"""
         self.db = db_connection
-    
+
     async def create(self, delivery: Delivery) -> Delivery:
         """Create a new delivery record"""
         query = """
@@ -222,34 +238,41 @@ class PgDeliveryRepository(DeliveryRepository):
             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
         ) RETURNING *
         """
-        
+
         result = await self.db.fetchrow(
             query,
-            delivery.id, delivery.post_id, delivery.status.value,
-            delivery.attempted_at, delivery.delivered_at, delivery.created_at,
-            delivery.delivery_channel_id, delivery.message_id,
-            delivery.error_message, delivery.retry_count, delivery.max_retries,
-            json.dumps(delivery.delivery_metadata)
+            delivery.id,
+            delivery.post_id,
+            delivery.status.value,
+            delivery.attempted_at,
+            delivery.delivered_at,
+            delivery.created_at,
+            delivery.delivery_channel_id,
+            delivery.message_id,
+            delivery.error_message,
+            delivery.retry_count,
+            delivery.max_retries,
+            json.dumps(delivery.delivery_metadata),
         )
-        
+
         return self._row_to_delivery(result)
-    
-    async def get_by_id(self, delivery_id: UUID) -> Optional[Delivery]:
+
+    async def get_by_id(self, delivery_id: UUID) -> Delivery | None:
         """Get delivery by ID"""
         query = "SELECT * FROM deliveries WHERE id = $1"
         result = await self.db.fetchrow(query, delivery_id)
-        
+
         if result:
             return self._row_to_delivery(result)
         return None
-    
-    async def get_by_post_id(self, post_id: UUID) -> List[Delivery]:
+
+    async def get_by_post_id(self, post_id: UUID) -> list[Delivery]:
         """Get all deliveries for a specific post"""
         query = "SELECT * FROM deliveries WHERE post_id = $1 ORDER BY created_at DESC"
         results = await self.db.fetch(query, post_id)
-        
+
         return [self._row_to_delivery(row) for row in results]
-    
+
     async def update(self, delivery: Delivery) -> Delivery:
         """Update an existing delivery"""
         query = """
@@ -260,99 +283,103 @@ class PgDeliveryRepository(DeliveryRepository):
         WHERE id = $1
         RETURNING *
         """
-        
+
         result = await self.db.fetchrow(
             query,
-            delivery.id, delivery.status.value, delivery.attempted_at,
-            delivery.delivered_at, delivery.delivery_channel_id, delivery.message_id,
-            delivery.error_message, delivery.retry_count, delivery.max_retries,
-            json.dumps(delivery.delivery_metadata)
+            delivery.id,
+            delivery.status.value,
+            delivery.attempted_at,
+            delivery.delivered_at,
+            delivery.delivery_channel_id,
+            delivery.message_id,
+            delivery.error_message,
+            delivery.retry_count,
+            delivery.max_retries,
+            json.dumps(delivery.delivery_metadata),
         )
-        
+
         return self._row_to_delivery(result)
-    
-    async def find(self, filter_criteria: DeliveryFilter) -> List[Delivery]:
+
+    async def find(self, filter_criteria: DeliveryFilter) -> list[Delivery]:
         """Find deliveries by filter criteria"""
         query = "SELECT * FROM deliveries WHERE 1=1"
         params = []
         param_count = 0
-        
+
         # Build dynamic WHERE clause similar to PgScheduleRepository
         if filter_criteria.post_id:
             param_count += 1
             query += f" AND post_id = ${param_count}"
             params.append(filter_criteria.post_id)
-        
+
         if filter_criteria.status:
             param_count += 1
             query += f" AND status = ${param_count}"
             params.append(filter_criteria.status.value)
-        
+
         # ... (other filter conditions)
-        
+
         query += " ORDER BY created_at DESC"
-        
+
         if filter_criteria.limit:
             param_count += 1
             query += f" LIMIT ${param_count}"
             params.append(filter_criteria.limit)
-        
+
         if filter_criteria.offset:
             param_count += 1
             query += f" OFFSET ${param_count}"
             params.append(filter_criteria.offset)
-        
+
         results = await self.db.fetch(query, *params)
         return [self._row_to_delivery(row) for row in results]
-    
-    async def get_failed_retryable(self) -> List[Delivery]:
+
+    async def get_failed_retryable(self) -> list[Delivery]:
         """Get failed deliveries that can be retried"""
         query = """
         SELECT * FROM deliveries 
         WHERE status IN ($1, $2) AND retry_count < max_retries
         ORDER BY attempted_at ASC
         """
-        
+
         results = await self.db.fetch(
-            query,
-            DeliveryStatus.FAILED.value,
-            DeliveryStatus.RETRYING.value
+            query, DeliveryStatus.FAILED.value, DeliveryStatus.RETRYING.value
         )
-        
+
         return [self._row_to_delivery(row) for row in results]
-    
+
     async def count(self, filter_criteria: DeliveryFilter) -> int:
         """Count deliveries matching filter criteria"""
         query = "SELECT COUNT(*) FROM deliveries WHERE 1=1"
         params = []
         param_count = 0
-        
+
         # Build same WHERE conditions as find()
         if filter_criteria.post_id:
             param_count += 1
             query += f" AND post_id = ${param_count}"
             params.append(filter_criteria.post_id)
-        
+
         # ... (other conditions)
-        
+
         result = await self.db.fetchval(query, *params)
         return result or 0
-    
+
     def _row_to_delivery(self, row) -> Delivery:
         """Convert database row to Delivery domain model"""
-        metadata = json.loads(row['delivery_metadata']) if row['delivery_metadata'] else {}
-        
+        metadata = json.loads(row["delivery_metadata"]) if row["delivery_metadata"] else {}
+
         return Delivery(
-            id=row['id'],
-            post_id=row['post_id'],
-            status=DeliveryStatus(row['status']),
-            attempted_at=row['attempted_at'],
-            delivered_at=row['delivered_at'],
-            created_at=row['created_at'],
-            delivery_channel_id=row['delivery_channel_id'],
-            message_id=row['message_id'],
-            error_message=row['error_message'],
-            retry_count=row['retry_count'],
-            max_retries=row['max_retries'],
-            delivery_metadata=metadata
+            id=row["id"],
+            post_id=row["post_id"],
+            status=DeliveryStatus(row["status"]),
+            attempted_at=row["attempted_at"],
+            delivered_at=row["delivered_at"],
+            created_at=row["created_at"],
+            delivery_channel_id=row["delivery_channel_id"],
+            message_id=row["message_id"],
+            error_message=row["error_message"],
+            retry_count=row["retry_count"],
+            max_retries=row["max_retries"],
+            delivery_metadata=metadata,
         )

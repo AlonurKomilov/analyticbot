@@ -5,18 +5,20 @@ from typing import Annotated
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from apis.routers.analytics_router import router as analytics_router
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
-# Imports updated for the new project structure (without 'src')
-from bot.config import Settings, settings
-from bot.container import container
-from bot.database.repositories import (
+from apps.api.routers.analytics_router import router as analytics_router
+from apps.bot.config import Settings, settings
+from apps.bot.container import container
+from apps.bot.database.repositories import (
     ChannelRepository,
     PlanRepository,
     SchedulerRepository,
     UserRepository,
 )
-from bot.models.twa import (
+from apps.bot.models.twa import (
     AddChannelRequest,
     Channel,
     InitialDataResponse,
@@ -27,19 +29,12 @@ from bot.models.twa import (
     User,
     ValidationErrorResponse,
 )
-from bot.services import GuardService, SubscriptionService
-from bot.services.auth_service import validate_init_data
-from bot.services.prometheus_service import prometheus_service, setup_prometheus_middleware
-from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from apps.bot.services import GuardService, SubscriptionService
+from apps.bot.services.auth_service import validate_init_data
+from apps.bot.services.prometheus_service import prometheus_service, setup_prometheus_middleware
 
-# Logging setup
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
-
-
-# --- FastAPI Dependencies ---
 
 
 def get_settings() -> Settings:
@@ -80,20 +75,15 @@ async def get_validated_user_data(
     """
     if not authorization or not authorization.startswith("TWA "):
         raise HTTPException(status_code=401, detail="Invalid authorization scheme.")
-
     init_data = authorization.split("TWA ", 1)[1]
     if not init_data:
         raise HTTPException(status_code=401, detail="initData is missing.")
-
     try:
         user_data = validate_init_data(init_data, current_settings.BOT_TOKEN.get_secret_value())
         return user_data
     except Exception as e:
         log.error(f"Could not validate initData: {e}")
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid initData.")
-
-
-# --- FastAPI Application ---
 
 
 @asynccontextmanager
@@ -105,9 +95,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     lifespan=lifespan,
-    responses={422: {"description": "Validation Error", "model": ValidationErrorResponse}},
+    responses={(422): {"description": "Validation Error", "model": ValidationErrorResponse}},
 )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -115,42 +104,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Add Prometheus metrics middleware
 app.add_middleware(setup_prometheus_middleware())
-
-# Set app info for Prometheus metrics
 prometheus_service.set_app_info(version="1.1.0", environment="production")
-
-# Mount analytics router with comprehensive analytics functionality
 app.include_router(analytics_router)
-
-
-# --- API Endpoints ---
 
 
 @app.get("/health", tags=["Health"])
 async def health_check():
     """Enhanced health check endpoint with system status"""
     try:
-        # Basic health status
-        status = {
-            "status": "ok",
-            "timestamp": datetime.now().isoformat(),
-            "version": "1.0.0",
-        }
-
-        # Check database health
+        status = {"status": "ok", "timestamp": datetime.now().isoformat(), "version": "1.0.0"}
         try:
-            from bot.database.db import is_db_healthy
+            from apps.bot.database.db import is_db_healthy
 
             db_healthy = await is_db_healthy()
             status["database"] = "healthy" if db_healthy else "unhealthy"
         except Exception as e:
             log.warning(f"Database health check failed: {e}")
             status["database"] = "unknown"
-
-        # Check Redis health (if configured)
         try:
             import redis.asyncio as redis
 
@@ -161,14 +132,10 @@ async def health_check():
         except Exception as e:
             log.warning(f"Redis health check failed: {e}")
             status["redis"] = "unknown"
-
-        # Overall status based on components
         if status.get("database") == "unhealthy":
             status["status"] = "degraded"
             return status
-
         return status
-
     except Exception as e:
         log.error(f"Health check error: {e}", exc_info=True)
         return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
@@ -184,36 +151,28 @@ async def detailed_health_check():
             system_metrics_available = True
         except ImportError:
             system_metrics_available = False
-
-        from bot.database.db import db_manager, is_db_healthy
+        from apps.bot.database.db import db_manager, is_db_healthy
 
         status = {
             "status": "ok",
             "timestamp": datetime.now().isoformat(),
-            "database": {
-                "healthy": await is_db_healthy(),
-            },
+            "database": {"healthy": await is_db_healthy()},
             "configuration": {
                 "debug_mode": settings.DEBUG_MODE,
                 "log_level": settings.LOG_LEVEL.value,
                 "supported_locales": settings.SUPPORTED_LOCALES,
             },
         }
-
-        # Add system metrics if psutil is available
         if system_metrics_available:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage("/")
-
             status["system"] = {
                 "cpu_percent": cpu_percent,
                 "memory_percent": memory.percent,
-                "disk_percent": (disk.used / disk.total) * 100,
+                "disk_percent": disk.used / disk.total * 100,
                 "available_memory_mb": memory.available // 1024 // 1024,
             }
-
-        # Add database pool info if available
         if db_manager.pool:
             status["database"].update(
                 {
@@ -221,9 +180,7 @@ async def detailed_health_check():
                     "pool_max_size": getattr(db_manager.pool, "get_max_size", lambda: 0)(),
                 }
             )
-
         return status
-
     except Exception as e:
         log.error(f"Detailed health check error: {e}", exc_info=True)
         return {"error": str(e)}
@@ -233,15 +190,11 @@ async def detailed_health_check():
 async def prometheus_metrics():
     """Prometheus metrics endpoint"""
     try:
-        # Collect latest metrics before serving
-        from bot.services.prometheus_service import collect_system_metrics
+        from apps.bot.services.prometheus_service import collect_system_metrics
 
         await collect_system_metrics()
-
         metrics_data = prometheus_service.get_metrics()
-
         return Response(content=metrics_data, media_type=prometheus_service.get_content_type())
-
     except Exception as e:
         log.error(f"Metrics endpoint error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Metrics collection failed")
@@ -255,15 +208,10 @@ async def upload_media_file(
     """Upload media file to storage channel with enhanced error handling"""
     if current_settings is None:
         current_settings = get_settings()
-
     bot = Bot(token=current_settings.BOT_TOKEN.get_secret_value())
-
     try:
-        # Validate file
         if not file.content_type:
             raise HTTPException(status_code=400, detail="File content type is required")
-
-        # Check file size (if file has size attribute)
         if hasattr(file, "size") and file.size:
             max_size = current_settings.MAX_MEDIA_SIZE_MB * 1024 * 1024
             if file.size > max_size:
@@ -271,18 +219,12 @@ async def upload_media_file(
                     status_code=413,
                     detail=f"File too large. Maximum size: {current_settings.MAX_MEDIA_SIZE_MB}MB",
                 )
-
-        # Validate content type
         if file.content_type not in current_settings.ALLOWED_MEDIA_TYPES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file.content_type}. "
-                f"Allowed types: {current_settings.ALLOWED_MEDIA_TYPES}",
+                detail=f"Unsupported file type: {file.content_type}. Allowed types: {current_settings.ALLOWED_MEDIA_TYPES}",
             )
-
         content_type = file.content_type.lower()
-
-        # Determine media type and send to storage channel
         if content_type.startswith("image/"):
             media_type = "photo"
             sent_message = await bot.send_photo(
@@ -300,7 +242,6 @@ async def upload_media_file(
             )
             file_id = sent_message.video.file_id
         elif content_type == "image/gif":
-            # GIF files should be sent as animation
             media_type = "animation"
             sent_message = await bot.send_animation(
                 chat_id=current_settings.STORAGE_CHANNEL_ID,
@@ -309,7 +250,6 @@ async def upload_media_file(
             )
             file_id = sent_message.animation.file_id
         else:
-            # Fallback to document for other types
             media_type = "document"
             sent_message = await bot.send_document(
                 chat_id=current_settings.STORAGE_CHANNEL_ID,
@@ -317,12 +257,10 @@ async def upload_media_file(
                 caption=f"Uploaded: {file.filename or 'unknown'}",
             )
             file_id = sent_message.document.file_id
-
         log.info(f"Successfully uploaded {media_type} file: {file.filename}")
         return {"ok": True, "file_id": file_id, "media_type": media_type, "filename": file.filename}
-
     except HTTPException:
-        raise  # Re-raise HTTP exceptions
+        raise
     except TelegramAPIError as e:
         log.error(f"Telegram API error while uploading file: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload file to Telegram: {str(e)}")
@@ -333,7 +271,6 @@ async def upload_media_file(
         await bot.session.close()
 
 
-# NEW: Enhanced direct media upload for TWA with channel targeting
 @app.post("/api/v1/media/upload-direct", tags=["Media", "TWA"])
 async def upload_media_direct(
     user_data: Annotated[dict, Depends(get_validated_user_data)],
@@ -343,11 +280,8 @@ async def upload_media_direct(
 ):
     """Enhanced direct media upload with channel targeting for TWA"""
     bot = Bot(token=current_settings.BOT_TOKEN.get_secret_value())
-
     try:
         user_id = user_data["id"]
-
-        # Get user's channels for validation if channel_id provided
         if channel_id:
             channel_repo = get_channel_repo()
             user_channels = await channel_repo.get_user_channels(user_id)
@@ -355,12 +289,8 @@ async def upload_media_direct(
                 raise HTTPException(
                     status_code=403, detail="Access denied: Channel not found or not owned by user"
                 )
-
-        # Enhanced file validation
         if not file.content_type:
             raise HTTPException(status_code=400, detail="File content type is required")
-
-        # File size validation with user-specific limits
         if hasattr(file, "size") and file.size:
             max_size = current_settings.MAX_MEDIA_SIZE_MB * 1024 * 1024
             if file.size > max_size:
@@ -368,18 +298,12 @@ async def upload_media_direct(
                     status_code=413,
                     detail=f"File too large. Maximum size: {current_settings.MAX_MEDIA_SIZE_MB}MB",
                 )
-
-        # Content type validation
         if file.content_type not in current_settings.ALLOWED_MEDIA_TYPES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file.content_type}. "
-                f"Allowed types: {current_settings.ALLOWED_MEDIA_TYPES}",
+                detail=f"Unsupported file type: {file.content_type}. Allowed types: {current_settings.ALLOWED_MEDIA_TYPES}",
             )
-
         content_type = file.content_type.lower()
-
-        # Enhanced metadata collection
         file_metadata = {
             "filename": file.filename or "unknown",
             "content_type": file.content_type,
@@ -387,14 +311,10 @@ async def upload_media_direct(
             "upload_timestamp": datetime.utcnow().isoformat(),
             "channel_id": channel_id,
         }
-
-        # Determine media type and upload to storage channel or direct channel
         target_chat_id = channel_id if channel_id else current_settings.STORAGE_CHANNEL_ID
         caption = f"📱 TWA Upload\n📁 {file_metadata['filename']}\n👤 User: {user_id}"
-
         if channel_id:
             caption += f"\n📺 Direct to channel: {channel_id}"
-
         if content_type.startswith("image/"):
             media_type = "photo"
             sent_message = await bot.send_photo(
@@ -446,13 +366,9 @@ async def upload_media_direct(
                     "mime_type": sent_message.document.mime_type,
                 }
             )
-
-        # Log successful upload with enhanced details
         log.info(
-            f"TWA Direct Upload successful: {media_type} file {file.filename} "
-            f"by user {user_id} to {'channel ' + str(channel_id) if channel_id else 'storage'}"
+            f"TWA Direct Upload successful: {media_type} file {file.filename} by user {user_id} to {'channel ' + str(channel_id) if channel_id else 'storage'}"
         )
-
         return {
             "ok": True,
             "file_id": file_id,
@@ -462,9 +378,8 @@ async def upload_media_direct(
             "message_id": sent_message.message_id,
             "upload_type": "direct_channel" if channel_id else "storage",
         }
-
     except HTTPException:
-        raise  # Re-raise HTTP exceptions
+        raise
     except TelegramAPIError as e:
         log.error(f"Telegram API error during TWA direct upload: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to upload file to Telegram: {str(e)}")
@@ -475,7 +390,6 @@ async def upload_media_direct(
         await bot.session.close()
 
 
-# NEW: Get storage channel files for media browser
 @app.get("/api/v1/media/storage-files", tags=["Media", "TWA"])
 async def get_storage_files(
     user_data: Annotated[dict, Depends(get_validated_user_data)],
@@ -485,17 +399,8 @@ async def get_storage_files(
 ):
     """Get files from storage channel for TWA media browser"""
     bot = Bot(token=current_settings.BOT_TOKEN.get_secret_value())
-
     try:
-        # Get recent messages from storage channel
-        # Note: This is a simplified implementation - in production you'd want
-        # to store media metadata in database for better performance
-
         storage_files = []
-
-        # This is a placeholder - Telegram doesn't provide direct file listing
-        # In production, you'd maintain a database of uploaded files
-
         return {
             "ok": True,
             "files": storage_files,
@@ -503,7 +408,6 @@ async def get_storage_files(
             "limit": limit,
             "offset": offset,
         }
-
     except Exception as e:
         log.error(f"Error fetching storage files: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch storage files")
@@ -511,12 +415,6 @@ async def get_storage_files(
         await bot.session.close()
 
 
-# =============================================================================
-# PHASE 2.1 WEEK 2: RICH ANALYTICS DASHBOARD & AI RECOMMENDATIONS
-# =============================================================================
-
-
-# Enhanced Analytics API endpoints for TWA Dashboard
 @app.get("/api/v1/analytics/post-dynamics/{post_id}", tags=["Analytics", "TWA"])
 async def get_post_view_dynamics(
     post_id: int,
@@ -527,27 +425,19 @@ async def get_post_view_dynamics(
     """Get interactive view progression data for charts"""
     try:
         user_id = user_data["id"]
-
-        # Get post and verify ownership
         scheduled_post = await scheduler_repo.get_post_by_id(post_id)
         if not scheduled_post or scheduled_post.user_id != user_id:
             raise HTTPException(status_code=404, detail="Post not found")
-
-        # Generate mock time-series data for now
-        # In production, this would query actual analytics data
         import random
         from datetime import datetime, timedelta
 
         dynamics_data = []
         base_time = datetime.utcnow() - timedelta(hours=hours_back)
         base_views = scheduled_post.views or random.randint(100, 1000)
-
         for hour in range(hours_back):
             time_point = base_time + timedelta(hours=hour)
-            # Simulate view growth with some randomness
-            growth_factor = 1 + (hour / hours_back) + random.uniform(-0.1, 0.3)
+            growth_factor = 1 + hour / hours_back + random.uniform(-0.1, 0.3)
             views_at_time = int(base_views * growth_factor)
-
             dynamics_data.append(
                 {
                     "time": time_point.isoformat(),
@@ -556,7 +446,6 @@ async def get_post_view_dynamics(
                     "engagement_spike": random.choice([True, False]) if hour > 2 else False,
                 }
             )
-
         return {
             "ok": True,
             "post_id": post_id,
@@ -573,7 +462,6 @@ async def get_post_view_dynamics(
                 "channel_id": scheduled_post.channel_id,
             },
         }
-
     except HTTPException:
         raise
     except Exception as e:
@@ -592,31 +480,19 @@ async def get_best_posting_time(
     """AI-driven posting time recommendations"""
     try:
         user_id = user_data["id"]
-
-        # Verify channel ownership
         user_channels = await channel_repo.get_user_channels(user_id)
         if not any(ch.id == channel_id for ch in user_channels):
             raise HTTPException(status_code=403, detail="Access denied to channel")
-
-        # Get historical posts for analysis
         from datetime import datetime, timedelta
 
         since_date = datetime.utcnow() - timedelta(days=days_analysis)
-
-        # This would query actual post performance data
-        # For now, we'll simulate AI recommendations
         import random
 
-        # Simulate AI analysis results
         time_recommendations = []
-
-        # Generate recommendations for different time slots
-        high_performance_hours = [9, 12, 15, 18, 20, 22]  # Typical high-engagement hours
-
+        high_performance_hours = [9, 12, 15, 18, 20, 22]
         for hour in high_performance_hours:
             confidence = random.uniform(70, 95)
-            predicted_engagement = random.uniform(0.05, 0.25)  # 5-25% engagement rate
-
+            predicted_engagement = random.uniform(0.05, 0.25)
             time_recommendations.append(
                 {
                     "hour": hour,
@@ -628,11 +504,7 @@ async def get_best_posting_time(
                     "reason": f"High audience activity at {hour:02d}:00 based on historical data",
                 }
             )
-
-        # Sort by confidence
         time_recommendations.sort(key=lambda x: x["confidence"], reverse=True)
-
-        # AI insights
         ai_insights = {
             "best_overall_time": time_recommendations[0] if time_recommendations else None,
             "audience_pattern": "Most active during business hours and evening",
@@ -641,17 +513,15 @@ async def get_best_posting_time(
             "avoid_times": ["01:00-06:00", "23:00-24:00"],
             "confidence_level": "high" if len(time_recommendations) > 3 else "medium",
         }
-
         return {
             "ok": True,
             "channel_id": channel_id,
             "analysis_period": f"{days_analysis} days",
-            "recommendations": time_recommendations[:5],  # Top 5 recommendations
+            "recommendations": time_recommendations[:5],
             "ai_insights": ai_insights,
             "generated_at": datetime.utcnow().isoformat(),
             "next_update": (datetime.utcnow() + timedelta(hours=6)).isoformat(),
         }
-
     except HTTPException:
         raise
     except Exception as e:
@@ -670,18 +540,13 @@ async def get_engagement_metrics(
     """Advanced engagement calculations and trends"""
     try:
         user_id = user_data["id"]
-
-        # Verify channel ownership
         user_channels = await channel_repo.get_user_channels(user_id)
         channel = next((ch for ch in user_channels if ch.id == channel_id), None)
         if not channel:
             raise HTTPException(status_code=403, detail="Access denied to channel")
-
-        # Calculate period dates
         from datetime import datetime, timedelta
 
         end_date = datetime.utcnow()
-
         if period == "day":
             start_date = end_date - timedelta(days=1)
             period_display = "Last 24 hours"
@@ -694,29 +559,20 @@ async def get_engagement_metrics(
         else:
             start_date = end_date - timedelta(days=7)
             period_display = "Last 7 days"
-
-        # Get posts in period (this would be actual database query)
-        # For now, simulate engagement metrics
         import random
 
-        # Simulate engagement data
         total_posts = random.randint(5, 25)
         total_views = random.randint(500, 5000)
         total_subscribers = (
             channel.subscribers if hasattr(channel, "subscribers") else random.randint(100, 2000)
         )
-
-        # Calculate metrics
         avg_views_per_post = total_views / total_posts if total_posts > 0 else 0
-        engagement_rate = (total_views / total_subscribers) * 100 if total_subscribers > 0 else 0
-        ctr_rate = random.uniform(2, 8)  # 2-8% typical CTR
-
-        # Top performing posts (simulated)
+        engagement_rate = total_views / total_subscribers * 100 if total_subscribers > 0 else 0
+        ctr_rate = random.uniform(2, 8)
         top_posts = []
         for i in range(min(5, total_posts)):
             post_views = random.randint(100, 800)
-            post_engagement = (post_views / total_subscribers) * 100 if total_subscribers > 0 else 0
-
+            post_engagement = post_views / total_subscribers * 100 if total_subscribers > 0 else 0
             top_posts.append(
                 {
                     "id": f"post_{i + 1}",
@@ -728,19 +584,12 @@ async def get_engagement_metrics(
                     "created_at": (end_date - timedelta(days=random.randint(0, 7))).isoformat(),
                 }
             )
-
-        # Sort by performance
         top_posts.sort(key=lambda x: x["performance_score"], reverse=True)
-
-        # Trend analysis
         trend_data = []
         for day in range(7):
             day_date = start_date + timedelta(days=day)
             daily_views = random.randint(50, 200)
-            daily_engagement = (
-                (daily_views / total_subscribers) * 100 if total_subscribers > 0 else 0
-            )
-
+            daily_engagement = daily_views / total_subscribers * 100 if total_subscribers > 0 else 0
             trend_data.append(
                 {
                     "date": day_date.strftime("%Y-%m-%d"),
@@ -749,7 +598,6 @@ async def get_engagement_metrics(
                     "posts_count": random.randint(1, 4),
                 }
             )
-
         return {
             "ok": True,
             "channel_id": channel_id,
@@ -782,7 +630,6 @@ async def get_engagement_metrics(
             },
             "generated_at": datetime.utcnow().isoformat(),
         }
-
     except HTTPException:
         raise
     except Exception as e:
@@ -800,11 +647,7 @@ async def get_initial_data(
 ):
     user_id = user_data["id"]
     username = user_data.get("username")
-
-    # Ensure the user exists in the database
     await user_repo.create_user(user_id, username)
-
-    # Fetch plan information
     plan = None
     plan_name = await user_repo.get_user_plan_name(user_id)
     if plan_name:
@@ -815,16 +658,10 @@ async def get_initial_data(
                 max_channels=plan_row["max_channels"],
                 max_posts_per_month=plan_row["max_posts_per_month"],
             )
-
-    # Fetch channels and scheduled posts
     channel_rows = await channel_repo.get_user_channels(user_id)
     channels = [
-        Channel(
-            id=row["id"],
-            title=row.get("title") or "",
-            username=row.get("username"),
-        )
-        for row in (channel_rows or [])
+        Channel(id=row["id"], title=row.get("title") or "", username=row.get("username"))
+        for row in channel_rows or []
     ]
     post_rows = await scheduler_repo.get_scheduled_posts_by_user(user_id)
     scheduled_posts = [
@@ -837,15 +674,11 @@ async def get_initial_data(
             scheduled_at=row.get("schedule_time"),
             buttons=row.get("inline_buttons"),
         )
-        for row in (post_rows or [])
+        for row in post_rows or []
     ]
-
     user = User(id=user_id, username=username)
     return InitialDataResponse(
-        user=user,
-        plan=plan,
-        channels=channels,
-        scheduled_posts=scheduled_posts,
+        user=user, plan=plan, channels=channels, scheduled_posts=scheduled_posts
     )
 
 
@@ -858,13 +691,10 @@ async def add_channel(
 ):
     user_id = user_data["id"]
     channel_username = request_data.channel_username.strip()
-
     if not channel_username.startswith("@"):
         channel_username = f"@{channel_username}"
-
     await subscription_service.check_channel_limit(user_id)
     channel_data = await guard_service.check_bot_is_admin(channel_username, user_id)
-
     return Channel(
         id=channel_data.get("channel_id") or channel_data["id"],
         title=channel_data.get("channel_name") or channel_data.get("title", ""),
@@ -881,7 +711,6 @@ async def schedule_post(
 ):
     user_id = user_data["id"]
     await subscription_service.check_post_limit(user_id)
-
     post_id = await scheduler_repo.create_scheduled_post(
         user_id=user_id,
         channel_id=request.channel_id,
@@ -889,11 +718,10 @@ async def schedule_post(
         schedule_time=request.scheduled_at,
         media_id=request.media_id,
         media_type=request.media_type,
-        inline_buttons=(
-            [button.model_dump() for button in request.buttons] if request.buttons else None
-        ),
+        inline_buttons=[button.model_dump() for button in request.buttons]
+        if request.buttons
+        else None,
     )
-
     return ScheduledPost(
         id=post_id,
         channel_id=request.channel_id,
@@ -915,7 +743,6 @@ async def delete_post(
     success = await scheduler_repo.delete_scheduled_post(post_id, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="Post not found or you don't have permission.")
-
     return MessageResponse(message="Post deleted successfully")
 
 
@@ -931,11 +758,9 @@ async def delete_channel(
         raise HTTPException(
             status_code=404, detail="Channel not found or you don't have permission."
         )
-
     success = await channel_repo.delete_channel(channel_id)
     if not success:
         raise HTTPException(
             status_code=404, detail="Channel not found or you don't have permission."
         )
-
     return MessageResponse(message="Channel deleted successfully")

@@ -33,6 +33,9 @@ from bot.models.twa import (
 from bot.services import GuardService, SubscriptionService
 from bot.services.auth_service import validate_init_data
 
+# Payment system imports
+from bot.api.payment_routes import payment_router
+
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -124,6 +127,9 @@ app.add_middleware(setup_prometheus_middleware())
 
 # Set app info for Prometheus metrics
 prometheus_service.set_app_info(version="1.1.0", environment="production")
+
+# Include payment routes
+app.include_router(payment_router, prefix="/api/v1")
 
 
 # --- API Endpoints ---

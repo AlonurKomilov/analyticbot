@@ -10,11 +10,14 @@ client = TestClient(app)
 
 
 def test_health_endpoint():
-    """Test that /health endpoint returns 200 with correct response"""
+    """Test that /health endpoint returns 200 with enhanced response"""
     response = client.get("/health")
     
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    json_response = response.json()
+    assert json_response["status"] == "ok"
+    assert "environment" in json_response
+    assert "debug" in json_response
 
 
 def test_health_endpoint_headers():

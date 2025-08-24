@@ -124,6 +124,64 @@ bot/
 
 ## 🚀 **Quick Start Guide**
 
+### Environment Variables
+
+AnalyticBot uses a centralized configuration system with Pydantic settings. Copy the example file and configure your environment:
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit with your values
+nano .env  # or use your preferred editor
+```
+
+#### Required Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `BOT_TOKEN` | Telegram Bot API token from @BotFather | `7900046521:AAGgnLxH...` |
+| `DATABASE_URL` | PostgreSQL connection URL | `postgresql+asyncpg://user:pass@host:port/db` |
+| `JWT_SECRET_KEY` | JWT signing secret (32+ chars) | Generate with: `openssl rand -hex 32` |
+| `TWA_HOST_URL` | Frontend URL for Telegram Web App | `https://your-app.com` |
+| `STORAGE_CHANNEL_ID` | Telegram channel for file storage | `-1001234567890` |
+
+#### Optional Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REDIS_URL` | Redis connection for caching | `redis://localhost:6379/0` |
+| `SENTRY_DSN` | Error tracking with Sentry | (empty) |
+| `LOG_LEVEL` | Logging verbosity | `INFO` |
+| `OPENAI_API_KEY` | OpenAI API for AI features | (empty) |
+
+#### Payment Gateway Variables (Optional)
+
+| Variable | Description | Usage |
+|----------|-------------|-------|
+| `STRIPE_SECRET_KEY` | Stripe API secret | International payments |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook secret | Payment verification |
+| `PAYME_SECRET_KEY` | PayMe API secret | Uzbekistan payments |
+| `CLICK_SECRET_KEY` | Click API secret | Uzbekistan payments |
+
+⚠️ **Security Note**: Never commit `.env` files or hardcode secrets. Use environment variables or secure secret management in production.
+
+✅ **Security Status**: This repository has been audited and all hardcoded secrets have been extracted to environment variables. The current `.env` file contains development placeholders only. In production, use secure secret management services like AWS Secrets Manager, Azure Key Vault, or Kubernetes Secrets.
+
+#### Configuration Structure
+
+The application uses a hierarchical configuration system:
+
+```python
+# New centralized config (recommended)
+from config import settings
+
+# Access nested settings
+bot_token = settings.bot.BOT_TOKEN.get_secret_value()
+db_url = settings.database.DATABASE_URL
+cors_origins = settings.api.CORS_ORIGINS
+```
+
 ### Prerequisites
 - Node.js 18+ and npm/yarn
 - Python 3.11+ with pip

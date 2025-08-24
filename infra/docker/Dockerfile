@@ -66,9 +66,9 @@ CMD ["python", "-m", "apps.bot.run_bot"]
 # ---------- Celery Worker ----------
 FROM final AS worker
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["celery", "-A", "apps.bot.celery_app", "worker", "--loglevel=info"]
+CMD ["celery", "-A", "infra.celery.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
 
 # ---------- Celery Beat ----------
 FROM final AS beat
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["celery", "-A", "apps.bot.celery_app", "beat", "--loglevel=info"]
+CMD ["celery", "-A", "infra.celery.celery_app", "beat", "--loglevel=info", "--scheduler=celery.beat:PersistentScheduler"]

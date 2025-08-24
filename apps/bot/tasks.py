@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime
 
-from apps.bot.celery_app import resilient_task
+from infra.celery import enhanced_retry_task
 from apps.bot.container import container
 from apps.bot.services.prometheus_service import prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
@@ -22,7 +22,7 @@ async def cleanup_resources():
         logger.warning("Resource cleanup warning", exc_info=e)
 
 
-@resilient_task(name="bot.tasks.send_post_task", bind=True)
+@enhanced_retry_task(name="bot.tasks.send_post_task", bind=True)
 def send_post_task(self, scheduler_id: int):
     async def _run():
         context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
@@ -47,7 +47,7 @@ def send_post_task(self, scheduler_id: int):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.remove_expired_schedulers", bind=True)
+@enhanced_retry_task(name="bot.tasks.remove_expired_schedulers", bind=True)
 def remove_expired_schedulers(self):
     async def _run():
         context = ErrorContext().add("task", "remove_expired_schedulers")
@@ -66,7 +66,7 @@ def remove_expired_schedulers(self):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.send_scheduled_message", bind=True)
+@enhanced_retry_task(name="bot.tasks.send_scheduled_message", bind=True)
 def send_scheduled_message(self):
     async def _run() -> str:
         context = ErrorContext().add("task", "send_scheduled_message")
@@ -109,7 +109,7 @@ def send_scheduled_message(self):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.update_post_views_task", bind=True)
+@enhanced_retry_task(name="bot.tasks.update_post_views_task", bind=True)
 @prometheus_timer("celery_task")
 def update_post_views_task(self):
     async def _run() -> str:
@@ -131,7 +131,7 @@ def update_post_views_task(self):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.health_check_task", bind=True)
+@enhanced_retry_task(name="bot.tasks.health_check_task", bind=True)
 def health_check_task(self):
     """Periodic health check task for monitoring system status"""
 
@@ -167,7 +167,7 @@ def health_check_task(self):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.cleanup_metrics_task", bind=True)
+@enhanced_retry_task(name="bot.tasks.cleanup_metrics_task", bind=True)
 def cleanup_metrics_task(self):
     """Periodic cleanup task for metrics and monitoring data"""
 
@@ -192,7 +192,7 @@ def cleanup_metrics_task(self):
     return asyncio.run(_run())
 
 
-@resilient_task(name="bot.tasks.maintenance_cleanup", bind=True)
+@enhanced_retry_task(name="bot.tasks.maintenance_cleanup", bind=True)
 def maintenance_cleanup(self):
     """Periodic maintenance: requeue stuck 'sending' posts and cleanup old posts."""
 
@@ -222,7 +222,7 @@ def maintenance_cleanup(self):
     return "ok"
 
 
-@resilient_task(name="bot.tasks.update_prometheus_metrics", bind=True)
+@enhanced_retry_task(name="bot.tasks.update_prometheus_metrics", bind=True)
 def update_prometheus_metrics(self):
     """Periodic task to update Prometheus metrics"""
 

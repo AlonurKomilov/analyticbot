@@ -1,16 +1,34 @@
 """
 AnalyticBot API - Main Entry Point
-Unified FastAPI application with secure configuration
+Unified FastAPI application with layered architecture and secure configuration
 """
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from typing import List
+from uuid import UUID
+from datetime import datetime
+
+from fastapi import FastAPI, Depends, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from config import settings
+from core import ScheduleService, DeliveryService, ScheduledPost
+from apps.api.deps import get_schedule_service, get_delivery_service, cleanup_db_pool
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events"""
+    # Startup
+    yield
+    # Shutdown
+    await cleanup_db_pool()
+
 
 app = FastAPI(
     title="AnalyticBot API", 
     version="v1",
-    debug=settings.DEBUG
+    debug=settings.DEBUG,
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -19,6 +37,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
 
 @app.get("/health")
 def health():
@@ -29,8 +48,112 @@ def health():
         "debug": settings.DEBUG
     }
 
-# TODO: Add routers from legacy APIs as needed
-# from apis.routers import analytics, security, performance
-# app.include_router(analytics.router, prefix="/analytics")
-# app.include_router(security.router, prefix="/security") 
-# app.include_router(performance.router, prefix="/performance")
+
+# Schedule endpoints using dependency injection
+@app.post("/schedule", response_model=dict)
+async def create_scheduled_post(
+    title: str,
+    content: str,
+    channel_id: str,
+    user_id: str,
+    scheduled_at: datetime,
+    tags: List[str] = None,
+    schedule_service: ScheduleService = Depends(get_schedule_service)
+):
+    """Create a new scheduled post"""
+    try:
+        post = await schedule_service.create_scheduled_post(
+            title=title,
+            content=content,
+            channel_id=channel_id,
+            user_id=user_id,
+            scheduled_at=scheduled_at,
+            tags=tags
+        )
+        
+        return {
+            "id": str(post.id),
+            "title": post.title,
+            "scheduled_at": post.scheduled_at.isoformat(),
+            "status": post.status.value
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/schedule/{post_id}")
+async def get_scheduled_post(
+    post_id: UUID,
+    schedule_service: ScheduleService = Depends(get_schedule_service)
+):
+    """Get a scheduled post by ID"""
+    post = await schedule_service.get_post(post_id)
+    
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    return {
+        "id": str(post.id),
+        "title": post.title,
+        "content": post.content,
+        "channel_id": post.channel_id,
+        "user_id": post.user_id,
+        "scheduled_at": post.scheduled_at.isoformat(),
+        "status": post.status.value,
+        "tags": post.tags,
+        "created_at": post.created_at.isoformat()
+    }
+
+
+@app.get("/schedule/user/{user_id}")
+async def get_user_posts(
+    user_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    schedule_service: ScheduleService = Depends(get_schedule_service)
+):
+    """Get all scheduled posts for a user"""
+    posts = await schedule_service.get_user_posts(
+        user_id=user_id,
+        limit=limit,
+        offset=offset
+    )
+    
+    return {
+        "posts": [
+            {
+                "id": str(post.id),
+                "title": post.title,
+                "scheduled_at": post.scheduled_at.isoformat(),
+                "status": post.status.value
+            }
+            for post in posts
+        ],
+        "total": len(posts)
+    }
+
+
+@app.delete("/schedule/{post_id}")
+async def cancel_scheduled_post(
+    post_id: UUID,
+    schedule_service: ScheduleService = Depends(get_schedule_service)
+):
+    """Cancel a scheduled post"""
+    try:
+        success = await schedule_service.cancel_post(post_id)
+        if success:
+            return {"message": "Post cancelled successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Post not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/delivery/stats")
+async def get_delivery_stats(
+    channel_id: str = None,
+    delivery_service: DeliveryService = Depends(get_delivery_service)
+):
+    """Get delivery statistics"""
+    stats = await delivery_service.get_delivery_stats(channel_id=channel_id)
+    return stats

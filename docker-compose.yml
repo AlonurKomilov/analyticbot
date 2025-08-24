@@ -42,6 +42,7 @@ services:
       context: .
       dockerfile: infra/docker/Dockerfile
       target: api
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
     container_name: analyticbot-api
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
@@ -57,9 +58,9 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 10s
+      timeout: 3s
+      retries: 10
     volumes:
       - ./var/results:/app/results
     restart: unless-stopped
@@ -70,6 +71,7 @@ services:
       context: .
       dockerfile: infra/docker/Dockerfile
       target: bot
+    command: python -m apps.bot.run_bot
     container_name: analyticbot-bot
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
@@ -89,6 +91,7 @@ services:
       context: .
       dockerfile: infra/docker/Dockerfile
       target: worker
+    command: celery -A infra.celery.celery_app worker -l info
     container_name: analyticbot-worker
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
@@ -110,6 +113,7 @@ services:
       context: .
       dockerfile: infra/docker/Dockerfile
       target: beat
+    command: celery -A infra.celery.celery_app beat -l info
     container_name: analyticbot-beat
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}

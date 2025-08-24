@@ -2,10 +2,10 @@ import asyncio
 import logging
 from datetime import datetime
 
-from infra.celery import enhanced_retry_task
 from apps.bot.container import container
 from apps.bot.services.prometheus_service import prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+from infra.celery import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
 

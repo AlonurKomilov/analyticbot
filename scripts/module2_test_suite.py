@@ -12,7 +12,7 @@ from datetime import datetime
 from pathlib import Path
 
 import aiohttp
-import psycopg
+import psycopg2 as psycopg
 import redis
 
 

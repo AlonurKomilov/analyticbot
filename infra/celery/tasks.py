@@ -20,68 +20,132 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
     max_retries=5,
 )
-def send_message_task(self, chat_id: str, message: str, **kwargs) -> dict[str, Any]:
+def send_message_task(self, chat_id: str, message: str, idempotency_key: str = None, **kwargs) -> dict[str, Any]:
     """
-    Critical message sending task with aggressive retry strategy.
-
-    Features:
-    - Exponential backoff: 2^retry_num seconds (10, 20, 40, 80, 160)
-    - Jitter to prevent thundering herd
-    - Maximum 5 retries for critical delivery
-    - Comprehensive error logging
-
+    Enhanced message sending task with idempotency and rate limiting.
+    
     Args:
-        chat_id: Telegram chat/channel ID
-        message: Message text to send
-        **kwargs: Additional Telegram API parameters
-
-    Returns:
-        Dict with success status and details
+        chat_id: Target chat ID
+        message: Message text
+        idempotency_key: Optional idempotency key for duplicate prevention
+        **kwargs: Additional parameters for bot.send_message()
     """
     import asyncio
+    from uuid import uuid4
 
-    async def _send_message():
+    async def _send_message_with_reliability():
         try:
             # Import inside task to avoid circular imports
             from apps.bot.container import container
             from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+            from core.services.enhanced_delivery_service import EnhancedDeliveryService
+            from core.utils.idempotency import IdempotencyGuard
+            from core.utils.ratelimit import TokenBucketRateLimiter
 
             context = (
                 ErrorContext()
                 .add("task", "send_message_task")
                 .add("chat_id", chat_id)
+                .add("idempotency_key", idempotency_key)
                 .add("retry", self.request.retries if hasattr(self.request, "retries") else 0)
             )
 
-            logger.info(f"Sending message to {chat_id} (attempt {self.request.retries + 1}/6)")
+            # Generate idempotency key if not provided
+            effective_idempotency_key = idempotency_key or f"task:{self.request.id}"
+            
+            logger.info(
+                f"Sending message to {chat_id} with reliability guards "
+                f"(attempt {self.request.retries + 1}/6, key={effective_idempotency_key})"
+            )
 
-            # Get bot instance and send message
-            bot = container.bot()
+            # Initialize reliability components
+            idempotency_guard = IdempotencyGuard()
+            rate_limiter = TokenBucketRateLimiter()
 
-            # Send the message
-            result = await bot.send_message(chat_id=chat_id, text=message, **kwargs)
+            # Check for duplicate operation
+            is_duplicate, existing_status = await idempotency_guard.is_duplicate(effective_idempotency_key)
+            
+            if is_duplicate and existing_status and existing_status.status == "completed":
+                logger.info(f"Duplicate task detected, returning cached result: {effective_idempotency_key}")
+                return {
+                    "success": True,
+                    "message_id": existing_status.result.get("message_id") if existing_status.result else None,
+                    "chat_id": chat_id,
+                    "duplicate": True,
+                    "cached_result": existing_status.result,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
 
-            logger.info(f"Message sent successfully to {chat_id}: {result.message_id}")
+            # Mark operation as started
+            operation_started = await idempotency_guard.mark_operation_start(effective_idempotency_key)
+            if not operation_started:
+                logger.warning(f"Could not acquire idempotency lock: {effective_idempotency_key}")
+                raise Exception("Operation already in progress")
 
-            # Record success metric
             try:
-                from apps.bot.utils.monitoring import metrics
-
-                metrics.record_metric(
-                    "message_sent_success",
-                    1.0,
-                    {"chat_id": str(chat_id), "retry_count": self.request.retries},
+                # Apply rate limiting
+                chat_allowed = await rate_limiter.acquire_with_delay(
+                    bucket_id=str(chat_id),
+                    tokens=1,
+                    limit_type="chat",
+                    max_wait=60.0  # 1 minute max wait
                 )
-            except ImportError:
-                pass
+                
+                if not chat_allowed:
+                    raise Exception(f"Chat rate limit exceeded for {chat_id}")
 
-            return {
-                "success": True,
-                "message_id": result.message_id,
-                "chat_id": chat_id,
-                "retry_count": self.request.retries,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+                global_allowed = await rate_limiter.acquire_with_delay(
+                    bucket_id="global_bot",
+                    tokens=1,
+                    limit_type="global",
+                    max_wait=60.0
+                )
+                
+                if not global_allowed:
+                    raise Exception("Global bot rate limit exceeded")
+
+                # Get bot instance and send message
+                bot = container.bot()
+                result = await bot.send_message(chat_id=chat_id, text=message, **kwargs)
+
+                logger.info(f"Message sent successfully to {chat_id}: {result.message_id}")
+
+                # Prepare result data
+                result_data = {
+                    "success": True,
+                    "message_id": result.message_id,
+                    "chat_id": chat_id,
+                    "retry_count": self.request.retries,
+                    "idempotency_key": effective_idempotency_key,
+                    "rate_limited": False,
+                    "duplicate": False,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+                # Mark operation as completed
+                await idempotency_guard.mark_operation_complete(effective_idempotency_key, result_data)
+
+                # Record success metric
+                try:
+                    from apps.bot.utils.monitoring import metrics
+                    metrics.record_metric(
+                        "message_sent_success",
+                        1.0,
+                        {
+                            "chat_id": str(chat_id), 
+                            "retry_count": self.request.retries,
+                            "with_idempotency": bool(idempotency_key)
+                        },
+                    )
+                except ImportError:
+                    pass
+
+                return result_data
+
+            except Exception as send_error:
+                # Mark operation as failed
+                await idempotency_guard.mark_operation_failed(effective_idempotency_key, str(send_error))
+                raise send_error
 
         except Exception as e:
             context.add("error", str(e))
@@ -90,7 +154,6 @@ def send_message_task(self, chat_id: str, message: str, **kwargs) -> dict[str, A
             # Record failure metric
             try:
                 from apps.bot.utils.monitoring import metrics
-
                 metrics.record_metric(
                     "message_sent_failure",
                     1.0,
@@ -98,6 +161,7 @@ def send_message_task(self, chat_id: str, message: str, **kwargs) -> dict[str, A
                         "chat_id": str(chat_id),
                         "retry_count": self.request.retries,
                         "error_type": type(e).__name__,
+                        "with_idempotency": bool(idempotency_key)
                     },
                 )
             except ImportError:
@@ -105,11 +169,16 @@ def send_message_task(self, chat_id: str, message: str, **kwargs) -> dict[str, A
 
             # Calculate delay for next retry
             delay = min(10 * (2**self.request.retries), 300)  # Max 5 minutes
-            logger.warning(f"Message send failed to {chat_id}, retrying in {delay}s: {e}")
+            
+            # Check if this is a rate limit error and adjust delay
+            if any(phrase in str(e).lower() for phrase in ["rate limit", "flood", "too many"]):
+                delay = min(delay * 2, 600)  # Double delay for rate limit errors, max 10 minutes
+                logger.warning(f"Rate limit detected, extending retry delay to {delay}s")
 
+            logger.warning(f"Message send failed to {chat_id}, retrying in {delay}s: {e}")
             raise self.retry(countdown=delay, exc=e)
 
-    return asyncio.run(_send_message())
+    return asyncio.run(_send_message_with_reliability())
 
 
 @enhanced_retry_task(

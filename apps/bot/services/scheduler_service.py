@@ -86,86 +86,150 @@ class SchedulerService:
 
     async def send_post_to_channel(self, post_data: dict) -> dict[str, any]:
         """
-        Send scheduled post to channel with enhanced error handling and monitoring.
+        Send scheduled post to channel with enhanced error handling, idempotency, and rate limiting.
 
         Returns:
             Dict with operation results and statistics
         """
+        from core.services.enhanced_delivery_service import EnhancedDeliveryService
+        from uuid import uuid4
+        import hashlib
+
         result = {
             "success": False,
             "message_id": None,
             "error": None,
             "post_id": post_data.get("id"),
         }
+        
         context = (
             ErrorContext()
             .add("operation", "send_post_to_channel")
             .add("post_id", post_data.get("id"))
             .add("channel_id", post_data.get("channel_id"))
         )
+        
         try:
             if not post_data.get("channel_id"):
                 raise ValueError("Channel ID is required")
             if not post_data.get("post_text") and (not post_data.get("media_id")):
                 raise ValueError("Either post text or media is required")
-            reply_markup = self._build_reply_markup(post_data.get("inline_buttons"))
-            sent_message = None
-            if post_data.get("media_id"):
-                media_type = post_data.get("media_type", "photo").lower()
-                if media_type == "photo":
-                    sent_message = await self.bot.send_photo(
-                        chat_id=post_data["channel_id"],
-                        photo=post_data["media_id"],
-                        caption=post_data.get("post_text", ""),
-                        reply_markup=reply_markup,
-                    )
-                elif media_type == "video":
-                    sent_message = await self.bot.send_video(
-                        chat_id=post_data["channel_id"],
-                        video=post_data["media_id"],
-                        caption=post_data.get("post_text", ""),
-                        reply_markup=reply_markup,
-                    )
-                elif media_type == "document":
-                    sent_message = await self.bot.send_document(
-                        chat_id=post_data["channel_id"],
-                        document=post_data["media_id"],
-                        caption=post_data.get("post_text", ""),
-                        reply_markup=reply_markup,
-                    )
+                
+            # Create enhanced delivery service for reliability
+            enhanced_delivery = EnhancedDeliveryService(
+                delivery_repo=None,  # Not using the repo-based delivery tracking here
+                schedule_repo=None
+            )
+            
+            # Create send function that encapsulates the actual sending logic
+            async def _do_send(post_data: dict) -> dict:
+                reply_markup = self._build_reply_markup(post_data.get("inline_buttons"))
+                sent_message = None
+                
+                if post_data.get("media_id"):
+                    media_type = post_data.get("media_type", "photo").lower()
+                    if media_type == "photo":
+                        sent_message = await self.bot.send_photo(
+                            chat_id=post_data["channel_id"],
+                            photo=post_data["media_id"],
+                            caption=post_data.get("post_text", ""),
+                            reply_markup=reply_markup,
+                        )
+                    elif media_type == "video":
+                        sent_message = await self.bot.send_video(
+                            chat_id=post_data["channel_id"],
+                            video=post_data["media_id"],
+                            caption=post_data.get("post_text", ""),
+                            reply_markup=reply_markup,
+                        )
+                    elif media_type == "document":
+                        sent_message = await self.bot.send_document(
+                            chat_id=post_data["channel_id"],
+                            document=post_data["media_id"],
+                            caption=post_data.get("post_text", ""),
+                            reply_markup=reply_markup,
+                        )
+                    else:
+                        sent_message = await self.bot.send_photo(
+                            chat_id=post_data["channel_id"],
+                            photo=post_data["media_id"],
+                            caption=post_data.get("post_text", ""),
+                            reply_markup=reply_markup,
+                        )
                 else:
-                    sent_message = await self.bot.send_photo(
+                    sent_message = await self.bot.send_message(
                         chat_id=post_data["channel_id"],
-                        photo=post_data["media_id"],
-                        caption=post_data.get("post_text", ""),
+                        text=post_data["post_text"],
                         reply_markup=reply_markup,
+                        disable_web_page_preview=True,
                     )
-            else:
-                sent_message = await self.bot.send_message(
-                    chat_id=post_data["channel_id"],
-                    text=post_data["post_text"],
-                    reply_markup=reply_markup,
-                    disable_web_page_preview=True,
-                )
-            if sent_message:
+                
+                if sent_message:
+                    return {
+                        "message_id": sent_message.message_id,
+                        "chat_id": sent_message.chat.id,
+                        "success": True
+                    }
+                else:
+                    raise Exception("No message returned from Telegram API")
+            
+            # Use enhanced delivery service with reliability guards
+            delivery_result = await enhanced_delivery.send_with_reliability_guards(
+                delivery_id=uuid4(),
+                post_data=post_data,
+                send_function=_do_send,
+                idempotency_ttl=1800,  # 30 minutes
+                max_rate_limit_wait=120.0  # 2 minutes
+            )
+            
+            # Process the delivery result
+            if delivery_result.get("success"):
+                sent_message_id = delivery_result.get("message_id")
+                
+                # Log analytics (with error handling)
                 try:
                     await self.analytics_repo.log_sent_post(
                         scheduled_post_id=post_data["id"],
-                        channel_id=sent_message.chat.id,
-                        message_id=sent_message.message_id,
+                        channel_id=post_data["channel_id"],
+                        message_id=sent_message_id,
                     )
                 except Exception as e:
                     analytics_context = context.add("sub_operation", "log_sent_post")
                     ErrorHandler.handle_database_error(e, analytics_context)
+                
+                # Update post status (with error handling)
                 try:
                     await self.scheduler_repo.update_post_status(post_data["id"], "sent")
                 except Exception as e:
                     status_context = context.add("sub_operation", "update_post_status")
                     ErrorHandler.handle_database_error(e, status_context)
-                result.update({"success": True, "message_id": sent_message.message_id})
+                
+                result.update({
+                    "success": True,
+                    "message_id": sent_message_id,
+                    "duplicate": delivery_result.get("duplicate", False),
+                    "rate_limited": delivery_result.get("rate_limited", False),
+                    "idempotency_key": delivery_result.get("idempotency_key")
+                })
+                
                 logger.info(
-                    f"Successfully sent post {post_data['id']} to channel {post_data['channel_id']} (message_id: {sent_message.message_id})"
+                    f"Successfully sent post {post_data['id']} to channel {post_data['channel_id']} "
+                    f"(message_id: {sent_message_id}, duplicate: {delivery_result.get('duplicate')}, "
+                    f"rate_limited: {delivery_result.get('rate_limited')})"
                 )
+            else:
+                error_msg = delivery_result.get("error", "Unknown delivery error")
+                result["error"] = error_msg
+                
+                # Update post status to error
+                try:
+                    await self.scheduler_repo.update_post_status(post_data["id"], "error")
+                except Exception as db_e:
+                    status_context = context.add("sub_operation", "update_error_status")
+                    ErrorHandler.handle_database_error(db_e, status_context)
+                    
+                logger.error(f"Failed to send post {post_data['id']}: {error_msg}")
+                
         except TelegramAPIError as e:
             error_id = ErrorHandler.handle_telegram_api_error(e, context)
             result["error"] = f"Telegram API error: {str(e)} (ID: {error_id})"
@@ -182,6 +246,7 @@ class SchedulerService:
             except Exception as db_e:
                 status_context = context.add("sub_operation", "update_error_status")
                 ErrorHandler.handle_database_error(db_e, status_context)
+                
         return result
 
     async def schedule_post(

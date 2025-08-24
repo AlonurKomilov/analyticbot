@@ -29,11 +29,19 @@ matplotlib = "^3.9.1"
 python-dotenv = "^1.0.1"
 sentry-sdk = "^2.9.0"
 fluent-compiler = "^0.4"
-# Phase 0.0 Infrastructure Dependencies
+# Infrastructure Dependencies
 pyyaml = "^6.0.0"
 kubernetes = "^28.1.0"
 jinja2 = "^3.1.0"
 prometheus-client = "^0.17.1"
+# Production Dependencies (moved from requirements.prod.txt)
+psutil = "^5.9.5"
+gunicorn = "^21.2.0"
+grafana-api = "^1.0.3"
+prometheus-api-client = "^0.5.3"
+httpx = "^0.24.1"
+py-spy = "^0.3.14"
+cryptography = "^41.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.1"
@@ -41,14 +49,17 @@ pre-commit = "^3.7.1"
 ruff = "^0.4.8"
 mypy = "^1.10.0"
 black = "^24.4.2"
-fakeredis="^2.21.0"
-pytest-cov="^4.1.0"
+fakeredis = "^2.21.0"
+pytest-cov = "^4.1.0"
 pip-audit = "^2.9.0"
 flake8 = "^7.3.0"
 pytest-dotenv = "^0.5.2"
 pytest-env = "^1.1.5"
-pytest-asyncio = "^1.1.0"
+pytest-asyncio = "^0.21.0"
 setuptools = "^80.9.0"
+# Additional dev dependencies
+pytest-benchmark = "^4.0.0"
+ipython = "^8.0.0"
 
 [tool.coverage.run]
 source = ["bot"]

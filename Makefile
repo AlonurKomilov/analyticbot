@@ -5,7 +5,7 @@ ifeq (,$(wildcard ./.env))
     $(shell cp .env.example .env)
 endif
 
-.PHONY: help up down logs ps migrate lint typecheck test
+.PHONY: help up down logs ps migrate lint typecheck test test-all export-reqs
 
 help:
 	@echo "Usage: make [target]"
@@ -18,6 +18,7 @@ help:
 	@echo "  lint        - Run ruff linter"
 	@echo "  typecheck   - Run mypy type checker"
 	@echo "  test        - Run pytest"
+	@echo "  export-reqs - Export Poetry deps to requirements.txt files"
 
 
 up:
@@ -46,3 +47,9 @@ test:
 
 test-all:
 	pytest -q --maxfail=1 --disable-warnings --cov=bot --cov-report=term-missing
+
+# Poetry dependency management
+.PHONY: export-reqs
+export-reqs:
+	poetry export -f requirements.txt --output requirements.txt --without-hashes
+	poetry export -f requirements.txt --output requirements.prod.txt --without-hashes --only=main

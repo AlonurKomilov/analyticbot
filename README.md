@@ -137,25 +137,49 @@ bot/
 
 ### Installation & Setup
 
+#### Prerequisites
+- Python 3.11+
+- Node.js 18+ (for frontend)
+- Poetry (Python dependency management)
+- PostgreSQL 14+
+- Redis 6+
+
+#### Install with Poetry (Recommended)
+
 ```bash
 # Clone the repository
 git clone https://github.com/AlonurKomilov/analyticbot.git
 cd analyticbot
 
-# Frontend setup
+# Install Python dependencies with Poetry
+poetry install
+
+# Activate virtual environment
+poetry shell
+
+# Backend setup
+python -m alembic upgrade head
+python apps/bot/run_bot.py
+
+# Frontend setup (new terminal)
 cd twa-frontend
 npm install
 npm run dev
 
-# Backend setup (new terminal)
-cd ../
+# Development server
+python scripts/dev_server.py  # API server on http://localhost:8000
+
+# Export requirements (optional)
+make export-reqs  # Creates requirements.txt from Poetry
+```
+
+#### Alternative: pip install
+
+```bash
+# Backend setup (if not using Poetry)
 pip install -r requirements.txt
 python -m alembic upgrade head
-python run_bot.py
-
-# Run tests
-cd twa-frontend
-npm run test:run  # Should show 13/13 passing
+python apps/bot/run_bot.py
 ```
 
 ### Docker Deployment (Recommended)

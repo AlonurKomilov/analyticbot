@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.11", "3.12" ]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache Poetry installation
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            pip-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --no-root
+          poetry install --no-interaction
+
+      - name: Check pre-commit configuration
+        id: precommit-check
+        run: |
+          if [ -f .pre-commit-config.yaml ]; then
+            echo "has-precommit=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-precommit=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install pre-commit
+        if: steps.precommit-check.outputs.has-precommit == 'true'
+        run: |
+          pip install pre-commit
+
+      - name: Run pre-commit
+        if: steps.precommit-check.outputs.has-precommit == 'true'
+        run: |
+          pre-commit run --all-files
+
+      - name: Lint with ruff
+        run: |
+          poetry run ruff check .
+
+      - name: Format check with ruff
+        run: |
+          poetry run ruff format --check .
+
+      - name: Run tests
+        run: |
+          poetry run pytest tests/test_layered_architecture.py tests/test_health.py -v
+
+  # Optional Docker build smoke test
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -f infra/docker/Dockerfile --target api -t analyticbot:test .
+          echo "✅ Docker build successful"
+
+      - name: Test Docker image
+        run: |
+          docker run --rm analyticbot:test python -c "
+          import apps.api.main
+          import apps.bot.run_bot
+          print('✅ Docker image imports working')
+          "

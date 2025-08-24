@@ -155,3 +155,16 @@ docker-compose.override.yml
 # Environment variables
 .env
 node_modules
+
+# Additional cleanup items
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+*.pyo
+*.db
+*.sqlite*
+.DS_Store
+results/
+logs/

@@ -1,3 +1,4 @@
+# migrated to apps/api/main.py
 #!/usr/bin/env python3
 """
 AnalyticBot - Main Runner

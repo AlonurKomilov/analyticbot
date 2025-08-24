@@ -1,3 +1,4 @@
+# migrated to apps/api/main.py
 """Legacy shim for performance monitoring API.
 
 Implementation lives in `apis.performance_api`.

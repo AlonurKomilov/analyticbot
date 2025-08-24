@@ -1,3 +1,4 @@
+# migrated to apps/api/main.py
 """Legacy shim module.
 
 This file remains only to keep backward compatibility for imports expecting

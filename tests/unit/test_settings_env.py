@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch
 
-from bot.config import Settings
+from apps.bot.config import Settings
 
 
 def test_settings_load_from_env():
@@ -19,7 +19,6 @@ def test_settings_load_from_env():
         "TWA_HOST_URL": "http://localhost:5173",
         "STORAGE_CHANNEL_ID": "-12345",
     }
-
     with patch.dict(os.environ, env_vars):
         settings = Settings()
         assert str(settings.DATABASE_URL) == env_vars["DATABASE_URL"]

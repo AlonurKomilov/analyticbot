@@ -3,11 +3,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from fastapi import HTTPException
 
-from bot.container import container
-from bot.database.repositories import ChannelRepository
-from bot.services.subscription_service import SubscriptionService
+from apps.bot.container import container
+from apps.bot.database.repositories import ChannelRepository
+from apps.bot.services.subscription_service import SubscriptionService
 
-# Pytest sozlamasi
 pytestmark = pytest.mark.asyncio
 
 
@@ -34,7 +33,6 @@ def subscription_service(mock_channel_repo):
 @pytest.fixture
 def setup_mocks(monkeypatch, mock_user_repo, mock_plan_repo):
     """Mocks for container dependencies."""
-
     monkeypatch.setattr(
         container,
         "resolve",
@@ -58,7 +56,6 @@ async def test_check_channel_limit_allow(
     mock_user_repo.get_user_plan_name.return_value = "free"
     mock_plan_repo.get_plan_by_name.return_value = {"max_channels": 3}
     mock_channel_repo.count_user_channels.return_value = 2
-
     await subscription_service.check_channel_limit(user_id=123)
 
 
@@ -73,22 +70,17 @@ async def test_check_channel_limit_deny(
     mock_user_repo.get_user_plan_name.return_value = "free"
     mock_plan_repo.get_plan_by_name.return_value = {"max_channels": 3}
     mock_channel_repo.count_user_channels.return_value = 3
-
     with pytest.raises(HTTPException) as exc_info:
         await subscription_service.check_channel_limit(user_id=123)
     assert exc_info.value.status_code == 403
 
 
 async def test_check_channel_limit_unlimited(
-    subscription_service: SubscriptionService,
-    setup_mocks,
-    mock_user_repo,
-    mock_plan_repo,
+    subscription_service: SubscriptionService, setup_mocks, mock_user_repo, mock_plan_repo
 ):
     """Foydalanuvchi cheksiz kanal qo'sha olishi kerak."""
     mock_user_repo.get_user_plan_name.return_value = "premium"
     mock_plan_repo.get_plan_by_name.return_value = {"max_channels": None}
-
     await subscription_service.check_channel_limit(user_id=123)
 
 
@@ -124,7 +116,6 @@ async def test_check_post_limit_allow(
     mock_user_repo.get_user_plan_name.return_value = "free"
     mock_plan_repo.get_plan_by_name.return_value = {"max_posts_per_month": 30}
     mock_scheduler_repo.count_user_posts_this_month.return_value = 10
-
     await subscription_service.check_post_limit(user_id=123)
 
 
@@ -139,22 +130,17 @@ async def test_check_post_limit_deny(
     mock_user_repo.get_user_plan_name.return_value = "free"
     mock_plan_repo.get_plan_by_name.return_value = {"max_posts_per_month": 30}
     mock_scheduler_repo.count_user_posts_this_month.return_value = 30
-
     with pytest.raises(HTTPException) as exc_info:
         await subscription_service.check_post_limit(user_id=123)
     assert exc_info.value.status_code == 403
 
 
 async def test_check_post_limit_unlimited(
-    subscription_service: SubscriptionService,
-    setup_full_mocks,
-    mock_user_repo,
-    mock_plan_repo,
+    subscription_service: SubscriptionService, setup_full_mocks, mock_user_repo, mock_plan_repo
 ):
     """User with unlimited plan can post."""
     mock_user_repo.get_user_plan_name.return_value = "premium"
     mock_plan_repo.get_plan_by_name.return_value = {"max_posts_per_month": None}
-
     await subscription_service.check_post_limit(user_id=123)
 
 
@@ -175,9 +161,7 @@ async def test_get_usage_status(
     }
     mock_channel_repo.count_user_channels.return_value = 3
     mock_scheduler_repo.count_user_posts_this_month.return_value = 42
-
     status = await subscription_service.get_usage_status(user_id=123)
-
     assert status.plan_name == "pro"
     assert status.current_channels == 3
     assert status.max_channels == 5

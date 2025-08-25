@@ -1,0 +1,3 @@
+-- This file is intentionally left empty.
+-- Database schema is now managed by Alembic migrations.
+-- See the 'alembic/' directory.

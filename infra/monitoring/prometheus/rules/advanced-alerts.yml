@@ -1,0 +1,292 @@
+groups:
+  - name: analyticbot.sla.rules
+    interval: 30s
+    rules:
+      # SLA/SLO Monitoring Rules
+      - alert: HighErrorRate
+        expr: (rate(analyticbot_api_requests_total{status=~"5.."}[5m]) / rate(analyticbot_api_requests_total[5m])) * 100 > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+          service: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }}% which exceeds our SLO of 0.1%"
+          runbook_url: "https://docs.analyticbot.com/runbooks/high-error-rate"
+          dashboard_url: "http://grafana:3000/d/analyticbot-sla-slo"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(analyticbot_http_request_duration_seconds_bucket[5m])) * 1000 > 200
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is {{ $value }}ms, exceeding SLO of 200ms"
+          runbook_url: "https://docs.analyticbot.com/runbooks/high-response-time"
+
+      - alert: SLAViolation
+        expr: 100 * (1 - (rate(analyticbot_api_requests_total{status=~"5.."}[24h]) / rate(analyticbot_api_requests_total[24h]))) < 99.9
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: overall
+        annotations:
+          summary: "SLA violation - Uptime below 99.9%"
+          description: "24-hour uptime is {{ $value }}%, below our 99.9% SLA commitment"
+          runbook_url: "https://docs.analyticbot.com/runbooks/sla-violation"
+
+  - name: analyticbot.infrastructure.rules
+    interval: 30s
+    rules:
+      # Infrastructure Health Alerts
+      - alert: HighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{name=~"analyticbot.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: "{{ $labels.name }}"
+        annotations:
+          summary: "High CPU usage on {{ $labels.name }}"
+          description: "CPU usage is {{ $value }}% on container {{ $labels.name }}"
+          runbook_url: "https://docs.analyticbot.com/runbooks/high-cpu"
+
+      - alert: HighMemoryUsage
+        expr: (container_memory_usage_bytes{name=~"analyticbot.*"} / container_spec_memory_limit_bytes{name=~"analyticbot.*"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: "{{ $labels.name }}"
+        annotations:
+          summary: "High memory usage on {{ $labels.name }}"
+          description: "Memory usage is {{ $value }}% of limit on container {{ $labels.name }}"
+
+      - alert: ContainerRestart
+        expr: increase(kube_pod_container_status_restarts_total{pod=~"analyticbot.*"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          team: platform
+          service: "{{ $labels.pod }}"
+        annotations:
+          summary: "Container restart detected"
+          description: "Container {{ $labels.pod }} has restarted {{ $value }} times in the last 10 minutes"
+
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total{pod=~"analyticbot.*"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: platform
+          service: "{{ $labels.pod }}"
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} is restarting frequently, indicating a crash loop"
+          runbook_url: "https://docs.analyticbot.com/runbooks/crash-loop"
+
+      - alert: DiskSpaceHigh
+        expr: 100 - ((node_filesystem_avail_bytes{mountpoint="/"} * 100) / node_filesystem_size_bytes{mountpoint="/"}) > 85
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: node
+        annotations:
+          summary: "Disk space usage high on {{ $labels.instance }}"
+          description: "Disk usage is {{ $value }}% on {{ $labels.instance }}"
+
+  - name: analyticbot.database.rules
+    interval: 30s
+    rules:
+      # Database Performance Alerts
+      - alert: DatabaseConnectionPoolHigh
+        expr: (analyticbot_database_connections_active / analyticbot_database_connections_max) * 100 > 80
+        for: 2m
+        labels:
+          severity: warning
+          team: platform
+          service: database
+        annotations:
+          summary: "Database connection pool usage high"
+          description: "Connection pool usage is {{ $value }}%, consider increasing pool size"
+
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, analyticbot_database_query_duration_seconds_bucket) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          team: platform
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s, exceeding 100ms target"
+          runbook_url: "https://docs.analyticbot.com/runbooks/slow-queries"
+
+      - alert: DatabaseDown
+        expr: up{job="analyticbot-db"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: database
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database is not responding to health checks"
+          runbook_url: "https://docs.analyticbot.com/runbooks/database-down"
+
+  - name: analyticbot.business.rules
+    interval: 60s
+    rules:
+      # Business Metrics Alerts
+      - alert: LowUserActivity
+        expr: rate(analyticbot_user_interactions_total[1h]) < 10
+        for: 15m
+        labels:
+          severity: warning
+          team: product
+          service: bot
+        annotations:
+          summary: "Low user activity detected"
+          description: "User interaction rate is {{ $value }}/hour, below expected baseline"
+
+      - alert: HighBotErrorRate
+        expr: (rate(analyticbot_bot_errors_total[5m]) / rate(analyticbot_bot_interactions_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: product
+          service: bot
+        annotations:
+          summary: "High bot error rate"
+          description: "Bot error rate is {{ $value }}%, investigate bot functionality"
+
+      - alert: SubscriptionChurnHigh
+        expr: increase(analyticbot_subscriptions_churn_total[24h]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          team: business
+          service: subscriptions
+        annotations:
+          summary: "High subscription churn detected"
+          description: "{{ $value }} subscription cancellations in the last 24 hours"
+
+  - name: analyticbot.security.rules
+    interval: 30s
+    rules:
+      # Security Alerts
+      - alert: SuspiciousActivity
+        expr: rate(analyticbot_failed_login_attempts_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+          service: auth
+        annotations:
+          summary: "High failed login attempts"
+          description: "{{ $value }} failed login attempts per minute detected"
+          runbook_url: "https://docs.analyticbot.com/runbooks/suspicious-activity"
+
+      - alert: RateLimitExceeded
+        expr: rate(analyticbot_rate_limit_exceeded_total[5m]) > 50
+        for: 1m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High rate limiting activity"
+          description: "{{ $value }} rate limit violations per minute"
+
+      - alert: UnauthorizedAccess
+        expr: rate(analyticbot_api_requests_total{status="401"}[5m]) > 20
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+          service: api
+        annotations:
+          summary: "High unauthorized access attempts"
+          description: "{{ $value }} unauthorized requests per minute"
+
+  - name: analyticbot.availability.rules
+    interval: 30s
+    rules:
+      # Service Availability
+      - alert: ServiceDown
+        expr: up{job=~"analyticbot.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "Service {{ $labels.job }} is not responding to health checks"
+          runbook_url: "https://docs.analyticbot.com/runbooks/service-down"
+
+      - alert: LoadBalancerDown
+        expr: up{job="analyticbot-lb"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: platform
+          service: loadbalancer
+        annotations:
+          summary: "Load balancer is down"
+          description: "Load balancer is not responding, traffic routing may be impacted"
+
+      - alert: RedisDown
+        expr: up{job="analyticbot-redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+          service: redis
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis service is not responding, caching functionality disabled"
+          runbook_url: "https://docs.analyticbot.com/runbooks/redis-down"
+
+  - name: analyticbot.performance.rules
+    interval: 30s
+    rules:
+      # Performance Degradation
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, rate(analyticbot_http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "High API latency detected"
+          description: "99th percentile response time is {{ $value }}s"
+
+      - alert: ThroughputDrop
+        expr: rate(analyticbot_api_requests_total[5m]) < 50
+        for: 10m
+        labels:
+          severity: warning
+          team: platform
+          service: api
+        annotations:
+          summary: "API throughput below baseline"
+          description: "Request rate is {{ $value }}/sec, below expected baseline of 100/sec"
+
+      - alert: QueueDepthHigh
+        expr: analyticbot_task_queue_depth > 1000
+        for: 5m
+        labels:
+          severity: warning
+          team: platform
+          service: workers
+        annotations:
+          summary: "Task queue depth is high"
+          description: "{{ $value }} tasks in queue, consider scaling workers"

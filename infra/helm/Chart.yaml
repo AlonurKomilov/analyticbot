@@ -1,0 +1,35 @@
+apiVersion: v2
+name: analyticbot
+description: Enterprise Telegram Bot Platform with AI/ML Analytics
+type: application
+version: 2.1.0
+appVersion: "2.1.0"
+
+keywords:
+  - telegram
+  - bot
+  - analytics
+  - ai
+  - ml
+  - kubernetes
+
+home: https://github.com/AlonurKomilov/analyticbot
+sources:
+  - https://github.com/AlonurKomilov/analyticbot
+
+maintainers:
+  - name: AlonurKomilov
+    email: alonurkomilov@gmail.com
+
+dependencies:
+  - name: postgresql
+    version: "~12.1.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "~18.1.0" 
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+
+annotations:
+  category: Analytics

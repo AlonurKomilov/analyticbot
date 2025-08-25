@@ -1,0 +1,194 @@
+# 🚨 PHASE 5.0: Production Alert Rules
+# Critical alerts for enterprise monitoring
+
+groups:
+  - name: analyticbot.critical
+    interval: 30s
+    rules:
+      # Service availability alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          title: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} has been down for more than 1 minute"
+          runbook_url: "https://docs.analyticbot.com/runbooks/service-down"
+
+      - alert: APIHighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          title: "High error rate on API"
+          description: "API error rate is {{ $value | humanizePercentage }} for more than 2 minutes"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          title: "Database is down"
+          description: "PostgreSQL database is not responding"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: infrastructure
+        annotations:
+          title: "Redis is down"
+          description: "Redis cache is not responding"
+
+  - name: analyticbot.performance
+    interval: 60s
+    rules:
+      # Performance alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          title: "High response time"
+          description: "95th percentile response time is {{ $value }}s for more than 5 minutes"
+
+      - alert: HighCPUUsage
+        expr: (100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 10m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          title: "High CPU usage"
+          description: "CPU usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          title: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: DiskSpaceRunningOut
+        expr: (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"}) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: infrastructure
+        annotations:
+          title: "Disk space running out"
+          description: "Disk space is {{ $value | humanizePercentage }} full on {{ $labels.instance }}"
+
+  - name: analyticbot.database
+    interval: 60s
+    rules:
+      # Database alerts
+      - alert: DatabaseConnectionsHigh
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          title: "Database connections running high"
+          description: "Database connections are at {{ $value | humanizePercentage }} of maximum"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_stat_database_tup_fetched[5m]) / rate(pg_stat_database_tup_returned[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          team: database
+        annotations:
+          title: "Database has slow queries"
+          description: "Database query efficiency is low: {{ $value | humanizePercentage }}"
+
+      - alert: DatabaseReplicationLag
+        expr: pg_stat_replication_lag_seconds > 300
+        for: 2m
+        labels:
+          severity: critical
+          team: database
+        annotations:
+          title: "Database replication lag"
+          description: "Database replication lag is {{ $value }} seconds"
+
+  - name: analyticbot.business
+    interval: 300s
+    rules:
+      # Business logic alerts
+      - alert: LowUserEngagement
+        expr: rate(telegram_messages_processed_total[1h]) < 10
+        for: 30m
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          title: "Low user engagement"
+          description: "Message processing rate is only {{ $value }} messages per second"
+
+      - alert: HighChurnRate
+        expr: increase(user_churn_total[24h]) > 100
+        for: 1h
+        labels:
+          severity: warning
+          team: product
+        annotations:
+          title: "High user churn rate"
+          description: "{{ $value }} users churned in the last 24 hours"
+
+      - alert: MLModelAccuracyDrop
+        expr: ml_model_accuracy < 0.7
+        for: 15m
+        labels:
+          severity: warning
+          team: data-science
+        annotations:
+          title: "ML model accuracy dropped"
+          description: "Model accuracy is {{ $value | humanizePercentage }}"
+
+  - name: analyticbot.security
+    interval: 60s
+    rules:
+      # Security alerts
+      - alert: HighFailedLoginRate
+        expr: rate(auth_failed_logins_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          title: "High failed login rate"
+          description: "Failed login rate is {{ $value }} per second"
+
+      - alert: SuspiciousAPIActivity
+        expr: rate(http_requests_total{status="401"}[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          title: "Suspicious API activity detected"
+          description: "High rate of 401 errors: {{ $value }} per second"
+
+      - alert: SecurityTokenExpiration
+        expr: (security_token_expiry_timestamp - time()) < 86400
+        for: 1h
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          title: "Security token expiring soon"
+          description: "Security token expires in {{ $value | humanizeDuration }}"

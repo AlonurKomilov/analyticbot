@@ -1,0 +1,290 @@
+---
+- name: Setup Kubernetes on Contabo VPS
+  hosts: k8s_servers
+  become: yes
+  vars:
+    k8s_version: "1.28.0"
+    docker_version: "24.0"
+    domain_name: "{{ domain_name | default('analyticbot.com') }}"
+  
+  pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 600
+
+  tasks:
+    - name: Set hostname
+      hostname:
+        name: "k8s-master"
+
+    - name: Update /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "127.0.0.1 k8s-master"
+        backup: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - software-properties-common
+          - unzip
+        state: present
+
+    - name: Disable swap temporarily
+      command: swapoff -a
+      ignore_errors: yes
+
+    - name: Disable swap permanently
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+
+    - name: Load kernel modules
+      modprobe:
+        name: "{{ item }}"
+      loop:
+        - overlay
+        - br_netfilter
+
+    - name: Set sysctl parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+        - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+        - { name: 'net.ipv4.ip_forward', value: '1' }
+
+    - name: Install Docker
+      block:
+        - name: Add Docker GPG key
+          apt_key:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            state: present
+
+        - name: Add Docker repository
+          apt_repository:
+            repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+
+        - name: Install Docker
+          apt:
+            name: 
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+            state: present
+
+        - name: Configure Docker daemon
+          copy:
+            content: |
+              {
+                "exec-opts": ["native.cgroupdriver=systemd"],
+                "log-driver": "json-file",
+                "log-opts": {
+                  "max-size": "100m"
+                },
+                "storage-driver": "overlay2"
+              }
+            dest: /etc/docker/daemon.json
+            backup: yes
+          notify: restart docker
+
+        - name: Start and enable Docker
+          systemd:
+            name: docker
+            state: started
+            enabled: yes
+
+    - name: Install Kubernetes
+      block:
+        - name: Add Kubernetes GPG key
+          apt_key:
+            url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+            state: present
+
+        - name: Add Kubernetes repository
+          apt_repository:
+            repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
+            state: present
+
+        - name: Install Kubernetes components
+          apt:
+            name:
+              - kubelet={{ k8s_version }}-00
+              - kubeadm={{ k8s_version }}-00
+              - kubectl={{ k8s_version }}-00
+            state: present
+
+        - name: Hold Kubernetes packages
+          dpkg_selections:
+            name: "{{ item }}"
+            selection: hold
+          loop:
+            - kubelet
+            - kubeadm
+            - kubectl
+
+    - name: Initialize Kubernetes cluster
+      command: >
+        kubeadm init
+        --pod-network-cidr=10.244.0.0/16
+        --service-cidr=10.96.0.0/12
+        --kubernetes-version={{ k8s_version }}
+        --node-name=k8s-master
+      register: kubeadm_init
+      creates: /etc/kubernetes/admin.conf
+
+    - name: Create .kube directory for root
+      file:
+        path: /root/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Copy admin.conf to .kube/config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install Flannel CNI plugin
+      shell: |
+        kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Remove taint from master node (for single-node cluster)
+      shell: |
+        kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      ignore_errors: yes
+
+    - name: Install NGINX Ingress Controller
+      shell: |
+        kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.2/deploy/static/provider/cloud/deploy.yaml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Install Metrics Server
+      shell: |
+        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Wait for metrics server to be ready
+      shell: |
+        kubectl wait --for=condition=ready pod -l k8s-app=metrics-server -n kube-system --timeout=300s
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+
+    - name: Install Helm
+      block:
+        - name: Download Helm
+          get_url:
+            url: https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
+            dest: /tmp/helm.tar.gz
+
+        - name: Extract Helm
+          unarchive:
+            src: /tmp/helm.tar.gz
+            dest: /tmp
+            remote_src: yes
+
+        - name: Move Helm to PATH
+          copy:
+            src: /tmp/linux-amd64/helm
+            dest: /usr/local/bin/helm
+            mode: '0755'
+            remote_src: yes
+
+    - name: Setup firewall rules
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '22'     # SSH
+        - '80'     # HTTP
+        - '443'    # HTTPS
+        - '6443'   # Kubernetes API
+        - '10250'  # Kubelet API
+        - '10251'  # kube-scheduler
+        - '10252'  # kube-controller-manager
+        - '2379:2380'  # etcd
+
+    - name: Enable firewall
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: Create analyticbot user for deployment
+      user:
+        name: analyticbot
+        groups: docker
+        append: yes
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Add analyticbot user to sudoers
+      lineinfile:
+        path: /etc/sudoers
+        line: 'analyticbot ALL=(ALL) NOPASSWD:ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Copy kubeconfig for analyticbot user
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/analyticbot/.kube/config
+        remote_src: yes
+        owner: analyticbot
+        group: analyticbot
+        mode: '0644'
+
+    - name: Create .kube directory for analyticbot
+      file:
+        path: /home/analyticbot/.kube
+        state: directory
+        owner: analyticbot
+        group: analyticbot
+        mode: '0755'
+
+  handlers:
+    - name: restart docker
+      systemd:
+        name: docker
+        state: restarted
+
+  post_tasks:
+    - name: Display cluster information
+      debug:
+        msg: |
+          Kubernetes cluster setup completed!
+          
+          Cluster info:
+          - Master node: {{ ansible_default_ipv4.address }}
+          - Kubernetes version: {{ k8s_version }}
+          - CNI: Flannel
+          - Ingress: NGINX
+          
+          To access cluster:
+          1. Copy kubeconfig: scp root@{{ ansible_default_ipv4.address }}:/etc/kubernetes/admin.conf ~/.kube/config
+          2. Test: kubectl get nodes
+          
+          Next steps:
+          1. Deploy AnalyticBot: ./infrastructure/deploy-k8s.sh
+          2. Configure DNS to point to {{ ansible_default_ipv4.address }}
+          3. Setup SSL certificates with cert-manager

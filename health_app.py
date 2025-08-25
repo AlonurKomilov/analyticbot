@@ -1,9 +1,2 @@
-# health_app.py
-from fastapi import FastAPI
-from typing import Dict
-
-app = FastAPI()
-
-@app.get("/health")
-def health() -> Dict[str, str]:
-    return {"status": "ok"}
+# AUTO-GENERATED COMPAT SHIM — redirects to canonical module
+from apps.bot.utils.health_app import *  # noqa: F401,F403

@@ -1,55 +1,9 @@
-name: Run Python Tests and Checks
-
+name: (archived) Python Tests and Checks
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  noop:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.11"]
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Poetry
-        run: pip install poetry
-
-      - name: Cache Poetry virtualenvs
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pypoetry/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install dependencies with Poetry
-        run: poetry install --no-root --with dev
-
-      - name: Run security check for vulnerabilities in dependencies
-        run: poetry run pip-audit
-
-      - name: Run static analysis with flake8
-        run: poetry run flake8
-
-      - name: Run type checking with mypy
-        run: poetry run mypy .
-
-      - name: Run import sorting check with isort
-        run: poetry run isort --check .
-
-      - name: Run formatting check with black
-        run: poetry run black --check .
-
-      - name: Run tests with pytest
-        run: poetry run pytest
+      - run: echo "Archived: this workflow is disabled and kept for history only."

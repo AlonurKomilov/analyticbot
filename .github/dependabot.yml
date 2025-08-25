@@ -1,0 +1,199 @@
+# Enhanced Dependabot Configuration
+# Manages automated dependency updates for all package managers
+
+version: 2
+updates:
+  # Python dependencies (main project)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "maintainer-team"
+    assignees:
+      - "lead-developer"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependency-update"
+      - "backend"
+      - "automerge"
+    allow:
+      # Allow version updates for all dependencies
+      - dependency-type: "all"
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "sqlalchemy"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "alembic"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "fastapi"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group related dependencies
+      test-dependencies:
+        patterns:
+          - "pytest*"
+          - "coverage*"
+          - "*test*"
+      database-dependencies:
+        patterns:
+          - "sqlalchemy*"
+          - "alembic*"
+          - "asyncpg*"
+          - "psycopg*"
+      web-framework:
+        patterns:
+          - "fastapi*"
+          - "uvicorn*"
+          - "starlette*"
+          - "pydantic*"
+
+  # Poetry dependencies (if using poetry.lock)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"  
+      time: "10:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "maintainer-team"
+    commit-message:
+      prefix: "poetry"
+    labels:
+      - "dependency-update"
+      - "poetry"
+
+  # Node.js dependencies (frontend)
+  - package-ecosystem: "npm"
+    directory: "/twa-frontend"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "frontend-team"
+    assignees:
+      - "frontend-lead"
+    commit-message:
+      prefix: "npm"
+      prefix-development: "npm-dev"
+      include: "scope"
+    labels:
+      - "dependency-update"
+      - "frontend"
+      - "automerge"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      # Ignore major React updates that might break things
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      # Ignore major build tool updates
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+    groups:
+      react-ecosystem:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      build-tools:
+        patterns:
+          - "vite*"
+          - "vitest*"
+          - "@vitejs/*"
+          - "eslint*"
+      ui-components:
+        patterns:
+          - "@mui/*"
+          - "@emotion/*"
+          - "@chakra-ui/*"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "1"
+      time: "06:00"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "devops-team"
+    commit-message:
+      prefix: "docker"
+    labels:
+      - "dependency-update"
+      - "ci/cd"
+      - "docker"
+    allow:
+      - dependency-type: "all"
+    ignore:
+      # Ignore major Python version updates
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
+      # Ignore major PostgreSQL updates
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "08:00"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "devops-team"
+    commit-message:
+      prefix: "actions"
+    labels:
+      - "dependency-update"
+      - "ci/cd"
+      - "github-actions"
+    allow:
+      - dependency-type: "all"
+    groups:
+      github-actions:
+        patterns:
+          - "actions/*"
+          - "github/*"
+      security-actions:
+        patterns:
+          - "github/codeql-action"
+          - "ossf/scorecard-action"
+          - "*security*"
+      testing-actions:
+        patterns:
+          - "*test*"
+          - "*coverage*"
+
+  # Terraform dependencies (if using)
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure"
+    schedule:
+      interval: "monthly"
+      day: "15"
+      time: "10:00"
+    open-pull-requests-limit: 2
+    reviewers:
+      - "infrastructure-team"
+    commit-message:
+      prefix: "terraform"
+    labels:
+      - "dependency-update"
+      - "infrastructure"
+    allow:
+      - dependency-type: "all"
+
+# Enable Dependabot security updates
+# This is configured at the repository level in Settings > Security & analysis

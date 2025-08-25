@@ -1,0 +1,183 @@
+# Staging Values for AnalyticBot
+# Override default values for staging deployment
+
+# Global settings
+global:
+  environment: staging
+  
+# Image settings
+image:
+  tag: "latest"
+  pullPolicy: Always
+
+# API Configuration
+api:
+  replicaCount: 2
+  workers: 2
+  
+  image:
+    repository: analyticbot/api
+    tag: "latest"
+    
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+      
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 85
+    
+  service:
+    type: ClusterIP
+    port: 8000
+
+# Bot Configuration
+bot:
+  replicaCount: 1
+  
+  image:
+    repository: analyticbot/bot
+    tag: "latest"
+    
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Database Configuration
+postgresql:
+  enabled: true
+  auth:
+    username: analyticbot_staging
+    database: analyticbot_staging
+    existingSecret: analyticbot-postgresql-secret
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: standard
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+# Redis Configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    existingSecret: analyticbot-redis-secret
+  master:
+    persistence:
+      enabled: true
+      size: 4Gi
+      storageClass: standard
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Persistence
+persistence:
+  enabled: true
+  storageClass: standard
+  accessMode: ReadWriteOnce
+  size: 5Gi
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/rate-limit: "200"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.staging.analyticbot.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: analyticbot-staging-tls
+      hosts:
+        - api.staging.analyticbot.dev
+
+# Environment Variables
+env:
+  ENVIRONMENT: "staging"
+  LOG_LEVEL: "DEBUG"
+  DEBUG: "true"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  CORS_ORIGINS: "https://bot.staging.analyticbot.dev,https://staging.analyticbot.dev"
+  
+  # AI/ML Configuration
+  OPENAI_MODEL: "gpt-3.5-turbo"
+  MAX_TOKENS: "2000"
+  TEMPERATURE: "0.8"
+  
+  # Analytics Configuration
+  ANALYTICS_RETENTION_DAYS: "30"
+  BATCH_SIZE: "500"
+  
+  # Monitoring Configuration
+  PROMETHEUS_PORT: "9090"
+  JAEGER_ENDPOINT: "http://jaeger-collector:14268/api/traces"
+  
+  # Feature Flags
+  ENABLE_ANALYTICS: "true"
+  ENABLE_AI_FEATURES: "true"
+  ENABLE_CACHING: "true"
+  ENABLE_RATE_LIMITING: "false"
+  
+  # Performance Configuration
+  WORKER_PROCESSES: "2"
+  CONNECTION_POOL_SIZE: "10"
+  RATE_LIMIT_PER_MINUTE: "120"
+  SESSION_TIMEOUT: "1800"
+  
+  # Backup Configuration
+  BACKUP_RETENTION_DAYS: "30"
+
+# Security Configuration
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+  capabilities:
+    drop:
+      - ALL
+
+# Network Policies
+networkPolicies:
+  enabled: false
+  
+# Service Monitor for Prometheus
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  interval: 60s
+  scrapeTimeout: 15s

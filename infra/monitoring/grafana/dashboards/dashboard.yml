@@ -1,0 +1,13 @@
+# 📊 PHASE 5.0: Grafana Dashboard Provisioning
+# Automated dashboard deployment configuration
+
+apiVersion: 1
+
+providers:
+  - name: 'analyticbot-dashboards'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/analyticbot

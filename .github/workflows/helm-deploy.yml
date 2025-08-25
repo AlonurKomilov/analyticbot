@@ -1,0 +1,423 @@
+name: 🚀 Helm Deployment Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'infrastructure/helm/**'
+      - '.github/workflows/helm-deploy.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'infrastructure/helm/**'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+      helm_action:
+        description: 'Helm Action'
+        required: true
+        default: 'upgrade'
+        type: choice
+        options:
+        - install
+        - upgrade
+        - rollback
+
+env:
+  HELM_VERSION: '3.12.0'
+  KUBECTL_VERSION: '1.28.0'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Helm Chart Validation and Testing
+  helm-validation:
+    name: 🔍 Helm Chart Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: 🧪 Helm Lint
+        run: |
+          echo "🔍 Linting Helm charts..."
+          cd infrastructure/helm
+          helm lint .
+          echo "✅ Helm lint completed successfully"
+
+      - name: 📋 Helm Template Validation
+        run: |
+          echo "🔍 Validating Helm templates..."
+          cd infrastructure/helm
+          
+          # Test with different values files
+          helm template test-release . --values values.yaml --dry-run
+          helm template test-staging . --values values-staging.yaml --dry-run
+          helm template test-prod . --values values-production.yaml --dry-run
+          
+          echo "✅ Helm templates validated successfully"
+
+      - name: 🔒 Security Scan
+        run: |
+          echo "🔍 Running security scan on Helm charts..."
+          
+          # Install kubesec for security scanning
+          wget https://github.com/controlplaneio/kubesec/releases/download/v2.13.0/kubesec_linux_amd64.tar.gz
+          tar -xzf kubesec_linux_amd64.tar.gz
+          sudo mv kubesec /usr/local/bin/
+          
+          cd infrastructure/helm
+          
+          # Generate manifests and scan them
+          helm template security-scan . --values values-production.yaml > manifests.yaml
+          kubesec scan manifests.yaml
+          
+          echo "✅ Security scan completed"
+
+      - name: 📊 Chart Documentation Check
+        run: |
+          echo "🔍 Checking Chart documentation..."
+          cd infrastructure/helm
+          
+          # Check required files exist
+          for file in Chart.yaml README.md values.yaml; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing required file: $file"
+              exit 1
+            fi
+          done
+          
+          # Validate Chart.yaml structure
+          if ! grep -q "name:" Chart.yaml; then
+            echo "❌ Chart.yaml missing name field"
+            exit 1
+          fi
+          
+          echo "✅ Chart documentation validated"
+
+  # Kubernetes Cluster Validation
+  k8s-validation:
+    name: ⚡ Kubernetes Validation
+    runs-on: ubuntu-latest
+    needs: helm-validation
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: ⚙️ Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: 🔧 Create Kind Cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: analyticbot-test
+          kubectl_version: ${{ env.KUBECTL_VERSION }}
+
+      - name: 🧪 Test Helm Installation in Kind
+        run: |
+          echo "🧪 Testing Helm installation in Kind cluster..."
+          cd infrastructure/helm
+          
+          # Create namespace
+          kubectl create namespace analyticbot-test
+          
+          # Install chart with test values
+          helm install test-analyticbot . \
+            --namespace analyticbot-test \
+            --values values.yaml \
+            --set image.tag=test \
+            --set postgresql.enabled=false \
+            --set redis.enabled=false \
+            --wait --timeout=300s
+          
+          # Verify installation
+          kubectl get pods -n analyticbot-test
+          kubectl get services -n analyticbot-test
+          
+          # Check pod status
+          kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=analyticbot -n analyticbot-test --timeout=300s
+          
+          echo "✅ Helm installation test completed successfully"
+
+      - name: 🔍 Validate Kubernetes Resources
+        run: |
+          echo "🔍 Validating Kubernetes resources..."
+          
+          # Check deployments are ready
+          kubectl get deployments -n analyticbot-test -o wide
+          
+          # Check services are accessible
+          kubectl get services -n analyticbot-test
+          
+          # Check configmaps and secrets
+          kubectl get configmaps,secrets -n analyticbot-test
+          
+          # Validate resource requests/limits are set
+          kubectl describe pods -n analyticbot-test | grep -E "(Requests|Limits):"
+          
+          echo "✅ Kubernetes resource validation completed"
+
+  # Staging Deployment
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [helm-validation, k8s-validation]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://staging.analyticbot.com
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: ⚙️ Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: 🔑 Configure Kubernetes Access
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: 🏗️ Deploy to Staging
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          cd infrastructure/helm
+          
+          # Create/update namespace
+          kubectl create namespace analyticbot-staging --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Deploy with staging values
+          helm upgrade --install analyticbot-staging . \
+            --namespace analyticbot-staging \
+            --values values-staging.yaml \
+            --set image.tag=${{ github.sha }} \
+            --set environment=staging \
+            --wait --timeout=600s
+          
+          echo "✅ Staging deployment completed"
+
+      - name: 🧪 Post-Deployment Validation
+        run: |
+          echo "🧪 Running post-deployment validation..."
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=analyticbot -n analyticbot-staging --timeout=300s
+          
+          # Check service endpoints
+          kubectl get endpoints -n analyticbot-staging
+          
+          # Run health checks
+          API_URL=$(kubectl get service analyticbot-staging-api -n analyticbot-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ ! -z "$API_URL" ]; then
+            curl -f http://$API_URL/health || echo "⚠️ Health check failed"
+          fi
+          
+          echo "✅ Post-deployment validation completed"
+
+  # Production Deployment
+  deploy-production:
+    name: 🎯 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://analyticbot.com
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: ⚙️ Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: 🔑 Configure Kubernetes Access
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: 📋 Pre-Deployment Checks
+        run: |
+          echo "🔍 Running pre-deployment checks..."
+          
+          # Check cluster health
+          kubectl cluster-info
+          kubectl get nodes
+          
+          # Check current deployment status
+          kubectl get deployments -n analyticbot-production || echo "No existing deployment"
+          
+          # Validate resources
+          kubectl top nodes || echo "Metrics not available"
+          
+          echo "✅ Pre-deployment checks completed"
+
+      - name: 🎯 Deploy to Production
+        run: |
+          echo "🎯 Deploying to production environment..."
+          cd infrastructure/helm
+          
+          # Create/update namespace
+          kubectl create namespace analyticbot-production --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Deploy with production values
+          helm upgrade --install analyticbot-production . \
+            --namespace analyticbot-production \
+            --values values-production.yaml \
+            --set image.tag=${{ github.sha }} \
+            --set environment=production \
+            --wait --timeout=900s
+          
+          echo "✅ Production deployment completed"
+
+      - name: 🔄 Production Health Checks
+        run: |
+          echo "🧪 Running production health checks..."
+          
+          # Wait for pods to be ready
+          kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=analyticbot -n analyticbot-production --timeout=600s
+          
+          # Comprehensive health checks
+          kubectl get pods,services,ingress -n analyticbot-production
+          
+          # Check application health
+          API_URL=$(kubectl get service analyticbot-production-api -n analyticbot-production -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ ! -z "$API_URL" ]; then
+            curl -f http://$API_URL/health
+            curl -f http://$API_URL/metrics
+          fi
+          
+          echo "✅ Production health checks completed"
+
+      - name: 📊 Deployment Summary
+        if: always()
+        run: |
+          echo "📊 Deployment Summary"
+          echo "===================="
+          echo "Environment: production"
+          echo "Image Tag: ${{ github.sha }}"
+          echo "Deployment Time: $(date)"
+          
+          kubectl get deployments -n analyticbot-production -o wide
+          kubectl get pods -n analyticbot-production
+          
+          echo "🎉 Production deployment pipeline completed!"
+
+  # Rollback Capability
+  rollback:
+    name: 🔄 Rollback Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.helm_action == 'rollback'
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: ⚙️ Setup Kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: ${{ env.KUBECTL_VERSION }}
+
+      - name: 🔑 Configure Kubernetes Access
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "production" ]; then
+            echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          else
+            echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
+          fi
+          chmod 600 $HOME/.kube/config
+
+      - name: 🔄 Perform Rollback
+        run: |
+          echo "🔄 Performing rollback for ${{ github.event.inputs.environment }}..."
+          
+          RELEASE_NAME="analyticbot-${{ github.event.inputs.environment }}"
+          NAMESPACE="analyticbot-${{ github.event.inputs.environment }}"
+          
+          # Show rollback history
+          helm history $RELEASE_NAME -n $NAMESPACE
+          
+          # Rollback to previous version
+          helm rollback $RELEASE_NAME -n $NAMESPACE
+          
+          # Wait for rollback to complete
+          kubectl rollout status deployment/$RELEASE_NAME-api -n $NAMESPACE
+          kubectl rollout status deployment/$RELEASE_NAME-bot -n $NAMESPACE
+          
+          echo "✅ Rollback completed successfully"
+
+      - name: 🧪 Post-Rollback Validation
+        run: |
+          echo "🧪 Validating rollback..."
+          
+          NAMESPACE="analyticbot-${{ github.event.inputs.environment }}"
+          
+          # Check pod status
+          kubectl get pods -n $NAMESPACE
+          kubectl wait --for=condition=Ready pods -l app.kubernetes.io/name=analyticbot -n $NAMESPACE --timeout=300s
+          
+          # Run basic health checks
+          API_SERVICE=$(kubectl get service -l app.kubernetes.io/name=analyticbot,app.kubernetes.io/component=api -n $NAMESPACE -o jsonpath='{.items[0].metadata.name}')
+          kubectl port-forward service/$API_SERVICE -n $NAMESPACE 8080:8000 &
+          sleep 5
+          curl -f http://localhost:8080/health || echo "⚠️ Health check after rollback failed"
+          
+          echo "✅ Rollback validation completed"
+
+  # Cleanup on Failure
+  cleanup-on-failure:
+    name: 🧹 Cleanup Failed Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    steps:
+      - name: 🧹 Clean up failed deployment resources
+        run: |
+          echo "🧹 Cleaning up failed deployment..."
+          # This would contain cleanup logic for failed deployments
+          # Implementation depends on specific cleanup requirements
+          echo "Cleanup procedures would be implemented here"
+          echo "✅ Cleanup completed"

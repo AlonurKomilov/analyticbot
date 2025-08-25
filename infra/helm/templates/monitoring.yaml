@@ -1,0 +1,80 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "analyticbot.fullname" . }}
+  labels:
+    {{- include "analyticbot.labels" . | nindent 4 }}
+  {{- if .Values.serviceMonitor.namespace }}
+  namespace: {{ .Values.serviceMonitor.namespace }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "analyticbot.selectorLabels" . | nindent 6 }}
+      component: api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.serviceMonitor.interval | default "30s" }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout | default "10s" }}
+      honorLabels: true
+{{- end }}
+---
+# AnalyticBot PrometheusRule for alerting
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "analyticbot.fullname" . }}
+  labels:
+    {{- include "analyticbot.labels" . | nindent 4 }}
+spec:
+  groups:
+    - name: analyticbot.rules
+      rules:
+        - alert: AnalyticBotAPIDown
+          expr: up{job="{{ include "analyticbot.fullname" . }}"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "AnalyticBot API is down"
+            description: "AnalyticBot API has been down for more than 1 minute."
+            
+        - alert: AnalyticBotHighErrorRate
+          expr: rate(http_requests_total{job="{{ include "analyticbot.fullname" . }}", status=~"5.."}[5m]) > 0.1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High error rate in AnalyticBot API"
+            description: "AnalyticBot API error rate is {{ "{{" }} $value {{ "}}" }} errors per second."
+            
+        - alert: AnalyticBotHighResponseTime
+          expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="{{ include "analyticbot.fullname" . }}"}[5m])) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High response time in AnalyticBot API"
+            description: "AnalyticBot API 95th percentile response time is {{ "{{" }} $value {{ "}}" }} seconds."
+            
+        - alert: AnalyticBotHighMemoryUsage
+          expr: container_memory_usage_bytes{pod=~"{{ include "analyticbot.fullname" . }}-api-.*"} / container_spec_memory_limit_bytes > 0.9
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage in AnalyticBot API"
+            description: "AnalyticBot API memory usage is above 90%."
+            
+        - alert: AnalyticBotHighCPUUsage
+          expr: rate(container_cpu_usage_seconds_total{pod=~"{{ include "analyticbot.fullname" . }}-api-.*"}[5m]) / container_spec_cpu_quota * container_spec_cpu_period > 0.8
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage in AnalyticBot API"
+            description: "AnalyticBot API CPU usage is above 80%."
+{{- end }}

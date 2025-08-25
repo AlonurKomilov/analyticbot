@@ -1,0 +1,214 @@
+name: 🤖 Smart Auto-Fixer (Enhanced)
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  issue_comment:
+    types: [created]
+  schedule:
+    # Run daily quality check at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to fix (default: current branch)'
+        required: false
+        default: ''
+      fix_type:
+        description: 'Type of fixes to apply'
+        required: true
+        type: choice
+        options:
+          - 'all'
+          - 'formatting'
+          - 'imports'
+          - 'type-hints'
+          - 'security'
+          - 'performance'
+        default: 'all'
+      create_pr:
+        description: 'Create PR with fixes'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  checks: write
+  actions: read
+
+jobs:
+  ai-fix:
+    if: >
+      (github.event_name == 'pull_request' && contains(join(github.event.pull_request.labels.*.name, ','), 'ai-fix'))
+      || (github.event_name == 'issue_comment' && github.event.issue.pull_request != null && contains(github.event.comment.body, '/ai-fix'))
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: analytic_bot
+          POSTGRES_USER: analytic
+          POSTGRES_PASSWORD: change_me
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U analytic -d analytic_bot"
+          --health-interval=5s --health-timeout=3s --health-retries=30
+
+    env:
+      PYTHON_VERSION: "3.11"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      POSTGRES_DB: analytic_bot
+      POSTGRES_USER: analytic
+      POSTGRES_PASSWORD: change_me
+      DATABASE_URL: postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot
+
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Authorize commenter (comment trigger only)
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const login = context.payload.comment.user.login;
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner, repo: context.repo.repo, username: login
+            });
+            if (!['admin','maintain','write'].includes(data.permission)) {
+              core.setFailed(`@${login} lacks write permission: ${data.permission}`);
+            }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install tools
+        run: |
+          python -m pip install -U pip
+          pip install ruff mypy pytest coverage diff-cover alembic
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..60}; do pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" && break; sleep 2; done
+
+      - name: Run DB migrations (Alembic)
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          if [ -f "alembic.ini" ] || [ -d "alembic" ]; then
+            alembic upgrade head || true
+          fi
+
+      - name: Project map & relevant snippets
+        run: |
+          mkdir -p ai_context
+          python scripts/ai_index.py --outdir ai_context --errors-file errors.seed || true
+
+      - name: Auto-format & lint (ruff)
+        run: |
+          ruff check . --fix
+          ruff format .
+
+      - name: MyPy (changed files only)
+        id: mypy
+        run: |
+          git fetch origin main >/dev/null 2>&1 || true
+          CHANGED=$(git diff --name-only --diff-filter=AMR origin/main... | grep -E '\.py$' || true)
+          if [ -n "$CHANGED" ]; then set +e; mypy $CHANGED | tee ai_context/mypy.out; echo "mypy_exit=$?" >> $GITHUB_OUTPUT; set -e
+          else echo "No changed .py files" | tee ai_context/mypy.out; echo "mypy_exit=0" >> $GITHUB_OUTPUT; fi
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          set +e
+          pytest -q --maxfail=1 --disable-warnings | tee ai_context/pytest.out
+          TEST_EXIT=$?
+          coverage xml || true
+          echo "tests_exit=$TEST_EXIT" >> $GITHUB_OUTPUT
+          set -e
+
+      - name: Diff coverage (changed code ≥ 85%)
+        id: diffcov
+        continue-on-error: true
+        run: |
+          git fetch origin main >/dev/null 2>&1 || true
+          diff-cover coverage.xml --compare-branch origin/main --fail-under=85 | tee ai_context/diffcov.out
+          echo "diffcov_exit=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Decide if AI patch is needed
+        id: need_ai
+        run: |
+          NEED=0
+          [ "${{ steps.mypy.outputs.mypy_exit }}" != "0" ] && NEED=1
+          [ "${{ steps.tests.outputs.tests_exit }}" != "0" ] && NEED=1
+          [ "${{ steps.diffcov.outputs.diffcov_exit }}" != "0" ] && NEED=1
+          echo "need=$NEED" >> $GITHUB_OUTPUT
+
+      - name: Prepare context bundle
+        if: steps.need_ai.outputs.need == '1'
+        run: |
+          echo "===== GIT DIFF vs origin/main =====" > ai_context/context.txt
+          git diff --unified=3 origin/main... >> ai_context/context.txt || true
+          echo "\n===== PROJECT MAP =====" >> ai_context/context.txt
+          cat ai_context/project_map.txt >> ai_context/context.txt || true
+          echo "\n===== IMPORT GRAPH =====" >> ai_context/context.txt
+          cat ai_context/import_graph.txt >> ai_context/context.txt || true
+          echo "\n===== RELEVANT SNIPPETS =====" >> ai_context/context.txt
+          cat ai_context/relevant_snippets.txt >> ai_context/context.txt || true
+          echo "\n===== mypy =====" >> ai_context/context.txt
+          cat ai_context/mypy.out >> ai_context/context.txt || true
+          echo "\n===== pytest =====" >> ai_context/context.txt
+          cat ai_context/pytest.out >> ai_context/context.txt || true
+          echo "\n===== diff-cover =====" >> ai_context/context.txt
+          cat ai_context/diffcov.out >> ai_context/context.txt || true
+          head -c 190000 ai_context/context.txt > ai_context/context.trim.txt || true
+
+      - name: AI fix (iter 1)
+        if: steps.need_ai.outputs.need == '1'
+        run: python scripts/ai_fix.py --context ai_context/context.trim.txt --apply
+
+      - name: Quick re-check (iter 1)
+        if: steps.need_ai.outputs.need == '1'
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: |
+          ruff check . --fix
+          ruff format .
+          set +e
+          git fetch origin main >/dev/null 2>&1 || true
+          CHANGED=$(git diff --name-only --diff-filter=AMR origin/main... | grep -E '\.py$' || true)
+          if [ -n "$CHANGED" ]; then mypy $CHANGED || true; fi
+          pytest -q --maxfail=1 --disable-warnings || true
+          coverage xml || true
+          diff-cover coverage.xml --compare-branch origin/main --fail-under=85 || true
+          set -e
+
+      - name: AI fix (iter 2)
+        if: steps.need_ai.outputs.need == '1'
+        run: python scripts/ai_fix.py --context ai_context/context.trim.txt --apply || true
+
+      - name: Commit & push AI changes
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "ai-fixer[bot]"
+            git config user.email "ai-fixer-bot@users.noreply.github.com"
+            git add -A
+            git commit -m "chore: AI auto-fix (project-aware)"
+            git push
+          fi
+
+      - name: Outcome
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const num = (context.eventName === 'issue_comment') ? context.payload.issue.number : context.payload.pull_request.number;
+            const body = `AI Fixer v2 finished:\\n• mypy exit: ${{ steps.mypy.outputs.mypy_exit }}\\n• tests exit: ${{ steps.tests.outputs.tests_exit }}\\n• diffcov exit: ${{ steps.diffcov.outputs.diffcov_exit }}`;
+            await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: num, body });

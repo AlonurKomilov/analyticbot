@@ -3,11 +3,9 @@ Payment routes for the bot API.
 Comprehensive payment system with subscriptions, webhooks, and analytics.
 """
 
-from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
 

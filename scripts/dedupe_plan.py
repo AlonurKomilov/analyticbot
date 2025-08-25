@@ -1,19 +1,31 @@
 # scripts/dedupe_plan.py
+import csv
 import hashlib
 import os
-import re
-import csv
 import pathlib
+import re
 from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 EXCLUDES = ["archive/", "results/", ".git/", ".venv/", "node_modules/", "__pycache__/"]
-PREF = [r"^apps/api/", r"^apps/bot/", r"^apps/frontend/", r"^core/", r"^infra/", r"^config/", r"^scripts/", r"^tests/", r"^docs/"]
+PREF = [
+    r"^apps/api/",
+    r"^apps/bot/",
+    r"^apps/frontend/",
+    r"^core/",
+    r"^infra/",
+    r"^config/",
+    r"^scripts/",
+    r"^tests/",
+    r"^docs/",
+]
 DEPREF = [r"^apis/", r"^bot/", r"^archive/", r"^results/"]
 
-def should_skip(p): 
+
+def should_skip(p):
     s = p.replace("\\", "/")
     return any(s.startswith(x) for x in EXCLUDES)
+
 
 def sha256(path):
     h = hashlib.sha256()
@@ -22,12 +34,14 @@ def sha256(path):
             h.update(b)
     return h.hexdigest()
 
+
 def rank(p):
     for i, pat in enumerate(PREF):
         if re.search(pat, p):
             return i
     penalty = sum(100 for pat in DEPREF if re.search(pat, p))
     return 50 + penalty
+
 
 def main():
     files = []
@@ -76,9 +90,12 @@ def main():
 
     # Write summary report
     with open(rep / "dedupe_report.md", "w") as f:
-        f.write("# Dedupe Plan\n\n- exact_duplicates.csv and same_name_diff_content.csv generated.\n")
+        f.write(
+            "# Dedupe Plan\n\n- exact_duplicates.csv and same_name_diff_content.csv generated.\n"
+        )
 
     print("OK: wrote dedupe plan to docs/reports/")
+
 
 if __name__ == "__main__":
     main()

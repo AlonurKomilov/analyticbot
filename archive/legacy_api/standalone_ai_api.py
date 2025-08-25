@@ -68,7 +68,9 @@ async def startup_event():
     """Initialize standalone ML services"""
     try:
         logger.info("🚀 Starting standalone AI/ML API...")
-        from apps.bot.services.ml.standalone_content_optimizer import StandaloneContentOptimizer
+        from apps.bot.services.ml.standalone_content_optimizer import (
+            StandaloneContentOptimizer,
+        )
 
         content_optimizer = StandaloneContentOptimizer()
         ml_services["content_optimizer"] = content_optimizer
@@ -104,7 +106,11 @@ async def root():
 async def health_check():
     """🏥 Health check for standalone ML API"""
     try:
-        health_status = {"status": "healthy", "timestamp": datetime.now(), "services": {}}
+        health_status = {
+            "status": "healthy",
+            "timestamp": datetime.now(),
+            "services": {},
+        }
         content_optimizer = ml_services.get("content_optimizer")
         if content_optimizer:
             try:
@@ -116,11 +122,7 @@ async def health_check():
                     "error": str(e),
                 }
         try:
-            import emoji
-            import numpy
-            import pandas
-            import sklearn
-            import textstat
+            pass
 
             health_status["dependencies"] = {
                 "numpy": "available",
@@ -283,4 +285,10 @@ if __name__ == "__main__":
     print("🤖 Starting Standalone AI/ML API...")
     print("📖 Documentation available at: http://localhost:8002/docs")
     print("🎬 Demo analysis at: http://localhost:8002/demo/analyze")
-    uvicorn.run("standalone_ai_api:app", host="0.0.0.0", port=8002, reload=False, log_level="info")
+    uvicorn.run(
+        "standalone_ai_api:app",
+        host="0.0.0.0",
+        port=8002,
+        reload=False,
+        log_level="info",
+    )

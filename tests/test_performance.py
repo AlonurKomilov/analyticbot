@@ -20,7 +20,7 @@ class TestPerformanceBenchmarks:
     @pytest.fixture
     async def mock_services(self):
         """Setup mock services for testing"""
-        pool = MagicMock()
+        MagicMock()
         analytics_repo = MagicMock(spec=AnalyticsRepository)
         scheduler_repo = MagicMock(spec=SchedulerRepository)
         analytics_repo.get_total_users_count.return_value = 1000
@@ -245,7 +245,6 @@ class TestErrorHandling:
                     results.append(f"result_{i}")
                 except ValueError:
                     errors += 1
-                    pass
             return (results, errors)
 
         start_time = time.time()
@@ -267,8 +266,16 @@ class TestConfigurationScenarios:
                 "database_url": "postgresql://user:pass@localhost/db",
                 "redis_url": "redis://localhost:6379/0",
                 "bot_token": "fake_token",
-                "features": {"analytics": True, "scheduling": True, "notifications": True},
-                "limits": {"max_posts_per_day": 100, "max_channels_per_user": 10, "rate_limit": 30},
+                "features": {
+                    "analytics": True,
+                    "scheduling": True,
+                    "notifications": True,
+                },
+                "limits": {
+                    "max_posts_per_day": 100,
+                    "max_channels_per_user": 10,
+                    "rate_limit": 30,
+                },
             }
             validated_config = {}
             for key, value in config.items():

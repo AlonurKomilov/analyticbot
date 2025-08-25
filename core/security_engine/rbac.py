@@ -252,7 +252,9 @@ class RBACManager:
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
         self.redis_client.setex(
-            cache_key, int(timedelta(hours=1).total_seconds()), json.dumps(permission_list)
+            cache_key,
+            int(timedelta(hours=1).total_seconds()),
+            json.dumps(permission_list),
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions

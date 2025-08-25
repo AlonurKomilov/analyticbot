@@ -5,6 +5,4 @@ This module exists only for backward compatibility with legacy imports
 (`performance_api:app`). Remove once all references are migrated.
 """
 
-from apps.api.performance_api import *
-
 __all__ = [name for name in globals().keys() if not name.startswith("_")]

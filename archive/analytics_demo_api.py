@@ -45,7 +45,11 @@ def generate_post_dynamics(hours_back: int = 24) -> List[PostDynamic]:
         comments = int(views * random.uniform(0.001, 0.01))
         data.append(
             PostDynamic(
-                timestamp=timestamp, views=views, likes=likes, shares=shares, comments=comments
+                timestamp=timestamp,
+                views=views,
+                likes=likes,
+                shares=shares,
+                comments=comments,
             )
         )
     return data
@@ -83,9 +87,11 @@ def generate_top_posts(count: int = 10) -> List[TopPost]:
                 comments=comments,
                 created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
                 type=random.choice(post_types),
-                thumbnail=f"https://picsum.photos/64/64?random={i}"
-                if random.choice([True, False])
-                else None,
+                thumbnail=(
+                    f"https://picsum.photos/64/64?random={i}"
+                    if random.choice([True, False])
+                    else None
+                ),
             )
         )
     return sorted(posts, key=lambda x: x.views, reverse=True)
@@ -94,11 +100,20 @@ def generate_top_posts(count: int = 10) -> List[TopPost]:
 def generate_best_times() -> List[BestTimeRecommendation]:
     """Generate mock best posting times"""
     recommendations = []
-    best_combinations = [(1, 14, 85.5), (4, 19, 82.3), (0, 12, 79.8), (3, 16, 77.2), (6, 10, 74.9)]
+    best_combinations = [
+        (1, 14, 85.5),
+        (4, 19, 82.3),
+        (0, 12, 79.8),
+        (3, 16, 77.2),
+        (6, 10, 74.9),
+    ]
     for day, hour, confidence in best_combinations:
         recommendations.append(
             BestTimeRecommendation(
-                day=day, hour=hour, confidence=confidence, avg_engagement=random.randint(150, 400)
+                day=day,
+                hour=hour,
+                confidence=confidence,
+                avg_engagement=random.randint(150, 400),
             )
         )
     return recommendations
@@ -207,7 +222,15 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
                 performance = random.randint(100, 300)
             hourly_performance[hour] = performance
         weekly_summary = {}
-        days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
         for i, day in enumerate(days):
             weekly_summary[day] = {
                 "best_hour": random.randint(9, 21),

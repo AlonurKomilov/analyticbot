@@ -18,7 +18,12 @@ from apps.bot.database.repositories import (
     SchedulerRepository,
     UserRepository,
 )
-from apps.bot.services import AnalyticsService, GuardService, SchedulerService, SubscriptionService
+from apps.bot.services import (
+    AnalyticsService,
+    GuardService,
+    SchedulerService,
+    SubscriptionService,
+)
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
 
 

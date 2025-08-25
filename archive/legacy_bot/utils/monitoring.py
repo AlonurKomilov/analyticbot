@@ -66,7 +66,7 @@ class MetricsCollector:
         self._lock = threading.RLock()
         self._start_time = datetime.now()
 
-    def record_metric(self, name: str, value: float, labels: (dict[str, str] | None) = None):
+    def record_metric(self, name: str, value: float, labels: dict[str, str] | None = None):
         """Record a metric value"""
         with self._lock:
             metric_data = MetricData(timestamp=datetime.now(), value=value, labels=labels or {})
@@ -85,7 +85,7 @@ class MetricsCollector:
             else:
                 stats.failed_requests += 1
 
-    def get_metric_values(self, name: str, since: (datetime | None) = None) -> list[MetricData]:
+    def get_metric_values(self, name: str, since: datetime | None = None) -> list[MetricData]:
         """Get metric values, optionally filtered by time"""
         with self._lock:
             if name not in self._metrics:
@@ -95,7 +95,7 @@ class MetricsCollector:
                 metrics = [m for m in metrics if m.timestamp >= since]
             return metrics
 
-    def get_performance_stats(self, endpoint: (str | None) = None) -> dict[str, PerformanceStats]:
+    def get_performance_stats(self, endpoint: str | None = None) -> dict[str, PerformanceStats]:
         """Get performance statistics"""
         with self._lock:
             if endpoint:
@@ -113,9 +113,9 @@ class MetricsCollector:
                 "uptime_seconds": uptime.total_seconds(),
                 "total_requests": total_requests,
                 "total_errors": total_errors,
-                "overall_error_rate": total_errors / total_requests * 100
-                if total_requests > 0
-                else 0,
+                "overall_error_rate": (
+                    total_errors / total_requests * 100 if total_requests > 0 else 0
+                ),
                 "endpoints": len(self._performance_stats),
                 "metrics_count": sum(len(metrics) for metrics in self._metrics.values()),
                 "timestamp": now.isoformat(),

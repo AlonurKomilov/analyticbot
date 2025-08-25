@@ -7,4 +7,9 @@ from .content_optimizer import ContentOptimizer
 from .engagement_analyzer import EngagementAnalyzer
 from .prediction_service import PredictionService
 
-__all__ = ["PredictionService", "ContentOptimizer", "ChurnPredictor", "EngagementAnalyzer"]
+__all__ = [
+    "PredictionService",
+    "ContentOptimizer",
+    "ChurnPredictor",
+    "EngagementAnalyzer",
+]

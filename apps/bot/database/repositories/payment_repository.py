@@ -33,7 +33,8 @@ class PaymentRepository:
         async with self.pool.acquire() as conn:
             if is_default:
                 await conn.execute(
-                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1", user_id
+                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1",
+                    user_id,
                 )
             await conn.execute(
                 "\n                INSERT INTO payment_methods \n                (id, user_id, provider, provider_method_id, method_type, \n                 last_four, brand, expires_at, is_default, metadata)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)\n                ",

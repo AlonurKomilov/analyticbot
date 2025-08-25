@@ -34,7 +34,7 @@ from apps.bot.services.auth_service import validate_init_data
 from apps.bot.services.prometheus_service import prometheus_service, setup_prometheus_middleware
 
 # Imports updated for the new project structure (without 'src')
-from bot.config import Settings, settings
+from apps.bot.config import Settings, settings
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)

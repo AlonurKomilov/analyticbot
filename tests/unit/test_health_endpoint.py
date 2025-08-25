@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from health_app import app
+from apps.bot.utils.health_app import app
 
 client = TestClient(app)
 

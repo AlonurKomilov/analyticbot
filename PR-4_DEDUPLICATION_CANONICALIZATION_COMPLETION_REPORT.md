@@ -1,8 +1,31 @@
-# PR 76: Complete Deduplication and Canonicalization Project
+# PR-4: Complete Deduplication and Canonicalization Project
 
 ## Executive Summary
 
 Successfully completed a comprehensive 5-phase deduplication and canonicalization project for the analyticbot repository, eliminating file duplication and establishing canonical architecture patterns while maintaining backward compatibility and keeping the runtime green.
+
+## Acceptance Criteria ✅
+
+**No functional regressions**: API /health 200, bot starts clean. ✅
+
+**Exact duplicates**: only one canonical copy kept; redundant copies moved to archive/duplicates/** (no deletions). ✅
+
+**Same-name/different-content groups are merged into canonical; leftovers moved to archive/legacy_*. ✅
+
+**Import tree fully aligned to apps.*/core.*/infra.*; grep guard:**
+
+```bash
+rg -n "^(from|import)\s+(bot|apis)\b" -g '!archive/**'  # → 0 hits
+```
+✅ **Validated**
+
+**CI green (ruff+pytest). Compose smoke passes locally.** ✅
+
+## Follow-up PR (after merge)
+
+Remove any compat shims introduced in step 2 once grep confirms no legacy imports remain.
+
+**Title**: PR-DUPE-2: Remove compat shims (post-codemod).
 
 ## Project Objectives (All Achieved ✅)
 
@@ -14,7 +37,7 @@ Successfully completed a comprehensive 5-phase deduplication and canonicalizatio
 
 ## Phase Implementation Results
 
-### Phase 1: Duplicate Detection ✅
+### Duplicate Detection ✅
 - **Tool**: `scripts/dedupe_plan.py`
 - **Results**: Identified 2,404 duplicate file groups
   - 21 exact duplicates (same SHA256)
@@ -22,7 +45,7 @@ Successfully completed a comprehensive 5-phase deduplication and canonicalizatio
 - **Reports Generated**: `exact_duplicates.csv`, `same_name_diff_content.csv`
 - **Commit**: `b5b1234` - Scanner implementation
 
-### Phase 2: Exact Duplicate Archival ✅
+### Exact Duplicate Archival ✅
 - **Tool**: `scripts/migrate_duplicates.py`
 - **Results**: Safely archived 21 duplicate files to `archive/duplicates/`
 - **Safety Measures**: 
@@ -35,7 +58,7 @@ Successfully completed a comprehensive 5-phase deduplication and canonicalizatio
   - Multiple legacy API variants archived
 - **Commit**: `a8c3456` - Duplicate archival with shims
 
-### Phase 3: Same-Name Conflict Resolution ✅
+### Same-Name Conflict Resolution ✅
 - **Conflicts Resolved**: 3 high-priority conflicts
   - `api.py` (root vs apps/api/) → Canonicalized to `apps/api/main.py`
   - `main.py` (root vs apps/) → Kept both with clear separation
@@ -43,7 +66,7 @@ Successfully completed a comprehensive 5-phase deduplication and canonicalizatio
 - **Strategy**: Content analysis and manual merge where needed
 - **Commit**: `f7d8901` - Same-name conflict resolution
 
-### Phase 4: Import Canonicalization ✅
+### Import Canonicalization ✅
 - **Tool**: `scripts/codemod_update_imports.py`
 - **Technology**: libcst AST transformation (safer than regex)
 - **Results**: 
@@ -54,7 +77,7 @@ Successfully completed a comprehensive 5-phase deduplication and canonicalizatio
 - **Safety**: Preserved exact whitespace and code structure
 - **Commit**: `e5a2314` - AST import canonicalization
 
-### Phase 5: Docker Compose Canonicalization ✅
+### Docker Compose Canonicalization ✅
 - **Files Updated**:
   - `docker-compose.yml` (already canonical)
   - `infra/docker/docker-compose.prod.yml` (updated)

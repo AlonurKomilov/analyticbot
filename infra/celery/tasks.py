@@ -20,10 +20,12 @@ logger = logging.getLogger(__name__)
     retry_jitter=True,
     max_retries=5,
 )
-def send_message_task(self, chat_id: str, message: str, idempotency_key: str = None, **kwargs) -> dict[str, Any]:
+def send_message_task(
+    self, chat_id: str, message: str, idempotency_key: str = None, **kwargs
+) -> dict[str, Any]:
     """
     Enhanced message sending task with idempotency and rate limiting.
-    
+
     Args:
         chat_id: Target chat ID
         message: Message text
@@ -31,14 +33,12 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
         **kwargs: Additional parameters for bot.send_message()
     """
     import asyncio
-    from uuid import uuid4
 
     async def _send_message_with_reliability():
         try:
             # Import inside task to avoid circular imports
             from apps.bot.container import container
             from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-            from core.services.enhanced_delivery_service import EnhancedDeliveryService
             from core.utils.idempotency import IdempotencyGuard
             from core.utils.ratelimit import TokenBucketRateLimiter
 
@@ -47,12 +47,15 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
                 .add("task", "send_message_task")
                 .add("chat_id", chat_id)
                 .add("idempotency_key", idempotency_key)
-                .add("retry", self.request.retries if hasattr(self.request, "retries") else 0)
+                .add(
+                    "retry",
+                    self.request.retries if hasattr(self.request, "retries") else 0,
+                )
             )
 
             # Generate idempotency key if not provided
             effective_idempotency_key = idempotency_key or f"task:{self.request.id}"
-            
+
             logger.info(
                 f"Sending message to {chat_id} with reliability guards "
                 f"(attempt {self.request.retries + 1}/6, key={effective_idempotency_key})"
@@ -63,13 +66,19 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
             rate_limiter = TokenBucketRateLimiter()
 
             # Check for duplicate operation
-            is_duplicate, existing_status = await idempotency_guard.is_duplicate(effective_idempotency_key)
-            
+            is_duplicate, existing_status = await idempotency_guard.is_duplicate(
+                effective_idempotency_key
+            )
+
             if is_duplicate and existing_status and existing_status.status == "completed":
-                logger.info(f"Duplicate task detected, returning cached result: {effective_idempotency_key}")
+                logger.info(
+                    f"Duplicate task detected, returning cached result: {effective_idempotency_key}"
+                )
                 return {
                     "success": True,
-                    "message_id": existing_status.result.get("message_id") if existing_status.result else None,
+                    "message_id": (
+                        existing_status.result.get("message_id") if existing_status.result else None
+                    ),
                     "chat_id": chat_id,
                     "duplicate": True,
                     "cached_result": existing_status.result,
@@ -77,7 +86,9 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
                 }
 
             # Mark operation as started
-            operation_started = await idempotency_guard.mark_operation_start(effective_idempotency_key)
+            operation_started = await idempotency_guard.mark_operation_start(
+                effective_idempotency_key
+            )
             if not operation_started:
                 logger.warning(f"Could not acquire idempotency lock: {effective_idempotency_key}")
                 raise Exception("Operation already in progress")
@@ -88,19 +99,16 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
                     bucket_id=str(chat_id),
                     tokens=1,
                     limit_type="chat",
-                    max_wait=60.0  # 1 minute max wait
+                    max_wait=60.0,  # 1 minute max wait
                 )
-                
+
                 if not chat_allowed:
                     raise Exception(f"Chat rate limit exceeded for {chat_id}")
 
                 global_allowed = await rate_limiter.acquire_with_delay(
-                    bucket_id="global_bot",
-                    tokens=1,
-                    limit_type="global",
-                    max_wait=60.0
+                    bucket_id="global_bot", tokens=1, limit_type="global", max_wait=60.0
                 )
-                
+
                 if not global_allowed:
                     raise Exception("Global bot rate limit exceeded")
 
@@ -123,18 +131,21 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
                 }
 
                 # Mark operation as completed
-                await idempotency_guard.mark_operation_complete(effective_idempotency_key, result_data)
+                await idempotency_guard.mark_operation_complete(
+                    effective_idempotency_key, result_data
+                )
 
                 # Record success metric
                 try:
                     from apps.bot.utils.monitoring import metrics
+
                     metrics.record_metric(
                         "message_sent_success",
                         1.0,
                         {
-                            "chat_id": str(chat_id), 
+                            "chat_id": str(chat_id),
                             "retry_count": self.request.retries,
-                            "with_idempotency": bool(idempotency_key)
+                            "with_idempotency": bool(idempotency_key),
                         },
                     )
                 except ImportError:
@@ -144,7 +155,9 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
 
             except Exception as send_error:
                 # Mark operation as failed
-                await idempotency_guard.mark_operation_failed(effective_idempotency_key, str(send_error))
+                await idempotency_guard.mark_operation_failed(
+                    effective_idempotency_key, str(send_error)
+                )
                 raise send_error
 
         except Exception as e:
@@ -154,6 +167,7 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
             # Record failure metric
             try:
                 from apps.bot.utils.monitoring import metrics
+
                 metrics.record_metric(
                     "message_sent_failure",
                     1.0,
@@ -161,7 +175,7 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
                         "chat_id": str(chat_id),
                         "retry_count": self.request.retries,
                         "error_type": type(e).__name__,
-                        "with_idempotency": bool(idempotency_key)
+                        "with_idempotency": bool(idempotency_key),
                     },
                 )
             except ImportError:
@@ -169,7 +183,7 @@ def send_message_task(self, chat_id: str, message: str, idempotency_key: str = N
 
             # Calculate delay for next retry
             delay = min(10 * (2**self.request.retries), 300)  # Max 5 minutes
-            
+
             # Check if this is a rate limit error and adjust delay
             if any(phrase in str(e).lower() for phrase in ["rate limit", "flood", "too many"]):
                 delay = min(delay * 2, 600)  # Double delay for rate limit errors, max 10 minutes
@@ -343,20 +357,26 @@ def health_check_task(self) -> dict[str, Any]:
 
             logger.debug("Running system health check")
 
-            health_results = {"timestamp": datetime.utcnow().isoformat(), "components": {}}
+            health_results = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "components": {},
+            }
 
             # Check database health
             try:
                 db = container.db_session()
                 # Simple query to check DB connectivity
-                result = await db.execute("SELECT 1")
+                await db.execute("SELECT 1")
                 health_results["components"]["database"] = {
                     "status": "healthy",
                     "response_time_ms": 0,  # Could measure actual response time
                 }
             except Exception as e:
                 logger.warning(f"Database health check failed: {e}")
-                health_results["components"]["database"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["database"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Redis health
             try:
@@ -370,7 +390,10 @@ def health_check_task(self) -> dict[str, Any]:
                 health_results["components"]["redis"] = {"status": "healthy"}
             except Exception as e:
                 logger.warning(f"Redis health check failed: {e}")
-                health_results["components"]["redis"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["redis"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Telegram API health
             try:
@@ -382,7 +405,10 @@ def health_check_task(self) -> dict[str, Any]:
                 }
             except Exception as e:
                 logger.warning(f"Telegram health check failed: {e}")
-                health_results["components"]["telegram"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["telegram"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Overall health status
             all_healthy = all(

@@ -50,7 +50,10 @@ class SecurityManager:
         self.security = HTTPBearer()
 
     def create_access_token(
-        self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
+        self,
+        user: User,
+        expires_delta: timedelta | None = None,
+        session_id: str | None = None,
     ) -> str:
         """
         Create JWT access token with user claims
@@ -174,7 +177,8 @@ class SecurityManager:
         except JWTError as e:
             logger.warning(f"JWT verification failed: {str(e)}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
             )
 
     def create_user_session(

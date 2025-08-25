@@ -31,7 +31,13 @@ from sklearn.impute import SimpleImputer
 
 # Regression Models
 # Classification Models
-from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, LogisticRegression, Ridge
+from sklearn.linear_model import (
+    ElasticNet,
+    Lasso,
+    LinearRegression,
+    LogisticRegression,
+    Ridge,
+)
 from sklearn.mixture import GaussianMixture
 
 # Machine Learning Libraries
@@ -64,7 +70,7 @@ from sklearn.metrics import (
 
 # Model optimization
 try:
-    import optuna
+    pass
 
     OPTUNA_AVAILABLE = True
 except ImportError:

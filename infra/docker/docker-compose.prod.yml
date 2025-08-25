@@ -100,6 +100,7 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.prod
     container_name: analyticbot-api-prod
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
       - REDIS_URL=redis://redis:6379/0
@@ -141,7 +142,7 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.prod
     container_name: analyticbot-bot-prod
-    command: ["python", "run_bot.py"]
+    command: python -m apps.bot.run_bot
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
       - REDIS_URL=redis://redis:6379/0
@@ -173,7 +174,7 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.prod
     container_name: analyticbot-celery-worker-prod
-    command: ["celery", "-A", "bot.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+    command: celery -A infra.celery.celery_app worker --loglevel=info --concurrency=4
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
       - REDIS_URL=redis://redis:6379/0
@@ -202,7 +203,7 @@ services:
       context: ../../
       dockerfile: infrastructure/docker/Dockerfile.prod
     container_name: analyticbot-celery-beat-prod
-    command: ["celery", "-A", "bot.celery_app", "beat", "--loglevel=info"]
+    command: celery -A infra.celery.celery_app beat --loglevel=info
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
       - REDIS_URL=redis://redis:6379/0

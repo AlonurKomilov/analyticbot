@@ -98,7 +98,8 @@ services:
   api:
     build:
       context: ../../
-      dockerfile: infrastructure/docker/Dockerfile.prod
+      dockerfile: infra/docker/Dockerfile
+      target: api
     container_name: analyticbot-api-prod
     command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
     environment:
@@ -140,7 +141,8 @@ services:
   bot:
     build:
       context: ../../
-      dockerfile: infrastructure/docker/Dockerfile.prod
+      dockerfile: infra/docker/Dockerfile
+      target: bot
     container_name: analyticbot-bot-prod
     command: python -m apps.bot.run_bot
     environment:
@@ -172,7 +174,8 @@ services:
   celery-worker:
     build:
       context: ../../
-      dockerfile: infrastructure/docker/Dockerfile.prod
+      dockerfile: infra/docker/Dockerfile
+      target: worker
     container_name: analyticbot-celery-worker-prod
     command: celery -A infra.celery.celery_app worker --loglevel=info --concurrency=4
     environment:
@@ -201,7 +204,8 @@ services:
   celery-beat:
     build:
       context: ../../
-      dockerfile: infrastructure/docker/Dockerfile.prod
+      dockerfile: infra/docker/Dockerfile
+      target: beat
     container_name: analyticbot-celery-beat-prod
     command: celery -A infra.celery.celery_app beat --loglevel=info
     environment:

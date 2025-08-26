@@ -22,31 +22,25 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache Poetry installation
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pypoetry
-          key: poetry-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            poetry-${{ runner.os }}-${{ matrix.python-version }}-
-
-      - name: Install Poetry
+      - name: Check deps are compiled
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pip install pip-tools
+          pip-compile --no-upgrade -o requirements.txt requirements.in
+          pip-compile --no-upgrade -o requirements.prod.txt requirements.prod.in
+          git diff --exit-code requirements.txt requirements.prod.txt
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          key: pip-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             pip-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
-          poetry install --no-interaction --no-root
-          poetry install --no-interaction
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Check pre-commit configuration
         id: precommit-check
@@ -69,15 +63,15 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          poetry run ruff check .
+          ruff check .
 
       - name: Format check with ruff
         run: |
-          poetry run ruff format --check .
+          ruff format --check .
 
       - name: Run tests
         run: |
-          poetry run pytest tests/test_layered_architecture.py tests/test_health.py -v
+          pytest tests/test_layered_architecture.py tests/test_health.py -v
 
   # Optional Docker build smoke test
   docker:

@@ -1,72 +1,13 @@
-[tool.poetry]
-name = "analytic-bot"
-version = "0.1.0"
-description = ""
-authors = ["Udevs <info@udevs.io>"]
-readme = "README.md"
-packages = [{include = "bot"}]
-
-[tool.poetry.dependencies]
-python = "^3.11"
-aiogram = "^3.10.0"
-pydantic = "^2.8.2"
-pydantic-settings = "^2.3.4"
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.31"}
-asyncpg = "^0.29.0"
-alembic = "^1.13.2"
-punq = "^0.6.2"
-celery = {extras = ["redis"], version = "^5.4.0"}
-redis = "^5.0.7"
-fluent-runtime = "^0.4.0"
-aiogram-i18n = "^1.4"
-uvloop = "^0.19.0"
-uvicorn = {extras = ["standard"], version = "^0.30.1"}
-fastapi = "^0.116.1"
-psycopg2-binary = "^2.9.9"
-python-multipart = "^0.0.18"
-fluent-syntax = "^0.19.0"
-matplotlib = "^3.9.1"
-python-dotenv = "^1.0.1"
-sentry-sdk = "^2.9.0"
-fluent-compiler = "^0.4"
-# Infrastructure Dependencies
-pyyaml = "^6.0.0"
-kubernetes = "^28.1.0"
-jinja2 = "^3.1.0"
-prometheus-client = "^0.17.1"
-# Production Dependencies (moved from requirements.prod.txt)
-psutil = "^5.9.5"
-gunicorn = "^21.2.0"
-grafana-api = "^1.0.3"
-prometheus-api-client = "^0.5.3"
-httpx = "^0.24.1"
-py-spy = "^0.3.14"
-cryptography = "^41.0.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.4.1"
-pre-commit = "^3.7.1"
-ruff = "^0.4.8"
-mypy = "^1.10.0"
-black = "^24.4.2"
-fakeredis = "^2.21.0"
-pytest-cov = "^4.1.0"
-pip-audit = "^2.9.0"
-flake8 = "^7.3.0"
-pytest-dotenv = "^0.5.2"
-pytest-env = "^1.1.5"
-pytest-asyncio = "^0.21.0"
-setuptools = "^80.9.0"
-# Additional dev dependencies
-pytest-benchmark = "^4.0.0"
-ipython = "^8.0.0"
+# AnalyticBot - Tool Configuration
+# Dependencies are managed via pip-tools (requirements.in -> requirements.txt)
 
 [tool.coverage.run]
-source = ["bot"]
+source = ["apps", "core"]
 branch = true
 omit = [
-    "bot/database/migrations/*",
+    "infra/db/alembic/versions/*",
     "tests/*",
+    "docs/*"
 ]
 
 [tool.ruff]
@@ -77,7 +18,3 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

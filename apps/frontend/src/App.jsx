@@ -20,6 +20,9 @@ import AddChannel from './components/AddChannel';
 import EnhancedMediaUploader from './components/EnhancedMediaUploader.jsx'; // NEW for Phase 2.1
 import StorageFileBrowser from './components/StorageFileBrowser.jsx'; // NEW for Phase 2.1
 import AnalyticsDashboard from './components/AnalyticsDashboard.jsx'; // NEW Week 2 Analytics
+import TWAEnhancementDemo from './components/TWAEnhancementDemo.jsx'; // NEW Phase 2.1 Demo
+import SuperAdminPanel from './components/SuperAdminPanel.jsx'; // NEW Phase 2.6 SuperAdmin Panel
+import DevelopmentTools from './components/DevelopmentTools.jsx'; // Development helper
 import { useAppStore } from './store/appStore.js';
 
 const AppSkeleton = () => (
@@ -107,6 +110,20 @@ function App() {
                                 label={
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         🧠 <span>AI Xizmatlari</span>
+                                    </Box>
+                                } 
+                            />
+                            <Tab 
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        🚀 <span>TWA Enhancement Demo</span>
+                                    </Box>
+                                } 
+                            />
+                            <Tab 
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        🛡️ <span>SuperAdmin Panel</span>
                                     </Box>
                                 } 
                             />
@@ -234,8 +251,21 @@ function App() {
                             </Grid>
                         </Container>
                     </TabPanel>
+
+                    {/* TWA Enhancement Demo Tab */}
+                    <TabPanel value={activeTab} index={3}>
+                        <TWAEnhancementDemo />
+                    </TabPanel>
+
+                    {/* SuperAdmin Panel Tab */}
+                    <TabPanel value={activeTab} index={4}>
+                        <SuperAdminPanel />
+                    </TabPanel>
                 </Box>
             )}
+            
+            {/* Development Tools (only visible in development) */}
+            <DevelopmentTools />
         </Container>
     );
 }

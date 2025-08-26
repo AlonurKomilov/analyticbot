@@ -30,6 +30,16 @@ class DeliveryStatus(str, Enum):
     RETRYING = "retrying"
 
 
+class MediaType(str, Enum):
+    """Media file type enumeration"""
+    
+    IMAGE = "image"
+    VIDEO = "video"
+    DOCUMENT = "document"
+    AUDIO = "audio"
+    OTHER = "other"
+
+
 @dataclass
 class ScheduledPost:
     """
@@ -169,3 +179,53 @@ class DeliveryFilter:
     to_date: datetime | None = None
     limit: int | None = None
     offset: int | None = None
+
+
+@dataclass
+class MediaFile:
+    """
+    Core domain model for media files
+    Represents files uploaded through TWA for use in posts
+    """
+    
+    id: int | None = None
+    file_id: str = ""
+    file_name: str = ""
+    file_size: int = 0
+    file_type: str = ""
+    telegram_file_id: str = ""
+    storage_channel_id: int = 0
+    user_id: UUID | None = None
+    
+    # Metadata
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    # Timestamps
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime | None = None
+    is_active: bool = True
+    
+    def get_media_type(self) -> MediaType:
+        """Get media type based on file type"""
+        if self.file_type.startswith('image/'):
+            return MediaType.IMAGE
+        elif self.file_type.startswith('video/'):
+            return MediaType.VIDEO
+        elif self.file_type.startswith('audio/'):
+            return MediaType.AUDIO
+        elif self.file_type in ['application/pdf', 'text/plain', 'application/msword']:
+            return MediaType.DOCUMENT
+        else:
+            return MediaType.OTHER
+    
+    def get_file_size_mb(self) -> float:
+        """Get file size in MB"""
+        return self.file_size / (1024 * 1024)
+    
+    def is_compressible(self) -> bool:
+        """Check if file type supports compression"""
+        compressible_types = [
+            'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+            'image/bmp', 'image/tiff'
+        ]
+        return self.file_type in compressible_types

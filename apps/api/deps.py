@@ -4,13 +4,16 @@ Wires database connections to repositories to services
 """
 
 from collections.abc import AsyncGenerator
+from typing import Dict, Any
 
 import asyncpg
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from config import settings
 from core.repositories.postgres import PgDeliveryRepository, PgScheduleRepository
 from core.services import DeliveryService, ScheduleService
+from core.security_engine.auth import get_current_user, require_role
+from core.security_engine.models import UserRole
 
 # Database connection dependency
 _db_pool = None
@@ -76,3 +79,14 @@ async def cleanup_db_pool():
     if _db_pool:
         await _db_pool.close()
         _db_pool = None
+
+
+# Authentication dependencies (exported for router use)
+def get_current_user_dep():
+    """Export get_current_user for router imports"""
+    return get_current_user
+
+
+def require_role_dep(role: UserRole):
+    """Export require_role factory for router imports"""
+    return require_role(role)

@@ -3,36 +3,13 @@ from datetime import datetime
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
-from pydantic import BaseModel, HttpUrl, ValidationError, field_validator
+from pydantic import ValidationError
 
 from apps.bot.database.repositories import AnalyticsRepository, SchedulerRepository
+from apps.bot.domain.models import InlineButton, InlineButtonsPayload
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
-
-
-class InlineButton(BaseModel):
-    text: str
-    url: HttpUrl | None = None
-    callback_data: str | None = None
-
-    @field_validator("callback_data")
-    @classmethod
-    def limit_callback(cls, v: str | None):
-        if v and len(v) > 60:
-            raise ValueError("callback_data too long (>60)")
-        return v
-
-
-class InlineButtonsPayload(BaseModel):
-    buttons: list[list[InlineButton]]
-
-    @field_validator("buttons")
-    @classmethod
-    def non_empty(cls, v):
-        if not v:
-            raise ValueError("buttons cannot be empty")
-        return v
 
 
 class SchedulerService:

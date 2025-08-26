@@ -135,7 +135,7 @@ class Module2LocalTester:
 
             sys.path.insert(0, str(self.project_root))
             try:
-                from apps.api.main_api import app
+                from apps.api.main import app
 
                 self.log_test("FastAPI Import", True, "Application imported successfully")
                 return True

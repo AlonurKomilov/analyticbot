@@ -1,17 +1,3 @@
-# 📚 AnalyticBot Documentation - Complete Overview
-
-**Last Updated:** August 18, 2025  
-**Documentation Status:** Complete and Up-to-Date
-
-## 📋 Documentation Structure
-
-### 🚀 Phase Documentation (Complete)
-
-#### ✅ Phase 0: Foundation Implementation
-**File:** `PHASE_0_IMPLEMENTATION.md`  
-**Status:** Completed  
-**Content:** Basic bot setup, database integration, core features
-
 # 📚 AnalyticBot Documentation Index
 
 Welcome to the comprehensive documentation for **AnalyticBot** - an enterprise-grade Telegram channel analytics platform.
@@ -19,35 +5,82 @@ Welcome to the comprehensive documentation for **AnalyticBot** - an enterprise-g
 ## 🎯 **Quick Navigation**
 
 ### 🚀 **Getting Started**
-- [**Main README**](../README.md) - Project overview and quick start
-- [**Installation Guide**](PHASE_1.5_IMPLEMENTATION_GUIDE.md) - Setup instructions
-- [**API Documentation**](PHASE_4.0_ADVANCED_ANALYTICS_DOCUMENTATION.md) - API reference
+- [**Main README**](../README.md) - Project overview and quickstart
+- [**Project Summary**](project_summary_en.md) - Comprehensive project overview
+- [**System Requirements**](SYSTEM_REQUIREMENTS.md) - Hardware and software requirements
+- [**Testing Guide**](TESTING.md) - Testing procedures and reports
 
-### 📊 **Project Status**
-- [**Current Phase**](phases/completed/PHASE_5.0_MODULE1_COMPLETION_REPORT.md) - Phase 5.0 Module 1 (Enterprise Integration)
-- [**Change Log**](CHANGELOG.md) - Version history and updates
-- [**Testing Report**](../twa-frontend/TESTING_REPORT.md) - Test results (13/13 passing)
+### 🏗️ **Architecture & Development**
+- [**Architecture Guide**](architecture.md) - System architecture and design patterns
+- [**Development Phases**](PHASE_COMPREHENSIVE_OVERVIEW.md) - Complete phase overview
+- [**Infrastructure Guide**](INFRASTRUCTURE_DEPLOYMENT_GUIDE.md) - Deployment and infrastructure
+- [**Performance Optimization**](PERFORMANCE_OPTIMIZATION_DOCUMENTATION.md) - Performance tuning guide
 
 ---
 
-## 🏗️ **Documentation Structure**
+## 📁 **Documentation Structure**
 
-### 📁 **phases/** - Development Phases
-#### ✅ **completed/** - Finished Phases
-- [**Phase 1.5**](PHASE_1.5_PERFORMANCE_OPTIMIZATION.md) - Performance Optimization
-- [**Phase 2.1**](phases/completed/PHASE_2.1_WEEK2_COMPLETE_REPORT.md) - TWA Enhancement & Analytics Dashboard
-- [**Phase 2.5**](phases/completed/PHASE_2.5_COMPLETION_REPORT.md) - AI/ML Enhancement
-- [**Phase 3.5**](phases/completed/PHASE_3.5_COMPLETION_REPORT.md) - Security Enhancement  
-- [**Phase 4.0**](phases/completed/PHASE_4.0_COMPLETION_REPORT.md) - Advanced Analytics
-- [**Phase 5.0 Module 1**](phases/completed/PHASE_5.0_MODULE1_COMPLETION_REPORT.md) - Containerization & Orchestration
+### 📊 **reports/** - Development & Audit Reports
+#### 🔍 **Pull Request Reports** 
+- [**PR-1: Layered Architecture**](reports/pr01_layered_architecture_report.md)
+- [**PR-2: Celery Master Integration**](reports/pr02_celery_master_completion_report.md)
+- [**PR-3: Implementation Complete**](reports/pr03_implementation_complete_report.md)
+- [**PR-4: Deduplication & Canonicalization**](reports/pr04_deduplication_canonicalization_completion_report.md)
+- [**PR-5: Canonicalization & Validation**](reports/pr05_canonicalization_and_validation_report.md)
+- [**PR-6: Validation Completion**](reports/pr06_validation_completion_report.md)
+- [**PR-76: Legacy Deduplication**](reports/pr76_deduplication_canonicalization_completion_report.md)
 
-#### 📋 **plans/** - Future Phases
-- [**Phase 2.5 Plan**](phases/plans/PHASE_2.5_AI_ML_PLAN.md) - AI/ML Enhancement Planning
-- [**Phase 3.5 Plan**](phases/plans/PHASE_3.5_SECURITY_PLAN.md) - Security Enhancement Planning
-- [**Phase 4.0 Plan**](phases/plans/PHASE_4.0_ADVANCED_ANALYTICS_PLAN.md) - Advanced Analytics Planning
-- [**Phase 5.0 Plan**](phases/plans/PHASE_5.0_ENTERPRISE_INTEGRATION_PLAN.md) - Enterprise Integration Planning
+#### 📋 **System Reports**
+- [**Audit Completion Report**](reports/audit_completion_report.md)
+- [**Security Audit Report**](reports/security_audit_report.md)
+- [**Comprehensive Fixes Report**](reports/comprehensive_fixes_completion_report.md)
+- [**PR Report Standardization**](reports/pr_report_standardization_summary.md)
 
-### 📊 **reports/** - Implementation Reports
+#### 📈 **Performance & Analytics**
+- [**Analytics Consolidation**](reports/ANALYTICS_CONSOLIDATION_REPORT.md)
+- [**Container Consolidation**](reports/CONTAINER_CONSOLIDATION_FINAL_REPORT.md)
+- [**Performance Optimization**](reports/PERFORMANCE_OPTIMIZATION_COMPLETE_REPORT.md)
+
+### 🏗️ **phases/** - Development Phases
+#### ✅ **Phase Completion Reports**
+- [**Phase 2.1 Week 2**](reports/PHASE_2.1_WEEK2_COMPLETE_REPORT.md) - TWA Enhancement
+- [**Phase 2.2**](reports/PHASE_2.2_COMPLETION_REPORT.md) - Analytics Dashboard
+- [**Phase 4.0**](reports/PHASE_4.0_COMPLETION_REPORT.md) - Advanced Analytics
+- [**Phase 5.0**](reports/PHASE_5.0_ENTERPRISE_INTEGRATION_PLAN.md) - Enterprise Integration
+
+#### 📋 **Phase Planning & Implementation**
+- [**Phase 0 Implementation**](PHASE_0_IMPLEMENTATION.md) - Foundation setup
+- [**Phase 1.5 Implementation**](PHASE_1.5_IMPLEMENTATION_GUIDE.md) - Performance optimization
+- [**Phase 2.1 Planning**](PHASE_2.1_TWA_ENHANCEMENT_PLAN.md) - TWA enhancement plan
+- [**Phase 2.5 AI/ML Plan**](PHASE_2.5_AI_ML_PLAN.md) - Machine learning integration
+
+### 📝 **Change Management**
+- [**CHANGELOG**](CHANGELOG.md) - Version history and release notes
+- [**Phase 0 Changelog**](CHANGELOG_PHASE_0.0.md) - Foundation phase changes
+- [**Documentation Cleanup**](DOCUMENTATION_CLEANUP_COMPLETE_REPORT.md) - Documentation audit results
+
+### 🔧 **Legacy & Archive**
+- [**Archive**](_archive/) - Archived documentation and legacy files
+- [**Migration Reports**](reports/duplicates_migration_summary.md) - File organization reports
+
+---
+
+## 🔗 **External Links**
+
+- [**Main Project Repository**](../) - Source code and development
+- [**API Documentation**](../apps/api/) - FastAPI application docs
+- [**Bot Implementation**](../apps/bot/) - Telegram bot source
+- [**Infrastructure**](../infra/) - Docker, Kubernetes, monitoring configs
+
+---
+
+## 📊 **Project Status**
+
+- **Current Phase:** Phase 5.0 - Enterprise Integration
+- **Test Coverage:** 33 test files centralized in `/tests/`
+- **Architecture:** Layered (apps/core/infra) with clean separation
+- **Dependencies:** pip-tools managed (requirements.in → requirements.txt)
+- **Deployment:** Docker + Kubernetes ready
 - [**Performance Reports**](reports/PERFORMANCE_OPTIMIZATION_COMPLETE_REPORT.md) - System performance analysis
 - [**Security Reports**](PHASE_3.5_SECURITY_DOCUMENTATION.md) - Security implementation details
 

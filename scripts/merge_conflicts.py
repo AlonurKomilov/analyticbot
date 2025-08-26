@@ -28,7 +28,7 @@ CANONICAL_PATTERNS = [
 DEPRIORITY_PATTERNS = [
     (r"^apis/", -50),
     (r"^bot/", -40),  # root bot/ vs apps/bot/
-    (r"^archive/", -100),
+    (r"^docs/_archive/", -100),
     (r"^results/", -100),
     (r"/__pycache__/", -200),
     (r"\.pyc$", -200),

@@ -89,7 +89,7 @@ def migrate_duplicates():
                     continue
 
                 # Create archive path
-                archive_path = f"archive/duplicates/{redundant}"
+                archive_path = f"docs/_archive/duplicates/{redundant}"
                 archive_full_path = ROOT / archive_path
                 archive_full_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -109,7 +109,7 @@ def migrate_duplicates():
                     return False
 
     print("\n✓ Migration complete:")
-    print(f"  - Moved {len(moved_files)} duplicate files to archive/")
+    print(f"  - Moved {len(moved_files)} duplicate files to docs/_archive/")
     print(f"  - Created {len(shim_files)} compatibility shims")
 
     return True

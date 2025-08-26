@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-EXCLUDES = ["archive/", "results/", ".git/", ".venv/", "node_modules/", "__pycache__/"]
+EXCLUDES = ["docs/_archive/", "results/", ".git/", ".venv/", "node_modules/", "__pycache__/"]
 PREF = [
     r"^apps/api/",
     r"^apps/bot/",
@@ -19,7 +19,7 @@ PREF = [
     r"^tests/",
     r"^docs/",
 ]
-DEPREF = [r"^apis/", r"^bot/", r"^archive/", r"^results/"]
+DEPREF = [r"^apis/", r"^bot/", r"^docs/_archive/", r"^results/"]
 
 
 def should_skip(p):

@@ -42,6 +42,17 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Compile all Python modules
+        run: python -m compileall -x 'apps/frontend/node_modules' .
+
+      - name: Import smokes
+        run: |
+          python -c "import apps.api.main; print('API OK')"
+          python -c "import apps.bot.run_bot; print('BOT OK')"
+
+      - name: Run tests (quick)
+        run: pytest tests/test_health.py tests/test_layered_architecture.py -q
+
       - name: Check pre-commit configuration
         id: precommit-check
         run: |
@@ -69,7 +80,7 @@ jobs:
         run: |
           ruff format --check .
 
-      - name: Run tests
+      - name: Run integration tests
         run: |
           pytest tests/test_layered_architecture.py tests/test_health.py -v
 

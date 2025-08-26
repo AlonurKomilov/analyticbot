@@ -19,6 +19,7 @@ from apps.bot.database.performance import (
     performance_timer,
 )
 from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from apps.bot.domain.constants import DEFAULT_BATCH_SIZE, DEFAULT_CACHE_TTL
 from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 

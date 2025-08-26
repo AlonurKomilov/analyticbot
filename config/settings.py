@@ -137,7 +137,7 @@ class Settings(BaseSettings):
         if password and hasattr(password, "get_secret_value"):
             password = password.get_secret_value()
 
-        return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db}"
+        return f"postgresql://{user}:{password}@{host}:{port}/{db}"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

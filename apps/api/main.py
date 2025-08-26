@@ -11,6 +11,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
+from apps.api.routers import analytics_router, media_router, admin_router
 from config import settings
 from core import DeliveryService, ScheduleService
 
@@ -32,6 +33,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(analytics_router, prefix="/api")
+app.include_router(media_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 
 @app.get("/health")

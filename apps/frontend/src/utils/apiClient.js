@@ -1,4 +1,5 @@
 import { ErrorHandler } from './errorHandler.js';
+import { mockApiClient, isDevelopment } from './mockApiClient.js';
 
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 const REQUEST_TIMEOUT = 30000; // 30 seconds
@@ -318,8 +319,19 @@ class ApiClient {
     }
 }
 
-// Create singleton instance
-export const apiClient = new ApiClient();
+// Create singleton instance with mock support
+const createApiClient = () => {
+    const useMockApi = isDevelopment && localStorage.getItem('useMockApi') === 'true';
+    
+    if (useMockApi) {
+        console.log('🔧 Using Mock API for development');
+        return mockApiClient;
+    }
+    
+    return new ApiClient();
+};
+
+export const apiClient = createApiClient();
 
 // Backward compatibility function
 export const apiFetch = async (endpoint, options = {}) => {

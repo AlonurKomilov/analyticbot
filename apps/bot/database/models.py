@@ -101,3 +101,28 @@ sent_posts = sa.Table(
 
 # NOTE: Alembic revision 0004 adds a composite unique constraint on (channel_id, message_id)
 # to protect against duplicate log entries when retrying sends.
+
+
+# 6. 'media_files' table (depends on 'users' and 'channels')
+media_files = sa.Table(
+    "media_files",
+    metadata,
+    sa.Column("id", sa.Integer, primary_key=True),
+    sa.Column("file_id", sa.String(255), unique=True, nullable=False, index=True),
+    sa.Column("file_name", sa.String(500), nullable=False),
+    sa.Column("file_size", sa.BigInteger, nullable=False),
+    sa.Column("file_type", sa.String(100), nullable=False),
+    sa.Column("telegram_file_id", sa.String(255), nullable=False),
+    sa.Column("storage_channel_id", sa.BigInteger, nullable=False),
+    sa.Column(
+        "user_id",
+        sa.BigInteger,
+        sa.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    sa.Column("metadata", sa.JSON, default={}),
+    sa.Column("is_active", sa.Boolean, default=True, nullable=False, index=True),
+    sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), index=True),
+    sa.Column("updated_at", sa.DateTime(timezone=True), onupdate=sa.func.now()),
+)

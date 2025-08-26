@@ -19,10 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Install Python dependencies
-COPY requirements.txt ./
+COPY requirements.prod.txt ./
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install -r requirements.txt
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.prod.txt
 
 ENV PATH="/opt/venv/bin:${PATH}"
 

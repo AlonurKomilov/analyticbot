@@ -45,31 +45,42 @@ infra/                   # 🏭 Infrastructure & DevOps
 
 ## 🚀 **Quickstart**
 
-### Option 1: Poetry (Development)
+### Option 1: pip-tools (Development)
 ```bash
 # 1. Clone and setup
 git clone <repo-url>
 cd analyticbot
 
-# 2. Install dependencies
-poetry install
+# 2. Create virtual environment and install dependencies
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
 
 # 3. Configure environment
 cp .env.example .env
 # Edit .env with your values (see Environment Variables section)
 
 # 4. Run database migrations
-poetry run alembic upgrade head
+alembic upgrade head
 
 # 5. Start services
 # Terminal 1: API Server
-poetry run uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Terminal 2: Telegram Bot  
-poetry run python -m apps.bot.run_bot
+python -m apps.bot.run_bot
 
 # 6. Health check
 curl http://localhost:8000/health
+```
+
+#### 📝 **Managing Dependencies**
+```bash
+# Change dependencies? Edit requirements.in or requirements.prod.in, then:
+pip install pip-tools
+pip-compile -o requirements.txt requirements.in
+pip-compile -o requirements.prod.txt requirements.prod.in
 ```
 
 ### Option 2: Docker Compose (Production-like)

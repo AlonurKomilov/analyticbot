@@ -1,0 +1,30 @@
+# AnalyticBot Production Dependencies - Runtime Only
+# Core Framework
+aiogram==3.*
+fastapi==0.116.*
+uvicorn[standard]==0.30.*
+
+# Database
+SQLAlchemy[asyncio]==2.*
+asyncpg==0.29.*
+psycopg2-binary==2.*
+alembic==1.*
+
+# Task Queue
+celery[redis]==5.*
+redis==5.*
+
+# Data & Validation
+pydantic==2.*
+pydantic-settings==2.*
+
+# Utils
+python-dotenv==1.*
+python-multipart==0.0.*
+
+# Monitoring
+prometheus-client==0.17.*
+
+# Production Runtime
+gunicorn==21.*
+psutil==5.*

@@ -1,0 +1,75 @@
+# Multi-stage Dockerfile for production deployment
+FROM python:3.11-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN groupadd -r app && useradd -r -g app app
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements first for better layer caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p /app/logs && chown -R app:app /app
+
+# Switch to non-root user
+USER app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Default command (can be overridden)
+CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Production stage
+FROM base as production
+
+# Install production dependencies only
+COPY requirements.prod.txt .
+RUN pip install --no-cache-dir -r requirements.prod.txt
+
+# Copy optimized application code
+COPY --chown=app:app . .
+
+# Set production environment
+ENV ENVIRONMENT=production
+ENV LOG_LEVEL=INFO
+
+# API service
+FROM production as api
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
+# Bot service
+FROM production as bot
+EXPOSE 8080
+CMD ["python", "run_bot.py"]
+
+# Celery worker
+FROM production as celery-worker
+EXPOSE 9540
+CMD ["celery", "-A", "bot.celery_app", "worker", "--loglevel=info", "--concurrency=4", "--max-tasks-per-child=1000"]
+
+# Celery beat
+FROM production as celery-beat
+CMD ["celery", "-A", "bot.celery_app", "beat", "--loglevel=info"]

@@ -1,13 +1,40 @@
-from .analytics_repository import AnalyticsRepository
-from .channel_repository import ChannelRepository
-from .plan_repository import PlanRepository  # <-- ADDED
-from .scheduler_repository import SchedulerRepository
-from .user_repository import UserRepository
+"""
+Repository imports redirected to infrastructure layer
+For backward compatibility, imports are redirected to infra/db/repositories/
+"""
+
+# Import all repository implementations from infrastructure layer
+from infra.db.repositories import (
+    AsyncpgUserRepository,
+    AsyncpgAdminRepository,
+    AsyncpgScheduleRepository,
+    AsyncpgDeliveryRepository,
+    AsyncpgAnalyticsRepository,
+    AsyncpgChannelRepository,
+    AsyncpgPaymentRepository,
+    AsyncpgPlanRepository
+)
+
+# Backward compatibility aliases
+UserRepository = AsyncpgUserRepository
+AnalyticsRepository = AsyncpgAnalyticsRepository 
+ChannelRepository = AsyncpgChannelRepository
+PaymentRepository = AsyncpgPaymentRepository
+PlanRepository = AsyncpgPlanRepository
 
 __all__ = [
+    "AsyncpgUserRepository",
+    "AsyncpgAdminRepository", 
+    "AsyncpgScheduleRepository",
+    "AsyncpgDeliveryRepository",
+    "AsyncpgAnalyticsRepository",
+    "AsyncpgChannelRepository",
+    "AsyncpgPaymentRepository",
+    "AsyncpgPlanRepository",
+    # Backward compatibility aliases
     "UserRepository",
-    "ChannelRepository",
-    "SchedulerRepository",
     "AnalyticsRepository",
-    "PlanRepository",  # <-- ADDED
+    "ChannelRepository", 
+    "PaymentRepository",
+    "PlanRepository"
 ]

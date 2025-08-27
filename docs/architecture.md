@@ -22,8 +22,8 @@ AnalyticBot follows a **clean layered architecture** pattern with clear separati
 │                  core/ (Business Logic Layer)               │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
 │  │    models   │  │   services  │  │    repositories     │  │
-│  │   Domain    │  │  Business   │  │    Data Access      │  │
-│  │   Models    │  │   Logic     │  │      Layer          │  │
+│  │   Domain    │  │  Business   │  │    (Interfaces)     │  │
+│  │   Models    │  │   Logic     │  │      Protocols      │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 │  ┌─────────────────────────────────────────────────────────┐  │
 │  │               security_engine/                          │  │
@@ -39,10 +39,11 @@ AnalyticBot follows a **clean layered architecture** pattern with clear separati
 │  │ Containers  │  │ Database    │  │     Kubernetes      │  │
 │  │             │  │ Migrations  │  │     Manifests       │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────┘  │
-│  ┌─────────────────────────────────────────────────────────┐  │
-│  │                  monitoring/                            │  │
-│  │         Prometheus, Grafana, Alerting                  │  │
-│  └─────────────────────────────────────────────────────────┘  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │db/repositories│  │ monitoring/ │  │       security/     │  │
+│  │ Concrete     │  │ Prometheus  │  │    SSL Certs &      │  │
+│  │Implementations│  │  Grafana    │  │     Secrets         │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -133,19 +134,33 @@ The core layer contains domain logic, business rules, and data access patterns.
 - Cross-domain operation coordination
 - External service integration
 
-#### `core/repositories/` - Data Access Layer
-**Purpose**: Abstract data persistence and provide clean interfaces for data operations.
+#### `core/repositories/` - Repository Interfaces (Ports)
+**Purpose**: Define abstract interfaces for data access operations following Clean Architecture dependency inversion principle.
 
 **Key Components**:
-- `user_repository.py`: User data persistence operations
-- `analytics_repository.py`: Analytics data access and aggregation
-- `base_repository.py`: Common repository patterns and utilities
+- `interfaces.py`: Protocol-based repository interfaces
+  - `UserRepository`: User data operations contract
+  - `AdminRepository`: Admin-specific operations
+  - `ScheduleRepository`: Scheduled task management
+  - `DeliveryRepository`: Message delivery operations
+  - `AnalyticsRepository`: Analytics data access
+  - `ChannelRepository`: Channel management operations
+  - `PaymentRepository`: Payment processing interface
+  - `PlanRepository`: Subscription plan management
+
+**Architecture Principle**:
+- **Core contains only abstractions**: Repository interfaces are defined as Python Protocols
+- **Dependency Inversion**: Core layer depends on abstractions, not concrete implementations
+- **Structural Typing**: Uses Protocol for duck-typing compatibility
+- **Implementation Agnostic**: Core doesn't know about database-specific details
 
 **Responsibilities**:
-- Data persistence abstraction
-- Query optimization and caching
-- Database transaction management
-- Data access pattern implementation
+- Define data access contracts
+- Provide type hints for business services
+- Enable dependency injection and testing
+- Maintain clean separation between business and data layers
+
+**Implementation Location**: Concrete implementations reside in `infra/db/repositories/`
 
 #### `core/security_engine/` - Security Framework
 **Purpose**: Handle authentication, authorization, and security-related operations.
@@ -164,7 +179,32 @@ The core layer contains domain logic, business rules, and data access patterns.
 
 ### Infrastructure Layer (`infra/`)
 
-The infrastructure layer manages deployment, persistence, and operational concerns.
+The infrastructure layer manages deployment, persistence, and operational concerns following Clean Architecture principles.
+
+#### `infra/db/repositories/` - Repository Implementations (Adapters)
+**Purpose**: Concrete implementations of repository interfaces using specific database technologies.
+
+**Key Components**:
+- `user_repository.py`: AsyncPG-based user operations
+- `admin_repository.py`: Admin data management implementation
+- `schedule_repository.py`: Scheduled task persistence
+- `delivery_repository.py`: Message delivery tracking
+- `analytics_repository.py`: Analytics data aggregation
+- `channel_repository.py`: Channel management implementation
+- `payment_repository.py`: Payment processing operations
+- `plan_repository.py`: Subscription plan management
+
+**Architecture Principle**:
+- **Adapters Pattern**: Implement core repository interfaces with concrete database logic
+- **Dependency Direction**: Infrastructure depends on core abstractions
+- **Technology Specific**: Contains AsyncPG, connection pooling, and PostgreSQL optimizations
+- **Replaceable**: Can be swapped without affecting business logic
+
+**Responsibilities**:
+- Implement repository Protocol interfaces
+- Handle database connections and transactions
+- Optimize queries and provide caching
+- Manage database-specific error handling
 
 #### `infra/docker/` - Container Configuration
 **Purpose**: Container definitions and multi-stage build optimization.
@@ -336,10 +376,24 @@ Notification Send ← Result Processing ← Business Logic ← Data Processing
 
 ## 🎯 **Design Principles**
 
-### 1. **Dependency Inversion**
-- High-level modules (services) don't depend on low-level modules (repositories)
-- Both depend on abstractions (interfaces)
-- Dependencies flow inward toward the business logic
+### 1. **Clean Architecture & Dependency Inversion**
+- **Dependency Rule**: Dependencies point inward - `infra` → `apps` → `core`
+- **Core Independence**: Business logic doesn't depend on external frameworks
+- **Protocol-Based Interfaces**: Core defines contracts using Python Protocols
+- **Implementation Flexibility**: Infrastructure implementations can be swapped
+
+**Example Structure**:
+```python
+# core/repositories/interfaces.py - Abstract Interface
+from typing import Protocol
+class UserRepository(Protocol):
+    async def get_by_id(self, user_id: int) -> User | None: ...
+
+# infra/db/repositories/user_repository.py - Concrete Implementation  
+class AsyncpgUserRepository:
+    async def get_by_id(self, user_id: int) -> User | None:
+        # AsyncPG implementation details
+```
 
 ### 2. **Single Responsibility**
 - Each layer has a single, well-defined responsibility
@@ -355,6 +409,33 @@ Notification Send ← Result Processing ← Business Logic ← Data Processing
 - Open for extension (new features) via dependency injection
 - Closed for modification of core business logic
 - New functionality added without changing existing code
+
+## 🔄 **Repository Pattern Implementation**
+
+### Clean Architecture Repository Pattern
+```
+┌─── core/repositories/interfaces.py ───┐
+│  Protocol Definitions (Ports)         │
+│  • UserRepository                     │  
+│  • AdminRepository                    │
+│  • AnalyticsRepository                │
+│  └─ Pure Python Protocols ────────────┘
+                    ▲
+                    │ implements
+                    │
+┌─── infra/db/repositories/ ────────────┐
+│  Concrete Implementations (Adapters)  │
+│  • AsyncpgUserRepository              │
+│  • AsyncpgAdminRepository             │  
+│  • AsyncpgAnalyticsRepository         │
+│  └─ Database-specific logic ──────────┘
+```
+
+### Benefits
+- **Testability**: Easy to mock with Protocol interfaces
+- **Flexibility**: Swap implementations (AsyncPG ↔ SQLAlchemy)  
+- **Maintainability**: Clear separation of concerns
+- **Type Safety**: Full typing support with structural subtyping
 
 ## 🧪 **Testing Strategy**
 

@@ -1,16 +1,22 @@
-from typing import Any
+"""
+Plan Repository Implementation
+Concrete implementation for subscription plan data operations
+"""
 
+from typing import Any, Optional
 import asyncpg
 
 
-class PlanRepository:
+class AsyncpgPlanRepository:
+    """Plan repository implementation using asyncpg"""
+    
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
-    async def get_plan_by_name(self, plan_name: str) -> dict[str, Any] | None:
+    async def get_plan_by_name(self, plan_name: str) -> Optional[dict[str, Any]]:
         """Retrieves the limits for a specific plan by its name."""
         async with self.pool.acquire() as conn:
-            return await conn.fetchrow(
+            row = await conn.fetchrow(
                 """
                 SELECT
                     id,
@@ -25,3 +31,4 @@ class PlanRepository:
                 """,
                 plan_name,
             )
+            return dict(row) if row else None

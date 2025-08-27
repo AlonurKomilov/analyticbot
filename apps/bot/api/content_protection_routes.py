@@ -1,12 +1,14 @@
 """
 Content Protection API Endpoints
 FastAPI routes for Phase 2.3: Content Protection & Premium Features
+Moved from apps/api/ to apps/bot/api/ for better architecture cohesion
 """
 
 import asyncio
 import tempfile
 from pathlib import Path
 from typing import Optional
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
@@ -23,8 +25,8 @@ from apps.bot.models.content_protection import (
     ProtectionLevel,
     PremiumFeatureLimits
 )
-from apps.api.deps import get_current_user  # Assuming you have user auth
-from core.repositories.user_repository import UserRepository
+from apps.bot.deps import get_current_user  # Updated import path for bot-specific auth
+from infra.db.repositories import AsyncpgUserRepository  # Use new infrastructure layer
 
 
 router = APIRouter(prefix="/api/v1/content-protection", tags=["Content Protection"])
@@ -346,9 +348,9 @@ async def get_feature_usage(
 # Helper functions (implement based on your existing systems)
 async def _get_user_tier(user_id: int) -> UserTier:
     """Get user's current subscription tier"""
-    # TODO: Integrate with your payment system (Phase 2.2)
+    # TODO: Integrate with your payment system (Phase 2.2) via infrastructure layer
     # For now, return PRO for demo purposes
-    return UserTier.PRO  # Replace with actual subscription check
+    return UserTier.PRO  # Replace with actual subscription check using AsyncpgUserRepository
 
 
 async def _check_feature_usage(feature: str, user_id: int, user_tier: UserTier):
@@ -366,15 +368,15 @@ async def _check_feature_usage(feature: str, user_id: int, user_tier: UserTier):
 
 async def _increment_feature_usage(feature: str, user_id: int, count: int = 1):
     """Increment feature usage counter"""
-    # TODO: Implement database update
-    # This should update the user_premium_features table
+    # TODO: Implement database update via infrastructure layer
+    # This should update the user_premium_features table using AsyncpgUserRepository
     pass
 
 
 async def _get_current_usage(user_id: int) -> dict:
     """Get current month's feature usage"""
-    # TODO: Implement database query
-    # Return current usage from user_premium_features table
+    # TODO: Implement database query via infrastructure layer
+    # Return current usage from user_premium_features table using AsyncpgUserRepository
     return {
         "watermarks": 5,
         "custom_emojis": 12,

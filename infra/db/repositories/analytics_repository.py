@@ -1,10 +1,16 @@
-from typing import Any
+"""
+Analytics Repository Implementation
+Concrete implementation for analytics data operations
+"""
 
-from asyncpg import Pool
+from typing import Any, Optional, List
+import asyncpg
 
 
-class AnalyticsRepository:
-    def __init__(self, pool: Pool):
+class AsyncpgAnalyticsRepository:
+    """Analytics repository implementation using asyncpg"""
+    
+    def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 
     async def log_sent_post(self, scheduled_post_id: int, channel_id: int, message_id: int):
@@ -18,7 +24,7 @@ class AnalyticsRepository:
         """
         await self._pool.execute(query, scheduled_post_id, channel_id, message_id)
 
-    async def get_all_trackable_posts(self, interval_days: int = 7) -> list[dict[str, Any]]:
+    async def get_all_trackable_posts(self, interval_days: int = 7) -> List[dict[str, Any]]:
         """
         Ko'rishlar sonini tekshirish kerak bo'lgan barcha postlarni oladi.
         Masalan, oxirgi 7 kun ichida yuborilganlar.
@@ -43,8 +49,7 @@ class AnalyticsRepository:
         query = "UPDATE scheduled_posts SET views = $1 WHERE id = $2;"
         await self._pool.execute(query, views, scheduled_post_id)
 
-    # --- YANGI QO'SHILGAN FUNKSIYA ---
-    async def get_all_posts_to_track_views(self) -> list[dict[str, Any]]:
+    async def get_all_posts_to_track_views(self) -> List[dict[str, Any]]:
         """
         Yuborilgan (`sent`) statusidagi va ko'rishlarni kuzatish kerak bo'lgan
         barcha postlarni ma'lumotlar bazasidan oladi.
@@ -58,7 +63,7 @@ class AnalyticsRepository:
         rows = await self._pool.fetch(query)
         return [dict(row) for row in rows]
 
-    async def get_posts_ordered_by_views(self, channel_id: int) -> list[dict[str, Any]]:
+    async def get_posts_ordered_by_views(self, channel_id: int) -> List[dict[str, Any]]:
         """Return posts for a channel ordered by view count."""
         query = """
             SELECT id, views, message_id
@@ -72,9 +77,7 @@ class AnalyticsRepository:
     async def get_total_users_count(self) -> int:
         """
         Retrieves the total count of users from the database.
-        This is a placeholder and assumes a 'users' table exists.
         """
-        # This query is a placeholder and might need adjustment based on the actual schema.
         query = "SELECT COUNT(id) FROM users;"
         count = await self._pool.fetchval(query)
         return count or 0
@@ -82,9 +85,7 @@ class AnalyticsRepository:
     async def get_total_channels_count(self) -> int:
         """
         Retrieves the total count of channels from the database.
-        This is a placeholder and assumes a 'channels' table exists.
         """
-        # This query is a placeholder and might need adjustment based on the actual schema.
         query = "SELECT COUNT(id) FROM channels;"
         count = await self._pool.fetchval(query)
         return count or 0
@@ -92,14 +93,12 @@ class AnalyticsRepository:
     async def get_total_posts_count(self) -> int:
         """
         Retrieves the total count of scheduled posts from the database.
-        This is a placeholder.
         """
-        # This query is a placeholder and might need adjustment based on the actual schema.
         query = "SELECT COUNT(id) FROM scheduled_posts;"
         count = await self._pool.fetchval(query)
         return count or 0
 
-    async def get_post_views(self, scheduled_post_id: int) -> int | None:
+    async def get_post_views(self, scheduled_post_id: int) -> Optional[int]:
         """Return the current stored views for a scheduled post or None if missing."""
         query = "SELECT views FROM scheduled_posts WHERE id = $1;"
         val = await self._pool.fetchval(query, scheduled_post_id)

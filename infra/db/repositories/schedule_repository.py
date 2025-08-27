@@ -1,11 +1,12 @@
 """
-PostgreSQL implementation of repository interfaces
-Concrete implementation using asyncpg and SQL
+Schedule Repository Implementation
+Concrete implementation using PostgreSQL/asyncpg
 """
 
 import json
 from datetime import datetime
 from uuid import UUID
+from typing import List, Optional
 
 from core.models import (
     Delivery,
@@ -15,10 +16,10 @@ from core.models import (
     ScheduledPost,
     ScheduleFilter,
 )
-from core.repositories import DeliveryRepository, ScheduleRepository
+from core.repositories.interfaces import ScheduleRepository, DeliveryRepository
 
 
-class PgScheduleRepository(ScheduleRepository):
+class AsyncpgScheduleRepository(ScheduleRepository):
     """
     PostgreSQL implementation of ScheduleRepository
     Uses asyncpg connection for database operations
@@ -58,7 +59,7 @@ class PgScheduleRepository(ScheduleRepository):
 
         return self._row_to_scheduled_post(result)
 
-    async def get_by_id(self, post_id: UUID) -> ScheduledPost | None:
+    async def get_by_id(self, post_id: UUID) -> Optional[ScheduledPost]:
         """Get scheduled post by ID"""
         query = "SELECT * FROM scheduled_posts WHERE id = $1"
         result = await self.db.fetchrow(query, post_id)
@@ -104,7 +105,7 @@ class PgScheduleRepository(ScheduleRepository):
         result = await self.db.execute(query, post_id)
         return result.split()[-1] == "1"  # Returns "DELETE 1" if successful
 
-    async def find(self, filter_criteria: ScheduleFilter) -> list[ScheduledPost]:
+    async def find(self, filter_criteria: ScheduleFilter) -> List[ScheduledPost]:
         """Find scheduled posts by filter criteria"""
         query = "SELECT * FROM scheduled_posts WHERE 1=1"
         params = []
@@ -157,7 +158,7 @@ class PgScheduleRepository(ScheduleRepository):
         results = await self.db.fetch(query, *params)
         return [self._row_to_scheduled_post(row) for row in results]
 
-    async def get_ready_for_delivery(self) -> list[ScheduledPost]:
+    async def get_ready_for_delivery(self) -> List[ScheduledPost]:
         """Get all posts that are ready for delivery"""
         query = """
         SELECT * FROM scheduled_posts 
@@ -217,7 +218,7 @@ class PgScheduleRepository(ScheduleRepository):
         )
 
 
-class PgDeliveryRepository(DeliveryRepository):
+class AsyncpgDeliveryRepository(DeliveryRepository):
     """
     PostgreSQL implementation of DeliveryRepository
     Uses asyncpg connection for database operations
@@ -257,7 +258,7 @@ class PgDeliveryRepository(DeliveryRepository):
 
         return self._row_to_delivery(result)
 
-    async def get_by_id(self, delivery_id: UUID) -> Delivery | None:
+    async def get_by_id(self, delivery_id: UUID) -> Optional[Delivery]:
         """Get delivery by ID"""
         query = "SELECT * FROM deliveries WHERE id = $1"
         result = await self.db.fetchrow(query, delivery_id)
@@ -266,7 +267,7 @@ class PgDeliveryRepository(DeliveryRepository):
             return self._row_to_delivery(result)
         return None
 
-    async def get_by_post_id(self, post_id: UUID) -> list[Delivery]:
+    async def get_by_post_id(self, post_id: UUID) -> List[Delivery]:
         """Get all deliveries for a specific post"""
         query = "SELECT * FROM deliveries WHERE post_id = $1 ORDER BY created_at DESC"
         results = await self.db.fetch(query, post_id)
@@ -300,7 +301,7 @@ class PgDeliveryRepository(DeliveryRepository):
 
         return self._row_to_delivery(result)
 
-    async def find(self, filter_criteria: DeliveryFilter) -> list[Delivery]:
+    async def find(self, filter_criteria: DeliveryFilter) -> List[Delivery]:
         """Find deliveries by filter criteria"""
         query = "SELECT * FROM deliveries WHERE 1=1"
         params = []
@@ -334,7 +335,7 @@ class PgDeliveryRepository(DeliveryRepository):
         results = await self.db.fetch(query, *params)
         return [self._row_to_delivery(row) for row in results]
 
-    async def get_failed_retryable(self) -> list[Delivery]:
+    async def get_failed_retryable(self) -> List[Delivery]:
         """Get failed deliveries that can be retried"""
         query = """
         SELECT * FROM deliveries 

@@ -1,11 +1,4 @@
 repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.10
-    hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
-repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
@@ -17,7 +10,7 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.10
+    rev: v0.6.9
     hooks:
       - id: ruff
         args: [--fix]
@@ -29,3 +22,12 @@ repos:
       - id: mypy
         additional_dependencies: [types-all]
         exclude: ^(tests/|bot/database/migrations/)
+
+  - repo: local
+    hooks:
+      - id: forbid-cross-imports
+        name: 🛡️  Clean Architecture Import Guard
+        entry: python3 scripts/guard_imports.py
+        language: system
+        types: [python]
+        description: "Prevent core/ from importing apps/ or infra/ modules"

@@ -18,6 +18,9 @@ redis==5.*
 pydantic==2.*
 pydantic-settings==2.*
 
+# Content Protection
+Pillow>=10.0.0  # Image watermarking and processing
+
 # Utils
 python-dotenv==1.*
 python-multipart==0.0.*

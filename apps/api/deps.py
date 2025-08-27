@@ -6,7 +6,8 @@ Wires database connections to repositories to services
 from collections.abc import AsyncGenerator
 
 import asyncpg
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from config import settings
 from core.repositories.postgres import PgDeliveryRepository, PgScheduleRepository
@@ -14,6 +15,9 @@ from core.services import DeliveryService, ScheduleService
 
 # Database connection dependency
 _db_pool = None
+
+# Security dependencies
+security = HTTPBearer()
 
 
 async def get_db_pool() -> asyncpg.Pool:
@@ -76,3 +80,17 @@ async def cleanup_db_pool():
     if _db_pool:
         await _db_pool.close()
         _db_pool = None
+
+
+# Authentication dependency (placeholder for now)
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> dict:
+    """Get current authenticated user (placeholder implementation)"""
+    # TODO: Implement proper JWT validation and user lookup
+    # For now, return a mock user for development
+    return {
+        "id": "user_123",
+        "username": "dev_user",
+        "tier": "pro"  # free, basic, pro, enterprise
+    }

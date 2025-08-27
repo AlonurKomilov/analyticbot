@@ -195,12 +195,10 @@ class TestFullSystemIntegration:
     @pytest.mark.asyncio
     async def test_complete_post_lifecycle(self):
         """Test complete post lifecycle from scheduling to analytics"""
-        pass
 
     @pytest.mark.asyncio
     async def test_system_resilience(self):
         """Test system resilience under various failure conditions"""
-        pass
 
 
 class TestPerformanceBenchmarks:

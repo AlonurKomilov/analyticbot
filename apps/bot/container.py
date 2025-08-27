@@ -111,7 +111,15 @@ def _make_repo(RepoCls: type) -> object:
         return RepoCls(pool)
     except TypeError:
         pass
-    for kw in ("session_pool", "session", "pool", "db", "database", "redis", "redis_client"):
+    for kw in (
+        "session_pool",
+        "session",
+        "pool",
+        "db",
+        "database",
+        "redis",
+        "redis_client",
+    ):
         try:
             return RepoCls(**{kw: pool})
         except TypeError:
@@ -169,29 +177,38 @@ container.register(
     AnalyticsRepository, factory=as_singleton(lambda: _make_repo(AnalyticsRepository))
 )
 
+
 def _register_services():
     """Register services with local imports to avoid circular dependencies"""
     try:
         # Import each service individually to better handle any import issues
         from apps.bot.services.guard_service import GuardService
+
         container.register(GuardService, factory=as_singleton(lambda: _make_service(GuardService)))
-        
+
         from apps.bot.services.subscription_service import SubscriptionService
+
         container.register(
-            SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService))
+            SubscriptionService,
+            factory=as_singleton(lambda: _make_service(SubscriptionService)),
         )
-        
+
         from apps.bot.services.scheduler_service import SchedulerService
+
         container.register(
-            SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))
+            SchedulerService,
+            factory=as_singleton(lambda: _make_service(SchedulerService)),
         )
-        
+
         from apps.bot.services.analytics_service import AnalyticsService
+
         container.register(
-            AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
+            AnalyticsService,
+            factory=as_singleton(lambda: _make_service(AnalyticsService)),
         )
     except Exception as e:
         logger.warning(f"Could not register some services: {e}")
+
 
 # Register services with local imports
 _register_services()

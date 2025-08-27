@@ -9,7 +9,12 @@ This module provides:
 - Comprehensive health monitoring
 """
 
-from .celery_app import celery_app, check_celery_health, critical_message_task, enhanced_retry_task
+from .celery_app import (
+    celery_app,
+    check_celery_health,
+    critical_message_task,
+    enhanced_retry_task,
+)
 from .tasks import (
     AVAILABLE_TASKS,
     cleanup_old_data,

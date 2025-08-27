@@ -41,7 +41,6 @@ def run_api():
 def run_ai_api():
     """Run the AI/ML API server (DEPRECATED - use main API)"""
     import uvicorn
-
     from archive.pure_ai_api import app
 
     print("⚠️  DEPRECATED: AI API moved to main API. Use 'python main.py api' instead.")
@@ -51,7 +50,6 @@ def run_ai_api():
 def run_security_api():
     """Run the Security API server (DEPRECATED - use main API)"""
     import uvicorn
-
     from archive.security_api import app
 
     print("⚠️  DEPRECATED: Security API moved to main API. Use 'python main.py api' instead.")

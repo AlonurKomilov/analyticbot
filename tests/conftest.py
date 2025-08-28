@@ -168,7 +168,7 @@ async def test_database() -> AsyncGenerator[TestDatabase, None]:
 
 @pytest.fixture(autouse=True)
 async def reset_test_data(request):
-    """Automatically reset test data before each test - but only for integration tests"""
+    """Automatically reset test data before each test - but only for integration tests that need real DB"""
     # Skip database setup for unit tests
     if ("unit" in request.keywords or 
         "test_domain_basic" in request.node.nodeid or
@@ -177,12 +177,20 @@ async def reset_test_data(request):
         yield
         return
     
+    # Skip database setup for mock-based integration tests (our new external service tests)
+    if ("test_telegram_integration" in request.node.nodeid or
+        "test_payment_integration" in request.node.nodeid or
+        "test_redis_integration" in request.node.nodeid or
+        "test_api_basic" in request.node.nodeid):
+        yield
+        return
+    
     # Only run database reset for integration tests that explicitly need it
     if hasattr(request, 'param') and request.param == 'no_db':
         yield
         return
         
-    # Try to setup database for integration tests
+    # Try to setup database for integration tests that actually need real DB
     try:
         test_db = TestDatabase()
         await test_db.setup()

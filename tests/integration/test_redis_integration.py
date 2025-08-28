@@ -206,7 +206,7 @@ class TestRedisCacheOperations:
         
         # Check membership
         is_member = await mock_redis_client.sismember(set_key, "user:123")
-        assert is_member is True
+        assert is_member == 1  # Redis returns 1 for True, 0 for False
         
         # Get all members
         members = await mock_redis_client.smembers(set_key)
@@ -336,10 +336,10 @@ class TestRedisRateLimiting:
         user_id = 123456789
         limit_config = rate_limit_config["api_calls"]
         
-        async def check_rate_limit(user_id: int, action: str, config: Dict[str, int]) -> bool:
+        async def check_rate_limit(user_id: int, action: str, config: Dict[str, int], request_time: float = None) -> bool:
             """Simple sliding window rate limiter"""
             key = f"rate_limit:{action}:{user_id}"
-            current_time = int(time.time())
+            current_time = request_time or time.time()
             window_start = current_time - config["window_seconds"]
             
             # Remove expired entries
@@ -351,7 +351,7 @@ class TestRedisRateLimiting:
             if current_count >= config["max_requests"]:
                 return False
             
-            # Add current request
+            # Add current request with unique timestamp
             await mock_redis_client.zadd(key, {str(current_time): current_time})
             await mock_redis_client.expire(key, config["window_seconds"])
             
@@ -359,8 +359,11 @@ class TestRedisRateLimiting:
         
         # Test rate limiting
         allowed_requests = 0
+        base_time = time.time()
         for i in range(limit_config["max_requests"] + 5):
-            is_allowed = await check_rate_limit(user_id, "api_calls", limit_config)
+            # Use slightly different timestamps to simulate real requests
+            request_time = base_time + (i * 0.001)  # 1ms apart
+            is_allowed = await check_rate_limit(user_id, "api_calls", limit_config, request_time)
             if is_allowed:
                 allowed_requests += 1
         

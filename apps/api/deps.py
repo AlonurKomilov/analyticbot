@@ -10,7 +10,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from config import settings
-from core.repositories.postgres import PgDeliveryRepository, PgScheduleRepository
+from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository, AsyncpgDeliveryRepository
 from core.services import DeliveryService, ScheduleService
 
 # Database connection dependency
@@ -45,29 +45,29 @@ async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
 # Repository dependencies
 async def get_schedule_repository(
     db: asyncpg.Connection = Depends(get_db_connection),
-) -> PgScheduleRepository:
+) -> AsyncpgScheduleRepository:
     """Get schedule repository with database dependency"""
-    return PgScheduleRepository(db)
+    return AsyncpgScheduleRepository(db)
 
 
 async def get_delivery_repository(
     db: asyncpg.Connection = Depends(get_db_connection),
-) -> PgDeliveryRepository:
+) -> AsyncpgDeliveryRepository:
     """Get delivery repository with database dependency"""
-    return PgDeliveryRepository(db)
+    return AsyncpgDeliveryRepository(db)
 
 
 # Service dependencies
 async def get_schedule_service(
-    schedule_repo: PgScheduleRepository = Depends(get_schedule_repository),
+    schedule_repo: AsyncpgScheduleRepository = Depends(get_schedule_repository),
 ) -> ScheduleService:
     """Get schedule service with repository dependency injection"""
     return ScheduleService(schedule_repo)
 
 
 async def get_delivery_service(
-    delivery_repo: PgDeliveryRepository = Depends(get_delivery_repository),
-    schedule_repo: PgScheduleRepository = Depends(get_schedule_repository),
+    delivery_repo: AsyncpgDeliveryRepository = Depends(get_delivery_repository),
+    schedule_repo: AsyncpgScheduleRepository = Depends(get_schedule_repository),
 ) -> DeliveryService:
     """Get delivery service with repository dependency injection"""
     return DeliveryService(delivery_repo, schedule_repo)

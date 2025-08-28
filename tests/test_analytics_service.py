@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiogram import Bot
 
-from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from apps.bot.services.analytics_service import AnalyticsService
 
 
@@ -21,7 +21,7 @@ def mock_analytics_repo() -> MagicMock:
     AnalyticsRepository'ning soxta (mock) obyektini yaratadi.
     Bu obyekt haqiqiy ma'lumotlar bazasiga ulanmaydi.
     """
-    return MagicMock(spec=AnalyticsRepository)
+    return MagicMock(spec=AsyncpgAnalyticsRepository)
 
 
 @pytest.fixture

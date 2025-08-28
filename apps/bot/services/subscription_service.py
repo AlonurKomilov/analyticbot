@@ -2,12 +2,10 @@ from fastapi import HTTPException
 
 from apps.bot.container import container
 from apps.bot.domain.models import SubscriptionStatus
-from apps.bot.database.repositories import (
-    ChannelRepository,
-    PlanRepository,
-    SchedulerRepository,
-    UserRepository,
-)
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from infra.db.repositories.plan_repository import AsyncpgPlanRepository
+from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+from infra.db.repositories.user_repository import AsyncpgUserRepository
 
 
 class SubscriptionService:
@@ -17,13 +15,13 @@ class SubscriptionService:
         subscription_service = Singleton(SubscriptionService, repository=channel_repository)
     """
 
-    def __init__(self, repository: ChannelRepository):
+    def __init__(self, repository: AsyncpgChannelRepository):
         self.channel_repo = repository
 
     async def _get_plan_row(self, user_id: int) -> dict | None:
         """Return the plan row for the user, or None if not set."""
-        user_repo = container.resolve(UserRepository)
-        plan_repo = container.resolve(PlanRepository)
+        user_repo = container.resolve(AsyncpgUserRepository)
+        plan_repo = container.resolve(AsyncpgPlanRepository)
         plan_name = await user_repo.get_user_plan_name(user_id)
         if not plan_name:
             return None
@@ -55,7 +53,7 @@ class SubscriptionService:
         max_posts = plan_row.get("max_posts_per_month")
         if max_posts is None:
             return
-        scheduler_repo = container.resolve(SchedulerRepository)
+        scheduler_repo = container.resolve(AsyncpgScheduleRepository)
         current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
         if current_posts >= max_posts:
             raise HTTPException(status_code=403, detail="Monthly post limit reached")
@@ -68,7 +66,7 @@ class SubscriptionService:
         plan_row = await self._get_plan_row(user_id)
         if not plan_row:
             return None
-        scheduler_repo = container.resolve(SchedulerRepository)
+        scheduler_repo = container.resolve(AsyncpgScheduleRepository)
         current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
         current_channels = await self.channel_repo.count_user_channels(user_id)
         plan_name = plan_row.get("plan_name") or plan_row.get("name") or "Unknown"

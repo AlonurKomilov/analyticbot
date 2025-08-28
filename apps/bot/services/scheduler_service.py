@@ -5,7 +5,8 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from pydantic import ValidationError
 
-from apps.bot.database.repositories import AnalyticsRepository, SchedulerRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from apps.bot.domain.models import InlineButton, InlineButtonsPayload
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
@@ -18,8 +19,8 @@ class SchedulerService:
     def __init__(
         self,
         bot: Bot,
-        scheduler_repo: SchedulerRepository,
-        analytics_repository: AnalyticsRepository,
+        scheduler_repo: AsyncpgScheduleRepository,
+        analytics_repository: AsyncpgAnalyticsRepository,
     ):
         self.bot = bot
         self.scheduler_repo = scheduler_repo

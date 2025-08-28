@@ -22,11 +22,11 @@ from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import Settings
-from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
-from apps.bot.database.repositories.channel_repository import ChannelRepository
-from apps.bot.database.repositories.plan_repository import PlanRepository
-from apps.bot.database.repositories.scheduler_repository import SchedulerRepository
-from apps.bot.database.repositories.user_repository import UserRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from infra.db.repositories.plan_repository import AsyncpgPlanRepository
+from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+from infra.db.repositories.user_repository import AsyncpgUserRepository
 from apps.bot.database.sqlite_engine import init_db
 
 
@@ -130,27 +130,27 @@ def _make_service(ServiceCls: type) -> object:
     if "bot" in names:
         kwargs["bot"] = container.resolve(_AioBot)
     if {"channel_repository", "channel_repo", "repository"} & names:
-        repo = container.resolve(ChannelRepository)
+        repo = container.resolve(AsyncpgChannelRepository)
         for cand in ("channel_repository", "channel_repo", "repository"):
             if cand in names:
                 kwargs[cand] = repo
                 break
     if {"scheduler_repository", "scheduler_repo"} & names:
-        repo = container.resolve(SchedulerRepository)
+        repo = container.resolve(AsyncpgScheduleRepository)
         for cand in ("scheduler_repository", "scheduler_repo"):
             if cand in names:
                 kwargs[cand] = repo
                 break
     if {"user_repository", "user_repo"} & names:
-        repo = container.resolve(UserRepository)
+        repo = container.resolve(AsyncpgUserRepository)
         for cand in ("user_repository", "user_repo"):
             if cand in names:
                 kwargs[cand] = repo
                 break
     if "analytics_repository" in names:
-        kwargs["analytics_repository"] = container.resolve(AnalyticsRepository)
+        kwargs["analytics_repository"] = container.resolve(AsyncpgAnalyticsRepository)
     if "plan_repository" in names:
-        kwargs["plan_repository"] = container.resolve(PlanRepository)
+        kwargs["plan_repository"] = container.resolve(AsyncpgPlanRepository)
     try:
         return ServiceCls(**kwargs)
     except TypeError:
@@ -159,14 +159,14 @@ def _make_service(ServiceCls: type) -> object:
 
 container.register(AsyncPGPool, factory=lambda: cast(AsyncPGPool, _pool_or_none()))
 container.register(async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none()))
-container.register(UserRepository, factory=as_singleton(lambda: _make_repo(UserRepository)))
-container.register(PlanRepository, factory=as_singleton(lambda: _make_repo(PlanRepository)))
-container.register(ChannelRepository, factory=as_singleton(lambda: _make_repo(ChannelRepository)))
+container.register(AsyncpgUserRepository, factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository)))
+container.register(AsyncpgPlanRepository, factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository)))
+container.register(AsyncpgChannelRepository, factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository)))
 container.register(
-    SchedulerRepository, factory=as_singleton(lambda: _make_repo(SchedulerRepository))
+    AsyncpgScheduleRepository, factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository))
 )
 container.register(
-    AnalyticsRepository, factory=as_singleton(lambda: _make_repo(AnalyticsRepository))
+    AsyncpgAnalyticsRepository, factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository))
 )
 
 def _register_services():

@@ -18,7 +18,7 @@ from apps.bot.database.performance import (
     performance_manager,
     performance_timer,
 )
-from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from apps.bot.domain.constants import DEFAULT_BATCH_SIZE, DEFAULT_CACHE_TTL
 from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class AnalyticsService:
     """🚀 Unified high-performance analytics service with advanced optimization"""
 
-    def __init__(self, bot: Bot, analytics_repository: AnalyticsRepository):
+    def __init__(self, bot: Bot, analytics_repository: Any):
         self.analytics_repository = analytics_repository
         self.bot = bot
         self._rate_limit_delay = 0.1

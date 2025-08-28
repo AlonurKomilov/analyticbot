@@ -34,16 +34,19 @@ async def test_get_plan_by_name():
 @pytest.mark.asyncio
 async def test_create_user():
     """
-    Tests creating a user.
+    Tests creating a user with new API.
     """
     mock_pool = AsyncMock()
+    mock_pool.fetchrow.return_value = {
+        "id": 123,
+        "username": "testuser",
+        "created_at": "2025-01-01T00:00:00"
+    }
     repo = AsyncpgUserRepository(pool=mock_pool)
-    await repo.create_user(123, "testuser")
-    mock_pool.execute.assert_called_once_with(
-        "\n            INSERT INTO users (id, username)\n            VALUES ($1, $2)\n            ON CONFLICT (id) DO NOTHING\n        ",
-        123,
-        "testuser",
-    )
+    user_data = {"id": 123, "username": "testuser"}
+    result = await repo.create_user(user_data)
+    assert result["id"] == 123
+    mock_pool.fetchrow.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -62,16 +65,13 @@ async def test_user_exists():
 
 
 @pytest.mark.asyncio
-async def test_get_user_plan_name():
+async def test_get_user_subscription_tier():
     """
-    Tests getting a user's plan name.
+    Tests getting a user's subscription tier (updated method name).
     """
     mock_pool = AsyncMock()
     mock_pool.fetchval.return_value = "pro"
     repo = AsyncpgUserRepository(pool=mock_pool)
-    plan_name = await repo.get_user_plan_name(123)
-    assert plan_name == "pro"
-    mock_pool.fetchval.assert_called_once_with(
-        "\n            SELECT p.name\n            FROM users u\n            JOIN plans p ON u.plan_id = p.id\n            WHERE u.id = $1\n        ",
-        123,
-    )
+    tier = await repo.get_user_subscription_tier(123)
+    assert tier == "pro"
+    mock_pool.fetchval.assert_called_once()

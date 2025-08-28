@@ -9,16 +9,23 @@ import json
 import logging
 from datetime import timedelta
 from enum import Enum
+from typing import Optional, Dict, Any
+from dataclasses import dataclass
 
 import redis
 
 from .models import PermissionMatrix, User, UserRole
 
 logger = logging.getLogger(__name__)
-try:
-    from apps.bot.config import settings
-except ImportError:
-    settings = None
+
+
+@dataclass
+class RBACConfig:
+    """RBAC configuration settings"""
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: Optional[str] = None
 
 
 class Permission(str, Enum):
@@ -77,15 +84,19 @@ class RBACManager:
     - Audit logging for access control
     """
 
-    def __init__(self, config=None):
-        self.config = config or settings
+    def __init__(self, config: Optional[RBACConfig] = None):
+        self.config = config or RBACConfig()
         try:
-            self.redis_client = redis.Redis(
-                host=self.config.REDIS_HOST,
-                port=self.config.REDIS_PORT,
-                db=self.config.REDIS_DB,
-                decode_responses=True,
-            )
+            redis_kwargs = {
+                "host": self.config.redis_host,
+                "port": self.config.redis_port,
+                "db": self.config.redis_db,
+                "decode_responses": True,
+            }
+            if self.config.redis_password:
+                redis_kwargs["password"] = self.config.redis_password
+                
+            self.redis_client = redis.Redis(**redis_kwargs)
             self.redis_client.ping()
             self._redis_available = True
         except Exception as e:
@@ -403,4 +414,5 @@ class RBACManager:
         logger.debug(f"Cleared permission cache for user {user_id}")
 
 
-rbac_manager = RBACManager()
+# RBAC manager should be initialized with proper config in application layer
+# rbac_manager = RBACManager()  # Removed - use DI instead

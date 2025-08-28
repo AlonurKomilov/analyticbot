@@ -5,6 +5,7 @@ Tests security-related functionality and vulnerability prevention
 import pytest
 import hashlib
 import secrets
+from collections import defaultdict
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Dict, List, Any

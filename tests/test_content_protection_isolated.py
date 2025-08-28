@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, patch, MagicMock
 # Isolated imports to avoid settings issues
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'apps', 'bot'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from services.content_protection import ContentProtectionService, PremiumEmojiService, WatermarkConfig
-from models.content_protection import (
+from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService, WatermarkConfig
+from apps.bot.models.content_protection import (
     ContentType, UserTier, ProtectionLevel, PremiumFeatureLimits,
     ContentProtectionRequest, ContentProtectionResponse
 )

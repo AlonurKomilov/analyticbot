@@ -87,7 +87,10 @@ class TestIdempotencyGuard:
 
     def test_cleanup_expired_removes_old_entries(self, idempotency_guard, mock_redis):
         """Test that expired entries are cleaned up."""
-        mock_redis.scan.return_value = (0, ["test:idempotency:old1", "test:idempotency:old2"])
+        mock_redis.scan.return_value = (
+            0,
+            ["test:idempotency:old1", "test:idempotency:old2"],
+        )
         mock_redis.get.side_effect = [
             None,  # old1 expired
             OperationStatus.COMPLETED.value,  # old2 still valid
@@ -130,7 +133,11 @@ class TestTokenBucketRateLimiter:
     def test_acquire_allows_when_tokens_available(self, mock_time, rate_limiter, mock_redis):
         """Test token acquisition when bucket has capacity."""
         # Mock Lua script execution - simulate tokens available
-        mock_redis.eval.return_value = [1, 9, 1000.0]  # [acquired, remaining, updated_at]
+        mock_redis.eval.return_value = [
+            1,
+            9,
+            1000.0,
+        ]  # [acquired, remaining, updated_at]
 
         result = rate_limiter.acquire(
             identifier="user:123", limit_type=RateLimitType.CHAT, tokens_requested=1
@@ -184,7 +191,11 @@ class TestTokenBucketRateLimiter:
 
     def test_get_bucket_stats_returns_current_state(self, rate_limiter, mock_redis):
         """Test bucket statistics retrieval."""
-        mock_redis.hmget.return_value = ["5", "1000.0", "10"]  # [tokens, updated_at, capacity]
+        mock_redis.hmget.return_value = [
+            "5",
+            "1000.0",
+            "10",
+        ]  # [tokens, updated_at, capacity]
 
         stats = rate_limiter.get_bucket_stats("user:123", RateLimitType.CHAT)
 
@@ -359,17 +370,14 @@ class TestReliabilityIntegration:
         """Test the complete reliability pipeline with real Redis."""
         # This would require a real Redis instance for integration testing
         # For now, we'll mark it as a placeholder for integration tests
-        pass
 
     def test_redis_connection_handling(self):
         """Test Redis connection error handling."""
         # Test what happens when Redis is unavailable
-        pass
 
     def test_concurrent_operations_handling(self):
         """Test handling of concurrent operations with same idempotency key."""
         # Test race conditions and concurrent access
-        pass
 
 
 if __name__ == "__main__":

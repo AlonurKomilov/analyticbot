@@ -1,13 +1,13 @@
 from fastapi import HTTPException
 
 from apps.bot.container import container
-from apps.bot.domain.models import SubscriptionStatus
 from apps.bot.database.repositories import (
     ChannelRepository,
     PlanRepository,
     SchedulerRepository,
     UserRepository,
 )
+from apps.bot.domain.models import SubscriptionStatus
 
 
 class SubscriptionService:

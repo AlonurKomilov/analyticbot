@@ -6,7 +6,7 @@ from aiogram.exceptions import TelegramAPIError
 from pydantic import ValidationError
 
 from apps.bot.database.repositories import AnalyticsRepository, SchedulerRepository
-from apps.bot.domain.models import InlineButton, InlineButtonsPayload
+from apps.bot.domain.models import InlineButtonsPayload
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
@@ -49,9 +49,9 @@ class SchedulerService:
                     button = InlineKeyboardButton(
                         text=btn.text,
                         url=str(btn.url) if btn.url else None,
-                        callback_data=btn.callback_data
-                        if btn.callback_data and (not btn.url)
-                        else None,
+                        callback_data=(
+                            btn.callback_data if btn.callback_data and (not btn.url) else None
+                        ),
                     )
                     button_row.append(button)
                 rows.append(button_row)

@@ -3,17 +3,18 @@ Plan Repository Implementation
 Concrete implementation for subscription plan data operations
 """
 
-from typing import Any, Optional
+from typing import Any
+
 import asyncpg
 
 
 class AsyncpgPlanRepository:
     """Plan repository implementation using asyncpg"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
-    async def get_plan_by_name(self, plan_name: str) -> Optional[dict[str, Any]]:
+    async def get_plan_by_name(self, plan_name: str) -> dict[str, Any] | None:
         """Retrieves the limits for a specific plan by its name."""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(

@@ -111,7 +111,15 @@ def _make_repo(RepoCls: type) -> object:
         return RepoCls(pool)
     except TypeError:
         pass
-    for kw in ("session_pool", "session", "pool", "db", "database", "redis", "redis_client"):
+    for kw in (
+        "session_pool",
+        "session",
+        "pool",
+        "db",
+        "database",
+        "redis",
+        "redis_client",
+    ):
         try:
             return RepoCls(**{kw: pool})
         except TypeError:
@@ -176,7 +184,8 @@ try:
 
     container.register(GuardService, factory=as_singleton(lambda: _make_service(GuardService)))
     container.register(
-        SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService))
+        SubscriptionService,
+        factory=as_singleton(lambda: _make_service(SubscriptionService)),
     )
     container.register(
         SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))

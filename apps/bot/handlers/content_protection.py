@@ -16,7 +16,7 @@ from aiogram.fsm.state import State, StatesGroup
 from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService
 from apps.bot.models.content_protection import UserTier, ProtectionLevel, PremiumFeatureLimits
 from apps.bot.services.payment_service import PaymentService  # Phase 2.2 integration
-from core.repositories.user_repository import UserRepository
+from infra.db.repositories.user_repository import UserRepository
 
 
 router = Router()

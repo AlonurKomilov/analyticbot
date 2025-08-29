@@ -28,7 +28,7 @@ class PerformanceMonitor:
             "cpu": {
                 "usage_percent": psutil.cpu_percent(interval=1),
                 "cores": psutil.cpu_count(),
-                "load_avg": psutil.getloadavg() if hasattr(psutil, "getloadavg") else None,
+                "load_avg": (psutil.getloadavg() if hasattr(psutil, "getloadavg") else None),
             },
             "memory": {
                 "total": psutil.virtual_memory().total,
@@ -199,18 +199,18 @@ async def get_all_metrics():
         )
         return {
             "timestamp": datetime.now().isoformat(),
-            "system": results[0]
-            if not isinstance(results[0], Exception)
-            else {"error": str(results[0])},
-            "database": results[1]
-            if not isinstance(results[1], Exception)
-            else {"error": str(results[1])},
-            "cache": results[2]
-            if not isinstance(results[2], Exception)
-            else {"error": str(results[2])},
-            "application": results[3]
-            if not isinstance(results[3], Exception)
-            else {"error": str(results[3])},
+            "system": (
+                results[0] if not isinstance(results[0], Exception) else {"error": str(results[0])}
+            ),
+            "database": (
+                results[1] if not isinstance(results[1], Exception) else {"error": str(results[1])}
+            ),
+            "cache": (
+                results[2] if not isinstance(results[2], Exception) else {"error": str(results[2])}
+            ),
+            "application": (
+                results[3] if not isinstance(results[3], Exception) else {"error": str(results[3])}
+            ),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")

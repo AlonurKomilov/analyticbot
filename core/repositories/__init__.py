@@ -8,15 +8,15 @@ This module now only contains imports of interface definitions
 
 # Import all repository interfaces
 from .interfaces import (
-    UserRepository,
     AdminRepository,
+    DeliveryRepository,
     ScheduleRepository,
-    DeliveryRepository
+    UserRepository,
 )
 
 __all__ = [
     "UserRepository",
-    "AdminRepository", 
+    "AdminRepository",
     "ScheduleRepository",
-    "DeliveryRepository"
+    "DeliveryRepository",
 ]

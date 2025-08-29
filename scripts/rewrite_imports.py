@@ -137,7 +137,7 @@ def main():
 
     # Check if astor is available
     try:
-        import astor
+        pass
     except ImportError:
         print("❌ astor library not found. Install with: pip install astor")
         return

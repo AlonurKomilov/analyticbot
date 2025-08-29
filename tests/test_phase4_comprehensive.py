@@ -108,7 +108,11 @@ async def test_module_4_1_data_processor():
         print("🔄 Test 5: Data Transformations...")
         transformed_df = await processor.apply_transformations(
             cleaned_df,
-            transformations={"sales": "log", "customers": "sqrt", "conversion_rate": "normalize"},
+            transformations={
+                "sales": "log",
+                "customers": "sqrt",
+                "conversion_rate": "normalize",
+            },
         )
         print(f"   ✅ Transformations applied: {len(['sales', 'customers', 'conversion_rate'])}")
         print(f"   ✅ Transformed data shape: {transformed_df.shape}")
@@ -139,7 +143,11 @@ async def test_module_4_2_predictive_engine():
         print("📅 Test 2: Time Series Forecasting...")
         ts_df = datasets["business"][["timestamp", "sales"]].dropna()
         forecast_results = await engine.forecast_time_series(
-            ts_df, date_column="timestamp", value_column="sales", periods=24, method="auto"
+            ts_df,
+            date_column="timestamp",
+            value_column="sales",
+            periods=24,
+            method="auto",
         )
         print(f"   ✅ Forecasting method: {forecast_results['method_used']}")
         print(f"   ✅ Forecast points: {len(forecast_results['forecast'])}")
@@ -180,7 +188,11 @@ async def test_module_4_3_dashboard():
     try:
         print("\n🧪 TESTING MODULE 4.3: ANALYTICS DASHBOARD")
         print("=" * 60)
-        from apps.bot.analytics import DashboardFactory, RealTimeDashboard, VisualizationEngine
+        from apps.bot.analytics import (
+            DashboardFactory,
+            RealTimeDashboard,
+            VisualizationEngine,
+        )
 
         viz_engine = VisualizationEngine()
         datasets = create_test_datasets()
@@ -196,7 +208,10 @@ async def test_module_4_3_dashboard():
         )
         print(f"   ✅ Bar chart created with {len(bar_data)} categories")
         scatter_chart = viz_engine.create_scatter_plot(
-            business_df.head(200), "marketing_spend", "sales", title="Marketing Spend vs Sales"
+            business_df.head(200),
+            "marketing_spend",
+            "sales",
+            title="Marketing Spend vs Sales",
         )
         print(f"   ✅ Scatter plot created with {len(scatter_chart.data)} traces")
         print("🎨 Test 2: Advanced Visualizations...")
@@ -274,7 +289,11 @@ async def test_module_4_4_ai_insights():
         print("🔍 Test 4: Hidden Pattern Discovery...")
         patterns = await insights_gen.discover_hidden_patterns(
             business_df,
-            pattern_types=["correlation_patterns", "clustering_patterns", "behavioral_patterns"],
+            pattern_types=[
+                "correlation_patterns",
+                "clustering_patterns",
+                "behavioral_patterns",
+            ],
         )
         print(f"   ✅ Pattern types discovered: {len(patterns['detailed_patterns'])}")
         print(f"   ✅ Pattern summary generated: {len(patterns['pattern_summary'])}")

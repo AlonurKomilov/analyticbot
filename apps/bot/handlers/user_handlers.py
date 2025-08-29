@@ -12,11 +12,12 @@ from aiogram.types import (
     MenuButtonDefault,
     MenuButtonWebApp,
     WebAppInfo,
+    CallbackQuery,
 )
 from aiogram_i18n import I18nContext
 
 from apps.bot.config import settings
-from apps.bot.database.repositories import UserRepository
+from infra.db.repositories import AsyncpgUserRepository as UserRepository
 from apps.bot.services.subscription_service import SubscriptionService
 
 router = Router()
@@ -36,10 +37,18 @@ def _get_webapp_url() -> str | None:
     try:
         twa = getattr(settings, "TWA_HOST_URL", None)
         if twa:
+            log.info(f"TWA URL from settings: {twa}")
             return str(twa)
-    except Exception:
-        pass
-    return os.getenv("WEBAPP_URL")
+    except Exception as e:
+        log.warning(f"Error getting TWA_HOST_URL from settings: {e}")
+    
+    # Try multiple environment variable names
+    env_url = os.getenv("TWA_HOST_URL") or os.getenv("WEBAPP_URL")
+    if env_url:
+        log.info(f"TWA URL from env: {env_url}")
+    else:
+        log.warning("No TWA_HOST_URL found in settings or environment")
+    return env_url
 
 
 def _is_public_https(url: str) -> bool:
@@ -54,7 +63,7 @@ def _is_public_https(url: str) -> bool:
 def _build_dashboard_kb(i18n: Any) -> tuple[InlineKeyboardMarkup | None, bool]:
     """
     HTTPS bo'lsa WebApp tugmasi (Telegram ichida).
-    HTTPS bo‘lmasa — hech qanday tugma yubormaymiz (Telegram localhost URL'larini rad etadi).
+    HTTPS bo'lmasa — hech qanday tugma yubormaymiz (Telegram localhost URL'larni rad etadi).
     return: (markup, is_webapp)
     """
     text = i18n.get("menu-button-dashboard")
@@ -67,9 +76,49 @@ def _build_dashboard_kb(i18n: Any) -> tuple[InlineKeyboardMarkup | None, bool]:
     return (None, False)
 
 
+def _build_start_menu_kb(i18n: Any) -> InlineKeyboardMarkup:
+    """Build comprehensive start menu with action buttons."""
+    buttons = []
+    
+    # First row: Add Channel and View Stats
+    row1 = [
+        InlineKeyboardButton(
+            text=i18n.get("button-add-channel"), 
+            callback_data="quick_add_channel"
+        ),
+        InlineKeyboardButton(
+            text=i18n.get("button-view-stats"), 
+            callback_data="quick_stats"
+        )
+    ]
+    buttons.append(row1)
+    
+    # Second row: Help and Commands
+    row2 = [
+        InlineKeyboardButton(
+            text=i18n.get("button-help"), 
+            callback_data="quick_help"
+        ),
+        InlineKeyboardButton(
+            text=i18n.get("button-commands"), 
+            callback_data="quick_commands"
+        )
+    ]
+    buttons.append(row2)
+    
+    # Third row: Dashboard (if available)
+    dashboard_kb, is_webapp = _build_dashboard_kb(i18n)
+    if dashboard_kb and is_webapp:
+        # Extract the dashboard button from the dashboard keyboard
+        dashboard_btn = dashboard_kb.inline_keyboard[0][0]
+        buttons.append([dashboard_btn])
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None:
     """
-    Persistent menu tugmasi: HTTPS bo‘lsa WebApp, bo‘lmasa default.
+    Persistent menu tugmasi: HTTPS bo'lsa WebApp, bo'lmasa default.
     """
     bot = cast(Bot | None, message.bot)
     chat_id = _chat_id_of(message)
@@ -109,9 +158,36 @@ async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18
         except Exception as e:
             log.warning("create_user failed: %s", e)
     await _set_webapp_menu_or_default(message, i18n)
-    kb, _ = _build_dashboard_kb(i18n)
+    
+    # Build comprehensive menu with action buttons
+    start_kb = _build_start_menu_kb(i18n)
     full_name = message.from_user.full_name if message.from_user else "there"
-    await message.answer(i18n.get("start_message", user_name=full_name), reply_markup=kb)
+    await message.answer(i18n.get("start_message", user_name=full_name), reply_markup=start_kb)
+
+
+@router.callback_query(F.data == "quick_add_channel")
+async def callback_quick_add_channel(callback: CallbackQuery, i18n: I18nContext):
+    await callback.message.answer(i18n.get("add-channel-usage"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "quick_stats")
+async def callback_quick_stats(callback: CallbackQuery, i18n: I18nContext):
+    await callback.message.answer(i18n.get("stats-generating"))
+    # Here you would normally call the stats handler
+    await callback.answer()
+
+
+@router.callback_query(F.data == "quick_help")
+async def callback_quick_help(callback: CallbackQuery, i18n: I18nContext):
+    await callback.message.answer(i18n.get("help-message"))
+    await callback.answer()
+
+
+@router.callback_query(F.data == "quick_commands")
+async def callback_quick_commands(callback: CallbackQuery, i18n: I18nContext):
+    await callback.message.answer(i18n.get("commands-list"))
+    await callback.answer()
 
 
 @router.message(F.web_app_data)
@@ -164,7 +240,7 @@ async def cmd_myplan(
 async def cmd_dashboard(message: types.Message, i18n: I18nContext):
     kb, is_webapp = _build_dashboard_kb(i18n)
     if not kb:
-        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun Codespaces/Ngrok HTTPS URL qo'ying:\nWEBAPP_URL=https://YOUR_PUBLIC_HOST/"
+        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun Codespaces/Ngrok HTTPS URL qo'ying:\nWEBAPP_URL=https://84dp9jc9-3000.euw.devtunnels.ms/"
         await message.answer(msg)
         return
     await message.answer(i18n.get("menu-button-dashboard"), reply_markup=kb)

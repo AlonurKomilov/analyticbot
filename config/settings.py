@@ -62,8 +62,8 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
     API_HOST_URL: AnyHttpUrl = "http://localhost:8000"
-    TWA_HOST_URL: AnyHttpUrl
-    CORS_ORIGINS: list[str] = ["*"]
+    TWA_HOST_URL: AnyHttpUrl = "https://84dp9jc9-3000.euw.devtunnels.ms"
+    CORS_ORIGINS: str = "*"
 
     # Security & Authentication
     JWT_SECRET_KEY: SecretStr
@@ -112,9 +112,21 @@ class Settings(BaseSettings):
                 admin_str = os.getenv("ADMIN_IDS") or os.getenv("ADMIN_IDS_STR", "")
 
             if admin_str:
-                self._admin_ids = [
-                    int(id_str.strip()) for id_str in admin_str.split(",") if id_str.strip()
-                ]
+                # Handle JSON format like ["123", "456"] or comma-separated like "123,456"
+                import json
+                try:
+                    # Try to parse as JSON first
+                    if admin_str.startswith('[') and admin_str.endswith(']'):
+                        parsed_ids = json.loads(admin_str)
+                        self._admin_ids = [int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()]
+                    else:
+                        # Parse as comma-separated
+                        self._admin_ids = [
+                            int(id_str.strip()) for id_str in admin_str.split(",") if id_str.strip()
+                        ]
+                except (json.JSONDecodeError, ValueError) as e:
+                    print(f"Warning: Could not parse ADMIN_IDS '{admin_str}': {e}")
+                    self._admin_ids = []
             else:
                 self._admin_ids = []
 
@@ -142,12 +154,16 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
-        """Parse comma-separated CORS origins"""
+        """Parse comma-separated CORS origins to return as is for now"""
+        return v if v else "*"
+
+    @field_validator("SUPPORTED_LOCALES", mode="before")
+    @classmethod
+    def parse_supported_locales(cls, v):
+        """Parse comma-separated supported locales"""
         if isinstance(v, str):
-            if v == "*":
-                return ["*"]
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v or ["*"]
+            return [locale.strip() for locale in v.split(",") if locale.strip()]
+        return v or ["en", "uz"]
 
     # Convenience property accessors for backward compatibility
     @property

@@ -25,7 +25,7 @@ from apps.bot.models.content_protection import (
     ProtectionLevel,
     PremiumFeatureLimits
 )
-from apps.bot.deps import get_current_user  # Updated import path for bot-specific auth
+from apps.api.deps import get_current_user  # Updated import path for API-specific auth
 from infra.db.repositories import AsyncpgUserRepository  # Use new infrastructure layer
 
 

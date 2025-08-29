@@ -20,8 +20,8 @@ from apps.bot.analytics import (
     PredictiveAnalyticsEngine,
 )
 from apps.bot.container import container
-from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
-from apps.bot.database.repositories.channel_repository import ChannelRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository as AnalyticsRepository
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository as ChannelRepository
 from apps.bot.services.analytics_service import AnalyticsService
 
 logger = logging.getLogger(__name__)

@@ -29,11 +29,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="AnalyticBot API", version="v1", debug=settings.DEBUG, lifespan=lifespan)
 
+# Add CORS middleware with explicit configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.api.CORS_ORIGINS,
-    allow_methods=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers

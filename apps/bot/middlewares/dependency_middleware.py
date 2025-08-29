@@ -11,12 +11,12 @@ from punq import MissingDependencyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import settings as app_settings
-from apps.bot.database.repositories import (
-    AnalyticsRepository,
-    ChannelRepository,
-    PlanRepository,
-    SchedulerRepository,
-    UserRepository,
+from infra.db.repositories import (
+    AsyncpgAnalyticsRepository as AnalyticsRepository,
+    AsyncpgChannelRepository as ChannelRepository,
+    AsyncpgPlanRepository as PlanRepository,
+    AsyncpgScheduleRepository as SchedulerRepository,
+    AsyncpgUserRepository as UserRepository,
 )
 from apps.bot.services import AnalyticsService, GuardService, SchedulerService, SubscriptionService
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore

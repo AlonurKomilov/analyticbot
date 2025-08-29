@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 
-from apps.bot.container import container
 from apps.bot.domain.models import SubscriptionStatus
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
@@ -12,20 +11,29 @@ class SubscriptionService:
     """
     Subscription limits & usage checks.
     Constructor MUST match container wiring:
-        subscription_service = Singleton(SubscriptionService, repository=channel_repository)
+        subscription_service = Singleton(SubscriptionService, 
+                                       channel_repo=channel_repository, 
+                                       user_repo=user_repository,
+                                       plan_repo=plan_repository,
+                                       schedule_repo=schedule_repository)
     """
 
-    def __init__(self, repository: AsyncpgChannelRepository):
-        self.channel_repo = repository
+    def __init__(self, 
+                 channel_repository: AsyncpgChannelRepository,
+                 user_repository: AsyncpgUserRepository,
+                 plan_repository: AsyncpgPlanRepository,
+                 scheduler_repository: AsyncpgScheduleRepository):
+        self.channel_repo = channel_repository
+        self.user_repo = user_repository
+        self.plan_repo = plan_repository
+        self.schedule_repo = scheduler_repository
 
     async def _get_plan_row(self, user_id: int) -> dict | None:
         """Return the plan row for the user, or None if not set."""
-        user_repo = container.resolve(AsyncpgUserRepository)
-        plan_repo = container.resolve(AsyncpgPlanRepository)
-        plan_name = await user_repo.get_user_plan_name(user_id)
+        plan_name = await self.user_repo.get_user_plan_name(user_id)
         if not plan_name:
             return None
-        return await plan_repo.get_plan_by_name(plan_name)
+        return await self.plan_repo.get_plan_by_name(plan_name)
 
     async def check_channel_limit(self, user_id: int) -> None:
         """
@@ -53,8 +61,7 @@ class SubscriptionService:
         max_posts = plan_row.get("max_posts_per_month")
         if max_posts is None:
             return
-        scheduler_repo = container.resolve(AsyncpgScheduleRepository)
-        current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
+        current_posts = await self.schedule_repo.count_user_posts_this_month(user_id)
         if current_posts >= max_posts:
             raise HTTPException(status_code=403, detail="Monthly post limit reached")
 
@@ -66,8 +73,7 @@ class SubscriptionService:
         plan_row = await self._get_plan_row(user_id)
         if not plan_row:
             return None
-        scheduler_repo = container.resolve(AsyncpgScheduleRepository)
-        current_posts = await scheduler_repo.count_user_posts_this_month(user_id)
+        current_posts = await self.schedule_repo.count_user_posts_this_month(user_id)
         current_channels = await self.channel_repo.count_user_channels(user_id)
         plan_name = plan_row.get("plan_name") or plan_row.get("name") or "Unknown"
         return SubscriptionStatus(

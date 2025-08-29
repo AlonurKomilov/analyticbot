@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from apps.bot.database.repositories.payment_repository import PaymentRepository
+from infra.db.repositories.payment_repository import AsyncpgPaymentRepository as PaymentRepository
 from apps.bot.models.payment import (
     BillingCycle,
     PaymentCreate,

@@ -1,4 +1,19 @@
-start_message = Xush kelibsiz! Quyidagi menyudan foydalaning.
+# Xush kelibsiz xabarlari
+start_message = 
+    🚀 <b>AnalyticBot ga xush kelibsiz, { $user_name }!</b>
+    
+    📊 Kanal analitikasi uchun eng yaxshi hamkor
+    ✨ Ko'rsatkichlarni kuzating, postlarni rejalashtiring va auditoriyangizni oshiring
+    
+    🎯 <b>Nima qila olasiz:</b>
+    • 📈 Kanalning batafsil analitikasi
+    • ⏰ Mukammal vaqtda post rejalashtirish
+    • 🛡️ Kontentingizni o'g'irlikdan himoya qilish
+    • 📱 Kuchli veb-dashboard dan foydalanish
+    
+    👆 <b>Boshlash uchun quyidagi menyudan foydalaning!</b>
+
+welcome_back = 👋 Qaytganingiz bilan, { $user_name }! Tahlil qilishga tayyormisiz?
 
 menu-button-dashboard = Bosh sahifa
 

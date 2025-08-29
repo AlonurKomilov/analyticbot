@@ -166,7 +166,7 @@ async def cmd_dashboard(message: types.Message, i18n: I18nContext):
     if not kb:
         msg = """Dashboard URL topilmadi yoki HTTPS emas.
 Dev uchun Codespaces/Ngrok HTTPS URL qo'ying:
-WEBAPP_URL=https://YOUR_PUBLIC_HOST/"""
+WEBAPP_URL=https://84dp9jc9-3000.euw.devtunnels.ms/"""
         await message.answer(msg)
         return
     await message.answer(i18n.get("menu-button-dashboard"), reply_markup=kb)

@@ -71,6 +71,10 @@ class Settings:
         self.DEFAULT_LOCALE = getattr(_main_settings, "DEFAULT_LOCALE", "en")
         self.SUPPORTED_LOCALES = getattr(_main_settings, "SUPPORTED_LOCALES", "en,uz")
 
+        # Web Application settings
+        self.TWA_HOST_URL = _main_settings.TWA_HOST_URL
+        self.API_HOST_URL = _main_settings.API_HOST_URL
+
         # App settings for backward compatibility
         self.LOG_FORMAT = _main_settings.LOG_FORMAT
 

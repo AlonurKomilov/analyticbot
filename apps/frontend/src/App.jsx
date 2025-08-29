@@ -64,7 +64,7 @@ function App() {
                     🤖 AnalyticBot Dashboard
                 </Typography>
                 <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                    To'liq Telegram Bot Boshqaruv Tizimi
+                    FULL TELEGRAM BOT ANALYTIC CONTROL
                 </Typography>
                 
                 {/* Service Status Cards */}

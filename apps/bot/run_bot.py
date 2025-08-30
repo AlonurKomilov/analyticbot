@@ -17,60 +17,57 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from apps.bot.deps import bot_container
-from apps.bot.schedule_handlers import schedule_router
-from apps.bot.handlers.user_handlers import router as user_router
 from apps.bot.handlers.admin_handlers import router as admin_router
 from apps.bot.handlers.content_protection import router as content_router
+from apps.bot.handlers.user_handlers import router as user_router
 from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
 from apps.bot.middlewares.i18n import i18n_middleware
+from apps.bot.schedule_handlers import schedule_router
 from config import settings
 
 
 def create_bot():
     """Create bot instance with development mode support"""
     token = settings.bot.BOT_TOKEN.get_secret_value()
-    
+
     # Development mode: Create mock bot if token is invalid
     if token in ("your_bot_token_here", "test_token"):
         from unittest.mock import Mock
-        
+
         class MockBot:
             def __init__(self):
                 self.session = Mock()
                 self.id = 7900046521
                 self.username = "test_bot"
                 self.first_name = "Test Bot"
-                
+
             async def get_me(self):
                 return self
-                
+
             async def close(self):
                 pass
-        
+
         logging.getLogger(__name__).warning("Using mock bot for development (invalid token)")
         return MockBot()
-    
+
     # Create bot with HTML parse mode as default
-    return Bot(
-        token=token,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
+    return Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
 def create_dispatcher(bot):
     """Create dispatcher with all handlers"""
     dp = Dispatcher()
-    
+
     # Set up middleware for dependency injection
     dp.update.outer_middleware(DependencyMiddleware(bot_container))
     dp.update.outer_middleware(i18n_middleware)
-    
+
     # Include all routers in the correct order
-    dp.include_router(user_router)      # Basic user commands like /start
-    dp.include_router(admin_router)     # Admin commands like /add_channel  
-    dp.include_router(content_router)   # Content protection handlers
+    dp.include_router(user_router)  # Basic user commands like /start
+    dp.include_router(admin_router)  # Admin commands like /add_channel
+    dp.include_router(content_router)  # Content protection handlers
     dp.include_router(schedule_router)  # Scheduling handlers
-    
+
     return dp
 
 
@@ -96,7 +93,7 @@ async def main():
         logger.info(f"Admin IDs: {settings.bot.ADMIN_IDS}")
 
         # Start polling (skip for mock bot)
-        if hasattr(bot, 'session'):
+        if hasattr(bot, "session"):
             await dp.start_polling(bot)
         else:
             logger.info("Mock bot running in development mode - no polling")

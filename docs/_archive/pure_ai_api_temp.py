@@ -4,5 +4,3 @@ Implementation lives in `apis.pure_ai_api`.
 This module remains only to satisfy legacy imports (`pure_ai_api:app`).
 Safe to remove after external references are updated.
 """
-
-from apps.api.pure_ai_api import *

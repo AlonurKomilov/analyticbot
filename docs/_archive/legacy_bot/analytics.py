@@ -43,7 +43,10 @@ from apps.bot.services.dashboard_service import (
     create_dashboard,
     create_visualization_engine,
 )
-from apps.bot.services.ml.ai_insights import AIInsightsGenerator, create_ai_insights_generator
+from apps.bot.services.ml.ai_insights import (
+    AIInsightsGenerator,
+    create_ai_insights_generator,
+)
 from apps.bot.services.ml.predictive_engine import (
     PredictiveAnalyticsEngine,
     create_predictive_engine,

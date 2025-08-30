@@ -14,7 +14,6 @@ import sys
 from pathlib import Path
 
 try:
-    import anthropic
     from anthropic import Anthropic
 
     HAS_ANTHROPIC = True
@@ -299,7 +298,10 @@ Focus on the most critical issues first. Provide concrete, actionable fixes.
         return applied_count
 
     async def fix_code(
-        self, context_file: str | None = None, fix_type: str = "all", apply_fixes: bool = False
+        self,
+        context_file: str | None = None,
+        fix_type: str = "all",
+        apply_fixes: bool = False,
     ) -> dict:
         """Main method to analyze and fix code issues"""
         result = {
@@ -344,7 +346,14 @@ def main():
     parser.add_argument("--context", type=str, help="Context file with additional information")
     parser.add_argument(
         "--fix-type",
-        choices=["all", "formatting", "imports", "security", "performance", "type-hints"],
+        choices=[
+            "all",
+            "formatting",
+            "imports",
+            "security",
+            "performance",
+            "type-hints",
+        ],
         default="all",
         help="Type of fixes to apply",
     )
@@ -362,7 +371,9 @@ def main():
     try:
         result = asyncio.run(
             fixer.fix_code(
-                context_file=args.context, fix_type=args.fix_type, apply_fixes=args.apply
+                context_file=args.context,
+                fix_type=args.fix_type,
+                apply_fixes=args.apply,
             )
         )
 

@@ -4,24 +4,30 @@ Minimal, practical skeleton for Clean Architecture
 """
 
 from dataclasses import dataclass
-from typing import Optional
-import asyncpg
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine, async_sessionmaker
 
-from core.repositories.interfaces import UserRepository, AdminRepository
+import asyncpg
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+from core.repositories.interfaces import AdminRepository, UserRepository
 from infra.db.repositories import (
-    AsyncpgUserRepository,
     AsyncpgAdminRepository,
     AsyncpgAnalyticsRepository,
     AsyncpgChannelRepository,
     AsyncpgPaymentRepository,
-    AsyncpgPlanRepository
+    AsyncpgPlanRepository,
+    AsyncpgUserRepository,
 )
 
 
 @dataclass(frozen=True)
 class Settings:
     """Application settings"""
+
     database_url: str
     database_pool_size: int = 10
     database_max_overflow: int = 20
@@ -29,12 +35,12 @@ class Settings:
 
 class Container:
     """Dependency Injection Container"""
-    
+
     def __init__(self, settings: Settings):
         self.settings = settings
-        self._engine: Optional[AsyncEngine] = None
-        self._session_factory: Optional[async_sessionmaker[AsyncSession]] = None
-        self._asyncpg_pool: Optional[asyncpg.Pool] = None
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker[AsyncSession] | None = None
+        self._asyncpg_pool: asyncpg.Pool | None = None
 
     # Database connections
     async def engine(self) -> AsyncEngine:
@@ -44,7 +50,7 @@ class Container:
                 self.settings.database_url,
                 pool_size=self.settings.database_pool_size,
                 max_overflow=self.settings.database_max_overflow,
-                pool_pre_ping=True
+                pool_pre_ping=True,
             )
         return self._engine
 
@@ -62,11 +68,9 @@ class Container:
             db_url = self.settings.database_url
             if db_url.startswith("postgresql+asyncpg://"):
                 db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-            
+
             self._asyncpg_pool = await asyncpg.create_pool(
-                db_url,
-                min_size=1,
-                max_size=self.settings.database_pool_size
+                db_url, min_size=1, max_size=self.settings.database_pool_size
             )
         return self._asyncpg_pool
 
@@ -117,7 +121,7 @@ class Container:
 
 
 # Global container instance (to be initialized in main)
-_container: Optional[Container] = None
+_container: Container | None = None
 
 
 def get_container() -> Container:

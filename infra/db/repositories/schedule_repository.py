@@ -6,7 +6,6 @@ Concrete implementation using PostgreSQL/asyncpg
 import json
 from datetime import datetime
 from uuid import UUID
-from typing import List, Optional
 
 from core.models import (
     Delivery,
@@ -16,7 +15,7 @@ from core.models import (
     ScheduledPost,
     ScheduleFilter,
 )
-from core.repositories.interfaces import ScheduleRepository, DeliveryRepository
+from core.repositories.interfaces import DeliveryRepository, ScheduleRepository
 
 
 class AsyncpgScheduleRepository(ScheduleRepository):
@@ -59,7 +58,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         return self._row_to_scheduled_post(result)
 
-    async def get_by_id(self, post_id: UUID) -> Optional[ScheduledPost]:
+    async def get_by_id(self, post_id: UUID) -> ScheduledPost | None:
         """Get scheduled post by ID"""
         query = "SELECT * FROM scheduled_posts WHERE id = $1"
         result = await self.db.fetchrow(query, post_id)
@@ -105,7 +104,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         result = await self.db.execute(query, post_id)
         return result.split()[-1] == "1"  # Returns "DELETE 1" if successful
 
-    async def find(self, filter_criteria: ScheduleFilter) -> List[ScheduledPost]:
+    async def find(self, filter_criteria: ScheduleFilter) -> list[ScheduledPost]:
         """Find scheduled posts by filter criteria"""
         query = "SELECT * FROM scheduled_posts WHERE 1=1"
         params = []
@@ -158,7 +157,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         results = await self.db.fetch(query, *params)
         return [self._row_to_scheduled_post(row) for row in results]
 
-    async def get_ready_for_delivery(self) -> List[ScheduledPost]:
+    async def get_ready_for_delivery(self) -> list[ScheduledPost]:
         """Get all posts that are ready for delivery"""
         query = """
         SELECT * FROM scheduled_posts 
@@ -258,7 +257,7 @@ class AsyncpgDeliveryRepository(DeliveryRepository):
 
         return self._row_to_delivery(result)
 
-    async def get_by_id(self, delivery_id: UUID) -> Optional[Delivery]:
+    async def get_by_id(self, delivery_id: UUID) -> Delivery | None:
         """Get delivery by ID"""
         query = "SELECT * FROM deliveries WHERE id = $1"
         result = await self.db.fetchrow(query, delivery_id)
@@ -267,7 +266,7 @@ class AsyncpgDeliveryRepository(DeliveryRepository):
             return self._row_to_delivery(result)
         return None
 
-    async def get_by_post_id(self, post_id: UUID) -> List[Delivery]:
+    async def get_by_post_id(self, post_id: UUID) -> list[Delivery]:
         """Get all deliveries for a specific post"""
         query = "SELECT * FROM deliveries WHERE post_id = $1 ORDER BY created_at DESC"
         results = await self.db.fetch(query, post_id)
@@ -301,7 +300,7 @@ class AsyncpgDeliveryRepository(DeliveryRepository):
 
         return self._row_to_delivery(result)
 
-    async def find(self, filter_criteria: DeliveryFilter) -> List[Delivery]:
+    async def find(self, filter_criteria: DeliveryFilter) -> list[Delivery]:
         """Find deliveries by filter criteria"""
         query = "SELECT * FROM deliveries WHERE 1=1"
         params = []
@@ -335,7 +334,7 @@ class AsyncpgDeliveryRepository(DeliveryRepository):
         results = await self.db.fetch(query, *params)
         return [self._row_to_delivery(row) for row in results]
 
-    async def get_failed_retryable(self) -> List[Delivery]:
+    async def get_failed_retryable(self) -> list[Delivery]:
         """Get failed deliveries that can be retried"""
         query = """
         SELECT * FROM deliveries 

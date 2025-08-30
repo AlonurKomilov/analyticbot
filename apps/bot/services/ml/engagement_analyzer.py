@@ -296,15 +296,17 @@ class EngagementAnalyzer:
                     "seo_score": content_analysis.seo_score,
                     "engagement_score": content_analysis.engagement_score,
                 },
-                "engagement_prediction": {
-                    "predicted_engagement": prediction_result.prediction
+                "engagement_prediction": (
+                    {
+                        "predicted_engagement": (
+                            prediction_result.prediction if prediction_result else 100
+                        ),
+                        "confidence": (prediction_result.confidence if prediction_result else 0.5),
+                        "key_factors": (prediction_result.factors if prediction_result else {}),
+                    }
                     if prediction_result
-                    else 100,
-                    "confidence": prediction_result.confidence if prediction_result else 0.5,
-                    "key_factors": prediction_result.factors if prediction_result else {},
-                }
-                if prediction_result
-                else None,
+                    else None
+                ),
                 "optimization_recommendations": content_analysis.optimization_tips,
                 "hashtag_suggestions": content_analysis.suggested_hashtags,
                 "optimal_timing": optimal_timing,
@@ -579,12 +581,14 @@ class EngagementAnalyzer:
         return insights
 
     async def _calculate_publishing_score(
-        self, content_analysis: ContentAnalysis, prediction_result: PredictionResult | None
+        self,
+        content_analysis: ContentAnalysis,
+        prediction_result: PredictionResult | None,
     ) -> dict[str, Any]:
         """Calculate overall publishing readiness score"""
         score_components = {
             "content_quality": content_analysis.overall_score,
-            "engagement_prediction": prediction_result.prediction if prediction_result else 50,
+            "engagement_prediction": (prediction_result.prediction if prediction_result else 50),
             "optimization_completeness": 100 - len(content_analysis.optimization_tips) * 10,
         }
 

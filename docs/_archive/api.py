@@ -31,7 +31,10 @@ from apps.bot.models.twa import (
 )
 from apps.bot.services import GuardService, SubscriptionService
 from apps.bot.services.auth_service import validate_init_data
-from apps.bot.services.prometheus_service import prometheus_service, setup_prometheus_middleware
+from apps.bot.services.prometheus_service import (
+    prometheus_service,
+    setup_prometheus_middleware,
+)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -113,7 +116,11 @@ app.include_router(payment_router, prefix="/api/v1")
 async def health_check():
     """Enhanced health check endpoint with system status"""
     try:
-        status = {"status": "ok", "timestamp": datetime.now().isoformat(), "version": "1.0.0"}
+        status = {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0",
+        }
         try:
             from apps.bot.database.db import is_db_healthy
 
@@ -138,7 +145,11 @@ async def health_check():
         return status
     except Exception as e:
         log.error(f"Health check error: {e}", exc_info=True)
-        return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @app.get("/health/detailed", tags=["Health"])
@@ -258,7 +269,12 @@ async def upload_media_file(
             )
             file_id = sent_message.document.file_id
         log.info(f"Successfully uploaded {media_type} file: {file.filename}")
-        return {"ok": True, "file_id": file_id, "media_type": media_type, "filename": file.filename}
+        return {
+            "ok": True,
+            "file_id": file_id,
+            "media_type": media_type,
+            "filename": file.filename,
+        }
     except HTTPException:
         raise
     except TelegramAPIError as e:
@@ -287,7 +303,8 @@ async def upload_media_direct(
             user_channels = await channel_repo.get_user_channels(user_id)
             if not any(ch.id == channel_id for ch in user_channels):
                 raise HTTPException(
-                    status_code=403, detail="Access denied: Channel not found or not owned by user"
+                    status_code=403,
+                    detail="Access denied: Channel not found or not owned by user",
                 )
         if not file.content_type:
             raise HTTPException(status_code=400, detail="File content type is required")
@@ -443,7 +460,7 @@ async def get_post_view_dynamics(
                     "time": time_point.isoformat(),
                     "views": views_at_time,
                     "growth_rate": (growth_factor - 1) * 100,
-                    "engagement_spike": random.choice([True, False]) if hour > 2 else False,
+                    "engagement_spike": (random.choice([True, False]) if hour > 2 else False),
                 }
             )
         return {
@@ -453,12 +470,14 @@ async def get_post_view_dynamics(
             "current_views": scheduled_post.views or base_views,
             "dynamics": dynamics_data,
             "metadata": {
-                "post_text": scheduled_post.text[:100] + "..."
-                if len(scheduled_post.text) > 100
-                else scheduled_post.text,
-                "created_at": scheduled_post.created_at.isoformat()
-                if scheduled_post.created_at
-                else None,
+                "post_text": (
+                    scheduled_post.text[:100] + "..."
+                    if len(scheduled_post.text) > 100
+                    else scheduled_post.text
+                ),
+                "created_at": (
+                    scheduled_post.created_at.isoformat() if scheduled_post.created_at else None
+                ),
                 "channel_id": scheduled_post.channel_id,
             },
         }
@@ -506,7 +525,7 @@ async def get_best_posting_time(
             )
         time_recommendations.sort(key=lambda x: x["confidence"], reverse=True)
         ai_insights = {
-            "best_overall_time": time_recommendations[0] if time_recommendations else None,
+            "best_overall_time": (time_recommendations[0] if time_recommendations else None),
             "audience_pattern": "Most active during business hours and evening",
             "posting_frequency_recommendation": "3-4 posts per day",
             "optimal_days": ["Monday", "Tuesday", "Wednesday", "Thursday"],
@@ -601,9 +620,9 @@ async def get_engagement_metrics(
         return {
             "ok": True,
             "channel_id": channel_id,
-            "channel_title": channel.title
-            if hasattr(channel, "title")
-            else f"Channel {channel_id}",
+            "channel_title": (
+                channel.title if hasattr(channel, "title") else f"Channel {channel_id}"
+            ),
             "analysis_period": period_display,
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
@@ -614,7 +633,7 @@ async def get_engagement_metrics(
                 "avg_views_per_post": round(avg_views_per_post, 1),
                 "engagement_rate": round(engagement_rate, 2),
                 "ctr_rate": round(ctr_rate, 2),
-                "performance_trend": "increasing" if random.choice([True, False]) else "stable",
+                "performance_trend": ("increasing" if random.choice([True, False]) else "stable"),
             },
             "top_posts": top_posts,
             "trend_data": trend_data,
@@ -718,9 +737,9 @@ async def schedule_post(
         schedule_time=request.scheduled_at,
         media_id=request.media_id,
         media_type=request.media_type,
-        inline_buttons=[button.model_dump() for button in request.buttons]
-        if request.buttons
-        else None,
+        inline_buttons=(
+            [button.model_dump() for button in request.buttons] if request.buttons else None
+        ),
     )
     return ScheduledPost(
         id=post_id,

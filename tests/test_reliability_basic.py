@@ -41,7 +41,11 @@ def test_idempotency_basic():
 def test_rate_limiter_basic():
     """Test basic rate limiter functionality."""
     try:
-        from core.utils.ratelimit import RateLimitResult, TokenBucketConfig, TokenBucketRateLimiter
+        from core.utils.ratelimit import (
+            RateLimitResult,
+            TokenBucketConfig,
+            TokenBucketRateLimiter,
+        )
 
         # Create mock Redis client
         mock_redis = MagicMock()
@@ -58,7 +62,10 @@ def test_rate_limiter_basic():
 
         # Test result model with all required fields
         result = RateLimitResult(
-            allowed=True, tokens_remaining=5, retry_after_seconds=0.0, bucket_key="test_key"
+            allowed=True,
+            tokens_remaining=5,
+            retry_after_seconds=0.0,
+            bucket_key="test_key",
         )
         assert result.allowed is True
         assert result.tokens_remaining == 5
@@ -95,7 +102,11 @@ def test_enhanced_delivery_service_basic():
         print("✅ EnhancedDeliveryService import and initialization: PASSED")
 
         # Test content hash generation (using correct method name)
-        post_data = {"post_text": "test message", "channel_id": 123, "buttons": ["btn1"]}
+        post_data = {
+            "post_text": "test message",
+            "channel_id": 123,
+            "buttons": ["btn1"],
+        }
         hash1 = service._hash_content(post_data)
         hash2 = service._hash_content(post_data)
 

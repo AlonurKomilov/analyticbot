@@ -9,7 +9,6 @@ file with a thin adapter around the official class.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from apps.bot.utils.simple_i18n_core import SimpleI18nCore
@@ -44,7 +43,6 @@ class _MiniI18n:
             print(f"I18N: Loaded locales: {list(self.core.locales.keys())}")
         except Exception as e:
             print(f"I18N: Failed to load locales: {e}")
-            pass
 
     def gettext(self, key: str, locale: str | None = None, **kwargs):
         self._ensure()

@@ -3,22 +3,19 @@ SQLAlchemy User Repository Implementation
 Concrete implementation of UserRepository interface using SQLAlchemy
 """
 
-from typing import Optional
 import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import and_, or_, func
 
 from core.repositories.interfaces import UserRepository as IUserRepository
 
 
 class AsyncpgUserRepository(IUserRepository):
     """User repository implementation using asyncpg (existing bot implementation)"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 
-    async def get_user_by_id(self, user_id: int) -> Optional[dict]:
+    async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID"""
         query = """
             SELECT u.id, u.username, u.created_at, p.name as subscription_tier
@@ -29,7 +26,7 @@ class AsyncpgUserRepository(IUserRepository):
         row = await self._pool.fetchrow(query, user_id)
         return dict(row) if row else None
 
-    async def get_user_by_telegram_id(self, telegram_id: int) -> Optional[dict]:
+    async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID - same as get_user_by_id for bot"""
         return await self.get_user_by_id(telegram_id)
 
@@ -42,10 +39,10 @@ class AsyncpgUserRepository(IUserRepository):
                 username = EXCLUDED.username
             RETURNING id, username, created_at
         """
-        user_id = user_data.get('id') or user_data.get('telegram_id')
-        username = user_data.get('username')
-        plan_id = user_data.get('plan_id', 1)  # Default plan
-        
+        user_id = user_data.get("id") or user_data.get("telegram_id")
+        username = user_data.get("username")
+        plan_id = user_data.get("plan_id", 1)  # Default plan
+
         row = await self._pool.fetchrow(query, user_id, username, plan_id)
         return dict(row) if row else None
 
@@ -55,25 +52,25 @@ class AsyncpgUserRepository(IUserRepository):
         set_clauses = []
         values = []
         param_count = 1
-        
+
         for key, value in updates.items():
-            if key in ['username', 'plan_id']:  # Only allow certain fields
+            if key in ["username", "plan_id"]:  # Only allow certain fields
                 set_clauses.append(f"{key} = ${param_count}")
                 values.append(value)
                 param_count += 1
-        
+
         if not set_clauses:
             return False
-            
+
         query = f"""
             UPDATE users 
             SET {', '.join(set_clauses)}
             WHERE id = ${param_count}
         """
         values.append(user_id)
-        
+
         result = await self._pool.execute(query, *values)
-        return result == 'UPDATE 1'
+        return result == "UPDATE 1"
 
     async def get_user_subscription_tier(self, user_id: int) -> str:
         """Get user's subscription tier"""
@@ -94,35 +91,31 @@ class AsyncpgUserRepository(IUserRepository):
 
 class SQLAlchemyUserRepository(IUserRepository):
     """User repository implementation using SQLAlchemy (for new implementations)"""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-        
-    async def get_user_by_id(self, user_id: int) -> Optional[dict]:
+
+    async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID - placeholder for SQLAlchemy implementation"""
         # TODO: Implement when we migrate to SQLAlchemy models
-        pass
-    
-    async def get_user_by_telegram_id(self, telegram_id: int) -> Optional[dict]:
+
+    async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID"""
         # TODO: Implement SQLAlchemy version
-        pass
-    
+
     async def create_user(self, user_data: dict) -> dict:
         """Create new user"""
         # TODO: Implement SQLAlchemy version
-        pass
-    
+
     async def update_user(self, user_id: int, **updates) -> bool:
         """Update user information"""
         # TODO: Implement SQLAlchemy version
-        pass
-    
+
     async def get_user_subscription_tier(self, user_id: int) -> str:
         """Get user's subscription tier"""
         # TODO: Implement SQLAlchemy version
         return "pro"
-    
+
     async def user_exists(self, user_id: int) -> bool:
         """Check if user exists"""
         # TODO: Implement SQLAlchemy version

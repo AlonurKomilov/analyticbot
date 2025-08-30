@@ -16,18 +16,19 @@ try:
     from aiogram.client.bot import Bot as _AioBot
 except Exception:
     from aiogram import Bot as _AioBot
+
 from aiogram import Bot as _ClientBot
 from aiogram import Dispatcher as _AioDispatcher
 from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import Settings
+from apps.bot.database.sqlite_engine import init_db
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository
-from apps.bot.database.sqlite_engine import init_db
 
 
 def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
@@ -111,7 +112,15 @@ def _make_repo(RepoCls: type) -> object:
         return RepoCls(pool)
     except TypeError:
         pass
-    for kw in ("session_pool", "session", "pool", "db", "database", "redis", "redis_client"):
+    for kw in (
+        "session_pool",
+        "session",
+        "pool",
+        "db",
+        "database",
+        "redis",
+        "redis_client",
+    ):
         try:
             return RepoCls(**{kw: pool})
         except TypeError:
@@ -159,39 +168,59 @@ def _make_service(ServiceCls: type) -> object:
 
 container.register(AsyncPGPool, factory=lambda: cast(AsyncPGPool, _pool_or_none()))
 container.register(async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none()))
-container.register(AsyncpgUserRepository, factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository)))
-container.register(AsyncpgPlanRepository, factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository)))
-container.register(AsyncpgChannelRepository, factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository)))
 container.register(
-    AsyncpgScheduleRepository, factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository))
+    AsyncpgUserRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository)),
 )
 container.register(
-    AsyncpgAnalyticsRepository, factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository))
+    AsyncpgPlanRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository)),
 )
+container.register(
+    AsyncpgChannelRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository)),
+)
+container.register(
+    AsyncpgScheduleRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository)),
+)
+container.register(
+    AsyncpgAnalyticsRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository)),
+)
+
 
 def _register_services():
     """Register services with local imports to avoid circular dependencies"""
     try:
         # Import each service individually to better handle any import issues
         from apps.bot.services.guard_service import GuardService
+
         container.register(GuardService, factory=as_singleton(lambda: _make_service(GuardService)))
-        
+
         from apps.bot.services.subscription_service import SubscriptionService
+
         container.register(
-            SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService))
+            SubscriptionService,
+            factory=as_singleton(lambda: _make_service(SubscriptionService)),
         )
-        
+
         from apps.bot.services.scheduler_service import SchedulerService
+
         container.register(
-            SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))
+            SchedulerService,
+            factory=as_singleton(lambda: _make_service(SchedulerService)),
         )
-        
+
         from apps.bot.services.analytics_service import AnalyticsService
+
         container.register(
-            AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
+            AnalyticsService,
+            factory=as_singleton(lambda: _make_service(AnalyticsService)),
         )
     except Exception as e:
         logger.warning(f"Could not register some services: {e}")
+
 
 # Register services with local imports
 _register_services()

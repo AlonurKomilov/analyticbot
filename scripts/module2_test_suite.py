@@ -36,7 +36,12 @@ class Module2TestSuite:
             print(f"   {message}")
 
         self.results["tests"].append(
-            {"name": test_name, "status": status, "message": message, "duration": duration}
+            {
+                "name": test_name,
+                "status": status,
+                "message": message,
+                "duration": duration,
+            }
         )
 
         if passed:
@@ -84,7 +89,10 @@ class Module2TestSuite:
                 try:
                     async with session.get(f"{self.api_url}{endpoint}", timeout=10) as response:
                         duration = time.time() - start_time
-                        success = response.status in [200, 404]  # 404 is OK for some endpoints
+                        success = response.status in [
+                            200,
+                            404,
+                        ]  # 404 is OK for some endpoints
                         self.log_test(
                             f"API {description}",
                             success,
@@ -108,7 +116,7 @@ class Module2TestSuite:
             # Test basic query
             async with conn.cursor() as cursor:
                 await cursor.execute("SELECT version();")
-                version = await cursor.fetchone()
+                await cursor.fetchone()
 
             await conn.close()
             duration = time.time() - start_time
@@ -132,11 +140,11 @@ class Module2TestSuite:
             r = redis.from_url(self.redis_url, socket_timeout=10)
 
             # Test ping
-            response = r.ping()
+            r.ping()
 
             # Test basic operations
             r.set("test_key", "test_value", ex=60)
-            value = r.get("test_key")
+            r.get("test_key")
             r.delete("test_key")
 
             duration = time.time() - start_time

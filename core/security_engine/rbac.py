@@ -7,10 +7,9 @@ granular permissions, and resource-level access control.
 
 import json
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Optional, Dict, Any
-from dataclasses import dataclass
 
 import redis
 
@@ -22,10 +21,11 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RBACConfig:
     """RBAC configuration settings"""
+
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
 
 
 class Permission(str, Enum):
@@ -84,7 +84,7 @@ class RBACManager:
     - Audit logging for access control
     """
 
-    def __init__(self, config: Optional[RBACConfig] = None):
+    def __init__(self, config: RBACConfig | None = None):
         self.config = config or RBACConfig()
         try:
             redis_kwargs = {
@@ -95,7 +95,7 @@ class RBACManager:
             }
             if self.config.redis_password:
                 redis_kwargs["password"] = self.config.redis_password
-                
+
             self.redis_client = redis.Redis(**redis_kwargs)
             self.redis_client.ping()
             self._redis_available = True
@@ -263,7 +263,9 @@ class RBACManager:
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
         self.redis_client.setex(
-            cache_key, int(timedelta(hours=1).total_seconds()), json.dumps(permission_list)
+            cache_key,
+            int(timedelta(hours=1).total_seconds()),
+            json.dumps(permission_list),
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions

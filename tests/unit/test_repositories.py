@@ -40,7 +40,7 @@ async def test_create_user():
     mock_pool.fetchrow.return_value = {
         "id": 123,
         "username": "testuser",
-        "created_at": "2025-01-01T00:00:00"
+        "created_at": "2025-01-01T00:00:00",
     }
     repo = AsyncpgUserRepository(pool=mock_pool)
     user_data = {"id": 123, "username": "testuser"}

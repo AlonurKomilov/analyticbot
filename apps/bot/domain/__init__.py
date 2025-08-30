@@ -28,13 +28,13 @@ from .models import (
 __all__ = [
     # Models
     "SubscriptionStatus",
-    "InlineButton", 
+    "InlineButton",
     "InlineButtonsPayload",
     "AnalyticsMetrics",
     "ServiceHealth",
     # Constants
     "PlanType",
-    "ServiceStatus", 
+    "ServiceStatus",
     "AnalyticsEventType",
     "DEFAULT_FREE_CHANNELS",
     "DEFAULT_FREE_POSTS_PER_MONTH",

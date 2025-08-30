@@ -2,6 +2,7 @@
 Minimal conftest for simple unit tests
 No database or external service dependencies
 """
+
 import pytest
 
 

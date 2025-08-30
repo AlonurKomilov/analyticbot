@@ -47,7 +47,10 @@ def send_message_task(
                 .add("task", "send_message_task")
                 .add("chat_id", chat_id)
                 .add("idempotency_key", idempotency_key)
-                .add("retry", self.request.retries if hasattr(self.request, "retries") else 0)
+                .add(
+                    "retry",
+                    self.request.retries if hasattr(self.request, "retries") else 0,
+                )
             )
 
             # Generate idempotency key if not provided
@@ -73,9 +76,9 @@ def send_message_task(
                 )
                 return {
                     "success": True,
-                    "message_id": existing_status.result.get("message_id")
-                    if existing_status.result
-                    else None,
+                    "message_id": (
+                        existing_status.result.get("message_id") if existing_status.result else None
+                    ),
                     "chat_id": chat_id,
                     "duplicate": True,
                     "cached_result": existing_status.result,
@@ -354,20 +357,26 @@ def health_check_task(self) -> dict[str, Any]:
 
             logger.debug("Running system health check")
 
-            health_results = {"timestamp": datetime.utcnow().isoformat(), "components": {}}
+            health_results = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "components": {},
+            }
 
             # Check database health
             try:
                 db = container.db_session()
                 # Simple query to check DB connectivity
-                result = await db.execute("SELECT 1")
+                await db.execute("SELECT 1")
                 health_results["components"]["database"] = {
                     "status": "healthy",
                     "response_time_ms": 0,  # Could measure actual response time
                 }
             except Exception as e:
                 logger.warning(f"Database health check failed: {e}")
-                health_results["components"]["database"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["database"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Redis health
             try:
@@ -381,7 +390,10 @@ def health_check_task(self) -> dict[str, Any]:
                 health_results["components"]["redis"] = {"status": "healthy"}
             except Exception as e:
                 logger.warning(f"Redis health check failed: {e}")
-                health_results["components"]["redis"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["redis"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Telegram API health
             try:
@@ -393,7 +405,10 @@ def health_check_task(self) -> dict[str, Any]:
                 }
             except Exception as e:
                 logger.warning(f"Telegram health check failed: {e}")
-                health_results["components"]["telegram"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["telegram"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Overall health status
             all_healthy = all(

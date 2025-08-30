@@ -36,7 +36,8 @@ class PaymentRepository:
             # If this is set as default, unset others
             if is_default:
                 await conn.execute(
-                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1", user_id
+                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1",
+                    user_id,
                 )
 
             await conn.execute(

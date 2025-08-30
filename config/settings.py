@@ -91,7 +91,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: SecretStr | None = None
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        env_parse_none_str="None",
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")
@@ -114,11 +117,14 @@ class Settings(BaseSettings):
             if admin_str:
                 # Handle JSON format like ["123", "456"] or comma-separated like "123,456"
                 import json
+
                 try:
                     # Try to parse as JSON first
-                    if admin_str.startswith('[') and admin_str.endswith(']'):
+                    if admin_str.startswith("[") and admin_str.endswith("]"):
                         parsed_ids = json.loads(admin_str)
-                        self._admin_ids = [int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()]
+                        self._admin_ids = [
+                            int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()
+                        ]
                     else:
                         # Parse as comma-separated
                         self._admin_ids = [

@@ -147,7 +147,10 @@ class ContentOptimizer:
         }
 
     async def analyze_content(
-        self, text: str, media_urls: list[str] | None = None, target_audience: str = "general"
+        self,
+        text: str,
+        media_urls: list[str] | None = None,
+        target_audience: str = "general",
     ) -> ContentAnalysis:
         """
         🎯 Comprehensive content analysis with optimization suggestions
@@ -252,7 +255,7 @@ class ContentOptimizer:
             topics = await self._extract_key_topics(text)
 
             # Analyze current hashtag performance
-            current_performance = await self._analyze_current_hashtags(current_hashtags)
+            await self._analyze_current_hashtags(current_hashtags)
 
             # Generate new hashtag suggestions
             suggestions = []
@@ -296,7 +299,7 @@ class ContentOptimizer:
 
             # Basic metrics
             word_count = len(text.split())
-            char_count = len(text)
+            len(text)
 
             # Length score (optimal 50-300 words)
             if 50 <= word_count <= 300:
@@ -364,7 +367,9 @@ class ContentOptimizer:
             ),
             "media_count": len(media_urls) if media_urls else 0,
             "line_count": len(text.split("\n")),
-            "avg_word_length": np.mean([len(word) for word in text.split()]) if text.split() else 0,
+            "avg_word_length": (
+                np.mean([len(word) for word in text.split()]) if text.split() else 0
+            ),
         }
 
     async def _analyze_sentiment(self, text: str) -> tuple[float, str]:
@@ -475,7 +480,15 @@ class ContentOptimizer:
         factors += 10
 
         # Call-to-action detection (5%)
-        cta_words = ["follow", "like", "share", "comment", "subscribe", "click", "visit"]
+        cta_words = [
+            "follow",
+            "like",
+            "share",
+            "comment",
+            "subscribe",
+            "click",
+            "visit",
+        ]
         if any(word in text.lower() for word in cta_words):
             score += 5
         factors += 5
@@ -483,7 +496,11 @@ class ContentOptimizer:
         return min(100.0, (score / factors) * 100) if factors > 0 else 0.0
 
     async def _predict_engagement(
-        self, text: str, metrics: dict[str, Any], sentiment_score: float, target_audience: str
+        self,
+        text: str,
+        metrics: dict[str, Any],
+        sentiment_score: float,
+        target_audience: str,
     ) -> tuple[float, float, float]:
         """Predict content engagement performance"""
 

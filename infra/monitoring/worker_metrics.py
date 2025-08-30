@@ -97,7 +97,12 @@ class WorkerMetricsCollector:
         """Collect comprehensive worker statistics."""
 
         with performance_context("collect_worker_stats", logger):
-            stats = {"workers": {}, "queues": {}, "system": {}, "timestamp": time.time()}
+            stats = {
+                "workers": {},
+                "queues": {},
+                "system": {},
+                "timestamp": time.time(),
+            }
 
             try:
                 # Get Celery inspect instance
@@ -223,7 +228,10 @@ class WorkerMetricsCollector:
 
         # Increment task counter
         self.worker_tasks_processed.labels(
-            worker_name=worker_name, hostname=hostname, task_name=task_name, status=status
+            worker_name=worker_name,
+            hostname=hostname,
+            task_name=task_name,
+            status=status,
         ).inc()
 
 

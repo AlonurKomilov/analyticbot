@@ -61,7 +61,7 @@ async def test_direct_ml():
             # Basic metrics
             word_count = len(text.split())
             hashtag_count = len(re.findall(r"#\w+", text))
-            emoji_count = text.count("🚀") + text.count("💡") + text.count("✨")
+            text.count("🚀") + text.count("💡") + text.count("✨")
 
             # Simple sentiment
             positive_words = {"great", "amazing", "excellent", "awesome", "fantastic"}

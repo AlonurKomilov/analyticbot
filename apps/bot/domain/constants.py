@@ -8,6 +8,7 @@ from enum import Enum
 
 class PlanType(str, Enum):
     """Available subscription plan types"""
+
     FREE = "free"
     PREMIUM = "premium"
     ENTERPRISE = "enterprise"
@@ -15,6 +16,7 @@ class PlanType(str, Enum):
 
 class ServiceStatus(str, Enum):
     """Service health status"""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -23,6 +25,7 @@ class ServiceStatus(str, Enum):
 
 class AnalyticsEventType(str, Enum):
     """Analytics event types"""
+
     POST_PUBLISHED = "post_published"
     POST_VIEWED = "post_viewed"
     USER_SUBSCRIBED = "user_subscribed"

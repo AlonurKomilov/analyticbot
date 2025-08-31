@@ -64,7 +64,7 @@ def test_basic_functionality():
         from apps.bot.services.dashboard_service import VisualizationEngine
         from apps.bot.utils.data_processor import AdvancedDataProcessor
 
-        processor = AdvancedDataProcessor()
+        AdvancedDataProcessor()
         print("   ✅ Data Processor initialized")
         viz_engine = VisualizationEngine()
         test_df = create_test_data()

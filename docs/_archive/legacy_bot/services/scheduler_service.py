@@ -18,7 +18,7 @@ class InlineButton(BaseModel):
 
     @field_validator("callback_data")
     @classmethod
-    def limit_callback(cls, v: (str | None)):
+    def limit_callback(cls, v: str | None):
         if v and len(v) > 60:
             raise ValueError("callback_data too long (>60)")
         return v
@@ -48,7 +48,7 @@ class SchedulerService:
         self.scheduler_repo = scheduler_repo
         self.analytics_repo = analytics_repository
 
-    def _build_reply_markup(self, raw: (dict | None)):
+    def _build_reply_markup(self, raw: dict | None):
         """Build inline keyboard markup from raw button data with error handling"""
         if not raw:
             return None
@@ -72,9 +72,9 @@ class SchedulerService:
                     button = InlineKeyboardButton(
                         text=btn.text,
                         url=str(btn.url) if btn.url else None,
-                        callback_data=btn.callback_data
-                        if btn.callback_data and not btn.url
-                        else None,
+                        callback_data=(
+                            btn.callback_data if btn.callback_data and not btn.url else None
+                        ),
                     )
                     button_row.append(button)
                 rows.append(button_row)
@@ -188,11 +188,11 @@ class SchedulerService:
         self,
         user_id: int,
         channel_id: int,
-        post_text: (str | None),
+        post_text: str | None,
         schedule_time: datetime,
-        media_id: (str | None) = None,
-        media_type: (str | None) = None,
-        inline_buttons: (dict | None) = None,
+        media_id: str | None = None,
+        media_type: str | None = None,
+        inline_buttons: dict | None = None,
     ) -> int | None:
         """
         Create a scheduled post with error handling.

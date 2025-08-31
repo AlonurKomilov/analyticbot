@@ -38,7 +38,7 @@ async def test_database_availability():
         conn = await asyncpg.connect(dsn, command_timeout=5)
         connection_time = time.perf_counter() - start_time
         start_time = time.perf_counter()
-        result = await conn.fetchval("SELECT 1 as test_value")
+        await conn.fetchval("SELECT 1 as test_value")
         query_time = time.perf_counter() - start_time
         db_version = await conn.fetchval("SELECT version()")
         db_size = await conn.fetchval(
@@ -103,7 +103,7 @@ async def test_redis_availability():
         await r.set("test_key", "test_value", ex=10)
         set_time = time.perf_counter() - start_time
         start_time = time.perf_counter()
-        value = await r.get("test_key")
+        await r.get("test_key")
         get_time = time.perf_counter() - start_time
         await r.delete("test_key")
         info = await r.info()
@@ -192,7 +192,11 @@ async def test_docker_services():
                 }
             else:
                 logger.warning("⚠️ Could not check Docker services status")
-                return {"docker_available": True, "services_running": False, "error": result.stderr}
+                return {
+                    "docker_available": True,
+                    "services_running": False,
+                    "error": result.stderr,
+                }
         else:
             logger.warning("⚠️ Docker Compose not available")
             return {"docker_available": False}

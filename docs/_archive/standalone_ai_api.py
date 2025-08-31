@@ -5,6 +5,4 @@ Kept only for backward compatibility with imports expecting `standalone_ai_api:a
 Safe to remove after external references are updated.
 """
 
-from apps.api.standalone_ai_api import *
-
 __all__ = [name for name in globals().keys() if not name.startswith("_")]

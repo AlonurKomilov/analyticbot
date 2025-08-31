@@ -51,8 +51,12 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
+dependency-injector==4.48.1
+    # via -r requirements.in
 fastapi==0.116.1
     # via -r requirements.in
+filelock==3.19.1
+    # via urlextract
 frozenlist==1.7.0
     # via
     #   aiohttp
@@ -73,6 +77,7 @@ idna==3.10
     # via
     #   anyio
     #   httpx
+    #   urlextract
     #   yarl
 iniconfig==2.1.0
     # via pytest
@@ -94,6 +99,8 @@ packaging==25.0
     #   pytest
 pillow==11.3.0
     # via -r requirements.in
+platformdirs==4.4.0
+    # via urlextract
 pluggy==1.6.0
     # via pytest
 prometheus-client==0.17.1
@@ -173,6 +180,10 @@ typing-inspection==0.4.1
     #   pydantic-settings
 tzdata==2025.2
     # via kombu
+uritools==5.0.0
+    # via urlextract
+urlextract==1.9.0
+    # via -r requirements.in
 uvicorn[standard]==0.30.6
     # via -r requirements.in
 uvloop==0.19.0

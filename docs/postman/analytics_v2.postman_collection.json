@@ -1,0 +1,661 @@
+{
+	"info": {
+		"_postman_id": "analytics-v2-collection",
+		"name": "Analytics Fusion API v2",
+		"description": "Complete collection for the unified Analytics Fusion API v2 with MTProto + existing analytics data fusion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "channel_id",
+			"value": "@techchannel",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "your-jwt-token-here",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Overview Analytics",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has required fields\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('channel_id');",
+							"    pm.expect(response).to.have.property('period');",
+							"    pm.expect(response).to.have.property('overview');",
+							"    pm.expect(response).to.have.property('data_sources');",
+							"});",
+							"",
+							"pm.test(\"Overview contains metrics\", function () {",
+							"    const response = pm.response.json();",
+							"    const overview = response.overview;",
+							"    pm.expect(overview).to.have.property('subscribers');",
+							"    pm.expect(overview).to.have.property('total_posts');",
+							"    pm.expect(overview).to.have.property('total_views');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/overview?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"overview"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Successful Overview Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v2/analytics/overview?channel_id=@techchannel&days=30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v2",
+								"analytics",
+								"overview"
+							],
+							"query": [
+								{
+									"key": "channel_id",
+									"value": "@techchannel"
+								},
+								{
+									"key": "days",
+									"value": "30"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"channel_id\": \"@techchannel\",\n  \"period\": 30,\n  \"period_start\": \"2024-01-01T00:00:00Z\",\n  \"period_end\": \"2024-01-31T00:00:00Z\",\n  \"overview\": {\n    \"subscribers\": 15432,\n    \"subscriber_growth\": 234,\n    \"total_posts\": 87,\n    \"total_views\": 542301,\n    \"average_views_per_post\": 6232,\n    \"engagement_rate\": 4.2\n  },\n  \"data_sources\": [\"mtproto\", \"existing_analytics\"],\n  \"cache_hit\": true,\n  \"last_updated\": \"2024-01-31T15:30:00Z\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Growth Metrics",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has growth data\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('growth');",
+							"    pm.expect(response.growth).to.have.property('subscriber_growth');",
+							"    pm.expect(response.growth).to.have.property('daily_growth');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/growth?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"growth"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reach Analysis",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has reach data\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('reach');",
+							"    pm.expect(response.reach).to.have.property('total_views');",
+							"    pm.expect(response.reach).to.have.property('unique_viewers');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/reach?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"reach"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Top Posts",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has top posts\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('top_posts');",
+							"    pm.expect(response.top_posts).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/top-posts?channel_id={{channel_id}}&days=30&limit=10",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"top-posts"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Traffic Sources",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has sources data\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('sources');",
+							"    pm.expect(response.sources).to.be.an('object');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/sources?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"sources"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Trending Analysis",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has trending data\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('trending');",
+							"    pm.expect(response.trending).to.have.property('is_trending');",
+							"    pm.expect(response.trending).to.have.property('trend_score');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/trending?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"trending"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Short Period (7 days)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Period is 7 days\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.period).to.equal(7);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/overview?channel_id={{channel_id}}&days=7",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"overview"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "7"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Long Period (90 days)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Period is 90 days\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.period).to.equal(90);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/overview?channel_id={{channel_id}}&days=90",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"overview"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "90"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Error - Invalid Channel ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Response has error details\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response).to.have.property('error');",
+							"    pm.expect(response).to.have.property('message');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/overview?channel_id=invalid-channel&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"overview"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "invalid-channel"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Error - Missing Authentication",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Remove the authorization header for this test",
+							"pm.request.headers.remove('Authorization');"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", function () {",
+							"    pm.response.to.have.status(401);",
+							"});",
+							"",
+							"pm.test(\"Response indicates authentication required\", function () {",
+							"    const response = pm.response.json();",
+							"    pm.expect(response.error).to.equal('authentication_required');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/api/v2/analytics/overview?channel_id={{channel_id}}&days=30",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v2",
+						"analytics",
+						"overview"
+					],
+					"query": [
+						{
+							"key": "channel_id",
+							"value": "{{channel_id}}"
+						},
+						{
+							"key": "days",
+							"value": "30"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

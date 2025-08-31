@@ -71,3 +71,42 @@ class AsyncpgChannelRepository:
         """Get total number of channels."""
         async with self.pool.acquire() as conn:
             return await conn.fetchval("SELECT COUNT(*) FROM channels")
+
+    async def ensure_channel(
+        self, 
+        channel_id: int, 
+        username: str | None = None,
+        title: str | None = None,
+        is_supergroup: bool = False
+    ) -> dict[str, Any]:
+        """Ensure channel exists with UPSERT behavior for MTProto ingestion.
+        
+        Args:
+            channel_id: Telegram channel ID
+            username: Channel username (without @)
+            title: Channel title/name
+            is_supergroup: Whether channel is a supergroup
+            
+        Returns:
+            Dictionary with channel information
+        """
+        async with self.pool.acquire() as conn:
+            # Use UPSERT to handle existing channels
+            await conn.execute(
+                """
+                INSERT INTO channels (id, title, username, user_id)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (id) DO UPDATE SET
+                    title = COALESCE(EXCLUDED.title, channels.title),
+                    username = COALESCE(EXCLUDED.username, channels.username),
+                    updated_at = NOW()
+                """,
+                channel_id,
+                title or username or f"Channel_{channel_id}",
+                username,
+                0  # Default user_id for MTProto channels
+            )
+            
+            # Return the channel record
+            record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)
+            return dict(record) if record else {}

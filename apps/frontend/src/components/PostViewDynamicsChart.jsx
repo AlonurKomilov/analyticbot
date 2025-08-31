@@ -71,24 +71,6 @@ const PostViewDynamicsChart = () => {
     // Get store methods and data source
     const { fetchPostDynamics, dataSource } = useAppStore();
 
-    // Analytics data loading function with useCallback to prevent unnecessary re-renders
-    const loadDynamics = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            
-            // Use store method which respects data source configuration
-            const result = await fetchPostDynamics(timeRange);
-            setData(result.timeline || result.data || []);
-            
-        } catch (err) {
-            setError(err.message);
-            console.error('Analytics malumotlarini olishda xatolik:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [timeRange, fetchPostDynamics]);
-
     // Generate mock data based on time range
     const generateMockData = (range) => {
         const now = new Date();
@@ -140,19 +122,49 @@ const PostViewDynamicsChart = () => {
 
         // Load data on mount and when timeRange changes
     useEffect(() => {
-        loadDynamics();
-    }, [loadDynamics]);
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // Use store method which respects data source configuration
+                const result = await fetchPostDynamics(timeRange);
+                setData(result.timeline || result.data || []);
+                
+            } catch (err) {
+                setError(err.message);
+                console.error('Analytics malumotlarini olishda xatolik:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        loadData();
+    }, [timeRange, fetchPostDynamics]); // Direct dependencies
     
     // Listen for data source changes
     useEffect(() => {
         const handleDataSourceChange = () => {
             console.log('PostViewDynamicsChart: Data source changed, reloading...');
-            loadDynamics();
+            // Reload data when source changes
+            const loadData = async () => {
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await fetchPostDynamics(timeRange);
+                    setData(result.timeline || result.data || []);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadData();
         };
         
         window.addEventListener('dataSourceChanged', handleDataSourceChange);
         return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
-    }, [loadDynamics]); // loadDynamics added to dependencies
+    }, []); // Remove dependencies that cause re-renders
 
     // Auto-refresh functionality
     useEffect(() => {
@@ -162,38 +174,70 @@ const PostViewDynamicsChart = () => {
                           refreshInterval === '1m' ? 60000 : 
                           refreshInterval === '5m' ? 300000 : 30000;
 
-        const interval = setInterval(loadDynamics, intervalMs);
+        const interval = setInterval(() => {
+            const loadData = async () => {
+                try {
+                    setLoading(true);
+                    setError(null);
+                    const result = await fetchPostDynamics(timeRange);
+                    setData(result.timeline || result.data || []);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            loadData();
+        }, intervalMs);
         return () => clearInterval(interval);
-    }, [autoRefresh, refreshInterval, loadDynamics]);
+    }, [autoRefresh, refreshInterval, timeRange]); // Remove fetchPostDynamics to prevent infinite re-renders
 
-    // Chart data transformation
+    // Chart data transformation with enhanced validation
     const chartData = useMemo(() => {
-        if (!data || !Array.isArray(data) || data.length === 0) return [];
+        if (!data || !Array.isArray(data) || data.length === 0) {
+            console.log('PostViewDynamicsChart: No data available');
+            return [];
+        }
         
         try {
-            return data.map((point, index) => {
+            const transformedData = data.map((point, index) => {
                 // Ensure point is an object
                 if (!point || typeof point !== 'object') {
                     console.warn(`Invalid data point at index ${index}:`, point);
                     return null;
                 }
                 
-                return {
+                // Create safe data point with fallbacks
+                const safePoint = {
                     time: point.timestamp ? 
                         new Date(point.timestamp).toLocaleTimeString('en-US', { 
                             hour: '2-digit', 
                             minute: '2-digit' 
                         }) : 
                         point.time || `Point ${index + 1}`,
-                    views: Number(point.views) || 0,
-                    likes: Number(point.likes || point.reactions) || 0,
-                    shares: Number(point.shares || point.forwards) || 0,
-                    comments: Number(point.comments) || 0,
+                    views: Math.max(0, Number(point.views) || 0),
+                    likes: Math.max(0, Number(point.likes || point.reactions) || 0),
+                    shares: Math.max(0, Number(point.shares || point.forwards) || 0),
+                    comments: Math.max(0, Number(point.comments) || 0),
                     timestamp: point.timestamp || new Date().toISOString()
                 };
+                
+                // Validate that all numeric values are finite
+                if (!Number.isFinite(safePoint.views) || 
+                    !Number.isFinite(safePoint.likes) ||
+                    !Number.isFinite(safePoint.shares) || 
+                    !Number.isFinite(safePoint.comments)) {
+                    console.warn(`Invalid numeric values in data point ${index}:`, safePoint);
+                    return null;
+                }
+                
+                return safePoint;
             }).filter(Boolean); // Remove null entries
+            
+            console.log(`PostViewDynamicsChart: Transformed ${transformedData.length} data points`);
+            return transformedData;
         } catch (error) {
-            console.error('Error processing chart data:', error);
+            console.error('Error transforming chart data:', error);
             return [];
         }
     }, [data]);
@@ -393,19 +437,21 @@ const PostViewDynamicsChart = () => {
             )}
 
             {/* Chart */}
-            {!loading && chartData.length > 0 && (
+            {!loading && chartData.length > 0 && Array.isArray(chartData) && (
                 <Box sx={{ height: 400, mt: 2 }}>
                     <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
+                        <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis 
                                 dataKey="time" 
                                 tick={{ fontSize: 12 }}
                                 interval="preserveStartEnd"
+                                type="category"
                             />
                             <YAxis 
                                 tick={{ fontSize: 12 }}
                                 tickFormatter={(value) => value.toLocaleString()}
+                                type="number"
                             />
                             <Tooltip content={<CustomTooltip />} />
                             <Legend />

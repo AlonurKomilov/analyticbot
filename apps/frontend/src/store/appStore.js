@@ -90,8 +90,18 @@ export const useAppStore = create(
 
         // Data source control methods
         setDataSource: (source) => {
+            const previousSource = get().dataSource;
             set({ dataSource: source });
             localStorage.setItem('useRealAPI', source === 'api' ? 'true' : 'false');
+            
+            // If data source actually changed, dispatch event
+            if (previousSource !== source) {
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
+                        detail: { source, previousSource } 
+                    }));
+                }, 100);
+            }
         },
         
         // Check if using real API
@@ -115,6 +125,8 @@ export const useAppStore = create(
                         console.log('✅ Successfully loaded data from real API');
                     } catch (apiError) {
                         console.log('⚠️ Real API unavailable, auto-switching to demo data');
+                        console.log('API Error details:', apiError.message);
+                        
                         // Auto-switch to mock data when API fails
                         get().setDataSource('mock');
                         
@@ -411,6 +423,7 @@ export const useAppStore = create(
                         console.log('✅ Post dynamics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for post dynamics, using demo data');
+                        console.log('Analytics API Error:', apiError.message);
                         const { mockAnalyticsData } = await import('../utils/mockData.js');
                         response = mockAnalyticsData.postDynamics;
                     }

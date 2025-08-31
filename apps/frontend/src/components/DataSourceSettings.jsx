@@ -35,10 +35,16 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   const checkAPIStatus = async () => {
     setIsChecking(true);
     try {
-      const response = await fetch('/api/health', {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/health`, {
         method: 'GET',
-        timeout: 3000
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         setApiStatus('online');
@@ -46,7 +52,10 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
         setApiStatus('offline');
       }
     } catch (error) {
-      console.log('API check failed:', error.message);
+      // Only log API check errors in development or when API status changes
+      if (import.meta.env.DEV && apiStatus !== 'offline') {
+        console.log('API check failed:', error.message);
+      }
       setApiStatus('offline');
     } finally {
       setLastChecked(new Date());

@@ -1,6 +1,6 @@
 import { ErrorHandler } from './errorHandler.js';
 
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
@@ -14,6 +14,15 @@ class ApiClient {
         this.defaultHeaders = {
             'Content-Type': 'application/json',
         };
+        
+        // Debug logging for API configuration
+        if (import.meta.env.VITE_DEBUG === 'true') {
+            console.log('🔧 API Client Configuration:', {
+                baseURL: this.baseURL,
+                timeout: REQUEST_TIMEOUT,
+                maxRetries: MAX_RETRIES
+            });
+        }
     }
 
     /**
@@ -64,7 +73,34 @@ class ApiClient {
             const response = await fetch(url, config);
             clearTimeout(timeoutId);
 
-            const responseData = await response.json();
+            // Check content type before trying to parse JSON
+            const contentType = response.headers.get('content-type');
+            let responseData;
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    responseData = await response.json();
+                } catch (parseError) {
+                    // If JSON parsing fails, throw a more helpful error
+                    const error = new Error(`Invalid JSON response from API: ${parseError.message}`);
+                    error.response = {
+                        status: response.status,
+                        statusText: response.statusText,
+                        data: null
+                    };
+                    throw error;
+                }
+            } else {
+                // If not JSON, likely an error page or wrong endpoint
+                const textContent = await response.text();
+                const error = new Error(`API returned non-JSON response. Expected JSON but got: ${contentType || 'unknown content type'}`);
+                error.response = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: textContent.substring(0, 200) // First 200 chars for debugging
+                };
+                throw error;
+            }
 
             if (!response.ok) {
                 const error = new Error(responseData.detail || 'API request failed');

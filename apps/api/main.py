@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
 from apps.api.routers.analytics_router import router as analytics_router
+from apps.api.routers.analytics_v2 import router as analytics_v2_router
 from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
@@ -41,6 +42,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(analytics_router)
+app.include_router(analytics_v2_router)  # New Analytics Fusion API v2
 app.include_router(content_protection_router)
 app.include_router(superadmin_router)
 

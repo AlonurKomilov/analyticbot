@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material'; // CircularProgress qo'shildi
+import { Box, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material';
 import { useAppStore } from '../store/appStore.js';
 
 const AddChannel = () => {
-    // isLoading holatini ham store'dan olamiz
-    const { addChannel, addChannelStatus, isLoading } = useAppStore();
+    const { addChannel, isLoading, getError } = useAppStore();
     const [channelName, setChannelName] = useState('');
+    const [status, setStatus] = useState({ success: false, message: '' });
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         if (channelName.trim()) {
-            addChannel(channelName.trim());
-            setChannelName('');
+            try {
+                setStatus({ success: false, message: '' });
+                await addChannel(channelName.trim());
+                setChannelName('');
+                setStatus({ success: true, message: 'Channel added successfully!' });
+            } catch (error) {
+                setStatus({ success: false, message: error.message || 'Failed to add channel' });
+            }
         }
     };
+
+    const loading = isLoading('addChannel');
+    const error = getError('addChannel');
 
     return (
         <Box sx={{ mb: 3, p: 2, border: '1px solid #30363d', borderRadius: '6px' }}>
@@ -25,20 +34,20 @@ const AddChannel = () => {
                     placeholder="@channel_username"
                     value={channelName}
                     onChange={(e) => setChannelName(e.target.value)}
-                    disabled={isLoading} // So'rov paytida nofaol
+                    disabled={loading}
                 />
                 <Button
                     variant="contained"
                     onClick={handleAdd}
-                    disabled={isLoading} // So'rov paytida nofaol
-                    sx={{ minWidth: '80px' }} // Tugma o'lchami o'zgarib ketmasligi for
+                    disabled={loading}
+                    sx={{ minWidth: '80px' }}
                 >
-                    {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Add'}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Add'}
                 </Button>
             </Box>
-            {addChannelStatus.message && !isLoading && (
-                <Alert severity={addChannelStatus.success ? 'success' : 'error'} sx={{ mt: 2 }}>
-                    {addChannelStatus.message}
+            {(status.message || error) && !loading && (
+                <Alert severity={status.success && !error ? 'success' : 'error'} sx={{ mt: 2 }}>
+                    {error || status.message}
                 </Alert>
             )}
         </Box>

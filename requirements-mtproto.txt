@@ -1,0 +1,14 @@
+# MTProto requirements for Telegram API integration
+# Install with: pip install -r requirements-mtproto.txt
+# Only needed when MTPROTO_ENABLED=True
+
+# Telethon for Telegram client
+telethon>=1.34.0,<2.0.0
+
+# Additional dependencies for MTProto functionality
+cryptg>=0.4.0  # Fast cryptographic library for Telethon
+pyaes>=1.6.0   # Alternative cryptographic backend
+
+# Optional performance improvements
+hachoir>=3.0.0  # Better media metadata extraction
+pillow>=10.0.0  # Image processing for media handling

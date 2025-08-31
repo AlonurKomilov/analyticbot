@@ -65,7 +65,8 @@ const PostCreator = React.memo(() => {
         text: '',
         selectedChannel: '',
         scheduleTime: null,
-        hasMedia: false
+        hasMedia: false,
+        buttons: []
     }, validatePostForm);
 
     // Update hasMedia when pendingMedia changes
@@ -83,14 +84,14 @@ const PostCreator = React.memo(() => {
 
     // Optimized button handlers
     const handleAddButton = useCallback((newButton) => {
-        setButtons(prevButtons => [...prevButtons, newButton]);
+        updateField('buttons', [...formState.buttons, newButton]);
         hapticFeedback('light');
-    }, [hapticFeedback]);
+    }, [hapticFeedback, updateField, formState.buttons]);
 
     const handleRemoveButton = useCallback((index) => {
-        setButtons(buttons.filter((_, i) => i !== index));
+        updateField('buttons', formState.buttons.filter((_, i) => i !== index));
         hapticFeedback('light');
-    }, [buttons, hapticFeedback]);
+    }, [formState.buttons, hapticFeedback, updateField]);
 
     const handleSchedulePost = useCallback(async () => {
         if (!validateForm()) return;

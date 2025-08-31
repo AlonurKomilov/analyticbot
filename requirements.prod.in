@@ -18,6 +18,15 @@ redis==5.*
 pydantic==2.*
 pydantic-settings==2.*
 
+# Dependency Injection
+dependency-injector==4.*
+
+# Content Protection
+Pillow>=10.0.0  # Image watermarking and processing
+
+# URL and Text Processing
+urlextract==1.*  # Enhanced URL extraction from text
+
 # Utils
 python-dotenv==1.*
 python-multipart==0.0.*

@@ -358,7 +358,7 @@ class ContentOptimizer:
             "emoji_count": len(emoji.emoji_list(text)),
             "url_count": len(
                 re.findall(
-                    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                    r"https?://(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,6}(?:/[^\s<>\"']*)?",
                     text,
                 )
             ),

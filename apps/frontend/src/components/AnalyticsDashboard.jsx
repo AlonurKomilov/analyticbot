@@ -11,7 +11,6 @@ import {
     CardContent,
     Chip,
     Alert,
-    Fab,
     SpeedDial,
     SpeedDialAction,
     SpeedDialIcon,
@@ -63,7 +62,7 @@ const AnalyticsDashboard = () => {
     const [showSettings, setShowSettings] = useState(false);
     
     // Store integration
-    const { dataSource, setDataSource, fetchData, isUsingRealAPI } = useAppStore();
+    const { dataSource, setDataSource, fetchData, isUsingRealAPI, clearAnalyticsData } = useAppStore();
 
     // Auto-refresh functionality
     useEffect(() => {
@@ -81,7 +80,19 @@ const AnalyticsDashboard = () => {
         
         try {
             await fetchData(newSource);
+            
+            // Clear analytics cache to force components to reload with new data source
+            clearAnalyticsData();
+            
             setLastUpdated(new Date());
+            
+            // Force refresh of analytics data with new source
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
+                    detail: { source: newSource } 
+                }));
+            }, 100);
+            
         } catch (error) {
             console.error('Error switching data source:', error);
         } finally {

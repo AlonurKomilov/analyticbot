@@ -37,7 +37,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     try {
       const response = await fetch('/api/health', {
         method: 'GET',
-        timeout: 5000
+        timeout: 3000
       });
       
       if (response.ok) {

@@ -38,6 +38,7 @@ class PerformanceConfig:
     TASK_BATCH_SIZE = 50
     TASK_DELAY = 0.1
     MAX_RETRIES = 3
+    TIMEOUT = 30  # General timeout constant
 
 
 class RedisCache:

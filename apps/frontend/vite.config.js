@@ -22,8 +22,7 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom'],
           'mui-vendor': [
             '@mui/material',
-            '@mui/icons-material',
-            '@mui/x-date-pickers'
+            '@mui/icons-material'
           ],
           'utils': [
             './src/utils/apiClient.js',

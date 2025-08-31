@@ -26,8 +26,7 @@ import {
 import {
     Search as SearchIcon,
     Refresh as RefreshIcon,
-    GetApp as DownloadIcon,
-    Share as ShareIcon,
+    GetApp as ShareIcon,
     Info as InfoIcon,
     Image as ImageIcon,
     VideoFile as VideoIcon,

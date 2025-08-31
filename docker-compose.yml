@@ -36,6 +36,41 @@ services:
       timeout: 5s
       retries: 5
 
+  # ---------- MTProto Service (Feature Flagged) ----------
+  mtproto:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile
+      target: api  # Reuse API image for now
+    command: python -m apps.mtproto
+    container_name: analyticbot-mtproto
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
+      REDIS_URL: redis://redis:6379/0
+      # MTProto feature flag - disabled by default
+      MTPROTO_ENABLED: ${MTPROTO_ENABLED:-false}
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID:-}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH:-}
+      TELEGRAM_SESSION_NAME: ${TELEGRAM_SESSION_NAME:-mtproto_session}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    env_file: 
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./apps/mtproto:/app/apps/mtproto:ro
+      - ./core:/app/core:ro
+      - ./infra:/app/infra:ro
+    profiles:
+      - mtproto  # Only start when explicitly requested
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # ---------- API Service ----------
   api:
     build:

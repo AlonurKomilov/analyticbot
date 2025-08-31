@@ -33,6 +33,7 @@ import {
     Star as StarIcon,
     CalendarToday as CalendarIcon
 } from '@mui/icons-material';
+import { useAppStore } from '../store/appStore.js';
 
 const TopPostsTable = () => {
     const [timeFilter, setTimeFilter] = useState('today');
@@ -42,6 +43,9 @@ const TopPostsTable = () => {
     const [posts, setPosts] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedPostId, setSelectedPostId] = useState(null);
+    
+    // Get store methods and data source
+    const { fetchTopPosts, dataSource } = useAppStore();
 
     // Top posts loading data
     const loadTopPosts = useCallback(async () => {
@@ -49,25 +53,17 @@ const TopPostsTable = () => {
             setLoading(true);
             setError(null);
             
-            // Try to fetch from API, fallback to mock data
-            try {
-                const response = await fetch(`http://localhost:8000/api/v1/analytics/top-posts?period=${timeFilter}&sort=${sortBy}`);
-                if (!response.ok) throw new Error('API not available');
-                
-                const result = await response.json();
-                setPosts(result.posts || []);
-            } catch {
-                // Generate mock data for demonstration
-                const mockPosts = generateMockPosts(timeFilter, sortBy);
-                setPosts(mockPosts);
-            }
+            // Use store method which respects data source configuration  
+            const result = await fetchTopPosts(timeFilter, sortBy);
+            setPosts(result.posts || []);
+            
         } catch (err) {
             setError(err.message);
             console.error('Top posts malumotlarini olishda xatolik:', err);
         } finally {
             setLoading(false);
         }
-    }, [timeFilter, sortBy]);
+    }, [timeFilter, sortBy, fetchTopPosts]);
 
     // Generate mock posts data
     const generateMockPosts = (timeFilter, sortBy) => {
@@ -167,6 +163,17 @@ const TopPostsTable = () => {
     // Component mount and filter when changes load data
     useEffect(() => {
         loadTopPosts();
+    }, [loadTopPosts]);
+    
+    // Listen for data source changes
+    useEffect(() => {
+        const handleDataSourceChange = () => {
+            console.log('TopPostsTable: Data source changed, reloading...');
+            loadTopPosts();
+        };
+        
+        window.addEventListener('dataSourceChanged', handleDataSourceChange);
+        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
     }, [loadTopPosts]);
 
     // Menu handlers

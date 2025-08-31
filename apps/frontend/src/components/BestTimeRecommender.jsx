@@ -21,12 +21,9 @@ import {
     ListItemAvatar,
     ListItemText,
     ListItemSecondaryAction,
-    IconButton,
     Divider
 } from '@mui/material';
 import {
-    AccessTime as TimeIcon,
-    TrendingUp as TrendingUpIcon,
     Psychology as AIIcon,
     Schedule as ScheduleIcon,
     Star as StarIcon,
@@ -35,6 +32,7 @@ import {
     Notifications as NotifyIcon,
     CheckCircle as CheckIcon
 } from '@mui/icons-material';
+import { useAppStore } from '../store/appStore.js';
 
 const BestTimeRecommender = () => {
     const [timeFrame, setTimeFrame] = useState('week');
@@ -43,34 +41,64 @@ const BestTimeRecommender = () => {
     const [error, setError] = useState(null);
     const [recommendations, setRecommendations] = useState(null);
     const [aiInsights, setAiInsights] = useState([]);
+    
+    // Get store methods and data source
+    const { fetchBestTime, dataSource } = useAppStore();
 
-    // Load best time recommendations loading
+    // Load best time recommendations using store
     const loadRecommendations = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
             
-            // Try to fetch from API, fallback to mock data
-            try {
-                const response = await fetch(`http://localhost:8000/api/v1/analytics/best-posting-time?timeframe=${timeFrame}&content_type=${contentType}`);
-                if (!response.ok) throw new Error('API not available');
-                
-                const result = await response.json();
-                setRecommendations(result);
-                setAiInsights(result.ai_recommendations || []);
-            } catch {
-                // Generate mock data for demonstration
-                const mockData = generateMockRecommendations(timeFrame, contentType);
-                setRecommendations(mockData);
-                setAiInsights(mockData.ai_recommendations || []);
-            }
+            // Use store method which respects data source configuration
+            const result = await fetchBestTime(timeFrame, contentType);
+            setRecommendations(result);
+            
+            // Generate AI insights based on the data
+            generateAIInsights(result);
+            
         } catch (err) {
             setError(err.message);
-            console.error('Best time malumotlarini olishda xatolik:', err);
+            console.error('Best time recommendations olishda xatolik:', err);
         } finally {
             setLoading(false);
         }
-    }, [timeFrame, contentType]);
+    }, [timeFrame, contentType, fetchBestTime]);
+
+    // Generate AI insights based on recommendations data
+    const generateAIInsights = (data) => {
+        if (!data) return;
+        
+        const insights = [];
+        
+        if (data.optimal) {
+            insights.push({
+                type: 'optimal',
+                title: `Eng yaxshi vaqt: ${data.optimal.time}`,
+                description: `${data.optimal.confidence}% ishonch bilan, ${data.optimal.expectedEngagement} engagement kutilmoqda`,
+                confidence: data.optimal.confidence
+            });
+        }
+        
+        setAiInsights(insights);
+    };
+
+    // Load data on mount and when dependencies change
+    useEffect(() => {
+        loadRecommendations();
+    }, [loadRecommendations]);
+    
+    // Listen for data source changes
+    useEffect(() => {
+        const handleDataSourceChange = () => {
+            console.log('BestTimeRecommender: Data source changed, reloading...');
+            loadRecommendations();
+        };
+        
+        window.addEventListener('dataSourceChanged', handleDataSourceChange);
+        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
+    }, [loadRecommendations]);
 
     // Generate mock recommendations data
     const generateMockRecommendations = (timeFrame, contentType) => {

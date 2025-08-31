@@ -15,8 +15,6 @@ import {
     CardContent
 } from '@mui/material';
 import {
-    LineChart,
-    Line,
     XAxis,
     YAxis,
     CartesianGrid,
@@ -34,6 +32,34 @@ import {
 } from '@mui/icons-material';
 import { useAppStore } from '../store/appStore.js';
 
+// Error Boundary Component
+class ChartErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('Chart Error:', error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <Alert severity="error" sx={{ m: 2 }}>
+                    Chart ma'lumotlarini ko'rsatishda xatolik yuz berdi. Sahifani yangilang.
+                </Alert>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 const PostViewDynamicsChart = () => {
     const [timeRange, setTimeRange] = useState('24h');
     const [loading, setLoading] = useState(true);
@@ -42,8 +68,8 @@ const PostViewDynamicsChart = () => {
     const [autoRefresh] = useState(true); // setAutoRefresh removed
     const [refreshInterval, setRefreshInterval] = useState('30s');
     
-    // Get store methods
-    const { fetchPostDynamics } = useAppStore();
+    // Get store methods and data source
+    const { fetchPostDynamics, dataSource } = useAppStore();
 
     // Analytics data loading function with useCallback to prevent unnecessary re-renders
     const loadDynamics = useCallback(async () => {
@@ -51,15 +77,10 @@ const PostViewDynamicsChart = () => {
             setLoading(true);
             setError(null);
             
-            // Try to use store method first, fallback to mock data
-            try {
-                const result = await fetchPostDynamics(timeRange);
-                setData(result.data || []);
-            } catch {
-                // Generate mock data for demonstration
-                const mockData = generateMockData(timeRange);
-                setData(mockData);
-            }
+            // Use store method which respects data source configuration
+            const result = await fetchPostDynamics(timeRange);
+            setData(result.timeline || result.data || []);
+            
         } catch (err) {
             setError(err.message);
             console.error('Analytics malumotlarini olishda xatolik:', err);
@@ -117,9 +138,20 @@ const PostViewDynamicsChart = () => {
         return points;
     };
 
-    // Load data when component mounts and timeRange changes
+        // Load data on mount and when timeRange changes
     useEffect(() => {
         loadDynamics();
+    }, [loadDynamics]);
+    
+    // Listen for data source changes
+    useEffect(() => {
+        const handleDataSourceChange = () => {
+            console.log('PostViewDynamicsChart: Data source changed, reloading...');
+            loadDynamics();
+        };
+        
+        window.addEventListener('dataSourceChanged', handleDataSourceChange);
+        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
     }, [loadDynamics]); // loadDynamics added to dependencies
 
     // Auto-refresh functionality
@@ -136,40 +168,69 @@ const PostViewDynamicsChart = () => {
 
     // Chart data transformation
     const chartData = useMemo(() => {
-        if (!data || !Array.isArray(data)) return [];
+        if (!data || !Array.isArray(data) || data.length === 0) return [];
         
-        return data.map(point => ({
-            time: new Date(point.timestamp).toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            }),
-            views: point.views || 0,
-            likes: point.likes || 0,
-            shares: point.shares || 0,
-            comments: point.comments || 0,
-            timestamp: point.timestamp
-        }));
+        try {
+            return data.map((point, index) => {
+                // Ensure point is an object
+                if (!point || typeof point !== 'object') {
+                    console.warn(`Invalid data point at index ${index}:`, point);
+                    return null;
+                }
+                
+                return {
+                    time: point.timestamp ? 
+                        new Date(point.timestamp).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        }) : 
+                        point.time || `Point ${index + 1}`,
+                    views: Number(point.views) || 0,
+                    likes: Number(point.likes || point.reactions) || 0,
+                    shares: Number(point.shares || point.forwards) || 0,
+                    comments: Number(point.comments) || 0,
+                    timestamp: point.timestamp || new Date().toISOString()
+                };
+            }).filter(Boolean); // Remove null entries
+        } catch (error) {
+            console.error('Error processing chart data:', error);
+            return [];
+        }
     }, [data]);
 
-    // Summary statistics
+    // Summary statistics with error handling
     const summaryStats = useMemo(() => {
-        if (!data || data.length === 0) return null;
+        if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        const latest = data[data.length - 1] || {};
-        const previous = data[data.length - 2] || {};
-        const total = data.reduce((sum, item) => sum + (item.views || 0), 0);
-        const avgViews = Math.round(total / data.length);
-        const growth = latest.views && previous.views ? 
-            ((latest.views - previous.views) / previous.views * 100).toFixed(1) : 0;
+        try {
+            const latest = data[data.length - 1] || {};
+            const previous = data[data.length - 2] || {};
+            
+            const safeNumber = (val) => Number(val) || 0;
+            const total = data.reduce((sum, item) => sum + safeNumber(item.views), 0);
+            const avgViews = Math.round(total / data.length);
+            const growth = safeNumber(latest.views) && safeNumber(previous.views) ? 
+                ((safeNumber(latest.views) - safeNumber(previous.views)) / safeNumber(previous.views) * 100).toFixed(1) : 0;
 
-        return {
-            totalViews: total,
-            currentViews: latest.views || 0,
-            averageViews: avgViews,
-            growthRate: parseFloat(growth),
-            peakViews: Math.max(...data.map(d => d.views || 0)),
-            dataPoints: data.length
-        };
+            return {
+                totalViews: total,
+                currentViews: safeNumber(latest.views),
+                averageViews: avgViews,
+                growthRate: parseFloat(growth),
+                peakViews: Math.max(...data.map(d => safeNumber(d.views))),
+                dataPoints: data.length
+            };
+        } catch (error) {
+            console.error('Error calculating summary stats:', error);
+            return {
+                totalViews: 0,
+                currentViews: 0,
+                averageViews: 0,
+                growthRate: 0,
+                peakViews: 0,
+                dataPoints: 0
+            };
+        }
     }, [data]);
 
     // Tooltip formatter
@@ -435,4 +496,10 @@ const PostViewDynamicsChart = () => {
     );
 };
 
-export default PostViewDynamicsChart;
+export default function PostViewDynamicsChartWrapper() {
+    return (
+        <ChartErrorBoundary>
+            <PostViewDynamicsChart />
+        </ChartErrorBoundary>
+    );
+}

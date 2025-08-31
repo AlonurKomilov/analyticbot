@@ -7,18 +7,18 @@ export const mockAnalyticsData = {
   // Post dynamics for charts
   postDynamics: {
     timeline: [
-      { time: '00:00', views: 1250, reactions: 45, forwards: 12 },
-      { time: '02:00', views: 890, reactions: 32, forwards: 8 },
-      { time: '04:00', views: 650, reactions: 18, forwards: 5 },
-      { time: '06:00', views: 1100, reactions: 38, forwards: 15 },
-      { time: '08:00', views: 2350, reactions: 89, forwards: 32 },
-      { time: '10:00', views: 3200, reactions: 124, forwards: 45 },
-      { time: '12:00', views: 4100, reactions: 156, forwards: 67 },
-      { time: '14:00', views: 3800, reactions: 142, forwards: 52 },
-      { time: '16:00', views: 4500, reactions: 178, forwards: 78 },
-      { time: '18:00', views: 5200, reactions: 198, forwards: 89 },
-      { time: '20:00', views: 4800, reactions: 165, forwards: 72 },
-      { time: '22:00', views: 3500, reactions: 125, forwards: 48 }
+      { timestamp: '2025-08-31T00:00:00Z', views: 1250, likes: 45, shares: 12, comments: 8 },
+      { timestamp: '2025-08-31T02:00:00Z', views: 890, likes: 32, shares: 8, comments: 5 },
+      { timestamp: '2025-08-31T04:00:00Z', views: 650, likes: 18, shares: 5, comments: 3 },
+      { timestamp: '2025-08-31T06:00:00Z', views: 1100, likes: 38, shares: 15, comments: 7 },
+      { timestamp: '2025-08-31T08:00:00Z', views: 2350, likes: 89, shares: 32, comments: 15 },
+      { timestamp: '2025-08-31T10:00:00Z', views: 3200, likes: 124, shares: 45, comments: 22 },
+      { timestamp: '2025-08-31T12:00:00Z', views: 4100, likes: 156, shares: 67, comments: 31 },
+      { timestamp: '2025-08-31T14:00:00Z', views: 3800, likes: 142, shares: 52, comments: 28 },
+      { timestamp: '2025-08-31T16:00:00Z', views: 4500, likes: 178, shares: 78, comments: 35 },
+      { timestamp: '2025-08-31T18:00:00Z', views: 5200, likes: 198, shares: 89, comments: 42 },
+      { timestamp: '2025-08-31T20:00:00Z', views: 4800, likes: 165, shares: 72, comments: 38 },
+      { timestamp: '2025-08-31T22:00:00Z', views: 3500, likes: 125, shares: 48, comments: 25 }
     ],
     summary: {
       totalViews: 35340,
@@ -249,7 +249,7 @@ const generateMockInitialDataEnhanced = () => ({
 /**
  * Simulates API delay for realistic loading experience
  */
-export const mockApiCall = async (data, delay = 800) => {
+export const mockApiCall = async (data, delay = 300) => {
   await new Promise(resolve => setTimeout(resolve, delay));
   return data;
 };

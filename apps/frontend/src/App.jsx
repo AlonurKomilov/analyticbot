@@ -125,7 +125,7 @@ function App() {
         setTimeout(() => {
             setIsInitialized(true); // Show UI immediately
             initializeApp(); // Load data in background
-        }, 500); // Optimized loading timeout
+        }, 300); // Optimized loading timeout
     }, [store]);
 
     const handleTabChange = (event, newValue) => {

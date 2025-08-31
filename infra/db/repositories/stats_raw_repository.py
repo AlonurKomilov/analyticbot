@@ -206,3 +206,9 @@ class AsyncpgStatsRawRepository:
                 "earliest_fetch": record["earliest_fetch"],
                 "latest_fetch": record["latest_fetch"]
             }
+        
+        return {}
+
+
+# Alias for backwards compatibility and cleaner imports
+StatsRawRepository = AsyncpgStatsRawRepository

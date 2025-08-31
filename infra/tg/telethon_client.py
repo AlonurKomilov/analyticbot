@@ -36,7 +36,7 @@ class TelethonTGClient:
         """
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self._client: Optional[TelegramClient] = None
+        self._client = None  # Type will be inferred, TelegramClient | None
         self._started = False
         
         # Validate configuration when features are enabled

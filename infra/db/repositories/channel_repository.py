@@ -110,3 +110,7 @@ class AsyncpgChannelRepository:
             # Return the channel record
             record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)
             return dict(record) if record else {}
+
+
+# Alias for backwards compatibility and cleaner imports
+ChannelRepository = AsyncpgChannelRepository

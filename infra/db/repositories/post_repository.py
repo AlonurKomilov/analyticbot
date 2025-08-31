@@ -266,3 +266,7 @@ class AsyncpgPostRepository:
                 results.append(post_dict)
             
             return results
+
+
+# Alias for backwards compatibility and cleaner imports
+PostRepository = AsyncpgPostRepository

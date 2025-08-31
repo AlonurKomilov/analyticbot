@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 from dependency_injector.wiring import Provide, inject
-from typing import Protocol, runtime_checkable, Any, Optional
+from typing import Protocol, Any, Optional
 import asyncio
 import logging
 
@@ -249,7 +249,6 @@ class RepositoryContainer:
         })()
 
 
-@runtime_checkable
 class MTProtoContainer(containers.DeclarativeContainer):
     """Dependency injection container for MTProto application.
     

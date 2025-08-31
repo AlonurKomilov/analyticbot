@@ -274,3 +274,7 @@ class AsyncpgPostMetricsRepository:
         if views == 0:
             return 0.0
         return (engagements / views) * 100.0
+
+
+# Alias for backwards compatibility and cleaner imports
+PostMetricsRepository = AsyncpgPostMetricsRepository

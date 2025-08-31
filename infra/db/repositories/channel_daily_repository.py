@@ -104,5 +104,9 @@ class AsyncpgChannelDailyRepository:
                     deleted_count = int(result.split(" ")[1])
                 except (IndexError, ValueError):
                     pass
-                    
+            
             return deleted_count
+
+
+# Alias for backwards compatibility and cleaner imports  
+ChannelDailyRepository = AsyncpgChannelDailyRepository

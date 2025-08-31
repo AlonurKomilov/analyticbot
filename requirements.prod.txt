@@ -177,3 +177,19 @@ websockets==15.0.1
     # via uvicorn
 yarl==1.20.1
     # via aiohttp
+
+# Phase 4.6 Additional Dependencies
+telethon>=1.32.0
+    # via -r requirements.prod.in (MTProto client)
+slowapi>=0.1.9
+    # via -r requirements.prod.in (rate limiting)
+opentelemetry-api>=1.20.0
+    # via -r requirements.prod.in (observability - optional)
+opentelemetry-sdk>=1.20.0
+    # via -r requirements.prod.in (observability - optional)
+opentelemetry-exporter-otlp-proto-grpc>=1.20.0
+    # via -r requirements.prod.in (observability - optional)
+opentelemetry-instrumentation-requests>=0.41b0
+    # via -r requirements.prod.in (observability - optional)
+opentelemetry-instrumentation-asyncpg>=0.41b0
+    # via -r requirements.prod.in (observability - optional)

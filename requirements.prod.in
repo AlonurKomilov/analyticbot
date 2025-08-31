@@ -21,6 +21,19 @@ pydantic-settings==2.*
 # Dependency Injection
 dependency-injector==4.*
 
+# Telegram Client
+telethon>=1.32.0
+
+# Rate Limiting
+slowapi>=0.1.9
+
+# Observability (Optional - for production monitoring)
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-exporter-otlp-proto-grpc>=1.20.0
+opentelemetry-instrumentation-requests>=0.41b0
+opentelemetry-instrumentation-asyncpg>=0.41b0
+
 # Content Protection
 Pillow>=10.0.0  # Image watermarking and processing
 

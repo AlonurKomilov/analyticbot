@@ -1,0 +1,7 @@
+# Include production code directories
+graft apps
+graft core
+graft infra
+
+# Exclude archived documentation from packages
+prune docs/_archive

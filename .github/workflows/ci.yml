@@ -50,6 +50,11 @@ jobs:
           python -c "import apps.api.main; print('API OK')"
           python -c "import apps.bot.run_bot; print('BOT OK')"
 
+      - name: Check for duplicate code
+        run: |
+          echo "🔍 Checking for structural code duplicates in production code..."
+          python3 scripts/dup_guard.py
+
       - name: Check test file syntax
         run: |
           echo "🔍 Checking test files for syntax issues..."

@@ -1,0 +1,4 @@
+# Git attributes for AnalyticBot
+
+# Exclude docs/_archive from exports and distribution packages
+docs/_archive/ export-ignore

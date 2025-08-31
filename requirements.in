@@ -1,8 +1,8 @@
 # AnalyticBot Dependencies - Development & Runtime
 # Core Framework
-aiogram==3.*
+aiogram==3.22.*
 fastapi==0.116.*
-uvicorn[standard]==0.30.*
+uvicorn[standard]==0.35.*
 
 # Database
 SQLAlchemy[asyncio]==2.*
@@ -12,7 +12,7 @@ alembic==1.*
 
 # Task Queue
 celery[redis]==5.*
-redis==5.*
+redis==6.*
 
 # Data & Validation
 pydantic==2.*

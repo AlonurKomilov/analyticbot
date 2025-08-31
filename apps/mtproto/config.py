@@ -176,6 +176,8 @@ class MTProtoSettings(BaseSettings):
         description="Logging level for MTProto application"
     )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": False,
+        "extra": "ignore"  # Ignore extra environment variables
+    }

@@ -8,8 +8,8 @@ from datetime import datetime
 from typing import Annotated
 import hashlib
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Request
+from fastapi.responses import JSONResponse, Response
 
 from apps.api.schemas.analytics_v2 import (
     OverviewResponse, SeriesResponse, PostListResponse, EdgeListResponse,
@@ -51,6 +51,7 @@ async def health_check():
 @router.get("/channels/{channel_id}/overview", response_model=OverviewResponse)
 async def get_channel_overview(
     channel_id: int,
+    request: Request,
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
@@ -58,10 +59,19 @@ async def get_channel_overview(
 ):
     """Get channel overview analytics"""
     try:
-        # Generate cache key
+        # Generate cache key and ETag
         cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("overview", cache_params, last_updated)
+        etag = f'"{hashlib.sha1(f"{cache_key}:{last_updated}".encode()).hexdigest()}"' if last_updated else None
+        
+        # Check If-None-Match header for 304 response
+        if_none_match = request.headers.get("if-none-match")
+        if etag and if_none_match == etag:
+            return Response(status_code=304, headers={
+                "Cache-Control": "public, max-age=60",
+                "ETag": etag
+            })
         
         # Try cache first
         cached_data = await cache.get_json(cache_key)
@@ -71,7 +81,7 @@ async def get_channel_overview(
                 content=cached_data,
                 headers={
                     "Cache-Control": "public, max-age=60",
-                    "ETag": f'"{hashlib.md5(f"{cache_key}:{last_updated}".encode()).hexdigest()}"' if last_updated else None
+                    "ETag": etag
                 }
             )
         
@@ -89,7 +99,7 @@ async def get_channel_overview(
             content=response_dict,
             headers={
                 "Cache-Control": "public, max-age=60",
-                "ETag": f'"{hashlib.md5(f"{cache_key}:{last_updated}".encode()).hexdigest()}"' if last_updated else None
+                "ETag": etag
             }
         )
         

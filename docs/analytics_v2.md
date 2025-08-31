@@ -167,13 +167,14 @@ Analysis of traffic sources and referral patterns.
 ```
 
 ### 6. Trending Analysis Endpoint
-**GET** `/trending?channel_id=<id>&days=<num>`
+**GET** `/trending?channel_id=<id>&days=<num>&method=<algorithm>`
 
 Statistical trending analysis using Z-score and EWMA algorithms.
 
 **Parameters:**
 - `channel_id` (required): Target channel ID
 - `days` (optional): Time period, default 30 days
+- `method` (optional): Algorithm choice - "zscore" or "ewma", default "zscore"
 
 **Response Example:**
 ```json
@@ -223,6 +224,8 @@ When data sources are unavailable:
 - **Cache Keys**: Include channel_id, endpoint, parameters, and user permissions
 - **Cache Invalidation**: Time-based TTL with manual invalidation for critical updates
 - **Cache Headers**: ETag and Last-Modified for client-side caching
+- **ETag Support**: SHA1-based ETags for conditional requests (304 Not Modified)
+- **Cache-Control**: Public caching with 60-second max-age for static content
 
 ### Rate Limiting
 - **Authenticated Users**: 100 requests/minute

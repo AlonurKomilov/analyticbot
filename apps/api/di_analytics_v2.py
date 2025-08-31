@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import Depends
 
 from core.services.analytics_fusion_service import AnalyticsFusionService
-from infrastructure.cache.redis_cache import create_cache_adapter
+from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository

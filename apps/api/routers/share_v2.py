@@ -14,6 +14,8 @@ from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from pydantic import BaseModel
 import aiohttp
 
+from apps.api.middleware.rate_limit import check_creation_rate_limit, check_access_rate_limit
+
 from config.settings import Settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
 from infra.db.repositories.shared_reports_repository import AsyncPgSharedReportsRepository
@@ -96,7 +98,8 @@ async def create_share_link(
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
     request: Request = None,
-    _: None = Depends(check_share_enabled)
+    _: None = Depends(check_share_enabled),
+    __: None = Depends(check_creation_rate_limit)
 ) -> ShareLinkResponse:
     """Create shareable link for analytics report"""
     
@@ -174,7 +177,9 @@ async def access_shared_report(
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     chart_renderer: Optional[ChartRenderer] = Depends(get_chart_renderer),
-    _: None = Depends(check_share_enabled)
+    request: Request = None,
+    _: None = Depends(check_share_enabled),
+    __: None = Depends(check_access_rate_limit)
 ):
     """Access shared report by token"""
     try:

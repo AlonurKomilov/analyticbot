@@ -11,18 +11,16 @@ Test Structure:
 - TestTelegramStateManagement: Bot state and session management testing
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
-import json
 import hashlib
 import hmac
+import json
 from datetime import datetime
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
 import httpx
-from fastapi.testclient import TestClient
+import pytest
 
 # Mock Telegram API responses and payloads
 MOCK_TELEGRAM_RESPONSES = {
@@ -490,7 +488,7 @@ class TestTelegramStateManagement:
         # Mock multi-user session storage
         sessions = {}
         
-        def manage_user_session(user_id: int, action: str, data: Dict[str, Any] = None):
+        def manage_user_session(user_id: int, action: str, data: dict[str, Any] = None):
             if action == "create":
                 sessions[user_id] = {
                     "user_id": user_id,

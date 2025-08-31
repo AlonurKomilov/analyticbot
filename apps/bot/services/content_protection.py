@@ -4,17 +4,13 @@ Advanced watermarking and premium content features
 """
 
 import asyncio
-import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union, Literal
+from typing import Literal
 from uuid import uuid4
 
 from PIL import Image, ImageDraw, ImageFont
-from aiogram.types import InputFile
 from pydantic import BaseModel
-
-from config import settings
 
 
 class WatermarkConfig(BaseModel):
@@ -36,7 +32,7 @@ class ContentProtectionService:
     
     async def add_image_watermark(
         self, 
-        image_path: Union[str, Path], 
+        image_path: str | Path, 
         config: WatermarkConfig
     ) -> Path:
         """Add watermark to image using Pillow"""
@@ -102,7 +98,7 @@ class ContentProtectionService:
     
     async def add_video_watermark(
         self, 
-        video_path: Union[str, Path], 
+        video_path: str | Path, 
         config: WatermarkConfig
     ) -> Path:
         """Add watermark to video using FFmpeg"""
@@ -213,8 +209,8 @@ class ContentProtectionService:
         self, 
         user_id: int, 
         content_type: str,
-        file_path: Optional[Path] = None,
-        text_content: Optional[str] = None
+        file_path: Path | None = None,
+        text_content: str | None = None
     ) -> dict:
         """Apply comprehensive content protection for premium users"""
         
@@ -339,7 +335,7 @@ class PremiumEmojiService:
                 text += signature
         
         # Get available custom emojis for tier
-        available_emojis = await PremiumEmojiService.get_premium_emoji_pack(user_tier)
+        await PremiumEmojiService.get_premium_emoji_pack(user_tier)
         
         # Create entities for custom emojis (if any in text)
         entities = []

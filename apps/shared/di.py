@@ -4,18 +4,23 @@ Minimal, practical skeleton for Clean Architecture
 """
 
 from dataclasses import dataclass
-from typing import Optional
-import asyncpg
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine, async_sessionmaker
 
-from core.repositories.interfaces import UserRepository, AdminRepository
+import asyncpg
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
+from core.repositories.interfaces import AdminRepository, UserRepository
 from infra.db.repositories import (
-    AsyncpgUserRepository,
     AsyncpgAdminRepository,
     AsyncpgAnalyticsRepository,
     AsyncpgChannelRepository,
     AsyncpgPaymentRepository,
-    AsyncpgPlanRepository
+    AsyncpgPlanRepository,
+    AsyncpgUserRepository,
 )
 
 
@@ -32,9 +37,9 @@ class Container:
     
     def __init__(self, settings: Settings):
         self.settings = settings
-        self._engine: Optional[AsyncEngine] = None
-        self._session_factory: Optional[async_sessionmaker[AsyncSession]] = None
-        self._asyncpg_pool: Optional[asyncpg.Pool] = None
+        self._engine: AsyncEngine | None = None
+        self._session_factory: async_sessionmaker[AsyncSession] | None = None
+        self._asyncpg_pool: asyncpg.Pool | None = None
 
     # Database connections
     async def engine(self) -> AsyncEngine:
@@ -117,7 +122,7 @@ class Container:
 
 
 # Global container instance (to be initialized in main)
-_container: Optional[Container] = None
+_container: Container | None = None
 
 
 def get_container() -> Container:

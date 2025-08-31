@@ -11,19 +11,16 @@ Test Structure:
 - TestPaymentErrorHandling: Payment failure scenarios and error handling
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
-import json
 import hashlib
 import hmac
-from datetime import datetime
+import json
 import uuid
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
 import httpx
-from fastapi.testclient import TestClient
+import pytest
 
 # Mock payment provider responses
 MOCK_STRIPE_RESPONSES = {
@@ -452,7 +449,7 @@ class TestPaymentWebhookProcessing:
         """Test webhook idempotency to prevent duplicate processing"""
         processed_events = set()
         
-        def process_webhook_event(event_id: str, event_data: Dict[str, Any]):
+        def process_webhook_event(event_id: str, event_data: dict[str, Any]):
             if event_id in processed_events:
                 return {"status": "duplicate", "processed": False}
             

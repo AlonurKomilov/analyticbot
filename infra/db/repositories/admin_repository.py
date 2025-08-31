@@ -3,7 +3,7 @@ Admin Repository Implementation
 Concrete implementation of AdminRepository interface
 """
 
-from typing import Optional
+
 import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ class AsyncpgAdminRepository(IAdminRepository):
     def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 
-    async def get_admin_by_username(self, username: str) -> Optional[dict]:
+    async def get_admin_by_username(self, username: str) -> dict | None:
         """Get admin by username"""
         query = """
             SELECT id, username, role, permissions, created_at, last_login
@@ -81,7 +81,7 @@ class SQLAlchemyAdminRepository(IAdminRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
         
-    async def get_admin_by_username(self, username: str) -> Optional[dict]:
+    async def get_admin_by_username(self, username: str) -> dict | None:
         """Get admin by username - SQLAlchemy implementation"""
         # TODO: Implement when we migrate to SQLAlchemy models
         pass

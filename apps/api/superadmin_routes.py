@@ -3,19 +3,18 @@ SuperAdmin Management Panel API Routes
 Enterprise-grade admin endpoints with comprehensive security and functionality
 """
 
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from datetime import datetime
+from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.services.superadmin_service import SuperAdminService
-from core.models.admin import AdminRole, UserStatus, AdminUser, SystemUser
 from apps.api.deps import get_db_connection
-
+from core.models.admin import AdminRole, AdminUser, UserStatus
+from core.services.superadmin_service import SuperAdminService
 
 # ===== PYDANTIC MODELS =====
 
@@ -28,23 +27,23 @@ class AdminLoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 28800  # 8 hours
-    admin_user: Dict[str, Any]
+    admin_user: dict[str, Any]
 
 
 class SystemUserResponse(BaseModel):
     id: UUID
     telegram_id: int
-    username: Optional[str]
-    full_name: Optional[str]
-    email: Optional[str]
+    username: str | None
+    full_name: str | None
+    email: str | None
     status: UserStatus
-    subscription_tier: Optional[str]
+    subscription_tier: str | None
     total_channels: int
     total_posts: int
-    last_activity: Optional[datetime]
+    last_activity: datetime | None
     created_at: datetime
-    suspended_at: Optional[datetime]
-    suspension_reason: Optional[str]
+    suspended_at: datetime | None
+    suspension_reason: str | None
 
 
 class UserSuspensionRequest(BaseModel):
@@ -52,9 +51,9 @@ class UserSuspensionRequest(BaseModel):
 
 
 class SystemStatsResponse(BaseModel):
-    users: Dict[str, int]
-    activity: Dict[str, int]
-    system: Dict[str, Any]
+    users: dict[str, int]
+    activity: dict[str, int]
+    system: dict[str, Any]
 
 
 class AuditLogResponse(BaseModel):
@@ -62,12 +61,12 @@ class AuditLogResponse(BaseModel):
     admin_username: str
     action: str
     resource_type: str
-    resource_id: Optional[str]
+    resource_id: str | None
     ip_address: str
     success: bool
-    error_message: Optional[str]
-    old_values: Optional[Dict[str, Any]]
-    new_values: Optional[Dict[str, Any]]
+    error_message: str | None
+    old_values: dict[str, Any] | None
+    new_values: dict[str, Any] | None
     created_at: datetime
 
 
@@ -77,7 +76,7 @@ class SystemConfigResponse(BaseModel):
     value: str
     value_type: str
     category: str
-    description: Optional[str]
+    description: str | None
     is_sensitive: bool
     requires_restart: bool
 
@@ -119,7 +118,7 @@ async def get_current_admin_user(
         
         return admin_user
     
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
@@ -204,12 +203,12 @@ async def admin_logout(
 
 # ===== USER MANAGEMENT ENDPOINTS =====
 
-@router.get("/users", response_model=List[SystemUserResponse])
+@router.get("/users", response_model=list[SystemUserResponse])
 async def get_system_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[UserStatus] = None,
-    search: Optional[str] = None,
+    status: UserStatus | None = None,
+    search: str | None = None,
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service)
 ):
@@ -285,14 +284,14 @@ async def get_system_stats(
     )
 
 
-@router.get("/audit-logs", response_model=List[AuditLogResponse])
+@router.get("/audit-logs", response_model=list[AuditLogResponse])
 async def get_audit_logs(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    admin_user_id: Optional[UUID] = None,
-    action: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
+    admin_user_id: UUID | None = None,
+    action: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service)
 ):
@@ -320,9 +319,9 @@ async def get_audit_logs(
 
 # ===== SYSTEM CONFIGURATION ENDPOINTS =====
 
-@router.get("/config", response_model=List[SystemConfigResponse])
+@router.get("/config", response_model=list[SystemConfigResponse])
 async def get_system_config(
-    category: Optional[str] = None,
+    category: str | None = None,
     current_admin: AdminUser = Depends(lambda: require_admin_role(AdminRole.SUPER_ADMIN)),
     admin_service: SuperAdminService = Depends(get_superadmin_service)
 ):

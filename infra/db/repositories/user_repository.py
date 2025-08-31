@@ -3,11 +3,9 @@ SQLAlchemy User Repository Implementation
 Concrete implementation of UserRepository interface using SQLAlchemy
 """
 
-from typing import Optional
+
 import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import and_, or_, func
 
 from core.repositories.interfaces import UserRepository as IUserRepository
 
@@ -18,7 +16,7 @@ class AsyncpgUserRepository(IUserRepository):
     def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 
-    async def get_user_by_id(self, user_id: int) -> Optional[dict]:
+    async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID"""
         query = """
             SELECT u.id, u.username, u.created_at, p.name as subscription_tier
@@ -29,7 +27,7 @@ class AsyncpgUserRepository(IUserRepository):
         row = await self._pool.fetchrow(query, user_id)
         return dict(row) if row else None
 
-    async def get_user_by_telegram_id(self, telegram_id: int) -> Optional[dict]:
+    async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID - same as get_user_by_id for bot"""
         return await self.get_user_by_id(telegram_id)
 
@@ -98,12 +96,12 @@ class SQLAlchemyUserRepository(IUserRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
         
-    async def get_user_by_id(self, user_id: int) -> Optional[dict]:
+    async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID - placeholder for SQLAlchemy implementation"""
         # TODO: Implement when we migrate to SQLAlchemy models
         pass
     
-    async def get_user_by_telegram_id(self, telegram_id: int) -> Optional[dict]:
+    async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID"""
         # TODO: Implement SQLAlchemy version
         pass

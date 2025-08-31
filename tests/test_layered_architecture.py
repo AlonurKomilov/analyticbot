@@ -101,22 +101,22 @@ def test_domain_models():
 
     assert post.title == "Test Post"
     assert post.status == PostStatus.DRAFT
-    assert post.is_ready_for_delivery() == False  # Not scheduled status
+    assert post.is_ready_for_delivery() is False  # Not scheduled status
 
     # Test status changes
     post.status = PostStatus.SCHEDULED
     post.scheduled_at = datetime.utcnow() - timedelta(minutes=1)  # Past time
-    assert post.is_ready_for_delivery() == True
+    assert post.is_ready_for_delivery() is True
 
     # Test Delivery
     delivery = Delivery(post_id=post.id, delivery_channel_id="123")
 
     assert delivery.status == DeliveryStatus.PENDING
-    assert delivery.can_retry() == False  # Not failed yet
+    assert delivery.can_retry() is False  # Not failed yet
 
     delivery.mark_as_failed("Test error")
     assert delivery.status == DeliveryStatus.FAILED
-    assert delivery.can_retry() == True
+    assert delivery.can_retry() is True
     assert delivery.error_message == "Test error"
 
 
@@ -158,7 +158,7 @@ async def test_schedule_service():
 
     # Test cancelling post
     success = await service.cancel_post(post.id)
-    assert success == True
+    assert success is True
 
     updated_post = await service.get_post(post.id)
     assert updated_post.status == PostStatus.CANCELLED
@@ -226,14 +226,14 @@ async def test_delivery_retry_logic():
     failed_delivery = await service.fail_delivery(delivery.id, "Network error")
     assert failed_delivery.status == DeliveryStatus.RETRYING
     assert failed_delivery.retry_count == 1
-    assert failed_delivery.can_retry() == True
+    assert failed_delivery.can_retry() is True
 
     # Test max retries exceeded
     failed_delivery.retry_count = 3  # Max retries
     await delivery_repo.update(failed_delivery)
 
     final_failure = await service.fail_delivery(delivery.id, "Final error")
-    assert final_failure.can_retry() == False
+    assert final_failure.can_retry() is False
 
     # Post should be marked as failed too
     final_post = await schedule_repo.get_by_id(post.id)

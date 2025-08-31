@@ -12,28 +12,25 @@ Test Structure:
 - TestAnalyticsWorkflow: Analytics viewing and reporting workflow
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
 import json
 import uuid
 from datetime import datetime, timedelta
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
 import httpx
-from fastapi.testclient import TestClient
+import pytest
 from fakeredis.aioredis import FakeRedis as FakeAsyncRedis
-
 
 # Mock workflow state storage
 workflow_state = {}
 
-def get_workflow_state(workflow_id: str) -> Dict[str, Any]:
+def get_workflow_state(workflow_id: str) -> dict[str, Any]:
     """Get workflow state for tracking across services"""
     return workflow_state.get(workflow_id, {})
 
-def update_workflow_state(workflow_id: str, updates: Dict[str, Any]):
+def update_workflow_state(workflow_id: str, updates: dict[str, Any]):
     """Update workflow state"""
     if workflow_id not in workflow_state:
         workflow_state[workflow_id] = {}
@@ -154,11 +151,6 @@ class TestUserOnboardingWorkflow:
         })
         
         # Mock bot receives /start
-        start_message = {
-            "message_id": 1,
-            "from": {"id": user_id, "username": "testuser"},
-            "text": "/start"
-        }
         
         # Simulate bot processing /start
         await mock_telegram_bot_workflow.send_message(
@@ -173,11 +165,6 @@ class TestUserOnboardingWorkflow:
         update_workflow_state(workflow_id, {"stage": "onboarding_begin"})
         
         # Mock callback query
-        callback_query = {
-            "id": "callback_123",
-            "from": {"id": user_id},
-            "data": "onboarding_begin"
-        }
         
         # Bot responds with language selection
         await mock_telegram_bot_workflow.edit_message_text(
@@ -209,7 +196,7 @@ class TestUserOnboardingWorkflow:
         )
         
         # API call to create user
-        user_creation_response = await mock_api_client_workflow.post(
+        await mock_api_client_workflow.post(
             "/api/users",
             json={
                 "user_id": user_id,
@@ -299,7 +286,7 @@ class TestUserOnboardingWorkflow:
         update_workflow_state(workflow_id, {"stage": "error_recovery", "retry_count": 1})
         
         # Retry - should succeed
-        retry_response = await mock_api_client_workflow.post(
+        await mock_api_client_workflow.post(
             "/api/users", 
             json={"user_id": user_id}
         )
@@ -353,16 +340,6 @@ class TestChannelConnectionWorkflow:
         )
         
         # Step 2: User provides channel information
-        channel_message = {
-            "message_id": 2,
-            "from": {"id": user_id},
-            "forward_from_chat": {
-                "id": channel_id,
-                "title": "Test Analytics Channel",
-                "username": "testanalyticschannel",
-                "type": "channel"
-            }
-        }
         
         update_workflow_state(workflow_id, {
             "stage": "channel_info_received",
@@ -386,7 +363,7 @@ class TestChannelConnectionWorkflow:
             })
         )
         
-        permissions_check = await mock_api_client_workflow.get(
+        await mock_api_client_workflow.get(
             f"/api/channels/{channel_id}/permissions",
             params={"bot_user_id": user_id}
         )
@@ -407,7 +384,7 @@ class TestChannelConnectionWorkflow:
             })
         )
         
-        channel_creation = await mock_api_client_workflow.post(
+        await mock_api_client_workflow.post(
             "/api/channels",
             json={
                 "channel_id": channel_id,
@@ -491,7 +468,7 @@ class TestChannelConnectionWorkflow:
         )
         
         # Permission check fails
-        permissions_response = await mock_api_client_workflow.get(
+        await mock_api_client_workflow.get(
             f"/api/channels/{channel_id}/permissions"
         )
         
@@ -605,7 +582,7 @@ class TestSubscriptionWorkflow:
             "amount": selected_plan["amount"]
         }
         
-        payment_result = await mock_payment_client_workflow.confirm_payment_intent(
+        await mock_payment_client_workflow.confirm_payment_intent(
             payment_intent["id"]
         )
         
@@ -623,7 +600,7 @@ class TestSubscriptionWorkflow:
             })
         )
         
-        subscription_update = await mock_api_client_workflow.put(
+        await mock_api_client_workflow.put(
             f"/api/users/{user_id}/subscription",
             json={
                 "plan_id": selected_plan["plan_id"],

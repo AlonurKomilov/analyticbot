@@ -4,10 +4,8 @@ Tests core functionality without complex imports
 """
 
 import sys
-import os
-from pathlib import Path
 import tempfile
-from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -57,7 +55,6 @@ def test_watermark_config_structure():
         
         # Test basic dataclass creation
         from dataclasses import dataclass
-        from typing import Optional
         
         @dataclass
         class TestWatermarkConfig:
@@ -125,7 +122,6 @@ def test_premium_limits_logic():
     """Test premium feature limits logic"""
     try:
         from dataclasses import dataclass
-        from typing import Optional
         from enum import Enum
         
         class TestUserTier(Enum):
@@ -136,9 +132,9 @@ def test_premium_limits_logic():
         
         @dataclass
         class TestPremiumFeatureLimits:
-            watermarks_per_month: Optional[int]
-            custom_emojis_per_month: Optional[int]
-            theft_scans_per_month: Optional[int]
+            watermarks_per_month: int | None
+            custom_emojis_per_month: int | None
+            theft_scans_per_month: int | None
             max_file_size_mb: int
             
             @classmethod

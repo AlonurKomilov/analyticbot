@@ -7,18 +7,18 @@ from typing import Any, cast
 from aiogram import Bot, F, Router, types
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     MenuButtonDefault,
     MenuButtonWebApp,
     WebAppInfo,
-    CallbackQuery,
 )
 from aiogram_i18n import I18nContext
 
 from apps.bot.config import settings
-from infra.db.repositories import AsyncpgUserRepository as UserRepository
 from apps.bot.services.subscription_service import SubscriptionService
+from infra.db.repositories import AsyncpgUserRepository as UserRepository
 
 router = Router()
 log = logging.getLogger(__name__)

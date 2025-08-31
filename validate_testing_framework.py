@@ -4,12 +4,10 @@ Testing & Quality Assurance Framework Validation Script
 Validates all components of the comprehensive testing framework
 """
 
-import asyncio
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
-import importlib.util
+from typing import Any
 
 # Add project root to Python path
 project_root = Path(__file__).parent
@@ -23,7 +21,7 @@ class TestingFrameworkValidator:
         self.venv_python = self.project_root / ".venv" / "bin" / "python"
         self.validation_results = {}
         
-    def run_command(self, command: List[str], description: str) -> Dict[str, Any]:
+    def run_command(self, command: list[str], description: str) -> dict[str, Any]:
         """Run a shell command and capture results"""
         try:
             result = subprocess.run(
@@ -58,7 +56,7 @@ class TestingFrameworkValidator:
                 "description": description
             }
     
-    def validate_test_structure(self) -> Dict[str, Any]:
+    def validate_test_structure(self) -> dict[str, Any]:
         """Validate that all test files exist and are properly structured"""
         print("🔍 Validating test file structure...")
         
@@ -101,7 +99,7 @@ class TestingFrameworkValidator:
             "description": "Test file structure validation"
         }
     
-    def validate_import_syntax(self) -> Dict[str, Any]:
+    def validate_import_syntax(self) -> dict[str, Any]:
         """Validate that all test files have correct Python syntax"""
         print("🔍 Validating Python syntax in test files...")
         
@@ -120,7 +118,7 @@ class TestingFrameworkValidator:
             for test_file in test_dir.glob("test_*.py"):
                 try:
                     # Try to compile the file to check syntax
-                    with open(test_file, 'r', encoding='utf-8') as f:
+                    with open(test_file, encoding='utf-8') as f:
                         compile(f.read(), str(test_file), 'exec')
                     valid_files.append(str(test_file.relative_to(self.project_root)))
                 except SyntaxError as e:
@@ -141,7 +139,7 @@ class TestingFrameworkValidator:
             "description": "Python syntax validation"
         }
     
-    def validate_pytest_collection(self) -> Dict[str, Any]:
+    def validate_pytest_collection(self) -> dict[str, Any]:
         """Validate that pytest can collect all tests without errors"""
         print("🔍 Validating pytest test collection...")
         
@@ -150,7 +148,7 @@ class TestingFrameworkValidator:
             "--collect-only", "--quiet", "tests/"
         ], "Pytest test collection validation")
     
-    def run_integration_tests(self) -> Dict[str, Any]:
+    def run_integration_tests(self) -> dict[str, Any]:
         """Run integration tests to validate framework"""
         print("🔍 Running integration tests...")
         
@@ -160,7 +158,7 @@ class TestingFrameworkValidator:
             "tests/integration/", "-v", "--tb=short", "-x", "--no-cov"
         ], "Integration tests execution")
     
-    def run_e2e_test_validation(self) -> Dict[str, Any]:
+    def run_e2e_test_validation(self) -> dict[str, Any]:
         """Validate E2E tests can be imported and instantiated"""
         print("🔍 Validating E2E test infrastructure...")
         
@@ -194,7 +192,7 @@ except Exception as e:
             str(self.venv_python), "-c", validation_script
         ], "E2E test infrastructure validation")
     
-    def validate_framework_completeness(self) -> Dict[str, Any]:
+    def validate_framework_completeness(self) -> dict[str, Any]:
         """Validate that the framework is complete"""
         print("🔍 Validating framework completeness...")
         
@@ -212,7 +210,7 @@ except Exception as e:
             total_tests = 0
             for test_file in test_dir.glob("test_*.py"):
                 try:
-                    with open(test_file, 'r', encoding='utf-8') as f:
+                    with open(test_file, encoding='utf-8') as f:
                         content = f.read()
                         # Count test methods
                         total_tests += content.count("def test_")

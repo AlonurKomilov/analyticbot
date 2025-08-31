@@ -72,8 +72,8 @@ class TestSecuritySystem:
         password = "TestPassword123!"
         user.set_password(password)
         assert user.hashed_password is not None
-        assert user.verify_password(password) == True
-        assert user.verify_password("wrongpassword") == False
+        assert user.verify_password(password) is True
+        assert user.verify_password("wrongpassword") is False
         print("✅ Password operations - PASSED")
 
     def test_jwt_token_operations(self):
@@ -107,7 +107,7 @@ class TestSecuritySystem:
         assert retrieved_session is not None
         assert retrieved_session.user_id == session.user_id
         result = self.security_manager.terminate_session(session.id)
-        assert result == True
+        assert result is True
         terminated_session = self.security_manager.get_session(session.id)
         assert terminated_session is None
         print("✅ Session management - PASSED")
@@ -131,12 +131,12 @@ class TestSecuritySystem:
         print("🧪 Testing RBAC Permissions...")
         admin_user = User(email="admin@test.com", username="adminuser", role=UserRole.ADMIN)
         user_user = User(email="user@test.com", username="useruser", role=UserRole.USER)
-        assert self.rbac_manager.has_permission(admin_user, Permission.USER_DELETE) == True
-        assert self.rbac_manager.has_permission(admin_user, Permission.SYSTEM_ADMIN) == True
-        assert self.rbac_manager.has_permission(user_user, Permission.ANALYTICS_READ) == True
-        assert self.rbac_manager.has_permission(user_user, Permission.USER_DELETE) == False
-        assert self.rbac_manager.has_role(admin_user, UserRole.USER) == True
-        assert self.rbac_manager.has_role(user_user, UserRole.ADMIN) == False
+        assert self.rbac_manager.has_permission(admin_user, Permission.USER_DELETE) is True
+        assert self.rbac_manager.has_permission(admin_user, Permission.SYSTEM_ADMIN) is True
+        assert self.rbac_manager.has_permission(user_user, Permission.ANALYTICS_READ) is True
+        assert self.rbac_manager.has_permission(user_user, Permission.USER_DELETE) is False
+        assert self.rbac_manager.has_role(admin_user, UserRole.USER) is True
+        assert self.rbac_manager.has_role(user_user, UserRole.ADMIN) is False
         print("✅ RBAC permissions - PASSED")
 
     def test_permission_matrix(self):
@@ -169,7 +169,7 @@ class TestSecuritySystem:
         """Test rate limiting functionality"""
         print("🧪 Testing Rate Limiting Simulation...")
         test_user_id = "rate-limit-test-user"
-        for i in range(3):
+        for _i in range(3):
             result = self.rbac_manager._check_mfa_rate_limit(test_user_id)
             if not result:
                 self.rbac_manager._record_mfa_attempt(test_user_id)
@@ -196,7 +196,7 @@ class TestSecuritySystem:
         payload2 = self.security_manager.verify_token(access_token)
         assert payload1["sub"] == payload2["sub"]
         result = self.security_manager.revoke_token(access_token)
-        assert result == True
+        assert result is True
         print("✅ Token caching and revocation - PASSED")
 
     def test_security_audit_logging(self):
@@ -207,7 +207,7 @@ class TestSecuritySystem:
         logger = logging.getLogger("security")
         assert logger is not None
         config = SecurityConfig()
-        assert config.AUDIT_LOG_ENABLED == True
+        assert config.AUDIT_LOG_ENABLED is True
         print("✅ Security audit logging - PASSED")
 
 

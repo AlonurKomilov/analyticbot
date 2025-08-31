@@ -9,7 +9,7 @@ import pytest
 import redis
 
 from core.services.enhanced_delivery_service import EnhancedDeliveryService
-from core.utils.idempotency import IdempotencyGuard, IdempotencyStatus
+from core.utils.idempotency import IdempotencyGuard
 from core.utils.ratelimit import RateLimitType, TokenBucketRateLimiter
 
 
@@ -53,7 +53,6 @@ class TestIdempotencyGuard:
         mock_status = '{"status": "processing", "created_at": "2025-01-01T00:00:00"}'
         mock_redis.get.return_value = mock_status
 
-        key = "test:idempotency:existing_key"
         # Note: The real implementation returns (is_duplicate, status) tuple
         # This test needs to be adjusted to match the actual API
         pass  # Placeholder - this test needs to be rewritten
@@ -62,7 +61,6 @@ class TestIdempotencyGuard:
         """Test that operation start is marked correctly."""
         mock_redis.set.return_value = True
 
-        key = "test:idempotency:start_key"
         # Note: The real implementation uses JSON serialization, not enum values
         # This test needs to be rewritten to match actual API
         pass  # Placeholder - this test needs to be rewritten
@@ -198,7 +196,7 @@ class TestEnhancedDeliveryService:
     def mock_delivery_service(self):
         """Create EnhancedDeliveryService with mocked dependencies."""
         with (
-            patch("core.services.enhanced_delivery_service.redis") as mock_redis,
+            patch("core.services.enhanced_delivery_service.redis"),
             patch("core.utils.idempotency.IdempotencyGuard") as mock_idempotency,
             patch("core.utils.ratelimit.TokenBucketRateLimiter") as mock_rate_limiter,
         ):

@@ -3,20 +3,19 @@ Integration tests for payment flow workflow
 Tests complete payment processing from webhook to database
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch
-import uuid
-from datetime import datetime
+from unittest.mock import patch
 
-from tests.factories import (
-    UserFactory, 
-    PaymentFactory,
-    SuccessfulPaymentFactory,
-    WebhookEventFactory,
-    RelatedDataFactory
-)
+import pytest
+
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository
+from tests.factories import (
+    PaymentFactory,
+    RelatedDataFactory,
+    SuccessfulPaymentFactory,
+    UserFactory,
+    WebhookEventFactory,
+)
 
 
 @pytest.mark.integration
@@ -194,7 +193,7 @@ class TestPaymentFlowIntegration:
         payload = webhook["payload"]
         
         # Check for duplicate processing (Redis check)
-        webhook_key = f"webhook:processed:{webhook['id']}"
+        f"webhook:processed:{webhook['id']}"
         
         # Simulate payment processing logic
         if webhook["event_type"] == "payment.completed":
@@ -270,7 +269,7 @@ class TestPaymentPerformance:
         start_time = time.time()
         processed_count = 0
         
-        for payment in payments:
+        for _payment in payments:
             # Simulate payment processing
             processed_count += 1
         

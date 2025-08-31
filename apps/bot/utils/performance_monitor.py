@@ -209,7 +209,7 @@ def performance_monitor(func_name: str | None = None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()
-            start_cpu = psutil.Process().cpu_percent()
+            psutil.Process().cpu_percent()
 
             try:
                 result = func(*args, **kwargs)

@@ -5,9 +5,27 @@
 source = ["apps", "core"]
 branch = true
 omit = [
-    "infra/db/alembic/versions/*",
-    "tests/*",
-    "docs/*"
+    "*/tests/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/__pycache__/*",
+    "docs/*",
+    "scripts/*",
+    "infra/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
 ]
 
 [tool.ruff]
@@ -17,4 +35,15 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q --cov=apps --cov=core --cov-report=term-missing --cov-report=html --cov-fail-under=80"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "e2e: End-to-end tests",
+    "performance: Performance tests",
+    "security: Security tests",
+    "slow: Slow running tests"
+]

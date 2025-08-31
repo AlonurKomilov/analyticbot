@@ -419,7 +419,7 @@ class AutomatedReportingSystem:
                     "type": section["type"],
                     "title": section["title"],
                     "content": str(section["content"])
-                    if not isinstance(section["content"], (dict, list))
+                    if not isinstance(section["content"], dict | list)
                     else section["content"],
                 }
                 report_data["sections"].append(section_data)

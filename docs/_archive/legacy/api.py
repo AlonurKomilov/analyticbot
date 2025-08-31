@@ -603,7 +603,7 @@ async def get_best_posting_time(
         # Get historical posts for analysis
         from datetime import datetime, timedelta
 
-        since_date = datetime.utcnow() - timedelta(days=days_analysis)
+        datetime.utcnow() - timedelta(days=days_analysis)
 
         # This would query actual post performance data
         # For now, we'll simulate AI recommendations

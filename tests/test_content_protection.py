@@ -3,16 +3,24 @@ Content Protection Test Suite - Phase 2.3
 Comprehensive tests for content protection and premium features
 """
 
-import pytest
 import tempfile
-from pathlib import Path
 from datetime import datetime
-from unittest.mock import AsyncMock, patch, MagicMock
+from pathlib import Path
 
-from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService, WatermarkConfig
+import pytest
+
 from apps.bot.models.content_protection import (
-    ContentType, UserTier, ProtectionLevel, PremiumFeatureLimits,
-    ContentProtectionRequest, ContentProtectionResponse
+    ContentProtectionRequest,
+    ContentProtectionResponse,
+    ContentType,
+    PremiumFeatureLimits,
+    ProtectionLevel,
+    UserTier,
+)
+from apps.bot.services.content_protection import (
+    ContentProtectionService,
+    PremiumEmojiService,
+    WatermarkConfig,
 )
 
 
@@ -262,10 +270,10 @@ class TestContentProtectionIntegration:
     async def test_watermark_with_tier_restrictions(self, mock_user_data):
         """Test watermarking respects user tier restrictions"""
         
-        content_protection = ContentProtectionService()
+        ContentProtectionService()
         
         # Test file size restrictions
-        limits = PremiumFeatureLimits.get_limits_for_tier(mock_user_data["tier"])
+        PremiumFeatureLimits.get_limits_for_tier(mock_user_data["tier"])
         
         # Large file should be rejected for free tier
         free_limits = PremiumFeatureLimits.get_limits_for_tier(UserTier.FREE)

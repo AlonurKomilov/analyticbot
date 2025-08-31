@@ -7,20 +7,17 @@ Tests the implementation without requiring PostgreSQL
 import asyncio
 import sys
 from pathlib import Path
-from datetime import datetime
-from contextlib import asynccontextmanager
 
 # Add project root to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
 
 # Import our SuperAdmin models and service
-from core.models.admin import AdminUser, AdminRole, AdminSession, SystemUser, AdminAuditLog
+from core.models.admin import AdminRole, AdminUser, Base, SystemUser
 from core.services.superadmin_service import SuperAdminService
-from core.models.admin import Base
 
 
 class TestSuperAdmin:

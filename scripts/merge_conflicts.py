@@ -109,7 +109,7 @@ def process_conflicts():
 
     with open(conflicts_file) as f:
         reader = csv.reader(f)
-        header = next(reader)  # Skip header
+        next(reader)  # Skip header
 
         for row in reader:
             if len(row) < 3:

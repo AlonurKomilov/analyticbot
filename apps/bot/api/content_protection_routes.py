@@ -4,30 +4,23 @@ FastAPI routes for Phase 2.3: Content Protection & Premium Features
 Moved from apps/api/ to apps/bot/api/ for better architecture cohesion
 """
 
-import asyncio
 import tempfile
-from pathlib import Path
-from typing import Optional
 from datetime import datetime
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService
+from apps.api.deps import get_current_user  # Updated import path for API-specific auth
 from apps.bot.models.content_protection import (
-    ContentProtectionRequest,
     ContentProtectionResponse,
-    WatermarkRequest,
     CustomEmojiRequest,
     CustomEmojiResponse,
-    ContentType,
-    UserTier,
+    PremiumFeatureLimits,
     ProtectionLevel,
-    PremiumFeatureLimits
+    UserTier,
 )
-from apps.api.deps import get_current_user  # Updated import path for API-specific auth
-from infra.db.repositories import AsyncpgUserRepository  # Use new infrastructure layer
-
+from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService
 
 router = APIRouter(prefix="/api/v1/content-protection", tags=["Content Protection"])
 

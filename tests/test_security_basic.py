@@ -3,10 +3,9 @@ Basic Security Tests - No External Dependencies
 Tests core security functionality without database or external service dependencies
 """
 import hashlib
-import secrets
 import hmac
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, List
+import secrets
+from typing import Any
 
 
 def test_basic_input_sanitization():
@@ -86,8 +85,8 @@ def test_basic_session_token_generation():
 
 def test_basic_rate_limiting():
     """Test basic rate limiting logic"""
-    from collections import defaultdict
     import time
+    from collections import defaultdict
     
     class SimpleRateLimiter:
         def __init__(self, max_requests: int = 5, window_seconds: int = 60):
@@ -164,7 +163,7 @@ def test_webhook_signature_validation():
 
 def test_pii_data_masking():
     """Test PII data masking"""
-    def mask_sensitive_data(data: Dict[str, Any]) -> Dict[str, Any]:
+    def mask_sensitive_data(data: dict[str, Any]) -> dict[str, Any]:
         sensitive_fields = ['password', 'token', 'secret', 'card_number', 'email']
         masked_data = data.copy()
         
@@ -237,7 +236,7 @@ def test_payment_amount_validation():
 
 def test_security_configuration_validation():
     """Test security configuration validation"""
-    def validate_security_config(config: Dict[str, Any]) -> List[str]:
+    def validate_security_config(config: dict[str, Any]) -> list[str]:
         issues = []
         
         # Required settings

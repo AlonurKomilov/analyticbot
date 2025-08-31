@@ -59,9 +59,10 @@ def test_fastapi_import():
 def test_database_imports():
     """Test database related imports"""
     try:
-        import alembic
         import asyncpg
         import sqlalchemy
+
+        import alembic
     except ImportError as e:
         pytest.fail(f"Failed to import database dependencies: {e}")
 

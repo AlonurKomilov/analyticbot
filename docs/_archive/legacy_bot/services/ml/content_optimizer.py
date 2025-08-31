@@ -252,7 +252,7 @@ class ContentOptimizer:
             topics = await self._extract_key_topics(text)
 
             # Analyze current hashtag performance
-            current_performance = await self._analyze_current_hashtags(current_hashtags)
+            await self._analyze_current_hashtags(current_hashtags)
 
             # Generate new hashtag suggestions
             suggestions = []
@@ -296,7 +296,7 @@ class ContentOptimizer:
 
             # Basic metrics
             word_count = len(text.split())
-            char_count = len(text)
+            len(text)
 
             # Length score (optimal 50-300 words)
             if 50 <= word_count <= 300:

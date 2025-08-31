@@ -11,27 +11,25 @@ Test Structure:
 - TestSystemResilienceWorkflow: Error handling and recovery across services
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
 import json
+import time
 import uuid
 from datetime import datetime, timedelta
-import time
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
-import httpx
+import pytest
 from fakeredis.aioredis import FakeRedis as FakeAsyncRedis
-
 
 # Mock system integration state
 system_integration_state = {}
 
-def get_system_integration_state(workflow_id: str) -> Dict[str, Any]:
+def get_system_integration_state(workflow_id: str) -> dict[str, Any]:
     return system_integration_state.get(workflow_id, {})
 
-def update_system_integration_state(workflow_id: str, updates: Dict[str, Any]):
+def update_system_integration_state(workflow_id: str, updates: dict[str, Any]):
     if workflow_id not in system_integration_state:
         system_integration_state[workflow_id] = {}
     system_integration_state[workflow_id].update(updates)
@@ -199,8 +197,8 @@ class TestCompleteSystemIntegration:
             text="🤖 Welcome to AnalyticBot!\n\nSelect your subscription plan:",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "💎 Premium Monthly - $29.99", "callback_data": f"plan_premium_monthly"}],
-                    [{"text": "🚀 Pro Annual - $299.99", "callback_data": f"plan_pro_annual"}]
+                    [{"text": "💎 Premium Monthly - $29.99", "callback_data": "plan_premium_monthly"}],
+                    [{"text": "🚀 Pro Annual - $299.99", "callback_data": "plan_pro_annual"}]
                 ]
             }
         )
@@ -221,7 +219,7 @@ class TestCompleteSystemIntegration:
         )
         
         plan_details = await mock_system_api.get(f"/api/plans/{plan_id}")
-        plan_data = await plan_details.json()
+        await plan_details.json()
         
         # Step 4: User registration/login through API
         mock_system_api.post.return_value = AsyncMock(
@@ -236,7 +234,7 @@ class TestCompleteSystemIntegration:
             })
         )
         
-        user_registration = await mock_system_api.post(
+        await mock_system_api.post(
             "/api/auth/register",
             json={
                 "telegram_id": user_id,
@@ -326,7 +324,7 @@ class TestCompleteSystemIntegration:
             })
         )
         
-        channel_registration = await mock_system_api.post(
+        await mock_system_api.post(
             f"/api/users/{user_id}/channels",
             json={
                 "channel_id": channel_id,
@@ -362,7 +360,7 @@ class TestCompleteSystemIntegration:
             })
         )
         
-        initial_analytics = await mock_system_api.post(
+        await mock_system_api.post(
             f"/api/analytics/{channel_id}/collect",
             json={"type": "initial_collection"}
         )
@@ -470,7 +468,7 @@ class TestPaymentProviderIntegration:
             amount=120000,  # UZS
             account={"user_id": str(user_id)}
         )
-        payme_perform = await mock_payment_providers["payme"].perform_transaction(
+        await mock_payment_providers["payme"].perform_transaction(
             id=payme_transaction["result"]["transaction"]
         )
         
@@ -487,7 +485,7 @@ class TestPaymentProviderIntegration:
             amount=120000,
             action=0  # Prepare
         )
-        click_complete = await mock_payment_providers["click"].complete_transaction(
+        await mock_payment_providers["click"].complete_transaction(
             click_trans_id=click_prepare["transaction_id"],
             merchant_trans_id=str(uuid.uuid4()),
             action=1  # Complete
@@ -524,7 +522,7 @@ class TestPaymentProviderIntegration:
             })
         )
         
-        coordination_validation = await mock_system_api.post(
+        await mock_system_api.post(
             "/api/payments/validate-providers",
             json={
                 "providers": ["stripe", "payme", "click"],
@@ -666,7 +664,7 @@ class TestRedisCoordinationWorkflow:
             })
         )
         
-        coordination_validation = await mock_system_api.post(
+        await mock_system_api.post(
             "/api/system/validate-redis-coordination",
             json={
                 "workflow_id": workflow_id,
@@ -721,11 +719,11 @@ class TestSystemResilienceWorkflow:
         
         # Step 2: Simulate API timeout and recovery
         # First attempt - timeout
-        mock_system_api.get.side_effect = asyncio.TimeoutError("API timeout")
+        mock_system_api.get.side_effect = TimeoutError("API timeout")
         
         try:
             await mock_system_api.get("/api/users/123456789", timeout=1.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Log failure and attempt recovery
             await mock_system_redis.hset(
                 f"service_failures:{workflow_id}",
@@ -876,7 +874,7 @@ class TestSystemResilienceWorkflow:
             })
         )
         
-        resilience_report = await mock_system_api.post(
+        await mock_system_api.post(
             "/api/system/resilience-report",
             json={
                 "workflow_id": workflow_id,
@@ -943,7 +941,7 @@ class TestSystemResilienceWorkflow:
                 })
             )
             
-            response = await mock_system_api.post(
+            await mock_system_api.post(
                 f"/api/users/{user_id}/subscription",
                 json={"plan_id": "premium_monthly"}
             )

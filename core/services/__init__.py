@@ -274,7 +274,7 @@ class DeliveryService:
         """
         Get delivery statistics for analytics
         """
-        filter_criteria = DeliveryFilter(
+        DeliveryFilter(
             channel_id=channel_id, from_date=from_date, to_date=to_date
         )
 

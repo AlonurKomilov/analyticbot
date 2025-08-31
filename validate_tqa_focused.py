@@ -4,11 +4,9 @@ Focused Testing & Quality Assurance Framework Validation
 Tests only our core TQA framework components without problematic imports
 """
 
-import asyncio
-import sys
 import subprocess
+import sys
 from pathlib import Path
-from typing import List, Dict, Any
 
 # Add project root to Python path
 project_root = Path(__file__).parent
@@ -46,7 +44,7 @@ def run_core_tqa_tests():
             
         # Check syntax
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 compile(f.read(), str(file_path), 'exec')
             print(f"✅ VALID: {test_file}")
         except SyntaxError as e:
@@ -66,7 +64,7 @@ def run_core_tqa_tests():
             continue
             
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 content = f.read()
                 test_count = content.count("def test_") + content.count("async def test_")
                 print(f"📁 {test_file}: {test_count} tests")
@@ -122,7 +120,7 @@ except Exception as e:
         if result.returncode == 0:
             print("✅ E2E TEST IMPORTS VALIDATED")
         else:
-            print(f"❌ E2E IMPORT VALIDATION FAILED:")
+            print("❌ E2E IMPORT VALIDATION FAILED:")
             print(result.stderr)
             all_tests_valid = False
             
@@ -171,9 +169,9 @@ except Exception as e:
     
     if all_tests_valid and total_tests >= 50:
         print("🎉 TQA FRAMEWORK VALIDATION SUCCESSFUL!")
-        print(f"✅ All core TQA files validated")
+        print("✅ All core TQA files validated")
         print(f"✅ {total_tests} tests found in TQA framework")
-        print(f"✅ E2E test infrastructure working")
+        print("✅ E2E test infrastructure working")
         print("\n🚀 Framework is ready for production!")
         return True
     else:

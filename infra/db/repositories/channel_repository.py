@@ -3,7 +3,8 @@ Channel Repository Implementation
 Concrete implementation for channel data operations
 """
 
-from typing import Any, Optional, List
+from typing import Any
+
 import asyncpg
 
 
@@ -14,7 +15,7 @@ class AsyncpgChannelRepository:
         self.pool = pool
 
     async def create_channel(
-        self, channel_id: int, user_id: int, title: str, username: Optional[str] = None
+        self, channel_id: int, user_id: int, title: str, username: str | None = None
     ) -> None:
         """Adds a new channel to the database for a specific user.
 
@@ -36,7 +37,7 @@ class AsyncpgChannelRepository:
                 username,
             )
 
-    async def get_channel_by_id(self, channel_id: int) -> Optional[dict[str, Any]]:
+    async def get_channel_by_id(self, channel_id: int) -> dict[str, Any] | None:
         """Retrieve a single channel by its ID."""
 
         async with self.pool.acquire() as conn:
@@ -49,7 +50,7 @@ class AsyncpgChannelRepository:
         async with self.pool.acquire() as conn:
             return await conn.fetchval("SELECT COUNT(*) FROM channels WHERE user_id = $1", user_id)
 
-    async def get_user_channels(self, user_id: int) -> List[dict[str, Any]]:
+    async def get_user_channels(self, user_id: int) -> list[dict[str, Any]]:
         """Retrieve all channels registered by a user."""
 
         async with self.pool.acquire() as conn:

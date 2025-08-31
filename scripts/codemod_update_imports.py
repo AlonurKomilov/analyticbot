@@ -200,7 +200,6 @@ def main():
     print(f"🔍 Found {len(files_to_process)} Python files to check")
 
     files_changed = 0
-    total_changes = 0
 
     for file_path in sorted(files_to_process):
         if rewrite_file(file_path):

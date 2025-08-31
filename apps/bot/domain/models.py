@@ -4,9 +4,8 @@ Centralized location for shared types to prevent circular imports
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
-from pydantic import BaseModel, HttpUrl, ValidationError, field_validator
+from pydantic import BaseModel, HttpUrl, field_validator
 
 
 @dataclass
@@ -61,4 +60,4 @@ class ServiceHealth:
     service_name: str
     is_healthy: bool
     last_check: str
-    error_message: Optional[str] = None
+    error_message: str | None = None

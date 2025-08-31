@@ -208,7 +208,7 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
             hourly_performance[hour] = performance
         weekly_summary = {}
         days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-        for i, day in enumerate(days):
+        for _i, day in enumerate(days):
             weekly_summary[day] = {
                 "best_hour": random.randint(9, 21),
                 "performance": random.randint(45, 90),

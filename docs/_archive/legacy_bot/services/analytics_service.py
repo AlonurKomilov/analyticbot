@@ -110,7 +110,7 @@ class AnalyticsService:
             grouped[channel_id].append(post)
         sorted_grouped = {}
         for channel_id, channel_posts in grouped.items():
-            total_priority = sum(post["_priority"] for post in channel_posts)
+            sum(post["_priority"] for post in channel_posts)
             sorted_grouped[channel_id] = sorted(
                 channel_posts, key=lambda x: x["_priority"], reverse=True
             )

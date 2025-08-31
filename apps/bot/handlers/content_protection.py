@@ -3,21 +3,22 @@ Bot Handlers for Phase 2.3: Content Protection & Premium Features
 Telegram bot handlers for content protection features
 """
 
-import asyncio
 from pathlib import Path
-from typing import Dict, Any
 
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, BufferedInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import (
+    BufferedInputFile,
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
+from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
 from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService
-from apps.bot.models.content_protection import UserTier, ProtectionLevel, PremiumFeatureLimits
-from apps.bot.services.payment_service import PaymentService  # Phase 2.2 integration
-from infra.db.repositories.user_repository import AsyncpgUserRepository as UserRepository
-
 
 router = Router()
 content_protection = ContentProtectionService()
@@ -557,7 +558,7 @@ async def _increment_feature_usage(feature: str, user_id: int, count: int = 1):
     pass
 
 
-async def _get_current_usage(user_id: int) -> Dict[str, int]:
+async def _get_current_usage(user_id: int) -> dict[str, int]:
     """Get current month's feature usage"""
     # TODO: Implement database query
     return {

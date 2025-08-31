@@ -8,11 +8,11 @@ from aiogram import Bot, Router, types
 from aiogram.filters import Command, CommandObject
 from aiogram_i18n import I18nContext
 
-from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.guard_service import GuardService
 from apps.bot.services.prometheus_service import prometheus_service
 from apps.bot.services.scheduler_service import SchedulerService
+from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
 
 router = Router()
 

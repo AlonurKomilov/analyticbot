@@ -99,13 +99,13 @@ def test_cpu_performance():
 
     # Mathematical computation
     start_time = time.perf_counter()
-    result = sum(i * i for i in range(100000))
+    sum(i * i for i in range(100000))
     math_time = time.perf_counter() - start_time
 
     # String processing
     start_time = time.perf_counter()
     text = "performance test " * 10000
-    processed = text.upper().replace("TEST", "TESTING").split()
+    text.upper().replace("TEST", "TESTING").split()
     string_time = time.perf_counter() - start_time
 
     # Sorting
@@ -113,7 +113,7 @@ def test_cpu_performance():
 
     data = [random.randint(1, 10000) for _ in range(50000)]
     start_time = time.perf_counter()
-    sorted_data = sorted(data)
+    sorted(data)
     sort_time = time.perf_counter() - start_time
 
     logger.info("✅ CPU Performance:")

@@ -108,7 +108,7 @@ class Module2TestSuite:
             # Test basic query
             async with conn.cursor() as cursor:
                 await cursor.execute("SELECT version();")
-                version = await cursor.fetchone()
+                await cursor.fetchone()
 
             await conn.close()
             duration = time.time() - start_time
@@ -132,11 +132,11 @@ class Module2TestSuite:
             r = redis.from_url(self.redis_url, socket_timeout=10)
 
             # Test ping
-            response = r.ping()
+            r.ping()
 
             # Test basic operations
             r.set("test_key", "test_value", ex=60)
-            value = r.get("test_key")
+            r.get("test_key")
             r.delete("test_key")
 
             duration = time.time() - start_time
@@ -162,7 +162,7 @@ class Module2TestSuite:
         success_count = 0
 
         async with aiohttp.ClientSession() as session:
-            for i in range(10):
+            for _i in range(10):
                 start_time = time.time()
                 try:
                     async with session.get(f"{self.api_url}/health", timeout=5) as response:

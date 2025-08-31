@@ -1,7 +1,5 @@
 """Custom I18N Core for AnalyticBot"""
-import os
 from pathlib import Path
-from typing import Dict, Any
 
 
 class SimpleI18nCore:
@@ -9,10 +7,10 @@ class SimpleI18nCore:
     
     def __init__(self, path_template: str):
         self.path_template = path_template
-        self.locales: Dict[str, Dict[str, str]] = {}
+        self.locales: dict[str, dict[str, str]] = {}
         self._loaded = False
     
-    def find_locales(self) -> Dict[str, Dict[str, str]]:
+    def find_locales(self) -> dict[str, dict[str, str]]:
         """Find and load all locale files"""
         locales = {}
         # Fix: Use dummy replacement to get correct parent path
@@ -44,7 +42,7 @@ class SimpleI18nCore:
         
         return locales
     
-    def _parse_ftl_content(self, content: str) -> Dict[str, str]:
+    def _parse_ftl_content(self, content: str) -> dict[str, str]:
         """Parse FTL content and extract key-value pairs"""
         data = {}
         current_key = None

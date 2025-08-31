@@ -3,8 +3,10 @@ Repository Contract Tests
 Tests that ensure all repository implementations follow the same contract
 """
 
-import pytest
 from typing import Protocol, runtime_checkable
+
+import pytest
+
 from core.repositories.interfaces import UserRepository
 
 

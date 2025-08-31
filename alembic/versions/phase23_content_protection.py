@@ -5,17 +5,17 @@ Revises: phase22_payment_system
 Create Date: 2025-01-07 20:00:00.000000
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 
+from alembic import op
 
 # revision identifiers
 revision: str = 'phase23_content_protection'
-down_revision: Union[str, None] = 'phase22_payment_system'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = 'phase22_payment_system'
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

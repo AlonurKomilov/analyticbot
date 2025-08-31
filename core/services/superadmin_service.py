@@ -6,18 +6,19 @@ Enterprise-grade service for SuperAdmin operations
 import hashlib
 import secrets
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Any
 
+from passlib.context import CryptContext
+from sqlalchemy import and_, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload
-from sqlalchemy import and_, or_, func, desc
-from passlib.context import CryptContext
 
 from core.models.admin import (
-    AdminUser, AdminRole, AdminSession, SystemUser, 
-    AdminAuditLog, SystemConfiguration, SystemMetrics,
-    UserStatus
+    AdminAuditLog,
+    AdminSession,
+    AdminUser,
+    SystemUser,
+    UserStatus,
 )
 
 
@@ -27,11 +28,11 @@ class SuperAdminService:
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     
-    async def authenticate_admin(self, db: AsyncSession, username: str, password: str, ip_address: str) -> Optional[AdminSession]:
+    async def authenticate_admin(self, db: AsyncSession, username: str, password: str, ip_address: str) -> AdminSession | None:
         """Authenticate admin user and create session"""
         try:
             # Get admin user
-            stmt = select(AdminUser).where(AdminUser.username == username, AdminUser.is_active == True)
+            stmt = select(AdminUser).where(AdminUser.username == username, AdminUser.is_active is True)
             result = await db.execute(stmt)
             admin = result.scalar_one_or_none()
             
@@ -76,7 +77,7 @@ class SuperAdminService:
         db.add(session)
         return session
     
-    async def get_system_stats(self, db: AsyncSession) -> Dict[str, Any]:
+    async def get_system_stats(self, db: AsyncSession) -> dict[str, Any]:
         """Get comprehensive system statistics"""
         # User statistics
         total_users = await db.scalar(select(func.count(SystemUser.id))) or 0
@@ -85,9 +86,9 @@ class SuperAdminService:
         
         # Admin statistics  
         total_admins = await db.scalar(select(func.count(AdminUser.id))) or 0
-        active_admins = await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active == True)) or 0
+        active_admins = await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active is True)) or 0
         active_sessions = await db.scalar(select(func.count(AdminSession.id)).where(
-            and_(AdminSession.is_active == True, AdminSession.expires_at > datetime.utcnow())
+            and_(AdminSession.is_active is True, AdminSession.expires_at > datetime.utcnow())
         )) or 0
         
         return {
@@ -135,11 +136,11 @@ class SuperAdminService:
             await db.commit()
             return True
             
-        except Exception as e:
+        except Exception:
             await db.rollback()
             return False
     
-    async def get_audit_logs(self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: int = None) -> Dict[str, Any]:
+    async def get_audit_logs(self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: int = None) -> dict[str, Any]:
         """Get paginated audit logs"""
         offset = (page - 1) * limit
         

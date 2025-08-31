@@ -3,12 +3,13 @@ Test data factories for generating realistic test data
 Uses factory_boy pattern for consistent, related test data generation
 """
 
-import factory
-from factory import Faker, SubFactory, LazyFunction
-from datetime import datetime, timedelta
-from uuid import uuid4
-from typing import Dict, Any
 import random
+from datetime import datetime, timedelta
+from typing import Any, Dict
+from uuid import uuid4
+
+import factory
+from factory import Faker, LazyFunction, SubFactory
 
 
 class UserFactory(factory.Factory):
@@ -203,7 +204,7 @@ class RelatedDataFactory:
     """Helper for generating related test data sets"""
     
     @staticmethod
-    def create_user_with_channels(channel_count: int = 3) -> Dict[str, Any]:
+    def create_user_with_channels(channel_count: int = 3) -> dict[str, Any]:
         """Create a user with multiple channels"""
         user = UserFactory()
         channels = [ChannelFactory(user_id=user['id']) for _ in range(channel_count)]
@@ -214,7 +215,7 @@ class RelatedDataFactory:
         }
     
     @staticmethod
-    def create_channel_with_posts(post_count: int = 5) -> Dict[str, Any]:
+    def create_channel_with_posts(post_count: int = 5) -> dict[str, Any]:
         """Create a channel with multiple scheduled posts"""
         user = UserFactory()
         channel = ChannelFactory(user_id=user['id'])
@@ -232,7 +233,7 @@ class RelatedDataFactory:
         }
     
     @staticmethod
-    def create_payment_flow_data() -> Dict[str, Any]:
+    def create_payment_flow_data() -> dict[str, Any]:
         """Create complete payment flow test data"""
         user = UserFactory()
         payment = PaymentFactory(user_id=user['id'])
@@ -252,7 +253,7 @@ class RelatedDataFactory:
         }
     
     @staticmethod
-    def create_analytics_scenario() -> Dict[str, Any]:
+    def create_analytics_scenario() -> dict[str, Any]:
         """Create analytics testing scenario"""
         user = UserFactory()
         channel = ChannelFactory(user_id=user['id'])

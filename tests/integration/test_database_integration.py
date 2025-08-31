@@ -2,23 +2,21 @@
 Module TQA.2.2: Database Integration Testing
 Comprehensive database layer testing with repositories, transactions, and data integrity
 """
-import pytest
 import asyncio
+from datetime import datetime
+from unittest.mock import AsyncMock
+
 import asyncpg
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
-import json
+import pytest
 
 # Test framework imports
 from tests.factories import (
-    UserFactory,
-    ChannelFactory,
-    ScheduledPostFactory,
-    PaymentFactory,
     AnalyticsDataFactory,
-    DeliveryFactory
+    ChannelFactory,
+    DeliveryFactory,
+    PaymentFactory,
+    ScheduledPostFactory,
+    UserFactory,
 )
 
 
@@ -133,7 +131,6 @@ class TestChannelRepositoryIntegration:
         mock_db_pool.execute.return_value = "UPDATE 1"
         
         # Test repository initialization
-        from infra.db.repositories.channel_repository import ChannelRepository
         
         # Verify mock setup
         assert mock_db_pool.fetchrow.return_value == channel_data
@@ -212,7 +209,7 @@ class TestScheduleRepositoryIntegration:
     
     def test_bulk_post_operations(self, mock_db_pool):
         """Test bulk operations for scheduled posts"""
-        posts = [ScheduledPostFactory() for _ in range(100)]
+        [ScheduledPostFactory() for _ in range(100)]
         
         # Mock bulk insert response
         mock_db_pool.executemany.return_value = None
@@ -232,7 +229,7 @@ class TestTransactionIntegration:
     def test_transaction_rollback_scenario(self, mock_db_connection):
         """Test transaction rollback on error"""
         user_data = UserFactory()
-        payment_data = PaymentFactory(user_id=user_data['id'])
+        PaymentFactory(user_id=user_data['id'])
         
         # Setup transaction mock
         mock_transaction = AsyncMock()
@@ -254,7 +251,7 @@ class TestTransactionIntegration:
     
     def test_concurrent_transaction_handling(self, mock_db_connection):
         """Test concurrent transaction isolation"""
-        channel_data = ChannelFactory()
+        ChannelFactory()
         
         # Setup concurrent access simulation
         mock_db_connection.fetchval.side_effect = [
@@ -392,7 +389,6 @@ class TestQueryPerformanceValidation:
     
     def test_query_execution_time_monitoring(self, mock_db_pool):
         """Test query execution time tracking"""
-        import time
         
         # Simulate slow query
         async def slow_query_mock(*args, **kwargs):
@@ -472,7 +468,7 @@ def validate_data_integrity(before_data, after_data):
 async def simulate_concurrent_operations(pool, operations, concurrent_count=10):
     """Simulate concurrent database operations"""
     tasks = []
-    for i in range(concurrent_count):
+    for _i in range(concurrent_count):
         for operation in operations:
             task = asyncio.create_task(operation(pool))
             tasks.append(task)

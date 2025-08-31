@@ -5,10 +5,12 @@ Revises:
 Create Date: 2025-08-27 12:00:00.000000
 
 """
-from alembic import op
+import uuid
+
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
-import uuid
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '001_create_superadmin_tables'

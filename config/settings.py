@@ -146,6 +146,7 @@ class Settings(BaseSettings):
         port = values.get("POSTGRES_PORT", 5432)
         db = values.get("POSTGRES_DB")
 
+        # Always extract secret value if it's a SecretStr
         if password and hasattr(password, "get_secret_value"):
             password = password.get_secret_value()
 

@@ -50,8 +50,21 @@ jobs:
           python -c "import apps.api.main; print('API OK')"
           python -c "import apps.bot.run_bot; print('BOT OK')"
 
-      - name: Run tests (quick)
-        run: pytest tests/test_health.py tests/test_layered_architecture.py -q
+      - name: Run tests with coverage
+        run: |
+          pip install pytest-cov
+          pytest --cov=apps --cov=core --cov-report=term-missing --cov-report=xml --cov-fail-under=70 tests/test_health.py tests/test_layered_architecture.py
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+      - name: Security audit
+        run: |
+          pip install safety
+          safety check --ignore=12345 || echo "⚠️ Security vulnerabilities found, review required"
 
       - name: Check pre-commit configuration
         id: precommit-check

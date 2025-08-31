@@ -3,21 +3,30 @@ Isolated Content Protection Test Suite - Phase 2.3
 Tests without importing the full application (to avoid settings dependencies)
 """
 
-import pytest
-import tempfile
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import AsyncMock, patch, MagicMock
+import os
 
 # Isolated imports to avoid settings issues
 import sys
-import os
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from apps.bot.services.content_protection import ContentProtectionService, PremiumEmojiService, WatermarkConfig
 from apps.bot.models.content_protection import (
-    ContentType, UserTier, ProtectionLevel, PremiumFeatureLimits,
-    ContentProtectionRequest, ContentProtectionResponse
+    ContentProtectionRequest,
+    ContentProtectionResponse,
+    ContentType,
+    PremiumFeatureLimits,
+    ProtectionLevel,
+    UserTier,
+)
+from apps.bot.services.content_protection import (
+    ContentProtectionService,
+    PremiumEmojiService,
+    WatermarkConfig,
 )
 
 

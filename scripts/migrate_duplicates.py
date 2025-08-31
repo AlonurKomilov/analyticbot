@@ -60,13 +60,13 @@ def migrate_duplicates():
 
     with open(duplicates_file) as f:
         reader = csv.reader(f)
-        header = next(reader)  # Skip header
+        next(reader)  # Skip header
 
         for row in reader:
             if len(row) < 3:
                 continue
 
-            hash_val, canonical, redundants_str = row[0], row[1], row[2]
+            _hash_val, canonical, redundants_str = row[0], row[1], row[2]
 
             # Skip node_modules files
             if "node_modules" in canonical or "node_modules" in redundants_str:

@@ -7,10 +7,9 @@ granular permissions, and resource-level access control.
 
 import json
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Optional, Dict, Any
-from dataclasses import dataclass
 
 import redis
 
@@ -25,7 +24,7 @@ class RBACConfig:
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
 
 
 class Permission(str, Enum):
@@ -84,7 +83,7 @@ class RBACManager:
     - Audit logging for access control
     """
 
-    def __init__(self, config: Optional[RBACConfig] = None):
+    def __init__(self, config: RBACConfig | None = None):
         self.config = config or RBACConfig()
         try:
             redis_kwargs = {

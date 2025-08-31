@@ -2,26 +2,25 @@
 Unit Tests for Domain Models
 Tests core domain models and business logic without external dependencies
 """
+
 import pytest
-from datetime import datetime, timedelta
-from decimal import Decimal
-from typing import Dict, Any
 from pydantic import ValidationError
+
+from apps.bot.domain.constants import (
+    DEFAULT_FREE_CHANNELS,
+    DEFAULT_PREMIUM_CHANNELS,
+    AnalyticsEventType,
+    PlanType,
+    ServiceStatus,
+)
 
 # Domain model imports
 from apps.bot.domain.models import (
-    SubscriptionStatus,
+    AnalyticsMetrics,
     InlineButton,
     InlineButtonsPayload,
-    AnalyticsMetrics,
-    ServiceHealth
-)
-from apps.bot.domain.constants import (
-    PlanType,
-    ServiceStatus,
-    AnalyticsEventType,
-    DEFAULT_FREE_CHANNELS,
-    DEFAULT_PREMIUM_CHANNELS
+    ServiceHealth,
+    SubscriptionStatus,
 )
 
 

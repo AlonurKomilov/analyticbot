@@ -12,7 +12,6 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from infra.db.repositories.payment_repository import AsyncpgPaymentRepository as PaymentRepository
 from apps.bot.models.payment import (
     BillingCycle,
     PaymentCreate,
@@ -25,6 +24,7 @@ from apps.bot.models.payment import (
     SubscriptionResponse,
     SubscriptionStatus,
 )
+from infra.db.repositories.payment_repository import AsyncpgPaymentRepository as PaymentRepository
 
 logger = logging.getLogger(__name__)
 
@@ -587,7 +587,7 @@ class PaymentService:
                 provider = payment_method["provider"]
                 adapter = self.get_adapter(provider)
                 try:
-                    provider_response = await adapter.create_subscription(
+                    await adapter.create_subscription(
                         customer_id=str(user_id),
                         payment_method_id=payment_method["provider_method_id"],
                         plan_id=str(subscription_data.plan_id),

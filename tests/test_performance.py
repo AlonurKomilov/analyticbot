@@ -20,7 +20,7 @@ class TestPerformanceBenchmarks:
     @pytest.fixture
     async def mock_services(self):
         """Setup mock services for testing"""
-        pool = MagicMock()
+        MagicMock()
         analytics_repo = MagicMock(spec=AnalyticsRepository)
         scheduler_repo = MagicMock(spec=SchedulerRepository)
         analytics_repo.get_total_users_count.return_value = 1000

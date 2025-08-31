@@ -16,7 +16,9 @@ import {
     SpeedDialAction,
     SpeedDialIcon,
     Breadcrumbs,
-    Link
+    Link,
+    Collapse,
+    IconButton
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
@@ -29,6 +31,8 @@ import {
     Share as ShareIcon,
     Print as PrintIcon,
     Home as HomeIcon,
+    ExpandMore as ExpandMoreIcon,
+    ExpandLess as ExpandLessIcon,
     NavigateNext as NavigateNextIcon
 } from '@mui/icons-material';
 
@@ -36,6 +40,8 @@ import {
 import PostViewDynamicsChart from './PostViewDynamicsChart';
 import TopPostsTable from './TopPostsTable';
 import BestTimeRecommender from './BestTimeRecommender';
+import DataSourceSettings from './DataSourceSettings';
+import { useAppStore } from '../store/appStore';
 
 // Tab Panel Component
 const TabPanel = ({ children, value, index, ...other }) => (
@@ -54,6 +60,10 @@ const AnalyticsDashboard = () => {
     const [activeTab, setActiveTab] = useState(0);
     const [lastUpdated, setLastUpdated] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    
+    // Store integration
+    const { dataSource, setDataSource, fetchData, isUsingRealAPI } = useAppStore();
 
     // Auto-refresh functionality
     useEffect(() => {
@@ -63,6 +73,21 @@ const AnalyticsDashboard = () => {
 
         return () => clearInterval(interval);
     }, []);
+
+    // Handle data source change
+    const handleDataSourceChange = async (newSource) => {
+        setDataSource(newSource);
+        setIsLoading(true);
+        
+        try {
+            await fetchData(newSource);
+            setLastUpdated(new Date());
+        } catch (error) {
+            console.error('Error switching data source:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
@@ -82,7 +107,7 @@ const AnalyticsDashboard = () => {
         { icon: <DownloadIcon />, name: 'Eksport', action: () => console.log('Export') },
         { icon: <ShareIcon />, name: 'Ulashish', action: () => console.log('Share') },
         { icon: <PrintIcon />, name: 'Chop etish', action: () => console.log('Print') },
-        { icon: <SettingsIcon />, name: 'Sozlamalar', action: () => console.log('Settings') }
+        { icon: <SettingsIcon />, name: 'Sozlamalar', action: () => setShowSettings(!showSettings) }
     ];
 
     return (
@@ -133,13 +158,26 @@ const AnalyticsDashboard = () => {
                         
                         <Chip 
                             icon={<TrendingIcon />} 
-                            label="Real-time" 
+                            label={isUsingRealAPI() ? "Live API" : "Demo Data"} 
                             color="primary" 
                             sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
                         />
+                        
+                        <IconButton
+                            onClick={() => setShowSettings(!showSettings)}
+                            sx={{ color: 'white' }}
+                            title="Data Source Settings"
+                        >
+                            {showSettings ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
                     </Box>
                 </Box>
             </Paper>
+
+            {/* Data Source Settings - Collapsible */}
+            <Collapse in={showSettings}>
+                <DataSourceSettings onDataSourceChange={handleDataSourceChange} />
+            </Collapse>
 
             {/* Alert for Phase 2.1 Status */}
             <Alert 

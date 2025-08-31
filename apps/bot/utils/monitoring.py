@@ -125,7 +125,7 @@ class MetricsCollector:
         """Remove old metrics to prevent memory leaks"""
         cutoff_time = datetime.now() - self._max_age
         with self._lock:
-            for metric_name, metrics in self._metrics.items():
+            for _metric_name, metrics in self._metrics.items():
                 while metrics and metrics[0].timestamp < cutoff_time:
                     metrics.popleft()
 

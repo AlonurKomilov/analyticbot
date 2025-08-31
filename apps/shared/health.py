@@ -4,17 +4,17 @@ System health monitoring for Clean Architecture components
 """
 
 from datetime import datetime
-from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Depends
+from typing import Any
 
-from apps.shared.di import get_container, Container
+from fastapi import APIRouter, Depends, HTTPException
 
+from apps.shared.di import Container, get_container
 
 router = APIRouter(prefix="/health", tags=["Health"])
 
 
 @router.get("/", summary="System Health Check")
-async def health_check() -> Dict[str, Any]:
+async def health_check() -> dict[str, Any]:
     """Basic health check endpoint"""
     return {
         "status": "healthy",
@@ -26,7 +26,7 @@ async def health_check() -> Dict[str, Any]:
 
 
 @router.get("/db", summary="Database Health Check")
-async def database_health(container: Container = Depends(get_container)) -> Dict[str, Any]:
+async def database_health(container: Container = Depends(get_container)) -> dict[str, Any]:
     """Check database connectivity and basic operations"""
     
     health_info = {
@@ -57,13 +57,13 @@ async def database_health(container: Container = Depends(get_container)) -> Dict
         
         # Test repository instantiation
         try:
-            user_repo = await container.user_repo()
+            await container.user_repo()
             health_info["repositories"]["user"] = "initialized"
             
-            analytics_repo = await container.analytics_repo()
+            await container.analytics_repo()
             health_info["repositories"]["analytics"] = "initialized"
             
-            channel_repo = await container.channel_repo()
+            await container.channel_repo()
             health_info["repositories"]["channel"] = "initialized"
             
         except Exception as repo_error:
@@ -80,7 +80,7 @@ async def database_health(container: Container = Depends(get_container)) -> Dict
 
 
 @router.get("/architecture", summary="Architecture Compliance Check")  
-async def architecture_health() -> Dict[str, Any]:
+async def architecture_health() -> dict[str, Any]:
     """Check Clean Architecture compliance"""
     
     compliance_info = {
@@ -130,7 +130,7 @@ async def architecture_health() -> Dict[str, Any]:
 
 
 @router.get("/di", summary="Dependency Injection Health")
-async def di_health(container: Container = Depends(get_container)) -> Dict[str, Any]:
+async def di_health(container: Container = Depends(get_container)) -> dict[str, Any]:
     """Check dependency injection container health"""
     
     di_info = {

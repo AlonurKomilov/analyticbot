@@ -12,8 +12,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
 from apps.api.routers.analytics_router import router as analytics_router
-from apps.bot.api.content_protection_routes import router as content_protection_router
 from apps.api.superadmin_routes import router as superadmin_router
+from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
 from core import DeliveryService, ScheduleService
 

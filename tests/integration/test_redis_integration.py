@@ -11,19 +11,14 @@ Test Structure:
 - TestRedisCacheInvalidation: Cache invalidation strategy testing
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional, Union
 import json
 import time
-from datetime import datetime, timedelta
-import pickle
-import hashlib
+from datetime import datetime
+
+import pytest
 
 # Test framework imports
-import redis.asyncio as redis
-from fakeredis import FakeRedis
 from fakeredis.aioredis import FakeRedis as FakeAsyncRedis
 
 
@@ -336,7 +331,7 @@ class TestRedisRateLimiting:
         user_id = 123456789
         limit_config = rate_limit_config["api_calls"]
         
-        async def check_rate_limit(user_id: int, action: str, config: Dict[str, int], request_time: float = None) -> bool:
+        async def check_rate_limit(user_id: int, action: str, config: dict[str, int], request_time: float = None) -> bool:
             """Simple sliding window rate limiter"""
             key = f"rate_limit:{action}:{user_id}"
             current_time = request_time or time.time()

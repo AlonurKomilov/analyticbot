@@ -2,17 +2,14 @@
 Module TQA.2.1: Basic API Integration Testing
 Simple API endpoint testing without complex dependencies
 """
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 # Test framework imports
-from tests.factories import (
-    UserFactory,
-    ChannelFactory,
-    AnalyticsDataFactory
-)
+from tests.factories import AnalyticsDataFactory, ChannelFactory, UserFactory
 
 
 @pytest.fixture
@@ -182,7 +179,6 @@ class TestAPIErrorScenarios:
     def test_concurrent_requests(self, test_client):
         """Test handling of concurrent requests"""
         import threading
-        import time
         
         results = []
         

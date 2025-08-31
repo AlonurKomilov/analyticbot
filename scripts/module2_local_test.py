@@ -122,15 +122,6 @@ class Module2LocalTester:
         try:
             original_cwd = os.getcwd()
             os.chdir(str(self.project_root))
-            test_env = {
-                **os.environ,
-                "DATABASE_URL": f"sqlite:///{self.db_path}",
-                "REDIS_URL": "redis://localhost:6379/0",
-                "ENVIRONMENT": "testing",
-                "DEBUG": "true",
-                "BOT_TOKEN": "test_token",
-                "JWT_SECRET_KEY": "test_secret_key",
-            }
             import sys
 
             sys.path.insert(0, str(self.project_root))

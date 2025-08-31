@@ -5,8 +5,9 @@ Concrete implementation for payment-related data operations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional, List
+from typing import Any
 from uuid import uuid4
+
 import asyncpg
 
 
@@ -22,11 +23,11 @@ class AsyncpgPaymentRepository:
         provider: str,
         provider_method_id: str,
         method_type: str,
-        last_four: Optional[str] = None,
-        brand: Optional[str] = None,
-        expires_at: Optional[datetime] = None,
+        last_four: str | None = None,
+        brand: str | None = None,
+        expires_at: datetime | None = None,
         is_default: bool = False,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Create a new payment method"""
         method_id = str(uuid4())
@@ -55,7 +56,7 @@ class AsyncpgPaymentRepository:
             )
         return method_id
 
-    async def get_user_payment_methods(self, user_id: int) -> List[dict[str, Any]]:
+    async def get_user_payment_methods(self, user_id: int) -> list[dict[str, Any]]:
         """Get all active payment methods for a user"""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
@@ -68,7 +69,7 @@ class AsyncpgPaymentRepository:
             )
             return [dict(row) for row in rows]
 
-    async def get_payment_method(self, method_id: str) -> Optional[dict[str, Any]]:
+    async def get_payment_method(self, method_id: str) -> dict[str, Any] | None:
         """Get payment method by ID"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow("SELECT * FROM payment_methods WHERE id = $1", method_id)
@@ -86,15 +87,15 @@ class AsyncpgPaymentRepository:
         self,
         user_id: int,
         plan_id: int,
-        payment_method_id: Optional[str],
-        provider_subscription_id: Optional[str],
+        payment_method_id: str | None,
+        provider_subscription_id: str | None,
         billing_cycle: str,
         amount: Decimal,
         currency: str,
         current_period_start: datetime,
         current_period_end: datetime,
-        trial_ends_at: Optional[datetime] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        trial_ends_at: datetime | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Create a new subscription"""
         subscription_id = str(uuid4())
@@ -130,7 +131,7 @@ class AsyncpgPaymentRepository:
             )
         return subscription_id
 
-    async def get_user_active_subscription(self, user_id: int) -> Optional[dict[str, Any]]:
+    async def get_user_active_subscription(self, user_id: int) -> dict[str, Any] | None:
         """Get user's active subscription with plan details"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -147,7 +148,7 @@ class AsyncpgPaymentRepository:
             return dict(row) if row else None
 
     async def update_subscription_status(
-        self, subscription_id: str, status: str, canceled_at: Optional[datetime] = None
+        self, subscription_id: str, status: str, canceled_at: datetime | None = None
     ) -> bool:
         """Update subscription status"""
         async with self.pool.acquire() as conn:
@@ -191,16 +192,16 @@ class AsyncpgPaymentRepository:
     async def create_payment(
         self,
         user_id: int,
-        subscription_id: Optional[str],
-        payment_method_id: Optional[str],
+        subscription_id: str | None,
+        payment_method_id: str | None,
         provider: str,
-        provider_payment_id: Optional[str],
+        provider_payment_id: str | None,
         idempotency_key: str,
         amount: Decimal,
         currency: str,
         status: str = "pending",
-        description: Optional[str] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Create a new payment record"""
         payment_id = str(uuid4())
@@ -232,9 +233,9 @@ class AsyncpgPaymentRepository:
         self,
         payment_id: str,
         status: str,
-        provider_payment_id: Optional[str] = None,
-        failure_code: Optional[str] = None,
-        failure_message: Optional[str] = None,
+        provider_payment_id: str | None = None,
+        failure_code: str | None = None,
+        failure_message: str | None = None,
         webhook_verified: bool = False,
     ) -> bool:
         """Update payment status and details"""
@@ -257,7 +258,7 @@ class AsyncpgPaymentRepository:
             )
             return result != "UPDATE 0"
 
-    async def get_payment_by_idempotency_key(self, idempotency_key: str) -> Optional[dict[str, Any]]:
+    async def get_payment_by_idempotency_key(self, idempotency_key: str) -> dict[str, Any] | None:
         """Get payment by idempotency key to prevent duplicates"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -267,7 +268,7 @@ class AsyncpgPaymentRepository:
 
     async def get_user_payments(
         self, user_id: int, limit: int = 50, offset: int = 0
-    ) -> List[dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get user's payment history"""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
@@ -286,7 +287,7 @@ class AsyncpgPaymentRepository:
             )
             return [dict(row) for row in rows]
 
-    async def get_payment(self, payment_id: str) -> Optional[dict[str, Any]]:
+    async def get_payment(self, payment_id: str) -> dict[str, Any] | None:
         """Get payment by ID"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow("SELECT * FROM payments WHERE id = $1", payment_id)
@@ -296,10 +297,10 @@ class AsyncpgPaymentRepository:
         self,
         provider: str,
         event_type: str,
-        provider_event_id: Optional[str],
-        object_id: Optional[str],
+        provider_event_id: str | None,
+        object_id: str | None,
         payload: dict[str, Any],
-        signature: Optional[str] = None,
+        signature: str | None = None,
     ) -> str:
         """Create webhook event record"""
         event_id = str(uuid4())
@@ -321,7 +322,7 @@ class AsyncpgPaymentRepository:
         return event_id
 
     async def mark_webhook_processed(
-        self, event_id: str, processed: bool = True, error_message: Optional[str] = None
+        self, event_id: str, processed: bool = True, error_message: str | None = None
     ) -> bool:
         """Mark webhook event as processed"""
         async with self.pool.acquire() as conn:
@@ -384,7 +385,7 @@ class AsyncpgPaymentRepository:
             )
             return dict(row) if row else {}
 
-    async def get_plan_with_pricing(self, plan_id: int) -> Optional[dict[str, Any]]:
+    async def get_plan_with_pricing(self, plan_id: int) -> dict[str, Any] | None:
         """Get plan with pricing information"""
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
@@ -392,7 +393,7 @@ class AsyncpgPaymentRepository:
             )
             return dict(row) if row else None
 
-    async def get_all_active_plans(self) -> List[dict[str, Any]]:
+    async def get_all_active_plans(self) -> list[dict[str, Any]]:
         """Get all active plans with pricing"""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(

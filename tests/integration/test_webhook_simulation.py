@@ -3,19 +3,18 @@ Webhook simulation tests for Telegram and payment providers
 Tests webhook handling, signature validation, and processing
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-import json
-import hmac
 import hashlib
+import hmac
+import json
 from datetime import datetime
+from unittest.mock import AsyncMock
+
+import pytest
 
 from tests.factories import (
-    UserFactory,
     ChannelFactory,
-    ScheduledPostFactory,
-    WebhookEventFactory,
-    PaymentFactory
+    PaymentFactory,
+    UserFactory,
 )
 
 
@@ -300,7 +299,6 @@ class TestPaymentWebhookSimulation:
         }
         
         # Mock Redis to track processed webhooks
-        processed_key = f"webhook:processed:{webhook_id}"
         mock_redis.exists.side_effect = [False, True, True]  # First time: new, then: duplicate
         mock_redis.setex.return_value = True
         

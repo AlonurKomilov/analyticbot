@@ -360,7 +360,7 @@ def health_check_task(self) -> dict[str, Any]:
             try:
                 db = container.db_session()
                 # Simple query to check DB connectivity
-                result = await db.execute("SELECT 1")
+                await db.execute("SELECT 1")
                 health_results["components"]["database"] = {
                     "status": "healthy",
                     "response_time_ms": 0,  # Could measure actual response time

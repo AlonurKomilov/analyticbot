@@ -3,18 +3,16 @@ Import Guard Script
 Forbids core -> apps/infra imports to maintain Clean Architecture principles
 """
 
-import sys
 import ast
 import pathlib
-from typing import List
-
+import sys
 
 ROOT = pathlib.Path(".").resolve()
 CORE = ROOT / "core"
 FORBIDDEN_IMPORTS = ("apps", "infra", "infrastructure")
 
 
-def scan_file(file: pathlib.Path) -> List[str]:
+def scan_file(file: pathlib.Path) -> list[str]:
     """Scan a Python file for forbidden imports"""
     violations = []
     
@@ -67,11 +65,11 @@ def main():
         for violation in all_violations:
             print(f"  ❌ {violation}")
         
-        print(f"\n📋 Clean Architecture Rules:")
-        print(f"  ✅ core/ can import: standard library, core modules")
-        print(f"  ❌ core/ cannot import: apps/, infra/, infrastructure/")
-        print(f"  ✅ apps/ can import: core/, standard library")
-        print(f"  ✅ infra/ can import: core/, standard library, external libraries")
+        print("\n📋 Clean Architecture Rules:")
+        print("  ✅ core/ can import: standard library, core modules")
+        print("  ❌ core/ cannot import: apps/, infra/, infrastructure/")
+        print("  ✅ apps/ can import: core/, standard library")
+        print("  ✅ infra/ can import: core/, standard library, external libraries")
         
         return 1
     

@@ -485,7 +485,7 @@ async def get_best_posting_time(
             raise HTTPException(status_code=403, detail="Access denied to channel")
         from datetime import datetime, timedelta
 
-        since_date = datetime.utcnow() - timedelta(days=days_analysis)
+        datetime.utcnow() - timedelta(days=days_analysis)
         import random
 
         time_recommendations = []

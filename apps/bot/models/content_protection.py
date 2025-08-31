@@ -3,15 +3,14 @@ Content Protection Models
 Data models for Phase 2.3: Content Protection & Premium Features
 """
 
+import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any
-from decimal import Decimal
+from typing import Any
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, JSON, Float
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-import uuid
 
 from core.models.base import BaseORMModel
 
@@ -53,7 +52,7 @@ class UserTier(str, Enum):
 class WatermarkRequest(BaseModel):
     """Request to add watermark to content"""
     content_type: ContentType
-    watermark_text: Optional[str] = None
+    watermark_text: str | None = None
     position: WatermarkPosition = WatermarkPosition.BOTTOM_RIGHT
     opacity: float = 0.7
     font_size: int = 24
@@ -67,7 +66,7 @@ class ContentProtectionRequest(BaseModel):
     content_type: ContentType
     apply_watermark: bool = True
     detect_theft: bool = True
-    watermark_config: Optional[WatermarkRequest] = None
+    watermark_config: WatermarkRequest | None = None
 
 
 class ContentProtectionResponse(BaseModel):
@@ -75,8 +74,8 @@ class ContentProtectionResponse(BaseModel):
     protection_id: str
     protected: bool
     protection_level: ProtectionLevel
-    watermarked_file_url: Optional[str] = None
-    theft_analysis: Optional[Dict[str, Any]] = None
+    watermarked_file_url: str | None = None
+    theft_analysis: dict[str, Any] | None = None
     processing_time_ms: int
     timestamp: datetime
 
@@ -94,7 +93,7 @@ class CustomEmojiRequest(BaseModel):
 class CustomEmojiResponse(BaseModel):
     """Response with custom emoji formatted message"""
     formatted_text: str
-    entities: list[Dict[str, Any]]
+    entities: list[dict[str, Any]]
     emojis_used: int
 
 
@@ -113,7 +112,7 @@ class PremiumFeatureUsage(BaseModel):
     feature_type: str
     usage_count: int
     last_used: datetime
-    monthly_limit: Optional[int] = None
+    monthly_limit: int | None = None
 
 
 # Database Models
@@ -213,19 +212,19 @@ class UserPremiumFeatures(BaseORMModel):
 class ContentProtectionAnalytics(BaseModel):
     """Analytics for content protection usage"""
     total_protections: int
-    protections_by_type: Dict[str, int]
+    protections_by_type: dict[str, int]
     watermarks_applied: int
     theft_detections: int
     average_processing_time_ms: float
-    premium_feature_adoption: Dict[str, float]
+    premium_feature_adoption: dict[str, float]
 
 
 class PremiumFeatureLimits(BaseModel):
     """Premium feature limits by tier"""
     tier: UserTier
-    watermarks_per_month: Optional[int] = None  # None = unlimited
-    custom_emojis_per_month: Optional[int] = None
-    theft_scans_per_month: Optional[int] = None
+    watermarks_per_month: int | None = None  # None = unlimited
+    custom_emojis_per_month: int | None = None
+    theft_scans_per_month: int | None = None
     max_file_size_mb: int = 50
     supported_formats: list[str] = ["jpg", "jpeg", "png", "mp4", "mov"]
 

@@ -2,20 +2,10 @@
 Basic Domain Model Tests - Working Implementation
 Tests core domain models with working pytest setup
 """
-import pytest
 
 # Test imports
-from apps.bot.domain.models import (
-    SubscriptionStatus,
-    InlineButton,
-    AnalyticsMetrics,
-    ServiceHealth
-)
-from apps.bot.domain.constants import (
-    PlanType,
-    ServiceStatus,
-    DEFAULT_FREE_CHANNELS
-)
+from apps.bot.domain.constants import DEFAULT_FREE_CHANNELS, PlanType, ServiceStatus
+from apps.bot.domain.models import AnalyticsMetrics, InlineButton, ServiceHealth, SubscriptionStatus
 
 
 def test_subscription_status_basic():

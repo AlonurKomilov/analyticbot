@@ -11,26 +11,23 @@ Test Structure:
 - TestRefundWorkflow: Refund processing and account adjustments
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
 import json
 import uuid
 from datetime import datetime, timedelta
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
-import httpx
+import pytest
 from fakeredis.aioredis import FakeRedis as FakeAsyncRedis
-
 
 # Mock payment workflow state
 payment_workflow_state = {}
 
-def get_payment_workflow_state(workflow_id: str) -> Dict[str, Any]:
+def get_payment_workflow_state(workflow_id: str) -> dict[str, Any]:
     return payment_workflow_state.get(workflow_id, {})
 
-def update_payment_workflow_state(workflow_id: str, updates: Dict[str, Any]):
+def update_payment_workflow_state(workflow_id: str, updates: dict[str, Any]):
     if workflow_id not in payment_workflow_state:
         payment_workflow_state[workflow_id] = {}
     payment_workflow_state[workflow_id].update(updates)
@@ -256,7 +253,7 @@ class TestSubscriptionPurchaseWorkflow:
             })
         )
         
-        subscription_update = await mock_payment_api.put(
+        await mock_payment_api.put(
             f"/api/users/{user_id}/subscription",
             json={
                 "plan_id": plan_id,
@@ -392,7 +389,7 @@ class TestSubscriptionPurchaseWorkflow:
         )
         
         # Step 6: Perform transaction (payment completion)
-        perform_result = await mock_payme_workflow.perform_transaction(
+        await mock_payme_workflow.perform_transaction(
             id=transaction_id
         )
         
@@ -420,7 +417,7 @@ class TestSubscriptionPurchaseWorkflow:
             })
         )
         
-        subscription_update = await mock_payment_api.put(
+        await mock_payment_api.put(
             f"/api/users/{user_id}/subscription",
             json={
                 "plan_id": plan_id,
@@ -536,7 +533,7 @@ class TestPaymentFailureWorkflow:
             "client_secret": "pi_retry_workflow_secret"
         }
         
-        retry_payment_intent = await mock_stripe_workflow.create_payment_intent(
+        await mock_stripe_workflow.create_payment_intent(
             amount=2999,
             currency="usd"
         )
@@ -548,7 +545,7 @@ class TestPaymentFailureWorkflow:
             "payment_method": {"card": {"brand": "mastercard", "last4": "5555"}}
         }
         
-        successful_retry = await mock_stripe_workflow.confirm_payment_intent("pi_retry_workflow")
+        await mock_stripe_workflow.confirm_payment_intent("pi_retry_workflow")
         
         # Step 8: Update subscription after successful retry
         mock_payment_api.put.return_value = AsyncMock(
@@ -559,7 +556,7 @@ class TestPaymentFailureWorkflow:
             })
         )
         
-        retry_update = await mock_payment_api.put(
+        await mock_payment_api.put(
             f"/api/users/{user_id}/subscription",
             json={"payment_intent_id": "pi_retry_workflow", "status": "active"}
         )
@@ -635,7 +632,7 @@ class TestPaymentFailureWorkflow:
                 }
             }
             
-            failed_attempt = await mock_stripe_workflow.confirm_payment_intent(f"pi_fail_{attempt}")
+            await mock_stripe_workflow.confirm_payment_intent(f"pi_fail_{attempt}")
             
             # Store failure
             await mock_payment_redis.hset(
@@ -740,7 +737,7 @@ class TestSubscriptionRenewalWorkflow:
             })
         )
         
-        subscription_details = await mock_payment_api.get(f"/api/subscriptions/{subscription_id}")
+        await mock_payment_api.get(f"/api/subscriptions/{subscription_id}")
         
         # Step 3: Process renewal with Stripe
         mock_stripe_workflow.retrieve_subscription.return_value = {
@@ -771,7 +768,7 @@ class TestSubscriptionRenewalWorkflow:
             })
         )
         
-        renewal_update = await mock_payment_api.put(
+        await mock_payment_api.put(
             f"/api/subscriptions/{subscription_id}/renew",
             json={
                 "renewed_at": datetime.now().isoformat(),
@@ -861,7 +858,7 @@ class TestRefundWorkflow:
             })
         )
         
-        payment_details = await mock_payment_api.get(f"/api/payments/{payment_intent_id}")
+        await mock_payment_api.get(f"/api/payments/{payment_intent_id}")
         
         # Step 3: Process refund with Stripe
         mock_stripe_workflow.create_refund.return_value = {
@@ -892,7 +889,7 @@ class TestRefundWorkflow:
             })
         )
         
-        subscription_update = await mock_payment_api.put(
+        await mock_payment_api.put(
             f"/api/users/{user_id}/subscription",
             json={
                 "status": "cancelled",

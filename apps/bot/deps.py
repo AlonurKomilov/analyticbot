@@ -3,13 +3,14 @@ Dependency injection setup for Telegram Bot
 Simple DI container for bot handlers
 """
 
-import asyncpg
-import aiosqlite
 import os
 
+import aiosqlite
+import asyncpg
+
 from config import settings
-from infra.db.repositories import AsyncpgDeliveryRepository, AsyncpgScheduleRepository
 from core.services import DeliveryService, ScheduleService
+from infra.db.repositories import AsyncpgDeliveryRepository, AsyncpgScheduleRepository
 
 
 class BotContainer:
@@ -46,7 +47,7 @@ class BotContainer:
                     max_size=settings.DB_MAX_OVERFLOW,
                     command_timeout=settings.DB_POOL_TIMEOUT,
                 )
-                print(f"Bot: Connected to PostgreSQL database")
+                print("Bot: Connected to PostgreSQL database")
 
     async def get_db_connection(self):
         """Get database connection"""

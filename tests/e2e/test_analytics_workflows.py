@@ -12,28 +12,23 @@ Test Structure:
 - TestCrossChannelAnalyticsWorkflow: Multi-channel data aggregation
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
 import json
 import uuid
 from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
+from typing import Any
+from unittest.mock import AsyncMock
 
 # Test framework imports
-import httpx
+import pytest
 from fakeredis.aioredis import FakeRedis as FakeAsyncRedis
-
 
 # Mock analytics workflow state
 analytics_workflow_state = {}
 
-def get_analytics_workflow_state(workflow_id: str) -> Dict[str, Any]:
+def get_analytics_workflow_state(workflow_id: str) -> dict[str, Any]:
     return analytics_workflow_state.get(workflow_id, {})
 
-def update_analytics_workflow_state(workflow_id: str, updates: Dict[str, Any]):
+def update_analytics_workflow_state(workflow_id: str, updates: dict[str, Any]):
     if workflow_id not in analytics_workflow_state:
         analytics_workflow_state[workflow_id] = {}
     analytics_workflow_state[workflow_id].update(updates)
@@ -170,7 +165,7 @@ class TestAnalyticsDataCollectionWorkflow:
         })
         
         # Step 2: Get channel information
-        channel_info = await mock_telegram_analytics.get_chat(channel_id)
+        await mock_telegram_analytics.get_chat(channel_id)
         
         # Step 3: Collect current metrics
         current_metrics = await mock_data_processor.collect_channel_data(channel_id)
@@ -235,7 +230,7 @@ class TestAnalyticsDataCollectionWorkflow:
             })
         )
         
-        analytics_save = await mock_analytics_api.post(
+        await mock_analytics_api.post(
             f"/api/analytics/{channel_id}",
             json={
                 "current_metrics": current_metrics,
@@ -362,7 +357,7 @@ class TestAnalyticsDataCollectionWorkflow:
             })
         )
         
-        aggregate_save = await mock_analytics_api.post(
+        await mock_analytics_api.post(
             f"/api/analytics/aggregate/{user_id}",
             json={
                 "channel_data": channel_data,
@@ -515,8 +510,8 @@ class TestReportGenerationWorkflow:
             })
         )
         
-        delivery_log = await mock_analytics_api.post(
-            f"/api/analytics/reports/delivery",
+        await mock_analytics_api.post(
+            "/api/analytics/reports/delivery",
             json={
                 "user_id": user_id,
                 "channel_id": channel_id,
@@ -677,7 +672,7 @@ class TestScheduledAnalyticsWorkflow:
             json=AsyncMock(return_value={"success": True, "data": {}})
         )
         
-        delivery_log = await mock_analytics_api.post(
+        await mock_analytics_api.post(
             f"/api/analytics/schedules/{schedule_id}/deliveries",
             json={
                 "delivered_at": datetime.now().isoformat(),
@@ -810,7 +805,7 @@ class TestRealTimeAnalyticsWorkflow:
             })
         )
         
-        insights_response = await mock_analytics_api.post(
+        await mock_analytics_api.post(
             f"/api/analytics/{channel_id}/realtime-insights",
             json={
                 "spike_data": realtime_data_points[1],  # The spike data
@@ -1012,7 +1007,7 @@ class TestCrossChannelAnalyticsWorkflow:
             })
         )
         
-        analysis_save = await mock_analytics_api.post(
+        await mock_analytics_api.post(
             f"/api/analytics/cross-platform/{user_id}",
             json={
                 "platform_data": platform_data,

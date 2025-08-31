@@ -2,22 +2,17 @@
 Module TQA.2.2: Database Repository Unit Testing
 Unit tests for database repository layer without requiring actual database connectivity
 """
-import pytest
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from unittest.mock import AsyncMock
+
 import asyncpg
+import pytest
 
 # Test framework imports
 from tests.factories import (
-    UserFactory,
     ChannelFactory,
-    ScheduledPostFactory,
     PaymentFactory,
-    AnalyticsDataFactory,
-    DeliveryFactory
+    ScheduledPostFactory,
+    UserFactory,
 )
 
 
@@ -103,7 +98,7 @@ class TestDatabaseRepositoryUnit:
             asyncpg.ConnectionFailureError("Connection lost")
         ]
         
-        repo = AsyncpgUserRepository(mock_db_pool)
+        AsyncpgUserRepository(mock_db_pool)
         
         for error in database_errors:
             mock_db_pool.fetchrow.side_effect = error
@@ -151,7 +146,7 @@ class TestDatabaseTransactionPatterns:
     def test_transaction_rollback_simulation(self, mock_db_connection):
         """Test transaction rollback simulation"""
         user_data = UserFactory()
-        payment_data = PaymentFactory(user_id=user_data['id'])
+        PaymentFactory(user_id=user_data['id'])
         
         # Setup transaction that fails on second operation
         side_effects = [
@@ -225,8 +220,8 @@ class TestDataIntegrityValidation:
     def test_cascade_delete_validation(self, mock_db_pool):
         """Test cascade delete behavior validation"""
         user_data = UserFactory()
-        channels = [ChannelFactory(user_id=user_data['id']) for _ in range(3)]
-        posts = [ScheduledPostFactory(user_id=user_data['id']) for _ in range(5)]
+        [ChannelFactory(user_id=user_data['id']) for _ in range(3)]
+        [ScheduledPostFactory(user_id=user_data['id']) for _ in range(5)]
         
         # Setup cascade delete simulation
         delete_results = [
@@ -442,7 +437,7 @@ class TestRepositoryPatternValidation:
             asyncpg.UniqueViolationError("Unique violation")
         ]
         
-        repo = AsyncpgUserRepository(mock_db_pool)
+        AsyncpgUserRepository(mock_db_pool)
         
         for error in db_errors:
             mock_db_pool.fetchrow.side_effect = error

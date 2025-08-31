@@ -5,11 +5,11 @@ Provides shared test infrastructure for all test modules
 
 import asyncio
 import os
-import pytest
-import pytest_asyncio
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
-from typing import AsyncGenerator, Generator
+
 import asyncpg
+import pytest
 from aiogram import Bot
 from faker import Faker
 

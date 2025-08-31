@@ -191,7 +191,7 @@ async def test_module_4_3_dashboard():
         )
         print(f"   ✅ Line chart created with {len(line_chart.data)} traces")
         bar_data = business_df.groupby("product_category")["sales"].sum().reset_index()
-        bar_chart = viz_engine.create_bar_chart(
+        viz_engine.create_bar_chart(
             bar_data, "product_category", "sales", title="Sales by Category"
         )
         print(f"   ✅ Bar chart created with {len(bar_data)} categories")
@@ -201,13 +201,13 @@ async def test_module_4_3_dashboard():
         print(f"   ✅ Scatter plot created with {len(scatter_chart.data)} traces")
         print("🎨 Test 2: Advanced Visualizations...")
         numeric_df = business_df.select_dtypes(include=[np.number])
-        corr_chart = viz_engine.create_correlation_matrix(numeric_df, title="Feature Correlations")
+        viz_engine.create_correlation_matrix(numeric_df, title="Feature Correlations")
         print("   ✅ Correlation matrix created")
-        dist_chart = viz_engine.create_distribution_plot(
+        viz_engine.create_distribution_plot(
             business_df, "sales", plot_type="histogram", title="Sales Distribution"
         )
         print("   ✅ Distribution plot created")
-        scatter_3d = viz_engine.create_3d_scatter(
+        viz_engine.create_3d_scatter(
             business_df.head(100),
             "sales",
             "customers",
@@ -219,14 +219,14 @@ async def test_module_4_3_dashboard():
         export_path = viz_engine.export_chart(line_chart, "/tmp/test_chart", format="html")
         print(f"   ✅ Chart exported to: {export_path}")
         print("🌐 Test 4: Dashboard Setup...")
-        dashboard = RealTimeDashboard(port=8055)
+        RealTimeDashboard(port=8055)
         print("   ✅ Dashboard initialized on port 8055")
         print("   ✅ Dashboard layout configured")
         print("🏭 Test 5: Dashboard Factory...")
-        ml_dashboard = DashboardFactory.create_ml_performance_dashboard(
+        DashboardFactory.create_ml_performance_dashboard(
             model_results={"test_model": {"accuracy": 0.95}}, port=8056
         )
-        business_dashboard = DashboardFactory.create_business_dashboard(
+        DashboardFactory.create_business_dashboard(
             data_source=business_df, port=8057
         )
         print("   ✅ ML performance dashboard created")

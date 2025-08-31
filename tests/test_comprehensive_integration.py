@@ -4,12 +4,11 @@ Tests that actually exercise the codebase to improve coverage
 """
 
 import os
-import pytest
-import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from fastapi.testclient import TestClient
 from contextlib import suppress
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+from fastapi.testclient import TestClient
 
 # Set environment variables before importing
 os.environ['DATABASE_URL'] = 'sqlite:///data/test_analytics.db'
@@ -24,7 +23,7 @@ os.environ['TWA_HOST_URL'] = 'https://test.com'
 
 def test_config_loading_comprehensive():
     """Test configuration loading executes actual code paths"""
-    from config.settings import Settings, LogLevel, LogFormat, settings
+    from config.settings import LogFormat, LogLevel, Settings
     
     # Test enum values and execute code
     assert LogLevel.INFO.value == "INFO"
@@ -40,12 +39,8 @@ def test_config_loading_comprehensive():
     )
     
     # Execute property accessors to cover code
-    db_url = test_settings.DATABASE_URL
-    admin_ids = test_settings.ADMIN_IDS
-    cors_origins = test_settings.CORS_ORIGINS
     
     # Execute the global settings to cover that code path
-    global_settings = settings
     print(f"✅ Config loading - covered {len(dir(test_settings))} properties")
 
 
@@ -66,13 +61,13 @@ def test_fastapi_app_execution():
 
 def test_domain_models_execution():
     """Test domain models by executing their methods"""
+    from apps.bot.domain.constants import PlanType
     from apps.bot.domain.models import (
-        SubscriptionStatus,
-        InlineButton,
         AnalyticsMetrics,
-        ServiceHealth
+        InlineButton,
+        ServiceHealth,
+        SubscriptionStatus,
     )
-    from apps.bot.domain.constants import PlanType, ServiceStatus
     
     # Execute SubscriptionStatus creation and access
     sub = SubscriptionStatus(
@@ -83,7 +78,6 @@ def test_domain_models_execution():
         current_posts_this_month=45
     )
     # Access all fields to execute code
-    plan_info = f"{sub.plan_name}-{sub.max_channels}-{sub.current_channels}"
     
     # Execute InlineButton validation
     button = InlineButton(text="Test", callback_data="short")
@@ -129,9 +123,9 @@ def test_repository_execution():
     """Test repository classes by executing their initialization"""
     from infra.db.repositories import (
         AsyncpgAnalyticsRepository,
-        AsyncpgUserRepository, 
         AsyncpgChannelRepository,
-        AsyncpgPaymentRepository
+        AsyncpgPaymentRepository,
+        AsyncpgUserRepository,
     )
     
     # Mock database connections and execute repository creation
@@ -202,14 +196,14 @@ def test_bot_run_execution(mock_dispatcher, mock_bot):
 
 def test_security_execution():
     """Test security components by executing their code"""
-    from core.security_engine import auth, models, config
+    from core.security_engine import auth, config, models
     from core.utils.ratelimit import TokenBucketRateLimiter
     
     # Execute rate limiter creation and usage
     rate_limiter = TokenBucketRateLimiter(capacity=10, refill_rate=1.0)
     
     # Execute token consumption to cover algorithm code
-    for i in range(5):
+    for _i in range(5):
         consumed = rate_limiter.consume()
         if not consumed:
             break
@@ -232,7 +226,6 @@ def test_celery_execution():
     
     # Execute configuration access to cover code
     conf_dict = dict(celery_app.conf)
-    task_list = celery_app.tasks
     
     # Try to access app methods
     app_attrs = dir(celery_app)
@@ -270,12 +263,12 @@ def test_ml_services_execution():
 
 def test_api_routers_execution():
     """Test API routers by executing their setup"""
-    from apps.api.routers.analytics_router import router
     from apps.api.main import app
+    from apps.api.routers.analytics_router import router
     
     # Execute router inspection
     routes = router.routes
-    router_attrs = dir(router)
+    dir(router)
     
     # Test router with app
     client = TestClient(app)
@@ -296,7 +289,7 @@ def test_api_routers_execution():
 
 def test_database_models_execution():
     """Test database models by executing their creation"""
-    from core.models import base, admin
+    from core.models import admin, base
     
     # Execute module attribute access
     base_attrs = dir(base)
@@ -330,7 +323,7 @@ def test_shared_utilities_execution():
     
     # Execute Settings
     settings = Settings(database_url="sqlite:///test.db")
-    settings_attrs = [a for a in dir(settings) if not a.startswith('_')]
+    [a for a in dir(settings) if not a.startswith('_')]
     
     # Execute HealthService
     try:
@@ -352,7 +345,7 @@ def test_monitoring_execution():
     
     # Execute error handler module
     handler_attrs = dir(error_handler)
-    monitoring_attrs = dir(monitoring)
+    dir(monitoring)
     
     # Execute PerformanceMonitor
     try:

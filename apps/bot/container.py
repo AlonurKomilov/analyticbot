@@ -22,12 +22,12 @@ from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import Settings
+from apps.bot.database.sqlite_engine import init_db
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository
-from apps.bot.database.sqlite_engine import init_db
 
 
 def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:

@@ -5,20 +5,19 @@ Tests core domain models without any database or external service dependencies
 import pytest
 from pydantic import ValidationError
 
-# Domain model imports
-from apps.bot.domain.models import (
-    SubscriptionStatus,
-    InlineButton,
-    InlineButtonsPayload,
-    AnalyticsMetrics,
-    ServiceHealth
-)
 from apps.bot.domain.constants import (
+    DEFAULT_FREE_CHANNELS,
+    DEFAULT_PREMIUM_CHANNELS,
     PlanType,
     ServiceStatus,
-    AnalyticsEventType,
-    DEFAULT_FREE_CHANNELS,
-    DEFAULT_PREMIUM_CHANNELS
+)
+
+# Domain model imports
+from apps.bot.domain.models import (
+    AnalyticsMetrics,
+    InlineButton,
+    ServiceHealth,
+    SubscriptionStatus,
 )
 
 

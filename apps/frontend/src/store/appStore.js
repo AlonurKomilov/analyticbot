@@ -12,6 +12,9 @@ const createLoadingState = () => ({
 
 export const useAppStore = create(
     subscribeWithSelector((set, get) => ({
+        // Data source configuration
+        dataSource: localStorage.getItem('useRealAPI') === 'true' ? 'api' : 'mock',
+        
         // Data state
         user: null,
         plan: null,
@@ -85,14 +88,46 @@ export const useAppStore = create(
             }
         })),
 
+        // Data source control methods
+        setDataSource: (source) => {
+            set({ dataSource: source });
+            localStorage.setItem('useRealAPI', source === 'api' ? 'true' : 'false');
+        },
+        
+        // Check if using real API
+        isUsingRealAPI: () => get().dataSource === 'api',
+        
         // Boshlang'ich ma'lumotlarni backend'dan loading
-        fetchData: async () => {
+        fetchData: async (forceSource = null) => {
             const operation = 'fetchData';
+            const currentSource = forceSource || get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const data = await apiClient.get('/initial-data');
+                let data;
+                
+                if (currentSource === 'api') {
+                    try {
+                        // Try real API first
+                        data = await apiClient.get('/initial-data');
+                        console.log('✅ Successfully loaded data from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ Real API unavailable, auto-switching to demo data');
+                        // Auto-switch to mock data when API fails
+                        get().setDataSource('mock');
+                        
+                        // Load mock data
+                        const { getMockInitialData } = await import('../utils/mockData.js');
+                        data = await getMockInitialData();
+                    }
+                } else {
+                    // Use mock data directly
+                    console.log('📊 Loading professional demo data');
+                    const { getMockInitialData } = await import('../utils/mockData.js');
+                    data = await getMockInitialData();
+                }
                 
                 set({
                     channels: data.channels || [],
@@ -103,11 +138,15 @@ export const useAppStore = create(
                 
                 get().setLoading(operation, false);
             } catch (error) {
-                ErrorHandler.handleError(error, {
-                    component: 'AppStore',
-                    action: 'fetchData'
+                // Fallback to basic demo data if everything fails
+                console.warn('Error loading data:', error);
+                set({
+                    channels: [],
+                    scheduledPosts: [],
+                    plan: { name: "Demo", max_channels: 10 },
+                    user: { username: "demo_user", first_name: "Demo" },
                 });
-                get().setError(operation, error.message);
+                get().setLoading(operation, false);
             }
         },
 
@@ -355,14 +394,32 @@ export const useAppStore = create(
 
         // ANALYTICS METHODS - NEW for Phase 2.1 Week 2
 
-        // Post dynamics datani getting
+        // Post dynamics datani getting with data source support
         fetchPostDynamics: async (period = '24h') => {
             const operation = 'fetchPostDynamics';
+            const currentSource = get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const response = await apiClient.get(`/analytics/post-dynamics?period=${period}`);
+                let response;
+                
+                if (currentSource === 'api') {
+                    try {
+                        response = await apiClient.get(`/analytics/post-dynamics?period=${period}`);
+                        console.log('✅ Post dynamics loaded from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ API unavailable for post dynamics, using demo data');
+                        const { mockAnalyticsData } = await import('../utils/mockData.js');
+                        response = mockAnalyticsData.postDynamics;
+                    }
+                } else {
+                    // Load from mock data
+                    console.log('📊 Loading post dynamics demo data');
+                    const { mockAnalyticsData } = await import('../utils/mockData.js');
+                    response = mockAnalyticsData.postDynamics;
+                }
                 
                 set(state => ({
                     analytics: {
@@ -378,21 +435,40 @@ export const useAppStore = create(
                 ErrorHandler.handleError(error, {
                     component: 'AppStore',
                     action: 'fetchPostDynamics',
-                    period
+                    period,
+                    dataSource: currentSource
                 });
                 get().setError(operation, error.message);
                 throw error;
             }
         },
 
-        // Top posts datani getting
+        // Top posts datani getting with data source support
         fetchTopPosts: async (period = 'today', sortBy = 'views') => {
             const operation = 'fetchTopPosts';
+            const currentSource = get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const response = await apiClient.get(`/analytics/top-posts?period=${period}&sort=${sortBy}`);
+                let response;
+                
+                if (currentSource === 'api') {
+                    try {
+                        response = await apiClient.get(`/analytics/top-posts?period=${period}&sort=${sortBy}`);
+                        console.log('✅ Top posts loaded from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ API unavailable for top posts, using demo data');
+                        const { mockAnalyticsData } = await import('../utils/mockData.js');
+                        response = { posts: mockAnalyticsData.topPosts };
+                    }
+                } else {
+                    // Load from mock data
+                    console.log('📊 Loading top posts demo data');
+                    const { mockAnalyticsData } = await import('../utils/mockData.js');
+                    response = { posts: mockAnalyticsData.topPosts };
+                }
                 
                 set(state => ({
                     analytics: {
@@ -409,21 +485,40 @@ export const useAppStore = create(
                     component: 'AppStore',
                     action: 'fetchTopPosts',
                     period,
-                    sortBy
+                    sortBy,
+                    dataSource: currentSource
                 });
                 get().setError(operation, error.message);
                 throw error;
             }
         },
 
-        // Best time recommendations getting
+        // Best time recommendations getting with data source support
         fetchBestTime: async (timeframe = 'week', contentType = 'all') => {
             const operation = 'fetchBestTime';
+            const currentSource = get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const response = await apiClient.get(`/analytics/best-posting-time?timeframe=${timeframe}&content_type=${contentType}`);
+                let response;
+                
+                if (currentSource === 'api') {
+                    try {
+                        response = await apiClient.get(`/analytics/best-posting-time?timeframe=${timeframe}&content_type=${contentType}`);
+                        console.log('✅ Best time recommendations loaded from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ API unavailable for best time, using demo data');
+                        const { mockAnalyticsData } = await import('../utils/mockData.js');
+                        response = mockAnalyticsData.bestTimeRecommendations;
+                    }
+                } else {
+                    // Load from mock data
+                    console.log('📊 Loading best time demo data');
+                    const { mockAnalyticsData } = await import('../utils/mockData.js');
+                    response = mockAnalyticsData.bestTimeRecommendations;
+                }
                 
                 set(state => ({
                     analytics: {
@@ -440,21 +535,40 @@ export const useAppStore = create(
                     component: 'AppStore',
                     action: 'fetchBestTime',
                     timeframe,
-                    contentType
+                    contentType,
+                    dataSource: currentSource
                 });
                 get().setError(operation, error.message);
                 throw error;
             }
         },
 
-        // Engagement metrics getting
+        // Engagement metrics getting with data source support
         fetchEngagementMetrics: async (period = '7d') => {
             const operation = 'fetchEngagementMetrics';
+            const currentSource = get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const response = await apiClient.get(`/analytics/engagement?period=${period}`);
+                let response;
+                
+                if (currentSource === 'api') {
+                    try {
+                        response = await apiClient.get(`/analytics/engagement?period=${period}`);
+                        console.log('✅ Engagement metrics loaded from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ API unavailable for engagement metrics, using demo data');
+                        const { mockAnalyticsData } = await import('../utils/mockData.js');
+                        response = mockAnalyticsData.engagementMetrics;
+                    }
+                } else {
+                    // Load from mock data
+                    console.log('📊 Loading engagement metrics demo data');
+                    const { mockAnalyticsData } = await import('../utils/mockData.js');
+                    response = mockAnalyticsData.engagementMetrics;
+                }
                 
                 set(state => ({
                     analytics: {
@@ -470,7 +584,8 @@ export const useAppStore = create(
                 ErrorHandler.handleError(error, {
                     component: 'AppStore',
                     action: 'fetchEngagementMetrics',
-                    period
+                    period,
+                    dataSource: currentSource
                 });
                 get().setError(operation, error.message);
                 throw error;

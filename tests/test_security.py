@@ -2,20 +2,17 @@
 Security Tests for AnalyticBot
 Tests security-related functionality and vulnerability prevention
 """
-import pytest
 import hashlib
 import secrets
 from collections import defaultdict
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, List, Any
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
-# Test factories
-from tests.factories import UserFactory, PaymentFactory
+import pytest
 
 # Security-related imports
-from apps.bot.utils.error_handler import ErrorHandler
-from apps.bot.domain.constants import PlanType
+
+# Test factories
 
 
 @pytest.mark.security
@@ -182,8 +179,8 @@ class TestRateLimiting:
     
     def test_request_rate_limiting(self):
         """Test basic request rate limiting"""
-        from collections import defaultdict
         import time
+        from collections import defaultdict
         
         class SimpleRateLimiter:
             def __init__(self, max_requests: int = 10, window_seconds: int = 60):
@@ -212,7 +209,7 @@ class TestRateLimiting:
         user_id = "test_user_123"
         
         # First 5 requests should be allowed
-        for i in range(5):
+        for _i in range(5):
             assert rate_limiter.is_allowed(user_id) is True
         
         # 6th request should be blocked
@@ -251,7 +248,7 @@ class TestRateLimiting:
         user_id = 123456789
         
         # First 3 payment attempts should be allowed
-        for i in range(3):
+        for _i in range(3):
             assert limiter.can_attempt_payment(user_id) is True
         
         # 4th attempt should be blocked
@@ -267,7 +264,7 @@ class TestDataPrivacySecurity:
     
     def test_pii_masking(self):
         """Test PII data masking for logs"""
-        def mask_sensitive_data(data: Dict[str, Any]) -> Dict[str, Any]:
+        def mask_sensitive_data(data: dict[str, Any]) -> dict[str, Any]:
             """Mask sensitive data in logs"""
             sensitive_fields = ['password', 'token', 'secret', 'card_number', 'email']
             masked_data = data.copy()
@@ -308,7 +305,7 @@ class TestDataPrivacySecurity:
     
     def test_user_data_anonymization(self):
         """Test user data anonymization"""
-        def anonymize_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
+        def anonymize_user(user_data: dict[str, Any]) -> dict[str, Any]:
             """Anonymize user data"""
             anonymized = user_data.copy()
             
@@ -406,7 +403,7 @@ class TestWebhookSecurity:
     
     def test_webhook_replay_attack_prevention(self):
         """Test webhook replay attack prevention"""
-        from datetime import datetime, timezone
+        from datetime import datetime
         
         class WebhookReplayProtector:
             def __init__(self, max_age_seconds: int = 300):  # 5 minutes
@@ -421,7 +418,7 @@ class TestWebhookSecurity:
                 # Check timestamp age
                 try:
                     webhook_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                    current_time = datetime.now(timezone.utc)
+                    current_time = datetime.now(UTC)
                     age_seconds = (current_time - webhook_time).total_seconds()
                     
                     if age_seconds > self.max_age_seconds:
@@ -438,7 +435,7 @@ class TestWebhookSecurity:
                 return True
         
         protector = WebhookReplayProtector(max_age_seconds=300)
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(UTC)
         
         # Valid webhook (recent timestamp)
         webhook_id_1 = "webhook_123"
@@ -467,7 +464,7 @@ class TestSecurityLogging:
         
         class SecurityLogger:
             @staticmethod
-            def log_security_event(event_type: str, user_id: int, details: Dict[str, Any]):
+            def log_security_event(event_type: str, user_id: int, details: dict[str, Any]):
                 event = {
                     "timestamp": datetime.utcnow().isoformat(),
                     "event_type": event_type,
@@ -521,7 +518,7 @@ class TestSecurityLogging:
 @pytest.mark.security
 def test_security_configuration_validation():
     """Test security configuration validation"""
-    def validate_security_config(config: Dict[str, Any]) -> List[str]:
+    def validate_security_config(config: dict[str, Any]) -> list[str]:
         """Validate security configuration"""
         issues = []
         

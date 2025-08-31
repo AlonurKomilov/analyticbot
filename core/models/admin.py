@@ -5,10 +5,9 @@ Enterprise-grade admin system with comprehensive user and system management
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
@@ -49,17 +48,17 @@ class AdminUser(Base):
     # Security fields
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
-    locked_until: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     
     # IP Security
-    allowed_ips: Mapped[Optional[list]] = mapped_column(JSON)  # List of allowed IP addresses
+    allowed_ips: Mapped[list | None] = mapped_column(JSON)  # List of allowed IP addresses
     
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    created_by: Mapped[Optional[UUID]] = mapped_column(PostgresUUID(as_uuid=True), ForeignKey("admin_users.id"))
+    created_by: Mapped[UUID | None] = mapped_column(PostgresUUID(as_uuid=True), ForeignKey("admin_users.id"))
     
     # Relationships
     sessions: Mapped[list["AdminSession"]] = relationship("AdminSession", back_populates="admin_user", cascade="all, delete-orphan")
@@ -94,25 +93,25 @@ class SystemUser(Base):
     
     id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), primary_key=True, default=uuid4)
     telegram_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
-    username: Mapped[Optional[str]] = mapped_column(String(50))
-    full_name: Mapped[Optional[str]] = mapped_column(String(100))
-    email: Mapped[Optional[str]] = mapped_column(String(255))
+    username: Mapped[str | None] = mapped_column(String(50))
+    full_name: Mapped[str | None] = mapped_column(String(100))
+    email: Mapped[str | None] = mapped_column(String(255))
     
     # Status and subscription
     status: Mapped[UserStatus] = mapped_column(String(20), nullable=False, default=UserStatus.ACTIVE)
-    subscription_tier: Mapped[Optional[str]] = mapped_column(String(20))  # free, basic, pro, enterprise
+    subscription_tier: Mapped[str | None] = mapped_column(String(20))  # free, basic, pro, enterprise
     
     # Usage statistics
     total_channels: Mapped[int] = mapped_column(Integer, default=0)
     total_posts: Mapped[int] = mapped_column(Integer, default=0)
-    last_activity: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_activity: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     
     # Audit fields
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    suspended_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    suspended_by: Mapped[Optional[UUID]] = mapped_column(PostgresUUID(as_uuid=True), ForeignKey("admin_users.id"))
-    suspension_reason: Mapped[Optional[str]] = mapped_column(Text)
+    suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    suspended_by: Mapped[UUID | None] = mapped_column(PostgresUUID(as_uuid=True), ForeignKey("admin_users.id"))
+    suspension_reason: Mapped[str | None] = mapped_column(Text)
 
 
 class AdminAuditLog(Base):
@@ -125,22 +124,22 @@ class AdminAuditLog(Base):
     # Action details
     action: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "user_suspended", "system_config_updated"
     resource_type: Mapped[str] = mapped_column(String(50), nullable=False)  # e.g., "user", "system", "subscription"
-    resource_id: Mapped[Optional[str]] = mapped_column(String(100))  # ID of affected resource
+    resource_id: Mapped[str | None] = mapped_column(String(100))  # ID of affected resource
     
     # Request details
     ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
-    user_agent: Mapped[Optional[str]] = mapped_column(Text)
-    request_method: Mapped[Optional[str]] = mapped_column(String(10))
-    request_path: Mapped[Optional[str]] = mapped_column(String(500))
+    user_agent: Mapped[str | None] = mapped_column(Text)
+    request_method: Mapped[str | None] = mapped_column(String(10))
+    request_path: Mapped[str | None] = mapped_column(String(500))
     
     # Change tracking
-    old_values: Mapped[Optional[dict]] = mapped_column(JSON)
-    new_values: Mapped[Optional[dict]] = mapped_column(JSON)
+    old_values: Mapped[dict | None] = mapped_column(JSON)
+    new_values: Mapped[dict | None] = mapped_column(JSON)
     
     # Metadata
     success: Mapped[bool] = mapped_column(Boolean, default=True)
-    error_message: Mapped[Optional[str]] = mapped_column(Text)
-    additional_data: Mapped[Optional[dict]] = mapped_column(JSON)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    additional_data: Mapped[dict | None] = mapped_column(JSON)
     
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -160,7 +159,7 @@ class SystemConfiguration(Base):
     category: Mapped[str] = mapped_column(String(50), nullable=False)  # system, security, features, etc.
     
     # Metadata
-    description: Mapped[Optional[str]] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
     is_sensitive: Mapped[bool] = mapped_column(Boolean, default=False)
     requires_restart: Mapped[bool] = mapped_column(Boolean, default=False)
     
@@ -180,7 +179,7 @@ class SystemMetrics(Base):
     metric_type: Mapped[str] = mapped_column(String(20), nullable=False)  # counter, gauge, histogram
     
     # Dimensions/Labels
-    labels: Mapped[Optional[dict]] = mapped_column(JSON)
+    labels: Mapped[dict | None] = mapped_column(JSON)
     
     # Timestamp
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

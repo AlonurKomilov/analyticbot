@@ -5,10 +5,10 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from pydantic import ValidationError
 
+from apps.bot.domain.models import InlineButtonsPayload
+from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-from apps.bot.domain.models import InlineButton, InlineButtonsPayload
-from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
 

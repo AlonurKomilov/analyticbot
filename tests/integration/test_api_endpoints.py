@@ -2,25 +2,18 @@
 Module TQA.2.1: API Integration Testing
 Comprehensive API endpoint testing with authentication, validation, and error handling
 """
-import pytest
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import AsyncMock, MagicMock, patch
 import json
-from fastapi import status
+from datetime import datetime, timedelta
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Import the FastAPI app
 from apps.api.main import app
 
 # Test framework imports
-from tests.factories import (
-    UserFactory,
-    ChannelFactory,
-    PaymentFactory,
-    AnalyticsDataFactory
-)
 
 
 @pytest.fixture
@@ -102,7 +95,7 @@ class TestAnalyticsAPIEndpoints:
         # If it succeeds, check structure
         if response.status_code == 200:
             data = response.json()
-            assert isinstance(data, (list, dict))
+            assert isinstance(data, list | dict)
     
     @patch('apps.api.deps.get_current_user')
     def test_channel_creation_endpoint(self, mock_get_current_user, test_client, mock_auth_user):
@@ -220,7 +213,7 @@ class TestAPIDataValidation:
 
 
 # Utility functions for test data generation
-def create_mock_jwt_token(user_data: Dict[str, Any], expiry_minutes: int = 30) -> str:
+def create_mock_jwt_token(user_data: dict[str, Any], expiry_minutes: int = 30) -> str:
     """Create mock JWT token for testing"""
     import base64
     
@@ -235,35 +228,25 @@ def create_mock_jwt_token(user_data: Dict[str, Any], expiry_minutes: int = 30) -
     return f"{header}.{payload}.{signature}"
 
 
-def validate_error_response_format(response_data: Dict[str, Any]) -> bool:
+def validate_error_response_format(response_data: dict[str, Any]) -> bool:
     """Validate error response follows expected format"""
     required_fields = ["detail"]
     return all(field in response_data for field in required_fields)
 
 
-def validate_success_response_format(response_data: Dict[str, Any], expected_type: str = "object") -> bool:
+def validate_success_response_format(response_data: dict[str, Any], expected_type: str = "object") -> bool:
     """Validate success response follows expected format"""
     if expected_type == "list":
         return isinstance(response_data, list)
     elif expected_type == "object":
         return isinstance(response_data, dict)
     return True
+from typing import Any
+from unittest.mock import patch
+
 import pytest
-import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
-from unittest.mock import AsyncMock, MagicMock, patch
-import json
-from fastapi import status
-from fastapi.testclient import TestClient
 
 # Test framework imports
-from tests.factories import (
-    UserFactory,
-    ChannelFactory,
-    PaymentFactory,
-    AnalyticsDataFactory
-)
 
 
 @pytest.mark.integration
@@ -591,7 +574,6 @@ class TestAPIErrorHandling:
         response = test_client.get("/health")
         
         # Check CORS headers
-        headers = response.headers
         # Basic CORS checks - actual headers depend on configuration
         assert response.status_code == 200  # At minimum, request should succeed
 
@@ -623,7 +605,7 @@ class TestAPIRateLimiting:
                 
                 # Make multiple rapid requests
                 responses = []
-                for i in range(10):  # Adjust number based on rate limit
+                for _i in range(10):  # Adjust number based on rate limit
                     response = test_client.get("/analytics/channels", headers=auth_headers)
                     responses.append(response)
                 
@@ -779,19 +761,19 @@ class TestAPIDataValidation:
 
 
 # Utility functions for API testing
-def create_test_user_token(user_id: int = 123456789, role: str = "user") -> Dict[str, str]:
+def create_test_user_token(user_id: int = 123456789, role: str = "user") -> dict[str, str]:
     """Create test authentication token headers"""
     # In a real implementation, this would create a valid JWT token
     return {"Authorization": f"Bearer test_token_user_{user_id}_role_{role}"}
 
 
-def assert_api_response_structure(response_data: Dict[str, Any], required_fields: List[str]):
+def assert_api_response_structure(response_data: dict[str, Any], required_fields: list[str]):
     """Assert that API response has required structure"""
     for field in required_fields:
         assert field in response_data, f"Missing required field: {field}"
 
 
-def assert_error_response_format(response_data: Dict[str, Any]):
+def assert_error_response_format(response_data: dict[str, Any]):
     """Assert that error response follows expected format"""
     assert "detail" in response_data, "Error response should have 'detail' field"
     

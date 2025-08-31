@@ -3,7 +3,8 @@ Analytics Repository Implementation
 Concrete implementation for analytics data operations
 """
 
-from typing import Any, Optional, List
+from typing import Any
+
 import asyncpg
 
 
@@ -24,7 +25,7 @@ class AsyncpgAnalyticsRepository:
         """
         await self._pool.execute(query, scheduled_post_id, channel_id, message_id)
 
-    async def get_all_trackable_posts(self, interval_days: int = 7) -> List[dict[str, Any]]:
+    async def get_all_trackable_posts(self, interval_days: int = 7) -> list[dict[str, Any]]:
         """
         Ko'rishlar sonini tekshirish kerak bo'lgan barcha postlarni oladi.
         Masalan, oxirgi 7 kun ichida yuborilganlar.
@@ -49,7 +50,7 @@ class AsyncpgAnalyticsRepository:
         query = "UPDATE scheduled_posts SET views = $1 WHERE id = $2;"
         await self._pool.execute(query, views, scheduled_post_id)
 
-    async def get_all_posts_to_track_views(self) -> List[dict[str, Any]]:
+    async def get_all_posts_to_track_views(self) -> list[dict[str, Any]]:
         """
         Yuborilgan (`sent`) statusidagi va ko'rishlarni kuzatish kerak bo'lgan
         barcha postlarni ma'lumotlar bazasidan oladi.
@@ -63,7 +64,7 @@ class AsyncpgAnalyticsRepository:
         rows = await self._pool.fetch(query)
         return [dict(row) for row in rows]
 
-    async def get_posts_ordered_by_views(self, channel_id: int) -> List[dict[str, Any]]:
+    async def get_posts_ordered_by_views(self, channel_id: int) -> list[dict[str, Any]]:
         """Return posts for a channel ordered by view count."""
         query = """
             SELECT id, views, message_id
@@ -98,7 +99,7 @@ class AsyncpgAnalyticsRepository:
         count = await self._pool.fetchval(query)
         return count or 0
 
-    async def get_post_views(self, scheduled_post_id: int) -> Optional[int]:
+    async def get_post_views(self, scheduled_post_id: int) -> int | None:
         """Return the current stored views for a scheduled post or None if missing."""
         query = "SELECT views FROM scheduled_posts WHERE id = $1;"
         val = await self._pool.fetchval(query, scheduled_post_id)

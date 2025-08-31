@@ -18,8 +18,6 @@ from apps.bot.database.performance import (
     performance_manager,
     performance_timer,
 )
-from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from apps.bot.domain.constants import DEFAULT_BATCH_SIZE, DEFAULT_CACHE_TTL
 from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
@@ -111,7 +109,7 @@ class AnalyticsService:
             grouped[channel_id].append(post)
         sorted_grouped = {}
         for channel_id, channel_posts in grouped.items():
-            total_priority = sum(post["_priority"] for post in channel_posts)
+            sum(post["_priority"] for post in channel_posts)
             sorted_grouped[channel_id] = sorted(
                 channel_posts, key=lambda x: x["_priority"], reverse=True
             )

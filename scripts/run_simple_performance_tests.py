@@ -280,7 +280,7 @@ async def test_database_simulation():
         return True
 
     tester = SimplifiedPerformanceTester()
-    for i in range(100):
+    for _i in range(100):
         await db_insert_simulation()
     await tester.measure_async_function("db_insert", db_insert_simulation, 100)
     await tester.measure_async_function("db_query", db_query_simulation, 200)
@@ -328,7 +328,7 @@ async def test_cache_simulation():
         return True
 
     tester = SimplifiedPerformanceTester()
-    for i in range(50):
+    for _i in range(50):
         await cache_set_operation()
     await tester.measure_async_function("cache_set", cache_set_operation, 100)
     await tester.measure_async_function("cache_get", cache_get_operation, 200)

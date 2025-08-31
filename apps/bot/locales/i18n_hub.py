@@ -9,7 +9,6 @@ file with a thin adapter around the official class.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from apps.bot.utils.simple_i18n_core import SimpleI18nCore

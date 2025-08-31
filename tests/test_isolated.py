@@ -16,8 +16,8 @@ def test_simple_domain_constants():
 
 def test_simple_subscription_status():
     """Test SubscriptionStatus without any fixtures"""
-    from apps.bot.domain.models import SubscriptionStatus
     from apps.bot.domain.constants import PlanType
+    from apps.bot.domain.models import SubscriptionStatus
     
     status = SubscriptionStatus(
         plan_name=PlanType.PREMIUM,

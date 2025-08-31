@@ -1,0 +1,320 @@
+/**
+ * Mock data service for immediate dashboard functionality
+ * Provides realistic demo data for the TWA dashboard
+ */
+
+export const mockAnalyticsData = {
+  // Post dynamics for charts
+  postDynamics: {
+    timeline: [
+      { time: '00:00', views: 1250, reactions: 45, forwards: 12 },
+      { time: '02:00', views: 890, reactions: 32, forwards: 8 },
+      { time: '04:00', views: 650, reactions: 18, forwards: 5 },
+      { time: '06:00', views: 1100, reactions: 38, forwards: 15 },
+      { time: '08:00', views: 2350, reactions: 89, forwards: 32 },
+      { time: '10:00', views: 3200, reactions: 124, forwards: 45 },
+      { time: '12:00', views: 4100, reactions: 156, forwards: 67 },
+      { time: '14:00', views: 3800, reactions: 142, forwards: 52 },
+      { time: '16:00', views: 4500, reactions: 178, forwards: 78 },
+      { time: '18:00', views: 5200, reactions: 198, forwards: 89 },
+      { time: '20:00', views: 4800, reactions: 165, forwards: 72 },
+      { time: '22:00', views: 3500, reactions: 125, forwards: 48 }
+    ],
+    summary: {
+      totalViews: 35340,
+      totalReactions: 1310,
+      totalForwards: 551,
+      avgEngagement: 5.27,
+      peakHour: '18:00',
+      growthRate: 12.5
+    }
+  },
+
+  // Top performing posts
+  topPosts: [
+    {
+      id: 1,
+      title: "🚀 New Feature: AI Analytics Dashboard",
+      views: 8540,
+      reactions: 324,
+      forwards: 89,
+      engagement: 4.83,
+      date: "2025-08-29T10:30:00Z",
+      channel: "AnalyticBot Updates"
+    },
+    {
+      id: 2,
+      title: "📊 Weekly Performance Report",
+      views: 7230,
+      reactions: 298,
+      forwards: 67,
+      engagement: 5.05,
+      date: "2025-08-28T14:15:00Z",
+      channel: "Analytics Channel"
+    },
+    {
+      id: 3,
+      title: "🎯 Best Practices for Content",
+      views: 6890,
+      reactions: 287,
+      forwards: 78,
+      engagement: 5.29,
+      date: "2025-08-27T16:45:00Z",
+      channel: "Marketing Tips"
+    },
+    {
+      id: 4,
+      title: "🧠 AI-Powered Insights",
+      views: 6540,
+      reactions: 267,
+      forwards: 54,
+      engagement: 4.91,
+      date: "2025-08-26T12:20:00Z",
+      channel: "Tech Updates"
+    },
+    {
+      id: 5,
+      title: "📈 Growth Metrics Analysis",
+      views: 5980,
+      reactions: 234,
+      forwards: 43,
+      engagement: 4.63,
+      date: "2025-08-25T09:10:00Z",
+      channel: "Business Analytics"
+    }
+  ],
+
+  // Best posting times
+  bestTimeRecommendations: {
+    weekdays: [
+      { day: 'Monday', bestTimes: ['09:00', '14:00', '18:00'], score: 8.5 },
+      { day: 'Tuesday', bestTimes: ['10:00', '15:00', '19:00'], score: 9.2 },
+      { day: 'Wednesday', bestTimes: ['09:30', '14:30', '18:30'], score: 8.8 },
+      { day: 'Thursday', bestTimes: ['10:30', '15:30', '19:30'], score: 9.0 },
+      { day: 'Friday', bestTimes: ['09:00', '13:00', '17:00'], score: 8.3 },
+      { day: 'Saturday', bestTimes: ['11:00', '16:00', '20:00'], score: 7.8 },
+      { day: 'Sunday', bestTimes: ['12:00', '17:00', '19:00'], score: 7.5 }
+    ],
+    optimal: {
+      time: '18:00',
+      day: 'Tuesday',
+      expectedEngagement: 9.2,
+      confidence: 94
+    }
+  },
+
+  // Engagement metrics
+  engagementMetrics: {
+    overview: {
+      totalSubscribers: 15847,
+      activeSubscribers: 12456,
+      avgViewsPerPost: 4285,
+      avgReactionsPerPost: 167,
+      avgForwardsPerPost: 45,
+      engagementRate: 4.94
+    },
+    trends: {
+      subscribersGrowth: 8.5,
+      engagementGrowth: 12.3,
+      viewsGrowth: 15.7,
+      reactionsGrowth: 9.8
+    },
+    byChannel: [
+      { name: 'AnalyticBot Updates', subscribers: 5420, engagement: 6.2 },
+      { name: 'Analytics Channel', subscribers: 4230, engagement: 5.8 },
+      { name: 'Marketing Tips', subscribers: 3890, engagement: 5.5 },
+      { name: 'Tech Updates', subscribers: 2307, engagement: 4.9 }
+    ]
+  },
+
+  // User channels
+  channels: [
+    {
+      id: 1,
+      name: 'AnalyticBot Updates',
+      username: '@analyticbot_updates',
+      subscribers: 5420,
+      status: 'active',
+      lastPost: '2025-08-29T10:30:00Z'
+    },
+    {
+      id: 2,
+      name: 'Analytics Channel',
+      username: '@analytics_insights',
+      subscribers: 4230,
+      status: 'active',
+      lastPost: '2025-08-28T14:15:00Z'
+    },
+    {
+      id: 3,
+      name: 'Marketing Tips',
+      username: '@marketing_pro_tips',
+      subscribers: 3890,
+      status: 'active',
+      lastPost: '2025-08-27T16:45:00Z'
+    }
+  ],
+
+  // User plan info
+  plan: {
+    name: 'Professional',
+    maxChannels: 10,
+    maxPostsPerMonth: 500,
+    features: ['Advanced Analytics', 'AI Insights', 'Custom Branding', 'Priority Support']
+  },
+
+  // System status
+  systemStatus: {
+    botStatus: 'online',
+    apiStatus: 'operational',
+    analyticsStatus: 'processing',
+    lastUpdate: new Date().toISOString()
+  }
+};
+
+// Mock initial data for app initialization (enhanced version)
+const generateMockInitialDataEnhanced = () => ({
+  user: {
+    id: 'demo_user_123',
+    username: 'analytics_pro',
+    first_name: 'Analytics',
+    last_name: 'Pro',
+    language_code: 'en'
+  },
+  plan: {
+    name: 'Professional Demo',
+    max_channels: 10,
+    max_scheduled_posts: 100,
+    analytics_enabled: true,
+    features: ['analytics', 'scheduling', 'media_upload', 'best_time_recommendations']
+  },
+  channels: [
+    {
+      id: 'demo_channel_1',
+      username: '@demo_tech_channel',
+      title: 'Tech Innovations',
+      member_count: 15420,
+      type: 'channel',
+      is_active: true,
+      last_post_date: '2025-08-31T10:30:00Z'
+    },
+    {
+      id: 'demo_channel_2',
+      username: '@demo_marketing_tips',
+      title: 'Marketing Tips',
+      member_count: 8750,
+      type: 'channel',
+      is_active: true,
+      last_post_date: '2025-08-31T08:15:00Z'
+    },
+    {
+      id: 'demo_channel_3',
+      username: '@demo_startup_news',
+      title: 'Startup News',
+      member_count: 12300,
+      type: 'channel',
+      is_active: true,
+      last_post_date: '2025-08-31T07:45:00Z'
+    }
+  ],
+  scheduled_posts: [
+    {
+      id: 'scheduled_1',
+      channel_id: 'demo_channel_1',
+      message: 'Exciting new AI developments are coming! Stay tuned for our deep dive analysis. 🚀\n\n#AI #Technology #Innovation',
+      schedule_time: '2025-08-31T18:00:00Z',
+      media_type: 'photo',
+      status: 'scheduled'
+    },
+    {
+      id: 'scheduled_2',
+      channel_id: 'demo_channel_2',
+      message: '5 Marketing Strategies That Actually Work in 2025 📈\n\nThread below 👇\n\n#Marketing #Strategy #Business',
+      schedule_time: '2025-08-31T20:30:00Z',
+      media_type: null,
+      status: 'scheduled'
+    },
+    {
+      id: 'scheduled_3',
+      channel_id: 'demo_channel_3',
+      message: 'BREAKING: New startup funding round hits $2.5M 💰\n\nFull details in our analysis:\n\n#Startup #Funding #Investment',
+      schedule_time: '2025-09-01T09:00:00Z',
+      media_type: 'document',
+      status: 'scheduled'
+    }
+  ],
+  analytics_summary: mockAnalyticsData
+});
+
+/**
+ * Simulates API delay for realistic loading experience
+ */
+export const mockApiCall = async (data, delay = 800) => {
+  await new Promise(resolve => setTimeout(resolve, delay));
+  return data;
+};
+
+/**
+ * Get mock post dynamics data
+ */
+export const getMockPostDynamics = async (period = '24h') => {
+  return mockApiCall({
+    ...mockAnalyticsData.postDynamics,
+    period,
+    timestamp: new Date().toISOString()
+  });
+};
+
+/**
+ * Get mock top posts data
+ */
+export const getMockTopPosts = async (period = 'today', sortBy = 'views') => {
+  const posts = [...mockAnalyticsData.topPosts];
+  
+  // Sort based on criteria
+  if (sortBy === 'engagement') {
+    posts.sort((a, b) => b.engagement - a.engagement);
+  } else if (sortBy === 'reactions') {
+    posts.sort((a, b) => b.reactions - a.reactions);
+  }
+  
+  return mockApiCall({
+    posts,
+    period,
+    sortBy,
+    total: posts.length
+  });
+};
+
+/**
+ * Get mock best time recommendations
+ */
+export const getMockBestTime = async (timeframe = 'week') => {
+  return mockApiCall({
+    ...mockAnalyticsData.bestTimeRecommendations,
+    timeframe,
+    generatedAt: new Date().toISOString()
+  });
+};
+
+/**
+ * Get mock engagement metrics
+ */
+export const getMockEngagementMetrics = async (period = '7d') => {
+  return mockApiCall({
+    ...mockAnalyticsData.engagementMetrics,
+    period,
+    calculatedAt: new Date().toISOString()
+  });
+};
+
+/**
+ * Get mock initial data for app (enhanced with data source switching)
+ */
+export const getMockInitialData = () => {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve(generateMockInitialDataEnhanced());
+        }, 200); // Fast loading for better UX
+    });
+};

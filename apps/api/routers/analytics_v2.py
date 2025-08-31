@@ -327,29 +327,5 @@ async def get_trending_posts(
         )
 
 
-# Error handlers
-@router.exception_handler(ValueError)
-async def value_error_handler(request, exc):
-    """Handle validation errors"""
-    return JSONResponse(
-        status_code=422,
-        content={
-            "error": "Validation Error",
-            "details": [{"type": "value_error", "message": str(exc)}],
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
-
-
-@router.exception_handler(Exception)
-async def general_exception_handler(request, exc):
-    """Handle general exceptions"""
-    logger.error(f"Unhandled exception in analytics v2 router: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal Server Error",
-            "details": [{"type": "server_error", "message": "An unexpected error occurred"}],
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    )
+# Note: Exception handlers should be added to the main FastAPI app, not APIRouter
+# These have been moved to apps.api.main for proper error handling

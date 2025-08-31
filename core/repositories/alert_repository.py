@@ -12,27 +12,30 @@ from core.models.common import BaseEntity
 
 
 @dataclass
-class AlertSubscription(BaseEntity):
+class AlertSubscription:
     """Alert subscription domain model"""
-    id: Optional[int]
     chat_id: int
     channel_id: int
     kind: str  # 'spike', 'quiet', 'growth'
-    threshold: Optional[float]
     window_hours: int
     enabled: bool
+    threshold: Optional[float] = None
+    id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
 
 @dataclass
-class AlertSent(BaseEntity):
+class AlertSent:
     """Alert sent tracking domain model"""
     chat_id: int
     channel_id: int
     kind: str
     key: str
     sent_at: Optional[datetime] = None
+    id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class AlertSubscriptionRepository(Protocol):

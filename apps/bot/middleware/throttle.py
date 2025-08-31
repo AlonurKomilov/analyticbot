@@ -179,3 +179,31 @@ async def cleanup_throttle_entries():
         except Exception:
             # Continue cleanup even if there are errors
             pass
+
+
+def rate_limit(key: str = "default", per_minute: int = 60, rate: Optional[float] = None):
+    """
+    Decorator for rate limiting bot handlers
+    
+    Args:
+        key: Custom key for throttling category
+        per_minute: Maximum requests per minute
+        rate: Minimum time between requests (seconds) - legacy parameter
+    
+    Returns:
+        Decorator function
+    """
+    def decorator(handler: Callable) -> Callable:
+        @wraps(handler)
+        async def wrapper(*args, **kwargs):
+            # For now, just pass through - can be enhanced later
+            # In a full implementation, this would check throttling
+            return await handler(*args, **kwargs)
+        
+        wrapper.__throttle_key__ = key
+        wrapper.__throttle_per_minute__ = per_minute
+        if rate is not None:
+            wrapper.__throttle_rate__ = rate
+        return wrapper
+    
+    return decorator

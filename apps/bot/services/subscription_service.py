@@ -11,18 +11,20 @@ class SubscriptionService:
     """
     Subscription limits & usage checks.
     Constructor MUST match container wiring:
-        subscription_service = Singleton(SubscriptionService, 
-                                       channel_repo=channel_repository, 
+        subscription_service = Singleton(SubscriptionService,
+                                       channel_repo=channel_repository,
                                        user_repo=user_repository,
                                        plan_repo=plan_repository,
                                        schedule_repo=schedule_repository)
     """
 
-    def __init__(self, 
-                 channel_repository: AsyncpgChannelRepository,
-                 user_repository: AsyncpgUserRepository,
-                 plan_repository: AsyncpgPlanRepository,
-                 scheduler_repository: AsyncpgScheduleRepository):
+    def __init__(
+        self,
+        channel_repository: AsyncpgChannelRepository,
+        user_repository: AsyncpgUserRepository,
+        plan_repository: AsyncpgPlanRepository,
+        scheduler_repository: AsyncpgScheduleRepository,
+    ):
         self.channel_repo = channel_repository
         self.user_repo = user_repository
         self.plan_repo = plan_repository

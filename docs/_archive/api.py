@@ -31,7 +31,10 @@ from apps.bot.models.twa import (
 )
 from apps.bot.services import GuardService, SubscriptionService
 from apps.bot.services.auth_service import validate_init_data
-from apps.bot.services.prometheus_service import prometheus_service, setup_prometheus_middleware
+from apps.bot.services.prometheus_service import (
+    prometheus_service,
+    setup_prometheus_middleware,
+)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

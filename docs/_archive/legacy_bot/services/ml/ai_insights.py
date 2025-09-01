@@ -23,7 +23,6 @@ from scipy import stats
 from scipy.signal import find_peaks
 
 try:
-    import statsmodels.api as sm
     from statsmodels.tsa.seasonal import seasonal_decompose
 
     STATSMODELS_AVAILABLE = True
@@ -33,7 +32,7 @@ except ImportError:
 from sklearn.ensemble import IsolationForest
 
 try:
-    import xgboost as xgb
+    pass
 
     XGBOOST_AVAILABLE = True
 except ImportError:

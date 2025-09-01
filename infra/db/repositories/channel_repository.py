@@ -10,7 +10,7 @@ import asyncpg
 
 class AsyncpgChannelRepository:
     """Channel repository implementation using asyncpg"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
@@ -73,20 +73,20 @@ class AsyncpgChannelRepository:
             return await conn.fetchval("SELECT COUNT(*) FROM channels")
 
     async def ensure_channel(
-        self, 
-        channel_id: int, 
+        self,
+        channel_id: int,
         username: str | None = None,
         title: str | None = None,
-        is_supergroup: bool = False
+        is_supergroup: bool = False,
     ) -> dict[str, Any]:
         """Ensure channel exists with UPSERT behavior for MTProto ingestion.
-        
+
         Args:
             channel_id: Telegram channel ID
             username: Channel username (without @)
             title: Channel title/name
             is_supergroup: Whether channel is a supergroup
-            
+
         Returns:
             Dictionary with channel information
         """
@@ -104,9 +104,9 @@ class AsyncpgChannelRepository:
                 channel_id,
                 title or username or f"Channel_{channel_id}",
                 username,
-                0  # Default user_id for MTProto channels
+                0,  # Default user_id for MTProto channels
             )
-            
+
             # Return the channel record
             record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)
             return dict(record) if record else {}

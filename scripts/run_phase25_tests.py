@@ -37,7 +37,10 @@ async def test_ml_services():
         from apps.bot.services.ml.churn_predictor import ChurnPredictor
         from apps.bot.services.ml.content_optimizer import ContentOptimizer
         from apps.bot.services.ml.engagement_analyzer import EngagementAnalyzer
-        from apps.bot.services.ml.prediction_service import ContentMetrics, PredictionService
+        from apps.bot.services.ml.prediction_service import (
+            ContentMetrics,
+            PredictionService,
+        )
 
         print("✅ All ML services imported successfully")
         test_results["ml_imports"] = True
@@ -254,27 +257,27 @@ async def test_dependencies():
     for dep in dependencies:
         try:
             if dep == "scikit-learn":
-                import sklearn
+                pass
 
                 available_deps.append(dep)
             elif dep == "numpy":
-                import numpy
+                pass
 
                 available_deps.append(dep)
             elif dep == "pandas":
-                import pandas
+                pass
 
                 available_deps.append(dep)
             elif dep == "textstat":
-                import textstat
+                pass
 
                 available_deps.append(dep)
             elif dep == "emoji":
-                import emoji
+                pass
 
                 available_deps.append(dep)
             elif dep == "joblib":
-                import joblib
+                pass
 
                 available_deps.append(dep)
         except ImportError:

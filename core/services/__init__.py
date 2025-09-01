@@ -4,8 +4,7 @@ Contains core business logic without external dependencies
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import List, Optional
+from datetime import datetime
 from uuid import UUID
 
 from core.models import (
@@ -274,9 +273,7 @@ class DeliveryService:
         """
         Get delivery statistics for analytics
         """
-        DeliveryFilter(
-            channel_id=channel_id, from_date=from_date, to_date=to_date
-        )
+        DeliveryFilter(channel_id=channel_id, from_date=from_date, to_date=to_date)
 
         # Get counts by status
         stats = {}

@@ -30,7 +30,7 @@ from typing import Any
 try:
     import structlog
     from structlog import stdlib
-    from structlog.processors import JSONRenderer, TimeStamper
+    from structlog.processors import TimeStamper
 
     STRUCTLOG_AVAILABLE = True
 except ImportError:

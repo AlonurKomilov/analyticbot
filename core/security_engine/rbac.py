@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RBACConfig:
     """RBAC configuration settings"""
+
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
@@ -94,7 +95,7 @@ class RBACManager:
             }
             if self.config.redis_password:
                 redis_kwargs["password"] = self.config.redis_password
-                
+
             self.redis_client = redis.Redis(**redis_kwargs)
             self.redis_client.ping()
             self._redis_available = True

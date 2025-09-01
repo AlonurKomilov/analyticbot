@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import psutil
 import pytest
 
-from apps.bot.database.repositories.analytics_repository import AnalyticsRepository
+from infra.db.repositories.analytics_repository import AnalyticsRepository
 from apps.bot.database.repositories.scheduler_repository import SchedulerRepository
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.scheduler_service import SchedulerService
@@ -245,7 +245,6 @@ class TestErrorHandling:
                     results.append(f"result_{i}")
                 except ValueError:
                     errors += 1
-                    pass
             return (results, errors)
 
         start_time = time.time()

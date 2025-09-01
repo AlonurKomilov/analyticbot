@@ -4,24 +4,26 @@ Handles file exports (CSV/PNG) and sending to users in Telegram bot
 """
 
 import logging
-import io
-from typing import Optional
 
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, BufferedInputFile
+import aiohttp
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-import aiohttp
+from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
-from config.settings import Settings
-from apps.bot.middleware.throttle import rate_limit
-from apps.bot.keyboards.analytics import (
-    get_export_type_keyboard,
-    get_export_format_keyboard
-)
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
 from apps.api.exports.csv_v2 import CSVExporter
-from infra.rendering.charts import ChartRenderer, ChartRenderingError, MATPLOTLIB_AVAILABLE
+from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.keyboards.analytics import (
+    get_export_format_keyboard,
+    get_export_type_keyboard,
+)
+from apps.bot.middleware.throttle import rate_limit
+from config.settings import Settings
+from infra.rendering.charts import (
+    MATPLOTLIB_AVAILABLE,
+    ChartRenderer,
+    ChartRenderingError,
+)
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -38,7 +40,7 @@ def get_csv_exporter() -> CSVExporter:
     return CSVExporter()
 
 
-def get_chart_renderer() -> Optional[ChartRenderer]:
+def get_chart_renderer() -> ChartRenderer | None:
     """Get chart renderer instance if available"""
     if not MATPLOTLIB_AVAILABLE:
         return None
@@ -50,17 +52,16 @@ def get_chart_renderer() -> Optional[ChartRenderer]:
 async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
     """Handle export menu selection"""
     settings = Settings()
-    
+
     if not settings.EXPORT_ENABLED:
         await callback.answer("📋 Export functionality is currently disabled", show_alert=True)
         return
-    
+
     keyboard = get_export_type_keyboard()
     await callback.message.edit_text(
-        "📋 <b>Export Analytics Data</b>\n\n"
-        "Choose the type of data you want to export:",
+        "📋 <b>Export Analytics Data</b>\n\n" "Choose the type of data you want to export:",
         reply_markup=keyboard,
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -70,29 +71,28 @@ async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
 async def handle_export_type_selection(callback: CallbackQuery, state: FSMContext):
     """Handle export type selection"""
     export_type = callback.data.split(":")[-1]
-    
+
     # Store export type in state
     await state.update_data(export_type=export_type)
-    
+
     # Show format selection
     keyboard = get_export_format_keyboard(export_type)
-    
+
     type_labels = {
-        'overview': 'Overview',
-        'growth': 'Growth Analysis', 
-        'reach': 'Reach Analysis',
-        'top_posts': 'Top Posts',
-        'sources': 'Traffic Sources',
-        'trending': 'Trending Content'
+        "overview": "Overview",
+        "growth": "Growth Analysis",
+        "reach": "Reach Analysis",
+        "top_posts": "Top Posts",
+        "sources": "Traffic Sources",
+        "trending": "Trending Content",
     }
-    
+
     type_label = type_labels.get(export_type, export_type.title())
-    
+
     await callback.message.edit_text(
-        f"📋 <b>Export {type_label}</b>\n\n"
-        "Choose export format:",
+        f"📋 <b>Export {type_label}</b>\n\n" "Choose export format:",
         reply_markup=keyboard,
-        parse_mode="HTML"
+        parse_mode="HTML",
     )
     await callback.answer()
 
@@ -102,44 +102,43 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
 async def handle_export_format_selection(callback: CallbackQuery, state: FSMContext):
     """Handle export format selection and start export"""
     format_type = callback.data.split(":")[-1]
-    
+
     # Get export type from state
     state_data = await state.get_data()
-    export_type = state_data.get('export_type')
-    
+    export_type = state_data.get("export_type")
+
     if not export_type:
         await callback.answer("❌ Export session expired. Please start over.", show_alert=True)
         return
-    
+
     # Clear state
     await state.clear()
-    
+
     # Start export process
     await callback.message.edit_text(
-        f"⏳ Preparing {format_type.upper()} export...\n"
-        "This may take a few moments."
+        f"⏳ Preparing {format_type.upper()} export...\n" "This may take a few moments."
     )
     await callback.answer()
-    
+
     try:
         # Get channel_id from callback context (you might need to adjust this)
-        user_id = callback.from_user.id
+        callback.from_user.id
         # For demo purposes, using a placeholder channel_id
         # In real implementation, you'd get this from user context/settings
         channel_id = "@demo_channel"  # TODO: Get from user settings
         period = 30  # TODO: Allow user to specify period
-        
+
         if format_type == "csv":
             await export_csv_data(callback.message, export_type, channel_id, period)
         elif format_type == "png":
             await export_png_chart(callback.message, export_type, channel_id, period)
-            
+
     except Exception as e:
         logger.error(f"Export failed for user {callback.from_user.id}: {e}")
         await callback.message.edit_text(
             "❌ <b>Export Failed</b>\n\n"
             "Sorry, we couldn't generate your export. Please try again later.",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
 
 
@@ -149,77 +148,72 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
         # Initialize clients
         analytics_client = get_analytics_client()
         csv_exporter = get_csv_exporter()
-        
+
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
             analytics_client.session = session
-            
-            if export_type == 'overview':
+
+            if export_type == "overview":
                 data = await analytics_client.get_overview(channel_id, period)
                 csv_content = csv_exporter.overview_to_csv(data)
-            elif export_type == 'growth':
+            elif export_type == "growth":
                 data = await analytics_client.get_growth(channel_id, period)
                 csv_content = csv_exporter.growth_to_csv(data)
-            elif export_type == 'reach':
+            elif export_type == "reach":
                 data = await analytics_client.get_reach(channel_id, period)
                 csv_content = csv_exporter.reach_to_csv(data)
-            elif export_type == 'top_posts':
+            elif export_type == "top_posts":
                 data = await analytics_client.get_top_posts(channel_id, period)
                 csv_content = csv_exporter.top_posts_to_csv(data)
-            elif export_type == 'sources':
+            elif export_type == "sources":
                 data = await analytics_client.get_sources(channel_id, period)
                 csv_content = csv_exporter.sources_to_csv(data)
-            elif export_type == 'trending':
+            elif export_type == "trending":
                 data = await analytics_client.get_trending(channel_id, period)
                 csv_content = csv_exporter.trending_to_csv(data)
             else:
                 raise ValueError(f"Unsupported export type: {export_type}")
-        
+
         if not data:
             await message.edit_text(
                 "📋 <b>No Data Available</b>\n\n"
                 "No analytics data available for the selected period.",
-                parse_mode="HTML"
+                parse_mode="HTML",
             )
             return
-        
+
         # Prepare file
         filename = csv_exporter.get_filename(export_type, channel_id, period)
-        file_buffer = BufferedInputFile(
-            csv_content.encode('utf-8'),
-            filename=filename
-        )
-        
+        file_buffer = BufferedInputFile(csv_content.encode("utf-8"), filename=filename)
+
         # Send file
         await message.answer_document(
             document=file_buffer,
             caption=f"📊 <b>{export_type.title()} Export</b>\n"
-                   f"📅 Period: {period} days\n"
-                   f"📈 Channel: {channel_id}",
-            parse_mode="HTML"
+            f"📅 Period: {period} days\n"
+            f"📈 Channel: {channel_id}",
+            parse_mode="HTML",
         )
-        
+
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n"
-            f"Your {export_type} data has been exported as CSV."
+            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} data has been exported as CSV."
         )
-        
+
         logger.info(f"CSV export completed for user {message.chat.id}, type {export_type}")
-        
+
     except aiohttp.ClientError as e:
         logger.error(f"Analytics API error during CSV export: {e}")
         await message.edit_text(
             "❌ <b>Export Failed</b>\n\n"
             "Analytics service is currently unavailable. Please try again later.",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
     except Exception as e:
         logger.error(f"CSV export error: {e}")
         await message.edit_text(
-            "❌ <b>Export Failed</b>\n\n"
-            "An error occurred during export. Please try again.",
-            parse_mode="HTML"
+            "❌ <b>Export Failed</b>\n\n" "An error occurred during export. Please try again.",
+            parse_mode="HTML",
         )
 
 
@@ -227,29 +221,29 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
     """Export data as PNG chart"""
     try:
         chart_renderer = get_chart_renderer()
-        
+
         if not chart_renderer:
             await message.edit_text(
                 "❌ <b>PNG Export Unavailable</b>\n\n"
                 "Chart rendering is not available on this server.",
-                parse_mode="HTML"
+                parse_mode="HTML",
             )
             return
-        
+
         # Initialize analytics client
         analytics_client = get_analytics_client()
-        
+
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
             analytics_client.session = session
-            
-            if export_type == 'growth':
+
+            if export_type == "growth":
                 data = await analytics_client.get_growth(channel_id, period)
                 png_bytes = chart_renderer.render_growth_chart(data)
-            elif export_type == 'reach':
+            elif export_type == "reach":
                 data = await analytics_client.get_reach(channel_id, period)
                 png_bytes = chart_renderer.render_reach_chart(data)
-            elif export_type == 'sources':
+            elif export_type == "sources":
                 data = await analytics_client.get_sources(channel_id, period)
                 png_bytes = chart_renderer.render_sources_chart(data)
             else:
@@ -257,62 +251,58 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
                     f"❌ <b>PNG Export Not Supported</b>\n\n"
                     f"PNG charts are not available for {export_type} data.\n"
                     "Try CSV export instead.",
-                    parse_mode="HTML"
+                    parse_mode="HTML",
                 )
                 return
-        
+
         if not data:
             await message.edit_text(
                 "📋 <b>No Data Available</b>\n\n"
                 "No analytics data available for the selected period.",
-                parse_mode="HTML"
+                parse_mode="HTML",
             )
             return
-        
+
         # Prepare file
         filename = f"{export_type}_{channel_id}_{period}d.png"
-        file_buffer = BufferedInputFile(
-            png_bytes,
-            filename=filename
-        )
-        
+        file_buffer = BufferedInputFile(png_bytes, filename=filename)
+
         # Send file
         await message.answer_photo(
             photo=file_buffer,
             caption=f"📊 <b>{export_type.title()} Chart</b>\n"
-                   f"📅 Period: {period} days\n"
-                   f"📈 Channel: {channel_id}",
-            parse_mode="HTML"
+            f"📅 Period: {period} days\n"
+            f"📈 Channel: {channel_id}",
+            parse_mode="HTML",
         )
-        
+
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n"
-            f"Your {export_type} chart has been generated."
+            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} chart has been generated."
         )
-        
+
         logger.info(f"PNG export completed for user {message.chat.id}, type {export_type}")
-        
+
     except ChartRenderingError as e:
         logger.error(f"Chart rendering error: {e}")
         await message.edit_text(
             "❌ <b>Chart Generation Failed</b>\n\n"
             "Unable to generate chart from the data. Please try again.",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
     except aiohttp.ClientError as e:
         logger.error(f"Analytics API error during PNG export: {e}")
         await message.edit_text(
             "❌ <b>Export Failed</b>\n\n"
             "Analytics service is currently unavailable. Please try again later.",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
     except Exception as e:
         logger.error(f"PNG export error: {e}")
         await message.edit_text(
             "❌ <b>Export Failed</b>\n\n"
             "An error occurred during chart generation. Please try again.",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
 
 
@@ -322,14 +312,14 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 async def cmd_export_csv(message: Message):
     """Direct CSV export command"""
     settings = Settings()
-    
+
     if not settings.EXPORT_ENABLED:
         await message.answer("📋 Export functionality is currently disabled.")
         return
-    
+
     # Parse command arguments
     args = message.text.split()[1:]  # Skip /export_csv
-    
+
     if len(args) < 2:
         await message.answer(
             "📋 <b>CSV Export Command</b>\n\n"
@@ -337,24 +327,24 @@ async def cmd_export_csv(message: Message):
             "Types: overview, growth, reach, top_posts, sources, trending\n"
             "Period: days (default: 30)\n\n"
             "Example: <code>/export_csv growth @mychannel 7</code>",
-            parse_mode="HTML"
+            parse_mode="HTML",
         )
         return
-    
+
     export_type = args[0]
     channel_id = args[1]
     period = int(args[2]) if len(args) > 2 else 30
-    
+
     # Validate parameters
-    valid_types = ['overview', 'growth', 'reach', 'top_posts', 'sources', 'trending']
+    valid_types = ["overview", "growth", "reach", "top_posts", "sources", "trending"]
     if export_type not in valid_types:
         await message.answer(f"❌ Invalid type. Must be one of: {', '.join(valid_types)}")
         return
-    
+
     if period < 1 or period > 365:
         await message.answer("❌ Period must be between 1 and 365 days.")
         return
-    
+
     # Start export
     status_message = await message.answer(f"⏳ Exporting {export_type} data...")
     await export_csv_data(status_message, export_type, channel_id, period)

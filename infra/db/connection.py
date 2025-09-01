@@ -2,11 +2,10 @@
 Database connection management for PostgreSQL
 """
 
-import asyncio
 import logging
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Optional
 
 import asyncpg
 from asyncpg import Connection, Pool
@@ -14,16 +13,18 @@ from asyncpg import Connection, Pool
 logger = logging.getLogger(__name__)
 
 # Global connection pool
-_connection_pool: Optional[Pool] = None
+_connection_pool: Pool | None = None
 
 
 async def create_connection_pool() -> Pool:
     """Create and return a connection pool"""
     global _connection_pool
-    
+
     if _connection_pool is None:
-        database_url = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/analyticbot")
-        
+        database_url = os.getenv(
+            "DATABASE_URL", "postgresql://postgres:password@localhost:5432/analyticbot"
+        )
+
         logger.info("Creating database connection pool")
         _connection_pool = await asyncpg.create_pool(
             database_url,
@@ -31,17 +32,17 @@ async def create_connection_pool() -> Pool:
             max_size=10,
             command_timeout=60,
         )
-    
+
     return _connection_pool
 
 
 async def get_connection_pool() -> Pool:
     """Get the global connection pool, creating it if necessary"""
     global _connection_pool
-    
+
     if _connection_pool is None:
         _connection_pool = await create_connection_pool()
-    
+
     return _connection_pool
 
 
@@ -49,7 +50,7 @@ async def get_connection_pool() -> Pool:
 async def get_db_connection() -> AsyncGenerator[Connection, None]:
     """Get a database connection from the pool"""
     pool = await get_connection_pool()
-    
+
     async with pool.acquire() as connection:
         yield connection
 
@@ -57,7 +58,7 @@ async def get_db_connection() -> AsyncGenerator[Connection, None]:
 async def close_connection_pool():
     """Close the connection pool"""
     global _connection_pool
-    
+
     if _connection_pool:
         logger.info("Closing database connection pool")
         await _connection_pool.close()

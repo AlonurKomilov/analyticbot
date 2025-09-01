@@ -41,7 +41,11 @@ def test_idempotency_basic():
 def test_rate_limiter_basic():
     """Test basic rate limiter functionality."""
     try:
-        from core.utils.ratelimit import RateLimitResult, TokenBucketConfig, TokenBucketRateLimiter
+        from core.utils.ratelimit import (
+            RateLimitResult,
+            TokenBucketConfig,
+            TokenBucketRateLimiter,
+        )
 
         # Create mock Redis client
         mock_redis = MagicMock()

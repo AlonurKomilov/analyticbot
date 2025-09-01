@@ -3,41 +3,41 @@ Redis Cache Adapter for Analytics Fusion
 Simple JSON caching with TTL support
 """
 
+import hashlib
 import json
 import logging
-from typing import Optional, Any
 from datetime import datetime
-import hashlib
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 class RedisJSONCache:
     """Redis-based JSON cache with TTL support"""
-    
+
     def __init__(self, redis_client=None):
         self.redis = redis_client
         self.enabled = redis_client is not None
 
-    async def get_json(self, key: str) -> Optional[dict]:
+    async def get_json(self, key: str) -> dict | None:
         """Get JSON data from cache"""
         if not self.enabled:
             return None
-            
+
         try:
             value = await self.redis.get(key)
             if value:
                 return json.loads(value)
         except Exception as e:
             logger.error(f"Cache get error for key {key}: {e}")
-        
+
         return None
 
     async def set_json(self, key: str, value: dict, ttl_s: int = 60) -> None:
         """Set JSON data in cache with TTL"""
         if not self.enabled:
             return
-            
+
         try:
             json_value = json.dumps(value, default=self._json_serializer)
             await self.redis.set(key, json_value, ex=ttl_s)
@@ -48,7 +48,7 @@ class RedisJSONCache:
         """Delete key from cache"""
         if not self.enabled:
             return
-            
+
         try:
             await self.redis.delete(key)
         except Exception as e:
@@ -58,7 +58,7 @@ class RedisJSONCache:
         """Check if key exists in cache"""
         if not self.enabled:
             return False
-            
+
         try:
             return bool(await self.redis.exists(key))
         except Exception as e:
@@ -70,12 +70,12 @@ class RedisJSONCache:
         # Sort parameters for consistent key generation
         sorted_params = sorted(params.items())
         params_str = json.dumps(sorted_params, default=str)
-        
+
         # Include last_updated in key for cache invalidation
         key_data = f"{endpoint}:{params_str}"
         if last_updated:
             key_data += f":{last_updated.isoformat()}"
-        
+
         # Create hash for shorter, consistent keys
         key_hash = hashlib.md5(key_data.encode()).hexdigest()
         return f"analytics_v2:{endpoint}:{key_hash}"
@@ -89,8 +89,8 @@ class RedisJSONCache:
 
 class NoOpCache:
     """No-operation cache for when Redis is not available"""
-    
-    async def get_json(self, key: str) -> Optional[dict]:
+
+    async def get_json(self, key: str) -> dict | None:
         return None
 
     async def set_json(self, key: str, value: dict, ttl_s: int = 60) -> None:

@@ -82,9 +82,7 @@ async def test_visualization():
         )
         print("   ✅ Line chart created")
         bar_data = test_df.groupby("region")["sales"].sum().reset_index()
-        viz_engine.create_bar_chart(
-            bar_data, "region", "sales", title="Sales by Region"
-        )
+        viz_engine.create_bar_chart(bar_data, "region", "sales", title="Sales by Region")
         print("   ✅ Bar chart created")
         return True
     except Exception as e:

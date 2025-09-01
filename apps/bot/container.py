@@ -159,9 +159,15 @@ def _make_service(ServiceCls: type) -> object:
 
 container.register(AsyncPGPool, factory=lambda: cast(AsyncPGPool, _pool_or_none()))
 container.register(async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none()))
-container.register(AsyncpgUserRepository, factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository)))
-container.register(AsyncpgPlanRepository, factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository)))
-container.register(AsyncpgChannelRepository, factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository)))
+container.register(
+    AsyncpgUserRepository, factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository))
+)
+container.register(
+    AsyncpgPlanRepository, factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository))
+)
+container.register(
+    AsyncpgChannelRepository, factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository))
+)
 container.register(
     AsyncpgScheduleRepository, factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository))
 )
@@ -169,29 +175,35 @@ container.register(
     AsyncpgAnalyticsRepository, factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository))
 )
 
+
 def _register_services():
     """Register services with local imports to avoid circular dependencies"""
     try:
         # Import each service individually to better handle any import issues
         from apps.bot.services.guard_service import GuardService
+
         container.register(GuardService, factory=as_singleton(lambda: _make_service(GuardService)))
-        
+
         from apps.bot.services.subscription_service import SubscriptionService
+
         container.register(
             SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService))
         )
-        
+
         from apps.bot.services.scheduler_service import SchedulerService
+
         container.register(
             SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))
         )
-        
+
         from apps.bot.services.analytics_service import AnalyticsService
+
         container.register(
             AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
         )
     except Exception as e:
         logger.warning(f"Could not register some services: {e}")
+
 
 # Register services with local imports
 _register_services()

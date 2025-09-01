@@ -89,23 +89,24 @@ class Settings(BaseSettings):
 
     # External Services
     OPENAI_API_KEY: SecretStr | None = None
+    ANTHROPIC_API_KEY: SecretStr | None = None  # For Smart Auto-Fixer
 
     # Phase 4.5: Bot UI & Alerts Integration Feature Flags
     BOT_ANALYTICS_UI_ENABLED: bool = False
     ALERTS_ENABLED: bool = False
     EXPORT_ENABLED: bool = False
     SHARE_LINKS_ENABLED: bool = False
-    
+
     # Analytics V2 Bot Client Settings
     ANALYTICS_V2_BASE_URL: str = "http://localhost:8000"
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
-    
+
     # Alert Settings
     ALERT_CHECK_INTERVAL_MINUTES: int = 5
     ALERT_DEDUPE_TTL_HOURS: int = 24
-    
+
     # Share Links Settings
     SHARE_LINK_DEFAULT_TTL_SECONDS: int = 3600
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
@@ -134,11 +135,14 @@ class Settings(BaseSettings):
             if admin_str:
                 # Handle JSON format like ["123", "456"] or comma-separated like "123,456"
                 import json
+
                 try:
                     # Try to parse as JSON first
-                    if admin_str.startswith('[') and admin_str.endswith(']'):
+                    if admin_str.startswith("[") and admin_str.endswith("]"):
                         parsed_ids = json.loads(admin_str)
-                        self._admin_ids = [int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()]
+                        self._admin_ids = [
+                            int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()
+                        ]
                     else:
                         # Parse as comma-separated
                         self._admin_ids = [

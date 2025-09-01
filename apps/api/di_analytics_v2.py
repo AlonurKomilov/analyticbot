@@ -4,21 +4,19 @@ Provides dependencies for the Analytics Fusion API
 """
 
 import logging
-from typing import Optional
-from fastapi import Depends
 
 from core.services.analytics_fusion_service import AnalyticsFusionService
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
-from infra.db.repositories.post_repository import AsyncpgPostRepository
-from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
+from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
+from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
 
 logger = logging.getLogger(__name__)
 
 # Global instances (will be initialized by container)
-_analytics_fusion_service: Optional[AnalyticsFusionService] = None
+_analytics_fusion_service: AnalyticsFusionService | None = None
 _cache_adapter = None
 
 
@@ -27,6 +25,7 @@ async def get_database_pool():
     # This should be integrated with the existing container system
     # For now, raise an error to indicate it needs to be wired
     from apps.bot.container import container
+
     return await container.resolve("database_pool")
 
 
@@ -35,6 +34,7 @@ async def get_redis_client():
     try:
         # Try to get Redis client from existing container if available
         from apps.bot.container import container
+
         return await container.resolve("redis_client")
     except Exception as e:
         logger.warning(f"Redis client not available: {e}")
@@ -44,33 +44,33 @@ async def get_redis_client():
 async def init_analytics_fusion_service():
     """Initialize analytics fusion service with all dependencies"""
     global _analytics_fusion_service
-    
+
     if _analytics_fusion_service is not None:
         return _analytics_fusion_service
-    
+
     try:
         # Get database pool
         pool = await get_database_pool()
-        
+
         # Initialize repositories
         channel_daily_repo = AsyncpgChannelDailyRepository(pool)
         post_repo = AsyncpgPostRepository(pool)
         metrics_repo = AsyncpgPostMetricsRepository(pool)
         edges_repo = AsyncpgEdgesRepository(pool)
         stats_raw_repo = AsyncpgStatsRawRepository(pool)
-        
+
         # Create service
         _analytics_fusion_service = AnalyticsFusionService(
             channel_daily_repo=channel_daily_repo,
             post_repo=post_repo,
             metrics_repo=metrics_repo,
             edges_repo=edges_repo,
-            stats_raw_repo=stats_raw_repo
+            stats_raw_repo=stats_raw_repo,
         )
-        
+
         logger.info("Analytics fusion service initialized successfully")
         return _analytics_fusion_service
-        
+
     except Exception as e:
         logger.error(f"Failed to initialize analytics fusion service: {e}")
         raise
@@ -79,10 +79,10 @@ async def init_analytics_fusion_service():
 async def init_cache_adapter():
     """Initialize cache adapter"""
     global _cache_adapter
-    
+
     if _cache_adapter is not None:
         return _cache_adapter
-    
+
     try:
         redis_client = await get_redis_client()
         _cache_adapter = create_cache_adapter(redis_client)
@@ -96,6 +96,7 @@ async def init_cache_adapter():
 
 # FastAPI dependencies
 
+
 async def get_analytics_fusion_service() -> AnalyticsFusionService:
     """Dependency to provide analytics fusion service"""
     return await init_analytics_fusion_service()
@@ -107,6 +108,7 @@ async def get_cache():
 
 
 # Repository dependencies (for direct access if needed)
+
 
 async def get_channel_daily_repository():
     """Get channel daily repository"""
@@ -140,14 +142,15 @@ async def get_stats_raw_repository():
 
 # Cleanup function
 
+
 async def cleanup_analytics_v2():
     """Cleanup function for graceful shutdown"""
     global _analytics_fusion_service, _cache_adapter
-    
+
     logger.info("Cleaning up Analytics V2 dependencies")
-    
+
     # Reset global instances
     _analytics_fusion_service = None
     _cache_adapter = None
-    
+
     logger.info("Analytics V2 dependencies cleaned up")

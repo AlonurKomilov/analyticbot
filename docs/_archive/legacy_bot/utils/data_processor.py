@@ -9,7 +9,6 @@ import asyncio
 import io
 import json
 import logging
-import sqlite3
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -18,7 +17,6 @@ from typing import Any
 import aiofiles
 import numpy as np
 import pandas as pd
-import psycopg2
 import requests
 from scipy import stats
 from sklearn.impute import KNNImputer, SimpleImputer
@@ -619,9 +617,8 @@ from sklearn.preprocessing import LabelEncoder
 
 # Database connectivity (if needed)
 try:
-    import sqlite3
+    pass
 
-    import psycopg2
     from sqlalchemy import create_engine
 
     DATABASE_AVAILABLE = True
@@ -630,14 +627,14 @@ except ImportError:
 
 # Additional data formats
 try:
-    import openpyxl
+    pass
 
     EXCEL_AVAILABLE = True
 except ImportError:
     EXCEL_AVAILABLE = False
 
 try:
-    import xmltodict
+    pass
 
     XML_AVAILABLE = True
 except ImportError:

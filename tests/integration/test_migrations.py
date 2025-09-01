@@ -3,7 +3,6 @@ import socket
 import urllib.parse as up
 
 import pytest
-
 from alembic import command
 from alembic.config import Config
 

@@ -27,6 +27,7 @@ from infra.db.repositories import (
 @dataclass(frozen=True)
 class Settings:
     """Application settings"""
+
     database_url: str
     database_pool_size: int = 10
     database_max_overflow: int = 20
@@ -34,7 +35,7 @@ class Settings:
 
 class Container:
     """Dependency Injection Container"""
-    
+
     def __init__(self, settings: Settings):
         self.settings = settings
         self._engine: AsyncEngine | None = None
@@ -49,7 +50,7 @@ class Container:
                 self.settings.database_url,
                 pool_size=self.settings.database_pool_size,
                 max_overflow=self.settings.database_max_overflow,
-                pool_pre_ping=True
+                pool_pre_ping=True,
             )
         return self._engine
 
@@ -67,11 +68,9 @@ class Container:
             db_url = self.settings.database_url
             if db_url.startswith("postgresql+asyncpg://"):
                 db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-            
+
             self._asyncpg_pool = await asyncpg.create_pool(
-                db_url,
-                min_size=1,
-                max_size=self.settings.database_pool_size
+                db_url, min_size=1, max_size=self.settings.database_pool_size
             )
         return self._asyncpg_pool
 

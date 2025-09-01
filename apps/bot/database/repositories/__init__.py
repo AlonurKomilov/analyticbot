@@ -17,14 +17,14 @@ from infra.db.repositories import (
 
 # Backward compatibility aliases
 UserRepository = AsyncpgUserRepository
-AnalyticsRepository = AsyncpgAnalyticsRepository 
+AnalyticsRepository = AsyncpgAnalyticsRepository
 ChannelRepository = AsyncpgChannelRepository
 PaymentRepository = AsyncpgPaymentRepository
 PlanRepository = AsyncpgPlanRepository
 
 __all__ = [
     "AsyncpgUserRepository",
-    "AsyncpgAdminRepository", 
+    "AsyncpgAdminRepository",
     "AsyncpgScheduleRepository",
     "AsyncpgDeliveryRepository",
     "AsyncpgAnalyticsRepository",
@@ -34,7 +34,7 @@ __all__ = [
     # Backward compatibility aliases
     "UserRepository",
     "AnalyticsRepository",
-    "ChannelRepository", 
+    "ChannelRepository",
     "PaymentRepository",
-    "PlanRepository"
+    "PlanRepository",
 ]

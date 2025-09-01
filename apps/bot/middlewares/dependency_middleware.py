@@ -11,23 +11,18 @@ from punq import MissingDependencyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import settings as app_settings
-from apps.bot.services import AnalyticsService, GuardService, SchedulerService, SubscriptionService
+from apps.bot.services import (
+    AnalyticsService,
+    GuardService,
+    SchedulerService,
+    SubscriptionService,
+)
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
-from infra.db.repositories import (
-    AsyncpgAnalyticsRepository as AnalyticsRepository,
-)
-from infra.db.repositories import (
-    AsyncpgChannelRepository as ChannelRepository,
-)
-from infra.db.repositories import (
-    AsyncpgPlanRepository as PlanRepository,
-)
-from infra.db.repositories import (
-    AsyncpgScheduleRepository as SchedulerRepository,
-)
-from infra.db.repositories import (
-    AsyncpgUserRepository as UserRepository,
-)
+from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
+from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
+from infra.db.repositories import AsyncpgPlanRepository as PlanRepository
+from infra.db.repositories import AsyncpgScheduleRepository as SchedulerRepository
+from infra.db.repositories import AsyncpgUserRepository as UserRepository
 
 
 async def _noop(*args: Any, **kwargs: Any) -> None:

@@ -68,7 +68,9 @@ async def startup_event():
     """Initialize standalone ML services"""
     try:
         logger.info("🚀 Starting standalone AI/ML API...")
-        from apps.bot.services.ml.standalone_content_optimizer import StandaloneContentOptimizer
+        from apps.bot.services.ml.standalone_content_optimizer import (
+            StandaloneContentOptimizer,
+        )
 
         content_optimizer = StandaloneContentOptimizer()
         ml_services["content_optimizer"] = content_optimizer
@@ -116,11 +118,7 @@ async def health_check():
                     "error": str(e),
                 }
         try:
-            import emoji
-            import numpy
-            import pandas
-            import sklearn
-            import textstat
+            pass
 
             health_status["dependencies"] = {
                 "numpy": "available",

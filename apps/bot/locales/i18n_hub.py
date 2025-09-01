@@ -43,7 +43,6 @@ class _MiniI18n:
             print(f"I18N: Loaded locales: {list(self.core.locales.keys())}")
         except Exception as e:
             print(f"I18N: Failed to load locales: {e}")
-            pass
 
     def gettext(self, key: str, locale: str | None = None, **kwargs):
         self._ensure()

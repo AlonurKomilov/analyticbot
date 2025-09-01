@@ -9,7 +9,6 @@ from pathlib import Path
 
 try:
     import libcst as cst
-    import libcst.matchers as m
 except ImportError:
     print("ERROR: libcst not installed. Install with: pip install libcst")
     sys.exit(1)

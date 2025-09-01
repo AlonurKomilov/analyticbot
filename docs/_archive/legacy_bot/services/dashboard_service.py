@@ -22,19 +22,13 @@ import pandas as pd
 # Visualization Libraries
 try:
     import plotly.express as px
-    import plotly.graph_objects as go
-    import plotly.utils
-    from plotly.subplots import make_subplots
 
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
 
 try:
-    import matplotlib.dates as mdates
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    from matplotlib.animation import FuncAnimation
+    pass
 
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
@@ -44,7 +38,7 @@ except ImportError:
 try:
     import dash
     import dash_bootstrap_components as dbc
-    from dash import Input, Output, State, callback, dcc, html
+    from dash import Input, Output, State, dcc, html
 
     DASH_AVAILABLE = True
 except ImportError:

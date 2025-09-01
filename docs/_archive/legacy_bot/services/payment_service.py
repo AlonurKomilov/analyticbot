@@ -36,14 +36,12 @@ class PaymentGatewayAdapter(ABC):
     @abstractmethod
     def provider_name(self) -> str:
         """Return the provider name"""
-        pass
 
     @abstractmethod
     async def create_payment_method(
         self, user_id: int, method_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Create payment method with the gateway"""
-        pass
 
     @abstractmethod
     async def charge_payment_method(
@@ -55,7 +53,6 @@ class PaymentGatewayAdapter(ABC):
         metadata: (dict[str, Any] | None) = None,
     ) -> dict[str, Any]:
         """Charge a payment method"""
-        pass
 
     @abstractmethod
     async def create_subscription(
@@ -67,22 +64,18 @@ class PaymentGatewayAdapter(ABC):
         trial_days: (int | None) = None,
     ) -> dict[str, Any]:
         """Create recurring subscription"""
-        pass
 
     @abstractmethod
     async def cancel_subscription(self, subscription_id: str) -> dict[str, Any]:
         """Cancel subscription"""
-        pass
 
     @abstractmethod
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify webhook signature"""
-        pass
 
     @abstractmethod
     async def handle_webhook_event(self, event_data: dict[str, Any]) -> dict[str, Any]:
         """Process webhook event"""
-        pass
 
 
 class StripeAdapter(PaymentGatewayAdapter):

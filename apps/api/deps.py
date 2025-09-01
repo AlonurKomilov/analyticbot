@@ -91,9 +91,14 @@ async def get_current_user(
 ) -> dict:
     """Get current authenticated user (placeholder implementation)"""
     # TODO: Implement proper JWT validation and user lookup
-    # For now, return a mock user for development
+    # Raise an exception in production to prevent unauthorized access
+    from config.settings import settings
+    if settings.ENV != "development":
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
     return {
         "id": "user_123",
         "username": "dev_user",
-        "tier": "pro"  # free, basic, pro, enterprise
+        "tier": "pro",  # free, basic, pro, enterprise
     }

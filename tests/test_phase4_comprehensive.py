@@ -180,7 +180,11 @@ async def test_module_4_3_dashboard():
     try:
         print("\n🧪 TESTING MODULE 4.3: ANALYTICS DASHBOARD")
         print("=" * 60)
-        from apps.bot.analytics import DashboardFactory, RealTimeDashboard, VisualizationEngine
+        from apps.bot.analytics import (
+            DashboardFactory,
+            RealTimeDashboard,
+            VisualizationEngine,
+        )
 
         viz_engine = VisualizationEngine()
         datasets = create_test_datasets()
@@ -226,9 +230,7 @@ async def test_module_4_3_dashboard():
         DashboardFactory.create_ml_performance_dashboard(
             model_results={"test_model": {"accuracy": 0.95}}, port=8056
         )
-        DashboardFactory.create_business_dashboard(
-            data_source=business_df, port=8057
-        )
+        DashboardFactory.create_business_dashboard(data_source=business_df, port=8057)
         print("   ✅ ML performance dashboard created")
         print("   ✅ Business dashboard created")
         print("✅ MODULE 4.3 TESTS PASSED")

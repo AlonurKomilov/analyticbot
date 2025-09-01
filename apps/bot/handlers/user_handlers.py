@@ -41,7 +41,7 @@ def _get_webapp_url() -> str | None:
             return str(twa)
     except Exception as e:
         log.warning(f"Error getting TWA_HOST_URL from settings: {e}")
-    
+
     # Try multiple environment variable names
     env_url = os.getenv("TWA_HOST_URL") or os.getenv("WEBAPP_URL")
     if env_url:
@@ -79,40 +79,30 @@ def _build_dashboard_kb(i18n: Any) -> tuple[InlineKeyboardMarkup | None, bool]:
 def _build_start_menu_kb(i18n: Any) -> InlineKeyboardMarkup:
     """Build comprehensive start menu with action buttons."""
     buttons = []
-    
+
     # First row: Add Channel and View Stats
     row1 = [
         InlineKeyboardButton(
-            text=i18n.get("button-add-channel"), 
-            callback_data="quick_add_channel"
+            text=i18n.get("button-add-channel"), callback_data="quick_add_channel"
         ),
-        InlineKeyboardButton(
-            text=i18n.get("button-view-stats"), 
-            callback_data="quick_stats"
-        )
+        InlineKeyboardButton(text=i18n.get("button-view-stats"), callback_data="quick_stats"),
     ]
     buttons.append(row1)
-    
+
     # Second row: Help and Commands
     row2 = [
-        InlineKeyboardButton(
-            text=i18n.get("button-help"), 
-            callback_data="quick_help"
-        ),
-        InlineKeyboardButton(
-            text=i18n.get("button-commands"), 
-            callback_data="quick_commands"
-        )
+        InlineKeyboardButton(text=i18n.get("button-help"), callback_data="quick_help"),
+        InlineKeyboardButton(text=i18n.get("button-commands"), callback_data="quick_commands"),
     ]
     buttons.append(row2)
-    
+
     # Third row: Dashboard (if available)
     dashboard_kb, is_webapp = _build_dashboard_kb(i18n)
     if dashboard_kb and is_webapp:
         # Extract the dashboard button from the dashboard keyboard
         dashboard_btn = dashboard_kb.inline_keyboard[0][0]
         buttons.append([dashboard_btn])
-    
+
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -158,7 +148,7 @@ async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18
         except Exception as e:
             log.warning("create_user failed: %s", e)
     await _set_webapp_menu_or_default(message, i18n)
-    
+
     # Build comprehensive menu with action buttons
     start_kb = _build_start_menu_kb(i18n)
     full_name = message.from_user.full_name if message.from_user else "there"

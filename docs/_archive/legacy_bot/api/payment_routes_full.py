@@ -106,7 +106,11 @@ async def get_payment_service() -> PaymentService:
     pool = db_manager.pool
     repository = PaymentRepository(pool)
     service = PaymentService(repository)
-    from apps.bot.services.payment_service import ClickAdapter, PaymeAdapter, StripeAdapter
+    from apps.bot.services.payment_service import (
+        ClickAdapter,
+        PaymeAdapter,
+        StripeAdapter,
+    )
 
     service.register_adapter(StripeAdapter("sk_test_...", "whsec_..."))
     service.register_adapter(PaymeAdapter("merchant_123", "secret_key"))

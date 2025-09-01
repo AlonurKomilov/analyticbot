@@ -24,7 +24,9 @@ from apps.bot.services.analytics_service import AnalyticsService
 from infra.db.repositories.analytics_repository import (
     AsyncpgAnalyticsRepository as AnalyticsRepository,
 )
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository as ChannelRepository
+from infra.db.repositories.channel_repository import (
+    AsyncpgChannelRepository as ChannelRepository,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(

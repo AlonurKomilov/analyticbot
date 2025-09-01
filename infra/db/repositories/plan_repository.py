@@ -10,7 +10,7 @@ import asyncpg
 
 class AsyncpgPlanRepository:
     """Plan repository implementation using asyncpg"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 

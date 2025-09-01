@@ -28,7 +28,7 @@ import numpy as np
 import pandas as pd
 
 try:
-    from jinja2 import Environment, FileSystemLoader, Template
+    from jinja2 import Environment, FileSystemLoader
 
     JINJA2_AVAILABLE = True
 except ImportError:
@@ -45,10 +45,15 @@ except ImportError:
 # Report generation libraries
 try:
     from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-    from reportlab.lib.units import inch
-    from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
 
     REPORTLAB_AVAILABLE = True
 except ImportError:
@@ -57,8 +62,7 @@ except ImportError:
 # Excel reporting
 try:
     import openpyxl
-    from openpyxl.chart import BarChart, LineChart, PieChart, Reference
-    from openpyxl.styles import Alignment, Border, Fill, Font, Side
+    from openpyxl.styles import Fill, Font
 
     OPENPYXL_AVAILABLE = True
 except ImportError:

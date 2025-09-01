@@ -1,17 +1,18 @@
 """
-Post Metrics Repository Implementation  
+Post Metrics Repository Implementation
 Repository for storing and managing post engagement metrics snapshots
 """
 
-from typing import Any, Optional
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Any
+
 import asyncpg
 
 
 class AsyncpgPostMetricsRepository:
     """Post metrics repository implementation using asyncpg for engagement tracking"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
@@ -24,10 +25,10 @@ class AsyncpgPostMetricsRepository:
         replies_count: int = 0,
         reactions_json: list = None,
         reactions_count: int = 0,
-        ts: datetime = None
+        ts: datetime = None,
     ) -> dict[str, Any]:
         """Add or update a metrics snapshot for a post.
-        
+
         Args:
             channel_id: Channel ID
             msg_id: Message ID
@@ -37,13 +38,13 @@ class AsyncpgPostMetricsRepository:
             reactions_json: List of reaction data
             reactions_count: Total reaction count
             ts: Timestamp for the snapshot
-            
+
         Returns:
             Dictionary with operation result
         """
         reactions_json = reactions_json or []
         ts = ts or datetime.utcnow()
-        
+
         async with self.pool.acquire() as conn:
             # Use UPSERT to handle existing metrics
             await conn.execute(
@@ -60,25 +61,28 @@ class AsyncpgPostMetricsRepository:
                     reactions_count = EXCLUDED.reactions_count,
                     updated_at = NOW()
                 """,
-                channel_id, msg_id, views, forwards, replies_count,
-                json.dumps(reactions_json), reactions_count, ts
+                channel_id,
+                msg_id,
+                views,
+                forwards,
+                replies_count,
+                json.dumps(reactions_json),
+                reactions_count,
+                ts,
             )
-            
+
             return {"success": True, "channel_id": channel_id, "msg_id": msg_id}
 
     async def get_post_metrics(
-        self, 
-        channel_id: int, 
-        msg_id: int,
-        limit: int = 10
+        self, channel_id: int, msg_id: int, limit: int = 10
     ) -> list[dict[str, Any]]:
         """Get metrics history for a specific post.
-        
+
         Args:
             channel_id: Channel ID
             msg_id: Message ID
             limit: Maximum snapshots to return
-            
+
         Returns:
             List of metrics snapshots ordered by time
         """
@@ -90,21 +94,19 @@ class AsyncpgPostMetricsRepository:
                 ORDER BY snapshot_time DESC
                 LIMIT $3
                 """,
-                channel_id, msg_id, limit
+                channel_id,
+                msg_id,
+                limit,
             )
             return [dict(record) for record in records]
 
-    async def get_latest_metrics(
-        self, 
-        channel_id: int, 
-        msg_id: int
-    ) -> Optional[dict[str, Any]]:
+    async def get_latest_metrics(self, channel_id: int, msg_id: int) -> dict[str, Any] | None:
         """Get the latest metrics snapshot for a post.
-        
+
         Args:
             channel_id: Channel ID
             msg_id: Message ID
-            
+
         Returns:
             Latest metrics dictionary or None if not found
         """
@@ -116,21 +118,18 @@ class AsyncpgPostMetricsRepository:
                 ORDER BY snapshot_time DESC
                 LIMIT 1
                 """,
-                channel_id, msg_id
+                channel_id,
+                msg_id,
             )
             return dict(record) if record else None
 
-    async def get_channel_metrics_summary(
-        self,
-        channel_id: int,
-        hours: int = 24
-    ) -> dict[str, Any]:
+    async def get_channel_metrics_summary(self, channel_id: int, hours: int = 24) -> dict[str, Any]:
         """Get aggregated metrics summary for a channel.
-        
+
         Args:
             channel_id: Channel ID
             hours: Hours to look back for the summary
-            
+
         Returns:
             Dictionary with aggregated metrics
         """
@@ -151,69 +150,66 @@ class AsyncpgPostMetricsRepository:
                 WHERE channel_id = $1 
                 AND snapshot_time > NOW() - INTERVAL '%s hours'
                 """,
-                channel_id
+                channel_id,
             )
-            
+
             if record:
                 return {
-                    'channel_id': channel_id,
-                    'period_hours': hours,
-                    'total_posts': record['total_posts'] or 0,
-                    'avg_views': float(record['avg_views'] or 0),
-                    'total_views': record['total_views'] or 0,
-                    'avg_forwards': float(record['avg_forwards'] or 0),
-                    'total_forwards': record['total_forwards'] or 0,
-                    'avg_replies': float(record['avg_replies'] or 0),
-                    'total_replies': record['total_replies'] or 0,
-                    'avg_reactions': float(record['avg_reactions'] or 0),
-                    'total_reactions': record['total_reactions'] or 0,
-                    'engagement_rate': self._calculate_engagement_rate(
-                        record['total_views'] or 0,
-                        (record['total_forwards'] or 0) + 
-                        (record['total_replies'] or 0) + 
-                        (record['total_reactions'] or 0)
-                    )
+                    "channel_id": channel_id,
+                    "period_hours": hours,
+                    "total_posts": record["total_posts"] or 0,
+                    "avg_views": float(record["avg_views"] or 0),
+                    "total_views": record["total_views"] or 0,
+                    "avg_forwards": float(record["avg_forwards"] or 0),
+                    "total_forwards": record["total_forwards"] or 0,
+                    "avg_replies": float(record["avg_replies"] or 0),
+                    "total_replies": record["total_replies"] or 0,
+                    "avg_reactions": float(record["avg_reactions"] or 0),
+                    "total_reactions": record["total_reactions"] or 0,
+                    "engagement_rate": self._calculate_engagement_rate(
+                        record["total_views"] or 0,
+                        (record["total_forwards"] or 0)
+                        + (record["total_replies"] or 0)
+                        + (record["total_reactions"] or 0),
+                    ),
                 }
-            
+
             return {
-                'channel_id': channel_id,
-                'period_hours': hours,
-                'total_posts': 0,
-                'avg_views': 0.0,
-                'total_views': 0,
-                'avg_forwards': 0.0,
-                'total_forwards': 0,
-                'avg_replies': 0.0,
-                'total_replies': 0,
-                'avg_reactions': 0.0,
-                'total_reactions': 0,
-                'engagement_rate': 0.0
+                "channel_id": channel_id,
+                "period_hours": hours,
+                "total_posts": 0,
+                "avg_views": 0.0,
+                "total_views": 0,
+                "avg_forwards": 0.0,
+                "total_forwards": 0,
+                "avg_replies": 0.0,
+                "total_replies": 0,
+                "avg_reactions": 0.0,
+                "total_reactions": 0,
+                "engagement_rate": 0.0,
             }
 
     async def get_trending_posts(
-        self,
-        channel_id: int = None,
-        hours: int = 24,
-        limit: int = 20
+        self, channel_id: int = None, hours: int = 24, limit: int = 20
     ) -> list[dict[str, Any]]:
         """Get trending posts based on engagement metrics.
-        
+
         Args:
             channel_id: Specific channel ID (None for all channels)
             hours: Hours to look back
             limit: Maximum posts to return
-            
+
         Returns:
             List of trending posts with their metrics
         """
         async with self.pool.acquire() as conn:
             where_clause = "WHERE snapshot_time > NOW() - INTERVAL '%s hours'"
             params = []
-            
+
             if channel_id:
                 where_clause += " AND channel_id = $1"
                 params.append(channel_id)
-            
+
             query = f"""
                 SELECT 
                     channel_id, msg_id,
@@ -229,16 +225,16 @@ class AsyncpgPostMetricsRepository:
                 ORDER BY total_engagement DESC, views DESC
                 LIMIT ${len(params) + 1}
             """
-            
+
             records = await conn.fetch(query, *params, limit)
             return [dict(record) for record in records]
 
     async def delete_old_snapshots(self, days: int = 30) -> int:
         """Delete old metric snapshots to keep database size manageable.
-        
+
         Args:
             days: Number of days to keep (older snapshots will be deleted)
-            
+
         Returns:
             Number of deleted snapshots
         """
@@ -248,9 +244,9 @@ class AsyncpgPostMetricsRepository:
                 DELETE FROM post_metrics 
                 WHERE snapshot_time < NOW() - INTERVAL '%s days'
                 """,
-                days
+                days,
             )
-            
+
             # Extract number from result string like "DELETE 42"
             deleted_count = 0
             if result and result.startswith("DELETE "):
@@ -258,16 +254,16 @@ class AsyncpgPostMetricsRepository:
                     deleted_count = int(result.split(" ")[1])
                 except (IndexError, ValueError):
                     pass
-                    
+
             return deleted_count
 
     def _calculate_engagement_rate(self, views: int, engagements: int) -> float:
         """Calculate engagement rate as percentage.
-        
+
         Args:
             views: Total views
             engagements: Total engagements (forwards + replies + reactions)
-            
+
         Returns:
             Engagement rate as percentage (0.0 to 100.0)
         """

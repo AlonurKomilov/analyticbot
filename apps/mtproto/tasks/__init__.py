@@ -9,7 +9,7 @@ This package contains both scheduled tasks and standalone scripts:
 All tasks respect MTProto feature flags and provide safe fallback behavior.
 """
 
-from .stats_loader import StatsLoaderTask
 from .scheduler import TaskScheduler
+from .stats_loader import StatsLoaderTask
 
 __all__ = ["StatsLoaderTask", "TaskScheduler"]

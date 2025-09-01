@@ -50,7 +50,11 @@ app.include_router(superadmin_router)
 @app.get("/health")
 def health():
     """Health check endpoint"""
-    return {"status": "ok", "environment": settings.ENVIRONMENT, "debug": settings.DEBUG}
+    return {
+        "status": "ok",
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+    }
 
 
 # Schedule endpoints using dependency injection
@@ -149,7 +153,8 @@ async def cancel_scheduled_post(
 
 @app.get("/delivery/stats")
 async def get_delivery_stats(
-    channel_id: str = None, delivery_service: DeliveryService = Depends(get_delivery_service)
+    channel_id: str = None,
+    delivery_service: DeliveryService = Depends(get_delivery_service),
 ):
     """Get delivery statistics"""
     stats = await delivery_service.get_delivery_stats(channel_id=channel_id)

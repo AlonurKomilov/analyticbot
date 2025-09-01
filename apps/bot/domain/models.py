@@ -11,6 +11,7 @@ from pydantic import BaseModel, HttpUrl, field_validator
 @dataclass
 class SubscriptionStatus:
     """Subscription status and usage information"""
+
     plan_name: str
     max_channels: int
     current_channels: int
@@ -20,6 +21,7 @@ class SubscriptionStatus:
 
 class InlineButton(BaseModel):
     """Telegram inline button configuration"""
+
     text: str
     url: HttpUrl | None = None
     callback_data: str | None = None
@@ -34,6 +36,7 @@ class InlineButton(BaseModel):
 
 class InlineButtonsPayload(BaseModel):
     """Collection of inline buttons for Telegram messages"""
+
     buttons: list[list[InlineButton]]
 
     @field_validator("buttons")
@@ -48,15 +51,17 @@ class InlineButtonsPayload(BaseModel):
 @dataclass
 class AnalyticsMetrics:
     """Analytics metrics for services"""
+
     total_posts: int
     total_views: int
     engagement_rate: float
     timestamp: str
 
 
-@dataclass  
+@dataclass
 class ServiceHealth:
     """Health status for services"""
+
     service_name: str
     is_healthy: bool
     last_check: str

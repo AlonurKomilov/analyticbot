@@ -13,27 +13,27 @@ from core.models import Delivery, DeliveryFilter, ScheduledPost, ScheduleFilter
 
 class UserRepository(Protocol):
     """User repository interface using Protocol (structural typing)"""
-    
+
     async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID"""
         ...
-    
+
     async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID"""
         ...
-    
+
     async def create_user(self, user_data: dict) -> dict:
         """Create new user"""
         ...
-    
+
     async def update_user(self, user_id: int, **updates) -> bool:
         """Update user information"""
         ...
-    
+
     async def get_user_subscription_tier(self, user_id: int) -> str:
         """Get user's subscription tier"""
         ...
-    
+
     async def user_exists(self, user_id: int) -> bool:
         """Check if user exists"""
         ...
@@ -41,15 +41,15 @@ class UserRepository(Protocol):
 
 class AdminRepository(Protocol):
     """Admin repository interface using Protocol"""
-    
+
     async def get_admin_by_username(self, username: str) -> dict | None:
         """Get admin by username"""
         ...
-    
+
     async def create_admin(self, admin_data: dict) -> dict:
         """Create new admin"""
         ...
-    
+
     async def update_admin(self, admin_id: int, **updates) -> bool:
         """Update admin information"""
         ...
@@ -127,15 +127,17 @@ class DeliveryRepository(Protocol):
 
 class ChannelDailyRepository(Protocol):
     """Repository interface for daily channel metrics"""
-    
+
     async def series_value(self, channel_id: int, metric: str, date: datetime) -> int | None:
         """Get metric value for a specific date"""
         ...
-    
-    async def series_data(self, channel_id: int, metric: str, from_dt: datetime, to_dt: datetime) -> list[dict]:
+
+    async def series_data(
+        self, channel_id: int, metric: str, from_dt: datetime, to_dt: datetime
+    ) -> list[dict]:
         """Get time series data for a metric"""
         ...
-    
+
     async def upsert_metric(self, channel_id: int, date: datetime, metric: str, value: int) -> None:
         """Insert or update a daily metric"""
         ...
@@ -143,31 +145,37 @@ class ChannelDailyRepository(Protocol):
 
 class PostRepository(Protocol):
     """Repository interface for posts/messages"""
-    
+
     async def count(self, channel_id: int, from_dt: datetime, to_dt: datetime) -> int:
         """Count posts in date range"""
         ...
-    
+
     async def sum_views(self, channel_id: int, from_dt: datetime, to_dt: datetime) -> int:
         """Sum views for posts in date range"""
         ...
-    
-    async def top_by_views(self, channel_id: int, from_dt: datetime, to_dt: datetime, limit: int) -> list[dict]:
+
+    async def top_by_views(
+        self, channel_id: int, from_dt: datetime, to_dt: datetime, limit: int
+    ) -> list[dict]:
         """Get top posts by views"""
         ...
 
 
 class PostMetricsRepository(Protocol):
     """Repository interface for post metrics snapshots"""
-    
-    async def get_latest_for_posts(self, channel_id: int, from_dt: datetime, to_dt: datetime) -> list[dict]:
+
+    async def get_latest_for_posts(
+        self, channel_id: int, from_dt: datetime, to_dt: datetime
+    ) -> list[dict]:
         """Get latest metrics for posts in date range"""
         ...
 
 
 class EdgesRepository(Protocol):
     """Repository interface for mention/forward edges"""
-    
-    async def top_edges(self, channel_id: int, from_dt: datetime, to_dt: datetime, kind: str) -> list[dict]:
+
+    async def top_edges(
+        self, channel_id: int, from_dt: datetime, to_dt: datetime, kind: str
+    ) -> list[dict]:
         """Get top edges (mentions/forwards) for a channel"""
         ...

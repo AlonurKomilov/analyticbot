@@ -13,7 +13,7 @@ from .user_repository import AsyncpgUserRepository, SQLAlchemyUserRepository
 
 __all__ = [
     "AsyncpgUserRepository",
-    "SQLAlchemyUserRepository", 
+    "SQLAlchemyUserRepository",
     "AsyncpgAdminRepository",
     "SQLAlchemyAdminRepository",
     "AsyncpgScheduleRepository",
@@ -21,5 +21,5 @@ __all__ = [
     "AsyncpgAnalyticsRepository",
     "AsyncpgChannelRepository",
     "AsyncpgPaymentRepository",
-    "AsyncpgPlanRepository"
+    "AsyncpgPlanRepository",
 ]

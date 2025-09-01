@@ -24,150 +24,229 @@ from core.models.admin import (
 
 class SuperAdminService:
     """Service for SuperAdmin operations and management"""
-    
+
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    
-    async def authenticate_admin(self, db: AsyncSession, username: str, password: str, ip_address: str) -> AdminSession | None:
+
+    async def authenticate_admin(
+        self, db: AsyncSession, username: str, password: str, ip_address: str
+    ) -> AdminSession | None:
         """Authenticate admin user and create session"""
         try:
             # Get admin user
-            stmt = select(AdminUser).where(AdminUser.username == username, AdminUser.is_active is True)
+            stmt = select(AdminUser).where(
+                AdminUser.username == username, AdminUser.is_active is True
+            )
             result = await db.execute(stmt)
             admin = result.scalar_one_or_none()
-            
+
             if not admin:
-                await self._log_security_event(db, "failed_login", {"username": username, "ip": ip_address, "reason": "user_not_found"})
+                await self._log_security_event(
+                    db,
+                    "failed_login",
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "user_not_found",
+                    },
+                )
                 return None
-            
+
             # Verify password
             if not self.pwd_context.verify(password, admin.password_hash):
-                await self._log_security_event(db, "failed_login", {"username": username, "ip": ip_address, "reason": "invalid_password"})
+                await self._log_security_event(
+                    db,
+                    "failed_login",
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "invalid_password",
+                    },
+                )
                 return None
-            
+
             # Successful login - reset failed attempts
             admin.failed_login_attempts = 0
             admin.last_login = datetime.utcnow()
             admin.last_login_ip = ip_address
-            
+
             # Create session
             session = await self.create_admin_session(db, admin, ip_address, "Test User Agent")
             await db.commit()
-            
-            await self._log_security_event(db, "successful_login", {"username": username, "ip": ip_address}, admin.id)
+
+            await self._log_security_event(
+                db,
+                "successful_login",
+                {"username": username, "ip": ip_address},
+                admin.id,
+            )
             return session
-            
+
         except Exception as e:
-            await self._log_security_event(db, "login_error", {"username": username, "ip": ip_address, "error": str(e)})
+            await self._log_security_event(
+                db,
+                "login_error",
+                {"username": username, "ip": ip_address, "error": str(e)},
+            )
             return None
-    
-    async def create_admin_session(self, db: AsyncSession, admin_user: AdminUser, ip_address: str, user_agent: str) -> AdminSession:
+
+    async def create_admin_session(
+        self, db: AsyncSession, admin_user: AdminUser, ip_address: str, user_agent: str
+    ) -> AdminSession:
         """Create secure admin session"""
         session_token = secrets.token_urlsafe(32)
         expires_at = datetime.utcnow() + timedelta(hours=8)  # 8-hour sessions
-        
+
         session = AdminSession(
             admin_user_id=admin_user.id,
             session_token=hashlib.sha256(session_token.encode()).hexdigest(),
             ip_address=ip_address,
             user_agent=user_agent,
-            expires_at=expires_at
+            expires_at=expires_at,
         )
-        
+
         db.add(session)
         return session
-    
+
     async def get_system_stats(self, db: AsyncSession) -> dict[str, Any]:
         """Get comprehensive system statistics"""
         # User statistics
         total_users = await db.scalar(select(func.count(SystemUser.id))) or 0
-        active_users = await db.scalar(select(func.count(SystemUser.id)).where(SystemUser.status == UserStatus.ACTIVE)) or 0
-        premium_users = await db.scalar(select(func.count(SystemUser.id)).where(SystemUser.subscription_tier == "premium")) or 0
-        
-        # Admin statistics  
+        active_users = (
+            await db.scalar(
+                select(func.count(SystemUser.id)).where(SystemUser.status == UserStatus.ACTIVE)
+            )
+            or 0
+        )
+        premium_users = (
+            await db.scalar(
+                select(func.count(SystemUser.id)).where(SystemUser.subscription_tier == "premium")
+            )
+            or 0
+        )
+
+        # Admin statistics
         total_admins = await db.scalar(select(func.count(AdminUser.id))) or 0
-        active_admins = await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active is True)) or 0
-        active_sessions = await db.scalar(select(func.count(AdminSession.id)).where(
-            and_(AdminSession.is_active is True, AdminSession.expires_at > datetime.utcnow())
-        )) or 0
-        
+        active_admins = (
+            await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active is True))
+            or 0
+        )
+        active_sessions = (
+            await db.scalar(
+                select(func.count(AdminSession.id)).where(
+                    and_(
+                        AdminSession.is_active is True,
+                        AdminSession.expires_at > datetime.utcnow(),
+                    )
+                )
+            )
+            or 0
+        )
+
         return {
             "users": {
                 "total": total_users,
                 "active": active_users,
                 "premium": premium_users,
-                "suspended": total_users - active_users
+                "suspended": total_users - active_users,
             },
             "admins": {
                 "total": total_admins,
                 "active": active_admins,
-                "sessions": active_sessions
+                "sessions": active_sessions,
             },
             "system": {
                 "uptime": "N/A",  # Will be calculated in production
                 "version": "1.0.0",
-                "environment": "development"
-            }
+                "environment": "development",
+            },
         }
-    
-    async def suspend_user(self, db: AsyncSession, admin_id: int, user_id: int, suspended_by: str, reason: str) -> bool:
+
+    async def suspend_user(
+        self,
+        db: AsyncSession,
+        admin_id: int,
+        user_id: int,
+        suspended_by: str,
+        reason: str,
+    ) -> bool:
         """Suspend a system user"""
         try:
             stmt = select(SystemUser).where(SystemUser.telegram_id == user_id)
             result = await db.execute(stmt)
             user = result.scalar_one_or_none()
-            
+
             if not user:
                 return False
-            
+
             # Store original status for audit log
             original_status = user.status
-            
+
             user.status = UserStatus.SUSPENDED
             user.updated_at = datetime.utcnow()
-            
+
             # Create audit log entry
             await self._create_audit_log(
-                db, admin_id, "suspend_user", "system_users", user.id,
-                {"status": original_status.value}, {"status": UserStatus.SUSPENDED.value},
-                f"User suspended: {reason}"
+                db,
+                admin_id,
+                "suspend_user",
+                "system_users",
+                user.id,
+                {"status": original_status.value},
+                {"status": UserStatus.SUSPENDED.value},
+                f"User suspended: {reason}",
             )
-            
+
             await db.commit()
             return True
-            
+
         except Exception:
             await db.rollback()
             return False
-    
-    async def get_audit_logs(self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: int = None) -> dict[str, Any]:
+
+    async def get_audit_logs(
+        self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: int = None
+    ) -> dict[str, Any]:
         """Get paginated audit logs"""
         offset = (page - 1) * limit
-        
-        stmt = select(AdminAuditLog).order_by(desc(AdminAuditLog.created_at)).offset(offset).limit(limit)
-        
+
+        stmt = (
+            select(AdminAuditLog)
+            .order_by(desc(AdminAuditLog.created_at))
+            .offset(offset)
+            .limit(limit)
+        )
+
         if admin_id:
             stmt = stmt.where(AdminAuditLog.admin_id == admin_id)
-        
+
         result = await db.execute(stmt)
         logs = result.scalars().all()
-        
+
         # Get total count
         count_stmt = select(func.count(AdminAuditLog.id))
         if admin_id:
             count_stmt = count_stmt.where(AdminAuditLog.admin_id == admin_id)
         total_count = await db.scalar(count_stmt) or 0
-        
+
         return {
             "logs": logs,
             "total": total_count,
             "page": page,
-            "pages": ((total_count) + limit - 1) // limit if total_count > 0 else 0
+            "pages": ((total_count) + limit - 1) // limit if total_count > 0 else 0,
         }
-    
-    async def _create_audit_log(self, db: AsyncSession, admin_id: int, action: str, table_name: str, 
-                               record_id: int, old_values: dict = None, new_values: dict = None, 
-                               additional_info: str = None) -> None:
+
+    async def _create_audit_log(
+        self,
+        db: AsyncSession,
+        admin_id: int,
+        action: str,
+        table_name: str,
+        record_id: int,
+        old_values: dict = None,
+        new_values: dict = None,
+        additional_info: str = None,
+    ) -> None:
         """Create audit log entry"""
         log = AdminAuditLog(
             admin_user_id=admin_id,
@@ -178,12 +257,14 @@ class SuperAdminService:
             old_values=old_values,
             new_values=new_values,
             success=True,
-            additional_data={"info": additional_info} if additional_info else None
+            additional_data={"info": additional_info} if additional_info else None,
         )
-        
+
         db.add(log)
-    
-    async def _log_security_event(self, db: AsyncSession, event_type: str, details: dict, admin_id: int = None) -> None:
+
+    async def _log_security_event(
+        self, db: AsyncSession, event_type: str, details: dict, admin_id: int = None
+    ) -> None:
         """Log security events"""
         log = AdminAuditLog(
             admin_user_id=admin_id,
@@ -193,7 +274,7 @@ class SuperAdminService:
             ip_address=details.get("ip", "127.0.0.1"),
             new_values=details,
             success=event_type == "successful_login",
-            additional_data={"info": f"Security event: {event_type}"}
+            additional_data={"info": f"Security event: {event_type}"},
         )
-        
+
         db.add(log)

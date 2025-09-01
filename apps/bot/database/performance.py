@@ -222,7 +222,8 @@ class QueryOptimizer:
         for batch in batches:
             async with pool.acquire() as conn:
                 batch_results = await asyncio.gather(
-                    *[conn.execute(query, *params) for params in batch], return_exceptions=True
+                    *[conn.execute(query, *params) for params in batch],
+                    return_exceptions=True,
                 )
                 results.extend(batch_results)
         return results
@@ -240,7 +241,8 @@ class QueryOptimizer:
         for batch in batches:
             async with pool.acquire() as conn:
                 batch_results = await asyncio.gather(
-                    *[conn.fetch(query, *params) for params in batch], return_exceptions=True
+                    *[conn.fetch(query, *params) for params in batch],
+                    return_exceptions=True,
                 )
                 for result in batch_results:
                     if not isinstance(result, Exception):

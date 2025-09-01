@@ -12,15 +12,14 @@ Usage:
 
 import ast
 import sys
-import os
-from pathlib import Path
-from typing import List, Dict, Set, Tuple
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
 class ImportViolation:
     """Represents an import violation."""
+
     file_path: str
     line_number: int
     imported_module: str
@@ -30,87 +29,91 @@ class ImportViolation:
 
 class ImportGuard:
     """Guards against architectural import violations."""
-    
+
     def __init__(self, project_root: Path):
         self.project_root = project_root
-        self.violations: List[ImportViolation] = []
-        
+        self.violations: list[ImportViolation] = []
+
         # Define architectural layers
         self.layers = {
-            'core': ['core'],
-            'infra': ['infra'],
-            'apps': ['apps'],
-            'config': ['config'],
-            'scripts': ['scripts'],
-            'tests': ['tests']
+            "core": ["core"],
+            "infra": ["infra"],
+            "apps": ["apps"],
+            "config": ["config"],
+            "scripts": ["scripts"],
+            "tests": ["tests"],
         }
-        
+
         # Define forbidden imports
         self.forbidden_imports = {
-            'core': ['apps', 'infra', 'infrastructure'],  # Core can't depend on outer layers
-            'infra': ['apps'],          # Infra can't depend on apps
+            "core": [
+                "apps",
+                "infra",
+                "infrastructure",
+            ],  # Core can't depend on outer layers
+            "infra": ["apps"],  # Infra can't depend on apps
         }
-    
-    def check_all_files(self) -> List[ImportViolation]:
+
+    def check_all_files(self) -> list[ImportViolation]:
         """Check all Python files in the project."""
         self.violations = []
-        
-        for py_file in self.project_root.rglob('*.py'):
+
+        for py_file in self.project_root.rglob("*.py"):
             if self._should_skip_file(py_file):
                 continue
-            
+
             try:
                 self._check_file(py_file)
             except Exception as e:
                 print(f"Warning: Could not check {py_file}: {e}")
-        
+
         return self.violations
-    
+
     def _should_skip_file(self, file_path: Path) -> bool:
         """Check if file should be skipped."""
         # Skip files in certain directories
-        skip_dirs = {'.git', '__pycache__', '.pytest_cache', 'venv', '.venv'}
-        
+        skip_dirs = {".git", "__pycache__", ".pytest_cache", "venv", ".venv"}
+
         for part in file_path.parts:
             if part in skip_dirs:
                 return True
-        
+
         return False
-    
+
     def _check_file(self, file_path: Path) -> None:
         """Check a single file for import violations."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
         except UnicodeDecodeError:
             return  # Skip binary files
-        
+
         try:
             tree = ast.parse(content)
         except SyntaxError:
             return  # Skip files with syntax errors
-        
+
         # Determine the layer of this file
         file_layer = self._get_file_layer(file_path)
         if not file_layer:
             return
-        
+
         # Check all imports
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 self._check_import_node(file_path, node, file_layer)
-    
+
     def _get_file_layer(self, file_path: Path) -> str:
         """Determine which architectural layer a file belongs to."""
         relative_path = file_path.relative_to(self.project_root)
-        
+
         for layer, prefixes in self.layers.items():
             for prefix in prefixes:
-                if str(relative_path).startswith(prefix + '/') or str(relative_path) == prefix:
+                if str(relative_path).startswith(prefix + "/") or str(relative_path) == prefix:
                     return layer
-        
-        return ''  # Unknown layer
-    
+
+        return ""  # Unknown layer
+
     def _check_import_node(self, file_path: Path, node, file_layer: str) -> None:
         """Check a single import node for violations."""
         if isinstance(node, ast.Import):
@@ -119,89 +122,93 @@ class ImportGuard:
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 self._check_import(file_path, node.lineno, node.module, file_layer)
-    
-    def _check_import(self, file_path: Path, line_number: int, module_name: str, file_layer: str) -> None:
+
+    def _check_import(
+        self, file_path: Path, line_number: int, module_name: str, file_layer: str
+    ) -> None:
         """Check a single import for violations."""
         # Check architectural violations
         self._check_architectural_violation(file_path, line_number, module_name, file_layer)
-        
+
         # Check MTProto import guards
         self._check_mtproto_imports(file_path, line_number, module_name, file_layer)
-    
-    def _check_architectural_violation(self, file_path: Path, line_number: int, module_name: str, file_layer: str) -> None:
+
+    def _check_architectural_violation(
+        self, file_path: Path, line_number: int, module_name: str, file_layer: str
+    ) -> None:
         """Check for architectural violations."""
         if file_layer not in self.forbidden_imports:
             return
-        
+
         forbidden_layers = self.forbidden_imports[file_layer]
-        
+
         for forbidden_layer in forbidden_layers:
-            if module_name.startswith(forbidden_layer + '.') or module_name == forbidden_layer:
+            if module_name.startswith(forbidden_layer + ".") or module_name == forbidden_layer:
                 # Allow some exceptions for legacy infra code that will be refactored
                 if self._is_legacy_exception(file_path, module_name):
                     continue
-                
+
                 violation = ImportViolation(
                     file_path=str(file_path),
                     line_number=line_number,
                     imported_module=module_name,
-                    violation_type='architectural',
-                    message=f"Layer '{file_layer}' cannot import from layer '{forbidden_layer}'"
+                    violation_type="architectural",
+                    message=f"Layer '{file_layer}' cannot import from layer '{forbidden_layer}'",
                 )
                 self.violations.append(violation)
-    
+
     def _is_legacy_exception(self, file_path: Path, module_name: str) -> bool:
         """Check if this is a legacy exception that we temporarily allow."""
         # Allow legacy infra->apps imports that are being refactored
         legacy_files = {
-            'infra/celery/celery_app.py',
-            'infra/celery/tasks.py', 
-            'infra/monitoring/worker_metrics.py',
-            'infra/db/alembic/env.py'
+            "infra/celery/celery_app.py",
+            "infra/celery/tasks.py",
+            "infra/monitoring/worker_metrics.py",
+            "infra/db/alembic/env.py",
         }
-        
+
         relative_path = str(file_path.relative_to(self.project_root))
         return relative_path in legacy_files
-    
-    def _check_mtproto_imports(self, file_path: Path, line_number: int, module_name: str, file_layer: str) -> None:
+
+    def _check_mtproto_imports(
+        self, file_path: Path, line_number: int, module_name: str, file_layer: str
+    ) -> None:
         """Check for MTProto import guard violations."""
         # Define MTProto-related imports that need guards
-        mtproto_modules = {
-            'telethon', 'pyrogram', 'telegram'
-        }
-        
+        mtproto_modules = {"telethon", "pyrogram", "telegram"}
+
         # Check if this is an MTProto import
         is_mtproto_import = any(
             module_name.startswith(mtproto_module) or module_name == mtproto_module
             for mtproto_module in mtproto_modules
         )
-        
+
         if is_mtproto_import:
             # This is a potential violation - MTProto imports should be guarded
             # or only exist in stub implementations
-            
+
             # Allow in infra/tg/ directory (stub implementations)
-            if 'infra/tg/' in str(file_path):
+            if "infra/tg/" in str(file_path):
                 return
-            
+
             violation = ImportViolation(
                 file_path=str(file_path),
                 line_number=line_number,
                 imported_module=module_name,
-                violation_type='mtproto_guard',
-                message=f"MTProto import '{module_name}' should be guarded or in stub implementation"
+                violation_type="mtproto_guard",
+                message=f"MTProto import '{module_name}' should be guarded or in stub implementation",
             )
             self.violations.append(violation)
-    
+
     def print_violations(self) -> None:
         """Print all violations to stdout."""
         if not self.violations:
             print("✅ No import violations found!")
             return
-        
+
         print(f"❌ Found {len(self.violations)} import violations:")
         print()
-        
+
         for violation in self.violations:
             print(f"File: {violation.file_path}:{violation.line_number}")
             print(f"Import: {violation.imported_module}")
@@ -214,10 +221,10 @@ def main():
     """Main entry point."""
     project_root = Path(__file__).parent.parent
     guard = ImportGuard(project_root)
-    
+
     violations = guard.check_all_files()
     guard.print_violations()
-    
+
     if violations:
         sys.exit(1)
     else:

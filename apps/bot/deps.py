@@ -40,7 +40,7 @@ class BotContainer:
                 db_url = settings.DATABASE_URL
                 if db_url and db_url.startswith("postgresql+asyncpg://"):
                     db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-                
+
                 self._db_pool = await asyncpg.create_pool(
                     db_url,
                     min_size=settings.DB_POOL_SIZE,
@@ -53,7 +53,7 @@ class BotContainer:
         """Get database connection"""
         if not self._db_pool and not self._sqlite_conn:
             await self.init_db_pool()
-        
+
         if self._use_sqlite:
             return self._sqlite_conn
         else:

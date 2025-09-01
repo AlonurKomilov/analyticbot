@@ -68,14 +68,10 @@ def test_basic_functionality():
         print("   ✅ Data Processor initialized")
         viz_engine = VisualizationEngine()
         test_df = create_test_data()
-        viz_engine.create_line_chart(
-            test_df.head(20), "timestamp", "sales", title="Test Chart"
-        )
+        viz_engine.create_line_chart(test_df.head(20), "timestamp", "sales", title="Test Chart")
         print("   ✅ Line chart created successfully")
         bar_data = test_df.groupby("region")["sales"].sum().reset_index()
-        viz_engine.create_bar_chart(
-            bar_data, "region", "sales", title="Sales by Region"
-        )
+        viz_engine.create_bar_chart(bar_data, "region", "sales", title="Sales by Region")
         print("   ✅ Bar chart created successfully")
         return True
     except Exception as e:

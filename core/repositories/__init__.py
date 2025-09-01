@@ -7,11 +7,16 @@ This module now only contains imports of interface definitions
 """
 
 # Import all repository interfaces
-from .interfaces import AdminRepository, DeliveryRepository, ScheduleRepository, UserRepository
+from .interfaces import (
+    AdminRepository,
+    DeliveryRepository,
+    ScheduleRepository,
+    UserRepository,
+)
 
 __all__ = [
     "UserRepository",
-    "AdminRepository", 
+    "AdminRepository",
     "ScheduleRepository",
-    "DeliveryRepository"
+    "DeliveryRepository",
 ]

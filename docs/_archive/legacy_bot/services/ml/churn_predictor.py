@@ -92,7 +92,12 @@ class ChurnPredictor:
         self.model_version = "v1.0"
 
         # Risk thresholds
-        self.risk_thresholds = {"low": 0.25, "medium": 0.50, "high": 0.75, "critical": 0.90}
+        self.risk_thresholds = {
+            "low": 0.25,
+            "medium": 0.50,
+            "high": 0.75,
+            "critical": 0.90,
+        }
 
         # Feature weights for explanation
         self.feature_importance = {
@@ -711,7 +716,10 @@ class ChurnPredictor:
                     "timeline_days": 30,
                 }
             ],
-            immediate_actions=["Monitor user engagement", "Collect more behavioral data"],
+            immediate_actions=[
+                "Monitor user engagement",
+                "Collect more behavioral data",
+            ],
             success_probability=0.5,
             analysis_date=datetime.now(),
             model_version=f"fallback_{reason}",

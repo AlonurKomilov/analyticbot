@@ -94,7 +94,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["payment_method_id"], ["payment_methods.id"], ondelete="SET NULL"),
         sa.Index("ix_subscriptions_user_id", "user_id"),
         sa.Index("ix_subscriptions_status", "status"),
-        sa.Index("ix_subscriptions_current_period", "current_period_start", "current_period_end"),
+        sa.Index(
+            "ix_subscriptions_current_period",
+            "current_period_start",
+            "current_period_end",
+        ),
         sa.CheckConstraint(
             "status IN ('active', 'canceled', 'past_due', 'unpaid', 'trialing', 'incomplete')"
         ),
@@ -173,7 +177,8 @@ def upgrade() -> None:
     )
 
     # Update plans with default pricing
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET 
             price_monthly = CASE 
                 WHEN name = 'free' THEN 0.00
@@ -189,7 +194,8 @@ def upgrade() -> None:
             END,
             currency = 'USD',
             is_active = true
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

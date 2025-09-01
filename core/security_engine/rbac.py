@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RBACConfig:
     """RBAC configuration settings"""
+
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
@@ -94,7 +95,7 @@ class RBACManager:
             }
             if self.config.redis_password:
                 redis_kwargs["password"] = self.config.redis_password
-                
+
             self.redis_client = redis.Redis(**redis_kwargs)
             self.redis_client.ping()
             self._redis_available = True
@@ -262,7 +263,9 @@ class RBACManager:
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
         self.redis_client.setex(
-            cache_key, int(timedelta(hours=1).total_seconds()), json.dumps(permission_list)
+            cache_key,
+            int(timedelta(hours=1).total_seconds()),
+            json.dumps(permission_list),
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions

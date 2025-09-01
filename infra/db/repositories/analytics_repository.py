@@ -10,7 +10,7 @@ import asyncpg
 
 class AsyncpgAnalyticsRepository:
     """Analytics repository implementation using asyncpg"""
-    
+
     def __init__(self, pool: asyncpg.Pool):
         self._pool = pool
 

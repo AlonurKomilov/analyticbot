@@ -9,7 +9,6 @@ from pathlib import Path
 
 try:
     import libcst as cst
-    import libcst.matchers as m
 except ImportError:
     print("ERROR: libcst not installed. Install with: pip install libcst")
     sys.exit(1)
@@ -192,7 +191,13 @@ def main():
                 path_parts = file_path.parts
                 if any(
                     exclude in path_parts
-                    for exclude in ["archive", ".venv", "node_modules", "__pycache__", ".git"]
+                    for exclude in [
+                        "archive",
+                        ".venv",
+                        "node_modules",
+                        "__pycache__",
+                        ".git",
+                    ]
                 ):
                     continue
                 files_to_process.append(file_path)

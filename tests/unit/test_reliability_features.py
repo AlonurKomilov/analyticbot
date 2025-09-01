@@ -10,7 +10,7 @@ import redis
 
 from core.services.enhanced_delivery_service import EnhancedDeliveryService
 from core.utils.idempotency import IdempotencyGuard
-from core.utils.ratelimit import RateLimitType, TokenBucketRateLimiter
+from core.utils.ratelimit import TokenBucketRateLimiter
 
 
 class TestIdempotencyGuard:
@@ -115,7 +115,7 @@ class TestTokenBucketRateLimiter:
     def test_get_bucket_key_formats_correctly(self, rate_limiter):
         """Test bucket key generation."""
         identifier = "user:123"
-        limit_type = RateLimitType.CHAT
+        limit_type = "CHAT"
 
         key = rate_limiter._get_bucket_key(identifier, limit_type)
 
@@ -354,17 +354,14 @@ class TestReliabilityIntegration:
         """Test the complete reliability pipeline with real Redis."""
         # This would require a real Redis instance for integration testing
         # For now, we'll mark it as a placeholder for integration tests
-        pass
 
     def test_redis_connection_handling(self):
         """Test Redis connection error handling."""
         # Test what happens when Redis is unavailable
-        pass
 
     def test_concurrent_operations_handling(self):
         """Test handling of concurrent operations with same idempotency key."""
         # Test race conditions and concurrent access
-        pass
 
 
 if __name__ == "__main__":

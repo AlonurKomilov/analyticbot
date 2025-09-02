@@ -440,7 +440,8 @@ class TestQueryPerformanceValidation:
 # Database test utilities
 def create_test_database_url():
     """Create test database connection URL"""
-    return "postgresql://test_user:test_pass@localhost:5432/analyticbot_test"
+    import os
+    return os.getenv("DATABASE_URL", "sqlite:///./test_analyticbot.db")
 
 
 def create_migration_test_data():

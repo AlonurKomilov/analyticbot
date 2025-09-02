@@ -45,7 +45,7 @@ class EnhancedDeliveryService(BaseDeliveryService):
             str(post_data.get("media_type", "")),
         ]
         content_str = "|".join(content_parts)
-        return hashlib.md5(content_str.encode()).hexdigest()
+        return hashlib.sha256(content_str.encode()).hexdigest()
 
     async def send_with_reliability_guards(
         self,

@@ -6,7 +6,7 @@
 #
 aiofiles==24.1.0
     # via aiogram
-aiogram==3.21.0
+aiogram==3.22.0
     # via -r requirements.in
 aiohappyeyeballs==2.6.1
     # via aiohttp
@@ -14,6 +14,8 @@ aiohttp==3.12.15
     # via aiogram
 aiosignal==1.4.0
     # via aiohttp
+aiosqlite==0.20.0
+    # via -r requirements.in
 alembic==1.16.4
     # via -r requirements.in
 amqp==5.3.1
@@ -31,6 +33,8 @@ attrs==25.3.0
     # via aiohttp
 billiard==4.2.1
     # via celery
+blinker==1.9.0
+    # via flask
 celery[redis]==5.5.3
     # via -r requirements.in
 certifi==2025.8.3
@@ -38,12 +42,18 @@ certifi==2025.8.3
     #   aiogram
     #   httpcore
     #   httpx
+    #   requests
+charset-normalizer==3.4.3
+    # via
+    #   reportlab
+    #   requests
 click==8.1.8
     # via
     #   celery
     #   click-didyoumean
     #   click-plugins
     #   click-repl
+    #   flask
     #   uvicorn
 click-didyoumean==0.3.1
     # via celery
@@ -51,22 +61,44 @@ click-plugins==1.1.1.2
     # via celery
 click-repl==0.3.0
     # via celery
+cmdstanpy==1.2.5
+    # via prophet
+contourpy==1.3.3
+    # via matplotlib
+cycler==0.12.1
+    # via matplotlib
+cython==3.1.3
+    # via pmdarima
+dash==3.2.0
+    # via -r requirements.in
 dependency-injector==4.48.1
     # via -r requirements.in
+deprecated==1.2.18
+    # via limits
 fastapi==0.116.1
     # via -r requirements.in
 filelock==3.19.1
     # via urlextract
+flask==3.1.2
+    # via dash
+fonttools==4.59.2
+    # via matplotlib
 frozenlist==1.7.0
     # via
     #   aiohttp
     #   aiosignal
+googleapis-common-protos==1.70.0
+    # via opentelemetry-exporter-otlp-proto-grpc
 greenlet==3.2.4
     # via sqlalchemy
+grpcio==1.74.0
+    # via opentelemetry-exporter-otlp-proto-grpc
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
+holidays==0.80
+    # via prophet
 httpcore==0.17.3
     # via httpx
 httptools==0.6.4
@@ -77,32 +109,135 @@ idna==3.10
     # via
     #   anyio
     #   httpx
+    #   requests
     #   urlextract
     #   yarl
+importlib-metadata==8.7.0
+    # via
+    #   dash
+    #   opentelemetry-api
+importlib-resources==6.5.2
+    # via prophet
 iniconfig==2.1.0
     # via pytest
+itsdangerous==2.2.0
+    # via flask
+jinja2==3.1.6
+    # via flask
+joblib==1.5.2
+    # via
+    #   pmdarima
+    #   scikit-learn
+kiwisolver==1.4.9
+    # via matplotlib
 kombu[redis]==5.5.4
     # via celery
+limits==5.5.0
+    # via slowapi
 magic-filter==1.0.12
     # via aiogram
 mako==1.3.10
     # via alembic
 markupsafe==3.0.2
-    # via mako
+    # via
+    #   flask
+    #   jinja2
+    #   mako
+    #   werkzeug
+matplotlib==3.10.6
+    # via prophet
 multidict==6.6.4
     # via
     #   aiohttp
     #   yarl
+narwhals==2.3.0
+    # via plotly
+nest-asyncio==1.6.0
+    # via dash
+numpy==2.3.2
+    # via
+    #   cmdstanpy
+    #   contourpy
+    #   matplotlib
+    #   pandas
+    #   patsy
+    #   pmdarima
+    #   prophet
+    #   scikit-learn
+    #   scipy
+    #   stanio
+    #   statsmodels
+opentelemetry-api==1.36.0
+    # via
+    #   -r requirements.in
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asyncpg
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-exporter-otlp-proto-common==1.36.0
+    # via opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-exporter-otlp-proto-grpc==1.36.0
+    # via -r requirements.in
+opentelemetry-instrumentation==0.57b0
+    # via
+    #   opentelemetry-instrumentation-asyncpg
+    #   opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-asyncpg==0.57b0
+    # via -r requirements.in
+opentelemetry-instrumentation-requests==0.57b0
+    # via -r requirements.in
+opentelemetry-proto==1.36.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-sdk==1.36.0
+    # via
+    #   -r requirements.in
+    #   opentelemetry-exporter-otlp-proto-grpc
+opentelemetry-semantic-conventions==0.57b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asyncpg
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-sdk
+opentelemetry-util-http==0.57b0
+    # via opentelemetry-instrumentation-requests
 packaging==25.0
     # via
     #   kombu
+    #   limits
+    #   matplotlib
+    #   opentelemetry-instrumentation
+    #   plotly
+    #   pmdarima
     #   pytest
+    #   statsmodels
+pandas==2.3.2
+    # via
+    #   cmdstanpy
+    #   pmdarima
+    #   prophet
+    #   statsmodels
+patsy==1.0.1
+    # via statsmodels
 pillow==11.3.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   matplotlib
+    #   qrcode
+    #   reportlab
 platformdirs==4.4.0
     # via urlextract
+plotly==6.3.0
+    # via
+    #   -r requirements.in
+    #   dash
 pluggy==1.6.0
     # via pytest
+pmdarima==2.0.4
+    # via -r requirements.in
 prometheus-client==0.17.1
     # via -r requirements.in
 prompt-toolkit==3.0.51
@@ -111,8 +246,18 @@ propcache==0.3.2
     # via
     #   aiohttp
     #   yarl
+prophet==1.1.7
+    # via -r requirements.in
+protobuf==6.32.0
+    # via
+    #   googleapis-common-protos
+    #   opentelemetry-proto
 psycopg2-binary==2.9.10
     # via -r requirements.in
+pyaes==1.6.1
+    # via telethon
+pyasn1==0.6.1
+    # via rsa
 pydantic==2.11.7
     # via
     #   -r requirements.in
@@ -125,6 +270,8 @@ pydantic-settings==2.10.1
     # via -r requirements.in
 pygments==2.19.2
     # via pytest
+pyparsing==3.2.3
+    # via matplotlib
 pytest==8.4.1
     # via
     #   -r requirements.in
@@ -132,7 +279,11 @@ pytest==8.4.1
 pytest-asyncio==0.21.2
     # via -r requirements.in
 python-dateutil==2.9.0.post0
-    # via celery
+    # via
+    #   celery
+    #   holidays
+    #   matplotlib
+    #   pandas
 python-dotenv==1.1.1
     # via
     #   -r requirements.in
@@ -140,16 +291,39 @@ python-dotenv==1.1.1
     #   uvicorn
 python-multipart==0.0.18
     # via -r requirements.in
+pytz==2025.2
+    # via pandas
 pyyaml==6.0.2
     # via uvicorn
+qrcode[pil]==8.2
+    # via -r requirements.in
 redis==5.2.1
     # via
     #   -r requirements.in
     #   kombu
+reportlab==4.4.3
+    # via -r requirements.in
+requests==2.32.5
+    # via dash
+retrying==1.4.2
+    # via dash
+rsa==4.9.1
+    # via telethon
 ruff==0.4.10
     # via -r requirements.in
+schedule==1.2.2
+    # via -r requirements.in
+scikit-learn==1.7.1
+    # via pmdarima
+scipy==1.16.1
+    # via
+    #   pmdarima
+    #   scikit-learn
+    #   statsmodels
 six==1.17.0
     # via python-dateutil
+slowapi==0.1.9
+    # via -r requirements.in
 sniffio==1.3.1
     # via
     #   anyio
@@ -160,15 +334,34 @@ sqlalchemy[asyncio]==2.0.43
     #   -r requirements.in
     #   alembic
     #   sqlalchemy
+stanio==0.5.1
+    # via cmdstanpy
 starlette==0.47.2
     # via fastapi
+statsmodels==0.14.5
+    # via pmdarima
+telethon==1.41.0
+    # via -r requirements.in
+threadpoolctl==3.6.0
+    # via scikit-learn
+tqdm==4.67.1
+    # via
+    #   cmdstanpy
+    #   prophet
 typing-extensions==4.14.1
     # via
     #   aiogram
     #   aiosignal
+    #   aiosqlite
     #   alembic
     #   anyio
+    #   dash
     #   fastapi
+    #   limits
+    #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-grpc
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
@@ -179,12 +372,18 @@ typing-inspection==0.4.1
     #   pydantic
     #   pydantic-settings
 tzdata==2025.2
-    # via kombu
+    # via
+    #   kombu
+    #   pandas
 uritools==5.0.0
     # via urlextract
 urlextract==1.9.0
     # via -r requirements.in
-uvicorn[standard]==0.30.6
+urllib3==2.5.0
+    # via
+    #   pmdarima
+    #   requests
+uvicorn[standard]==0.35.0
     # via -r requirements.in
 uvloop==0.19.0
     # via uvicorn
@@ -199,21 +398,18 @@ wcwidth==0.2.13
     # via prompt-toolkit
 websockets==15.0.1
     # via uvicorn
+werkzeug==3.1.3
+    # via
+    #   dash
+    #   flask
+wrapt==1.17.3
+    # via
+    #   deprecated
+    #   opentelemetry-instrumentation
 yarl==1.20.1
     # via aiohttp
+zipp==3.23.0
+    # via importlib-metadata
 
-# Phase 4.6 Additional Dependencies
-telethon>=1.32.0
-    # via -r requirements.in (MTProto client)
-slowapi>=0.1.9
-    # via -r requirements.in (rate limiting)
-opentelemetry-api>=1.20.0
-    # via -r requirements.in (observability - optional)
-opentelemetry-sdk>=1.20.0
-    # via -r requirements.in (observability - optional)
-opentelemetry-exporter-otlp-proto-grpc>=1.20.0
-    # via -r requirements.in (observability - optional)
-opentelemetry-instrumentation-requests>=0.41b0
-    # via -r requirements.in (observability - optional)
-opentelemetry-instrumentation-asyncpg>=0.41b0
-    # via -r requirements.in (observability - optional)
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

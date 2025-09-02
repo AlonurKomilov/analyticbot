@@ -500,14 +500,16 @@ class AdvancedDataProcessor:
                 try:
                     df[col] = pd.to_datetime(df[col])
                     continue
-                except:
+                except Exception as e:
+                    logger.debug(f"Failed to convert column {col} to datetime: {e}")
                     pass
 
                 # Try numeric
                 try:
                     df[col] = pd.to_numeric(df[col])
                     continue
-                except:
+                except Exception as e:
+                    logger.debug(f"Failed to convert column {col} to numeric: {e}")
                     pass
 
         return df
@@ -531,7 +533,8 @@ class AdvancedDataProcessor:
             lower_bound = Q1 - 1.5 * IQR
             upper_bound = Q3 + 1.5 * IQR
             return len(series[(series < lower_bound) | (series > upper_bound)])
-        except:
+        except Exception as e:
+            logger.debug(f"Failed to count outliers: {e}")
             return 0
 
     def _calculate_quality_score(self, analysis: dict[str, Any]) -> float:

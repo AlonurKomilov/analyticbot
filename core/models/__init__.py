@@ -9,6 +9,9 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
+# Export ORM base for database models
+from .base import Base, BaseORMModel, TimestampMixin, BaseTimestampedModel
+
 
 class PostStatus(str, Enum):
     """Post status enumeration"""

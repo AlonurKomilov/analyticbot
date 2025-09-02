@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from core.database.connection_manager import db_manager, DatabaseManager
 from core.repositories.interfaces import AdminRepository, UserRepository
 from infra.db.repositories import (
     AsyncpgAdminRepository,
@@ -22,6 +23,30 @@ from infra.db.repositories import (
     AsyncpgPlanRepository,
     AsyncpgUserRepository,
 )
+
+
+class OptimizedPoolAdapter:
+    """Adapter to provide asyncpg pool interface using optimized database manager"""
+
+    def __init__(self, db_manager: DatabaseManager):
+        self._db_manager = db_manager
+
+    @classmethod
+    async def create(cls, db_manager: DatabaseManager):
+        """Create adapter instance"""
+        return cls(db_manager)
+
+    async def fetchrow(self, query: str, *args, **kwargs):
+        """Fetch single row"""
+        return await self._db_manager.fetch_one(query, *args, **kwargs)
+
+    async def fetch(self, query: str, *args, **kwargs):
+        """Fetch multiple rows"""
+        return await self._db_manager.fetch_query(query, *args, **kwargs)
+
+    async def execute(self, query: str, *args, **kwargs):
+        """Execute query"""
+        return await self._db_manager.execute_query(query, *args, **kwargs)
 
 
 @dataclass(frozen=True)
@@ -41,8 +66,17 @@ class Container:
         self._engine: AsyncEngine | None = None
         self._session_factory: async_sessionmaker[AsyncSession] | None = None
         self._asyncpg_pool: asyncpg.Pool | None = None
+        self._db_manager: DatabaseManager | None = None
 
-    # Database connections
+    # Database connections - now using optimized database manager
+    async def database_manager(self) -> DatabaseManager:
+        """Get optimized database manager"""
+        if not self._db_manager:
+            self._db_manager = db_manager
+            if not db_manager._pool:  # Initialize if not already done
+                await db_manager.initialize()
+        return self._db_manager
+
     async def engine(self) -> AsyncEngine:
         """Get SQLAlchemy async engine (for future SQLAlchemy implementations)"""
         if not self._engine:
@@ -62,7 +96,7 @@ class Container:
         return self._session_factory
 
     async def asyncpg_pool(self) -> asyncpg.Pool:
-        """Get asyncpg connection pool (current implementation)"""
+        """Get asyncpg connection pool (legacy - use database_manager instead)"""
         if not self._asyncpg_pool:
             # Convert SQLAlchemy URL to asyncpg format if needed
             db_url = self.settings.database_url
@@ -74,35 +108,42 @@ class Container:
             )
         return self._asyncpg_pool
 
-    # Repository implementations (infra layer)
+    # Repository implementations (infra layer) - now using optimized connection management
     async def user_repo(self) -> UserRepository:
         """Get User repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        # Create a wrapper that provides pool interface for backward compatibility
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgUserRepository(pool)
 
     async def admin_repo(self) -> AdminRepository:
         """Get Admin repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgAdminRepository(pool)
 
     async def analytics_repo(self) -> AsyncpgAnalyticsRepository:
         """Get Analytics repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgAnalyticsRepository(pool)
 
     async def channel_repo(self) -> AsyncpgChannelRepository:
         """Get Channel repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgChannelRepository(pool)
 
     async def payment_repo(self) -> AsyncpgPaymentRepository:
         """Get Payment repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgPaymentRepository(pool)
 
     async def plan_repo(self) -> AsyncpgPlanRepository:
         """Get Plan repository implementation"""
-        pool = await self.asyncpg_pool()
+        db_mgr = await self.database_manager()
+        pool = await OptimizedPoolAdapter.create(db_mgr)
         return AsyncpgPlanRepository(pool)
 
     # Service layer (to be implemented)
@@ -114,6 +155,8 @@ class Container:
     # Cleanup
     async def close(self):
         """Close all connections"""
+        if self._db_manager:
+            await self._db_manager.close()
         if self._asyncpg_pool:
             await self._asyncpg_pool.close()
         if self._engine:

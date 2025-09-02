@@ -1,6 +1,6 @@
 """
-🚀 PHASE 1.5: PERFORMANCE OPTIMIZATION MODULE
-Enhanced database performance and caching layer
+🚀 PERFORMANCE OPTIMIZATION MODULE
+Enhanced database performance and caching layer using optimized connection management
 """
 
 import asyncio
@@ -17,6 +17,7 @@ import redis.asyncio as redis
 from asyncpg.pool import Pool
 
 from apps.bot.config import settings
+from core.database.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ class RedisCache:
         """Generate cache key from prefix and parameters"""
         key_data = f"{prefix}:{':'.join(map(str, args))}"
         if kwargs:
-            key_data += f":{hashlib.md5(json.dumps(kwargs, sort_keys=True).encode()).hexdigest()}"
+            key_data += f":{hashlib.sha256(json.dumps(kwargs, sort_keys=True).encode()).hexdigest()}"
         return key_data
 
     async def get(self, key: str) -> Any | None:
@@ -136,71 +137,37 @@ class RedisCache:
 
 
 class OptimizedPool:
-    """High-performance database connection pool"""
+    """High-performance database connection pool using optimized connection management"""
 
     def __init__(self):
-        self._pool: Pool | None = None
+        self._db_manager = db_manager
         self._semaphore = asyncio.Semaphore(PerformanceConfig.MAX_CONCURRENT_QUERIES)
 
-    async def create_pool(self) -> Pool:
-        """Create optimized database pool"""
-        dsn_string = str(settings.DATABASE_URL.unicode_string())
-        self._pool = await asyncpg.create_pool(
-            dsn=dsn_string,
-            min_size=PerformanceConfig.DB_POOL_MIN_SIZE,
-            max_size=PerformanceConfig.DB_POOL_MAX_SIZE,
-            command_timeout=PerformanceConfig.DB_POOL_COMMAND_TIMEOUT,
-            server_settings={
-                "application_name": "analyticbot_optimized",
-                "tcp_keepalives_idle": "600",
-                "tcp_keepalives_interval": "30",
-                "tcp_keepalives_count": "3",
-                "shared_preload_libraries": "pg_stat_statements",
-                "track_activity_query_size": "2048",
-                "log_min_duration_statement": "1000",
-                "checkpoint_completion_target": "0.9",
-                "wal_buffers": "16MB",
-                "effective_cache_size": "2GB",
-                "random_page_cost": "1.1",
-            },
-        )
-        await self._initialize_optimizations()
-        logger.info(
-            f"✅ Optimized DB pool created: {PerformanceConfig.DB_POOL_MIN_SIZE}-{PerformanceConfig.DB_POOL_MAX_SIZE} connections"
-        )
-        return self._pool
+    async def create_pool(self):
+        """Use optimized database manager"""
+        if not self._db_manager._pool:
+            await self._db_manager.initialize()
+        logger.info("✅ Using optimized database pool")
+        return self._db_manager._pool
 
     async def _initialize_optimizations(self):
-        """Initialize database optimizations"""
-        async with self._pool.acquire() as conn:
-            optimizations = [
-                "\n                CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_analytics_channel_date \n                ON analytics(channel_id, created_at DESC);\n                ",
-                "\n                CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_analytics_message_views \n                ON analytics(message_id, view_count) WHERE view_count > 0;\n                ",
-                "\n                CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_active_plan \n                ON users(is_active, plan_id) WHERE is_active = true;\n                ",
-                "\n                CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_channels_user_active \n                ON channels(user_id, is_active) WHERE is_active = true;\n                ",
-                "\n                CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_scheduled_posts_execution \n                ON scheduled_posts(scheduled_time) WHERE status = 'pending';\n                ",
-            ]
-            for optimization in optimizations:
-                try:
-                    await conn.execute(optimization)
-                except Exception as e:
-                    logger.debug(f"Index creation skipped (probably exists): {e}")
+        """Optimizations are now handled by optimized connection manager"""
+        logger.info("📊 Database optimizations handled by optimized connection manager")
 
     @asynccontextmanager
     async def acquire_connection(self):
-        """Acquire database connection with concurrency control"""
+        """Acquire database connection with concurrency control using optimized manager"""
         async with self._semaphore:
-            async with self._pool.acquire(timeout=PerformanceConfig.DB_POOL_TIMEOUT) as conn:
+            async with self._db_manager.connection() as conn:
                 yield conn
 
     async def close(self):
-        """Close database pool"""
-        if self._pool:
-            await self._pool.close()
+        """Close database pool using optimized manager"""
+        await self._db_manager.close()
 
 
 class QueryOptimizer:
-    """Database query optimization utilities"""
+    """Database query optimization utilities using optimized manager"""
 
     @staticmethod
     def batch_queries(
@@ -211,40 +178,38 @@ class QueryOptimizer:
 
     @staticmethod
     async def execute_batched(
-        pool: Pool,
         query: str,
         params_list: list[tuple],
         batch_size: int = PerformanceConfig.QUERY_BATCH_SIZE,
     ):
-        """Execute query in optimized batches"""
+        """Execute query in optimized batches using optimized manager"""
         results = []
         batches = QueryOptimizer.batch_queries(params_list, batch_size)
         for batch in batches:
-            async with pool.acquire() as conn:
-                batch_results = await asyncio.gather(
-                    *[conn.execute(query, *params) for params in batch], return_exceptions=True
-                )
-                results.extend(batch_results)
+            batch_results = await asyncio.gather(
+                *[db_manager.execute_query(query, *params) for params in batch],
+                return_exceptions=True
+            )
+            results.extend(batch_results)
         return results
 
     @staticmethod
     async def fetch_in_batches(
-        pool: Pool,
         query: str,
         params_list: list[tuple],
         batch_size: int = PerformanceConfig.QUERY_BATCH_SIZE,
     ) -> list[list]:
-        """Fetch data in optimized batches"""
+        """Fetch data in optimized batches using optimized manager"""
         all_results = []
         batches = QueryOptimizer.batch_queries(params_list, batch_size)
         for batch in batches:
-            async with pool.acquire() as conn:
-                batch_results = await asyncio.gather(
-                    *[conn.fetch(query, *params) for params in batch], return_exceptions=True
-                )
-                for result in batch_results:
-                    if not isinstance(result, Exception):
-                        all_results.extend(result)
+            batch_results = await asyncio.gather(
+                *[db_manager.fetch_query(query, *params) for params in batch],
+                return_exceptions=True
+            )
+            for result in batch_results:
+                if not isinstance(result, Exception):
+                    all_results.extend(result)
         return all_results
 
 
@@ -294,7 +259,7 @@ def performance_timer(operation_name: str):
 
 
 class PerformanceManager:
-    """Centralized performance management"""
+    """Centralized performance management using optimized connection management"""
 
     def __init__(self):
         self.pool = OptimizedPool()
@@ -305,7 +270,7 @@ class PerformanceManager:
         """Initialize all performance components"""
         await self.cache.connect()
         await self.pool.create_pool()
-        logger.info("🚀 Performance optimization system initialized")
+        logger.info("🚀 Performance optimization system initialized with optimized connection management")
 
     async def close(self):
         """Close all performance components"""
@@ -314,22 +279,38 @@ class PerformanceManager:
         logger.info("🏁 Performance optimization system closed")
 
     async def get_performance_stats(self) -> dict[str, Any]:
-        """Get performance statistics"""
+        """Get performance statistics including optimized connection metrics"""
         stats = {
             "cache_connected": self.cache._is_connected,
-            "pool_size": self.pool._pool.get_size() if self.pool._pool else 0,
-            "pool_free": self.pool._pool.get_idle_size() if self.pool._pool else 0,
+            "phase3_optimizations": "enabled",
             "timestamp": time.time(),
         }
+
+        # Get optimized database stats
+        if self.pool._db_manager._pool:
+            db_stats = self.pool._db_manager.get_stats()
+            stats.update({
+                "pool_size": db_stats.get("pool_size", 0),
+                "idle_connections": db_stats.get("idle_connections", 0),
+                "used_connections": db_stats.get("used_connections", 0),
+                "avg_query_time": db_stats.get("avg_query_time", 0),
+                "total_queries": db_stats.get("query_count", 0),
+                "health_status": db_stats.get("health_status", False),
+            })
+
+        # Get Redis stats
         if self.cache._is_connected:
             try:
                 redis_info = await self.cache._redis.info()
-                stats["redis_memory"] = redis_info.get("used_memory_human", "N/A")
-                stats["redis_connections"] = redis_info.get("connected_clients", 0)
-                stats["redis_hits"] = redis_info.get("keyspace_hits", 0)
-                stats["redis_misses"] = redis_info.get("keyspace_misses", 0)
-            except Exception:
-                pass
+                stats.update({
+                    "redis_memory": redis_info.get("used_memory_human", "N/A"),
+                    "redis_connections": redis_info.get("connected_clients", 0),
+                    "redis_hits": redis_info.get("keyspace_hits", 0),
+                    "redis_misses": redis_info.get("keyspace_misses", 0),
+                })
+            except Exception as e:
+                logger.warning(f"Error getting Redis stats: {e}")
+
         return stats
 
 

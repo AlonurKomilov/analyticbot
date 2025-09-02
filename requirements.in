@@ -8,11 +8,12 @@ uvicorn[standard]==0.35.*
 SQLAlchemy[asyncio]==2.*
 asyncpg==0.29.*
 psycopg2-binary==2.*
+aiosqlite==0.20.*  # SQLite support for testing
 alembic==1.*
 
 # Task Queue
 celery[redis]==5.*
-redis==6.*
+redis>=4.5.2,<6.0.0
 
 # Data & Validation
 pydantic==2.*
@@ -36,6 +37,23 @@ opentelemetry-instrumentation-asyncpg>=0.41b0
 
 # Content Protection
 Pillow>=10.0.0  # Image watermarking and processing
+
+# QR Code generation
+qrcode[pil]>=7.0.0
+
+# Dashboard and Visualization
+dash>=2.0.0
+plotly>=5.0.0
+
+# PDF Generation
+reportlab>=4.0.0
+
+# Time Series Analysis
+prophet>=1.1.0
+pmdarima>=2.0.0
+
+# Scheduling
+schedule>=1.2.0
 
 # URL and Text Processing
 urlextract==1.*  # Enhanced URL extraction from text

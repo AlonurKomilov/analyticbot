@@ -113,7 +113,8 @@ async def create_share_link(
 
     try:
         # Verify data exists
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             analytics_client.session = session
 
             if report_type == "overview":
@@ -197,7 +198,8 @@ async def access_shared_report(
         report_type = shared_report["report_type"]
         format = shared_report["format"]
 
-        async with aiohttp.ClientSession() as session:
+        timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             analytics_client.session = session
 
             if report_type == "overview":

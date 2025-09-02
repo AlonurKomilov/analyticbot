@@ -10,6 +10,8 @@ import logging
 import sys
 import traceback
 
+logger = logging.getLogger(__name__)
+
 # Configure minimal logging
 logging.basicConfig(level=logging.WARNING)
 
@@ -77,7 +79,8 @@ async def test_direct_ml():
             # Simple readability
             try:
                 readability = flesch_reading_ease(text)
-            except:
+            except Exception as e:
+                logger.warning(f"Failed to calculate readability score, using default: {e}")
                 readability = 70.0  # Default
 
             # Calculate score

@@ -14,7 +14,7 @@ def test_settings_load_from_env():
         "POSTGRES_PASSWORD": "test_password",
         "POSTGRES_DB": "test_db",
         "POSTGRES_PORT": "5432",
-        "DATABASE_URL": "postgresql+asyncpg://test_user:test_password@localhost:5432/test_db",
+        "DATABASE_URL": "sqlite:///./test_analyticbot.db",  # Use SQLite for tests
         "REDIS_URL": "redis://localhost:6379/0",
         "TWA_HOST_URL": "http://localhost:5173",
         "STORAGE_CHANNEL_ID": "-12345",

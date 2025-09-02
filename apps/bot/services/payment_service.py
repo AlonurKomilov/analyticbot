@@ -383,7 +383,7 @@ class ClickAdapter(PaymentGatewayAdapter):
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify Click webhook signature"""
         try:
-            expected_signature = hashlib.md5(f"{payload.decode()}{secret}".encode()).hexdigest()
+            expected_signature = hashlib.sha256(f"{payload.decode()}{secret}".encode()).hexdigest()
             return hmac.compare_digest(expected_signature, signature)
         except Exception as e:
             logger.error(f"Click webhook verification error: {e}")

@@ -12,9 +12,12 @@ import asyncpg
 import pytest
 from aiogram import Bot
 from faker import Faker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # Test database configuration
-TEST_DATABASE_URL = "postgresql://test_user:test_pass@localhost:5432/analyticbot_test"
+# Test database configuration - use SQLite for tests (faster, no external dependencies)
+TEST_DATABASE_URL = "sqlite:///./test_analyticbot.db"
 
 # Faker instance for generating test data
 fake = Faker()
@@ -125,36 +128,56 @@ def test_payment_data() -> dict:
 
 
 class TestDatabase:
-    """Test database helper for integration tests"""
+    """Test database helper for integration tests using SQLite"""
 
     def __init__(self, db_url: str = TEST_DATABASE_URL):
         self.db_url = db_url
-        self.pool: asyncpg.Pool = None
+        self.engine = None
+        self.session_factory = None
 
     async def setup(self):
         """Setup test database connection"""
         try:
-            self.pool = await asyncpg.create_pool(
-                self.db_url, min_size=1, max_size=5, command_timeout=10.0
+            # Convert SQLite URL to async format if needed
+            if self.db_url.startswith("sqlite://"):
+                # For SQLite, we need to use aiosqlite
+                from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+                self.engine = create_async_engine(
+                    self.db_url.replace("sqlite://", "sqlite+aiosqlite://"),
+                    echo=False,
+                    connect_args={"check_same_thread": False}
+                )
+            else:
+                # For PostgreSQL, use asyncpg
+                self.engine = create_async_engine(self.db_url, echo=False)
+
+            self.session_factory = sessionmaker(
+                self.engine, class_=AsyncSession, expire_on_commit=False
             )
+
+            # Create tables if they don't exist
+            from core.models import Base
+            async with self.engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+
         except Exception as e:
             pytest.skip(f"Test database not available: {e}")
 
     async def cleanup(self):
         """Clean up test database"""
-        if self.pool:
-            await self.pool.close()
+        if self.engine:
+            await self.engine.dispose()
 
     async def reset_tables(self):
         """Reset all tables for clean test state"""
-        if not self.pool:
+        if not self.engine:
             return
 
-        async with self.pool.acquire() as conn:
-            # Clean test data but preserve schema
-            await conn.execute(
-                "TRUNCATE users, channels, scheduled_posts, deliveries RESTART IDENTITY CASCADE"
-            )
+        from core.models import Base
+        async with self.engine.begin() as conn:
+            # Drop all tables and recreate them
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
 
 
 @pytest.fixture

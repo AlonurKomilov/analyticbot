@@ -4,6 +4,7 @@ Advanced watermarking and premium content features
 """
 
 import asyncio
+import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
@@ -11,6 +12,9 @@ from uuid import uuid4
 
 from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 class WatermarkConfig(BaseModel):
@@ -56,7 +60,8 @@ class ContentProtectionService:
                     font = ImageFont.truetype(
                         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", config.font_size
                     )
-                except:
+                except Exception as e:
+                    logger.warning(f"Failed to load custom font, using default: {e}")
                     font = ImageFont.load_default()
 
                 # Calculate text position

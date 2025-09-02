@@ -389,10 +389,10 @@ class TestPaymentWebhookProcessing:
 
         # Create signature string
         signature_string = json.dumps(webhook_data, sort_keys=True)
-        signature = hashlib.md5((signature_string + webhook_key).encode()).hexdigest()
+        signature = hashlib.sha256((signature_string + webhook_key).encode()).hexdigest()
 
         # Validate signature
-        assert len(signature) == 32  # MD5 hex length
+        assert len(signature) == 64  # SHA256 hex length
         assert isinstance(signature, str)
 
     def test_webhook_event_processing(self):

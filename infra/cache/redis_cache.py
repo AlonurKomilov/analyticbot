@@ -77,7 +77,7 @@ class RedisJSONCache:
             key_data += f":{last_updated.isoformat()}"
 
         # Create hash for shorter, consistent keys
-        key_hash = hashlib.md5(key_data.encode()).hexdigest()
+        key_hash = hashlib.sha256(key_data.encode()).hexdigest()
         return f"analytics_v2:{endpoint}:{key_hash}"
 
     def _json_serializer(self, obj: Any) -> str:

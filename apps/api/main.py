@@ -17,14 +17,17 @@ from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
 from core import DeliveryService, ScheduleService
+from core.database.connection_manager import init_database, close_database
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
-    # Startup
+    # Startup - Initialize optimized database
+    await init_database()
     yield
-    # Shutdown
+    # Shutdown - Cleanup database and legacy pool
+    await close_database()
     await cleanup_db_pool()
 
 

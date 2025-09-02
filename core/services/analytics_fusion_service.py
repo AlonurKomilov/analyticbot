@@ -274,8 +274,8 @@ class AnalyticsFusionService:
                     # Convert date to datetime for comparison
                     day_datetime = datetime.combine(latest_daily["day"], datetime.min.time())
                     timestamps.append(day_datetime)
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Error processing latest daily data for channel {channel_id}: {e}")
 
             # Check latest stats_raw entry if available
             if self._stats_raw and hasattr(self._stats_raw, "get_stats_summary"):
@@ -283,8 +283,8 @@ class AnalyticsFusionService:
                     stats_summary = await self._stats_raw.get_stats_summary(channel_id)
                     if stats_summary and stats_summary.get("latest_fetch"):
                         timestamps.append(stats_summary["latest_fetch"])
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Error getting stats summary for channel {channel_id}: {e}")
 
             return max(timestamps) if timestamps else None
 

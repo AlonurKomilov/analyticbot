@@ -170,9 +170,9 @@ class TestSecuritySystem:
         print("🧪 Testing Rate Limiting Simulation...")
         test_user_id = "rate-limit-test-user"
         for _i in range(3):
-            result = self.rbac_manager._check_mfa_rate_limit(test_user_id)
+            result = self.mfa_manager._check_mfa_rate_limit(test_user_id)
             if not result:
-                self.rbac_manager._record_mfa_attempt(test_user_id)
+                self.mfa_manager._record_mfa_attempt(test_user_id)
         print("✅ Rate limiting simulation - PASSED")
 
     def test_security_headers_and_config(self):

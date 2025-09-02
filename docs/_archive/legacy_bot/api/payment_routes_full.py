@@ -128,7 +128,9 @@ async def create_payment_method(
     """Create a new payment method"""
     try:
         return await payment_service.create_payment_method(
-            user_id=user_id, payment_method_data=payment_method_data, provider=provider.value
+            user_id=user_id,
+            payment_method_data=payment_method_data,
+            provider=provider.value,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -271,7 +273,9 @@ async def cancel_subscription(
 
 
 @payment_router.get("/plans", response_model=list[PlanWithPricing])
-async def get_pricing_plans(payment_service: PaymentService = Depends(get_payment_service)):
+async def get_pricing_plans(
+    payment_service: PaymentService = Depends(get_payment_service),
+):
     """Get all available pricing plans"""
     plans = await payment_service.repository.get_all_active_plans()
     return [PlanWithPricing(**plan) for plan in plans]

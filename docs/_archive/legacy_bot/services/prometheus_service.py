@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class PrometheusService:
     """Service for Prometheus metrics collection and exposition"""
 
-    def __init__(self, registry: (CollectorRegistry | None) = None):
+    def __init__(self, registry: CollectorRegistry | None = None):
         self.registry = registry or CollectorRegistry()
         self._setup_metrics()
 
@@ -67,7 +67,9 @@ class PrometheusService:
             registry=self.registry,
         )
         self.database_connections_active = Gauge(
-            "database_connections_active", "Active database connections", registry=self.registry
+            "database_connections_active",
+            "Active database connections",
+            registry=self.registry,
         )
         self.database_query_duration_seconds = Histogram(
             "database_query_duration_seconds",
@@ -104,16 +106,25 @@ class PrometheusService:
             "posts_scheduled", "Number of scheduled posts", registry=self.registry
         )
         self.posts_sent_total = Counter(
-            "posts_sent_total", "Total posts sent", ["channel_id"], registry=self.registry
+            "posts_sent_total",
+            "Total posts sent",
+            ["channel_id"],
+            registry=self.registry,
         )
         self.post_views_updated_total = Counter(
-            "post_views_updated_total", "Total post views updated", registry=self.registry
+            "post_views_updated_total",
+            "Total post views updated",
+            registry=self.registry,
         )
         self.system_memory_usage = Gauge(
-            "system_memory_usage_percent", "System memory usage percentage", registry=self.registry
+            "system_memory_usage_percent",
+            "System memory usage percentage",
+            registry=self.registry,
         )
         self.system_cpu_usage = Gauge(
-            "system_cpu_usage_percent", "System CPU usage percentage", registry=self.registry
+            "system_cpu_usage_percent",
+            "System CPU usage percentage",
+            registry=self.registry,
         )
         self.health_check_status = Gauge(
             "health_check_status",
@@ -198,7 +209,7 @@ class PrometheusService:
 prometheus_service = PrometheusService()
 
 
-def prometheus_timer(metric_name: str, labels: (dict[str, str] | None) = None):
+def prometheus_timer(metric_name: str, labels: dict[str, str] | None = None):
     """Decorator to time function execution and record in Prometheus"""
 
     def decorator(func):

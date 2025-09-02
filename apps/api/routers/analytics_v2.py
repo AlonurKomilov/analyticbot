@@ -60,7 +60,11 @@ async def get_channel_overview(
     """Get channel overview analytics"""
     try:
         # Generate cache key and ETag
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("overview", cache_params, last_updated)
         etag = (
@@ -73,7 +77,8 @@ async def get_channel_overview(
         if_none_match = request.headers.get("if-none-match")
         if etag and if_none_match == etag:
             return Response(
-                status_code=304, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
+                status_code=304,
+                headers={"Cache-Control": "public, max-age=60", "ETag": etag},
             )
 
         # Try cache first
@@ -81,7 +86,8 @@ async def get_channel_overview(
         if cached_data:
             cached_data["meta"]["cache_hit"] = True
             return JSONResponse(
-                content=cached_data, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
+                content=cached_data,
+                headers={"Cache-Control": "public, max-age=60", "ETag": etag},
             )
 
         # Get fresh data
@@ -95,7 +101,8 @@ async def get_channel_overview(
 
         # Return with cache headers
         return JSONResponse(
-            content=response_dict, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
+            content=response_dict,
+            headers={"Cache-Control": "public, max-age=60", "ETag": etag},
         )
 
     except Exception as e:
@@ -163,7 +170,11 @@ async def get_channel_reach(
     """Get channel reach time series (avg views per post)"""
     try:
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("reach", cache_params, last_updated)
 
@@ -233,7 +244,8 @@ async def get_top_posts(
     except Exception as e:
         logger.error(f"Error getting top posts for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get top posts"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get top posts",
         )
 
 
@@ -326,7 +338,8 @@ async def get_trending_posts(
     except Exception as e:
         logger.error(f"Error getting trending posts for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get trending posts"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get trending posts",
         )
 
 

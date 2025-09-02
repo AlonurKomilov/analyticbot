@@ -6,6 +6,7 @@ Create Date: 2025-08-31 12:00:00.000000
 """
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "0007_mtproto_stats_tables"

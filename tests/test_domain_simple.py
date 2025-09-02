@@ -89,7 +89,9 @@ class TestServiceHealthSimple:
     def test_service_health_healthy(self):
         """Test creating a healthy ServiceHealth instance"""
         health = ServiceHealth(
-            service_name="telegram_bot", is_healthy=True, last_check="2024-01-15T10:30:00Z"
+            service_name="telegram_bot",
+            is_healthy=True,
+            last_check="2024-01-15T10:30:00Z",
         )
 
         assert health.service_name == "telegram_bot"

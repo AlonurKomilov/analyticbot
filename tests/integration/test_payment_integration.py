@@ -454,7 +454,8 @@ class TestPaymentErrorHandling:
         ]
 
         result = await mock_stripe_client.confirm_payment_intent(
-            payment_intent_id="pi_test_failed_payment", payment_method="pm_test_declined_card"
+            payment_intent_id="pi_test_failed_payment",
+            payment_method="pm_test_declined_card",
         )
 
         # Validate error handling
@@ -486,7 +487,10 @@ class TestPaymentErrorHandling:
             assert len(scenario["message"]) > 0
 
             # Test error categorization
-            is_retryable = scenario["error_code"] not in ["insufficient_funds", "card_declined"]
+            is_retryable = scenario["error_code"] not in [
+                "insufficient_funds",
+                "card_declined",
+            ]
             assert isinstance(is_retryable, bool)
 
     @pytest.mark.asyncio

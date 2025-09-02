@@ -65,7 +65,10 @@ def test_inline_button_with_callback():
 def test_analytics_metrics_basic():
     """Test basic AnalyticsMetrics functionality"""
     metrics = AnalyticsMetrics(
-        total_posts=150, total_views=25000, engagement_rate=0.15, timestamp="2024-01-15T10:30:00Z"
+        total_posts=150,
+        total_views=25000,
+        engagement_rate=0.15,
+        timestamp="2024-01-15T10:30:00Z",
     )
 
     assert metrics.total_posts == 150
@@ -136,7 +139,10 @@ def test_business_logic_usage_calculation():
 def test_analytics_engagement_calculation():
     """Test analytics engagement calculation"""
     metrics = AnalyticsMetrics(
-        total_posts=100, total_views=5000, engagement_rate=0.08, timestamp="2024-01-15T10:30:00Z"
+        total_posts=100,
+        total_views=5000,
+        engagement_rate=0.08,
+        timestamp="2024-01-15T10:30:00Z",
     )
 
     # Calculate views per post

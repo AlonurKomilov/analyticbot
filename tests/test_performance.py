@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, MagicMock
 import psutil
 import pytest
 
-from infra.db.repositories.analytics_repository import AnalyticsRepository
 from apps.bot.database.repositories.scheduler_repository import SchedulerRepository
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.scheduler_service import SchedulerService
+from infra.db.repositories.analytics_repository import AnalyticsRepository
 
 
 class TestPerformanceBenchmarks:
@@ -266,8 +266,16 @@ class TestConfigurationScenarios:
                 "database_url": "postgresql://user:pass@localhost/db",
                 "redis_url": "redis://localhost:6379/0",
                 "bot_token": "fake_token",
-                "features": {"analytics": True, "scheduling": True, "notifications": True},
-                "limits": {"max_posts_per_day": 100, "max_channels_per_user": 10, "rate_limit": 30},
+                "features": {
+                    "analytics": True,
+                    "scheduling": True,
+                    "notifications": True,
+                },
+                "limits": {
+                    "max_posts_per_day": 100,
+                    "max_channels_per_user": 10,
+                    "rate_limit": 30,
+                },
             }
             validated_config = {}
             for key, value in config.items():

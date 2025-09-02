@@ -151,7 +151,11 @@ class TestCompleteSystemIntegration:
 
     @pytest.mark.asyncio
     async def test_complete_user_subscription_system_workflow(
-        self, mock_system_api, mock_system_bot, mock_payment_providers, mock_system_redis
+        self,
+        mock_system_api,
+        mock_system_bot,
+        mock_payment_providers,
+        mock_system_redis,
     ):
         """Test complete user subscription workflow across all system components"""
         workflow_id = str(uuid.uuid4())
@@ -187,7 +191,12 @@ class TestCompleteSystemIntegration:
                             "callback_data": "plan_premium_monthly",
                         }
                     ],
-                    [{"text": "🚀 Pro Annual - $299.99", "callback_data": "plan_pro_annual"}],
+                    [
+                        {
+                            "text": "🚀 Pro Annual - $299.99",
+                            "callback_data": "plan_pro_annual",
+                        }
+                    ],
                 ]
             },
         )
@@ -203,7 +212,11 @@ class TestCompleteSystemIntegration:
                         "name": "Premium Monthly",
                         "price": 2999,
                         "currency": "usd",
-                        "features": ["Advanced Analytics", "Multiple Channels", "Custom Reports"],
+                        "features": [
+                            "Advanced Analytics",
+                            "Multiple Channels",
+                            "Custom Reports",
+                        ],
                     },
                 }
             ),
@@ -251,7 +264,8 @@ class TestCompleteSystemIntegration:
         # Step 6: Payment processing coordination
         # Create Stripe customer through payment provider
         stripe_customer = await mock_payment_providers["stripe"].create_customer(
-            email=f"user_{user_id}@telegram.local", metadata={"telegram_id": str(user_id)}
+            email=f"user_{user_id}@telegram.local",
+            metadata={"telegram_id": str(user_id)},
         )
 
         # Step 7: Subscription creation through API
@@ -298,7 +312,12 @@ class TestCompleteSystemIntegration:
             text="✅ Subscription activated! Now let's connect your channel.\n\nAdd me as admin to your channel and send /connect_channel",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📋 How to add bot to channel", "callback_data": "help_add_bot"}]
+                    [
+                        {
+                            "text": "📋 How to add bot to channel",
+                            "callback_data": "help_add_bot",
+                        }
+                    ]
                 ]
             },
         )
@@ -324,7 +343,11 @@ class TestCompleteSystemIntegration:
 
         await mock_system_api.post(
             f"/api/users/{user_id}/channels",
-            json={"channel_id": channel_id, "title": channel_info.title, "type": channel_info.type},
+            json={
+                "channel_id": channel_id,
+                "title": channel_info.title,
+                "type": channel_info.type,
+            },
         )
 
         # Step 10: Analytics initialization
@@ -346,7 +369,11 @@ class TestCompleteSystemIntegration:
                     "success": True,
                     "data": {
                         "collection_id": str(uuid.uuid4()),
-                        "initial_metrics": {"subscribers": 1500, "posts": 45, "avg_views": 2500},
+                        "initial_metrics": {
+                            "subscribers": 1500,
+                            "posts": 45,
+                            "avg_views": 2500,
+                        },
                     },
                 }
             ),
@@ -525,7 +552,10 @@ class TestPaymentProviderIntegration:
 
         await mock_system_api.post(
             "/api/payments/validate-providers",
-            json={"providers": ["stripe", "payme", "click"], "test_results": provider_results},
+            json={
+                "providers": ["stripe", "payme", "click"],
+                "test_results": provider_results,
+            },
         )
 
         # Validate multi-provider coordination
@@ -699,7 +729,11 @@ class TestSystemResilienceWorkflow:
 
     @pytest.mark.asyncio
     async def test_service_failure_recovery_workflow(
-        self, mock_system_api, mock_system_bot, mock_payment_providers, mock_system_redis
+        self,
+        mock_system_api,
+        mock_system_bot,
+        mock_payment_providers,
+        mock_system_redis,
     ):
         """Test system resilience and recovery from service failures"""
         workflow_id = str(uuid.uuid4())
@@ -740,7 +774,10 @@ class TestSystemResilienceWorkflow:
         mock_system_api.get.return_value = AsyncMock(
             status_code=200,
             json=AsyncMock(
-                return_value={"success": True, "data": {"user_id": user_id, "recovered": True}}
+                return_value={
+                    "success": True,
+                    "data": {"user_id": user_id, "recovered": True},
+                }
             ),
         )
 
@@ -936,12 +973,16 @@ class TestSystemResilienceWorkflow:
             mock_system_api.post.return_value = AsyncMock(
                 status_code=201,
                 json=AsyncMock(
-                    return_value={"success": True, "data": {"user_id": user_id, "processed": True}}
+                    return_value={
+                        "success": True,
+                        "data": {"user_id": user_id, "processed": True},
+                    }
                 ),
             )
 
             await mock_system_api.post(
-                f"/api/users/{user_id}/subscription", json={"plan_id": "premium_monthly"}
+                f"/api/users/{user_id}/subscription",
+                json={"plan_id": "premium_monthly"},
             )
 
             # Bot notification

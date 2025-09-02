@@ -167,7 +167,12 @@ def main():
     print("🧪 MTProto Phase 4.1 Foundation Test Suite")
     print("=" * 50)
 
-    tests = [test_imports, test_protocol_interfaces, test_stub_implementation, test_import_guards]
+    tests = [
+        test_imports,
+        test_protocol_interfaces,
+        test_stub_implementation,
+        test_import_guards,
+    ]
 
     results = []
     for test in tests:

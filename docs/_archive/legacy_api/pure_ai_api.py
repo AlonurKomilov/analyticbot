@@ -147,8 +147,23 @@ class PureContentAnalyzer:
 
         # Popular hashtags by category
         self.hashtag_suggestions = {
-            "general": ["#viral", "#trending", "#popular", "#content", "#social", "#digital"],
-            "tech": ["#AI", "#ML", "#technology", "#innovation", "#digital", "#future", "#tech"],
+            "general": [
+                "#viral",
+                "#trending",
+                "#popular",
+                "#content",
+                "#social",
+                "#digital",
+            ],
+            "tech": [
+                "#AI",
+                "#ML",
+                "#technology",
+                "#innovation",
+                "#digital",
+                "#future",
+                "#tech",
+            ],
             "business": [
                 "#business",
                 "#entrepreneur",
@@ -165,7 +180,14 @@ class PureContentAnalyzer:
                 "#life",
                 "#wellness",
             ],
-            "social": ["#community", "#network", "#connection", "#share", "#engage", "#together"],
+            "social": [
+                "#community",
+                "#network",
+                "#connection",
+                "#share",
+                "#engage",
+                "#together",
+            ],
         }
 
     async def analyze_content(
@@ -186,12 +208,20 @@ class PureContentAnalyzer:
 
             # Overall score calculation
             overall_score = self._calculate_overall_score(
-                word_count, hashtag_count, emoji_count, sentiment_score, readability_score
+                word_count,
+                hashtag_count,
+                emoji_count,
+                sentiment_score,
+                readability_score,
             )
 
             # Generate optimization tips
             optimization_tips = self._generate_optimization_tips(
-                word_count, hashtag_count, emoji_count, sentiment_score, readability_score
+                word_count,
+                hashtag_count,
+                emoji_count,
+                sentiment_score,
+                readability_score,
             )
 
             # Suggest hashtags

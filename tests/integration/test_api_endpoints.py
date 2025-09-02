@@ -104,7 +104,9 @@ class TestAnalyticsAPIEndpoints:
         }
 
         response = test_client.post(
-            "/analytics/channels", headers={"Authorization": "Bearer test_token"}, json=channel_data
+            "/analytics/channels",
+            headers={"Authorization": "Bearer test_token"},
+            json=channel_data,
         )
 
         # Should not fail due to authentication
@@ -113,7 +115,11 @@ class TestAnalyticsAPIEndpoints:
 
         # Check if endpoint exists and processes data
         if response.status_code not in [404, 405]:  # Method exists
-            assert response.status_code in [200, 201, 422]  # Success or validation error
+            assert response.status_code in [
+                200,
+                201,
+                422,
+            ]  # Success or validation error
 
 
 @pytest.mark.integration
@@ -166,7 +172,9 @@ class TestAPIDataValidation:
         }
 
         response = test_client.post(
-            "/analytics/channels", headers={"Authorization": "Bearer test_token"}, json=invalid_data
+            "/analytics/channels",
+            headers={"Authorization": "Bearer test_token"},
+            json=invalid_data,
         )
 
         # Should not fail due to authentication
@@ -366,7 +374,11 @@ class TestAnalyticsAPIEndpoints:
     def mock_auth_dependency(self):
         """Mock authentication dependency"""
         with patch("apps.api.deps.get_current_user") as mock:
-            mock.return_value = {"user_id": 123456789, "username": "testuser", "role": "user"}
+            mock.return_value = {
+                "user_id": 123456789,
+                "username": "testuser",
+                "role": "user",
+            }
             yield mock
 
     def test_get_channels_success(self, test_client, auth_headers, mock_auth_dependency):
@@ -442,7 +454,10 @@ class TestAnalyticsAPIEndpoints:
             {"telegram_id": -1001234567892},  # Missing name
             # Invalid field values
             {"name": "", "telegram_id": -1001234567892},  # Empty name
-            {"name": "Test Channel", "telegram_id": "invalid"},  # Invalid telegram_id type
+            {
+                "name": "Test Channel",
+                "telegram_id": "invalid",
+            },  # Invalid telegram_id type
             {"name": "a" * 300, "telegram_id": -1001234567892},  # Name too long
         ]
 
@@ -692,11 +707,16 @@ class TestAPIDataValidation:
 
             for injection_attempt in sql_injection_attempts:
                 response = test_client.get(
-                    f"/analytics/channels/{injection_attempt}/stats", headers=auth_headers
+                    f"/analytics/channels/{injection_attempt}/stats",
+                    headers=auth_headers,
                 )
 
                 # Should handle safely - either 404 for invalid ID or error
-                assert response.status_code in [400, 404, 422]  # Should not cause SQL error
+                assert response.status_code in [
+                    400,
+                    404,
+                    422,
+                ]  # Should not cause SQL error
 
     def test_data_type_validation(self, test_client, auth_headers, mock_auth_dependency):
         """Test strict data type validation"""
@@ -726,7 +746,11 @@ class TestAPIDataValidation:
             # Name too long
             {"name": "a" * 1000, "telegram_id": -1001234567890},
             # Description too long (if there's a limit)
-            {"name": "Valid Name", "telegram_id": -1001234567890, "description": "x" * 5000},
+            {
+                "name": "Valid Name",
+                "telegram_id": -1001234567890,
+                "description": "x" * 5000,
+            },
         ]
 
         for test_case in test_cases:

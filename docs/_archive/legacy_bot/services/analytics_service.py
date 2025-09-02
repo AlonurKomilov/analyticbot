@@ -159,7 +159,13 @@ class AnalyticsService:
     ) -> dict[str, int]:
         """⚡ High-performance channel processing with concurrency control"""
         async with self._semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "cached": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "cached": 0,
+            }
             if hasattr(performance_manager, "cache"):
                 cache_key = f"channel_problems:{channel_id}"
                 if await performance_manager.cache.get(cache_key):
@@ -349,7 +355,10 @@ class AnalyticsService:
                     update_params = [(update["post_id"], update["new_views"]) for update in updates]
                     if hasattr(performance_manager, "query_optimizer"):
                         results = await performance_manager.query_optimizer.execute_batched(
-                            performance_manager.pool._pool, query, update_params, batch_size=50
+                            performance_manager.pool._pool,
+                            query,
+                            update_params,
+                            batch_size=50,
                         )
                         successful_updates = sum(
                             1 for result in results if not isinstance(result, Exception)
@@ -478,7 +487,7 @@ class AnalyticsService:
             return b""
 
     async def get_post_views(
-        self, scheduled_post_id: int, user_id: (int | None) = None
+        self, scheduled_post_id: int, user_id: int | None = None
     ) -> int | None:
         """
         Return stored view count for a scheduled post with error handling.
@@ -528,15 +537,18 @@ class AnalyticsService:
 
     async def get_analytics_data(
         self,
-        channel_id: (int | None) = None,
-        start_date: (datetime | None) = None,
-        end_date: (datetime | None) = None,
+        channel_id: int | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Get analytics data with filtering"""
         try:
             return await self.analytics_repository.get_analytics_data(
-                channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
+                channel_id=channel_id,
+                start_date=start_date,
+                end_date=end_date,
+                limit=limit,
             )
         except Exception as e:
             context = (
@@ -755,7 +767,7 @@ class AnalyticsService:
             return b""
 
     async def get_post_views(
-        self, scheduled_post_id: int, user_id: (int | None) = None
+        self, scheduled_post_id: int, user_id: int | None = None
     ) -> int | None:
         """
         Return stored view count for a scheduled post with error handling.

@@ -38,7 +38,11 @@ class TestUpdatesPollerGracefulShutdown:
         collector.start_collecting = AsyncMock()
         collector.stop_collecting = AsyncMock()
         collector.get_stats = Mock(
-            return_value={"updates_processed": 42, "updates_skipped": 3, "updates_errors": 1}
+            return_value={
+                "updates_processed": 42,
+                "updates_skipped": 3,
+                "updates_errors": 1,
+            }
         )
         return collector
 
@@ -59,10 +63,22 @@ class TestUpdatesPollerGracefulShutdown:
         mock_collector.start_collecting.side_effect = mock_start_collecting
 
         with (
-            patch("apps.mtproto.tasks.poll_updates.MTProtoSettings", return_value=mock_settings),
-            patch("apps.mtproto.tasks.poll_updates.get_repositories", return_value=AsyncMock()),
-            patch("apps.mtproto.tasks.poll_updates.create_tg_client", return_value=mock_tg_client),
-            patch("apps.mtproto.tasks.poll_updates.UpdatesCollector", return_value=mock_collector),
+            patch(
+                "apps.mtproto.tasks.poll_updates.MTProtoSettings",
+                return_value=mock_settings,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.get_repositories",
+                return_value=AsyncMock(),
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.create_tg_client",
+                return_value=mock_tg_client,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.UpdatesCollector",
+                return_value=mock_collector,
+            ),
         ):
             # Start polling in background
             polling_task = asyncio.create_task(poller.start_polling(restart_on_error=False))
@@ -118,10 +134,22 @@ class TestUpdatesPollerGracefulShutdown:
         mock_collector.start_collecting.side_effect = mock_long_collection
 
         with (
-            patch("apps.mtproto.tasks.poll_updates.MTProtoSettings", return_value=mock_settings),
-            patch("apps.mtproto.tasks.poll_updates.get_repositories", return_value=AsyncMock()),
-            patch("apps.mtproto.tasks.poll_updates.create_tg_client", return_value=mock_tg_client),
-            patch("apps.mtproto.tasks.poll_updates.UpdatesCollector", return_value=mock_collector),
+            patch(
+                "apps.mtproto.tasks.poll_updates.MTProtoSettings",
+                return_value=mock_settings,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.get_repositories",
+                return_value=AsyncMock(),
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.create_tg_client",
+                return_value=mock_tg_client,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.UpdatesCollector",
+                return_value=mock_collector,
+            ),
         ):
             # Start polling
             polling_task = asyncio.create_task(poller.start_polling(restart_on_error=False))
@@ -151,10 +179,22 @@ class TestUpdatesPollerGracefulShutdown:
         mock_collector.start_collecting.side_effect = mock_brief_collection
 
         with (
-            patch("apps.mtproto.tasks.poll_updates.MTProtoSettings", return_value=mock_settings),
-            patch("apps.mtproto.tasks.poll_updates.get_repositories", return_value=AsyncMock()),
-            patch("apps.mtproto.tasks.poll_updates.create_tg_client", return_value=mock_tg_client),
-            patch("apps.mtproto.tasks.poll_updates.UpdatesCollector", return_value=mock_collector),
+            patch(
+                "apps.mtproto.tasks.poll_updates.MTProtoSettings",
+                return_value=mock_settings,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.get_repositories",
+                return_value=AsyncMock(),
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.create_tg_client",
+                return_value=mock_tg_client,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.UpdatesCollector",
+                return_value=mock_collector,
+            ),
         ):
             # Start polling with signal handlers
             start_time = time.time()
@@ -233,10 +273,22 @@ class TestUpdatesPollerGracefulShutdown:
         mock_collector.start_collecting.side_effect = mock_failing_collection
 
         with (
-            patch("apps.mtproto.tasks.poll_updates.MTProtoSettings", return_value=mock_settings),
-            patch("apps.mtproto.tasks.poll_updates.get_repositories", return_value=AsyncMock()),
-            patch("apps.mtproto.tasks.poll_updates.create_tg_client", return_value=mock_tg_client),
-            patch("apps.mtproto.tasks.poll_updates.UpdatesCollector", return_value=mock_collector),
+            patch(
+                "apps.mtproto.tasks.poll_updates.MTProtoSettings",
+                return_value=mock_settings,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.get_repositories",
+                return_value=AsyncMock(),
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.create_tg_client",
+                return_value=mock_tg_client,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.UpdatesCollector",
+                return_value=mock_collector,
+            ),
         ):
             # Start polling with restart on error
             polling_task = asyncio.create_task(poller.start_polling(restart_on_error=True))
@@ -272,10 +324,22 @@ class TestUpdatesPollerGracefulShutdown:
         mock_collector.start_collecting.side_effect = mock_collection
 
         with (
-            patch("apps.mtproto.tasks.poll_updates.MTProtoSettings", return_value=mock_settings),
-            patch("apps.mtproto.tasks.poll_updates.get_repositories", return_value=AsyncMock()),
-            patch("apps.mtproto.tasks.poll_updates.create_tg_client", return_value=mock_tg_client),
-            patch("apps.mtproto.tasks.poll_updates.UpdatesCollector", return_value=mock_collector),
+            patch(
+                "apps.mtproto.tasks.poll_updates.MTProtoSettings",
+                return_value=mock_settings,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.get_repositories",
+                return_value=AsyncMock(),
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.create_tg_client",
+                return_value=mock_tg_client,
+            ),
+            patch(
+                "apps.mtproto.tasks.poll_updates.UpdatesCollector",
+                return_value=mock_collector,
+            ),
         ):
             # Start polling
             polling_task = asyncio.create_task(poller.start_polling(restart_on_error=False))

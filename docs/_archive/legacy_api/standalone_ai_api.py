@@ -106,7 +106,11 @@ async def root():
 async def health_check():
     """🏥 Health check for standalone ML API"""
     try:
-        health_status = {"status": "healthy", "timestamp": datetime.now(), "services": {}}
+        health_status = {
+            "status": "healthy",
+            "timestamp": datetime.now(),
+            "services": {},
+        }
         content_optimizer = ml_services.get("content_optimizer")
         if content_optimizer:
             try:
@@ -281,4 +285,10 @@ if __name__ == "__main__":
     print("🤖 Starting Standalone AI/ML API...")
     print("📖 Documentation available at: http://localhost:8002/docs")
     print("🎬 Demo analysis at: http://localhost:8002/demo/analyze")
-    uvicorn.run("standalone_ai_api:app", host="0.0.0.0", port=8002, reload=False, log_level="info")
+    uvicorn.run(
+        "standalone_ai_api:app",
+        host="0.0.0.0",
+        port=8002,
+        reload=False,
+        log_level="info",
+    )

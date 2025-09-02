@@ -44,7 +44,11 @@ class SuperAdminService:
                 await self._log_security_event(
                     db,
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "user_not_found"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "user_not_found",
+                    },
                 )
                 return None
 
@@ -53,7 +57,11 @@ class SuperAdminService:
                 await self._log_security_event(
                     db,
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "invalid_password"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "invalid_password",
+                    },
                 )
                 return None
 
@@ -67,13 +75,18 @@ class SuperAdminService:
             await db.commit()
 
             await self._log_security_event(
-                db, "successful_login", {"username": username, "ip": ip_address}, admin.id
+                db,
+                "successful_login",
+                {"username": username, "ip": ip_address},
+                admin.id,
             )
             return session
 
         except Exception as e:
             await self._log_security_event(
-                db, "login_error", {"username": username, "ip": ip_address, "error": str(e)}
+                db,
+                "login_error",
+                {"username": username, "ip": ip_address, "error": str(e)},
             )
             return None
 
@@ -122,7 +135,8 @@ class SuperAdminService:
             await db.scalar(
                 select(func.count(AdminSession.id)).where(
                     and_(
-                        AdminSession.is_active is True, AdminSession.expires_at > datetime.utcnow()
+                        AdminSession.is_active is True,
+                        AdminSession.expires_at > datetime.utcnow(),
                     )
                 )
             )
@@ -136,7 +150,11 @@ class SuperAdminService:
                 "premium": premium_users,
                 "suspended": total_users - active_users,
             },
-            "admins": {"total": total_admins, "active": active_admins, "sessions": active_sessions},
+            "admins": {
+                "total": total_admins,
+                "active": active_admins,
+                "sessions": active_sessions,
+            },
             "system": {
                 "uptime": "N/A",  # Will be calculated in production
                 "version": "1.0.0",
@@ -145,7 +163,12 @@ class SuperAdminService:
         }
 
     async def suspend_user(
-        self, db: AsyncSession, admin_id: int, user_id: int, suspended_by: str, reason: str
+        self,
+        db: AsyncSession,
+        admin_id: int,
+        user_id: int,
+        suspended_by: str,
+        reason: str,
     ) -> bool:
         """Suspend a system user"""
         try:

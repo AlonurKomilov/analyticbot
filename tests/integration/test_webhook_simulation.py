@@ -87,7 +87,11 @@ class TestTelegramWebhookSimulation:
             "update_id": 12347,
             "channel_post": {
                 "message_id": 789,
-                "chat": {"id": channel["id"], "title": channel["title"], "type": "channel"},
+                "chat": {
+                    "id": channel["id"],
+                    "title": channel["title"],
+                    "type": "channel",
+                },
                 "date": int(datetime.now().timestamp()),
                 "text": "Test channel post",
                 "views": 100,
@@ -291,7 +295,11 @@ class TestPaymentWebhookSimulation:
         }
 
         # Mock Redis to track processed webhooks
-        mock_redis.exists.side_effect = [False, True, True]  # First time: new, then: duplicate
+        mock_redis.exists.side_effect = [
+            False,
+            True,
+            True,
+        ]  # First time: new, then: duplicate
         mock_redis.setex.return_value = True
 
         # Act: Process same webhook multiple times
@@ -324,7 +332,10 @@ class TestPaymentWebhookSimulation:
         try:
             update_id = webhook_update.get("update_id")
             if not update_id:
-                return {"success": False, "error": "Malformed webhook - missing update_id"}
+                return {
+                    "success": False,
+                    "error": "Malformed webhook - missing update_id",
+                }
 
             result = {"success": True, "update_id": update_id}
 
@@ -365,7 +376,11 @@ class TestPaymentWebhookSimulation:
             # Extract signature from headers
             signature_header = headers.get("stripe-signature", "")
             if not signature_header:
-                return {"valid_signature": False, "processed": False, "error": "No signature"}
+                return {
+                    "valid_signature": False,
+                    "processed": False,
+                    "error": "No signature",
+                }
 
             # Parse signature components
             signature_parts = signature_header.split(",")
@@ -392,13 +407,21 @@ class TestPaymentWebhookSimulation:
             ).hexdigest()
 
             if signature != expected_signature:
-                return {"valid_signature": False, "processed": False, "error": "Signature mismatch"}
+                return {
+                    "valid_signature": False,
+                    "processed": False,
+                    "error": "Signature mismatch",
+                }
 
             # Process webhook
             webhook_data = json.loads(payload)
             payment_id = webhook_data.get("data", {}).get("object", {}).get("id")
 
-            return {"valid_signature": True, "processed": True, "payment_id": payment_id}
+            return {
+                "valid_signature": True,
+                "processed": True,
+                "payment_id": payment_id,
+            }
 
         except Exception as e:
             return {"valid_signature": False, "processed": False, "error": str(e)}
@@ -415,10 +438,16 @@ class TestPaymentWebhookSimulation:
 
             # Check if payment exists in database
             payment = await db_pool.fetchrow(
-                "SELECT * FROM payments WHERE user_id = $1 AND amount = $2", user_id, amount
+                "SELECT * FROM payments WHERE user_id = $1 AND amount = $2",
+                user_id,
+                amount,
             )
 
-            return {"success": True, "method": method, "payment_found": payment is not None}
+            return {
+                "success": True,
+                "method": method,
+                "payment_found": payment is not None,
+            }
 
         return {"success": False, "error": f"Unsupported method: {method}"}
 
@@ -436,7 +465,11 @@ class TestPaymentWebhookSimulation:
                 merchant_trans_id,
             )
 
-            return {"success": True, "click_trans_id": click_trans_id, "payment_updated": True}
+            return {
+                "success": True,
+                "click_trans_id": click_trans_id,
+                "payment_updated": True,
+            }
 
         return {"success": False, "error": f"Unsupported action: {action}"}
 
@@ -455,7 +488,8 @@ class TestPaymentWebhookSimulation:
         # Process webhook
         if db_pool:
             await db_pool.execute(
-                "INSERT INTO webhook_events (id, processed_at) VALUES ($1, NOW())", webhook_id
+                "INSERT INTO webhook_events (id, processed_at) VALUES ($1, NOW())",
+                webhook_id,
             )
 
         return {"processed": True, "duplicate": False}

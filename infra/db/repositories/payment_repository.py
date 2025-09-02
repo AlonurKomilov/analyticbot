@@ -34,7 +34,8 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             if is_default:
                 await conn.execute(
-                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1", user_id
+                    "UPDATE payment_methods SET is_default = false WHERE user_id = $1",
+                    user_id,
                 )
             await conn.execute(
                 """

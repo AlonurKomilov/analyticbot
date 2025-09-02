@@ -122,7 +122,11 @@ class TestAnalyticsFusionServiceTrending:
                     "views": views,
                     "forwards": views // 30,  # Trending posts get more forwards
                     "replies": views // 80,
-                    "reactions": {"👍": views // 15, "❤️": views // 25, "🔥": views // 40},
+                    "reactions": {
+                        "👍": views // 15,
+                        "❤️": views // 25,
+                        "🔥": views // 40,
+                    },
                     "title": f"Post {i+1}" + (" - VIRAL!" if views > 3000 else ""),
                     "permalink": f"https://t.me/test/{i+1}",
                 }

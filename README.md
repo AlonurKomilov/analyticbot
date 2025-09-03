@@ -27,7 +27,7 @@ apps/                    # 🚪 Application Layer (Entry Points)
     ├── src/             # React components & logic
     └── public/          # Frontend static assets
 
-core/                    # 🧠 Business Logic (Framework-Agnostic)  
+core/                    # 🧠 Business Logic (Framework-Agnostic)
 ├── models/              # Domain entities (ScheduledPost, Delivery)
 ├── services/            # Business services (ScheduleService, DeliveryService)
 ├── repositories/        # Repository pattern + PostgreSQL implementation
@@ -38,7 +38,7 @@ infra/                   # 🏭 Infrastructure & DevOps
 ├── db/                  # Database infrastructure
 │   ├── alembic/         # Database migrations (canonical home)
 │   └── init/            # DB initialization scripts
-├── k8s/                 # Kubernetes manifests  
+├── k8s/                 # Kubernetes manifests
 ├── helm/                # Helm charts
 └── monitoring/          # Prometheus, Grafana configs
 ```
@@ -68,7 +68,7 @@ alembic upgrade head
 # Terminal 1: API Server
 uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 
-# Terminal 2: Telegram Bot  
+# Terminal 2: Telegram Bot
 python -m apps.bot.run_bot
 
 # 6. Health check
@@ -84,7 +84,7 @@ pip-compile -o requirements.prod.txt requirements.prod.in
 ```
 
 ### Option 2: Docker Compose (Production-like)
-```bash  
+```bash
 # 1. Clone and configure
 git clone <repo-url>
 cd analyticbot
@@ -110,14 +110,14 @@ docker compose ps                  # Service status
 
 ### 📈 **Analytics & Insights**
 - **Real-time Dashboard** - Live channel performance tracking
-- **AI-Powered Analytics** - ML-driven content optimization  
+- **AI-Powered Analytics** - ML-driven content optimization
 - **Scheduled Posting** - Smart content delivery system
 - **Performance Metrics** - Comprehensive engagement analytics
 
 ### 🤖 **Bot Features**
 - **Multi-channel Support** - Manage multiple Telegram channels
 - **Content Scheduling** - Plan and automate posts
-- **Analytics Commands** - `/stats`, `/schedule`, `/cancel`  
+- **Analytics Commands** - `/stats`, `/schedule`, `/cancel`
 - **Admin Controls** - User management and permissions
 
 ### 🏢 **Enterprise Grade**
@@ -148,7 +148,7 @@ Copy `.env.example` to `.env` and configure:
 # Start API with auto-reload
 poetry run uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
 
-# Start bot with development logging  
+# Start bot with development logging
 ENVIRONMENT=development poetry run python -m apps.bot.run_bot
 
 # Alternative: Use the development script
@@ -164,7 +164,7 @@ poetry run alembic revision -m "message" # Create new migration
 
 # Code quality
 poetry run ruff check .                   # Lint code
-poetry run ruff format .                  # Format code  
+poetry run ruff format .                  # Format code
 poetry run pre-commit run --all-files    # Run all pre-commit hooks
 
 # Development utilities
@@ -194,7 +194,7 @@ poetry run pytest tests/test_layered_architecture.py tests/test_health.py -v
 tests/
 ├── test_layered_architecture.py  # Core business logic tests
 ├── test_health.py                # API health endpoint tests
-├── test_imports.py               # Import validation tests  
+├── test_imports.py               # Import validation tests
 ├── integration/                  # Integration test suites
 └── unit/                         # Unit test suites
 ```
@@ -218,7 +218,7 @@ curl http://localhost:8000/health
 ```
 
 ### Kubernetes (Production)
-```bash  
+```bash
 # Deploy to Kubernetes
 kubectl apply -f infra/k8s/
 
@@ -237,7 +237,7 @@ kubectl logs deployment/analyticbot-api
 # Development
 ENVIRONMENT=development docker compose up
 
-# Production  
+# Production
 ENVIRONMENT=production docker compose -f docker-compose.yml up -d
 
 # With full monitoring stack
@@ -293,7 +293,7 @@ This project follows a clean layered architecture pattern:
 📦 AnalyticBot
 ├── apps/                     # Application layer
 │   ├── api/                  # FastAPI web application
-│   ├── bot/                  # Telegram bot application  
+│   ├── bot/                  # Telegram bot application
 │   └── frontend/             # React TWA frontend
 ├── core/                     # Business logic layer
 │   ├── models/               # Domain models
@@ -346,7 +346,7 @@ kubectl port-forward svc/grafana 3000:3000
 - **Database Queries**: < 20ms for analytics operations
 - **Memory Usage**: < 256MB per API instance
 
-### Bot Performance  
+### Bot Performance
 - **Message Processing**: < 50ms average response time
 - **Concurrent Users**: 10,000+ active users supported
 - **Background Tasks**: 500+ jobs/minute processing capacity
@@ -356,7 +356,7 @@ kubectl port-forward svc/grafana 3000:3000
 ```bash
 # Real performance metrics from production
 API Instances: 3 replicas @ 128MB each
-Bot Instances: 2 replicas @ 64MB each  
+Bot Instances: 2 replicas @ 64MB each
 Database: PostgreSQL 16 with connection pooling
 Cache Hit Rate: 95%+ for frequently accessed data
 ```
@@ -368,7 +368,7 @@ Cache Hit Rate: 95%+ for frequently accessed data
 tests/
 ├── test_layered_architecture.py  # Core business logic validation
 ├── test_health.py                # API health and readiness checks
-├── test_imports.py               # Import path validation  
+├── test_imports.py               # Import path validation
 ├── integration/                  # Cross-layer integration tests
 ├── unit/                         # Isolated unit tests
 └── performance/                  # Load and performance tests
@@ -395,7 +395,7 @@ poetry run pytest tests/integration/ -v --tb=short
 collected 18 items
 
 tests/test_layered_architecture.py .......... [ 55%]
-tests/test_health.py ....                    [ 77%]  
+tests/test_health.py ....                    [ 77%]
 tests/test_imports.py ....                   [100%]
 
 =================== 18 passed in 2.34s ===================
@@ -418,7 +418,7 @@ tests/test_imports.py ....                   [100%]
 
 ### Infrastructure Security
 - Container security scanning
-- Dependency vulnerability monitoring  
+- Dependency vulnerability monitoring
 - Automated security updates
 - Audit logging and monitoring
 
@@ -434,7 +434,7 @@ tests/test_imports.py ....                   [100%]
 ```yaml
 # Available monitoring components in infra/monitoring/
 - Prometheus: Metrics collection and alerting
-- Grafana: Dashboards and visualization  
+- Grafana: Dashboards and visualization
 - Alertmanager: Alert routing and notifications
 - Loki: Log aggregation and search (optional)
 
@@ -469,7 +469,7 @@ async def health_check():
 # Health and system status
 GET  /health                   # Service health check with dependencies
 
-# Analytics endpoints  
+# Analytics endpoints
 GET  /api/analytics/posts      # Post performance metrics
 GET  /api/analytics/users      # User engagement statistics
 GET  /api/analytics/channels   # Channel analytics overview

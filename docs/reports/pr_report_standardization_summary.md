@@ -50,16 +50,16 @@ Remove any compat shims introduced in step 2 once grep confirms no legacy import
 
 ### Consistent Naming Pattern
 All reports now follow the `PR-#_DESCRIPTIVE_NAME_REPORT.md` pattern:
-- PR-1: Layered Architecture  
+- PR-1: Layered Architecture
 - PR-2: Celery Master
 - PR-3: Implementation Complete
-- PR-4: Deduplication Canonicalization 
+- PR-4: Deduplication Canonicalization
 - PR-5: Architecture Canonicalization & Validation
 - PR-6: Final Validation & Smoke Testing
 
 ## 🔍 Validation
 - All files successfully renamed and tracked by git
-- PR number references updated in document titles  
+- PR number references updated in document titles
 - Acceptance criteria added where requested (PR-4)
 - Phase content and implementation details untouched
 - Clean sequential numbering PR-1 through PR-6

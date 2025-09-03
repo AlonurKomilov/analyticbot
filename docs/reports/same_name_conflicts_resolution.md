@@ -13,7 +13,7 @@
    - **Archived**: `main.py` → `archive/legacy_main/main.py`
    - **Resolution**: Legacy was just a redirect stub, safe to archive
 
-2. **`config.py`** 
+2. **`config.py`**
    - **Canonical**: `apps/bot/config.py` (Bot-specific settings wrapper)
    - **Archived**: `bot/config.py` → `archive/legacy_bot/config_old.py`
    - **Kept Separate**: `core/security_engine/config.py` (different purpose)
@@ -55,7 +55,7 @@
 
 #### 🏗️ **Cleaner Entry Points**
 - **API**: `apps/api/main.py` as single FastAPI entry point
-- **Bot**: `apps/bot/run_bot.py` as single bot entry point  
+- **Bot**: `apps/bot/run_bot.py` as single bot entry point
 - **Removed**: Legacy root `main.py` redirect
 
 #### ⚙️ **Unified Configuration**
@@ -80,16 +80,16 @@
 
 1. **✅ Phase 1 Complete**: Critical application conflicts resolved
 2. **🔄 Phase 2**: Test all canonical entry points work correctly
-3. **📝 Phase 3**: Update any remaining import references  
+3. **📝 Phase 3**: Update any remaining import references
 4. **🧹 Phase 4**: Clean up remaining low-priority conflicts
 5. **🗑️ Phase 5**: Remove compatibility shims once imports updated
 
 ### Safety Measures Applied
 
-✅ **Preserved History**: All moves done with `git mv`  
-✅ **Safe Archival**: No direct deletions, everything preserved in `archive/`  
-✅ **Logic Preservation**: Important functionality merged into canonical locations  
-✅ **Documentation**: Clear TODOs and migration paths documented  
+✅ **Preserved History**: All moves done with `git mv`
+✅ **Safe Archival**: No direct deletions, everything preserved in `archive/`
+✅ **Logic Preservation**: Important functionality merged into canonical locations
+✅ **Documentation**: Clear TODOs and migration paths documented
 ✅ **Incremental**: Small batches with testing between changes
 
 ### Architecture Status
@@ -100,15 +100,15 @@ apps/
   api/main.py          # ← Single API entry point
   bot/config.py        # ← Bot-specific configuration wrapper
   bot/api/payment_routes.py  # ← Enhanced payment routes
-  
+
 core/
   security_engine/config.py  # ← Security configuration
-  
+
 config/
   settings.py          # ← Central configuration
 
 archive/
-  legacy_main/main.py  # ← Archived legacy entry point  
+  legacy_main/main.py  # ← Archived legacy entry point
   legacy_bot/          # ← Archived legacy bot files
 ```
 

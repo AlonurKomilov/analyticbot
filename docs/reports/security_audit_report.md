@@ -80,7 +80,7 @@ def capture_admin_ids(cls, v):
 ```python
 # Auto-constructs secure DB URL from components
 @field_validator("DATABASE_URL", mode="before")
-@classmethod  
+@classmethod
 def build_database_url(cls, v, info):
     """Build DATABASE_URL from components if not provided"""
     # Securely combines user, password, host, port, db
@@ -96,7 +96,7 @@ config/
 
 # Backward compatibility maintained:
 bot/config/
-├── __init__.py          # Redirects to config.settings  
+├── __init__.py          # Redirects to config.settings
 └── config.py            # Deprecated, redirects to config.settings
 ```
 
@@ -107,7 +107,7 @@ from config import settings
 bot_token = settings.BOT_TOKEN.get_secret_value()
 
 # Legacy support (still works)
-from bot.config import settings  
+from bot.config import settings
 bot_token = settings.BOT_TOKEN.get_secret_value()
 ```
 
@@ -140,7 +140,7 @@ JWT_SECRET_KEY=CHANGE_ME_RANDOM_32_BYTE_HEX_STRING
 - Use environment variables directly (no `.env` file)
 - Use secret management services:
   - AWS Secrets Manager
-  - Azure Key Vault  
+  - Azure Key Vault
   - Kubernetes Secrets
   - HashiCorp Vault
 
@@ -173,7 +173,7 @@ assert bool(settings.BOT_TOKEN)  # ✅ Secret loaded
 - ✅ `.env.example` provides secure template
 - ✅ Real `.env` file gitignored
 
-### 2. **Use Strong Secret Protection**  
+### 2. **Use Strong Secret Protection**
 - ✅ Pydantic SecretStr prevents accidental exposure
 - ✅ Secrets never logged or printed
 - ✅ Access via `.get_secret_value()` when needed
@@ -207,7 +207,7 @@ assert bool(settings.BOT_TOKEN)  # ✅ Secret loaded
 ## Compliance Notes
 
 This security implementation addresses:
-- **OWASP Top 10**: A07:2021 – Identification and Authentication Failures  
+- **OWASP Top 10**: A07:2021 – Identification and Authentication Failures
 - **NIST Guidelines**: Secure secret management practices
 - **Industry Standards**: Environment variable isolation, strong typing
 
@@ -215,7 +215,7 @@ This security implementation addresses:
 
 PR-6 successfully implements enterprise-grade security practices:
 - **100+ hardcoded secrets** extracted and secured
-- **Zero breaking changes** due to backward compatibility  
+- **Zero breaking changes** due to backward compatibility
 - **Comprehensive validation** with Pydantic SecretStr
 - **Production-ready** configuration architecture
 - **Full test coverage** maintained (12/12 tests passing)

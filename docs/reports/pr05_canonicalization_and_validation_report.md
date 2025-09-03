@@ -10,7 +10,7 @@ apps/
 ├── api/              # FastAPI application
 │   ├── main.py       # Entry point with /health endpoint
 │   ├── deps.py       # Dependency injection
-│   ├── routers/      # API route modules  
+│   ├── routers/      # API route modules
 │   └── public/       # Static files (api_dashboard.html)
 ├── bot/              # Aiogram Telegram bot
 │   ├── run_bot.py    # Entry point
@@ -100,7 +100,7 @@ infra/
 # API Server
 uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
 
-# Telegram Bot  
+# Telegram Bot
 python -m apps.bot.run_bot
 
 # Docker Compose

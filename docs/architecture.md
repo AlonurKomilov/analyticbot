@@ -69,7 +69,7 @@ The applications layer contains the entry points and user interfaces for the sys
 - Authentication middleware integration
 - CORS and security header management
 
-#### `apps/bot/` - Telegram Bot Application  
+#### `apps/bot/` - Telegram Bot Application
 **Purpose**: Telegram bot interface for direct user interaction within Telegram.
 
 **Key Components**:
@@ -214,7 +214,7 @@ The infrastructure layer manages deployment, persistence, and operational concer
 - `docker-compose.yml`: Development and production orchestration
 - `nginx/`: Reverse proxy and static file serving
 
-#### `infra/db/` - Database Management  
+#### `infra/db/` - Database Management
 **Purpose**: Database schema management and migration control.
 
 **Key Components**:
@@ -389,7 +389,7 @@ from typing import Protocol
 class UserRepository(Protocol):
     async def get_by_id(self, user_id: int) -> User | None: ...
 
-# infra/db/repositories/user_repository.py - Concrete Implementation  
+# infra/db/repositories/user_repository.py - Concrete Implementation
 class AsyncpgUserRepository:
     async def get_by_id(self, user_id: int) -> User | None:
         # AsyncPG implementation details
@@ -400,7 +400,7 @@ class AsyncpgUserRepository:
 - Components are focused and cohesive
 - Changes in one layer don't affect others
 
-### 3. **Interface Segregation**  
+### 3. **Interface Segregation**
 - Small, focused interfaces rather than large, monolithic ones
 - Clients depend only on methods they actually use
 - Easy to mock and test individual components
@@ -416,7 +416,7 @@ class AsyncpgUserRepository:
 ```
 ┌─── core/repositories/interfaces.py ───┐
 │  Protocol Definitions (Ports)         │
-│  • UserRepository                     │  
+│  • UserRepository                     │
 │  • AdminRepository                    │
 │  • AnalyticsRepository                │
 │  └─ Pure Python Protocols ────────────┘
@@ -426,14 +426,14 @@ class AsyncpgUserRepository:
 ┌─── infra/db/repositories/ ────────────┐
 │  Concrete Implementations (Adapters)  │
 │  • AsyncpgUserRepository              │
-│  • AsyncpgAdminRepository             │  
+│  • AsyncpgAdminRepository             │
 │  • AsyncpgAnalyticsRepository         │
 │  └─ Database-specific logic ──────────┘
 ```
 
 ### Benefits
 - **Testability**: Easy to mock with Protocol interfaces
-- **Flexibility**: Swap implementations (AsyncPG ↔ SQLAlchemy)  
+- **Flexibility**: Swap implementations (AsyncPG ↔ SQLAlchemy)
 - **Maintainability**: Clear separation of concerns
 - **Type Safety**: Full typing support with structural subtyping
 
@@ -441,7 +441,7 @@ class AsyncpgUserRepository:
 
 ### Layer-Specific Testing
 - **Applications**: Integration tests for API endpoints and bot handlers
-- **Business Logic**: Unit tests for services with mocked repositories  
+- **Business Logic**: Unit tests for services with mocked repositories
 - **Data Access**: Repository tests with test database fixtures
 - **Infrastructure**: Container and deployment validation tests
 
@@ -457,7 +457,7 @@ class AsyncpgUserRepository:
 Local Machine → Poetry Environment → PostgreSQL + Redis → Hot Reload
 ```
 
-### Production Environment  
+### Production Environment
 ```
 Load Balancer → Kubernetes Ingress → Pod Replicas → Managed Database
                                            ↓

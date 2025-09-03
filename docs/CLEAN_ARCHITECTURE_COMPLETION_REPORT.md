@@ -7,7 +7,7 @@
 
 ## ✅ Task 2: Fixed architecture violations
 - **Status**: COMPLETED
-- **Actions**: 
+- **Actions**:
   - Created protocols in `core/ports/analytics_client.py` for analytics data interfaces
   - Created protocols in `core/ports/mtproto_config.py` for MTProto configuration
   - Updated `infra/rendering/charts.py` to use protocols instead of direct `apps.*` imports
@@ -24,7 +24,7 @@
 - **Actions**:
   - Moved 5 root-level test files into `tests/` directory:
     - `test_imports.py`
-    - `test_superadmin.py` 
+    - `test_superadmin.py`
     - `test_graceful_shutdown_standalone.py`
     - `test_rate_limit_standalone.py`
     - `test_trending_zscore_standalone.py`
@@ -91,7 +91,7 @@
   ├── requirements*.txt/.in  # Dependencies
   ├── apps/                 # Application layer
   ├── config/              # Configuration
-  ├── core/                # Core domain layer  
+  ├── core/                # Core domain layer
   ├── data/                # Database files
   ├── docs/                # All documentation
   ├── infra/               # Infrastructure layer
@@ -124,7 +124,7 @@ Before creating new folders, analysis of existing structure revealed:
 ### 📋 Clean Architecture Compliance:
 ```
 apps/     - Application layer (existing, untouched)
-core/     - Domain layer (existing, extended with ports/)  
+core/     - Domain layer (existing, extended with ports/)
 infra/    - Infrastructure layer (existing, extended with cache/)
 config/   - Configuration (existing, untouched)
 tests/    - Testing (existing, populated with moved files)

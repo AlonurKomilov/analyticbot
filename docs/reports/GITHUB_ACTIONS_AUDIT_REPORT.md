@@ -43,7 +43,7 @@
 - `ai-fix-enhanced.yml` (535 lines) - Full-featured
 - `ai-fix.yml` (215 lines) - Basic version
 
-**Impact**: 
+**Impact**:
 - Confusing for developers
 - Resource waste (2x execution)
 - Potential conflicts
@@ -136,7 +136,7 @@ Resource Usage:
 
 **Current Score**: 7.5/10
 - ✅ Good automation coverage
-- ✅ Security workflows present  
+- ✅ Security workflows present
 - ✅ Multiple deployment options
 - ⚠️ Duplicate workflows
 - ⚠️ Some performance issues

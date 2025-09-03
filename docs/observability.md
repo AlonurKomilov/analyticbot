@@ -169,7 +169,7 @@ logger.error(
       "connections_max": 20
     },
     "redis": {
-      "status": "healthy", 
+      "status": "healthy",
       "latency_ms": 1,
       "memory_used_mb": 256,
       "memory_max_mb": 512
@@ -202,28 +202,28 @@ class HealthChecker:
             "redis": self._check_redis,
             "analytics_service": self._check_analytics_service
         }
-    
+
     async def check_health(self, detailed=False):
         results = {}
         overall_status = "healthy"
-        
+
         for name, check_func in self.checks.items():
             try:
                 result = await asyncio.wait_for(check_func(), timeout=5.0)
                 results[name] = result
-                
+
                 if result["status"] not in ["healthy", "degraded"]:
                     overall_status = "unhealthy"
                 elif result["status"] == "degraded" and overall_status == "healthy":
                     overall_status = "degraded"
-                    
+
             except asyncio.TimeoutError:
                 results[name] = {"status": "timeout", "error": "Health check timeout"}
                 overall_status = "unhealthy"
             except Exception as e:
                 results[name] = {"status": "error", "error": str(e)}
                 overall_status = "unhealthy"
-        
+
         return {
             "status": overall_status,
             "services": results if detailed else None,
@@ -251,23 +251,23 @@ class HealthChecker:
 async def monitor_resources(request, call_next):
     start_time = time.time()
     start_memory = psutil.Process().memory_info().rss
-    
+
     response = await call_next(request)
-    
+
     duration = time.time() - start_time
     memory_delta = psutil.Process().memory_info().rss - start_memory
-    
+
     # Record metrics
     request_duration.labels(
         method=request.method,
         endpoint=request.url.path,
         status=response.status_code
     ).observe(duration)
-    
+
     memory_usage.labels(
         endpoint=request.url.path
     ).observe(memory_delta)
-    
+
     return response
 ```
 
@@ -275,7 +275,7 @@ async def monitor_resources(request, call_next):
 
 ### Error Classification
 - **Critical**: System failures affecting all users
-- **High**: Feature failures affecting multiple users  
+- **High**: Feature failures affecting multiple users
 - **Medium**: Individual request failures
 - **Low**: Expected errors (validation, rate limits)
 
@@ -290,7 +290,7 @@ def capture_error_context(error, request=None):
         "service": "analytics-api",
         "version": app_version
     }
-    
+
     if request:
         context.update({
             "request_id": getattr(request.state, 'request_id', None),
@@ -300,7 +300,7 @@ def capture_error_context(error, request=None):
             "headers": dict(request.headers),
             "client_ip": get_client_ip(request)
         })
-    
+
     return context
 ```
 
@@ -390,7 +390,7 @@ groups:
           severity: P0
         annotations:
           summary: "Analytics API service is down"
-          
+
       - alert: HighErrorRate
         expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
         for: 2m
@@ -398,7 +398,7 @@ groups:
           severity: P1
         annotations:
           summary: "High error rate detected: {{ $value }}%"
-          
+
       - alert: DatabaseConnections
         expr: db_connections_active / db_connections_max > 0.9
         for: 1m
@@ -419,7 +419,7 @@ groups:
           severity: P2
         annotations:
           summary: "95th percentile latency above 500ms"
-          
+
       - alert: CacheHitRateDecline
         expr: cache_hit_ratio < 0.7
         for: 10m
@@ -495,12 +495,12 @@ grep '"duration_ms"' /var/log/app.log | jq 'select(.context.duration_ms > 1000)'
 #### Metrics Queries
 ```promql
 # 95th percentile response time by endpoint
-histogram_quantile(0.95, 
+histogram_quantile(0.95,
   rate(http_request_duration_seconds_bucket[5m])
 ) by (endpoint)
 
 # Cache hit ratio trend
-rate(cache_operations_total{status="hit"}[5m]) / 
+rate(cache_operations_total{status="hit"}[5m]) /
 rate(cache_operations_total[5m])
 
 # Rate limit events per minute

@@ -38,8 +38,8 @@ class AsyncpgPaymentRepository:
                 )
             await conn.execute(
                 """
-                INSERT INTO payment_methods 
-                (id, user_id, provider, provider_method_id, method_type, 
+                INSERT INTO payment_methods
+                (id, user_id, provider, provider_method_id, method_type,
                  last_four, brand, expires_at, is_default, metadata)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 """,
@@ -61,7 +61,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
                 """
-                SELECT * FROM payment_methods 
+                SELECT * FROM payment_methods
                 WHERE user_id = $1 AND is_active = true
                 ORDER BY is_default DESC, created_at DESC
                 """,
@@ -102,7 +102,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
-                UPDATE subscriptions 
+                UPDATE subscriptions
                 SET status = 'canceled', canceled_at = now()
                 WHERE user_id = $1 AND status = 'active'
                 """,
@@ -110,7 +110,7 @@ class AsyncpgPaymentRepository:
             )
             await conn.execute(
                 """
-                INSERT INTO subscriptions 
+                INSERT INTO subscriptions
                 (id, user_id, plan_id, payment_method_id, provider_subscription_id,
                  status, billing_cycle, amount, currency, current_period_start,
                  current_period_end, trial_ends_at, metadata)
@@ -155,7 +155,7 @@ class AsyncpgPaymentRepository:
             if canceled_at:
                 result = await conn.execute(
                     """
-                    UPDATE subscriptions 
+                    UPDATE subscriptions
                     SET status = $1, canceled_at = $2, updated_at = now()
                     WHERE id = $3
                     """,
@@ -166,7 +166,7 @@ class AsyncpgPaymentRepository:
             else:
                 result = await conn.execute(
                     """
-                    UPDATE subscriptions 
+                    UPDATE subscriptions
                     SET status = $1, updated_at = now()
                     WHERE id = $2
                     """,
@@ -180,7 +180,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
                 """
-                UPDATE subscriptions 
+                UPDATE subscriptions
                 SET current_period_end = $1, updated_at = now()
                 WHERE id = $2
                 """,
@@ -208,7 +208,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO payments 
+                INSERT INTO payments
                 (id, user_id, subscription_id, payment_method_id, provider,
                  provider_payment_id, idempotency_key, amount, currency,
                  status, description, metadata)
@@ -242,10 +242,11 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
                 """
-                UPDATE payments 
+                UPDATE payments
                 SET status = $1, provider_payment_id = COALESCE($2, provider_payment_id),
                     failure_code = $3, failure_message = $4, webhook_verified = $5,
-                    processed_at = CASE WHEN $1 IN ('succeeded', 'failed') THEN now() ELSE processed_at END,
+                    processed_at = CASE WHEN $1 IN ('succeeded', 'failed')
+                                   THEN now() ELSE processed_at END,
                     updated_at = now()
                 WHERE id = $6
                 """,
@@ -307,7 +308,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO webhook_events 
+                INSERT INTO webhook_events
                 (id, provider, event_type, provider_event_id, object_id, payload, signature)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
                 """,
@@ -329,7 +330,7 @@ class AsyncpgPaymentRepository:
             if error_message:
                 result = await conn.execute(
                     """
-                    UPDATE webhook_events 
+                    UPDATE webhook_events
                     SET processed = $1, last_error = $2, retry_count = retry_count + 1,
                         processed_at = CASE WHEN $1 THEN now() ELSE processed_at END
                     WHERE id = $3
@@ -341,7 +342,7 @@ class AsyncpgPaymentRepository:
             else:
                 result = await conn.execute(
                     """
-                    UPDATE webhook_events 
+                    UPDATE webhook_events
                     SET processed = $1, processed_at = now()
                     WHERE id = $2
                     """,
@@ -355,13 +356,13 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(*) as payment_count,
                     SUM(CASE WHEN status = 'succeeded' THEN amount ELSE 0 END) as total_revenue,
                     SUM(CASE WHEN status = 'failed' THEN amount ELSE 0 END) as failed_amount,
                     COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
                     COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments
-                FROM payments 
+                FROM payments
                 WHERE created_at BETWEEN $1 AND $2
                 """,
                 start_date,
@@ -374,7 +375,7 @@ class AsyncpgPaymentRepository:
         async with self.pool.acquire() as conn:
             row = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(*) as total_subscriptions,
                     COUNT(CASE WHEN status = 'active' THEN 1 END) as active_subscriptions,
                     COUNT(CASE WHEN status = 'canceled' THEN 1 END) as canceled_subscriptions,
@@ -394,9 +395,99 @@ class AsyncpgPaymentRepository:
             return dict(row) if row else None
 
     async def get_all_active_plans(self) -> list[dict[str, Any]]:
-        """Get all active plans with pricing"""
+        """Get all active subscription plans"""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
-                "SELECT * FROM plans WHERE is_active = true ORDER BY price_monthly ASC"
+                """
+                SELECT id, name, max_channels, max_posts_per_month, created_at
+                FROM plans
+                WHERE is_active = true
+                ORDER BY id
+                """,
             )
             return [dict(row) for row in rows]
+
+    # 🚀 NEW GENERATOR-BASED MEMORY OPTIMIZATIONS
+
+    async def iter_user_payments(self, user_id: int, batch_size: int = 1000):
+        """
+        🧠 MEMORY-OPTIMIZED: Generator-based iteration for user payments
+        Useful for processing payment history without loading all records into memory
+        """
+        offset = 0
+        while True:
+            query = """
+                SELECT p.id, p.amount, p.currency, p.status, p.created_at,
+                       s.plan_id, pl.name as plan_name
+                FROM payments p
+                LEFT JOIN subscriptions s ON p.subscription_id = s.id
+                LEFT JOIN plans pl ON s.plan_id = pl.id
+                WHERE p.user_id = $1
+                ORDER BY p.created_at DESC
+                LIMIT $2 OFFSET $3
+            """
+
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(query, user_id, batch_size, offset)
+
+            if not rows:
+                break
+
+            yield [dict(row) for row in rows]
+
+            if len(rows) < batch_size:
+                break
+
+            offset += batch_size
+
+    async def stream_payments_by_status(self, status: str = "completed"):
+        """
+        🧠 ADVANCED MEMORY OPTIMIZATION: Stream payments by status
+        Yields individual payment records for efficient processing of large datasets
+        """
+        query = """
+            SELECT p.id, p.user_id, p.amount, p.currency, p.status,
+                   p.created_at, p.metadata,
+                   s.plan_id, pl.name as plan_name
+            FROM payments p
+            LEFT JOIN subscriptions s ON p.subscription_id = s.id
+            LEFT JOIN plans pl ON s.plan_id = pl.id
+            WHERE p.status = $1
+            ORDER BY p.created_at DESC
+        """
+
+        async with self.pool.acquire() as conn:
+            async for record in conn.cursor(query, status):
+                yield dict(record)
+
+    async def iter_subscriptions_expiring_soon(self, days_ahead: int = 7, batch_size: int = 500):
+        """
+        🧠 MEMORY-OPTIMIZED: Generator for subscriptions expiring soon
+        Useful for renewal notifications and batch processing
+        """
+        offset = 0
+        while True:
+            query = f"""
+                SELECT s.id, s.user_id, s.current_period_end, s.status,
+                       u.username, p.name as plan_name, p.max_channels
+                FROM subscriptions s
+                JOIN users u ON s.user_id = u.id
+                JOIN plans p ON s.plan_id = p.id
+                WHERE s.status = 'active'
+                AND s.current_period_end <= NOW() + INTERVAL '{days_ahead} days'
+                ORDER BY s.current_period_end
+                LIMIT $1 OFFSET $2
+            """
+
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(query, batch_size, offset)
+
+            if not rows:
+                break
+
+            yield [dict(row) for row in rows]
+
+            if len(rows) < batch_size:
+                break
+
+            offset += batch_size

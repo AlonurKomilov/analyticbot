@@ -13,8 +13,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from core.services import DeliveryService as BaseDeliveryService
 from core.common_helpers.idempotency import IdempotencyGuard
+from core.services import DeliveryService as BaseDeliveryService
 from core.utils.ratelimit import TokenBucketRateLimiter
 
 logger = logging.getLogger(__name__)

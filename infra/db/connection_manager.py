@@ -6,14 +6,13 @@ Unified, high-performance database connection management system
 import asyncio
 import logging
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any
 
 import asyncpg
-import psycopg2
 from asyncpg import Connection, Pool
-from psycopg2 import pool
 
 from config.settings import settings
 
@@ -47,7 +46,7 @@ class ConnectionHealthMonitor:
         self.config = config
         self.last_health_check = 0
         self.is_healthy = False
-        self._monitor_task: Optional[asyncio.Task] = None
+        self._monitor_task: asyncio.Task | None = None
 
     async def start_monitoring(self, pool: Pool):
         """Start health monitoring"""
@@ -99,9 +98,9 @@ class OptimizedAsyncPgPool:
 
     def __init__(self, config: ConnectionConfig):
         self.config = config
-        self._pool: Optional[Pool] = None
+        self._pool: Pool | None = None
         self._health_monitor = ConnectionHealthMonitor(config)
-        self._prepared_statements: Dict[str, str] = {}
+        self._prepared_statements: dict[str, str] = {}
         self._connection_stats = {
             "created": 0,
             "acquired": 0,
@@ -209,19 +208,20 @@ class OptimizedAsyncPgPool:
             self._connection_stats["total_query_time"] += duration
             self._connection_stats["query_count"] += 1
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get connection pool statistics"""
         stats = self._connection_stats.copy()
         if self._pool:
-            stats.update({
-                "pool_size": self._pool.get_size(),
-                "idle_connections": self._pool.get_idle_size(),
-                "used_connections": self._pool.get_size() - self._pool.get_idle_size(),
-            })
+            stats.update(
+                {
+                    "pool_size": self._pool.get_size(),
+                    "idle_connections": self._pool.get_idle_size(),
+                    "used_connections": self._pool.get_size() - self._pool.get_idle_size(),
+                }
+            )
         stats["health_status"] = self._health_monitor.is_healthy
         stats["avg_query_time"] = (
-            stats["total_query_time"] / stats["query_count"]
-            if stats["query_count"] > 0 else 0
+            stats["total_query_time"] / stats["query_count"] if stats["query_count"] > 0 else 0
         )
         return stats
 
@@ -263,29 +263,25 @@ class QueryOptimizer:
         return query
 
     @staticmethod
-    def batch_operations(operations: List[Dict], batch_size: int = 100) -> List[List[Dict]]:
+    def batch_operations(operations: list[dict], batch_size: int = 100) -> list[list[dict]]:
         """Split operations into optimized batches"""
-        return [operations[i:i + batch_size] for i in range(0, len(operations), batch_size)]
+        return [operations[i : i + batch_size] for i in range(0, len(operations), batch_size)]
 
     @staticmethod
     async def execute_batch(
-        pool: OptimizedAsyncPgPool,
-        query: str,
-        params_list: List[tuple],
-        batch_size: int = 100
-    ) -> List[Any]:
+        pool: OptimizedAsyncPgPool, query: str, params_list: list[tuple], batch_size: int = 100
+    ) -> list[Any]:
         """Execute batch operations efficiently"""
         results = []
         batches = QueryOptimizer.batch_operations(
-            [{"query": query, "params": params} for params in params_list],
-            batch_size
+            [{"query": query, "params": params} for params in params_list], batch_size
         )
 
         for batch in batches:
             async with pool.acquire() as conn:
                 batch_results = await asyncio.gather(
                     *[conn.execute(item["query"], *item["params"]) for item in batch],
-                    return_exceptions=True
+                    return_exceptions=True,
                 )
                 results.extend(batch_results)
 
@@ -305,7 +301,7 @@ class DatabaseManager:
             min_connections=settings.DB_POOL_SIZE // 2,
             max_connections=settings.DB_POOL_SIZE,
         )
-        self._pool: Optional[OptimizedAsyncPgPool] = None
+        self._pool: OptimizedAsyncPgPool | None = None
         self._query_optimizer = QueryOptimizer()
 
     async def initialize(self):
@@ -335,7 +331,7 @@ class DatabaseManager:
         async with self.connection() as conn:
             return await conn.execute(optimized_query, *args, **kwargs)
 
-    async def fetch_query(self, query: str, *args, **kwargs) -> List[Dict]:
+    async def fetch_query(self, query: str, *args, **kwargs) -> list[dict]:
         """Fetch optimized query results"""
         optimized_query = self._query_optimizer.optimize_query(query)
 
@@ -343,7 +339,7 @@ class DatabaseManager:
             rows = await conn.fetch(optimized_query, *args, **kwargs)
             return [dict(row) for row in rows]
 
-    async def fetch_one(self, query: str, *args, **kwargs) -> Optional[Dict]:
+    async def fetch_one(self, query: str, *args, **kwargs) -> dict | None:
         """Fetch single row from optimized query"""
         optimized_query = self._query_optimizer.optimize_query(query)
 
@@ -351,14 +347,14 @@ class DatabaseManager:
             row = await conn.fetchrow(optimized_query, *args, **kwargs)
             return dict(row) if row else None
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get database performance statistics"""
         if not self._pool:
             return {"error": "Database manager not initialized"}
 
         return self._pool.get_stats()
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check"""
         if not self._pool:
             return {"healthy": False, "error": "Database manager not initialized"}

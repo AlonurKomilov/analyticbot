@@ -107,7 +107,7 @@ async def test_direct_ml():
 
         # Test with sample content
         test_text = """
-        🚀 Amazing new feature launched! 
+        🚀 Amazing new feature launched!
         This is an excellent update that will help users achieve great results.
         Try it now and see the fantastic improvements!
         #launch #amazing #update #great #success

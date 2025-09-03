@@ -200,8 +200,8 @@ def test_bot_run_execution(mock_dispatcher, mock_bot):
 
 def test_security_execution():
     """Test security components by executing their code"""
-    from core.security_engine import auth, config, models
     from core.common_helpers.ratelimit import TokenBucketRateLimiter
+    from core.security_engine import auth, config, models
 
     # Execute rate limiter creation and usage
     rate_limiter = TokenBucketRateLimiter(capacity=10, refill_rate=1.0)

@@ -8,9 +8,9 @@ from uuid import uuid4
 import pytest
 import redis
 
-from core.services.enhanced_delivery_service import EnhancedDeliveryService
 from core.common_helpers.idempotency import IdempotencyGuard
 from core.common_helpers.ratelimit import TokenBucketRateLimiter
+from core.services.enhanced_delivery_service import EnhancedDeliveryService
 
 
 class TestIdempotencyGuard:
@@ -24,7 +24,7 @@ class TestIdempotencyGuard:
     @pytest.fixture
     def idempotency_guard(self, mock_redis):
         """Create IdempotencyGuard with mocked Redis."""
-        with patch('core.utils.idempotency.redis') as mock_redis_module:
+        with patch("core.utils.idempotency.redis") as mock_redis_module:
             mock_redis_module.from_url.return_value = mock_redis
             return IdempotencyGuard(redis_url="redis://mock", key_prefix="test")
 
@@ -45,7 +45,7 @@ class TestIdempotencyGuard:
     @pytest.mark.asyncio
     async def test_is_duplicate_returns_false_for_new_key(self, idempotency_guard, mock_redis):
         """Test that new operations are not flagged as duplicates."""
-        with patch.object(idempotency_guard, 'get_redis') as mock_get_redis:
+        with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             mock_redis.get.return_value = None
 
@@ -59,7 +59,7 @@ class TestIdempotencyGuard:
     @pytest.mark.asyncio
     async def test_is_duplicate_returns_true_for_existing_key(self, idempotency_guard, mock_redis):
         """Test that existing operations are flagged as duplicates."""
-        with patch.object(idempotency_guard, 'get_redis') as mock_get_redis:
+        with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             # Mock existing idempotency status as JSON
             mock_status = '{"status": "processing", "created_at": "2025-01-01T00:00:00"}'
@@ -75,7 +75,7 @@ class TestIdempotencyGuard:
     @pytest.mark.asyncio
     async def test_mark_operation_start_sets_status(self, idempotency_guard, mock_redis):
         """Test that operation start is marked correctly."""
-        with patch.object(idempotency_guard, 'get_redis') as mock_get_redis:
+        with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             mock_redis.set.return_value = True
 
@@ -88,7 +88,7 @@ class TestIdempotencyGuard:
     @pytest.mark.asyncio
     async def test_mark_operation_complete_updates_status(self, idempotency_guard, mock_redis):
         """Test that operation completion is marked correctly."""
-        with patch.object(idempotency_guard, 'get_redis') as mock_get_redis:
+        with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             mock_redis.set.return_value = True
 
@@ -103,7 +103,7 @@ class TestIdempotencyGuard:
     @pytest.mark.asyncio
     async def test_cleanup_expired_removes_old_entries(self, idempotency_guard, mock_redis):
         """Test that expired entries are cleaned up."""
-        with patch.object(idempotency_guard, 'get_redis') as mock_get_redis:
+        with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             mock_redis.keys.return_value = ["test:idempotency:old1", "test:idempotency:old2"]
             mock_redis.ttl.side_effect = [-1, 3600]  # old1 expired, old2 still valid
@@ -126,7 +126,7 @@ class TestTokenBucketRateLimiter:
     @pytest.fixture
     def rate_limiter(self, mock_redis):
         """Create TokenBucketRateLimiter with mocked Redis."""
-        with patch('core.utils.ratelimit.redis') as mock_redis_module:
+        with patch("core.utils.ratelimit.redis") as mock_redis_module:
             mock_redis_module.from_url.return_value = mock_redis
             return TokenBucketRateLimiter(
                 redis_url="redis://mock",
@@ -145,8 +145,10 @@ class TestTokenBucketRateLimiter:
     @pytest.mark.asyncio
     async def test_acquire_allows_when_tokens_available(self, rate_limiter, mock_redis):
         """Test token acquisition when bucket has capacity."""
-        with patch.object(rate_limiter, 'get_redis') as mock_get_redis, \
-             patch("time.time", return_value=1000.0):
+        with (
+            patch.object(rate_limiter, "get_redis") as mock_get_redis,
+            patch("time.time", return_value=1000.0),
+        ):
             mock_get_redis.return_value = mock_redis
             # Mock Lua script execution - simulate tokens available
             mock_redis.eval.return_value = [1, 9, 1000.0]  # [success, remaining_tokens, updated_at]
@@ -162,8 +164,10 @@ class TestTokenBucketRateLimiter:
     @pytest.mark.asyncio
     async def test_acquire_rejects_when_no_tokens(self, rate_limiter, mock_redis):
         """Test token acquisition when bucket is empty."""
-        with patch.object(rate_limiter, 'get_redis') as mock_get_redis, \
-             patch("time.time", return_value=1000.0):
+        with (
+            patch.object(rate_limiter, "get_redis") as mock_get_redis,
+            patch("time.time", return_value=1000.0),
+        ):
             mock_get_redis.return_value = mock_redis
             # Mock Lua script execution - simulate no tokens
             mock_redis.eval.return_value = [
@@ -183,7 +187,7 @@ class TestTokenBucketRateLimiter:
     @pytest.mark.asyncio
     async def test_acquire_with_delay_waits_and_retries(self, rate_limiter, mock_redis):
         """Test acquire_with_delay waits for tokens and retries."""
-        with patch.object(rate_limiter, 'get_redis') as mock_get_redis:
+        with patch.object(rate_limiter, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             # First call: no tokens, second call: tokens available
             mock_redis.eval.side_effect = [
@@ -206,7 +210,7 @@ class TestTokenBucketRateLimiter:
     @pytest.mark.asyncio
     async def test_get_bucket_stats_returns_current_state(self, rate_limiter, mock_redis):
         """Test bucket statistics retrieval."""
-        with patch.object(rate_limiter, 'get_redis') as mock_get_redis:
+        with patch.object(rate_limiter, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
             mock_redis.keys.return_value = ["test:rate:chat:user:123"]
             mock_redis.hmget.return_value = ["5", "1000.0"]  # [tokens, last_refill]
@@ -234,9 +238,7 @@ class TestEnhancedDeliveryService:
             mock_redis_ratelimit.from_url.return_value = MagicMock()
 
             service = EnhancedDeliveryService(
-                delivery_repo=None, 
-                schedule_repo=None,
-                redis_url="redis://localhost:6379"
+                delivery_repo=None, schedule_repo=None, redis_url="redis://localhost:6379"
             )
             return service
 
@@ -246,11 +248,18 @@ class TestEnhancedDeliveryService:
         service = mock_delivery_service
 
         # Mock the internal guard methods
-        with patch.object(service.idempotency_guard, 'is_duplicate', return_value=(False, None)) as mock_duplicate, \
-             patch.object(service.idempotency_guard, 'mark_operation_start', return_value=True) as mock_start, \
-             patch.object(service.idempotency_guard, 'mark_operation_complete') as mock_complete, \
-             patch.object(service.rate_limiter, 'acquire_with_delay', return_value=True) as mock_rate_limit:
-
+        with (
+            patch.object(
+                service.idempotency_guard, "is_duplicate", return_value=(False, None)
+            ) as mock_duplicate,
+            patch.object(
+                service.idempotency_guard, "mark_operation_start", return_value=True
+            ) as mock_start,
+            patch.object(service.idempotency_guard, "mark_operation_complete") as mock_complete,
+            patch.object(
+                service.rate_limiter, "acquire_with_delay", return_value=True
+            ) as mock_rate_limit,
+        ):
             # Mock successful send function
             async def mock_send_function(post_data):
                 return {"message_id": 12345, "success": True}
@@ -282,7 +291,11 @@ class TestEnhancedDeliveryService:
         service = mock_delivery_service
 
         # Mock duplicate detection
-        with patch.object(service.idempotency_guard, 'is_duplicate', return_value=(True, MagicMock(status="completed", result={"message_id": 12345}))) as mock_duplicate:
+        with patch.object(
+            service.idempotency_guard,
+            "is_duplicate",
+            return_value=(True, MagicMock(status="completed", result={"message_id": 12345})),
+        ) as mock_duplicate:
 
             async def mock_send_function(post_data):
                 return {"message_id": 12345, "success": True}
@@ -310,9 +323,17 @@ class TestEnhancedDeliveryService:
         service = mock_delivery_service
 
         # Mock successful duplicate check and operation start
-        with patch.object(service.idempotency_guard, 'is_duplicate', return_value=(False, None)) as mock_duplicate, \
-             patch.object(service.idempotency_guard, 'mark_operation_start', return_value=True) as mock_start, \
-             patch.object(service.rate_limiter, 'acquire_with_delay', return_value=False) as mock_rate_limit:
+        with (
+            patch.object(
+                service.idempotency_guard, "is_duplicate", return_value=(False, None)
+            ) as mock_duplicate,
+            patch.object(
+                service.idempotency_guard, "mark_operation_start", return_value=True
+            ) as mock_start,
+            patch.object(
+                service.rate_limiter, "acquire_with_delay", return_value=False
+            ) as mock_rate_limit,
+        ):
 
             async def mock_send_function(post_data):
                 return {"message_id": 12345, "success": True}

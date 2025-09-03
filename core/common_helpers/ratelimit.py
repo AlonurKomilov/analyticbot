@@ -86,27 +86,27 @@ class TokenBucketRateLimiter:
         local refill_rate = tonumber(ARGV[2])
         local tokens_requested = tonumber(ARGV[3])
         local now = tonumber(ARGV[4])
-        
+
         -- Get current bucket state
         local bucket_data = redis.call('HMGET', bucket_key, 'tokens', 'last_refill')
         local tokens = tonumber(bucket_data[1])
         local last_refill = tonumber(bucket_data[2])
-        
+
         -- Initialize bucket if it doesn't exist
         if tokens == nil then
             tokens = capacity
             last_refill = now
         end
-        
+
         -- Calculate tokens to add based on elapsed time
         local elapsed = now - last_refill
         local tokens_to_add = elapsed * refill_rate
         tokens = math.min(capacity, tokens + tokens_to_add)
-        
+
         -- Check if we have enough tokens
         local success = 0
         local retry_after = 0
-        
+
         if tokens >= tokens_requested then
             tokens = tokens - tokens_requested
             success = 1
@@ -115,11 +115,11 @@ class TokenBucketRateLimiter:
             local tokens_needed = tokens_requested - tokens
             retry_after = tokens_needed / refill_rate
         end
-        
+
         -- Update bucket state
         redis.call('HMSET', bucket_key, 'tokens', tokens, 'last_refill', now)
         redis.call('EXPIRE', bucket_key, 3600)  -- 1 hour TTL
-        
+
         return {success, math.floor(tokens), retry_after}
         """
 

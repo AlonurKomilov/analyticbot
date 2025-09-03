@@ -17,7 +17,7 @@ from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
 from core import DeliveryService, ScheduleService
-from infra.db.connection_manager import init_database, close_database
+from infra.db.connection_manager import close_database, init_database
 
 
 @asynccontextmanager

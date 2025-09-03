@@ -6,7 +6,6 @@ Apply database performance optimizations and indexes
 import asyncio
 import logging
 import time
-from typing import Dict, List
 
 from infra.db.connection_manager import db_manager
 
@@ -19,7 +18,7 @@ class DatabaseOptimizer:
     def __init__(self):
         self.optimizations_applied = []
 
-    async def apply_optimizations(self) -> Dict:
+    async def apply_optimizations(self) -> dict:
         """Apply all database performance optimizations"""
         logger.info("🚀 Starting database performance optimizations...")
 
@@ -131,7 +130,7 @@ class DatabaseOptimizer:
                 except Exception as e:
                     logger.debug(f"Index creation skipped (table may not exist): {e}")
 
-    async def _verify_optimizations(self) -> Dict:
+    async def _verify_optimizations(self) -> dict:
         """Verify that optimizations were applied"""
         verification_results = {}
 
@@ -155,7 +154,9 @@ class DatabaseOptimizer:
                 WHERE schemaname = 'public' AND indexname LIKE 'idx_%';
             """)
             verification_results["indexes_found"] = index_count
-            logger.info(f"✅ Verification: SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname LIKE 'idx_%'; = {index_count}")
+            logger.info(
+                f"✅ Verification: SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname LIKE 'idx_%'; = {index_count}"
+            )
 
         return verification_results
 
@@ -180,9 +181,6 @@ if __name__ == "__main__":
 
 import asyncio
 import logging
-from typing import List
-
-from infra.db.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +228,6 @@ class DatabaseOptimizer:
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_plan_active
             ON users(plan_id, is_active, created_at DESC) WHERE is_active = true;
             """,
-
             # Channel-related indexes
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_channels_user_active_status
@@ -240,7 +237,6 @@ class DatabaseOptimizer:
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_channels_created_active
             ON channels(created_at DESC, is_active) WHERE is_active = true;
             """,
-
             # Analytics indexes
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_analytics_channel_date_views
@@ -254,7 +250,6 @@ class DatabaseOptimizer:
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_analytics_date_range
             ON analytics(created_at DESC, channel_id) WHERE created_at >= CURRENT_DATE - INTERVAL '30 days';
             """,
-
             # Payment indexes
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_user_status_date
@@ -264,13 +259,11 @@ class DatabaseOptimizer:
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_status_date
             ON payments(status, created_at DESC) WHERE status IN ('pending', 'completed');
             """,
-
             # Plan indexes
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_plans_active_features
             ON plans(is_active, features) WHERE is_active = true;
             """,
-
             # Scheduled posts indexes
             """
             CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_scheduled_posts_execution
@@ -299,12 +292,10 @@ class DatabaseOptimizer:
             "SET session maintenance_work_mem = '256MB';",
             "SET session effective_cache_size = '2GB';",
             "SET session random_page_cost = '1.1';",
-
             # Connection settings
             "SET session tcp_keepalives_idle = '60';",
             "SET session tcp_keepalives_interval = '10';",
             "SET session tcp_keepalives_count = '3';",
-
             # Query optimization
             "SET session enable_seqscan = 'off';",  # Prefer index scans
             "SET session enable_bitmapscan = 'on';",

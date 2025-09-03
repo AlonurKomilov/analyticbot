@@ -125,16 +125,16 @@ async def run_comprehensive_tests():
         print("\n🎯 Testing Comprehensive Content Analysis")
         content_data = {
             "text": """🚀 Revolutionary breakthrough! Our AI-powered platform is transforming the digital landscape!
-            
+
             Key benefits:
             • Boost engagement rates by 50-75%
             • Predict viral content with 85% accuracy
             • Real-time performance optimization
             • Smart hashtag recommendations
             • Advanced sentiment analysis
-            
+
             Join 10,000+ creators who've already seen amazing results! ✨
-            
+
             #AI #innovation #contentcreation #socialmedia #analytics #growth #technology #breakthrough""",
             "target_audience": "tech",
         }

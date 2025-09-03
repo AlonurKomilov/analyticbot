@@ -114,7 +114,14 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
 @task_postrun.connect
 def task_postrun_handler(
-    sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds
+    sender=None,
+    task_id=None,
+    task=None,
+    args=None,
+    kwargs=None,
+    retval=None,
+    state=None,
+    **kwds,
 ):
     """Called after task execution"""
     logger.info(f"Completed task {task.name} (ID: {task_id}) with state: {state}")

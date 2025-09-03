@@ -112,7 +112,10 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        env_parse_none_str="None",
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")

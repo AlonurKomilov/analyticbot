@@ -39,7 +39,7 @@ class _MiniI18n:
         except Exception:
             pass
 
-    def gettext(self, key: str, locale: (str | None) = None, **kwargs):
+    def gettext(self, key: str, locale: str | None = None, **kwargs):
         self._ensure()
         loc = locale or self.default_locale
         try:

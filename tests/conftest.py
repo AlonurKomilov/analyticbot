@@ -12,7 +12,6 @@ import asyncpg
 import pytest
 from aiogram import Bot
 from faker import Faker
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 # Test database configuration
@@ -142,10 +141,11 @@ class TestDatabase:
             if self.db_url.startswith("sqlite://"):
                 # For SQLite, we need to use aiosqlite
                 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+
                 self.engine = create_async_engine(
                     self.db_url.replace("sqlite://", "sqlite+aiosqlite://"),
                     echo=False,
-                    connect_args={"check_same_thread": False}
+                    connect_args={"check_same_thread": False},
                 )
             else:
                 # For PostgreSQL, use asyncpg
@@ -157,6 +157,7 @@ class TestDatabase:
 
             # Create tables if they don't exist
             from core.models import Base
+
             async with self.engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
 
@@ -174,6 +175,7 @@ class TestDatabase:
             return
 
         from core.models import Base
+
         async with self.engine.begin() as conn:
             # Drop all tables and recreate them
             await conn.run_sync(Base.metadata.drop_all)

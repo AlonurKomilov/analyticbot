@@ -89,12 +89,14 @@ class ScheduledPostFactory(factory.Factory):
     views = Faker("random_int", min=0, max=10000)
     created_at = Faker("past_datetime", start_date="-30d")
     buttons = factory.LazyFunction(
-        lambda: []
-        if random.random() > 0.3
-        else [
-            {"text": "Visit Website", "url": "https://example.com"},
-            {"text": "Learn More", "url": "https://example.com/learn"},
-        ]
+        lambda: (
+            []
+            if random.random() > 0.3
+            else [
+                {"text": "Visit Website", "url": "https://example.com"},
+                {"text": "Learn More", "url": "https://example.com/learn"},
+            ]
+        )
     )
 
 
@@ -114,7 +116,9 @@ class DeliveryFactory(factory.Factory):
         "status", yes_declaration=Faker("text", max_nb_chars=100), no_declaration=None
     )
     sent_at = factory.Maybe(
-        "status", yes_declaration=Faker("past_datetime", start_date="-7d"), no_declaration=None
+        "status",
+        yes_declaration=Faker("past_datetime", start_date="-7d"),
+        no_declaration=None,
     )
     created_at = Faker("past_datetime", start_date="-7d")
 
@@ -139,7 +143,9 @@ class PaymentFactory(factory.Factory):
     )
     created_at = Faker("past_datetime", start_date="-30d")
     completed_at = factory.Maybe(
-        "status", yes_declaration=Faker("past_datetime", start_date="-30d"), no_declaration=None
+        "status",
+        yes_declaration=Faker("past_datetime", start_date="-30d"),
+        no_declaration=None,
     )
 
 
@@ -182,14 +188,17 @@ class WebhookEventFactory(factory.Factory):
 
     id = LazyFunction(uuid4)
     event_type = Faker(
-        "random_element", elements=["payment.completed", "payment.failed", "telegram.update"]
+        "random_element",
+        elements=["payment.completed", "payment.failed", "telegram.update"],
     )
     provider = Faker("random_element", elements=["stripe", "payme", "telegram"])
     payload = factory.LazyFunction(lambda: {"test": True, "timestamp": datetime.now().isoformat()})
     signature = Faker("sha256")
     status = Faker("random_element", elements=["pending", "processed", "failed"])
     processed_at = factory.Maybe(
-        "status", yes_declaration=Faker("past_datetime", start_date="-1d"), no_declaration=None
+        "status",
+        yes_declaration=Faker("past_datetime", start_date="-1d"),
+        no_declaration=None,
     )
     created_at = Faker("past_datetime", start_date="-1d")
 

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.database.connection_manager import db_manager, DatabaseManager
+from core.database.connection_manager import DatabaseManager, db_manager
 from core.repositories.interfaces import AdminRepository, UserRepository
 from infra.db.repositories import (
     AsyncpgAdminRepository,

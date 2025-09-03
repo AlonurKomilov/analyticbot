@@ -87,7 +87,11 @@ def generate_post_dynamics(hours_back: int = 24) -> list[PostDynamic]:
 
         data.append(
             PostDynamic(
-                timestamp=timestamp, views=views, likes=likes, shares=shares, comments=comments
+                timestamp=timestamp,
+                views=views,
+                likes=likes,
+                shares=shares,
+                comments=comments,
             )
         )
 
@@ -128,9 +132,11 @@ def generate_top_posts(count: int = 10) -> list[TopPost]:
                 comments=comments,
                 created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
                 type=random.choice(post_types),
-                thumbnail=f"https://picsum.photos/64/64?random={i}"
-                if random.choice([True, False])
-                else None,
+                thumbnail=(
+                    f"https://picsum.photos/64/64?random={i}"
+                    if random.choice([True, False])
+                    else None
+                ),
             )
         )
 
@@ -154,7 +160,10 @@ def generate_best_times() -> list[BestTimeRecommendation]:
     for day, hour, confidence in best_combinations:
         recommendations.append(
             BestTimeRecommendation(
-                day=day, hour=hour, confidence=confidence, avg_engagement=random.randint(150, 400)
+                day=day,
+                hour=hour,
+                confidence=confidence,
+                avg_engagement=random.randint(150, 400),
             )
         )
 
@@ -280,7 +289,15 @@ async def get_best_posting_time(timeframe: str = "week", content_type: str = "al
 
         # Weekly summary
         weekly_summary = {}
-        days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
         for _i, day in enumerate(days):
             weekly_summary[day] = {
                 "best_hour": random.randint(9, 21),

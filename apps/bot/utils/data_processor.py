@@ -362,7 +362,9 @@ class AdvancedDataProcessor:
             analysis["missing_data"] = {
                 "total_missing": missing_data.sum(),
                 "columns_with_missing": (missing_data > 0).sum(),
-                "highest_missing_column": missing_data.idxmax() if missing_data.max() > 0 else None,
+                "highest_missing_column": (
+                    missing_data.idxmax() if missing_data.max() > 0 else None
+                ),
                 "highest_missing_percentage": (missing_data.max() / len(df)) * 100,
             }
 
@@ -502,7 +504,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to datetime: {e}")
-                    pass
 
                 # Try numeric
                 try:
@@ -510,7 +511,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to numeric: {e}")
-                    pass
 
         return df
 
@@ -979,7 +979,10 @@ class AdvancedDataProcessor:
             type_analysis = {}
             for dtype in df.dtypes.value_counts().index:
                 cols_of_type = df.select_dtypes(include=[dtype]).columns.tolist()
-                type_analysis[str(dtype)] = {"count": len(cols_of_type), "columns": cols_of_type}
+                type_analysis[str(dtype)] = {
+                    "count": len(cols_of_type),
+                    "columns": cols_of_type,
+                }
 
             quality_report["data_types"] = type_analysis
 
@@ -1016,13 +1019,15 @@ class AdvancedDataProcessor:
                         "outlier_percentage": float(outliers / len(col_data) * 100),
                         "skewness": skewness,
                         "kurtosis": kurtosis,
-                        "normality_test_p_value": float(
-                            stats.shapiro(
-                                col_data.dropna().sample(min(5000, len(col_data.dropna())))
-                            )[1]
-                        )
-                        if len(col_data.dropna()) > 0
-                        else None,
+                        "normality_test_p_value": (
+                            float(
+                                stats.shapiro(
+                                    col_data.dropna().sample(min(5000, len(col_data.dropna())))
+                                )[1]
+                            )
+                            if len(col_data.dropna()) > 0
+                            else None
+                        ),
                     }
 
                 quality_report["numeric_analysis"] = numeric_analysis
@@ -1038,17 +1043,21 @@ class AdvancedDataProcessor:
 
                     categorical_analysis[col] = {
                         "unique_values": int(col_data.nunique()),
-                        "most_common": str(value_counts.index[0])
-                        if len(value_counts) > 0
-                        else None,
-                        "most_common_count": int(value_counts.iloc[0])
-                        if len(value_counts) > 0
-                        else 0,
-                        "most_common_percentage": float(value_counts.iloc[0] / len(col_data) * 100)
-                        if len(value_counts) > 0
-                        else 0,
+                        "most_common": (
+                            str(value_counts.index[0]) if len(value_counts) > 0 else None
+                        ),
+                        "most_common_count": (
+                            int(value_counts.iloc[0]) if len(value_counts) > 0 else 0
+                        ),
+                        "most_common_percentage": (
+                            float(value_counts.iloc[0] / len(col_data) * 100)
+                            if len(value_counts) > 0
+                            else 0
+                        ),
                         "cardinality": int(col_data.nunique()),
-                        "mode": str(col_data.mode().iloc[0]) if len(col_data.mode()) > 0 else None,
+                        "mode": (
+                            str(col_data.mode().iloc[0]) if len(col_data.mode()) > 0 else None
+                        ),
                     }
 
                 quality_report["categorical_analysis"] = categorical_analysis
@@ -1179,7 +1188,10 @@ class AdvancedDataProcessor:
                         # Get selected feature names
                         selected_features = X.columns[selector.get_support()].tolist()
                         df = pd.concat(
-                            [pd.DataFrame(X_selected, columns=selected_features), df[[target]]],
+                            [
+                                pd.DataFrame(X_selected, columns=selected_features),
+                                df[[target]],
+                            ],
                             axis=1,
                         )
 
@@ -1283,10 +1295,10 @@ class AdvancedDataProcessor:
                 if df[col].dtype in ["int64", "float64"]:
                     col_info.update(
                         {
-                            "mean": float(df[col].mean()) if df[col].notna().sum() > 0 else None,
-                            "std": float(df[col].std()) if df[col].notna().sum() > 0 else None,
-                            "min": float(df[col].min()) if df[col].notna().sum() > 0 else None,
-                            "max": float(df[col].max()) if df[col].notna().sum() > 0 else None,
+                            "mean": (float(df[col].mean()) if df[col].notna().sum() > 0 else None),
+                            "std": (float(df[col].std()) if df[col].notna().sum() > 0 else None),
+                            "min": (float(df[col].min()) if df[col].notna().sum() > 0 else None),
+                            "max": (float(df[col].max()) if df[col].notna().sum() > 0 else None),
                         }
                     )
 
@@ -1491,7 +1503,11 @@ if __name__ == "__main__":
 
         # Test data transformation
         transformations = [
-            {"type": "scale", "method": "standard", "columns": ["age", "salary", "score"]},
+            {
+                "type": "scale",
+                "method": "standard",
+                "columns": ["age", "salary", "score"],
+            },
             {"type": "encode", "method": "label", "columns": ["department"]},
         ]
 

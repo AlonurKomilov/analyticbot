@@ -17,7 +17,7 @@ from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
 from core import DeliveryService, ScheduleService
-from core.database.connection_manager import init_database, close_database
+from core.database.connection_manager import close_database, init_database
 
 
 @asynccontextmanager
@@ -53,7 +53,11 @@ app.include_router(superadmin_router)
 @app.get("/health")
 def health():
     """Health check endpoint"""
-    return {"status": "ok", "environment": settings.ENVIRONMENT, "debug": settings.DEBUG}
+    return {
+        "status": "ok",
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+    }
 
 
 # Schedule endpoints using dependency injection
@@ -152,7 +156,8 @@ async def cancel_scheduled_post(
 
 @app.get("/delivery/stats")
 async def get_delivery_stats(
-    channel_id: str = None, delivery_service: DeliveryService = Depends(get_delivery_service)
+    channel_id: str = None,
+    delivery_service: DeliveryService = Depends(get_delivery_service),
 ):
     """Get delivery statistics"""
     stats = await delivery_service.get_delivery_stats(channel_id=channel_id)

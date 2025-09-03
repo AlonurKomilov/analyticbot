@@ -6,6 +6,7 @@ Create Date: 2025-01-27 10:30:00.000000
 """
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "0008_create_superadmin_system"
@@ -50,7 +51,10 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
         sa.Column("added_by", sa.BigInteger(), nullable=False),
         sa.Column(
-            "added_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False
+            "added_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column("last_activity", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
@@ -156,7 +160,9 @@ def upgrade():
     op.create_index("ix_admin_audit_log_action", "admin_audit_log", ["action"])
     op.create_index("ix_admin_audit_log_timestamp", "admin_audit_log", ["timestamp"])
     op.create_index(
-        "ix_admin_audit_log_resource", "admin_audit_log", ["resource_type", "resource_id"]
+        "ix_admin_audit_log_resource",
+        "admin_audit_log",
+        ["resource_type", "resource_id"],
     )
 
     op.create_index("ix_admin_sessions_admin_user_id", "admin_sessions", ["admin_user_id"])

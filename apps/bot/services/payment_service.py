@@ -148,9 +148,9 @@ class StripeAdapter(PaymentGatewayAdapter):
                     now + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365)
                 ).timestamp()
             ),
-            "trial_end": int((now + timedelta(days=trial_days)).timestamp())
-            if trial_days
-            else None,
+            "trial_end": (
+                int((now + timedelta(days=trial_days)).timestamp()) if trial_days else None
+            ),
             "customer": customer_id,
             "default_payment_method": payment_method_id,
         }
@@ -428,7 +428,10 @@ class PaymentService:
         return adapter
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str = None
+        self,
+        user_id: int,
+        payment_method_data: PaymentMethodCreate,
+        provider: str = None,
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
@@ -441,7 +444,9 @@ class PaymentService:
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
-                    year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
+                    year=card.get("exp_year", 2025),
+                    month=card.get("exp_month", 12),
+                    day=1,
                 )
             method_id = await self.repository.create_payment_method(
                 user_id=user_id,
@@ -452,7 +457,10 @@ class PaymentService:
                 brand=payment_method_data.brand,
                 expires_at=expires_at,
                 is_default=payment_method_data.is_default,
-                metadata={"provider_response": provider_response, **payment_method_data.metadata},
+                metadata={
+                    "provider_response": provider_response,
+                    **payment_method_data.metadata,
+                },
             )
             return PaymentMethodResponse(
                 id=method_id,
@@ -488,7 +496,10 @@ class PaymentService:
         ]
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self,
+        user_id: int,
+        payment_data: PaymentCreate,
+        idempotency_key: str | None = None,
     ) -> PaymentResponse:
         """Process a one-time payment"""
         idempotency_key = idempotency_key or str(uuid4())
@@ -537,7 +548,9 @@ class PaymentService:
             logger.error(f"Payment processing failed: {e}")
             if "payment_id" in locals():
                 await self.repository.update_payment_status(
-                    payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
+                    payment_id=payment_id,
+                    status=PaymentStatus.FAILED,
+                    failure_message=str(e),
                 )
             raise
 
@@ -590,7 +603,8 @@ class PaymentService:
                         trial_days=subscription_data.trial_days,
                     )
                     await self.repository.update_subscription_status(
-                        subscription_id=subscription_id, status=SubscriptionStatus.ACTIVE
+                        subscription_id=subscription_id,
+                        status=SubscriptionStatus.ACTIVE,
                     )
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")

@@ -1,4 +1,3 @@
-
 """
 🚀 DATABASE OPTIMIZATION VALIDATION
 Test and validate database performance optimizations
@@ -7,7 +6,6 @@ Test and validate database performance optimizations
 import asyncio
 import logging
 import time
-from typing import Dict, List
 
 from core.database.connection_manager import db_manager
 
@@ -20,7 +18,7 @@ class DatabaseOptimizationValidator:
     def __init__(self):
         self.test_results = {}
 
-    async def run_validation(self) -> Dict:
+    async def run_validation(self) -> dict:
         """Run comprehensive validation of database optimizations"""
         logger.info("🧪 Starting database optimization validation...")
 
@@ -67,7 +65,9 @@ class DatabaseOptimizationValidator:
                 "total_time": pool_time,
                 "avg_time_per_connection": pool_time / len(connections),
             }
-            logger.info(f"✅ Connection pool test passed: {len(connections)} connections in {pool_time:.3f}s")
+            logger.info(
+                f"✅ Connection pool test passed: {len(connections)} connections in {pool_time:.3f}s"
+            )
 
         except Exception as e:
             self.test_results["connection_pool"] = {
@@ -126,7 +126,9 @@ class DatabaseOptimizationValidator:
                 "total_time": query_time,
                 "avg_time_per_query": query_time / len(results),
             }
-            logger.info(f"✅ Query optimization test passed: {len(results)} queries in {query_time:.3f}s")
+            logger.info(
+                f"✅ Query optimization test passed: {len(results)} queries in {query_time:.3f}s"
+            )
 
         except Exception as e:
             self.test_results["query_optimization"] = {
@@ -155,7 +157,9 @@ class DatabaseOptimizationValidator:
                 self.test_results["performance_indexes"] = {
                     "status": "passed",
                     "indexes_found": len(indexes),
-                    "index_details": [{"name": idx["indexname"], "table": idx["tablename"]} for idx in indexes],
+                    "index_details": [
+                        {"name": idx["indexname"], "table": idx["tablename"]} for idx in indexes
+                    ],
                 }
                 logger.info(f"✅ Performance indexes test passed: {len(indexes)} indexes found")
 
@@ -199,7 +203,7 @@ class DatabaseOptimizationValidator:
             }
             logger.error(f"❌ Connection settings test failed: {e}")
 
-    def _generate_report(self) -> Dict:
+    def _generate_report(self) -> dict:
         """Generate comprehensive validation report"""
         total_tests = len(self.test_results)
         passed_tests = sum(1 for test in self.test_results.values() if test["status"] == "passed")
@@ -212,7 +216,9 @@ class DatabaseOptimizationValidator:
                 "total_tests": total_tests,
                 "passed_tests": passed_tests,
                 "failed_tests": failed_tests,
-                "success_rate": f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "0%",
+                "success_rate": (
+                    f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "0%"
+                ),
             },
             "test_results": self.test_results,
             "status": "passed" if failed_tests == 0 else "failed",
@@ -248,21 +254,25 @@ async def benchmark_database_performance():
         try:
             result = await db_manager.fetch_one(query)
             execution_time = time.time() - start_time
-            results.append({
-                "query": query[:50] + "...",
-                "execution_time": execution_time,
-                "status": "success",
-                "result": result,
-            })
+            results.append(
+                {
+                    "query": query[:50] + "...",
+                    "execution_time": execution_time,
+                    "status": "success",
+                    "result": result,
+                }
+            )
             logger.info(f"✅ Query executed in {execution_time:.3f}s")
         except Exception as e:
             execution_time = time.time() - start_time
-            results.append({
-                "query": query[:50] + "...",
-                "execution_time": execution_time,
-                "status": "failed",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "query": query[:50] + "...",
+                    "execution_time": execution_time,
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
             logger.error(f"❌ Query failed in {execution_time:.3f}s: {e}")
 
     return {
@@ -292,10 +302,6 @@ if __name__ == "__main__":
 
 import asyncio
 import logging
-import time
-from typing import Dict, List
-
-from core.database.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -306,7 +312,7 @@ class DatabaseOptimizationValidator:
     def __init__(self):
         self.test_results = {}
 
-    async def run_validation(self) -> Dict:
+    async def run_validation(self) -> dict:
         """Run comprehensive validation of database optimizations"""
         logger.info("🧪 Starting database optimization validation...")
 
@@ -353,7 +359,9 @@ class DatabaseOptimizationValidator:
                 "total_time": pool_time,
                 "avg_time_per_connection": pool_time / len(connections),
             }
-            logger.info(f"✅ Connection pool test passed: {len(connections)} connections in {pool_time:.3f}s")
+            logger.info(
+                f"✅ Connection pool test passed: {len(connections)} connections in {pool_time:.3f}s"
+            )
 
         except Exception as e:
             self.test_results["connection_pool"] = {
@@ -412,7 +420,9 @@ class DatabaseOptimizationValidator:
                 "total_time": query_time,
                 "avg_time_per_query": query_time / len(results),
             }
-            logger.info(f"✅ Query optimization test passed: {len(results)} queries in {query_time:.3f}s")
+            logger.info(
+                f"✅ Query optimization test passed: {len(results)} queries in {query_time:.3f}s"
+            )
 
         except Exception as e:
             self.test_results["query_optimization"] = {
@@ -441,7 +451,9 @@ class DatabaseOptimizationValidator:
                 self.test_results["performance_indexes"] = {
                     "status": "passed",
                     "indexes_found": len(indexes),
-                    "index_details": [{"name": idx["indexname"], "table": idx["tablename"]} for idx in indexes],
+                    "index_details": [
+                        {"name": idx["indexname"], "table": idx["tablename"]} for idx in indexes
+                    ],
                 }
                 logger.info(f"✅ Performance indexes test passed: {len(indexes)} indexes found")
 
@@ -485,7 +497,7 @@ class DatabaseOptimizationValidator:
             }
             logger.error(f"❌ Connection settings test failed: {e}")
 
-    def _generate_report(self) -> Dict:
+    def _generate_report(self) -> dict:
         """Generate comprehensive validation report"""
         total_tests = len(self.test_results)
         passed_tests = sum(1 for test in self.test_results.values() if test["status"] == "passed")
@@ -498,7 +510,9 @@ class DatabaseOptimizationValidator:
                 "total_tests": total_tests,
                 "passed_tests": passed_tests,
                 "failed_tests": failed_tests,
-                "success_rate": f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "0%",
+                "success_rate": (
+                    f"{(passed_tests / total_tests * 100):.1f}%" if total_tests > 0 else "0%"
+                ),
             },
             "test_results": self.test_results,
             "status": "passed" if failed_tests == 0 else "failed",
@@ -534,21 +548,25 @@ async def benchmark_database_performance():
         try:
             result = await db_manager.fetch_one(query)
             execution_time = time.time() - start_time
-            results.append({
-                "query": query[:50] + "...",
-                "execution_time": execution_time,
-                "status": "success",
-                "result": result,
-            })
+            results.append(
+                {
+                    "query": query[:50] + "...",
+                    "execution_time": execution_time,
+                    "status": "success",
+                    "result": result,
+                }
+            )
             logger.info(f"✅ Query executed in {execution_time:.3f}s")
         except Exception as e:
             execution_time = time.time() - start_time
-            results.append({
-                "query": query[:50] + "...",
-                "execution_time": execution_time,
-                "status": "failed",
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "query": query[:50] + "...",
+                    "execution_time": execution_time,
+                    "status": "failed",
+                    "error": str(e),
+                }
+            )
             logger.error(f"❌ Query failed in {execution_time:.3f}s: {e}")
 
     return {

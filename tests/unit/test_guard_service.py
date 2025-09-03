@@ -2,8 +2,11 @@
 Unit tests for GuardService - Service Layer Testing with Mocks
 Testing business logic while mocking external dependencies (Redis)
 """
+
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+
 from apps.bot.services.guard_service import GuardService
 
 
@@ -40,9 +43,9 @@ class TestGuardService:
         """Test Redis key generation for channel"""
         channel_id = 12345
         expected_key = "blacklist:12345"
-        
+
         key = guard_service_with_redis._key(channel_id)
-        
+
         assert key == expected_key
 
     @pytest.mark.asyncio
@@ -50,9 +53,9 @@ class TestGuardService:
         """Test adding word to blacklist with Redis"""
         channel_id = 12345
         word = "BadWord"
-        
+
         await guard_service_with_redis.add_word(channel_id, word)
-        
+
         mock_redis.sadd.assert_called_once_with("blacklist:12345", "badword")
 
     @pytest.mark.asyncio
@@ -60,10 +63,10 @@ class TestGuardService:
         """Test adding word to blacklist without Redis (should do nothing)"""
         channel_id = 12345
         word = "BadWord"
-        
+
         # Should not raise any exception
         result = await guard_service_no_redis.add_word(channel_id, word)
-        
+
         assert result is None
 
     @pytest.mark.asyncio
@@ -71,9 +74,9 @@ class TestGuardService:
         """Test removing word from blacklist with Redis"""
         channel_id = 12345
         word = "BadWord"
-        
+
         await guard_service_with_redis.remove_word(channel_id, word)
-        
+
         mock_redis.srem.assert_called_once_with("blacklist:12345", "badword")
 
     @pytest.mark.asyncio
@@ -81,10 +84,10 @@ class TestGuardService:
         """Test removing word from blacklist without Redis (should do nothing)"""
         channel_id = 12345
         word = "BadWord"
-        
+
         # Should not raise any exception
         result = await guard_service_no_redis.remove_word(channel_id, word)
-        
+
         assert result is None
 
     @pytest.mark.asyncio
@@ -92,9 +95,9 @@ class TestGuardService:
         """Test listing blacklisted words with Redis"""
         channel_id = 12345
         mock_redis.smembers.return_value = [b"badword1", b"badword2", b"spam"]
-        
+
         words = await guard_service_with_redis.list_words(channel_id)
-        
+
         mock_redis.smembers.assert_called_once_with("blacklist:12345")
         assert words == {"badword1", "badword2", "spam"}
 
@@ -102,9 +105,9 @@ class TestGuardService:
     async def test_list_words_without_redis(self, guard_service_no_redis):
         """Test listing blacklisted words without Redis (should return empty set)"""
         channel_id = 12345
-        
+
         words = await guard_service_no_redis.list_words(channel_id)
-        
+
         assert words == set()
 
     @pytest.mark.asyncio
@@ -112,9 +115,9 @@ class TestGuardService:
         """Test listing words when Redis returns empty set"""
         channel_id = 12345
         mock_redis.smembers.return_value = []
-        
+
         words = await guard_service_with_redis.list_words(channel_id)
-        
+
         assert words == set()
 
     @pytest.mark.asyncio
@@ -123,9 +126,9 @@ class TestGuardService:
         channel_id = 12345
         text = "This is a clean message"
         mock_redis.smembers.return_value = []
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is False
 
     @pytest.mark.asyncio
@@ -134,9 +137,9 @@ class TestGuardService:
         channel_id = 12345
         text = "This contains spam content"
         mock_redis.smembers.return_value = [b"spam", b"badword"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is True
 
     @pytest.mark.asyncio
@@ -145,9 +148,9 @@ class TestGuardService:
         channel_id = 12345
         text = "This contains SPAM content"
         mock_redis.smembers.return_value = [b"spam"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is True
 
     @pytest.mark.asyncio
@@ -156,9 +159,9 @@ class TestGuardService:
         channel_id = 12345
         text = "This message is legitimate"  # "git" is in "legitimate"
         mock_redis.smembers.return_value = [b"git"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         # Should be False because "git" should only match whole words
         assert result is False
 
@@ -168,9 +171,9 @@ class TestGuardService:
         channel_id = 12345
         text = "Check this: spam@email.com and other-stuff!"
         mock_redis.smembers.return_value = [b"spam", b"other"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is True
 
     @pytest.mark.asyncio
@@ -179,9 +182,9 @@ class TestGuardService:
         channel_id = 12345
         text = "This is a completely clean message"
         mock_redis.smembers.return_value = [b"spam", b"badword", b"inappropriate"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is False
 
     @pytest.mark.asyncio
@@ -189,9 +192,9 @@ class TestGuardService:
         """Test is_blocked without Redis connection"""
         channel_id = 12345
         text = "Any message"
-        
+
         result = await guard_service_no_redis.is_blocked(channel_id, text)
-        
+
         assert result is False
 
     @pytest.mark.asyncio
@@ -199,15 +202,10 @@ class TestGuardService:
         """Test check_bot_is_admin placeholder method"""
         channel_username = "test_channel"
         user_id = 123456
-        
+
         result = await guard_service_with_redis.check_bot_is_admin(channel_username, user_id)
-        
-        expected = {
-            "id": 0,
-            "channel_id": 0,
-            "title": "",
-            "username": "test_channel"
-        }
+
+        expected = {"id": 0, "channel_id": 0, "title": "", "username": "test_channel"}
         assert result == expected
 
     @pytest.mark.asyncio
@@ -216,9 +214,9 @@ class TestGuardService:
         channel_id = 12345
         text = "Don't use that word here"
         mock_redis.smembers.return_value = [b"don't"]
-        
+
         result = await guard_service_with_redis.is_blocked(channel_id, text)
-        
+
         assert result is True
 
     @pytest.mark.asyncio
@@ -226,9 +224,9 @@ class TestGuardService:
         """Test that words are normalized to lowercase when added"""
         channel_id = 12345
         word = "MiXeDCaSe"
-        
+
         await guard_service_with_redis.add_word(channel_id, word)
-        
+
         mock_redis.sadd.assert_called_once_with("blacklist:12345", "mixedcase")
 
     @pytest.mark.asyncio
@@ -236,7 +234,7 @@ class TestGuardService:
         """Test that words are normalized to lowercase when removed"""
         channel_id = 12345
         word = "MiXeDCaSe"
-        
+
         await guard_service_with_redis.remove_word(channel_id, word)
-        
+
         mock_redis.srem.assert_called_once_with("blacklist:12345", "mixedcase")

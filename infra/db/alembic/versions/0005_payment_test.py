@@ -9,6 +9,7 @@ Create Date: 2025-08-24 12:30:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -31,7 +32,8 @@ def upgrade() -> None:
         pass  # Column already exists
 
     # Update existing plans with pricing (simplified for testing)
-    op.execute("""
+    op.execute(
+        """
         UPDATE plans SET 
             price_monthly = CASE 
                 WHEN name = 'Free' THEN 0.00
@@ -47,7 +49,8 @@ def upgrade() -> None:
                 WHEN name = 'Enterprise' THEN 999.99
                 ELSE 0.00
             END
-    """)
+    """
+    )
 
     # Payment Methods table
     op.create_table(
@@ -64,10 +67,16 @@ def upgrade() -> None:
         sa.Column("is_active", sa.Boolean(), default=True, nullable=False),
         sa.Column("metadata_json", sa.TEXT(), nullable=True),  # Store JSON as TEXT
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )
@@ -91,10 +100,16 @@ def upgrade() -> None:
         sa.Column("cancel_at_period_end", sa.Boolean(), default=False, nullable=False),
         sa.Column("metadata_json", sa.TEXT(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["plan_id"], ["plans.id"], ondelete="CASCADE"),
@@ -121,10 +136,16 @@ def upgrade() -> None:
         sa.Column("processed_at", sa.DateTime(), nullable=True),
         sa.Column("metadata_json", sa.TEXT(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "updated_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["subscription_id"], ["subscriptions.id"], ondelete="CASCADE"),
@@ -146,7 +167,10 @@ def upgrade() -> None:
         sa.Column("retry_count", sa.Integer(), default=0, nullable=False),
         sa.Column("last_error", sa.TEXT(), nullable=True),
         sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("datetime('now')"), nullable=False
+            "created_at",
+            sa.DateTime(),
+            server_default=sa.text("datetime('now')"),
+            nullable=False,
         ),
     )
 

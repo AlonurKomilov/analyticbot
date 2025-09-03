@@ -6,8 +6,9 @@ Create Date: 2025-01-27 10:45:00.000000
 """
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision = "0009_content_protection_system"
 down_revision = "0008_create_superadmin_system"
@@ -78,7 +79,10 @@ def upgrade():
         sa.Column("reason", sa.Text(), nullable=True),
         sa.Column("added_by", sa.BigInteger(), nullable=False),
         sa.Column(
-            "added_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("now()"), nullable=False
+            "added_at",
+            sa.TIMESTAMP(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
         ),
         sa.Column("expires_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
@@ -139,7 +143,8 @@ def upgrade():
         sa.Column("whitelist_enabled", sa.Boolean(), nullable=False, server_default="false"),
     )
     op.add_column(
-        "channels", sa.Column("last_content_scan", sa.TIMESTAMP(timezone=True), nullable=True)
+        "channels",
+        sa.Column("last_content_scan", sa.TIMESTAMP(timezone=True), nullable=True),
     )
 
     # Create indexes for performance

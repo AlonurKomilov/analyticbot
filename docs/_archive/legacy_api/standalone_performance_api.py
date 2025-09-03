@@ -46,7 +46,7 @@ class StandalonePerformanceMonitor:
                 "cpu": {
                     "usage_percent": cpu_percent,
                     "cores": cpu_count,
-                    "frequency": psutil.cpu_freq()._asdict() if psutil.cpu_freq() else None,
+                    "frequency": (psutil.cpu_freq()._asdict() if psutil.cpu_freq() else None),
                 },
                 "memory": {
                     "total": memory.total,
@@ -202,11 +202,18 @@ async def health_check():
         return {
             "status": status,
             "timestamp": datetime.now().isoformat(),
-            "quick_metrics": {"cpu_percent": cpu_percent, "memory_percent": memory_percent},
+            "quick_metrics": {
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory_percent,
+            },
             "performance_monitor": "operational",
         }
     except Exception as e:
-        return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @app.get("/metrics/all")
@@ -324,5 +331,9 @@ if __name__ == "__main__":
     print("🎯 Score: http://localhost:8001/performance/score")
 
     uvicorn.run(
-        "standalone_performance_api:app", host="0.0.0.0", port=8001, reload=False, log_level="info"
+        "standalone_performance_api:app",
+        host="0.0.0.0",
+        port=8001,
+        reload=False,
+        log_level="info",
     )

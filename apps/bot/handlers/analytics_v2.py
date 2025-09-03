@@ -341,9 +341,11 @@ async def choose_period(callback: CallbackQuery, i18n: I18nContext):
         # Create analytics client
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             # Get overview data
             overview_data = await client.overview(channel_id, period)
@@ -375,9 +377,11 @@ async def show_overview(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.overview(channel_id, period)
             text = _format_overview_text(data)
@@ -407,9 +411,11 @@ async def show_growth(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.growth(channel_id, period)
             text = _format_growth_text(data)
@@ -439,9 +445,11 @@ async def show_reach(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.reach(channel_id, period)
             text = _format_reach_text(data)
@@ -471,9 +479,11 @@ async def show_top_posts(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.top_posts(channel_id, period, limit=10)
             text = _format_top_posts_text(data)
@@ -503,9 +513,11 @@ async def show_sources(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.sources(channel_id, period)
             text = _format_sources_text(data)
@@ -535,9 +547,11 @@ async def show_trending(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.trending(channel_id, period)
             text = _format_trending_text(data)
@@ -619,7 +633,8 @@ async def show_share_options(callback: CallbackQuery, i18n: I18nContext):
 
     if not settings.SHARE_LINKS_ENABLED:
         await callback.answer(
-            "🚧 Share links feature is currently disabled. Coming soon!", show_alert=True
+            "🚧 Share links feature is currently disabled. Coming soon!",
+            show_alert=True,
         )
         return
 

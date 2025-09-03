@@ -7,8 +7,9 @@ Create Date: 2025-08-31 12:00:00.000000
 """
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "0010_phase_4_5_bot_ui_alerts"
@@ -38,7 +39,9 @@ def upgrade() -> None:
 
     # Create indexes for alert subscriptions
     op.create_index(
-        "ix_alert_subscriptions_chat_channel", "alert_subscriptions", ["chat_id", "channel_id"]
+        "ix_alert_subscriptions_chat_channel",
+        "alert_subscriptions",
+        ["chat_id", "channel_id"],
     )
     op.create_index("ix_alert_subscriptions_enabled", "alert_subscriptions", ["enabled"])
     op.create_index("ix_alert_subscriptions_kind", "alert_subscriptions", ["kind"])

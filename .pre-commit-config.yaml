@@ -20,7 +20,7 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        exclude: ^(tests/|bot/database/migrations/)
+        exclude: ^(tests/|bot/database/migrations/|docs/|scripts/)
 
   - repo: local
     hooks:

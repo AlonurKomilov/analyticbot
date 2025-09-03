@@ -150,28 +150,31 @@ async def get_dashboard_factory() -> DashboardFactory:
 
 def generate_post_dynamics(hours_back: int = 24) -> list[PostDynamic]:
     """Generate mock post dynamics data"""
-    data = []
     base_views = random.randint(1000, 5000)
-    for i in range(hours_back):
-        timestamp = datetime.now() - timedelta(hours=hours_back - i)
-        hour = timestamp.hour
-        day_factor = 1.2 if 9 <= hour <= 21 else 0.8
-        weekend_factor = 1.3 if timestamp.weekday() in [5, 6] else 1.0
-        views = int(base_views * day_factor * weekend_factor * random.uniform(0.7, 1.3))
-        likes = int(views * random.uniform(0.02, 0.08))
-        shares = int(views * random.uniform(0.005, 0.02))
-        comments = int(views * random.uniform(0.001, 0.01))
-        data.append(
-            PostDynamic(
-                timestamp=timestamp, views=views, likes=likes, shares=shares, comments=comments
-            )
+
+    # Optimized list comprehension instead of append loop
+    data = [
+        PostDynamic(
+            timestamp=(timestamp := datetime.now() - timedelta(hours=hours_back - i)),
+            views=(
+                views := int(
+                    base_views
+                    * (1.2 if 9 <= timestamp.hour <= 21 else 0.8)
+                    * (1.3 if timestamp.weekday() in [5, 6] else 1.0)
+                    * random.uniform(0.7, 1.3)
+                )
+            ),
+            likes=int(views * random.uniform(0.02, 0.08)),
+            shares=int(views * random.uniform(0.005, 0.02)),
+            comments=int(views * random.uniform(0.001, 0.01)),
         )
+        for i in range(hours_back)
+    ]
     return data
 
 
 def generate_top_posts(count: int = 10) -> list[TopPost]:
     """Generate mock top posts data"""
-    posts = []
     post_types = ["text", "photo", "video", "poll"]
     titles = [
         "New product announcement",
@@ -185,33 +188,30 @@ def generate_top_posts(count: int = 10) -> list[TopPost]:
         "Technical update",
         "Special offer",
     ]
-    for i in range(count):
-        views = random.randint(500, 50000)
-        likes = int(views * random.uniform(0.02, 0.12))
-        shares = int(views * random.uniform(0.005, 0.03))
-        comments = int(views * random.uniform(0.001, 0.02))
-        posts.append(
-            TopPost(
-                id=f"post_{i + 1}",
-                title=random.choice(titles),
-                content=f"Post content for {titles[i % len(titles)]}...",
-                views=views,
-                likes=likes,
-                shares=shares,
-                comments=comments,
-                created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
-                type=random.choice(post_types),
-                thumbnail=f"https://picsum.photos/64/64?random={i}"
-                if random.choice([True, False])
-                else None,
-            )
+
+    # Optimized list comprehension instead of append loop
+    posts = [
+        TopPost(
+            id=f"post_{i + 1}",
+            title=random.choice(titles),
+            content=f"Post content for {titles[i % len(titles)]}...",
+            views=(views := random.randint(500, 50000)),
+            likes=int(views * random.uniform(0.02, 0.12)),
+            shares=int(views * random.uniform(0.005, 0.03)),
+            comments=int(views * random.uniform(0.001, 0.02)),
+            created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
+            type=random.choice(post_types),
+            thumbnail=f"https://picsum.photos/64/64?random={i}"
+            if random.choice([True, False])
+            else None,
         )
+        for i in range(count)
+    ]
     return sorted(posts, key=lambda x: x.views, reverse=True)
 
 
 def generate_best_time_recommendations() -> list[BestTimeRecommendation]:
     """Generate mock best posting time recommendations"""
-    recommendations = []
     best_times = [
         (1, 9, 0.85, 1250),
         (1, 18, 0.92, 1450),
@@ -222,13 +222,12 @@ def generate_best_time_recommendations() -> list[BestTimeRecommendation]:
         (6, 14, 0.75, 890),
         (0, 16, 0.8, 1050),
     ]
-    for day, hour, confidence, engagement in best_times:
-        recommendations.append(
-            BestTimeRecommendation(
-                day=day, hour=hour, confidence=confidence, avg_engagement=engagement
-            )
-        )
-    return recommendations
+
+    # Optimized list comprehension instead of append loop
+    return [
+        BestTimeRecommendation(day=day, hour=hour, confidence=confidence, avg_engagement=engagement)
+        for day, hour, confidence, engagement in best_times
+    ]
 
 
 def generate_ai_recommendations() -> list[AIRecommendation]:
@@ -633,25 +632,102 @@ async def refresh_channel_analytics(
         )
 
 
+def generate_dynamic_cache_key(channel_id: int, days: int, endpoint: str = "summary") -> str:
+    """Generate dynamic cache key with channel activity consideration"""
+    import hashlib
+    from datetime import datetime
+
+    # Base key components
+    base_key = f"{endpoint}:channel:{channel_id}:days:{days}"
+
+    # Add timestamp granularity based on activity level
+    now = datetime.utcnow()
+    if days <= 1:
+        # High activity: 5-minute granularity
+        time_bucket = now.replace(minute=(now.minute // 5) * 5, second=0, microsecond=0)
+    elif days <= 7:
+        # Medium activity: 15-minute granularity
+        time_bucket = now.replace(minute=(now.minute // 15) * 15, second=0, microsecond=0)
+    else:
+        # Lower activity: 1-hour granularity
+        time_bucket = now.replace(minute=0, second=0, microsecond=0)
+
+    # Create hash for consistent key
+    key_data = f"{base_key}:{time_bucket.isoformat()}"
+    key_hash = hashlib.sha256(key_data.encode()).hexdigest()[:16]
+    return f"analytics:v2:{key_hash}"
+
+
+def calculate_dynamic_ttl(days: int, channel_activity: str = "medium") -> int:
+    """Calculate dynamic TTL based on data age and activity level"""
+    base_ttl = {
+        "high": 300,  # 5 minutes for high activity
+        "medium": 600,  # 10 minutes for medium activity
+        "low": 1800,  # 30 minutes for low activity
+    }.get(channel_activity, 600)
+
+    # Adjust TTL based on query time range
+    if days <= 1:
+        return base_ttl // 2  # More frequent updates for recent data
+    elif days <= 7:
+        return base_ttl
+    else:
+        return base_ttl * 2  # Less frequent updates for historical data
+
+
 @router.get("/summary/{channel_id}")
 async def get_analytics_summary(
     channel_id: int,
     days: int = Query(30, ge=1, le=365),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
-    """Get analytics summary for a channel"""
+    """Get analytics summary for a channel with enhanced caching strategy"""
     try:
+        # Enhanced caching with dynamic TTL and smart cache keys
+        from apps.bot.container import container
+        from infra.cache.redis_cache import create_cache_adapter
+
+        try:
+            redis_client = container.resolve("redis_client")
+            cache = create_cache_adapter(redis_client)
+        except Exception:
+            cache = create_cache_adapter(None)  # No-op cache fallback
+
+        # Generate smart cache key with activity consideration
+        cache_key = generate_dynamic_cache_key(channel_id, days, "summary")
+
+        # Try to get cached result first
+        cached_result = await cache.get_json(cache_key)
+        if cached_result:
+            cached_result["cache_hit"] = True
+            cached_result["cache_key"] = cache_key
+            return cached_result
+
+        # Generate fresh data
         end_date = datetime.utcnow()
         start_date = end_date - timedelta(days=days)
         summary = await analytics_service.get_analytics_summary(
             channel_id=channel_id, start_date=start_date, end_date=end_date
         )
-        return {
+
+        # Prepare response
+        result = {
             "channel_id": channel_id,
             "period_days": days,
             "summary": summary,
             "generated_at": datetime.utcnow(),
+            "cache_hit": False,
+            "cache_key": cache_key,
         }
+
+        # Cache with dynamic TTL
+        activity_level = "high" if days <= 7 else "medium" if days <= 30 else "low"
+        ttl = calculate_dynamic_ttl(days, activity_level)
+        await cache.set_json(cache_key, result, ttl)
+
+        logger.info(f"Analytics summary cached for channel {channel_id} with TTL {ttl}s")
+        return result
+
     except Exception as e:
         logger.error(f"Error generating analytics summary for channel {channel_id}: {e}")
         raise HTTPException(

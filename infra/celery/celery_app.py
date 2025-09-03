@@ -3,10 +3,10 @@ Celery Application Configuration - Master Scheduler
 Production-ready Celery setup with retry/backoff strategies
 """
 
-import logging
+from typing import Callable
 from typing import Any
 
-from celery import Celery
+import logging
 from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
 
 # Import from centralized configuration
@@ -31,7 +31,7 @@ celery_app = Celery(
 celery_app.conf.update(
     # Task acknowledgment and prefetch
     task_acks_late=True,
-    worker_prefetch_multiplier=1,
+    worker_prefetch_multiplier=2,  # UPDATED: Increase prefetch for better throughput
     # Default retry configuration (enhanced)
     task_default_retry_delay=30,  # 30 seconds base delay
     task_default_max_retries=5,  # Maximum 5 retries
@@ -54,15 +54,54 @@ celery_app.conf.update(
         "bot.tasks.cleanup_metrics_task": {"queue": "maintenance"},
         "bot.tasks.maintenance_cleanup": {"queue": "maintenance"},
     },
-    # Serialization
-    task_serializer="json",
-    accept_content=["json"],
-    result_serializer="json",
-    result_expires=3600,  # 1 hour
-    # Worker configuration
+    # Serialization and compression (ENHANCED)
+    task_serializer="msgpack",
+    accept_content=["json", "msgpack"],
+    result_serializer="msgpack",
+    result_compression="gzip",  # NEW: Compress results to save memory
+    task_compression="gzip",  # NEW: Compress task payloads
+    result_expires=7200,  # UPDATED: Increase to 2 hours
+    # Worker configuration (ENHANCED)
     worker_max_tasks_per_child=1000,
     worker_disable_rate_limits=False,
     worker_send_task_events=True,
+    worker_max_memory_per_child=200000,  # NEW: 200MB per worker child process
+    # Broker connection pool settings (NEW)
+    broker_pool_limit=10,  # NEW: Limit broker connections
+    broker_connection_retry_on_startup=True,  # NEW: Retry broker connections
+    broker_connection_max_retries=5,  # NEW: Max broker retry attempts
+    # Result backend transport options (NEW)
+    result_backend_transport_options={
+        "retry_policy": {
+            "timeout": 5.0,
+            "max_retries": 3,
+            "interval_start": 0.1,
+            "interval_step": 0.2,
+            "interval_max": 2.0,
+        },
+        "connection_pool_kwargs": {
+            "max_connections": 20,
+            "retry_on_timeout": True,
+        },
+    },
+    # Broker transport options (NEW)
+    broker_transport_options={
+        "retry_policy": {
+            "timeout": 5.0,
+            "max_retries": 5,
+            "interval_start": 0.1,
+            "interval_step": 0.2,
+            "interval_max": 2.0,
+        },
+        "connection_pool_kwargs": {
+            "max_connections": 20,
+            "retry_on_timeout": True,
+        },
+    },
+    # Performance optimizations (NEW)
+    task_always_eager=False,  # NEW: Ensure tasks run asynchronously
+    task_eager_propagates=False,  # NEW: Don't propagate exceptions in eager mode
+    result_persistent=True,  # NEW: Persist results to disk
     # Timezone
     timezone="UTC",
     enable_utc=True,
@@ -73,7 +112,7 @@ celery_app.conf.update(
 )
 
 
-def enhanced_retry_task(**opts) -> callable:
+def enhanced_retry_task(**opts) -> Callable:
     """
     Enhanced decorator for tasks with intelligent retry/backoff and monitoring.
 
@@ -123,7 +162,7 @@ def enhanced_retry_task(**opts) -> callable:
     return decorator
 
 
-def critical_message_task(**opts) -> callable:
+def critical_message_task(**opts) -> Callable:
     """
     Special decorator for critical message tasks with aggressive retry strategy.
 

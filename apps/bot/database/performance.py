@@ -17,7 +17,7 @@ import redis.asyncio as redis
 from asyncpg.pool import Pool
 
 from apps.bot.config import settings
-from core.database.connection_manager import db_manager
+from infra.db.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 

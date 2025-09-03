@@ -8,7 +8,7 @@ import logging
 import time
 from typing import Dict, List
 
-from core.database.connection_manager import db_manager
+from infra.db.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ import asyncio
 import logging
 from typing import List
 
-from core.database.connection_manager import db_manager
+from infra.db.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 

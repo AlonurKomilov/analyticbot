@@ -39,8 +39,8 @@ def send_message_task(
             # Import inside task to avoid circular imports
             from apps.bot.container import container
             from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-            from core.utils.idempotency import IdempotencyGuard
-            from core.utils.ratelimit import TokenBucketRateLimiter
+            from core.common_helpers.idempotency import IdempotencyGuard
+            from core.common_helpers.ratelimit import TokenBucketRateLimiter
 
             context = (
                 ErrorContext()

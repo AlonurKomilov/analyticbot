@@ -9,8 +9,8 @@ import pytest
 import redis
 
 from core.services.enhanced_delivery_service import EnhancedDeliveryService
-from core.utils.idempotency import IdempotencyGuard
-from core.utils.ratelimit import TokenBucketRateLimiter
+from core.common_helpers.idempotency import IdempotencyGuard
+from core.common_helpers.ratelimit import TokenBucketRateLimiter
 
 
 class TestIdempotencyGuard:

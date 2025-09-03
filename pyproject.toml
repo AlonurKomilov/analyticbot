@@ -52,3 +52,53 @@ markers = [
     "security: Security tests",
     "slow: Slow running tests"
 ]
+
+[project]
+name = "analyticbot"
+version = "0.1.0"
+description = "AnalyticBot for Telegram"
+requires-python = ">=3.11"
+dependencies = [
+    "aiogram==3.*",
+    "fastapi==0.116.*",
+    "uvicorn[standard]==0.30.*",
+    "SQLAlchemy[asyncio]==2.*",
+    "asyncpg==0.29.*",
+    "psycopg2-binary==2.*",
+    "alembic==1.*",
+    "celery[redis]==5.*",
+    "redis==5.*",
+    "pydantic==2.*",
+    "pydantic-settings==2.*",
+    "dependency-injector==4.*",
+    "telethon>=1.32.0",
+    "slowapi>=0.1.9",
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20.0",
+    "opentelemetry-instrumentation-requests>=0.41b0",
+    "opentelemetry-instrumentation-asyncpg>=0.41b0",
+    "Pillow>=10.0.0",
+    "urlextract==1.*",
+    "python-dotenv==1.*",
+    "python-multipart==0.0.*",
+    "prometheus-client==0.17.*",
+    "gunicorn==21.*",
+    "psutil==5.*",
+    "qrcode[pil]>=7.0.0",
+    "dash>=2.0.0",
+    "plotly>=5.0.0",
+    "reportlab>=4.0.0",
+    "prophet>=1.1.0",
+    "pmdarima>=2.0.0",
+    "schedule>=1.2.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.*",
+    "pytest-asyncio==0.21.*",
+    "httpx==0.24.*",
+    "ruff==0.4.*",
+    "aiosqlite==0.20.*",
+]

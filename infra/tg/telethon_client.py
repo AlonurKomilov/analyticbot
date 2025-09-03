@@ -5,7 +5,7 @@ import logging
 from collections.abc import AsyncIterator
 from typing import Any
 
-from apps.mtproto.config import MTProtoSettings
+from core.ports.mtproto_config import MTProtoConfigProtocol
 
 # Try to import Telethon - graceful fallback if not installed
 try:
@@ -36,7 +36,7 @@ class TelethonTGClient:
     Telethon is not available.
     """
 
-    def __init__(self, settings: MTProtoSettings):
+    def __init__(self, settings: MTProtoConfigProtocol):
         """Initialize the Telethon Telegram client.
 
         Args:

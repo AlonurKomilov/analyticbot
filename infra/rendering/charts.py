@@ -7,10 +7,10 @@ import io
 import logging
 from datetime import datetime
 
-from apps.bot.clients.analytics_v2_client import (
-    GrowthResponse,
-    ReachResponse,
-    SourcesResponse,
+from core.ports.analytics_client import (
+    GrowthDataProtocol,
+    ReachDataProtocol,
+    SourcesDataProtocol,
 )
 
 logger = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ class ChartRenderer:
             logger.error(f"Failed to render pie chart: {e}")
             raise ChartRenderingError(f"Pie chart rendering failed: {e}")
 
-    def render_growth_chart(self, data: GrowthResponse) -> bytes:
+    def render_growth_chart(self, data: GrowthDataProtocol) -> bytes:
         """Render specialized growth chart"""
         daily_growth = data.growth.daily_growth
 
@@ -242,7 +242,7 @@ class ChartRenderer:
             ylabel="Subscribers",
         )
 
-    def render_reach_chart(self, data: ReachResponse) -> bytes:
+    def render_reach_chart(self, data: ReachDataProtocol) -> bytes:
         """Render specialized reach chart"""
         hourly_dist = data.reach.hourly_distribution
 
@@ -262,7 +262,7 @@ class ChartRenderer:
             ylabel="Views",
         )
 
-    def render_sources_chart(self, data: SourcesResponse) -> bytes:
+    def render_sources_chart(self, data: SourcesDataProtocol) -> bytes:
         """Render specialized sources pie chart"""
         sources = data.sources
 

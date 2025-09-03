@@ -70,8 +70,8 @@ class AnalyticsResponseMeta(BaseModel):
     source: list[str] = Field(
         default_factory=lambda: ["mtproto", "db", "legacy"], description="Data sources used"
     )
-    generated_at: datetime | None = Field(
-        default_factory=datetime.utcnow, description="When response was generated"
+    generated_at: str = Field(
+        default_factory=lambda: datetime.utcnow().isoformat(), description="When response was generated (ISO string)"
     )
     cache_hit: bool | None = Field(None, description="Whether response came from cache")
 
@@ -141,7 +141,7 @@ class ErrorResponse(BaseModel):
 
     error: str
     details: list[ErrorDetail] | None = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
 # Health check response
@@ -153,4 +153,4 @@ class HealthResponse(BaseModel):
     status: str = Field(default="healthy")
     service: str = Field(default="analytics-fusion")
     version: str = Field(default="2.0.0")
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())

@@ -1,4 +1,10 @@
 # apps/bot/celery_app.py
+"""
+DEPRECATED: Legacy re-export of Celery app.
+New code should import directly from infra.celery.celery_app
+This module exists only for backward compatibility and will be removed in a future version.
+"""
+
 try:
     # Prefer re-export if resilient_task exists
     from infra.celery.celery_app import celery_app as app

@@ -113,6 +113,11 @@ jobs:
         run: |
           pre-commit run --all-files
 
+      - name: Check architecture violations
+        run: |
+          echo "🏛️ Checking for architecture violations..."
+          python scripts/guard_imports.py
+
       - name: Lint with ruff
         run: |
           ruff check .

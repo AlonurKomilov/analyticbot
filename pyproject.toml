@@ -2,7 +2,7 @@
 # Dependencies are managed via pip-tools (requirements.in -> requirements.txt)
 
 [tool.coverage.run]
-source = ["apps", "core"]
+source = ["apps", "core", "infra"]
 branch = true
 omit = [
     "*/tests/*",
@@ -11,7 +11,10 @@ omit = [
     "*/__pycache__/*",
     "docs/*",
     "scripts/*",
-    "infra/*"
+    "infra/docker/*",
+    "infra/k8s/*",
+    "infra/terraform/*",
+    "infra/helm/*"
 ]
 
 [tool.coverage.report]
@@ -37,7 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --cov=apps --cov=core --cov-report=term-missing --cov-report=html --cov-fail-under=80"
+addopts = "-q --cov=apps --cov=core --cov=infra --cov-report=term-missing --cov-report=html --cov-fail-under=80"
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

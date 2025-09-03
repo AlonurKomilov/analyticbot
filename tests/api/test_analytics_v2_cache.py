@@ -32,7 +32,7 @@ def mock_fusion_service():
             "avg_reach": 100.0,
             "err": None,
             "followers": 500,
-            "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"}
+            "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"},
         }
     )
     return service
@@ -42,24 +42,24 @@ def mock_fusion_service():
 def mock_cache():
     """Mock cache"""
     cache = Mock()
-    
+
     def mock_generate_cache_key(endpoint: str, params: dict, last_updated=None):
         """Mock cache key generation that mimics real behavior"""
         import hashlib
         import json
         from datetime import datetime
-        
+
         # Sort parameters for consistent key generation
         sorted_params = sorted(params.items())
-        
+
         # Convert datetime objects to isoformat for consistency with router
         def datetime_serializer(obj):
             if isinstance(obj, datetime):
                 return obj.isoformat()
             return str(obj)
-        
+
         params_str = json.dumps(sorted_params, default=datetime_serializer)
-        
+
         # Include last_updated in key for cache invalidation
         key_data = f"{endpoint}:{params_str}"
         if last_updated:
@@ -67,11 +67,11 @@ def mock_cache():
                 key_data += f":{last_updated.isoformat()}"
             else:
                 key_data += f":{last_updated}"
-        
+
         # Create hash for shorter, consistent keys
         key_hash = hashlib.sha256(key_data.encode()).hexdigest()
         return f"analytics_v2:{endpoint}:{key_hash}"
-    
+
     cache.generate_cache_key = Mock(side_effect=mock_generate_cache_key)
     cache.get_json = AsyncMock(return_value=None)  # No cache initially
     cache.set_json = AsyncMock()
@@ -174,9 +174,7 @@ class TestAnalyticsV2ETag:
         assert response.status_code == 200
         assert response.headers["Cache-Control"] == "public, max-age=60"
 
-    async def test_etag_changes_with_different_params(
-        self, client: AsyncClient, monkeypatch
-    ):
+    async def test_etag_changes_with_different_params(self, client: AsyncClient, monkeypatch):
         """Test that ETag changes when request parameters change"""
         # Mock fusion service
         service = Mock()
@@ -190,29 +188,30 @@ class TestAnalyticsV2ETag:
                 "avg_reach": 100.0,
                 "err": None,
                 "followers": 500,
-                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"}
+                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"},
             }
         )
 
         # Mock cache with proper key generation matching router
         cache = Mock()
+
         def mock_generate_cache_key(endpoint: str, params: dict, last_updated=None):
             """Mock cache key generation that matches router implementation"""
             import hashlib
             import json
             from datetime import datetime
-            
+
             # Sort parameters for consistent key generation (matches router)
             sorted_params = sorted(params.items())
-            
+
             # Convert datetime objects to isoformat for consistency with router
             def datetime_serializer(obj):
                 if isinstance(obj, datetime):
                     return obj.isoformat()
                 return str(obj)
-            
+
             params_str = json.dumps(sorted_params, default=datetime_serializer)
-            
+
             # Include last_updated in key for cache invalidation
             key_data = f"{endpoint}:{params_str}"
             if last_updated:
@@ -220,11 +219,11 @@ class TestAnalyticsV2ETag:
                     key_data += f":{last_updated.isoformat()}"
                 else:
                     key_data += f":{last_updated}"
-            
+
             # Create hash for shorter, consistent keys
             key_hash = hashlib.sha256(key_data.encode()).hexdigest()
             return f"analytics_v2:{endpoint}:{key_hash}"
-        
+
         cache.generate_cache_key = Mock(side_effect=mock_generate_cache_key)
         cache.get_json = AsyncMock(return_value=None)  # No cache initially
         cache.set_json = AsyncMock()
@@ -252,14 +251,13 @@ class TestAnalyticsV2ETag:
         # ETags should be different because parameters are different
         assert response1.headers["ETag"] != response2.headers["ETag"]
 
-    async def test_etag_changes_with_different_last_updated(
-        self, client: AsyncClient, monkeypatch
-    ):
+    async def test_etag_changes_with_different_last_updated(self, client: AsyncClient, monkeypatch):
         """Test that ETag changes when last_updated timestamp changes"""
         # Reset global cache adapter before test
         import apps.api.di_analytics_v2 as di
+
         di._cache_adapter = None
-        
+
         # Mock fusion service with different last_updated times
         service1 = Mock()
         service1.get_last_updated_at = AsyncMock(
@@ -272,7 +270,7 @@ class TestAnalyticsV2ETag:
                 "avg_reach": 100.0,
                 "err": None,
                 "followers": 500,
-                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"}
+                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"},
             }
         )
 
@@ -287,31 +285,32 @@ class TestAnalyticsV2ETag:
                 "avg_reach": 100.0,
                 "err": None,
                 "followers": 500,
-                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"}
+                "period": {"from": "2025-08-30T00:00:00", "to": "2025-08-31T23:59:59"},
             }
         )
 
         # Mock cache
         cache = Mock()
+
         def mock_generate_cache_key(endpoint: str, params: dict, last_updated=None):
             """Mock cache key generation that mimics real behavior"""
             import hashlib
             import json
             from datetime import datetime
-            
+
             print(f"DEBUG cache: endpoint={endpoint}, params={params}, last_updated={last_updated}")
-            
+
             # Sort parameters for consistent key generation
             sorted_params = sorted(params.items())
-            
+
             # Convert datetime objects to isoformat for consistency with router
             def datetime_serializer(obj):
                 if isinstance(obj, datetime):
                     return obj.isoformat()
                 return str(obj)
-            
+
             params_str = json.dumps(sorted_params, default=datetime_serializer)
-            
+
             # Include last_updated in key for cache invalidation - THIS IS THE KEY CHANGE
             key_data = f"{endpoint}:{params_str}"
             if last_updated:
@@ -319,15 +318,15 @@ class TestAnalyticsV2ETag:
                     key_data += f":{last_updated.isoformat()}"
                 else:
                     key_data += f":{last_updated}"
-            
+
             print(f"DEBUG cache: key_data={key_data}")
-            
+
             # Create hash for shorter, consistent keys
             key_hash = hashlib.sha256(key_data.encode()).hexdigest()
             result = f"analytics_v2:{endpoint}:{key_hash}"
             print(f"DEBUG cache: result={result}")
             return result
-        
+
         cache.generate_cache_key = Mock(side_effect=mock_generate_cache_key)
         cache.get_json = AsyncMock(return_value=None)  # No cache initially
         cache.set_json = AsyncMock()

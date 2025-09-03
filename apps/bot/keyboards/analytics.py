@@ -18,9 +18,11 @@ class AnalyticsKeyboards:
             ("📉 90 Days", "period:90"),
         ]
 
-        keyboard = []
-        for text, callback_data in periods:
-            keyboard.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+        # Optimized list comprehension instead of append loop
+        keyboard = [
+            [InlineKeyboardButton(text=text, callback_data=callback_data)]
+            for text, callback_data in periods
+        ]
 
         # Add back button
         keyboard.append([InlineKeyboardButton(text="◀️ Back", callback_data="analytics:back")])
@@ -150,22 +152,20 @@ class AnalyticsKeyboards:
     def export_options_keyboard(channel_id: str, period: int) -> InlineKeyboardMarkup:
         """Export options keyboard"""
         options = [
-            ("📄 CSV Report", f"export:csv:{channel_id}:{period}"),
+            ("� JSON Data", f"export:json:{channel_id}:{period}"),
+            ("�📄 CSV Report", f"export:csv:{channel_id}:{period}"),
             ("📈 PNG Chart", f"export:png:{channel_id}:{period}"),
             ("📦 Full Export", f"export:full:{channel_id}:{period}"),
         ]
 
-        keyboard = []
-        for text, callback_data in options:
-            keyboard.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+        # Optimized list comprehension instead of append loop
+        keyboard = [
+            [InlineKeyboardButton(text=text, callback_data=callback_data)]
+            for text, callback_data in options
+        ]
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text="◀️ Back to Analytics",
-                    callback_data=f"analytics:overview:{channel_id}:{period}",
-                )
-            ]
+            [InlineKeyboardButton(text="◀️ Back", callback_data=f"analytics:channel:{channel_id}")]
         )
 
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -179,9 +179,11 @@ class AnalyticsKeyboards:
             ("⚙️ Alert Settings", f"alerts:settings:{channel_id}"),
         ]
 
-        keyboard = []
-        for text, callback_data in options:
-            keyboard.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+        # Optimized list comprehension instead of append loop
+        keyboard = [
+            [InlineKeyboardButton(text=text, callback_data=callback_data)]
+            for text, callback_data in options
+        ]
 
         keyboard.append(
             [
@@ -202,9 +204,11 @@ class AnalyticsKeyboards:
             ("📈 Growth Alert", f"alert:type:growth:{channel_id}"),
         ]
 
-        keyboard = []
-        for text, callback_data in alert_types:
-            keyboard.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+        # Optimized list comprehension instead of append loop
+        keyboard = [
+            [InlineKeyboardButton(text=text, callback_data=callback_data)]
+            for text, callback_data in alert_types
+        ]
 
         keyboard.append(
             [
@@ -306,9 +310,11 @@ class AnalyticsKeyboards:
             ("🔗 24 Hour Link", f"share:create:{channel_id}:{period}:86400"),
         ]
 
-        keyboard = []
-        for text, callback_data in options:
-            keyboard.append([InlineKeyboardButton(text=text, callback_data=callback_data)])
+        # Optimized list comprehension instead of append loop
+        keyboard = [
+            [InlineKeyboardButton(text=text, callback_data=callback_data)]
+            for text, callback_data in options
+        ]
 
         keyboard.append(
             [

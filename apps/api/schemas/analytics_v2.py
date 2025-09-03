@@ -71,7 +71,8 @@ class AnalyticsResponseMeta(BaseModel):
         default_factory=lambda: ["mtproto", "db", "legacy"], description="Data sources used"
     )
     generated_at: str = Field(
-        default_factory=lambda: datetime.utcnow().isoformat(), description="When response was generated (ISO string)"
+        default_factory=lambda: datetime.utcnow().isoformat(),
+        description="When response was generated (ISO string)",
     )
     cache_hit: bool | None = Field(None, description="Whether response came from cache")
 

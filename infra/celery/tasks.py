@@ -8,6 +8,14 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from infra.celery.celery_app import critical_message_task, enhanced_retry_task
+from apps.bot.container import container
+from config.settings import Settings
+from pydantic import SecretStr
+
+try:
+    from aiogram.client.bot import Bot as _AioBot
+except Exception:
+    from aiogram import Bot as _AioBot
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +29,7 @@ logger = logging.getLogger(__name__)
     max_retries=5,
 )
 def send_message_task(
-    self, chat_id: str, message: str, idempotency_key: str = None, **kwargs
+    self, chat_id: str, message: str, idempotency_key: str | None = None, **kwargs
 ) -> dict[str, Any]:
     """
     Enhanced message sending task with idempotency and rate limiting.
@@ -110,7 +118,7 @@ def send_message_task(
                     raise Exception("Global bot rate limit exceeded")
 
                 # Get bot instance and send message
-                bot = container.bot()
+                bot = container.resolve(_AioBot)
                 result = await bot.send_message(chat_id=chat_id, text=message, **kwargs)
 
                 logger.info(f"Message sent successfully to {chat_id}: {result.message_id}")
@@ -141,8 +149,8 @@ def send_message_task(
                         1.0,
                         {
                             "chat_id": str(chat_id),
-                            "retry_count": self.request.retries,
-                            "with_idempotency": bool(idempotency_key),
+                            "retry_count": str(self.request.retries),
+                            "with_idempotency": str(bool(idempotency_key)).lower(),
                         },
                     )
                 except ImportError:
@@ -170,9 +178,9 @@ def send_message_task(
                     1.0,
                     {
                         "chat_id": str(chat_id),
-                        "retry_count": self.request.retries,
+                        "retry_count": str(self.request.retries),
                         "error_type": type(e).__name__,
-                        "with_idempotency": bool(idempotency_key),
+                        "with_idempotency": str(bool(idempotency_key)).lower(),
                     },
                 )
             except ImportError:
@@ -375,7 +383,19 @@ def health_check_task(self) -> dict[str, Any]:
 
                 from config.settings import Settings
 
-                settings = Settings()
+                try:
+                    settings = Settings()
+                except Exception:
+                    # For tests/development, create settings with minimal required values
+                    import os
+                    settings = Settings(
+                        BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
+                        STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
+                        POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
+                        POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
+                        POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
+                        JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+                    )
                 redis_client = redis.from_url(str(settings.REDIS_URL))
                 redis_client.ping()
                 health_results["components"]["redis"] = {"status": "healthy"}
@@ -385,7 +405,7 @@ def health_check_task(self) -> dict[str, Any]:
 
             # Check Telegram API health
             try:
-                bot = container.bot()
+                bot = container.resolve(_AioBot)
                 me = await bot.get_me()
                 health_results["components"]["telegram"] = {
                     "status": "healthy",

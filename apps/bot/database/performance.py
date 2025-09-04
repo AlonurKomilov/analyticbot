@@ -208,7 +208,7 @@ class QueryOptimizer:
                 return_exceptions=True,
             )
             for result in batch_results:
-                if not isinstance(result, Exception):
+                if not isinstance(result, Exception) and isinstance(result, list):
                     all_results.extend(result)
         return all_results
 
@@ -306,13 +306,14 @@ class PerformanceManager:
         if self.cache._is_connected:
             try:
                 redis_info = await self.cache._redis.info()
-                stats.update(
-                    {
-                        "redis_memory": redis_info.get("used_memory_human", "N/A"),
-                        "redis_connections": redis_info.get("connected_clients", 0),
-                        "redis_hits": redis_info.get("keyspace_hits", 0),
-                        "redis_misses": redis_info.get("keyspace_misses", 0),
-                    }
+                if redis_info:  # Check if redis_info is not None
+                    stats.update(
+                        {
+                            "redis_memory": redis_info.get("used_memory_human", "N/A"),
+                            "redis_connections": redis_info.get("connected_clients", 0),
+                            "redis_hits": redis_info.get("keyspace_hits", 0),
+                            "redis_misses": redis_info.get("keyspace_misses", 0),
+                        }
                 )
             except Exception as e:
                 logger.warning(f"Error getting Redis stats: {e}")

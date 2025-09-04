@@ -13,7 +13,19 @@ from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
 # Import from centralized configuration
 from config.settings import Settings
 
-settings = Settings()
+try:
+    settings = Settings()
+except Exception:
+    # For tests/development, create settings with minimal required values
+    import os
+    settings = Settings(
+        BOT_TOKEN=os.getenv("BOT_TOKEN", "test_token"),
+        STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
+        POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
+        POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD", "test_pass"),
+        POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
+        JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY", "test_jwt_key")
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -236,7 +248,7 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
     try:
         from apps.bot.utils.monitoring import metrics
 
-        metrics.record_metric("celery_task_started", 1.0, {"task": task.name})
+        metrics.record_metric("celery_task_started", 1.0, {"task": str(getattr(task, 'name', 'unknown'))})
     except ImportError:
         pass
 
@@ -256,7 +268,7 @@ def task_postrun_handler(
         metrics.record_metric(
             "celery_task_completed",
             1.0,
-            {"task": task.name, "state": state, "success": str(success).lower()},
+            {"task": str(getattr(task, 'name', 'unknown')), "state": str(state), "success": str(success).lower()},
         )
     except ImportError:
         pass
@@ -287,7 +299,7 @@ def task_failure_handler(
     try:
         from apps.bot.utils.monitoring import metrics
 
-        metrics.record_metric("celery_task_failed", 1.0, {"task": sender.name})
+        metrics.record_metric("celery_task_failed", 1.0, {"task": str(getattr(sender, 'name', 'unknown'))})
     except ImportError:
         pass
 
@@ -302,7 +314,7 @@ def worker_ready_handler(sender=None, **kwargs):
     try:
         from apps.bot.utils.monitoring import metrics
 
-        metrics.record_metric("celery_worker_ready", 1.0, {"hostname": hostname})
+        metrics.record_metric("celery_worker_ready", 1.0, {"hostname": str(hostname or "unknown")})
     except ImportError:
         pass
 

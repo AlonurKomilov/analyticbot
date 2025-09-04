@@ -5,10 +5,15 @@ from core.services.analytics_fusion_service import AnalyticsFusionService
 from datetime import UTC, datetime
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
+from typing import TYPE_CHECKING, Union
+
+if TYPE_CHECKING:
+    from asyncpg.pool import Pool
 
 """
 Dependency Injection for Analytics V2
@@ -24,7 +29,7 @@ _analytics_fusion_service: AnalyticsFusionService | None = None
 _cache_adapter = None
 
 
-async def get_database_pool():
+async def get_database_pool() -> Union["Pool", object, None]:
     """Get database pool - to be implemented with existing container"""
     # Check if we're in test environment
     import os
@@ -81,11 +86,17 @@ async def get_database_pool():
             async def execute(self, query, *args, **kwargs):
                 return None
 
-                return MockPool()
+        return MockPool()
 
     # For production, use the existing container system
-
-                return await container.resolve("database_pool")
+    try:
+        # Use the punq container that's already imported
+        from asyncpg.pool import Pool as AsyncPGPool
+        pool = container.resolve(AsyncPGPool)
+        return pool
+    except Exception as e:
+        logger.error(f"Failed to get database pool: {e}")
+        return None
 
 
 async def get_redis_client():
@@ -97,15 +108,14 @@ async def get_redis_client():
 
     try:
         # Try to get Redis client from existing container if available
-
-        return await container.resolve("redis_client")
+        return container.resolve("redis_client")
     except Exception as e:
         logger.warning(f"Redis client not available: {e}")
         return None
 
 
-async def init_analytics_fusion_service():
-    """Initialize analytics fusion service with all dependencies"""
+async def init_analytics_fusion_service() -> AnalyticsFusionService:
+    """Initialize analytics fusion service"""
     global _analytics_fusion_service
 
     if _analytics_fusion_service is not None:
@@ -114,26 +124,32 @@ async def init_analytics_fusion_service():
     try:
         # Get database pool
         pool = await get_database_pool()
+        if pool is None:
+            raise RuntimeError("Failed to get database pool")
 
-        # Initialize repositories
-        channel_daily_repo = AsyncpgChannelDailyRepository(pool)
-        post_repo = AsyncpgPostRepository(pool)
-        metrics_repo = AsyncpgPostMetricsRepository(pool)
-        edges_repo = AsyncpgEdgesRepository(pool)
-        stats_raw_repo = AsyncpgStatsRawRepository(pool)
+        # Type narrowing for repositories - they accept both Pool and MockPool
+        # Create repositories
+        channel_repo = AsyncpgChannelRepository(pool)  # type: ignore
+        channel_daily_repo = AsyncpgChannelDailyRepository(pool)  # type: ignore
+        post_repo = AsyncpgPostRepository(pool)  # type: ignore
+        metrics_repo = AsyncpgPostMetricsRepository(pool)  # type: ignore
+        edges_repo = AsyncpgEdgesRepository(pool)  # type: ignore
+        stats_raw_repo = AsyncpgStatsRawRepository(pool)  # type: ignore
 
-        # Create service
+        # Initialize cache
+        cache_adapter = await init_cache_adapter()
+
+        # Create analytics fusion service
         _analytics_fusion_service = AnalyticsFusionService(
             channel_daily_repo=channel_daily_repo,
             post_repo=post_repo,
             metrics_repo=metrics_repo,
             edges_repo=edges_repo,
-            stats_raw_repo=stats_raw_repo,
+            stats_raw_repo=stats_raw_repo
         )
 
-        logger.info("Analytics fusion service initialized successfully")
+        logger.info("Analytics Fusion Service initialized successfully")
         return _analytics_fusion_service
-
     except Exception as e:
         logger.error(f"Failed to initialize analytics fusion service: {e}")
         raise
@@ -176,31 +192,41 @@ async def get_cache():
 async def get_channel_daily_repository():
     """Get channel daily repository"""
     pool = await get_database_pool()
-    return AsyncpgChannelDailyRepository(pool)
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    return AsyncpgChannelDailyRepository(pool)  # type: ignore
 
 
 async def get_post_repository():
     """Get post repository"""
     pool = await get_database_pool()
-    return AsyncpgPostRepository(pool)
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    return AsyncpgPostRepository(pool)  # type: ignore
 
 
 async def get_metrics_repository():
     """Get post metrics repository"""
     pool = await get_database_pool()
-    return AsyncpgPostMetricsRepository(pool)
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    return AsyncpgPostMetricsRepository(pool)  # type: ignore
 
 
 async def get_edges_repository() -> AsyncpgEdgesRepository:
     """Get edges repository"""
     pool = await get_database_pool()
-    return AsyncpgEdgesRepository(pool)
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    return AsyncpgEdgesRepository(pool)  # type: ignore
 
 
 async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
     """Get stats raw repository"""
     pool = await get_database_pool()
-    return AsyncpgStatsRawRepository(pool)
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    return AsyncpgStatsRawRepository(pool)  # type: ignore
 
 
 # Cleanup function

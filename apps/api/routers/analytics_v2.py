@@ -80,22 +80,30 @@ async def get_channel_overview(
         cached_data = await cache.get_json(cache_key)
         if cached_data:
             cached_data["meta"]["cache_hit"] = True
-            return JSONResponse(
-                content=cached_data, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
-            )
-
-        # Get fresh data
+        # Create proper headers dict without None values
+        headers = {"Cache-Control": "public, max-age=60"}
+        if etag:
+            headers["ETag"] = etag
+        
+        return JSONResponse(
+            content=cached_data, headers=headers
+        )        # Get fresh data
         overview_data = await service.get_overview(channel_id, from_, to_)
 
-        response_data = OverviewResponse(data=overview_data)
+        response_data = OverviewResponse(data=overview_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response
         await cache.set_json(cache_key, response_dict, ttl_s=120)
 
         # Return with cache headers
+        # Create proper headers dict without None values
+        headers = {"Cache-Control": "public, max-age=60"}
+        if etag:
+            headers["ETag"] = etag
+        
         return JSONResponse(
-            content=response_dict, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
+            content=response_dict, headers=headers
         )
 
     except Exception as e:
@@ -136,7 +144,7 @@ async def get_channel_growth(
         # Get fresh data
         growth_data = await service.get_growth(channel_id, from_, to_, window)
 
-        response_data = SeriesResponse(data=growth_data)
+        response_data = SeriesResponse(data=growth_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response
@@ -176,7 +184,7 @@ async def get_channel_reach(
         # Get fresh data
         reach_data = await service.get_reach(channel_id, from_, to_)
 
-        response_data = SeriesResponse(data=reach_data)
+        response_data = SeriesResponse(data=reach_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response
@@ -222,7 +230,7 @@ async def get_top_posts(
         # Get fresh data
         posts_data = await service.get_top_posts(channel_id, from_, to_, limit)
 
-        response_data = PostListResponse(data=posts_data)
+        response_data = PostListResponse(data=posts_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response
@@ -265,9 +273,13 @@ async def get_channel_sources(
             return cached_data
 
         # Get fresh data
-        sources_data = await service.get_sources(channel_id, from_, to_, kind)
+        # Validate kind parameter
+        if kind not in ("mention", "forward"):
+            raise HTTPException(status_code=400, detail="kind must be 'mention' or 'forward'")
+        
+        sources_data = await service.get_sources(channel_id, from_, to_, kind)  # type: ignore
 
-        response_data = EdgeListResponse(data=sources_data)
+        response_data = EdgeListResponse(data=sources_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response
@@ -315,7 +327,7 @@ async def get_trending_posts(
         # Get fresh data
         trending_data = await service.get_trending(channel_id, from_, to_, method, window_hours)
 
-        response_data = PostListResponse(data=trending_data)
+        response_data = PostListResponse(data=trending_data)  # type: ignore
         response_dict = response_data.dict()
 
         # Cache the response

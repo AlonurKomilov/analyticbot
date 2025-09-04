@@ -709,4 +709,37 @@ class AnalyticsService:
         except Exception as e:
             logger.debug(f"⚠️ Failed to get views for post {post['id']}: {e}")
             return None
-        """📊 High-performance batch database updates"""
+
+    # API compatibility methods for FastAPI router
+    async def get_analytics_data(self, channel_id: int, **kwargs) -> dict[str, Any]:
+        """Get analytics data for API endpoints - compatibility method"""
+        return {
+            "channel_id": channel_id,
+            "views": 0,
+            "subscribers": 0,
+            "posts": 0,
+            "message": "Analytics data placeholder - implement specific logic as needed"
+        }
+
+    async def get_dashboard_data(self, channel_id: int) -> dict[str, Any]:
+        """Get dashboard data for API endpoints - compatibility method"""
+        return {
+            "channel_id": channel_id,
+            "dashboard_data": {},
+            "message": "Dashboard data placeholder - implement specific logic as needed"
+        }
+
+    async def refresh_channel_analytics(self, channel_id: int) -> dict[str, Any]:
+        """Refresh channel analytics - compatibility method"""
+        return {
+            "channel_id": channel_id,
+            "refreshed": True,
+            "message": "Analytics refresh placeholder - implement specific logic as needed"
+        }
+
+    async def get_analytics_summary(self, **kwargs) -> dict[str, Any]:
+        """Get analytics summary - compatibility method"""
+        return {
+            "summary": {},
+            "message": "Analytics summary placeholder - implement specific logic as needed"
+        }

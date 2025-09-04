@@ -111,6 +111,25 @@ class AsyncpgChannelRepository:
             record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)
             return dict(record) if record else {}
 
+    async def get_channels(self, skip: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+        """Get all channels with pagination - API compatibility method"""
+        async with self.pool.acquire() as conn:
+            records = await conn.fetch(
+                "SELECT * FROM channels ORDER BY id LIMIT $1 OFFSET $2",
+                limit, skip
+            )
+            return [dict(record) for record in records]
+
+    async def get_channel_by_telegram_id(self, telegram_id: int) -> dict[str, Any] | None:
+        """Get channel by telegram ID - API compatibility method"""
+        async with self.pool.acquire() as conn:
+            record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", telegram_id)
+            return dict(record) if record else None
+
+    async def get_channel(self, channel_id: int) -> dict[str, Any] | None:
+        """Get channel by ID - alias for get_channel_by_id for API compatibility"""
+        return await self.get_channel_by_id(channel_id)
+
 
 # Alias for backwards compatibility and cleaner imports
 ChannelRepository = AsyncpgChannelRepository

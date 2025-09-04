@@ -4,7 +4,9 @@ Simple test runner for reliability features to validate basic functionality.
 """
 
 import sys
+from datetime import datetime
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 # Add the project root to Python path
 sys.path.insert(0, "/workspaces/analyticbot")
@@ -23,7 +25,7 @@ def test_idempotency_basic():
         print("✅ IdempotencyGuard import and initialization: PASSED")
 
         # Test IdempotencyStatus model
-        status = IdempotencyStatus(status="processing", created_at="2024-01-01T00:00:00Z")
+        status = IdempotencyStatus(status="processing",             created_at=datetime.fromisoformat("2024-01-01T00:00:00+00:00"))
         assert status.status == "processing"
         print("✅ IdempotencyStatus model: PASSED")
 
@@ -114,8 +116,9 @@ def test_enhanced_delivery_service_basic():
         print("✅ EnhancedDeliveryService different content hash: PASSED")
 
         # Test idempotency key generation
-        key = service._generate_idempotency_key("post123", 456, hash1)
-        assert "post123" in key
+        test_post_id = uuid4()
+        key = service._generate_idempotency_key(test_post_id, "456", hash1)
+        assert str(test_post_id) in key
         assert "456" in key
         print("✅ EnhancedDeliveryService idempotency key generation: PASSED")
 

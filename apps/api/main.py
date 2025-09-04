@@ -64,7 +64,7 @@ async def create_scheduled_post(
     channel_id: str,
     user_id: str,
     scheduled_at: datetime,
-    tags: list[str] = None,
+    tags: list[str] | None = None,
     schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """Create a new scheduled post"""
@@ -152,7 +152,7 @@ async def cancel_scheduled_post(
 
 @app.get("/delivery/stats")
 async def get_delivery_stats(
-    channel_id: str = None, delivery_service: DeliveryService = Depends(get_delivery_service)
+    channel_id: str | None = None, delivery_service: DeliveryService = Depends(get_delivery_service)
 ):
     """Get delivery statistics"""
     stats = await delivery_service.get_delivery_stats(channel_id=channel_id)

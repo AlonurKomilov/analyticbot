@@ -106,44 +106,38 @@ class Container:
             self._asyncpg_pool = await asyncpg.create_pool(
                 db_url, min_size=1, max_size=self.settings.database_pool_size
             )
+        assert self._asyncpg_pool is not None  # Type narrowing for mypy
         return self._asyncpg_pool
 
     # Repository implementations (infra layer) - now using optimized connection management
     async def user_repo(self) -> UserRepository:
         """Get User repository implementation"""
-        db_mgr = await self.database_manager()
-        # Create a wrapper that provides pool interface for backward compatibility
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgUserRepository(pool)
 
     async def admin_repo(self) -> AdminRepository:
         """Get Admin repository implementation"""
-        db_mgr = await self.database_manager()
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgAdminRepository(pool)
 
     async def analytics_repo(self) -> AsyncpgAnalyticsRepository:
         """Get Analytics repository implementation"""
-        db_mgr = await self.database_manager()
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgAnalyticsRepository(pool)
 
     async def channel_repo(self) -> AsyncpgChannelRepository:
         """Get Channel repository implementation"""
-        db_mgr = await self.database_manager()
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgChannelRepository(pool)
 
     async def payment_repo(self) -> AsyncpgPaymentRepository:
         """Get Payment repository implementation"""
-        db_mgr = await self.database_manager()
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgPaymentRepository(pool)
 
     async def plan_repo(self) -> AsyncpgPlanRepository:
         """Get Plan repository implementation"""
-        db_mgr = await self.database_manager()
-        pool = await OptimizedPoolAdapter.create(db_mgr)
+        pool = await self.asyncpg_pool()
         return AsyncpgPlanRepository(pool)
 
     # Service layer (to be implemented)

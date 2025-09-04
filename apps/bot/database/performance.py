@@ -83,7 +83,7 @@ class RedisCache:
 
     def _generate_key(self, prefix: str, *args, **kwargs) -> str:
         """Generate cache key from prefix and parameters"""
-        key_data = f"{prefix}:{':'.join(map(str, args))}"
+        key_data = f"{prefix}:{':'.join(str(arg) for arg in args)}"
         if kwargs:
             key_data += (
                 f":{hashlib.sha256(json.dumps(kwargs, sort_keys=True).encode()).hexdigest()}"
@@ -303,7 +303,7 @@ class PerformanceManager:
             )
 
         # Get Redis stats
-        if self.cache._is_connected:
+        if self.cache._is_connected and hasattr(self.cache, '_redis') and self.cache._redis is not None:
             try:
                 redis_info = await self.cache._redis.info()
                 if redis_info:  # Check if redis_info is not None
@@ -314,7 +314,7 @@ class PerformanceManager:
                             "redis_hits": redis_info.get("keyspace_hits", 0),
                             "redis_misses": redis_info.get("keyspace_misses", 0),
                         }
-                )
+                    )
             except Exception as e:
                 logger.warning(f"Error getting Redis stats: {e}")
 

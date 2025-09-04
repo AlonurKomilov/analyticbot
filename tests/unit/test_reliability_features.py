@@ -105,7 +105,10 @@ class TestIdempotencyGuard:
         """Test that expired entries are cleaned up."""
         with patch.object(idempotency_guard, "get_redis") as mock_get_redis:
             mock_get_redis.return_value = mock_redis
-            mock_redis.keys.return_value = ["test:idempotency:old1", "test:idempotency:old2"]
+            mock_redis.keys.return_value = [
+                "test:idempotency:old1",
+                "test:idempotency:old2",
+            ]
             mock_redis.ttl.side_effect = [-1, 3600]  # old1 expired, old2 still valid
             mock_redis.delete.return_value = 1
 
@@ -151,7 +154,11 @@ class TestTokenBucketRateLimiter:
         ):
             mock_get_redis.return_value = mock_redis
             # Mock Lua script execution - simulate tokens available
-            mock_redis.eval.return_value = [1, 9, 1000.0]  # [success, remaining_tokens, updated_at]
+            mock_redis.eval.return_value = [
+                1,
+                9,
+                1000.0,
+            ]  # [success, remaining_tokens, updated_at]
 
             success, retry_after = await rate_limiter.acquire(
                 bucket_id="user:123", tokens=1, limit_type="chat"
@@ -238,7 +245,9 @@ class TestEnhancedDeliveryService:
             mock_redis_ratelimit.from_url.return_value = MagicMock()
 
             service = EnhancedDeliveryService(
-                delivery_repo=None, schedule_repo=None, redis_url="redis://localhost:6379"
+                delivery_repo=None,
+                schedule_repo=None,
+                redis_url="redis://localhost:6379",
             )
             return service
 
@@ -294,7 +303,10 @@ class TestEnhancedDeliveryService:
         with patch.object(
             service.idempotency_guard,
             "is_duplicate",
-            return_value=(True, MagicMock(status="completed", result={"message_id": 12345})),
+            return_value=(
+                True,
+                MagicMock(status="completed", result={"message_id": 12345}),
+            ),
         ) as mock_duplicate:
 
             async def mock_send_function(post_data):

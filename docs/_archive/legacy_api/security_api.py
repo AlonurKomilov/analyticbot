@@ -61,11 +61,15 @@ rbac_manager = RBACManager()
 
 # Rate limiting setup
 redis_client = redis.Redis(
-    host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB, decode_responses=True
+    host=config.REDIS_HOST,
+    port=config.REDIS_PORT,
+    db=config.REDIS_DB,
+    decode_responses=True,
 )
 
 limiter = Limiter(
-    key_func=get_remote_address, storage_uri=f"redis://{config.REDIS_HOST}:{config.REDIS_PORT}/1"
+    key_func=get_remote_address,
+    storage_uri=f"redis://{config.REDIS_HOST}:{config.REDIS_PORT}/1",
 )
 
 # Initialize FastAPI app
@@ -257,7 +261,8 @@ async def register(request: Request, registration_data: RegisterRequest):
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )
 
 
@@ -310,7 +315,8 @@ async def oauth_login(provider: str, request: Request):
     except Exception as e:
         logger.error(f"OAuth login error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OAuth login failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OAuth login failed",
         )
 
 
@@ -358,7 +364,8 @@ async def oauth_callback(provider: str, code: str, state: str, request: Request)
     except Exception as e:
         logger.error(f"OAuth callback error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="OAuth callback failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OAuth callback failed",
         )
 
 
@@ -377,7 +384,9 @@ async def setup_mfa(current_user: dict[str, Any] = Depends(get_current_user)):
     try:
         # Create user object (in real implementation, fetch from database)
         user = User(
-            id=current_user["sub"], email=current_user["email"], username=current_user["username"]
+            id=current_user["sub"],
+            email=current_user["email"],
+            username=current_user["username"],
         )
 
         mfa_setup = mfa_manager.setup_mfa(user)
@@ -402,7 +411,9 @@ async def verify_mfa_setup(token: str, current_user: dict[str, Any] = Depends(ge
     try:
         # Create user object
         user = User(
-            id=current_user["sub"], email=current_user["email"], username=current_user["username"]
+            id=current_user["sub"],
+            email=current_user["email"],
+            username=current_user["username"],
         )
 
         if mfa_manager.verify_setup_token(user, token):
@@ -417,7 +428,8 @@ async def verify_mfa_setup(token: str, current_user: dict[str, Any] = Depends(ge
     except Exception as e:
         logger.error(f"MFA verification error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MFA verification failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="MFA verification failed",
         )
 
 
@@ -445,7 +457,8 @@ async def disable_mfa(current_user: dict[str, Any] = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"MFA disable error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MFA disable failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="MFA disable failed",
         )
 
 
@@ -455,7 +468,9 @@ async def disable_mfa(current_user: dict[str, Any] = Depends(get_current_user)):
 
 
 @app.get("/security/permissions", response_model=PermissionMatrix)
-async def get_user_permissions(current_user: dict[str, Any] = Depends(get_current_user)):
+async def get_user_permissions(
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
     """
     🛡️ Get User Permissions
 
@@ -505,19 +520,25 @@ async def check_permission(
             perm = Permission(permission)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid permission: {permission}"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid permission: {permission}",
             )
 
         has_permission = rbac_manager.has_permission(user, perm, resource_id)
 
-        return {"permission": permission, "resource_id": resource_id, "granted": has_permission}
+        return {
+            "permission": permission,
+            "resource_id": resource_id,
+            "granted": has_permission,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Check permission error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Permission check failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Permission check failed",
         )
 
 
@@ -527,7 +548,9 @@ async def check_permission(
 
 
 @app.get("/security/admin/users")
-async def list_users(current_user: dict[str, Any] = Depends(require_role(UserRole.ADMIN))):
+async def list_users(
+    current_user: dict[str, Any] = Depends(require_role(UserRole.ADMIN)),
+):
     """
     👥 List All Users (Admin Only)
 
@@ -565,7 +588,8 @@ async def update_user_role(
     except Exception as e:
         logger.error(f"Update user role error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update user role"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user role",
         )
 
 
@@ -607,7 +631,8 @@ async def get_user_sessions(current_user: dict[str, Any] = Depends(get_current_u
     except Exception as e:
         logger.error(f"Get sessions error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve sessions"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve sessions",
         )
 
 
@@ -630,7 +655,8 @@ async def terminate_session(
             return {"message": "Session terminated successfully"}
         else:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to terminate session"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to terminate session",
             )
 
     except HTTPException:
@@ -638,7 +664,8 @@ async def terminate_session(
     except Exception as e:
         logger.error(f"Terminate session error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to terminate session"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to terminate session",
         )
 
 

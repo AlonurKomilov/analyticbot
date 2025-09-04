@@ -308,7 +308,9 @@ async def generate_performance_report(
                 "performance_forecast": report.performance_forecast,
                 "growth_predictions": report.growth_predictions,
             },
-            "churn_analysis": report.churn_risk_summary if request.include_churn_analysis else None,
+            "churn_analysis": (
+                report.churn_risk_summary if request.include_churn_analysis else None
+            ),
             "quality": {
                 "analysis_completeness": report.analysis_completeness,
                 "data_quality_score": report.data_quality_score,
@@ -380,14 +382,16 @@ async def optimize_content_real_time(text: str, services: dict = Depends(get_ml_
         scores = await content_optimizer.score_content_realtime(text)
         return {
             "scores": scores,
-            "recommendations": await content_optimizer._generate_optimization_tips(
-                await content_optimizer._extract_content_metrics(text),
-                scores.get("sentiment_score", 0.5) * 2 - 1,
-                70.0,
-                scores.get("overall_score", 0.5) * 100,
-            )
-            if hasattr(content_optimizer, "_generate_optimization_tips")
-            else [],
+            "recommendations": (
+                await content_optimizer._generate_optimization_tips(
+                    await content_optimizer._extract_content_metrics(text),
+                    scores.get("sentiment_score", 0.5) * 2 - 1,
+                    70.0,
+                    scores.get("overall_score", 0.5) * 100,
+                )
+                if hasattr(content_optimizer, "_generate_optimization_tips")
+                else []
+            ),
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:

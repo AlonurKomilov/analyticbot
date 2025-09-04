@@ -17,7 +17,12 @@ class AnalyticsFusionService:
     """Core service for unified analytics combining MTProto and legacy data"""
 
     def __init__(
-        self, channel_daily_repo, post_repo, metrics_repo, edges_repo, stats_raw_repo=None
+        self,
+        channel_daily_repo,
+        post_repo,
+        metrics_repo,
+        edges_repo,
+        stats_raw_repo=None,
     ):
         self._daily = channel_daily_repo
         self._posts = post_repo
@@ -129,13 +134,21 @@ class AnalyticsFusionService:
             return []
 
     async def get_sources(
-        self, channel_id: int, frm: datetime, to: datetime, kind: Literal["mention", "forward"]
+        self,
+        channel_id: int,
+        frm: datetime,
+        to: datetime,
+        kind: Literal["mention", "forward"],
     ) -> list[dict]:
         """Get traffic sources (mentions/forwards)"""
         try:
             rows = await self._edges.top_edges(channel_id, frm, to, kind)
             return [
-                {"src": r.get("src", 0), "dst": r.get("dst", 0), "count": r.get("count", 0)}
+                {
+                    "src": r.get("src", 0),
+                    "dst": r.get("dst", 0),
+                    "count": r.get("count", 0),
+                }
                 for r in rows
             ]
         except Exception as e:

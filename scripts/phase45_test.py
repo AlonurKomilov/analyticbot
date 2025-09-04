@@ -46,7 +46,11 @@ class Phase45TestSuite:
 
     def log_test_result(self, test_name: str, success: bool, message: str = "", data: Any = None):
         """Log test result"""
-        self.test_results[test_name] = {"success": success, "message": message, "data": data}
+        self.test_results[test_name] = {
+            "success": success,
+            "message": message,
+            "data": data,
+        }
 
         status = "✅ PASS" if success else "❌ FAIL"
         logger.info(f"{status} - {test_name}: {message}")
@@ -219,7 +223,10 @@ class Phase45TestSuite:
             success = has_required and valid_alert_type and valid_threshold
 
             self.log_test_result(
-                test_name, success, f"Alert configuration validated: {mock_alert_id}", test_alert
+                test_name,
+                success,
+                f"Alert configuration validated: {mock_alert_id}",
+                test_alert,
             )
 
         except Exception as e:
@@ -263,7 +270,10 @@ class Phase45TestSuite:
                 test_name,
                 success,
                 f"Share token generated: {token_length} chars, expires in {(expires_at - datetime.utcnow()).total_seconds():.0f}s",
-                {"token_length": token_length, "report_type": mock_shared_report["report_type"]},
+                {
+                    "token_length": token_length,
+                    "report_type": mock_shared_report["report_type"],
+                },
             )
 
         except Exception as e:
@@ -343,7 +353,10 @@ class Phase45TestSuite:
             success = valid_minute_limit and valid_hour_limit
 
             self.log_test_result(
-                test_name, success, f"Rate limits configured: {test_limits}", test_limits
+                test_name,
+                success,
+                f"Rate limits configured: {test_limits}",
+                test_limits,
             )
 
         except Exception as e:

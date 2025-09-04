@@ -17,7 +17,12 @@ class AsyncpgPostRepository:
         self.pool = pool
 
     async def upsert_post(
-        self, channel_id: int, msg_id: int, date: datetime, text: str = "", links_json: list = None
+        self,
+        channel_id: int,
+        msg_id: int,
+        date: datetime,
+        text: str = "",
+        links_json: list = None,
     ) -> dict[str, Any]:
         """Insert or update a post with UPSERT behavior.
 
@@ -36,7 +41,9 @@ class AsyncpgPostRepository:
         async with self.pool.acquire() as conn:
             # Check if record exists
             existing = await conn.fetchrow(
-                "SELECT id FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "SELECT id FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
 
             if existing:
@@ -97,7 +104,9 @@ class AsyncpgPostRepository:
         """
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
-                "SELECT * FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "SELECT * FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
             return dict(record) if record else None
 
@@ -154,7 +163,9 @@ class AsyncpgPostRepository:
         """
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "DELETE FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
             return result != "DELETE 0"
 

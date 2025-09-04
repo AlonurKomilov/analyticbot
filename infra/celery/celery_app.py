@@ -3,10 +3,10 @@ Celery Application Configuration - Master Scheduler
 Production-ready Celery setup with retry/backoff strategies
 """
 
-from typing import Callable
+import logging
+from collections.abc import Callable
 from typing import Any
 
-import logging
 from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
 
 # Import from centralized configuration
@@ -106,9 +106,11 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     # Beat schedule database
-    beat_scheduler="django_celery_beat.schedulers:DatabaseScheduler"
-    if hasattr(settings, "DATABASE_URL")
-    else "celery.beat:PersistentScheduler",
+    beat_scheduler=(
+        "django_celery_beat.schedulers:DatabaseScheduler"
+        if hasattr(settings, "DATABASE_URL")
+        else "celery.beat:PersistentScheduler"
+    ),
 )
 
 
@@ -242,7 +244,14 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
 @task_postrun.connect
 def task_postrun_handler(
-    sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds
+    sender=None,
+    task_id=None,
+    task=None,
+    args=None,
+    kwargs=None,
+    retval=None,
+    state=None,
+    **kwds,
 ):
     """Enhanced post-run handler with comprehensive metrics"""
     logger.info(f"Completed task {task.name} (ID: {task_id[:8]}...) with state: {state}")
@@ -351,9 +360,9 @@ def check_celery_health() -> dict[str, Any]:
             "responsive_workers": responsive_workers,
             "health_ratio": health_ratio,
             "queues": len(active_queues) if active_queues else 0,
-            "reserved_tasks": sum(len(tasks) for tasks in reserved_tasks.values())
-            if reserved_tasks
-            else 0,
+            "reserved_tasks": (
+                sum(len(tasks) for tasks in reserved_tasks.values()) if reserved_tasks else 0
+            ),
             "timestamp": str(__import__("datetime").datetime.utcnow()),
         }
 

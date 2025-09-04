@@ -49,8 +49,8 @@ class PaymentGatewayAdapter(ABC):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: (str | None) = None,
-        metadata: (dict[str, Any] | None) = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Charge a payment method"""
 
@@ -61,7 +61,7 @@ class PaymentGatewayAdapter(ABC):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: (int | None) = None,
+        trial_days: int | None = None,
     ) -> dict[str, Any]:
         """Create recurring subscription"""
 
@@ -110,8 +110,8 @@ class StripeAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: (str | None) = None,
-        metadata: (dict[str, Any] | None) = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Process Stripe payment"""
         payment_intent_id = f"pi_{uuid4().hex[:24]}"
@@ -132,7 +132,7 @@ class StripeAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: (int | None) = None,
+        trial_days: int | None = None,
     ) -> dict[str, Any]:
         """Create Stripe subscription"""
         subscription_id = f"sub_{uuid4().hex[:24]}"
@@ -146,9 +146,9 @@ class StripeAdapter(PaymentGatewayAdapter):
                     now + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365)
                 ).timestamp()
             ),
-            "trial_end": int((now + timedelta(days=trial_days)).timestamp())
-            if trial_days
-            else None,
+            "trial_end": (
+                int((now + timedelta(days=trial_days)).timestamp()) if trial_days else None
+            ),
             "customer": customer_id,
             "default_payment_method": payment_method_id,
         }
@@ -242,8 +242,8 @@ class PaymeAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: (str | None) = None,
-        metadata: (dict[str, Any] | None) = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Process Payme payment"""
         transaction_id = f"txn_{uuid4().hex[:16]}"
@@ -263,7 +263,7 @@ class PaymeAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: (int | None) = None,
+        trial_days: int | None = None,
     ) -> dict[str, Any]:
         """Payme doesn't support subscriptions directly - simulate with recurring payments"""
         return {
@@ -339,8 +339,8 @@ class ClickAdapter(PaymentGatewayAdapter):
         method_id: str,
         amount: Decimal,
         currency: str,
-        description: (str | None) = None,
-        metadata: (dict[str, Any] | None) = None,
+        description: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Process Click payment"""
         click_trans_id = f"click_{uuid4().hex[:12]}"
@@ -359,7 +359,7 @@ class ClickAdapter(PaymentGatewayAdapter):
         payment_method_id: str,
         plan_id: str,
         billing_cycle: BillingCycle,
-        trial_days: (int | None) = None,
+        trial_days: int | None = None,
     ) -> dict[str, Any]:
         """Click subscription simulation"""
         return {
@@ -426,7 +426,10 @@ class PaymentService:
         return adapter
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str = None
+        self,
+        user_id: int,
+        payment_method_data: PaymentMethodCreate,
+        provider: str = None,
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
@@ -439,7 +442,9 @@ class PaymentService:
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
-                    year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
+                    year=card.get("exp_year", 2025),
+                    month=card.get("exp_month", 12),
+                    day=1,
                 )
             method_id = await self.repository.create_payment_method(
                 user_id=user_id,
@@ -450,7 +455,10 @@ class PaymentService:
                 brand=payment_method_data.brand,
                 expires_at=expires_at,
                 is_default=payment_method_data.is_default,
-                metadata={"provider_response": provider_response, **payment_method_data.metadata},
+                metadata={
+                    "provider_response": provider_response,
+                    **payment_method_data.metadata,
+                },
             )
             return PaymentMethodResponse(
                 id=method_id,
@@ -486,7 +494,10 @@ class PaymentService:
         ]
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: (str | None) = None
+        self,
+        user_id: int,
+        payment_data: PaymentCreate,
+        idempotency_key: str | None = None,
     ) -> PaymentResponse:
         """Process a one-time payment"""
         idempotency_key = idempotency_key or str(uuid4())
@@ -535,7 +546,9 @@ class PaymentService:
             logger.error(f"Payment processing failed: {e}")
             if "payment_id" in locals():
                 await self.repository.update_payment_status(
-                    payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
+                    payment_id=payment_id,
+                    status=PaymentStatus.FAILED,
+                    failure_message=str(e),
                 )
             raise
 
@@ -588,7 +601,8 @@ class PaymentService:
                         trial_days=subscription_data.trial_days,
                     )
                     await self.repository.update_subscription_status(
-                        subscription_id=subscription_id, status=SubscriptionStatus.ACTIVE
+                        subscription_id=subscription_id,
+                        status=SubscriptionStatus.ACTIVE,
                     )
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")

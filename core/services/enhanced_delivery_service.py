@@ -15,7 +15,7 @@ from uuid import UUID
 
 from core.common_helpers.idempotency import IdempotencyGuard
 from core.services import DeliveryService as BaseDeliveryService
-from core.utils.ratelimit import TokenBucketRateLimiter
+from core.common_helpers.ratelimit import TokenBucketRateLimiter
 
 logger = logging.getLogger(__name__)
 

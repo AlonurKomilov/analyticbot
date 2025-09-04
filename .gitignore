@@ -223,6 +223,7 @@ public
 !.env.example
 env.bak
 .env.bak
+.venv
 
 # Local environment overrides
 .env.local
@@ -350,3 +351,24 @@ celery-*.log
 .coverage
 .pytest_cache/
 .tox/
+
+# Machine Learning models and cache
+*.pkl
+*.joblib
+*.model
+mlruns/
+.mlflow/
+
+# NLP/AI data
+nltk_data/
+.transformers_cache/
+
+# Development cache files
+.ruff_cache/
+.mypy_cache/
+
+# Requirements backup files
+requirements_updated.txt
+requirements_backup.txt
+
+

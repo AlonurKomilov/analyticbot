@@ -1,18 +1,21 @@
-"""
-Dependency Injection for Analytics V2
-Provides dependencies for the Analytics Fusion API
-"""
-
-import logging
-from datetime import datetime, UTC
-
+import os
+from apps.bot.container import container
+from unittest.mock import AsyncMock
 from core.services.analytics_fusion_service import AnalyticsFusionService
+from datetime import UTC, datetime
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
+
+"""
+Dependency Injection for Analytics V2
+Provides dependencies for the Analytics Fusion API
+"""
+
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -25,63 +28,75 @@ async def get_database_pool():
     """Get database pool - to be implemented with existing container"""
     # Check if we're in test environment
     import os
+
     if os.getenv("ENVIRONMENT") == "test" or "pytest" in os.getenv("_", ""):
         # For tests, create a proper mock pool that supports async context manager
-        from unittest.mock import AsyncMock, MagicMock
-        import asyncio
-        
+
         class MockConnection:
             def __init__(self):
                 self.execute = AsyncMock(return_value=None)
-                self.fetchrow = AsyncMock(return_value={"snapshot_time": datetime(2025, 8, 31, 12, 0, 0, tzinfo=UTC)})
-                self.fetchval = AsyncMock(return_value=100)  # Return a number for count/sum operations
-                self.fetch = AsyncMock(return_value=[
-                    {"msg_id": 1, "date": "2025-08-30T10:00:00Z", "views": 1000, "forwards": 10, "replies": 5, "reactions": "{}", "title": "Test Post", "permalink": ""}
-                ])
-            
+                self.fetchrow = AsyncMock(
+                    return_value={"snapshot_time": datetime(2025, 8, 31, 12, 0, 0, tzinfo=UTC)}
+                )
+                self.fetchval = AsyncMock(
+                    return_value=100
+                )  # Return a number for count/sum operations
+                self.fetch = AsyncMock(
+                    return_value=[
+                        {
+                            "msg_id": 1,
+                            "date": "2025-08-30T10:00:00Z",
+                            "views": 1000,
+                            "forwards": 10,
+                            "replies": 5,
+                            "reactions": "{}",
+                            "title": "Test Post",
+                            "permalink": "",
+                        }
+                    ]
+                )
+
             async def __aenter__(self):
                 return self
-            
+
             async def __aexit__(self, exc_type, exc_val, exc_tb):
                 pass
-        
+
         class MockPool:
             def __init__(self):
                 self._connection = MockConnection()
-            
+
             def acquire(self):
                 return self._connection
-            
+
             async def fetchrow(self, query, *args, **kwargs):
                 return None
-            
+
             async def fetchval(self, query, *args, **kwargs):
                 return None
-            
+
             async def fetch(self, query, *args, **kwargs):
                 return []
-            
+
             async def execute(self, query, *args, **kwargs):
                 return None
-        
-        return MockPool()
+
+                return MockPool()
 
     # For production, use the existing container system
-    from apps.bot.container import container
 
-    return await container.resolve("database_pool")
+                return await container.resolve("database_pool")
 
 
 async def get_redis_client():
     """Get Redis client - to be implemented with existing container"""
-    import os
+
     if os.getenv("ENVIRONMENT") == "test" or "pytest" in os.getenv("_", ""):
         # For tests, return None (cache adapter will handle this)
         return None
 
     try:
         # Try to get Redis client from existing container if available
-        from apps.bot.container import container
 
         return await container.resolve("redis_client")
     except Exception as e:

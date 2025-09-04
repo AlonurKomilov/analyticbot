@@ -1,13 +1,6 @@
-"""
-CSV Export Service for Analytics V2
-Provides CSV serialization for analytics data
-"""
-
 import csv
 import io
 import logging
-from datetime import datetime
-
 from apps.bot.clients.analytics_v2_client import (
     GrowthResponse,
     OverviewResponse,
@@ -16,6 +9,7 @@ from apps.bot.clients.analytics_v2_client import (
     TopPostsResponse,
     TrendingResponse,
 )
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

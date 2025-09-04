@@ -1,3 +1,10 @@
+from .churn_predictor import ChurnPredictor
+from .content_optimizer import ContentAnalysis, ContentOptimizer
+from .prediction_service import ContentMetrics, PredictionResult, PredictionService
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
 """
 📊 Engagement Analyzer - Advanced analytics and insights engine
 
@@ -10,15 +17,7 @@ Features:
 """
 
 import logging
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any
-
 import numpy as np
-
-from .churn_predictor import ChurnPredictor
-from .content_optimizer import ContentAnalysis, ContentOptimizer
-from .prediction_service import ContentMetrics, PredictionResult, PredictionService
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +95,7 @@ class EngagementAnalyzer:
         churn_predictor: ChurnPredictor,
         db_service=None,
         cache_service=None,
-    ):
+        ):
         self.prediction_service = prediction_service
         self.content_optimizer = content_optimizer
         self.churn_predictor = churn_predictor
@@ -137,7 +136,7 @@ class EngagementAnalyzer:
         period_days: int = 30,
         include_predictions: bool = True,
         include_churn_analysis: bool = True,
-    ) -> PerformanceReport:
+        ) -> PerformanceReport:
         """
         📊 Generate comprehensive performance analysis report
 
@@ -231,7 +230,8 @@ class EngagementAnalyzer:
                 await self.cache_service.set(cache_key, report.__dict__, ttl=3600)
 
             logger.info(
-                f"✅ Generated performance report: {len(insights)} insights, {len(priority_actions)} actions"
+                f"✅ Generated performance report: {len(insights)} insights, "
+                f"{len(priority_actions)} actions"
             )
             return report
 
@@ -245,7 +245,7 @@ class EngagementAnalyzer:
         media_urls: list[str] | None = None,
         channel_id: int | None = None,
         scheduled_time: datetime | None = None,
-    ) -> dict[str, Any]:
+        ) -> dict[str, Any]:
         """
         🎯 Pre-publish content analysis with optimization recommendations
 
@@ -332,7 +332,7 @@ class EngagementAnalyzer:
 
     async def get_real_time_insights(
         self, channel_id: int, lookback_hours: int = 24
-    ) -> list[EngagementInsight]:
+        ) -> list[EngagementInsight]:
         """
         ⚡ Get real-time engagement insights and alerts
 
@@ -387,7 +387,7 @@ class EngagementAnalyzer:
 
     async def _collect_analytics_data(
         self, channel_id: int, start_date: datetime, end_date: datetime
-    ) -> dict[str, Any]:
+        ) -> dict[str, Any]:
         """Collect comprehensive analytics data for analysis"""
         # Simulate analytics data collection
         # In real implementation, this would query the database
@@ -397,8 +397,8 @@ class EngagementAnalyzer:
         return {
             "posts": [
                 {
-                    "id": i,
-                    "content": f"Sample post {i}",
+                    "id": idx,
+                    "content": f"Sample post {idx}",
                     "created_at": start_date + timedelta(days=np.random.randint(0, days)),
                     "views": np.random.randint(50, 500),
                     "likes": np.random.randint(5, 50),
@@ -406,16 +406,16 @@ class EngagementAnalyzer:
                     "shares": np.random.randint(0, 10),
                     "hashtags": np.random.randint(0, 8),
                 }
-                for i in range(50)  # Sample 50 posts
+                for idx in range(50)  # Sample 50 posts
             ],
             "user_sessions": [
                 {
-                    "user_id": i,
+                    "user_id": idx,
                     "session_start": start_date + timedelta(hours=np.random.randint(0, days * 24)),
                     "duration_minutes": np.random.randint(1, 60),
                     "actions_taken": np.random.randint(1, 20),
                 }
-                for i in range(200)  # Sample 200 sessions
+                for idx in range(200)  # Sample 200 sessions
             ],
             "engagement_metrics": {
                 "total_views": np.random.randint(5000, 15000),
@@ -476,7 +476,7 @@ class EngagementAnalyzer:
         content_analysis: dict[str, Any],
         user_analysis: dict[str, Any],
         churn_summary: dict[str, Any],
-    ) -> list[EngagementInsight]:
+        ) -> list[EngagementInsight]:
         """Generate key actionable insights"""
         insights = []
 
@@ -487,7 +487,11 @@ class EngagementAnalyzer:
                 EngagementInsight(
                     insight_type="content_performance",
                     title="High-Quality Content Performance",
-                    description=f"Content quality score is excellent ({overall_score:.1f}/100). Continue current content strategy.",
+                    description=(
+                        f"Content quality score is excellent "
+                        f"({overall_score:.1f}/100). Continue current content "
+                        f"strategy."
+                    ),
                     impact_level="high",
                     confidence=0.9,
                     data_points={"content_score": overall_score},
@@ -503,7 +507,10 @@ class EngagementAnalyzer:
                 EngagementInsight(
                     insight_type="content_performance",
                     title="Content Quality Needs Improvement",
-                    description=f"Content quality score is below optimal ({overall_score:.1f}/100). Focus on optimization.",
+                    description=(
+                        f"Content quality score is below optimal "
+                        f"({overall_score:.1f}/100). Focus on optimization."
+                    ),
                     impact_level="medium",
                     confidence=0.8,
                     data_points={"content_score": overall_score},
@@ -523,7 +530,10 @@ class EngagementAnalyzer:
                 EngagementInsight(
                     insight_type="retention_analysis",
                     title="User Retention Alert",
-                    description=f"{high_risk_count} users are at high risk of churning. Immediate retention actions needed.",
+                    description=(
+                        f"{high_risk_count} users are at high risk of "
+                        f"churning. Immediate retention actions needed."
+                    ),
                     impact_level="critical",
                     confidence=0.85,
                     data_points={"high_risk_users": high_risk_count},
@@ -557,16 +567,19 @@ class EngagementAnalyzer:
             )
 
             if recent_engagement > older_engagement * 1.2:  # 20% improvement
+                improvement_pct = ((recent_engagement / older_engagement - 1) * 100)
                 insights.append(
                     EngagementInsight(
                         insight_type="engagement_trend",
                         title="Positive Engagement Trend",
-                        description=f"Recent posts showing {((recent_engagement / older_engagement - 1) * 100):.1f}% engagement increase.",
+                        description=(
+                            f"Recent posts showing {improvement_pct:.1f}% "
+                            f"engagement increase."
+                        ),
                         impact_level="high",
                         confidence=0.8,
                         data_points={
-                            "engagement_improvement": (recent_engagement / older_engagement - 1)
-                            * 100
+                            "engagement_improvement": improvement_pct
                         },
                         recommendations=[
                             "Double down on successful content formats",
@@ -580,7 +593,7 @@ class EngagementAnalyzer:
 
     async def _calculate_publishing_score(
         self, content_analysis: ContentAnalysis, prediction_result: PredictionResult | None
-    ) -> dict[str, Any]:
+        ) -> dict[str, Any]:
         """Calculate overall publishing readiness score"""
         score_components = {
             "content_quality": content_analysis.overall_score,
@@ -627,7 +640,7 @@ class EngagementAnalyzer:
 
     async def _create_fallback_report(
         self, channel_id: int, period_start: datetime, period_end: datetime
-    ) -> PerformanceReport:
+        ) -> PerformanceReport:
         """Create fallback report when analysis fails"""
         return PerformanceReport(
             channel_id=channel_id,

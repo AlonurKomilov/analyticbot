@@ -24,7 +24,7 @@ class TestIdempotencyGuard:
     @pytest.fixture
     def idempotency_guard(self, mock_redis):
         """Create IdempotencyGuard with mocked Redis."""
-        with patch("core.utils.idempotency.redis") as mock_redis_module:
+        with patch("core.common_helpers.idempotency.redis") as mock_redis_module:
             mock_redis_module.from_url.return_value = mock_redis
             return IdempotencyGuard(redis_url="redis://mock", key_prefix="test")
 
@@ -126,7 +126,7 @@ class TestTokenBucketRateLimiter:
     @pytest.fixture
     def rate_limiter(self, mock_redis):
         """Create TokenBucketRateLimiter with mocked Redis."""
-        with patch("core.utils.ratelimit.redis") as mock_redis_module:
+        with patch("core.common_helpers.ratelimit.redis") as mock_redis_module:
             mock_redis_module.from_url.return_value = mock_redis
             return TokenBucketRateLimiter(
                 redis_url="redis://mock",
@@ -230,8 +230,8 @@ class TestEnhancedDeliveryService:
     def mock_delivery_service(self):
         """Create EnhancedDeliveryService with mocked dependencies."""
         with (
-            patch("core.utils.idempotency.redis") as mock_redis_idempotency,
-            patch("core.utils.ratelimit.redis") as mock_redis_ratelimit,
+            patch("core.common_helpers.idempotency.redis") as mock_redis_idempotency,
+            patch("core.common_helpers.ratelimit.redis") as mock_redis_ratelimit,
         ):
             # Mock Redis connections
             mock_redis_idempotency.from_url.return_value = MagicMock()

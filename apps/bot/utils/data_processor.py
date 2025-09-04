@@ -588,3 +588,9 @@ if __name__ == "__main__":
     print(f"Data Quality Score: {quality_report['quality_score']:.2f}/100")
 
     print("✅ Advanced Data Processor test complete!")
+
+
+# Convenience function for easy integration with bot utils
+async def create_data_processor():
+    """Factory function to create and initialize data processor"""
+    return AdvancedDataProcessor()

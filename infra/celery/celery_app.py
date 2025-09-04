@@ -7,6 +7,7 @@ from typing import Callable
 from typing import Any
 
 import logging
+from celery import Celery
 from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
 
 # Import from centralized configuration

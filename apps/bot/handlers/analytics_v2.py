@@ -1,15 +1,9 @@
-"""
-Analytics V2 Bot Handlers
-Provides interactive analytics interface using API v2 data
-"""
-
-import logging
-from datetime import datetime
-
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
+from datetime import datetime
+import logging
 
 from apps.bot.clients.analytics_v2_client import (
     AnalyticsV2Client,
@@ -31,6 +25,11 @@ from apps.bot.keyboards.analytics import (
 from apps.bot.middleware.throttle import throttle
 from config.settings import Settings
 from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
+
+"""
+Analytics V2 Bot Handlers
+Provides interactive analytics interface using API v2 data
+"""
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +66,11 @@ def _format_overview_text(data: OverviewResponse) -> str:
     # Main metrics
     lines = [
         "📊 **Channel Overview**",
-        f"🗓 Period: {data.period} days ({data.period_start.strftime('%m/%d')} - {data.period_end.strftime('%m/%d')})",
+        ("🗓 Period: " + f"{data.period}" + "days ( " + f"{data.period_start.strftime('%m/%d')}" + "- " + f"{data.period_end.strftime('%m/%d')}" + " )"),
         "",
         f"👥 **Subscribers:** {_format_number(overview.subscribers)}",
-        f"📈 **Growth:** {_format_number(overview.subscriber_growth)} ({_format_percentage(overview.subscriber_growth / max(overview.subscribers - overview.subscriber_growth, 1) * 100)})",
+        ("📈 **Growth:** " + f"{_format_number(overview.subscriber_growth)}" + "( " + f"{_format_percentage(overview.subscriber_growth / max(overview.subscribers -
+overview.subscriber_growth, 1) * 100)}" + " )"),
         "",
         f"📝 **Posts:** {overview.total_posts}",
         f"👁️ **Total Views:** {_format_number(overview.total_views)}",
@@ -110,7 +110,8 @@ def _format_growth_text(data: GrowthResponse) -> str:
         change = day_data.get("change", 0)
         subscribers = day_data.get("subscribers", 0)
         lines.append(
-            f"• {date}: {_format_number(subscribers)} ({_format_percentage(change) if change else '—'})"
+            ("• " + f"{date}" + ": " + f"{_format_number(subscribers)}" + "( " + f"{_format_percentage(change)
+if change else '—'}" + " )")
         )
 
     lines.extend(
@@ -169,7 +170,7 @@ def _format_top_posts_text(data: TopPostsResponse) -> str:
             [
                 f"**{i}. Post #{post.post_id}**",
                 f"📝 {message_preview}",
-                f"👁️ Views: {_format_number(post.views)} | 🔄 Forwards: {_format_number(post.forwards)} | 💫 Score: {post.engagement_score:.1f}",
+                ("👁️ Views: " + f"{_format_number(post.views)}" + "| 🔄 Forwards: " + f"{_format_number(post.forwards)}" + "| 💫 Score: " + f"{post.engagement_score:.1f}"),
                 f"📅 {post.published_at.strftime('%m/%d/%Y %H:%M')}",
                 "",
             ]
@@ -193,10 +194,10 @@ def _format_sources_text(data: SourcesResponse) -> str:
         "🌊 **Traffic Sources**",
         f"🗓 Period: {data.period} days",
         "",
-        f"🎯 **Direct:** {_format_number(sources.direct.get('views', 0))} ({sources.direct.get('percentage', 0):.1f}%)",
-        f"🔄 **Forwards:** {_format_number(sources.forwards.get('views', 0))} ({sources.forwards.get('percentage', 0):.1f}%)",
-        f"🔗 **Links:** {_format_number(sources.links.get('views', 0))} ({sources.links.get('percentage', 0):.1f}%)",
-        f"🔍 **Search:** {_format_number(sources.search.get('views', 0))} ({sources.search.get('percentage', 0):.1f}%)",
+        ("🎯 **Direct:** " + f"{_format_number(sources.direct.get('views', 0))}" + "( " + f"{sources.direct.get('percentage', 0):.1f}" + " %)"),
+        ("🔄 **Forwards:** " + f"{_format_number(sources.forwards.get('views', 0))}" + "( " + f"{sources.forwards.get('percentage', 0):.1f}" + " %)"),
+        ("🔗 **Links:** " + f"{_format_number(sources.links.get('views', 0))}" + "( " + f"{sources.links.get('percentage', 0):.1f}" + " %)"),
+        ("🔍 **Search:** " + f"{_format_number(sources.search.get('views', 0))}" + "( " + f"{sources.search.get('percentage', 0):.1f}" + " %)"),
         "",
     ]
 
@@ -572,7 +573,7 @@ async def show_export_options(callback: CallbackQuery, i18n: I18nContext):
         channel_id, period = parts[2], int(parts[3])
 
         await callback.message.edit_text(
-            f"📤 **Export Options**\n\nChannel: {channel_id}\nPeriod: {period} days\n\nChoose export format:",
+            ("📤 **Export Options**\n\nChannel: " + f"{channel_id}" + "\nPeriod: " + f"{period}" + " days\n\nChoose export format:"),
             reply_markup=kb_export(channel_id, period),
         )
 

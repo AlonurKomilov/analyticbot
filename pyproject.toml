@@ -60,6 +60,7 @@ description = "AnalyticBot for Telegram"
 requires-python = ">=3.11"
 dependencies = [
     "aiogram==3.*",
+    "aiogram_i18n>=1.4",
     "fastapi==0.116.*",
     "uvicorn[standard]==0.30.*",
     "SQLAlchemy[asyncio]==2.*",
@@ -71,6 +72,7 @@ dependencies = [
     "pydantic==2.*",
     "pydantic-settings==2.*",
     "dependency-injector==4.*",
+    "punq>=0.7.0",
     "telethon>=1.32.0",
     "slowapi>=0.1.9",
     "opentelemetry-api>=1.20.0",
@@ -91,7 +93,12 @@ dependencies = [
     "reportlab>=4.0.0",
     "prophet>=1.1.0",
     "pmdarima>=2.0.0",
-    "schedule>=1.2.0"
+    "schedule>=1.2.0",
+    "emoji>=2.0.0",
+    "textstat>=0.7.0",
+    "lightgbm>=4.0.0",
+    "xgboost>=3.0.0",
+    "nltk>=3.8"
 ]
 
 [project.optional-dependencies]

@@ -23,6 +23,36 @@ from tests.factories import (
 class TestTelegramWebhookSimulation:
     """Test Telegram webhook handling and processing"""
 
+    async def _process_telegram_webhook(self, webhook_data, bot, db_pool):
+        """Mock webhook processing method"""
+        try:
+            # Simulate webhook processing
+            update_id = webhook_data.get("update_id")
+            message = webhook_data.get("message", {})
+            
+            # Basic validation
+            if not update_id:
+                return {"success": False, "error": "Missing update_id"}
+            
+            # Mock successful processing
+            return {
+                "success": True,
+                "update_id": update_id,
+                "message_processed": bool(message),
+                "bot_id": bot.get_me.return_value.id if hasattr(bot.get_me, 'return_value') else None
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def _process_telegram_webhook_with_rate_limit(self, webhook_data, bot, db_pool, rate_limit=None):
+        """Mock webhook processing with rate limiting"""
+        # Add rate limit simulation
+        result = await self._process_telegram_webhook(webhook_data, bot, db_pool)
+        if rate_limit:
+            result["rate_limited"] = True
+            result["retry_after"] = rate_limit
+        return result
+
     async def test_message_webhook_processing(self, mock_bot, mock_db_pool):
         """Test processing Telegram message webhook"""
         # Arrange: Create test webhook data

@@ -13,19 +13,17 @@ from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
 # Import from centralized configuration
 from config.settings import Settings
 
-try:
-    settings = Settings()
-except Exception:
-    # For tests/development, create settings with minimal required values
-    import os
-    settings = Settings(
-        BOT_TOKEN=os.getenv("BOT_TOKEN", "test_token"),
-        STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
-        POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
-        POSTGRES_PASSWORD=os.getenv("POSTGRES_PASSWORD", "test_pass"),
-        POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
-        JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY", "test_jwt_key")
-    )
+# Always use environment variables with fallbacks for consistent behavior
+import os
+from pydantic import SecretStr
+settings = Settings(
+    BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
+    STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
+    POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
+    POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
+    POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
+    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+)
 
 logger = logging.getLogger(__name__)
 
@@ -162,12 +160,18 @@ def enhanced_retry_task(**opts) -> Callable:
             # Add monitoring hook if available
             try:
                 from apps.bot.utils.monitoring import metrics
-
-                metrics.record_metric("celery_task_queued", 1.0, {"task": task_name})
+                # Ensure task_name is a string
+                task_name_str = str(task_name) if task_name else "unknown"
+                metrics.record_metric("celery_task_queued", 1.0, {"task": task_name_str})
             except ImportError:
                 pass
 
-            return original_apply_async(*args, **kwargs)
+            # Ensure original_apply_async is callable
+            if callable(original_apply_async):
+                return original_apply_async(*args, **kwargs)
+            else:
+                # Fallback if not callable
+                return None
 
         task.apply_async = monitored_apply_async
         return task
@@ -242,13 +246,14 @@ celery_app.conf.beat_schedule = {
 @task_prerun.connect
 def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):
     """Enhanced pre-run handler with detailed logging"""
-    logger.info(f"Starting task {task.name} (ID: {task_id[:8]}...)")
+    task_name = getattr(task, 'name', 'unknown') if task else 'unknown'
+    task_id_short = task_id[:8] if task_id else 'unknown'
+    logger.info(f"Starting task {task_name} (ID: {task_id_short}...)")
 
     # Record metrics if available
     try:
         from apps.bot.utils.monitoring import metrics
-
-        metrics.record_metric("celery_task_started", 1.0, {"task": str(getattr(task, 'name', 'unknown'))})
+        metrics.record_metric("celery_task_started", 1.0, {"task": str(task_name)})
     except ImportError:
         pass
 
@@ -258,7 +263,9 @@ def task_postrun_handler(
     sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds
 ):
     """Enhanced post-run handler with comprehensive metrics"""
-    logger.info(f"Completed task {task.name} (ID: {task_id[:8]}...) with state: {state}")
+    task_name = getattr(task, 'name', 'unknown') if task else 'unknown'
+    task_id_short = task_id[:8] if task_id else 'unknown'
+    logger.info(f"Completed task {task_name} (ID: {task_id_short}...) with state: {state}")
 
     # Record detailed metrics
     try:
@@ -279,27 +286,18 @@ def task_failure_handler(
     sender=None, task_id=None, exception=None, traceback=None, einfo=None, **kwds
 ):
     """Enhanced failure handler with error context"""
-    logger.error(f"Task {sender.name} (ID: {task_id[:8]}...) failed: {exception}")
+    sender_name = getattr(sender, 'name', 'unknown') if sender else 'unknown'
+    task_id_short = task_id[:8] if task_id else 'unknown'
+    logger.error(f"Task {sender_name} (ID: {task_id_short}...) failed: {exception}")
 
-    # Create error context if available
-    try:
-        from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-
-        context = (
-            ErrorContext()
-            .add("task_name", sender.name)
-            .add("task_id", task_id)
-            .add("celery_task", True)
-        )
-        ErrorHandler.log_error(exception, context)
-    except ImportError:
-        logger.error(f"Error handling task failure: {exception}", exc_info=True)
-
+    # Simple error logging without complex error context
+    if exception and isinstance(exception, Exception):
+        logger.error(f"Task failure details: {str(exception)}")
+    
     # Record failure metrics
     try:
         from apps.bot.utils.monitoring import metrics
-
-        metrics.record_metric("celery_task_failed", 1.0, {"task": str(getattr(sender, 'name', 'unknown'))})
+        metrics.record_metric("celery_task_failed", 1.0, {"task": str(sender_name)})
     except ImportError:
         pass
 

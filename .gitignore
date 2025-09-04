@@ -371,4 +371,8 @@ nltk_data/
 requirements_updated.txt
 requirements_backup.txt
 
+# Archive directories (legacy code)
+docs/_archive/
+docs/archive/
+
 

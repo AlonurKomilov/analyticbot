@@ -34,6 +34,13 @@ exclude_lines = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = [
+    "docs/_archive/**",
+    "docs/archive/**",
+    "**/migrations/**",
+    "**/venv/**",
+    "**/__pycache__/**",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

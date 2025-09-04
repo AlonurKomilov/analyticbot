@@ -88,6 +88,12 @@ class AdvancedDataProcessor:
         except Exception as e:
             logger.error(f"Data ingestion failed: {str(e)}")
             raise
+    
+    async def _setup_streaming(self, source: str, **kwargs) -> pd.DataFrame:
+        """Setup streaming data source (placeholder implementation)"""
+        logger.info(f"Setting up streaming from: {source}")
+        # For now, return empty DataFrame - can be implemented later
+        return pd.DataFrame()
 
     async def _ingest_csv(self, filepath: str, **kwargs) -> pd.DataFrame:
         """Ingest CSV data with async file reading"""
@@ -293,8 +299,16 @@ class AdvancedDataProcessor:
 
         elif method == "zscore":
             for col in numeric_cols:
-                z_scores = np.abs(stats.zscore(df[col].dropna()))
-                df = df[z_scores < 3]  # Remove data points with |z-score| > 3
+                try:
+                    column_data = df[col].dropna()
+                    if len(column_data) > 0:
+                        z_scores = np.abs(stats.zscore(column_data.values))
+                        # Create boolean mask for the original dataframe
+                        valid_indices = column_data.index[z_scores < 3]
+                        df = df.loc[df.index.isin(valid_indices)]
+                except Exception as e:
+                    logger.warning(f"Z-score outlier removal failed for column {col}: {e}")
+                    continue
 
         elif method == "isolation":
             from sklearn.ensemble import IsolationForest
@@ -378,14 +392,29 @@ class AdvancedDataProcessor:
                 for i in range(len(correlation_matrix.columns)):
                     for j in range(i + 1, len(correlation_matrix.columns)):
                         corr_val = correlation_matrix.iloc[i, j]
-                        if abs(corr_val) > 0.7:  # High correlation threshold
-                            high_correlations.append(
-                                {
-                                    "column1": correlation_matrix.columns[i],
-                                    "column2": correlation_matrix.columns[j],
-                                    "correlation": corr_val,
-                                }
-                            )
+                        try:
+                            # Handle different types of correlation values
+                            if hasattr(corr_val, 'item') and callable(corr_val.item):
+                                # For pandas/numpy scalars with .item() method
+                                corr_val_float = float(corr_val.item())
+                            elif isinstance(corr_val, (int, float)):
+                                # For regular numeric types
+                                corr_val_float = float(corr_val)
+                            else:
+                                # Skip non-numeric values
+                                continue
+                            
+                            if abs(corr_val_float) > 0.7:  # High correlation threshold
+                                high_correlations.append(
+                                    {
+                                        "column1": correlation_matrix.columns[i],
+                                        "column2": correlation_matrix.columns[j],
+                                        "correlation": corr_val_float,
+                                    }
+                                )
+                        except (ValueError, TypeError):
+                            # Skip non-numeric correlation values
+                            continue
 
                 analysis["correlations"] = {
                     "high_correlations": high_correlations,

@@ -10,7 +10,7 @@ This service extends the core DeliveryService with:
 import hashlib
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Callable
 from uuid import UUID
 
 from core.common_helpers.idempotency import IdempotencyGuard
@@ -51,7 +51,7 @@ class EnhancedDeliveryService(BaseDeliveryService):
         self,
         delivery_id: UUID,
         post_data: dict,
-        send_function: callable,
+        send_function: Callable[..., Any],
         idempotency_ttl: int = 1800,  # 30 minutes
         max_rate_limit_wait: float = 120.0,  # 2 minutes max wait
     ) -> dict[str, Any]:

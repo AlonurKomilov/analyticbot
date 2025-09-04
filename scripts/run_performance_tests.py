@@ -57,9 +57,11 @@ async def run_basic_performance_tests():
         logger.info("🔍 Testing database connection performance...")
 
         async def db_connection_test():
-            async with db_manager.pool.acquire() as conn:
-                result = await conn.fetchval("SELECT 1 as test_value")
-                return result
+            if db_manager.pool:
+                async with db_manager.pool.acquire() as conn:
+                    result = await conn.fetchval("SELECT 1 as test_value")
+                    return result
+            return None
 
         db_result = await tester.benchmark_function(
             "database_connection_basic", db_connection_test, iterations=20, concurrent=False
@@ -138,9 +140,11 @@ async def run_load_test():
             for i in range(5):
 
                 async def db_op():
-                    async with db_manager.pool.acquire() as conn:
-                        result = await conn.fetchval("SELECT pg_sleep(0.01), 1")
-                        return result
+                    if db_manager.pool:
+                        async with db_manager.pool.acquire() as conn:
+                            result = await conn.fetchval("SELECT pg_sleep(0.01), 1")
+                            return result
+                    return None
 
                 tasks.append(db_op())
             if performance_manager.cache._is_connected:

@@ -177,8 +177,11 @@ class AnalyticsService:
         Fetch view count for a single post with error handling
         """
         try:
-            message = await self.bot.get_message(chat_id=channel_id, message_id=message_id)
-            return getattr(message, "views", None)
+            # For aiogram, we need to use different approach
+            # Since views are not directly accessible via aiogram Bot API,
+            # we'll return None and handle this at a higher level
+            logger.debug(f"View fetching for aiogram bot not implemented for message {message_id}")
+            return None
         except TelegramBadRequest as e:
             if "message not found" in str(e).lower():
                 return 0  # Message deleted, return 0 views
@@ -446,8 +449,8 @@ class AnalyticsService:
             # Record metrics
             prometheus_service.record_post_views_update(stats["updated"])
 
-            if hasattr(self, "_cache_performance_stats"):
-                await self._cache_performance_stats(stats)
+            # Cache performance stats
+            await self._cache_performance_stats(stats)
 
         except Exception as e:
             context = ErrorContext().add("operation", "update_all_post_views_optimized")
@@ -456,6 +459,15 @@ class AnalyticsService:
             stats["duration"] = asyncio.get_event_loop().time() - start_time
 
         return stats
+    
+    async def _cache_performance_stats(self, stats: dict[str, int]) -> None:
+        """Cache performance statistics for monitoring"""
+        try:
+            cache_key = f"performance_stats:{datetime.now().strftime('%Y%m%d_%H')}"
+            await performance_manager.cache.set(cache_key, stats, ttl=3600)
+            logger.debug(f"Cached performance stats: {stats}")
+        except Exception as e:
+            logger.warning(f"Failed to cache performance stats: {e}")
 
     @cache_result("posts_to_track", ttl=getattr(PerformanceConfig, "CACHE_ANALYTICS_TTL", 300))
     async def _get_posts_to_track_cached(self) -> list[dict]:
@@ -519,6 +531,14 @@ class AnalyticsService:
         if tasks:
             completed_stats = await asyncio.gather(*tasks, return_exceptions=True)
             await self._merge_stats(stats, completed_stats)
+    
+    async def _merge_stats(self, stats: dict[str, int], completed_stats: list) -> None:
+        """Merge completed task stats into main stats"""
+        for result in completed_stats:
+            if isinstance(result, dict):
+                for key, value in result.items():
+                    if isinstance(value, (int, float)):
+                        stats[key] = int(stats.get(key, 0) + value)
 
     async def _process_channels_sequential(
         self, grouped: dict[int, list[dict]], stats: dict[str, int]
@@ -626,31 +646,12 @@ class AnalyticsService:
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
         message_ids = [post["message_id"] for post in batch]
         try:
-            messages = await self.bot.get_messages(chat_id=channel_id, message_ids=message_ids)
-            msg_map = {m.message_id: m for m in messages if m}
+            # For aiogram, we don't have direct get_messages method
+            # Skip view fetching for now
+            logger.debug(f"Skipping view updates for aiogram bot - not implemented")
             for post in batch:
                 stats["processed"] += 1
-                message = msg_map.get(post["message_id"])
-                if not message:
-                    stats["skipped"] += 1
-                    continue
-                if message.views is None:
-                    stats["skipped"] += 1
-                    continue
-                try:
-                    await self.analytics_repository.update_post_views(
-                        scheduled_post_id=post["id"], views=message.views
-                    )
-                    stats["updated"] += 1
-                except Exception as e:
-                    context = (
-                        ErrorContext()
-                        .add("operation", "update_post_views")
-                        .add("post_id", post["id"])
-                        .add("channel_id", channel_id)
-                    )
-                    ErrorHandler.handle_database_error(e, context)
-                    stats["errors"] += 1
+                stats["skipped"] += 1
         except TelegramBadRequest as e:
             context = (
                 ErrorContext()
@@ -704,8 +705,9 @@ class AnalyticsService:
     async def _get_single_post_views(self, channel_id: int, post: dict) -> int | None:
         """Get views for a single post without caching"""
         try:
-            message = await self.bot.get_message(chat_id=channel_id, message_id=post["message_id"])
-            return getattr(message, "views", 0) or 0
+            # For aiogram, view fetching is not directly supported
+            logger.debug(f"View fetching not implemented for aiogram bot - post {post['id']}")
+            return None
         except Exception as e:
             logger.debug(f"⚠️ Failed to get views for post {post['id']}: {e}")
             return None

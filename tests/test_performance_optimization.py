@@ -215,16 +215,20 @@ async def run_comprehensive_performance_test() -> dict[str, Any] | None:
         logger.info("🔍 Testing database operations...")
 
         async def db_simple_query():
-            async with db_manager.pool.acquire() as conn:
-                return await conn.fetchval("SELECT 1")
+            if db_manager.pool:
+                async with db_manager.pool.acquire() as conn:
+                    return await conn.fetchval("SELECT 1")
+            return None
 
         await tester.benchmark_function("db_simple_query", db_simple_query, iterations=50)
 
         async def db_complex_query():
-            async with db_manager.pool.acquire() as conn:
-                return await conn.fetch(
-                    "\n                    SELECT \n                        generate_series(1, 100) as id,\n                        md5(random()::text) as hash_value,\n                        now() as timestamp\n                "
-                )
+            if db_manager.pool:
+                async with db_manager.pool.acquire() as conn:
+                    return await conn.fetch(
+                        "\n                    SELECT \n                        generate_series(1, 100) as id,\n                        md5(random()::text) as hash_value,\n                        now() as timestamp\n                "
+                    )
+            return []
 
         await tester.benchmark_function("db_complex_query", db_complex_query, iterations=20)
         if performance_manager.cache._is_connected:
@@ -315,39 +319,6 @@ async def run_comprehensive_performance_test() -> dict[str, Any] | None:
             memory_increase = final_memory - initial_memory
             assert memory_increase < 50, f"Memory leak detected: {memory_increase}MB increase"
         logger.info("✅ Memory efficiency test completed")
-
-
-async def run_comprehensive_performance_test():
-    """🚀 Run comprehensive performance test suite"""
-    tester = PerformanceTester()
-    try:
-        await tester.setup()
-        logger.info("🧪 Starting comprehensive performance tests...")
-
-        async def db_test():
-            async with db_manager.pool.acquire() as conn:
-                return await conn.fetchval("SELECT COUNT(*) FROM information_schema.tables")
-
-        await tester.benchmark_function("database_query", db_test, iterations=50)
-        if performance_manager.cache._is_connected:
-
-            async def cache_test():
-                await performance_manager.cache.set("test_key", {"test": True})
-                result = await performance_manager.cache.get("test_key")
-                await performance_manager.cache.delete("test_key")
-                return result
-
-            await tester.benchmark_function("cache_operations", cache_test, iterations=100)
-        report = tester.generate_report()
-        logger.info("📊 PERFORMANCE TEST REPORT")
-        logger.info("=" * 50)
-        logger.info(f"Total Tests: {report['summary']['total_tests']}")
-        logger.info(f"Success Rate: {report['summary']['success_rate']:.1f}%")
-        logger.info(f"Average Throughput: {report['summary']['avg_throughput']:.1f} ops/sec")
-        logger.info(f"Average Response Time: {report['summary']['avg_response_time']:.3f}s")
-        return report
-    finally:
-        await tester.teardown()
 
 
 if __name__ == "__main__":

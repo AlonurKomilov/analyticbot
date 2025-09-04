@@ -118,8 +118,15 @@ def send_message_task(
                     raise Exception("Global bot rate limit exceeded")
 
                 # Get bot instance and send message
-                bot = container.resolve(_AioBot)
-                result = await bot.send_message(chat_id=chat_id, text=message, **kwargs)
+                bot_instance = container.resolve(_AioBot)
+                if isinstance(bot_instance, list):
+                    # If multiple bots, use the first one
+                    bot_instance = bot_instance[0] if bot_instance else None
+                
+                if bot_instance is None:
+                    raise Exception("Bot instance not available")
+                
+                result = await bot_instance.send_message(chat_id=chat_id, text=message, **kwargs)
 
                 logger.info(f"Message sent successfully to {chat_id}: {result.message_id}")
 
@@ -166,8 +173,8 @@ def send_message_task(
                 raise send_error
 
         except Exception as e:
-            context.add("error", str(e))
-            ErrorHandler.log_error(e, context)
+            # Simple error logging without complex error context
+            logger.error(f"Failed to send message to {chat_id}: {e}")
 
             # Record failure metric
             try:
@@ -392,22 +399,24 @@ def health_check_task(self) -> dict[str, Any]:
             # Check Redis health
             try:
                 import redis
+                from pydantic import SecretStr
 
                 from config.settings import Settings
 
-                try:
-                    settings = Settings()
-                except Exception:
-                    # For tests/development, create settings with minimal required values
-                    import os
-                    settings = Settings(
-                        BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
-                        STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
-                        POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
-                        POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
-                        POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
-                        JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
-                    )
+                # Try to create settings, fallback to test values if needed
+                settings = None
+                import os
+                from pydantic import SecretStr
+                
+                # Always use environment variables with fallbacks
+                settings = Settings(
+                    BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
+                    STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
+                    POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
+                    POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
+                    POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
+                    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+                )
                 redis_client = redis.from_url(str(settings.REDIS_URL))
                 redis_client.ping()
                 health_results["components"]["redis"] = {"status": "healthy"}
@@ -417,9 +426,12 @@ def health_check_task(self) -> dict[str, Any]:
 
             # Check Telegram API health
             try:
-                bot = container.resolve(_AioBot)
-                if bot:
-                    me = await bot.get_me()
+                bot_instance = container.resolve(_AioBot)
+                if isinstance(bot_instance, list):
+                    bot_instance = bot_instance[0] if bot_instance else None
+                
+                if bot_instance:
+                    me = await bot_instance.get_me()
                     health_results["components"]["telegram"] = {
                         "status": "healthy",
                         "bot_username": me.username if me else "unknown",

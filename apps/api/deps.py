@@ -17,7 +17,7 @@ from infra.db.repositories.schedule_repository import (
 )
 
 # Database connection dependency
-_db_pool = None
+_db_pool: asyncpg.Pool | None = None
 
 # Security dependencies
 security = HTTPBearer()
@@ -35,6 +35,7 @@ async def get_db_pool() -> asyncpg.Pool:
             command_timeout=settings.DB_POOL_TIMEOUT,
         )
 
+    assert _db_pool is not None  # Type narrowing for mypy
     return _db_pool
 
 
@@ -93,7 +94,7 @@ async def get_current_user(
     # TODO: Implement proper JWT validation and user lookup
     # Raise an exception in production to prevent unauthorized access
     from config.settings import settings
-    if settings.ENV != "development":
+    if settings.ENVIRONMENT != "development":
         from fastapi import HTTPException
         raise HTTPException(status_code=401, detail="Authentication required")
     

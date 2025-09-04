@@ -191,13 +191,13 @@ async def get_metrics_repository():
     return AsyncpgPostMetricsRepository(pool)
 
 
-async def get_edges_repository():
+async def get_edges_repository() -> AsyncpgEdgesRepository:
     """Get edges repository"""
     pool = await get_database_pool()
     return AsyncpgEdgesRepository(pool)
 
 
-async def get_stats_raw_repository():
+async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
     """Get stats raw repository"""
     pool = await get_database_pool()
     return AsyncpgStatsRawRepository(pool)

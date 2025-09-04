@@ -9,19 +9,21 @@ import logging
 from datetime import datetime
 from typing import Any
 
+import redis.asyncio as redis
+
 logger = logging.getLogger(__name__)
 
 
 class RedisJSONCache:
     """Redis-based JSON cache with TTL support"""
 
-    def __init__(self, redis_client=None):
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.redis = redis_client
         self.enabled = redis_client is not None
 
     async def get_json(self, key: str) -> dict | None:
         """Get JSON data from cache"""
-        if not self.enabled:
+        if not self.enabled or self.redis is None:
             return None
 
         try:
@@ -35,7 +37,7 @@ class RedisJSONCache:
 
     async def set_json(self, key: str, value: dict, ttl_s: int = 60) -> None:
         """Set JSON data in cache with TTL"""
-        if not self.enabled:
+        if not self.enabled or self.redis is None:
             return
 
         try:
@@ -46,7 +48,7 @@ class RedisJSONCache:
 
     async def delete(self, key: str) -> None:
         """Delete key from cache"""
-        if not self.enabled:
+        if not self.enabled or self.redis is None:
             return
 
         try:
@@ -56,7 +58,7 @@ class RedisJSONCache:
 
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache"""
-        if not self.enabled:
+        if not self.enabled or self.redis is None:
             return False
 
         try:
@@ -65,7 +67,7 @@ class RedisJSONCache:
             logger.error(f"Cache exists error for key {key}: {e}")
             return False
 
-    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime = None) -> str:
+    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime | None = None) -> str:
         """Generate a consistent cache key from endpoint and parameters"""
         # Sort parameters for consistent key generation
         sorted_params = sorted(params.items())
@@ -102,7 +104,7 @@ class NoOpCache:
     async def exists(self, key: str) -> bool:
         return False
 
-    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime = None) -> str:
+    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime | None = None) -> str:
         return f"noop:{endpoint}"
 
 

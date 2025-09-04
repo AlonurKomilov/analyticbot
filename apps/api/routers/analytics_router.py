@@ -138,7 +138,7 @@ async def get_predictive_engine() -> PredictiveAnalyticsEngine:
     return PredictiveAnalyticsEngine()
 
 
-async def get_ai_insights() -> AIInsightsGenerator:
+async def get_ai_insights_generator() -> AIInsightsGenerator:
     """Get AI insights generator"""
     return AIInsightsGenerator()
 
@@ -562,7 +562,7 @@ async def make_prediction(
 
 @router.get("/insights/{channel_id}")
 async def get_ai_insights(
-    channel_id: int, insights_generator: AIInsightsGenerator = Depends(get_ai_insights)
+    channel_id: int, insights_generator: AIInsightsGenerator = Depends(get_ai_insights_generator)
 ):
     """Generate AI-powered insights for a channel"""
     try:

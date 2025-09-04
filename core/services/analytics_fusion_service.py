@@ -243,9 +243,10 @@ class AnalyticsFusionService:
             except (json.JSONDecodeError, TypeError):
                 reactions = {}
 
+        date_value = record.get("date")
         return {
             "msg_id": record.get("msg_id", 0),
-            "date": record.get("date").isoformat() if record.get("date") else "",
+            "date": date_value.isoformat() if date_value is not None else "",
             "views": record.get("views", 0),
             "forwards": record.get("forwards", 0),
             "replies": record.get("replies", 0),

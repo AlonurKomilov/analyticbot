@@ -7,6 +7,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from passlib.context import CryptContext
 from sqlalchemy import and_, desc, func
@@ -35,7 +36,7 @@ class SuperAdminService:
         try:
             # Get admin user
             stmt = select(AdminUser).where(
-                AdminUser.username == username, AdminUser.is_active is True
+                AdminUser.username == username, AdminUser.is_active == True
             )
             result = await db.execute(stmt)
             admin = result.scalar_one_or_none()
@@ -60,7 +61,6 @@ class SuperAdminService:
             # Successful login - reset failed attempts
             admin.failed_login_attempts = 0
             admin.last_login = datetime.utcnow()
-            admin.last_login_ip = ip_address
 
             # Create session
             session = await self.create_admin_session(db, admin, ip_address, "Test User Agent")
@@ -115,14 +115,14 @@ class SuperAdminService:
         # Admin statistics
         total_admins = await db.scalar(select(func.count(AdminUser.id))) or 0
         active_admins = (
-            await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active is True))
+            await db.scalar(select(func.count(AdminUser.id)).where(AdminUser.is_active == True))
             or 0
         )
         active_sessions = (
             await db.scalar(
                 select(func.count(AdminSession.id)).where(
                     and_(
-                        AdminSession.is_active is True, AdminSession.expires_at > datetime.utcnow()
+                        AdminSession.is_active == True, AdminSession.expires_at > datetime.utcnow()
                     )
                 )
             )
@@ -182,7 +182,7 @@ class SuperAdminService:
             return False
 
     async def get_audit_logs(
-        self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: int = None
+        self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: UUID | None = None
     ) -> dict[str, Any]:
         """Get paginated audit logs"""
         offset = (page - 1) * limit
@@ -195,7 +195,7 @@ class SuperAdminService:
         )
 
         if admin_id:
-            stmt = stmt.where(AdminAuditLog.admin_id == admin_id)
+            stmt = stmt.where(AdminAuditLog.admin_user_id == admin_id)
 
         result = await db.execute(stmt)
         logs = result.scalars().all()
@@ -203,7 +203,7 @@ class SuperAdminService:
         # Get total count
         count_stmt = select(func.count(AdminAuditLog.id))
         if admin_id:
-            count_stmt = count_stmt.where(AdminAuditLog.admin_id == admin_id)
+            count_stmt = count_stmt.where(AdminAuditLog.admin_user_id == admin_id)
         total_count = await db.scalar(count_stmt) or 0
 
         return {
@@ -219,10 +219,10 @@ class SuperAdminService:
         admin_id: int,
         action: str,
         table_name: str,
-        record_id: int,
-        old_values: dict = None,
-        new_values: dict = None,
-        additional_info: str = None,
+        record_id: UUID,
+        old_values: dict | None = None,
+        new_values: dict | None = None,
+        additional_info: str | None = None,
     ) -> None:
         """Create audit log entry"""
         log = AdminAuditLog(
@@ -240,7 +240,7 @@ class SuperAdminService:
         db.add(log)
 
     async def _log_security_event(
-        self, db: AsyncSession, event_type: str, details: dict, admin_id: int = None
+        self, db: AsyncSession, event_type: str, details: dict, admin_id: UUID | None = None
     ) -> None:
         """Log security events"""
         log = AdminAuditLog(

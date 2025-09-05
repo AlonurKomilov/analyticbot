@@ -63,8 +63,9 @@ async def get_channel_overview(
         cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("overview", cache_params, last_updated)
+        last_updated_str = last_updated.isoformat() if last_updated else ""
         etag = (
-            f'"{hashlib.sha256(f"{cache_key}:{last_updated.isoformat() if last_updated else ""}".encode()).hexdigest()}"'
+            f'"{hashlib.sha256(f"{cache_key}:{last_updated_str}".encode()).hexdigest()}"'
             if last_updated
             else None
         )

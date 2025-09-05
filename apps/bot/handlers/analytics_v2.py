@@ -114,8 +114,7 @@ def _format_overview_text(data: OverviewResponse) -> str:
         ("🗓 Period: " + f"{data.period}" + "days ( " + f"{data.period_start.strftime('%m/%d')}" + "- " + f"{data.period_end.strftime('%m/%d')}" + " )"),
         "",
         f"👥 **Subscribers:** {_format_number(overview.subscribers)}",
-        ("📈 **Growth:** " + f"{_format_number(overview.subscriber_growth)}" + "( " + f"{_format_percentage(overview.subscriber_growth / max(overview.subscribers -
-overview.subscriber_growth, 1) * 100)}" + " )"),
+        ("📈 **Growth:** " + f"{_format_number(overview.subscriber_growth)}" + "( " + f"{_format_percentage(overview.subscriber_growth / max(overview.subscribers - overview.subscriber_growth, 1) * 100)}" + " )"),
         "",
         f"📝 **Posts:** {overview.total_posts}",
         f"👁️ **Total Views:** {_format_number(overview.total_views)}",
@@ -155,8 +154,7 @@ def _format_growth_text(data: GrowthResponse) -> str:
         change = day_data.get("change", 0)
         subscribers = day_data.get("subscribers", 0)
         lines.append(
-            ("• " + f"{date}" + ": " + f"{_format_number(subscribers)}" + "( " + f"{_format_percentage(change)
-if change else '—'}" + " )")
+            ("• " + f"{date}" + ": " + f"{_format_number(subscribers)}" + "( " + f"{_format_percentage(change) if change else '—'}" + " )")
         )
 
     lines.extend(

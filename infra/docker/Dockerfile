@@ -35,6 +35,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    libgomp1 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

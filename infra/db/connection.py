@@ -43,6 +43,9 @@ async def get_connection_pool() -> Pool:
     if _connection_pool is None:
         _connection_pool = await create_connection_pool()
 
+    if _connection_pool is None:
+        raise RuntimeError("Failed to create database connection pool")
+    
     return _connection_pool
 
 

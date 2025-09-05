@@ -484,7 +484,9 @@ class TestSecurityLogging:
 
         # Test various security events
         SecurityLogger.log_security_event(
-            "login_failed", 123456789, {"ip": "192.168.1.1", "reason": "invalid_password"}
+            "login_failed",
+            123456789,
+            {"ip": "192.168.1.1", "reason": "invalid_password"},
         )
 
         SecurityLogger.log_security_event(

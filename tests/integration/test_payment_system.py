@@ -67,7 +67,12 @@ class MockPaymentRepository:
         return self.counter - 1
 
     async def create_payment_method(
-        self, user_id: int, provider: str, provider_method_id: str, method_type: str, **kwargs
+        self,
+        user_id: int,
+        provider: str,
+        provider_method_id: str,
+        method_type: str,
+        **kwargs,
     ) -> str:
         method_id = f"pm_test_{self.get_counter():04d}"
         self.payment_methods[method_id] = {
@@ -84,7 +89,12 @@ class MockPaymentRepository:
         return method_id
 
     async def create_payment(
-        self, user_id: int, amount: Decimal, currency: str, idempotency_key: str, **kwargs
+        self,
+        user_id: int,
+        amount: Decimal,
+        currency: str,
+        idempotency_key: str,
+        **kwargs,
     ) -> str:
         payment_id = f"pay_test_{self.get_counter():04d}"
         self.payments[payment_id] = {
@@ -202,7 +212,11 @@ async def test_payment_system():
     payme_adapter = MockPaymentAdapter("payme")
     click_adapter = MockPaymentAdapter("click")
 
-    adapters = {"stripe": stripe_adapter, "payme": payme_adapter, "click": click_adapter}
+    adapters = {
+        "stripe": stripe_adapter,
+        "payme": payme_adapter,
+        "click": click_adapter,
+    }
 
     # Test 1: Plan Management
     print("\n📋 TEST 1: Plan Management")

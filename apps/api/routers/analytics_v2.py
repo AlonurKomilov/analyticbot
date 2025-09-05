@@ -84,10 +84,8 @@ async def get_channel_overview(
         headers = {"Cache-Control": "public, max-age=60"}
         if etag:
             headers["ETag"] = etag
-        
-        return JSONResponse(
-            content=cached_data, headers=headers
-        )        # Get fresh data
+
+        return JSONResponse(content=cached_data, headers=headers)  # Get fresh data
         overview_data = await service.get_overview(channel_id, from_, to_)
 
         response_data = OverviewResponse(data=overview_data)  # type: ignore
@@ -101,10 +99,8 @@ async def get_channel_overview(
         headers = {"Cache-Control": "public, max-age=60"}
         if etag:
             headers["ETag"] = etag
-        
-        return JSONResponse(
-            content=response_dict, headers=headers
-        )
+
+        return JSONResponse(content=response_dict, headers=headers)
 
     except Exception as e:
         logger.error(f"Error getting overview for channel {channel_id}: {e}")
@@ -276,7 +272,7 @@ async def get_channel_sources(
         # Validate kind parameter
         if kind not in ("mention", "forward"):
             raise HTTPException(status_code=400, detail="kind must be 'mention' or 'forward'")
-        
+
         sources_data = await service.get_sources(channel_id, from_, to_, kind)  # type: ignore
 
         response_data = EdgeListResponse(data=sources_data)  # type: ignore

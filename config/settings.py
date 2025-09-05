@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     # Phase 4.5: Bot UI & Alerts Integration Feature Flags
     BOT_ANALYTICS_UI_ENABLED: bool = False
     ALERTS_ENABLED: bool = False
-    EXPORT_ENABLED: bool = False
+    EXPORT_ENABLED: bool = True
     SHARE_LINKS_ENABLED: bool = False
 
     # Analytics V2 Bot Client Settings
@@ -102,6 +102,11 @@ class Settings(BaseSettings):
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
+    
+    # Export Settings
+    MAX_EXPORT_SIZE_MB: int = 50
+    RATE_LIMIT_PER_HOUR: int = 100
+    RATE_LIMIT_PER_MINUTE: int = 10
 
     # Alert Settings
     ALERT_CHECK_INTERVAL_MINUTES: int = 5

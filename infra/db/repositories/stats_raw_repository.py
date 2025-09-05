@@ -4,7 +4,7 @@ Repository for storing and managing raw statistics data from MTProto
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 import asyncpg
@@ -158,7 +158,7 @@ class AsyncpgStatsRawRepository:
         Returns:
             Number of deleted records
         """
-        cutoff_date = datetime.utcnow() - datetime.timedelta(days=days_to_keep)
+        cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)
 
         async with self.pool.acquire() as conn:
             result = await conn.execute("DELETE FROM stats_raw WHERE fetched_at < $1", cutoff_date)

@@ -135,7 +135,8 @@ class OptimizedAsyncPgPool:
         )
 
         # Start health monitoring
-        await self._health_monitor.start_monitoring(self._pool)
+        if self._pool is not None:
+            await self._health_monitor.start_monitoring(self._pool)
 
         # Initialize optimizations
         await self._initialize_optimizations()
@@ -143,10 +144,15 @@ class OptimizedAsyncPgPool:
         logger.info(
             f"🚀 Optimized asyncpg pool initialized: {self.config.min_connections}-{self.config.max_connections} connections"
         )
+        if self._pool is None:
+            raise RuntimeError("Database pool not initialized")
         return self._pool
 
     async def _initialize_optimizations(self):
         """Initialize database optimizations"""
+        if self._pool is None:
+            logger.warning("Skipping database optimizations - pool not initialized")
+            return
         async with self._pool.acquire() as conn:
             optimizations = [
                 # Performance indexes
@@ -193,6 +199,9 @@ class OptimizedAsyncPgPool:
     @asynccontextmanager
     async def acquire(self) -> AsyncGenerator[Connection, None]:
         """Acquire connection with monitoring"""
+        if self._pool is None:
+            raise RuntimeError("Database pool not initialized")
+            
         start_time = time.time()
         try:
             async with self._pool.acquire() as conn:

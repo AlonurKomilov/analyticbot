@@ -3,7 +3,7 @@ Channel Daily Repository Implementation
 Repository for storing and managing daily channel metrics
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import asyncpg
@@ -106,7 +106,7 @@ class AsyncpgChannelDailyRepository:
 
     async def delete_old_metrics(self, days_to_keep: int = 365) -> int:
         """Delete old metrics to manage storage"""
-        cutoff_date = date.today() - datetime.timedelta(days=days_to_keep)
+        cutoff_date = date.today() - timedelta(days=days_to_keep)
 
         async with self.pool.acquire() as conn:
             result = await conn.execute("DELETE FROM channel_daily WHERE day < $1", cutoff_date)

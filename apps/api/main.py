@@ -3,6 +3,7 @@ AnalyticBot API - Main Entry Point
 Unified FastAPI application with layered architecture and secure configuration
 """
 
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 from uuid import UUID
@@ -13,22 +14,33 @@ from starlette.middleware.cors import CORSMiddleware
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
 from apps.api.routers.analytics_router import router as analytics_router
 from apps.api.routers.analytics_v2 import router as analytics_v2_router
+from apps.api.routers.exports_v2 import router as exports_v2_router
 from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
 from core import DeliveryService, ScheduleService
 from infra.db.connection_manager import close_database, init_database
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
     # Startup - Initialize optimized database
-    await init_database()
+    try:
+        await init_database()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        # Continue without database for now to allow health checks
     yield
     # Shutdown - Cleanup database and legacy pool
-    await close_database()
-    await cleanup_db_pool()
+    try:
+        await close_database()
+        await cleanup_db_pool()
+    except Exception as e:
+        logger.error(f"Database cleanup failed: {e}")
 
 
 app = FastAPI(title="AnalyticBot API", version="v1", debug=settings.DEBUG, lifespan=lifespan)
@@ -46,6 +58,7 @@ app.add_middleware(
 # Include routers
 app.include_router(analytics_router)
 app.include_router(analytics_v2_router)  # New Analytics Fusion API v2
+app.include_router(exports_v2_router)  # Export functionality
 app.include_router(content_protection_router)
 app.include_router(superadmin_router)
 

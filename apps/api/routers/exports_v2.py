@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from apps.api.exports.csv_v2 import CSVExporter
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
-from config.settings import Settings
+from config import settings
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
     ChartRenderer,
@@ -36,8 +36,7 @@ class ExportStatus(BaseModel):
 
 def get_analytics_client() -> AnalyticsV2Client:
     """Get analytics client instance"""
-    settings = Settings()
-    return AnalyticsV2Client(settings.ANALYTICS_API_URL)
+    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_csv_exporter() -> CSVExporter:
@@ -57,9 +56,11 @@ def get_chart_renderer() -> ChartRenderer:
 
 def check_export_enabled():
     """Check if export functionality is enabled"""
-    settings = Settings()
     if not settings.EXPORT_ENABLED:
         raise HTTPException(status_code=403, detail="Export functionality is disabled")
+
+
+# CSV Export Endpoints
 
 
 @router.get("/csv/overview/{channel_id}")
@@ -73,19 +74,20 @@ async def export_overview_csv(
     """Export channel overview as CSV"""
     try:
         # Fetch analytics data
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            overview_data = await analytics_client.get_overview(channel_id, period)
+        overview_data = await analytics_client.overview(channel_id, period)
 
         if not overview_data:
             raise HTTPException(status_code=404, detail="Analytics data not found")
 
         # Generate CSV
         csv_content = csv_exporter.overview_to_csv(overview_data)
-        filename = csv_exporter.get_filename("overview", channel_id, period)
+        filename = csv_exporter.generate_filename("overview", channel_id, period)
+
+        # Create bytes stream for StreamingResponse
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
 
         return StreamingResponse(
-            io.StringIO(csv_content),
+            csv_bytes,
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
@@ -108,18 +110,19 @@ async def export_growth_csv(
 ):
     """Export growth data as CSV"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            growth_data = await analytics_client.get_growth(channel_id, period)
+        growth_data = await analytics_client.growth(channel_id, period)
 
         if not growth_data:
             raise HTTPException(status_code=404, detail="Growth data not found")
 
         csv_content = csv_exporter.growth_to_csv(growth_data)
-        filename = csv_exporter.get_filename("growth", channel_id, period)
+        filename = csv_exporter.generate_filename("growth", channel_id, period)
+
+        # Create bytes stream for StreamingResponse
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
 
         return StreamingResponse(
-            io.StringIO(csv_content),
+            csv_bytes,
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
@@ -142,18 +145,19 @@ async def export_reach_csv(
 ):
     """Export reach data as CSV"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            reach_data = await analytics_client.get_reach(channel_id, period)
+        reach_data = await analytics_client.reach(channel_id, period)
 
         if not reach_data:
             raise HTTPException(status_code=404, detail="Reach data not found")
 
         csv_content = csv_exporter.reach_to_csv(reach_data)
-        filename = csv_exporter.get_filename("reach", channel_id, period)
+        filename = csv_exporter.generate_filename("reach", channel_id, period)
+
+        # Create bytes stream for StreamingResponse
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
 
         return StreamingResponse(
-            io.StringIO(csv_content),
+            csv_bytes,
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
@@ -176,18 +180,19 @@ async def export_sources_csv(
 ):
     """Export traffic sources as CSV"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            sources_data = await analytics_client.get_sources(channel_id, period)
+        sources_data = await analytics_client.sources(channel_id, period)
 
         if not sources_data:
             raise HTTPException(status_code=404, detail="Sources data not found")
 
         csv_content = csv_exporter.sources_to_csv(sources_data)
-        filename = csv_exporter.get_filename("sources", channel_id, period)
+        filename = csv_exporter.generate_filename("sources", channel_id, period)
+
+        # Create bytes stream for StreamingResponse
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
 
         return StreamingResponse(
-            io.StringIO(csv_content),
+            csv_bytes,
             media_type="text/csv",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
@@ -200,6 +205,9 @@ async def export_sources_csv(
         raise HTTPException(status_code=500, detail="Export failed")
 
 
+# PNG Chart Export Endpoints
+
+
 @router.get("/png/growth/{channel_id}")
 async def export_growth_chart(
     channel_id: str,
@@ -210,30 +218,28 @@ async def export_growth_chart(
 ):
     """Export growth chart as PNG"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            growth_data = await analytics_client.get_growth(channel_id, period)
+        growth_data = await analytics_client.growth(channel_id, period)
 
         if not growth_data:
             raise HTTPException(status_code=404, detail="Growth data not found")
 
         # Render chart
-        png_bytes = chart_renderer.render_growth_chart(growth_data)
+        chart_bytes = chart_renderer.render_growth_chart(growth_data)
 
-        filename = f"growth_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d')}.png"
+        filename = f"growth_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
         return Response(
-            content=png_bytes,
+            content=chart_bytes,
             media_type="image/png",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except aiohttp.ClientError as e:
-        logger.error(f"Failed to fetch growth data: {e}")
-        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except ChartRenderingError as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except aiohttp.ClientError as e:
+        logger.error(f"Failed to fetch growth data: {e}")
+        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except Exception as e:
         logger.error(f"PNG export failed: {e}")
         raise HTTPException(status_code=500, detail="Export failed")
@@ -247,32 +253,30 @@ async def export_reach_chart(
     chart_renderer: ChartRenderer = Depends(get_chart_renderer),
     _: None = Depends(check_export_enabled),
 ):
-    """Export reach distribution chart as PNG"""
+    """Export reach chart as PNG"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            reach_data = await analytics_client.get_reach(channel_id, period)
+        reach_data = await analytics_client.reach(channel_id, period)
 
         if not reach_data:
             raise HTTPException(status_code=404, detail="Reach data not found")
 
         # Render chart
-        png_bytes = chart_renderer.render_reach_chart(reach_data)
+        chart_bytes = chart_renderer.render_reach_chart(reach_data)
 
-        filename = f"reach_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d')}.png"
+        filename = f"reach_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
         return Response(
-            content=png_bytes,
+            content=chart_bytes,
             media_type="image/png",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except aiohttp.ClientError as e:
-        logger.error(f"Failed to fetch reach data: {e}")
-        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except ChartRenderingError as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except aiohttp.ClientError as e:
+        logger.error(f"Failed to fetch reach data: {e}")
+        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except Exception as e:
         logger.error(f"PNG export failed: {e}")
         raise HTTPException(status_code=500, detail="Export failed")
@@ -286,41 +290,41 @@ async def export_sources_chart(
     chart_renderer: ChartRenderer = Depends(get_chart_renderer),
     _: None = Depends(check_export_enabled),
 ):
-    """Export traffic sources pie chart as PNG"""
+    """Export sources chart as PNG"""
     try:
-        async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
-            sources_data = await analytics_client.get_sources(channel_id, period)
+        sources_data = await analytics_client.sources(channel_id, period)
 
         if not sources_data:
             raise HTTPException(status_code=404, detail="Sources data not found")
 
         # Render chart
-        png_bytes = chart_renderer.render_sources_chart(sources_data)
+        chart_bytes = chart_renderer.render_sources_chart(sources_data)
 
-        filename = f"sources_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d')}.png"
+        filename = f"sources_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
         return Response(
-            content=png_bytes,
+            content=chart_bytes,
             media_type="image/png",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except aiohttp.ClientError as e:
-        logger.error(f"Failed to fetch sources data: {e}")
-        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except ChartRenderingError as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except aiohttp.ClientError as e:
+        logger.error(f"Failed to fetch sources data: {e}")
+        raise HTTPException(status_code=502, detail="Analytics service unavailable")
     except Exception as e:
         logger.error(f"PNG export failed: {e}")
         raise HTTPException(status_code=500, detail="Export failed")
 
 
+# System Status Endpoint
+
+
 @router.get("/status")
 async def export_status():
     """Get export system status"""
-    settings = Settings()
 
     return {
         "exports_enabled": settings.EXPORT_ENABLED,

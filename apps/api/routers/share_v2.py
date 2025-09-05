@@ -18,7 +18,7 @@ from apps.api.middleware.rate_limit import (
     check_creation_rate_limit,
 )
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
-from config.settings import Settings
+from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
 from infra.db.repositories.shared_reports_repository import (
     AsyncPgSharedReportsRepository,
@@ -55,8 +55,7 @@ class SharedReportResponse(BaseModel):
 
 def get_analytics_client() -> AnalyticsV2Client:
     """Get analytics client instance"""
-    settings = Settings()
-    return AnalyticsV2Client(settings.ANALYTICS_API_URL)
+    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_shared_reports_repository() -> SharedReportsRepository:
@@ -79,7 +78,6 @@ def get_chart_renderer() -> ChartRenderer:
 
 def check_share_enabled():
     """Check if share functionality is enabled"""
-    settings = Settings()
     if not settings.SHARE_LINKS_ENABLED:
         raise HTTPException(status_code=403, detail="Share functionality is disabled")
 
@@ -115,20 +113,20 @@ async def create_share_link(
         # Verify data exists
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            analytics_client.session = session
+            # Note: AnalyticsV2Client manages session internally
 
             if report_type == "overview":
-                data = await analytics_client.get_overview(channel_id, period)
+                data = await analytics_client.overview(channel_id, period)
             elif report_type == "growth":
-                data = await analytics_client.get_growth(channel_id, period)
+                data = await analytics_client.growth(channel_id, period)
             elif report_type == "reach":
-                data = await analytics_client.get_reach(channel_id, period)
+                data = await analytics_client.reach(channel_id, period)
             elif report_type == "top_posts":
-                data = await analytics_client.get_top_posts(channel_id, period)
+                data = await analytics_client.top_posts(channel_id, period)
             elif report_type == "sources":
-                data = await analytics_client.get_sources(channel_id, period)
+                data = await analytics_client.sources(channel_id, period)
             elif report_type == "trending":
-                data = await analytics_client.get_trending(channel_id, period)
+                data = await analytics_client.trending(channel_id, period)
 
         if not data:
             raise HTTPException(status_code=404, detail="No analytics data available for sharing")
@@ -200,20 +198,20 @@ async def access_shared_report(
 
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            analytics_client.session = session
+            # Note: AnalyticsV2Client manages session internally
 
             if report_type == "overview":
-                data = await analytics_client.get_overview(channel_id, period)
+                data = await analytics_client.overview(channel_id, period)
             elif report_type == "growth":
-                data = await analytics_client.get_growth(channel_id, period)
+                data = await analytics_client.growth(channel_id, period)
             elif report_type == "reach":
-                data = await analytics_client.get_reach(channel_id, period)
+                data = await analytics_client.reach(channel_id, period)
             elif report_type == "top_posts":
-                data = await analytics_client.get_top_posts(channel_id, period)
+                data = await analytics_client.top_posts(channel_id, period)
             elif report_type == "sources":
-                data = await analytics_client.get_sources(channel_id, period)
+                data = await analytics_client.sources(channel_id, period)
             elif report_type == "trending":
-                data = await analytics_client.get_trending(channel_id, period)
+                data = await analytics_client.trending(channel_id, period)
 
         if not data:
             raise HTTPException(status_code=404, detail="Analytics data no longer available")
@@ -233,14 +231,14 @@ async def access_shared_report(
             elif report_type == "trending":
                 csv_content = csv_exporter.trending_to_csv(data)
 
-            filename = csv_exporter.get_filename(report_type, channel_id, period)
+            filename = csv_exporter.generate_filename(report_type, channel_id, period)
 
             import io
 
             from fastapi.responses import StreamingResponse
 
             return StreamingResponse(
-                io.StringIO(csv_content),
+                io.BytesIO(csv_content.getvalue().encode('utf-8')),
                 media_type="text/csv",
                 headers={"Content-Disposition": f'attachment; filename="{filename}"'},
             )

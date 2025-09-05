@@ -18,7 +18,7 @@ from apps.bot.keyboards.analytics import (
     get_export_type_keyboard,
 )
 from apps.bot.middleware.throttle import rate_limit
-from config.settings import Settings
+from config import settings
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
     ChartRenderer,
@@ -31,8 +31,7 @@ router = Router()
 
 def get_analytics_client() -> AnalyticsV2Client:
     """Get analytics client instance"""
-    settings = Settings()
-    return AnalyticsV2Client(settings.ANALYTICS_API_URL)
+    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_csv_exporter() -> CSVExporter:
@@ -51,7 +50,6 @@ def get_chart_renderer() -> ChartRenderer | None:
 @rate_limit("export", per_minute=5)
 async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
     """Handle export menu selection"""
-    settings = Settings()
 
     if not settings.EXPORT_ENABLED:
         await callback.answer("📋 Export functionality is currently disabled", show_alert=True)
@@ -151,25 +149,25 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
 
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
+            # Note: AnalyticsV2Client manages session internally
 
             if export_type == "overview":
-                data = await analytics_client.get_overview(channel_id, period)
+                data = await analytics_client.overview(channel_id, period)
                 csv_content = csv_exporter.overview_to_csv(data)
             elif export_type == "growth":
-                data = await analytics_client.get_growth(channel_id, period)
+                data = await analytics_client.growth(channel_id, period)
                 csv_content = csv_exporter.growth_to_csv(data)
             elif export_type == "reach":
-                data = await analytics_client.get_reach(channel_id, period)
+                data = await analytics_client.reach(channel_id, period)
                 csv_content = csv_exporter.reach_to_csv(data)
             elif export_type == "top_posts":
-                data = await analytics_client.get_top_posts(channel_id, period)
+                data = await analytics_client.top_posts(channel_id, period)
                 csv_content = csv_exporter.top_posts_to_csv(data)
             elif export_type == "sources":
-                data = await analytics_client.get_sources(channel_id, period)
+                data = await analytics_client.sources(channel_id, period)
                 csv_content = csv_exporter.sources_to_csv(data)
             elif export_type == "trending":
-                data = await analytics_client.get_trending(channel_id, period)
+                data = await analytics_client.trending(channel_id, period)
                 csv_content = csv_exporter.trending_to_csv(data)
             else:
                 raise ValueError(f"Unsupported export type: {export_type}")
@@ -183,8 +181,8 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
             return
 
         # Prepare file
-        filename = csv_exporter.get_filename(export_type, channel_id, period)
-        file_buffer = BufferedInputFile(csv_content.encode("utf-8"), filename=filename)
+        filename = csv_exporter.generate_filename(export_type, channel_id, period)
+        file_buffer = BufferedInputFile(csv_content.getvalue().encode("utf-8"), filename=filename)
 
         # Send file
         await message.answer_document(
@@ -235,16 +233,16 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
-            analytics_client.session = session
+            # Note: AnalyticsV2Client manages session internally
 
             if export_type == "growth":
-                data = await analytics_client.get_growth(channel_id, period)
+                data = await analytics_client.growth(channel_id, period)
                 png_bytes = chart_renderer.render_growth_chart(data)
             elif export_type == "reach":
-                data = await analytics_client.get_reach(channel_id, period)
+                data = await analytics_client.reach(channel_id, period)
                 png_bytes = chart_renderer.render_reach_chart(data)
             elif export_type == "sources":
-                data = await analytics_client.get_sources(channel_id, period)
+                data = await analytics_client.sources(channel_id, period)
                 png_bytes = chart_renderer.render_sources_chart(data)
             else:
                 await message.edit_text(
@@ -311,7 +309,6 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 @rate_limit("export", per_minute=3)
 async def cmd_export_csv(message: Message):
     """Direct CSV export command"""
-    settings = Settings()
 
     if not settings.EXPORT_ENABLED:
         await message.answer("📋 Export functionality is currently disabled.")

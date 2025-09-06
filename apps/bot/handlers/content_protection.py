@@ -61,7 +61,8 @@ async def cmd_protect_content(message: Message, state: FSMContext):
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="🎥 Add Video Watermark", callback_data="protect_video_watermark"
+                    text="🎥 Add Video Watermark",
+                    callback_data="protect_video_watermark",
                 )
             ]
         )
@@ -71,7 +72,8 @@ async def cmd_protect_content(message: Message, state: FSMContext):
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="🎭 Format with Custom Emojis", callback_data="protect_custom_emoji"
+                    text="🎭 Format with Custom Emojis",
+                    callback_data="protect_custom_emoji",
                 )
             ]
         )
@@ -386,7 +388,8 @@ async def handle_custom_emoji_format(message: Message, state: FSMContext):
         )
 
         await message.answer(
-            f"✨ **Premium Formatted Message:**\n\n{formatted_text}", parse_mode="Markdown"
+            f"✨ **Premium Formatted Message:**\n\n{formatted_text}",
+            parse_mode="Markdown",
         )
 
         # Update usage tracking

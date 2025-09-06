@@ -65,7 +65,11 @@ class DCRouter:
         return None
 
     async def cache_dc_mapping(
-        self, peer_id: str, dc_id: int, request_type: str = "default", success: bool = True
+        self,
+        peer_id: str,
+        dc_id: int,
+        request_type: str = "default",
+        success: bool = True,
     ) -> None:
         """Cache DC mapping for a peer."""
         cache_key = self._make_cache_key(peer_id, request_type)

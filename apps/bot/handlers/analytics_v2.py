@@ -1,9 +1,10 @@
+import logging
+from datetime import datetime
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
-from datetime import datetime
-import logging
 
 from apps.bot.clients.analytics_v2_client import (
     AnalyticsV2Client,
@@ -23,7 +24,6 @@ from apps.bot.keyboards.analytics import (
     kb_tabs,
 )
 from apps.bot.middleware.throttle import throttle
-from config.settings import Settings
 from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
 
 """
@@ -36,6 +36,7 @@ def _get_settings():
     """Get settings instance with proper error handling"""
     try:
         from config.settings import Settings
+
         # Just return the module/class without instantiation to avoid constructor issues
         return Settings
     except Exception:
@@ -47,10 +48,13 @@ def _get_settings():
             EXPORT_ENABLED = True
             ALERTS_ENABLED = True
             SHARE_LINKS_ENABLED = True
+
         return MockSettings()
 
 
-def _safe_callback_data_split(callback_data: str | None, separator: str = ":", index: int = 1) -> str | None:
+def _safe_callback_data_split(
+    callback_data: str | None, separator: str = ":", index: int = 1
+) -> str | None:
     """Safely split callback data and return the requested part"""
     if not callback_data:
         return None
@@ -67,14 +71,18 @@ async def _safe_edit_message(callback: CallbackQuery, text: str, reply_markup=No
     """Safely edit callback message with type checking"""
     try:
         from aiogram.types import Message
-        if (callback.message and 
-            isinstance(callback.message, Message) and 
-            hasattr(callback.message, 'edit_text')):
+
+        if (
+            callback.message
+            and isinstance(callback.message, Message)
+            and hasattr(callback.message, "edit_text")
+        ):
             await callback.message.edit_text(text, reply_markup=reply_markup)  # type: ignore
             return True
         return False
     except Exception:
         return False
+
 
 logger = logging.getLogger(__name__)
 
@@ -111,10 +119,24 @@ def _format_overview_text(data: OverviewResponse) -> str:
     # Main metrics
     lines = [
         "📊 **Channel Overview**",
-        ("🗓 Period: " + f"{data.period}" + "days ( " + f"{data.period_start.strftime('%m/%d')}" + "- " + f"{data.period_end.strftime('%m/%d')}" + " )"),
+        (
+            "🗓 Period: "
+            + f"{data.period}"
+            + "days ( "
+            + f"{data.period_start.strftime('%m/%d')}"
+            + "- "
+            + f"{data.period_end.strftime('%m/%d')}"
+            + " )"
+        ),
         "",
         f"👥 **Subscribers:** {_format_number(overview.subscribers)}",
-        ("📈 **Growth:** " + f"{_format_number(overview.subscriber_growth)}" + "( " + f"{_format_percentage(overview.subscriber_growth / max(overview.subscribers - overview.subscriber_growth, 1) * 100)}" + " )"),
+        (
+            "📈 **Growth:** "
+            + f"{_format_number(overview.subscriber_growth)}"
+            + "( "
+            + f"{_format_percentage(overview.subscriber_growth / max(overview.subscribers - overview.subscriber_growth, 1) * 100)}"
+            + " )"
+        ),
         "",
         f"📝 **Posts:** {overview.total_posts}",
         f"👁️ **Total Views:** {_format_number(overview.total_views)}",
@@ -154,7 +176,13 @@ def _format_growth_text(data: GrowthResponse) -> str:
         change = day_data.get("change", 0)
         subscribers = day_data.get("subscribers", 0)
         lines.append(
-            ("• " + f"{date}" + ": " + f"{_format_number(subscribers)}" + "( " + f"{_format_percentage(change) if change else '—'}" + " )")
+            "• "
+            + f"{date}"
+            + ": "
+            + f"{_format_number(subscribers)}"
+            + "( "
+            + f"{_format_percentage(change) if change else '—'}"
+            + " )"
         )
 
     lines.extend(
@@ -213,7 +241,14 @@ def _format_top_posts_text(data: TopPostsResponse) -> str:
             [
                 f"**{i}. Post #{post.post_id}**",
                 f"📝 {message_preview}",
-                ("👁️ Views: " + f"{_format_number(post.views)}" + "| 🔄 Forwards: " + f"{_format_number(post.forwards)}" + "| 💫 Score: " + f"{post.engagement_score:.1f}"),
+                (
+                    "👁️ Views: "
+                    + f"{_format_number(post.views)}"
+                    + "| 🔄 Forwards: "
+                    + f"{_format_number(post.forwards)}"
+                    + "| 💫 Score: "
+                    + f"{post.engagement_score:.1f}"
+                ),
                 f"📅 {post.published_at.strftime('%m/%d/%Y %H:%M')}",
                 "",
             ]
@@ -237,10 +272,34 @@ def _format_sources_text(data: SourcesResponse) -> str:
         "🌊 **Traffic Sources**",
         f"🗓 Period: {data.period} days",
         "",
-        ("🎯 **Direct:** " + f"{_format_number(sources.direct.get('views', 0))}" + "( " + f"{sources.direct.get('percentage', 0):.1f}" + " %)"),
-        ("🔄 **Forwards:** " + f"{_format_number(sources.forwards.get('views', 0))}" + "( " + f"{sources.forwards.get('percentage', 0):.1f}" + " %)"),
-        ("🔗 **Links:** " + f"{_format_number(sources.links.get('views', 0))}" + "( " + f"{sources.links.get('percentage', 0):.1f}" + " %)"),
-        ("🔍 **Search:** " + f"{_format_number(sources.search.get('views', 0))}" + "( " + f"{sources.search.get('percentage', 0):.1f}" + " %)"),
+        (
+            "🎯 **Direct:** "
+            + f"{_format_number(sources.direct.get('views', 0))}"
+            + "( "
+            + f"{sources.direct.get('percentage', 0):.1f}"
+            + " %)"
+        ),
+        (
+            "🔄 **Forwards:** "
+            + f"{_format_number(sources.forwards.get('views', 0))}"
+            + "( "
+            + f"{sources.forwards.get('percentage', 0):.1f}"
+            + " %)"
+        ),
+        (
+            "🔗 **Links:** "
+            + f"{_format_number(sources.links.get('views', 0))}"
+            + "( "
+            + f"{sources.links.get('percentage', 0):.1f}"
+            + " %)"
+        ),
+        (
+            "🔍 **Search:** "
+            + f"{_format_number(sources.search.get('views', 0))}"
+            + "( "
+            + f"{sources.search.get('percentage', 0):.1f}"
+            + " %)"
+        ),
         "",
     ]
 
@@ -300,12 +359,15 @@ async def _get_user_channels(
         # Mock channels since repository method doesn't exist yet
         channels = [
             {"id": "demo_channel", "name": "Demo Channel"},
-            {"id": "test_channel", "name": "Test Channel"}
+            {"id": "test_channel", "name": "Test Channel"},
         ]
-            
+
         # Format channels for display
         channel_list = [
-            (ch.get("name", f"Channel {ch.get('id', 'Unknown')}"), str(ch.get("id", "unknown")))
+            (
+                ch.get("name", f"Channel {ch.get('id', 'Unknown')}"),
+                str(ch.get("id", "unknown")),
+            )
             for ch in channels
         ]
         return channel_list
@@ -363,18 +425,19 @@ async def choose_channel(callback: CallbackQuery, i18n: I18nContext):
         if not callback.data:
             await callback.answer("❌ Invalid callback data")
             return
-            
+
         channel_id = callback.data.split(":")[1]
 
         # Show period selection
         if callback.message:
-            await _safe_edit_message(callback, 
+            await _safe_edit_message(
+                callback,
                 f"📊 **Analytics for Channel {channel_id}**\n\nSelect time period:",
                 reply_markup=kb_periods(),
             )
 
             # Store channel ID for next step (simplified state management)
-            setattr(callback.message, "_selected_channel", channel_id)
+            callback.message._selected_channel = channel_id
         await callback.answer()
 
     except Exception as e:
@@ -400,18 +463,18 @@ async def choose_period(callback: CallbackQuery, i18n: I18nContext):
         # Create analytics client
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             # Get overview data
             overview_data = await client.overview(channel_id, period)
 
             # Format and send overview
             text = _format_overview_text(overview_data)
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -434,16 +497,16 @@ async def show_overview(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.overview(channel_id, period)
             text = _format_overview_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -466,16 +529,16 @@ async def show_growth(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.growth(channel_id, period)
             text = _format_growth_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -498,16 +561,16 @@ async def show_reach(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.reach(channel_id, period)
             text = _format_reach_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -530,16 +593,16 @@ async def show_top_posts(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.top_posts(channel_id, period, limit=10)
             text = _format_top_posts_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -562,16 +625,16 @@ async def show_sources(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.sources(channel_id, period)
             text = _format_sources_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -594,16 +657,16 @@ async def show_trending(callback: CallbackQuery, i18n: I18nContext):
 
         async with AnalyticsV2Client(
             base_url=settings.ANALYTICS_V2_BASE_URL,
-            token=settings.ANALYTICS_V2_TOKEN.get_secret_value()
-            if settings.ANALYTICS_V2_TOKEN
-            else None,
+            token=(
+                settings.ANALYTICS_V2_TOKEN.get_secret_value()
+                if settings.ANALYTICS_V2_TOKEN
+                else None
+            ),
         ) as client:
             data = await client.trending(channel_id, period)
             text = _format_trending_text(data)
 
-            await _safe_edit_message(callback, 
-                text, reply_markup=kb_tabs(channel_id, period)
-            )
+            await _safe_edit_message(callback, text, reply_markup=kb_tabs(channel_id, period))
 
         await callback.answer()
 
@@ -630,8 +693,15 @@ async def show_export_options(callback: CallbackQuery, i18n: I18nContext):
         parts = _safe_callback_data_split(callback.data, ":", 0) or []
         channel_id, period = parts[2], int(parts[3])
 
-        await _safe_edit_message(callback, 
-            ("📤 **Export Options**\n\nChannel: " + f"{channel_id}" + "\nPeriod: " + f"{period}" + " days\n\nChoose export format:"),
+        await _safe_edit_message(
+            callback,
+            (
+                "📤 **Export Options**\n\nChannel: "
+                + f"{channel_id}"
+                + "\nPeriod: "
+                + f"{period}"
+                + " days\n\nChoose export format:"
+            ),
             reply_markup=kb_export(channel_id, period),
         )
 
@@ -658,7 +728,8 @@ async def show_alerts_options(callback: CallbackQuery, i18n: I18nContext):
         parts = _safe_callback_data_split(callback.data, ":", 0) or []
         channel_id = parts[2]
 
-        await _safe_edit_message(callback, 
+        await _safe_edit_message(
+            callback,
             f"🔔 **Alert Management**\n\nChannel: {channel_id}\n\nManage your alert subscriptions:",
             reply_markup=kb_alerts_main(channel_id),
         )
@@ -678,7 +749,8 @@ async def show_share_options(callback: CallbackQuery, i18n: I18nContext):
 
     if not settings.SHARE_LINKS_ENABLED:
         await callback.answer(
-            "🚧 Share links feature is currently disabled. Coming soon!", show_alert=True
+            "🚧 Share links feature is currently disabled. Coming soon!",
+            show_alert=True,
         )
         return
 
@@ -707,7 +779,8 @@ async def show_channels_again(callback: CallbackQuery, channel_repo: ChannelRepo
     user_id = _get_user_id(callback)
     if user_id:
         channels = await _get_user_channels(user_id, channel_repo)
-        await _safe_edit_message(callback, 
+        await _safe_edit_message(
+            callback,
             "📊 **Analytics Dashboard**\n\nSelect a channel to analyze:",
             reply_markup=kb_channels(channels),
         )

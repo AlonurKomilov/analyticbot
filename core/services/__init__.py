@@ -176,7 +176,9 @@ class DeliveryService:
 
         # Create delivery record
         delivery = Delivery(
-            post_id=post.id, delivery_channel_id=post.channel_id, status=DeliveryStatus.PENDING
+            post_id=post.id,
+            delivery_channel_id=post.channel_id,
+            status=DeliveryStatus.PENDING,
         )
 
         created_delivery = await self.delivery_repo.create(delivery)
@@ -279,7 +281,10 @@ class DeliveryService:
         stats = {}
         for status in DeliveryStatus:
             status_filter = DeliveryFilter(
-                channel_id=channel_id, from_date=from_date, to_date=to_date, status=status
+                channel_id=channel_id,
+                from_date=from_date,
+                to_date=to_date,
+                status=status,
             )
             stats[status.value] = await self.delivery_repo.count(status_filter)
 

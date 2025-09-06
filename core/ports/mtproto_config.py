@@ -8,7 +8,7 @@ from typing import Protocol
 
 class MTProtoConfigProtocol(Protocol):
     """Protocol for MTProto configuration"""
-    
+
     MTPROTO_ENABLED: bool
     TELEGRAM_API_ID: int | None
     TELEGRAM_API_HASH: str | None

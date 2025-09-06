@@ -64,7 +64,10 @@ async def run_basic_performance_tests():
             return None
 
         db_result = await tester.benchmark_function(
-            "database_connection_basic", db_connection_test, iterations=20, concurrent=False
+            "database_connection_basic",
+            db_connection_test,
+            iterations=20,
+            concurrent=False,
         )
         logger.info(
             f"📊 DB Connection: {db_result.avg_time:.3f}s avg, {db_result.throughput:.1f} ops/sec"
@@ -107,7 +110,10 @@ async def run_basic_performance_tests():
             return len([r for r in results if not isinstance(r, Exception)])
 
         concurrent_result = await tester.benchmark_function(
-            "concurrent_operations_basic", concurrent_test, iterations=10, concurrent=False
+            "concurrent_operations_basic",
+            concurrent_test,
+            iterations=10,
+            concurrent=False,
         )
         logger.info(
             f"🔄 Concurrent: {concurrent_result.avg_time:.3f}s avg, {concurrent_result.throughput:.1f} ops/sec"

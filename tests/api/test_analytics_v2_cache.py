@@ -87,7 +87,8 @@ class TestAnalyticsV2ETag:
         """Test that ETag is generated and included in response headers"""
         # Mock the dependencies
         monkeypatch.setattr(
-            "apps.api.di_analytics_v2.get_analytics_fusion_service", lambda: mock_fusion_service
+            "apps.api.di_analytics_v2.get_analytics_fusion_service",
+            lambda: mock_fusion_service,
         )
         monkeypatch.setattr("apps.api.di_analytics_v2.get_cache", lambda: mock_cache)
 
@@ -109,7 +110,8 @@ class TestAnalyticsV2ETag:
         """Test that 304 is returned when If-None-Match header matches ETag"""
         # Mock the dependencies
         monkeypatch.setattr(
-            "apps.api.di_analytics_v2.get_analytics_fusion_service", lambda: mock_fusion_service
+            "apps.api.di_analytics_v2.get_analytics_fusion_service",
+            lambda: mock_fusion_service,
         )
         monkeypatch.setattr("apps.api.di_analytics_v2.get_cache", lambda: mock_cache)
 
@@ -140,7 +142,8 @@ class TestAnalyticsV2ETag:
         """Test that 200 is returned when If-None-Match header doesn't match current ETag"""
         # Mock the dependencies
         monkeypatch.setattr(
-            "apps.api.di_analytics_v2.get_analytics_fusion_service", lambda: mock_fusion_service
+            "apps.api.di_analytics_v2.get_analytics_fusion_service",
+            lambda: mock_fusion_service,
         )
         monkeypatch.setattr("apps.api.di_analytics_v2.get_cache", lambda: mock_cache)
 
@@ -162,7 +165,8 @@ class TestAnalyticsV2ETag:
         """Test that Cache-Control header is present and correct"""
         # Mock the dependencies
         monkeypatch.setattr(
-            "apps.api.di_analytics_v2.get_analytics_fusion_service", lambda: mock_fusion_service
+            "apps.api.di_analytics_v2.get_analytics_fusion_service",
+            lambda: mock_fusion_service,
         )
         monkeypatch.setattr("apps.api.di_analytics_v2.get_cache", lambda: mock_cache)
 
@@ -333,7 +337,8 @@ class TestAnalyticsV2ETag:
 
         # Mock create_cache_adapter to return our mock cache instead of NoOpCache
         monkeypatch.setattr(
-            "infra.cache.redis_cache.create_cache_adapter", lambda redis_client=None: cache
+            "infra.cache.redis_cache.create_cache_adapter",
+            lambda redis_client=None: cache,
         )
 
         # First request

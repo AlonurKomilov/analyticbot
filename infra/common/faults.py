@@ -69,7 +69,10 @@ class FaultInjector:
         self.add_fault(
             "network_delay",
             FaultConfig(
-                fault_type=FaultType.DELAY, probability=0.05, min_delay_ms=100, max_delay_ms=2000
+                fault_type=FaultType.DELAY,
+                probability=0.05,
+                min_delay_ms=100,
+                max_delay_ms=2000,
             ),
         )
 
@@ -283,7 +286,11 @@ def get_global_injector() -> FaultInjector:
     global _global_injector
     if _global_injector is None:
         # Check environment variables for fault injection settings
-        enabled = os.getenv("FAULT_INJECTION_ENABLED", "false").lower() in ("true", "1", "yes")
+        enabled = os.getenv("FAULT_INJECTION_ENABLED", "false").lower() in (
+            "true",
+            "1",
+            "yes",
+        )
         _global_injector = FaultInjector(enabled=enabled)
     return _global_injector
 

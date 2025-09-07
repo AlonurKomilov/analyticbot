@@ -34,7 +34,9 @@ def demonstrate_send_message_task():
         # Example 2: Message with additional parameters
         logger.info("📨 Example 2: Message with parse mode")
         result = send_message_task.delay(
-            chat_id="-1001234567890", message="*Bold text* and _italic text_", parse_mode="Markdown"
+            chat_id="-1001234567890",
+            message="*Bold text* and _italic text_",
+            parse_mode="Markdown",
         )
         logger.info(f"   Task queued with ID: {result.id}")
 

@@ -1,8 +1,10 @@
 import os
-from apps.bot.container import container
-from unittest.mock import AsyncMock
-from core.services.analytics_fusion_service import AnalyticsFusionService
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Union
+from unittest.mock import AsyncMock
+
+from apps.bot.container import container
+from core.services.analytics_fusion_service import AnalyticsFusionService
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
@@ -10,7 +12,6 @@ from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
-from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from asyncpg.pool import Pool
@@ -92,6 +93,7 @@ async def get_database_pool() -> Union["Pool", object, None]:
     try:
         # Use the punq container that's already imported
         from asyncpg.pool import Pool as AsyncPGPool
+
         pool = container.resolve(AsyncPGPool)
         return pool
     except Exception as e:
@@ -137,7 +139,7 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
         stats_raw_repo = AsyncpgStatsRawRepository(pool)  # type: ignore
 
         # Initialize cache
-        cache_adapter = await init_cache_adapter()
+        await init_cache_adapter()
 
         # Create analytics fusion service
         _analytics_fusion_service = AnalyticsFusionService(
@@ -145,7 +147,7 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
             post_repo=post_repo,
             metrics_repo=metrics_repo,
             edges_repo=edges_repo,
-            stats_raw_repo=stats_raw_repo
+            stats_raw_repo=stats_raw_repo,
         )
 
         logger.info("Analytics Fusion Service initialized successfully")

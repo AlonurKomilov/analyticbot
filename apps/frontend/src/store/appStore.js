@@ -107,10 +107,24 @@ export const useAppStore = create(
         // Check if using real API
         isUsingRealAPI: () => get().dataSource === 'api',
         
-        // Boshlang'ich ma'lumotlarni backend'dan loading
+        // Boshlang'ich ma'lumotlarni backend'dan loading (with throttling)
         fetchData: async (forceSource = null) => {
             const operation = 'fetchData';
             const currentSource = forceSource || get().dataSource;
+            const now = Date.now();
+            
+            // Throttle requests to prevent rapid successive calls
+            const lastFetchKey = `lastFetch_${operation}`;
+            const lastFetchTime = get()[lastFetchKey] || 0;
+            const minInterval = 3000; // Minimum 3 seconds between fetchData requests
+            
+            if (now - lastFetchTime < minInterval && !forceSource) {
+                console.log(`FetchData: Throttling request (last fetch ${now - lastFetchTime}ms ago)`);
+                return;
+            }
+            
+            // Update last fetch time immediately to prevent concurrent calls
+            set(state => ({ ...state, [lastFetchKey]: now }));
             
             try {
                 get().setLoading(operation, true);
@@ -127,8 +141,10 @@ export const useAppStore = create(
                         console.log('⚠️ Real API unavailable, auto-switching to demo data');
                         console.log('API Error details:', apiError.message);
                         
-                        // Auto-switch to mock data when API fails
-                        get().setDataSource('mock');
+                        // Auto-switch to mock data when API fails (only if not forced)
+                        if (!forceSource) {
+                            get().setDataSource('mock');
+                        }
                         
                         // Load mock data
                         const { getMockInitialData } = await import('../utils/mockData.js');
@@ -302,14 +318,35 @@ export const useAppStore = create(
             }
         },
 
-        // NEW: Get storage files for media browser
+        // NEW: Get storage files for media browser (with fallback)
         getStorageFiles: async (limit = 20, offset = 0) => {
             const operation = 'getStorageFiles';
+            const currentSource = get().dataSource;
+            
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const response = await apiClient.getStorageFiles(limit, offset);
+                let response;
+                
+                if (currentSource === 'api') {
+                    try {
+                        response = await apiClient.getStorageFiles(limit, offset);
+                        console.log('✅ Storage files loaded from real API');
+                    } catch (apiError) {
+                        console.log('⚠️ API unavailable for storage files, using demo data');
+                        console.log('Storage API Error:', apiError.message);
+                        
+                        // Fallback to mock storage files
+                        const { getMockStorageFiles } = await import('../utils/mockData.js');
+                        response = getMockStorageFiles(limit, offset);
+                    }
+                } else {
+                    // Load from mock data
+                    console.log('📊 Loading storage files demo data');
+                    const { getMockStorageFiles } = await import('../utils/mockData.js');
+                    response = getMockStorageFiles(limit, offset);
+                }
                 
                 set(() => ({
                     storageFiles: {
@@ -406,10 +443,24 @@ export const useAppStore = create(
 
         // ANALYTICS METHODS - NEW for Phase 2.1 Week 2
 
-        // Post dynamics datani getting with data source support
+        // Post dynamics datani getting with data source support (with throttling)
         fetchPostDynamics: async (period = '24h') => {
             const operation = 'fetchPostDynamics';
             const currentSource = get().dataSource;
+            const now = Date.now();
+            
+            // Throttle requests to prevent rapid successive calls
+            const lastFetchKey = `lastFetch_${operation}_${period}`;
+            const lastFetchTime = get()[lastFetchKey] || 0;
+            const minInterval = 2000; // Minimum 2 seconds between requests
+            
+            if (now - lastFetchTime < minInterval) {
+                console.log(`PostDynamics: Throttling request (last fetch ${now - lastFetchTime}ms ago)`);
+                return get().analytics?.postDynamics || [];
+            }
+            
+            // Update last fetch time immediately to prevent concurrent calls
+            set(state => ({ ...state, [lastFetchKey]: now }));
             
             try {
                 get().setLoading(operation, true);
@@ -419,7 +470,7 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/post-dynamics?period=${period}`);
+                        response = await apiClient.get(`/analytics/demo/post-dynamics?period=${period}`);
                         console.log('✅ Post dynamics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for post dynamics, using demo data');
@@ -469,7 +520,7 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/top-posts?period=${period}&sort=${sortBy}`);
+                        response = await apiClient.get(`/analytics/demo/top-posts?period=${period}&sort=${sortBy}`);
                         console.log('✅ Top posts loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for top posts, using demo data');
@@ -519,7 +570,7 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/best-posting-time?timeframe=${timeframe}&content_type=${contentType}`);
+                        response = await apiClient.get(`/analytics/demo/best-times?timeframe=${timeframe}&content_type=${contentType}`);
                         console.log('✅ Best time recommendations loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for best time, using demo data');
@@ -569,7 +620,7 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/engagement?period=${period}`);
+                        response = await apiClient.get(`/analytics/demo/engagement?period=${period}`);
                         console.log('✅ Engagement metrics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for engagement metrics, using demo data');

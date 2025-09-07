@@ -58,9 +58,14 @@ export default defineConfig({
     hmr: true,
     // CORS for development
     cors: true,
-    // Port configuration
-    port: 3000,
-    host: true
+    // Port configuration - use environment variable or default
+    port: parseInt(process.env.VITE_PORT) || 5173,
+    host: '0.0.0.0', // Allow external connections
+    // Watch options for better file watching in Docker
+    watch: {
+      usePolling: true,
+      interval: 100
+    }
   },
   
   // Path resolution

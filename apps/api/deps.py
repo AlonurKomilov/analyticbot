@@ -28,8 +28,13 @@ async def get_db_pool() -> asyncpg.Pool:
     global _db_pool
 
     if _db_pool is None:
+        # Convert SQLAlchemy-style URL to asyncpg-compatible URL
+        db_url = settings.DATABASE_URL
+        if db_url and db_url.startswith("postgresql+asyncpg://"):
+            db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+        
         _db_pool = await asyncpg.create_pool(
-            settings.DATABASE_URL,
+            db_url,
             min_size=settings.DB_POOL_SIZE,
             max_size=settings.DB_MAX_OVERFLOW,
             command_timeout=settings.DB_POOL_TIMEOUT,

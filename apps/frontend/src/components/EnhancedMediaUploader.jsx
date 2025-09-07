@@ -157,7 +157,7 @@ const EnhancedMediaUploader = () => {
     return (
         <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-                📱 Enhanced Media Upload
+                <span aria-hidden="true">📱</span> Enhanced Media Upload
             </Typography>
 
             {/* Upload Configuration */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
     Paper,
     Typography,
@@ -15,22 +15,198 @@ import {
     CardContent
 } from '@mui/material';
 import {
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
-    AreaChart,
-    Area
-} from 'recharts';
-import {
     TrendingUp as TrendingUpIcon,
     Speed as SpeedIcon,
     Visibility as ViewsIcon,
     ShowChart as ChartIcon
 } from '@mui/icons-material';
 import { useAppStore } from '../store/appStore.js';
+
+// Stable Chart Component with Memoization
+const StableChart = React.memo(({ data, timeRange }) => {
+    // Dynamic import to prevent SSR issues and reduce bundle size
+    const [ChartComponents, setChartComponents] = useState(null);
+    const [chartError, setChartError] = useState(null);
+
+    useEffect(() => {
+        let mounted = true;
+        
+        const loadChartComponents = async () => {
+            try {
+                const recharts = await import('recharts');
+                if (mounted) {
+                    setChartComponents({
+                        ResponsiveContainer: recharts.ResponsiveContainer,
+                        AreaChart: recharts.AreaChart,
+                        Area: recharts.Area,
+                        XAxis: recharts.XAxis,
+                        YAxis: recharts.YAxis,
+                        CartesianGrid: recharts.CartesianGrid,
+                        Tooltip: recharts.Tooltip,
+                        Legend: recharts.Legend
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load chart components:', error);
+                if (mounted) {
+                    setChartError('Failed to load chart library');
+                }
+            }
+        };
+
+        loadChartComponents();
+        
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    // Custom Tooltip component
+    const CustomTooltip = useCallback(({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <Paper sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        {label}
+                    </Typography>
+                    {payload.map((entry, index) => (
+                        <Typography 
+                            key={index} 
+                            variant="body2" 
+                            sx={{ color: entry.color }}
+                        >
+                            {entry.name}: {Number(entry.value).toLocaleString()}
+                        </Typography>
+                    ))}
+                </Paper>
+            );
+        }
+        return null;
+    }, []);
+
+    // Stable chart data with proper key generation
+    const stableData = useMemo(() => {
+        if (!data || !Array.isArray(data)) return [];
+        
+        return data.map((item, index) => ({
+            ...item,
+            key: `${item.timestamp || index}-${item.time || index}`, // Stable key
+            views: Number(item.views) || 0,
+            likes: Number(item.likes) || 0,
+            shares: Number(item.shares) || 0,
+            comments: Number(item.comments) || 0
+        }));
+    }, [data]);
+
+    if (chartError) {
+        return (
+            <Alert severity="error" sx={{ m: 2 }}>
+                Chart library failed to load. Please refresh the page.
+            </Alert>
+        );
+    }
+
+    if (!ChartComponents) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
+                <CircularProgress />
+                <Typography variant="body2" sx={{ ml: 2 }}>
+                    Loading chart...
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (!stableData || stableData.length === 0) {
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                height: 400,
+                color: 'text.secondary'
+            }}>
+                <ChartIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+                <Typography variant="h6" gutterBottom>
+                    No data available
+                </Typography>
+                <Typography variant="body2">
+                    No post activity data for the selected time range
+                </Typography>
+            </Box>
+        );
+    }
+
+    const { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } = ChartComponents;
+
+    return (
+        <Box sx={{ height: 400, mt: 2 }}>
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart 
+                    data={stableData} 
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    key={`chart-${timeRange}-${stableData.length}`} // Force re-render on data change
+                >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                        dataKey="time" 
+                        tick={{ fontSize: 12 }}
+                        interval="preserveStartEnd"
+                        type="category"
+                        allowDuplicatedCategory={false}
+                    />
+                    <YAxis 
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value) => Number(value).toLocaleString()}
+                        type="number"
+                        allowDataOverflow={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Area
+                        type="monotone"
+                        dataKey="views"
+                        stackId="1"
+                        stroke="#8884d8"
+                        fill="#8884d8"
+                        fillOpacity={0.6}
+                        name="Views"
+                        animationDuration={300}
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="likes"
+                        stackId="1"
+                        stroke="#82ca9d"
+                        fill="#82ca9d"
+                        fillOpacity={0.6}
+                        name="Likes"
+                        animationDuration={300}
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="shares"
+                        stackId="1"
+                        stroke="#ffc658"
+                        fill="#ffc658"
+                        fillOpacity={0.6}
+                        name="Shares"
+                        animationDuration={300}
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
+        </Box>
+    );
+}, (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary re-renders
+    return (
+        prevProps.timeRange === nextProps.timeRange &&
+        JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data)
+    );
+});
+
+StableChart.displayName = 'StableChart';
 
 // Error Boundary Component
 class ChartErrorBoundary extends React.Component {
@@ -65,150 +241,155 @@ const PostViewDynamicsChart = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState([]);
-    const [autoRefresh] = useState(true); // setAutoRefresh removed
+    const [autoRefresh] = useState(true);
     const [refreshInterval, setRefreshInterval] = useState('30s');
     
-    // Get store methods and data source
-    const { fetchPostDynamics, dataSource } = useAppStore();
+    // Get store methods
+    const { fetchPostDynamics } = useAppStore();
+    
+    // Use refs to track state and prevent unnecessary re-renders
+    const isMountedRef = useRef(true);
+    const dataRef = useRef([]);
+    const timeRangeRef = useRef(timeRange);
+    const isLoadingRef = useRef(false);
 
-    // Generate mock data based on time range
-    const generateMockData = (range) => {
-        const now = new Date();
-        const points = [];
-        let intervalMs, count;
-
-        switch (range) {
-            case '1h':
-                intervalMs = 5 * 60 * 1000; // 5 minutes
-                count = 12;
-                break;
-            case '6h':
-                intervalMs = 30 * 60 * 1000; // 30 minutes
-                count = 12;
-                break;
-            case '24h':
-                intervalMs = 2 * 60 * 60 * 1000; // 2 hours
-                count = 12;
-                break;
-            case '7d':
-                intervalMs = 24 * 60 * 60 * 1000; // 1 day
-                count = 7;
-                break;
-            case '30d':
-                intervalMs = 24 * 60 * 60 * 1000; // 1 day
-                count = 30;
-                break;
-            default:
-                intervalMs = 60 * 60 * 1000; // 1 hour
-                count = 24;
+    // Stable load data function with debouncing
+    const loadData = useCallback(async () => {
+        if (isLoadingRef.current) {
+            console.log('PostViewDynamicsChart: Skipping load - already loading');
+            return;
         }
 
-        for (let i = 0; i < count; i++) {
-            const timestamp = new Date(now.getTime() - (count - i - 1) * intervalMs);
-            const baseViews = Math.floor(Math.random() * 1000) + 500;
-            const variation = Math.sin(i * 0.5) * 200; // Add some wave pattern
+        isLoadingRef.current = true;
+        setLoading(true);
+        setError(null);
+
+        try {
+            const currentTimeRange = timeRangeRef.current;
+            console.log('PostViewDynamicsChart: Loading data for timeRange:', currentTimeRange);
             
-            points.push({
-                timestamp: timestamp.toISOString(),
-                views: Math.max(0, Math.floor(baseViews + variation + Math.random() * 300)),
-                likes: Math.floor((baseViews + variation) * 0.1 + Math.random() * 20),
-                shares: Math.floor((baseViews + variation) * 0.05 + Math.random() * 10),
-                comments: Math.floor((baseViews + variation) * 0.02 + Math.random() * 5)
-            });
-        }
-
-        return points;
-    };
-
-        // Load data on mount and when timeRange changes
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                
-                // Use store method which respects data source configuration
-                const result = await fetchPostDynamics(timeRange);
-                setData(result.timeline || result.data || []);
-                
-            } catch (err) {
-                setError(err.message);
-                console.error('Analytics malumotlarini olishda xatolik:', err);
-            } finally {
+            const result = await fetchPostDynamics(currentTimeRange);
+            
+            if (isMountedRef.current) {
+                dataRef.current = result || [];
+                setRawData(result || []);
+                dataVersionRef.current += 1;
+            }
+        } catch (err) {
+            console.error('PostViewDynamicsChart: Error loading data:', err);
+            if (isMountedRef.current) {
+                setError(err.message || 'Failed to load analytics data');
+            }
+        } finally {
+            if (isMountedRef.current) {
                 setLoading(false);
+            }
+            isLoadingRef.current = false;
+        }
+    }, []); // Remove fetchPostDynamics dependency to prevent infinite loops
+    
+    // Handle time range changes with debouncing
+    const handleTimeRangeChange = useCallback((newTimeRange) => {
+        timeRangeRef.current = newTimeRange;
+        setTimeRange(newTimeRange);
+        
+        // Debounce time range changes to prevent rapid API calls
+        setTimeout(() => {
+            if (isMountedRef.current && timeRangeRef.current === newTimeRange) {
+                loadData();
+            }
+        }, 300);
+    }, []); // No dependencies to prevent infinite loops
+
+    // Initial load (only once)
+    useEffect(() => {
+        let mounted = true;
+        
+        const initialLoad = async () => {
+            // Small delay to avoid race conditions
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (mounted && isMountedRef.current) {
+                loadData();
             }
         };
         
-        loadData();
-    }, [timeRange, fetchPostDynamics]); // Direct dependencies
+        initialLoad();
+        
+        return () => {
+            mounted = false;
+        };
+    }, []); // Empty dependency array for initial load only
     
-    // Listen for data source changes
+    // Listen for data source changes (with debouncing)
     useEffect(() => {
+        let timeoutId;
+        
         const handleDataSourceChange = () => {
             console.log('PostViewDynamicsChart: Data source changed, reloading...');
-            // Reload data when source changes
-            const loadData = async () => {
-                try {
-                    setLoading(true);
-                    setError(null);
-                    const result = await fetchPostDynamics(timeRange);
-                    setData(result.timeline || result.data || []);
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
+            
+            // Clear any pending reload
+            if (timeoutId) clearTimeout(timeoutId);
+            
+            // Debounce the reload to prevent rapid successive calls
+            timeoutId = setTimeout(() => {
+                if (isMountedRef.current) {
+                    loadData();
                 }
-            };
-            loadData();
+            }, 500); // 500ms debounce for data source changes
         };
         
         window.addEventListener('dataSourceChanged', handleDataSourceChange);
-        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
-    }, []); // Remove dependencies that cause re-renders
+        
+        return () => {
+            window.removeEventListener('dataSourceChanged', handleDataSourceChange);
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, []); // No dependencies to prevent infinite loops
 
-    // Auto-refresh functionality
+    // Auto-refresh functionality with cleanup (disabled by default to prevent loops)
     useEffect(() => {
+        // Disable auto-refresh by default to prevent infinite API calls
         if (!autoRefresh || refreshInterval === 'disabled') return;
 
         const intervalMs = refreshInterval === '30s' ? 30000 : 
                           refreshInterval === '1m' ? 60000 : 
                           refreshInterval === '5m' ? 300000 : 30000;
 
+        console.log('PostViewDynamicsChart: Setting up auto-refresh every', intervalMs, 'ms');
+        
         const interval = setInterval(() => {
-            const loadData = async () => {
-                try {
-                    setLoading(true);
-                    setError(null);
-                    const result = await fetchPostDynamics(timeRange);
-                    setData(result.timeline || result.data || []);
-                } catch (err) {
-                    setError(err.message);
-                } finally {
-                    setLoading(false);
-                }
-            };
-            loadData();
+            if (isMountedRef.current && !isLoadingRef.current) {
+                console.log('PostViewDynamicsChart: Auto-refresh triggered');
+                loadData();
+            }
         }, intervalMs);
-        return () => clearInterval(interval);
-    }, [autoRefresh, refreshInterval, timeRange]); // Remove fetchPostDynamics to prevent infinite re-renders
+        
+        return () => {
+            console.log('PostViewDynamicsChart: Clearing auto-refresh interval');
+            clearInterval(interval);
+        };
+    }, [autoRefresh, refreshInterval]); // Removed loadData dependency
 
-    // Chart data transformation with enhanced validation
+    // Cleanup when component unmounts
+    useEffect(() => {
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    // Chart data transformation with enhanced validation and memoization
     const chartData = useMemo(() => {
         if (!data || !Array.isArray(data) || data.length === 0) {
-            console.log('PostViewDynamicsChart: No data available');
             return [];
         }
         
         try {
             const transformedData = data.map((point, index) => {
-                // Ensure point is an object
                 if (!point || typeof point !== 'object') {
-                    console.warn(`Invalid data point at index ${index}:`, point);
                     return null;
                 }
                 
-                // Create safe data point with fallbacks
-                const safePoint = {
+                return {
                     time: point.timestamp ? 
                         new Date(point.timestamp).toLocaleTimeString('en-US', { 
                             hour: '2-digit', 
@@ -221,20 +402,8 @@ const PostViewDynamicsChart = () => {
                     comments: Math.max(0, Number(point.comments) || 0),
                     timestamp: point.timestamp || new Date().toISOString()
                 };
-                
-                // Validate that all numeric values are finite
-                if (!Number.isFinite(safePoint.views) || 
-                    !Number.isFinite(safePoint.likes) ||
-                    !Number.isFinite(safePoint.shares) || 
-                    !Number.isFinite(safePoint.comments)) {
-                    console.warn(`Invalid numeric values in data point ${index}:`, safePoint);
-                    return null;
-                }
-                
-                return safePoint;
-            }).filter(Boolean); // Remove null entries
+            }).filter(Boolean);
             
-            console.log(`PostViewDynamicsChart: Transformed ${transformedData.length} data points`);
             return transformedData;
         } catch (error) {
             console.error('Error transforming chart data:', error);
@@ -242,63 +411,33 @@ const PostViewDynamicsChart = () => {
         }
     }, [data]);
 
-    // Summary statistics with error handling
+    // Summary statistics with memoization
     const summaryStats = useMemo(() => {
-        if (!data || !Array.isArray(data) || data.length === 0) return null;
+        if (!chartData || chartData.length === 0) return null;
 
         try {
-            const latest = data[data.length - 1] || {};
-            const previous = data[data.length - 2] || {};
+            const latest = chartData[chartData.length - 1] || {};
+            const previous = chartData[chartData.length - 2] || {};
             
-            const safeNumber = (val) => Number(val) || 0;
-            const total = data.reduce((sum, item) => sum + safeNumber(item.views), 0);
-            const avgViews = Math.round(total / data.length);
-            const growth = safeNumber(latest.views) && safeNumber(previous.views) ? 
-                ((safeNumber(latest.views) - safeNumber(previous.views)) / safeNumber(previous.views) * 100).toFixed(1) : 0;
+            const total = chartData.reduce((sum, item) => sum + (item.views || 0), 0);
+            const avgViews = Math.round(total / chartData.length) || 0;
+            const currentViews = latest.views || 0;
+            const previousViews = previous.views || 0;
+            const growth = previousViews > 0 ? ((currentViews - previousViews) / previousViews * 100) : 0;
 
             return {
                 totalViews: total,
-                currentViews: safeNumber(latest.views),
+                currentViews,
                 averageViews: avgViews,
-                growthRate: parseFloat(growth),
-                peakViews: Math.max(...data.map(d => safeNumber(d.views))),
-                dataPoints: data.length
+                growthRate: Number(growth.toFixed(1)),
+                peakViews: Math.max(...chartData.map(d => d.views || 0)),
+                dataPoints: chartData.length
             };
         } catch (error) {
             console.error('Error calculating summary stats:', error);
-            return {
-                totalViews: 0,
-                currentViews: 0,
-                averageViews: 0,
-                growthRate: 0,
-                peakViews: 0,
-                dataPoints: 0
-            };
+            return null;
         }
-    }, [data]);
-
-    // Tooltip formatter
-    const CustomTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
-            return (
-                <Paper sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                        {label}
-                    </Typography>
-                    {payload.map((entry, index) => (
-                        <Typography 
-                            key={index} 
-                            variant="body2" 
-                            sx={{ color: entry.color }}
-                        >
-                            {entry.name}: {entry.value.toLocaleString()}
-                        </Typography>
-                    ))}
-                </Paper>
-            );
-        }
-        return null;
-    };
+    }, [chartData]);
 
     if (error) {
         return (
@@ -324,32 +463,32 @@ const PostViewDynamicsChart = () => {
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     {/* Time Range Selector */}
                     <FormControl size="small" sx={{ minWidth: 120 }}>
-                        <InputLabel>Vaqt oralig'i</InputLabel>
+                        <InputLabel>Time Range</InputLabel>
                         <Select
                             value={timeRange}
-                            label="Vaqt oralig'i"
-                            onChange={(e) => setTimeRange(e.target.value)}
+                            label="Time Range"
+                            onChange={(e) => handleTimeRangeChange(e.target.value)}
                         >
-                            <MenuItem value="1h">1 soat</MenuItem>
-                            <MenuItem value="6h">6 soat</MenuItem>
-                            <MenuItem value="24h">24 soat</MenuItem>
-                            <MenuItem value="7d">7 kun</MenuItem>
-                            <MenuItem value="30d">30 kun</MenuItem>
+                            <MenuItem value="1h">1 Hour</MenuItem>
+                            <MenuItem value="6h">6 Hours</MenuItem>
+                            <MenuItem value="24h">24 Hours</MenuItem>
+                            <MenuItem value="7d">7 Days</MenuItem>
+                            <MenuItem value="30d">30 Days</MenuItem>
                         </Select>
                     </FormControl>
 
                     {/* Refresh Interval */}
                     <FormControl size="small" sx={{ minWidth: 120 }}>
-                        <InputLabel>Yangilash</InputLabel>
+                        <InputLabel>Refresh</InputLabel>
                         <Select
                             value={refreshInterval}
-                            label="Yangilash"
+                            label="Refresh"
                             onChange={(e) => setRefreshInterval(e.target.value)}
                         >
-                            <MenuItem value="30s">30 soniya</MenuItem>
-                            <MenuItem value="1m">1 daqiqa</MenuItem>
-                            <MenuItem value="5m">5 daqiqa</MenuItem>
-                            <MenuItem value="disabled">O'chirilgan</MenuItem>
+                            <MenuItem value="30s">30 seconds</MenuItem>
+                            <MenuItem value="1m">1 minute</MenuItem>
+                            <MenuItem value="5m">5 minutes</MenuItem>
+                            <MenuItem value="disabled">Disabled</MenuItem>
                         </Select>
                     </FormControl>
                 </Box>
@@ -364,7 +503,7 @@ const PostViewDynamicsChart = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <ViewsIcon color="primary" fontSize="small" />
                                     <Typography variant="caption" color="text.secondary">
-                                        Jami Ko'rishlar
+                                        Total Views
                                     </Typography>
                                 </Box>
                                 <Typography variant="h6">
@@ -380,7 +519,7 @@ const PostViewDynamicsChart = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <SpeedIcon color="secondary" fontSize="small" />
                                     <Typography variant="caption" color="text.secondary">
-                                        O'rtacha
+                                        Average
                                     </Typography>
                                 </Box>
                                 <Typography variant="h6">
@@ -396,7 +535,7 @@ const PostViewDynamicsChart = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <TrendingUpIcon color="success" fontSize="small" />
                                     <Typography variant="caption" color="text.secondary">
-                                        O'sish %
+                                        Growth %
                                     </Typography>
                                 </Box>
                                 <Typography variant="h6" sx={{ 
@@ -414,7 +553,7 @@ const PostViewDynamicsChart = () => {
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <ChartIcon color="warning" fontSize="small" />
                                     <Typography variant="caption" color="text.secondary">
-                                        Eng yuqori
+                                        Peak Views
                                     </Typography>
                                 </Box>
                                 <Typography variant="h6">
@@ -431,60 +570,14 @@ const PostViewDynamicsChart = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
                     <CircularProgress />
                     <Typography variant="body2" sx={{ ml: 2 }}>
-                        Ma'lumotlar yuklanmoqda...
+                        Loading analytics data...
                     </Typography>
                 </Box>
             )}
 
             {/* Chart */}
-            {!loading && chartData.length > 0 && Array.isArray(chartData) && (
-                <Box sx={{ height: 400, mt: 2 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis 
-                                dataKey="time" 
-                                tick={{ fontSize: 12 }}
-                                interval="preserveStartEnd"
-                                type="category"
-                            />
-                            <YAxis 
-                                tick={{ fontSize: 12 }}
-                                tickFormatter={(value) => value.toLocaleString()}
-                                type="number"
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend />
-                            <Area
-                                type="monotone"
-                                dataKey="views"
-                                stackId="1"
-                                stroke="#8884d8"
-                                fill="#8884d8"
-                                fillOpacity={0.6}
-                                name="Ko'rishlar"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="likes"
-                                stackId="1"
-                                stroke="#82ca9d"
-                                fill="#82ca9d"
-                                fillOpacity={0.6}
-                                name="Yoqtirishlar"
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="shares"
-                                stackId="1"
-                                stroke="#ffc658"
-                                fill="#ffc658"
-                                fillOpacity={0.6}
-                                name="Ulashishlar"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </Box>
+            {!loading && chartData.length > 0 && (
+                <StableChart data={chartData} timeRange={timeRange} />
             )}
 
             {/* Empty State */}
@@ -499,10 +592,10 @@ const PostViewDynamicsChart = () => {
                 }}>
                     <ChartIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
                     <Typography variant="h6" gutterBottom>
-                        Ma'lumot topilmadi
+                        No data available
                     </Typography>
                     <Typography variant="body2">
-                        Tanlangan vaqt oralig'ida post faolligi ma'lumotlari yo'q
+                        No post activity data for the selected time range
                     </Typography>
                 </Box>
             )}
@@ -532,7 +625,7 @@ const PostViewDynamicsChart = () => {
                     {summaryStats && summaryStats.growthRate > 10 && (
                         <Chip 
                             size="small" 
-                            label="📈 Yuqori o'sish" 
+                            label={<><span aria-hidden="true">📈</span> Yuqori o'sish</>}
                             color="success" 
                         />
                     )}

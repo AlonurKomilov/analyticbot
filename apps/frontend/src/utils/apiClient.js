@@ -124,6 +124,28 @@ class ApiClient {
                 throw timeoutError;
             }
 
+            // Handle connection refused - auto-switch to demo mode
+            if (error.message.includes('ERR_CONNECTION_REFUSED') || 
+                error.message.includes('Failed to fetch') ||
+                error.message.includes('Network request failed')) {
+                
+                // Only log in development mode
+                if (import.meta.env.DEV) {
+                    console.warn('API connection failed, auto-switching to demo mode');
+                }
+                
+                // Automatically switch to demo mode
+                localStorage.setItem('useRealAPI', 'false');
+                window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
+                    detail: { source: 'mock', reason: 'api_unavailable' }
+                }));
+                
+                // Create a user-friendly error
+                const connectionError = new Error('API is currently unavailable. Switched to demo mode automatically.');
+                connectionError.response = { status: 503, autoSwitched: true };
+                throw connectionError;
+            }
+
             // Retry logic
             if (this.isRetryableError(error) && attempt < MAX_RETRIES) {
                 console.warn(`API request failed (attempt ${attempt}/${MAX_RETRIES}), retrying...`, {
@@ -240,15 +262,21 @@ class ApiClient {
                 }));
             });
 
-            // Set timeout and headers
+            // Set timeout first
             xhr.timeout = REQUEST_TIMEOUT;
             
-            // Set auth header
+            // Open the request
+            xhr.open('POST', `${this.baseURL}${endpoint}`);
+            
+            // Set auth header after opening the request
             const twaInitData = window.Telegram?.WebApp?.initData || '';
-            xhr.setRequestHeader('Authorization', `TWA ${twaInitData}`);
+            try {
+                xhr.setRequestHeader('Authorization', `TWA ${twaInitData}`);
+            } catch (error) {
+                console.warn('Failed to set Authorization header:', error);
+            }
 
             // Start upload
-            xhr.open('POST', `${this.baseURL}${endpoint}`);
             xhr.send(formData);
         });
     }
@@ -267,22 +295,23 @@ class ApiClient {
                 formData.append('channel_id', channelId.toString());
             }
 
+            const startTime = Date.now();
+
             // Progress tracking with enhanced metadata
             if (onProgress) {
                 xhr.upload.addEventListener('progress', (event) => {
                     if (event.lengthComputable) {
                         const progress = (event.loaded / event.total) * 100;
+                        const speed = event.loaded / ((Date.now() - startTime) / 1000); // bytes per second
                         onProgress({
                             progress,
                             loaded: event.loaded,
                             total: event.total,
-                            speed: event.loaded / ((Date.now() - startTime) / 1000) // bytes per second
+                            speed: speed || 0
                         });
                     }
                 });
             }
-
-            const startTime = Date.now();
 
             // Success handler with enhanced response
             xhr.addEventListener('load', () => {
@@ -333,15 +362,21 @@ class ApiClient {
                 }));
             });
 
-            // Set timeout and headers
+            // Set timeout first
             xhr.timeout = REQUEST_TIMEOUT;
             
-            // Set auth header
-            const twaInitData = window.Telegram?.WebApp?.initData || '';
-            xhr.setRequestHeader('Authorization', `TWA ${twaInitData}`);
-
-            // Start upload to enhanced direct endpoint
+            // Open the request
             xhr.open('POST', `${this.baseURL}/api/v1/media/upload-direct`);
+            
+            // Set auth header after opening the request
+            const twaInitData = window.Telegram?.WebApp?.initData || '';
+            try {
+                xhr.setRequestHeader('Authorization', `TWA ${twaInitData}`);
+            } catch (error) {
+                console.warn('Failed to set Authorization header:', error);
+            }
+
+            // Start upload
             xhr.send(formData);
         });
     }

@@ -56,11 +56,14 @@ export const useFormState = (initialState, validator) => {
         setState(prev => ({ ...prev, [field]: value }));
         setTouched(prev => ({ ...prev, [field]: true }));
         
-        if (validator && touched[field]) {
-            const fieldErrors = validator({ ...state, [field]: value });
-            setErrors(prev => ({ ...prev, [field]: fieldErrors[field] }));
+        if (validator) {
+            setErrors(prev => {
+                const newState = { ...state, [field]: value };
+                const fieldErrors = validator(newState);
+                return { ...prev, [field]: fieldErrors[field] };
+            });
         }
-    }, [state, touched, validator]);
+    }, [validator]);
 
     const validateForm = useCallback(() => {
         if (!validator) return true;

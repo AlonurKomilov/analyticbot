@@ -88,17 +88,19 @@ const AppSkeleton = () => (
     </Stack>
 );
 
-// Tab Panel Component
+// Tab Panel Component with improved accessibility
 const TabPanel = ({ children, value, index, ...other }) => (
-    <div
+    <section
         role="tabpanel"
         hidden={value !== index}
         id={`main-tabpanel-${index}`}
         aria-labelledby={`main-tab-${index}`}
+        aria-hidden={value !== index}
+        tabIndex={value === index ? 0 : -1}
         {...other}
     >
         {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
+    </section>
 );
 
 function App() {
@@ -106,27 +108,40 @@ function App() {
     const [activeTab, setActiveTab] = useState(1); // Start with Analytics Dashboard
     const [isInitialized, setIsInitialized] = useState(false);
 
-    // Initialize app data when component mounts
+    // Initialize app data when component mounts (only once)
     React.useEffect(() => {
+        let mounted = true;
+        
         const initializeApp = async () => {
             try {
                 // Load initial data, but don't block UI if it fails
-                await store.fetchData();
+                if (mounted) {
+                    await store.fetchData();
+                }
             } catch (error) {
                 console.warn('Failed to fetch initial data, using demo mode:', error);
                 // Continue with mock data for demo purposes
             } finally {
                 // Always mark as initialized to show the UI
-                setIsInitialized(true);
+                if (mounted) {
+                    setIsInitialized(true);
+                }
             }
         };
 
         // Show content immediately with minimal delay for better UX
-        setTimeout(() => {
-            setIsInitialized(true); // Show UI immediately
-            initializeApp(); // Load data in background
+        const timeoutId = setTimeout(() => {
+            if (mounted) {
+                setIsInitialized(true); // Show UI immediately
+                initializeApp(); // Load data in background
+            }
         }, 300); // Optimized loading timeout
-    }, [store]);
+        
+        return () => {
+            mounted = false;
+            clearTimeout(timeoutId);
+        };
+    }, []); // Empty dependency array - initialize only once!
 
     const handleTabChange = (event, newValue) => {
         setActiveTab(newValue);
@@ -136,220 +151,252 @@ function App() {
     const shouldShowLoading = !isInitialized;
 
     return (
-        <Container maxWidth="xl">
-            <Box sx={{ my: 2, textAlign: 'center' }}>
-                <Typography variant="h4" component="h1" gutterBottom sx={{ 
-                    background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', 
-                    backgroundClip: 'text', 
-                    WebkitBackgroundClip: 'text', 
-                    color: 'transparent',
-                    fontWeight: 'bold',
-                    mb: 1
-                }}>
-                    🤖 AnalyticBot Dashboard
-                </Typography>
-                <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
-                    PROFESSIONAL TELEGRAM ANALYTICS • REAL-TIME DATA • AI INSIGHTS
-                </Typography>
-                
-                {/* Enhanced Service Status Cards */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    gap: 1, 
-                    justifyContent: 'center', 
-                    flexWrap: 'wrap', 
-                    mb: 3,
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: 'background.paper',
-                    boxShadow: 1
-                }}>
-                    <Chip icon={<span>✅</span>} label="Bot Online" color="success" size="medium" sx={{ fontSize: '0.9rem' }} />
-                    <Chip icon={<span>�</span>} label="Analytics Ready" color="primary" size="medium" sx={{ fontSize: '0.9rem' }} />
-                    <Chip icon={<span>🛡️</span>} label="Secure" color="secondary" size="medium" sx={{ fontSize: '0.9rem' }} />
-                    <Chip icon={<span>🧠</span>} label="AI Active" color="warning" size="medium" sx={{ fontSize: '0.9rem' }} />
-                    <Chip icon={<span>⚡</span>} label="Real-time" color="info" size="medium" sx={{ fontSize: '0.9rem' }} />
-                </Box>
-            </Box>
-
-            {shouldShowLoading ? (
-                <AppSkeleton />
-            ) : (
-                <Box>
-                    {/* Main Navigation Tabs */}
-                    <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
-                        <Tabs
-                            value={activeTab}
-                            onChange={handleTabChange}
-                            sx={{ 
-                                borderBottom: 1, 
-                                borderColor: 'divider',
-                                '& .MuiTab-root': {
-                                    fontWeight: 'bold',
-                                    fontSize: '1rem',
-                                    textTransform: 'none',
-                                    minHeight: 64,
-                                    '&.Mui-selected': {
-                                        color: 'primary.main'
-                                    }
-                                }
-                            }}
-                            variant="fullWidth"
-                            TabIndicatorProps={{
-                                style: {
-                                    height: 4,
-                                    borderRadius: '4px 4px 0 0'
-                                }
-                            }}
+        <main role="main" aria-label="AnalyticBot Dashboard">
+            {/* Skip navigation link for keyboard users */}
+            <a href="#main-content" className="skip-link">
+                Skip to main content
+            </a>
+            
+            <Container maxWidth="xl">
+                <header>
+                    <Box sx={{ my: 2, textAlign: 'center' }}>
+                        <Typography variant="h4" component="h1" gutterBottom sx={{ 
+                            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)', 
+                            backgroundClip: 'text', 
+                            WebkitBackgroundClip: 'text', 
+                            color: 'transparent',
+                            fontWeight: 'bold',
+                            mb: 1
+                        }}>
+                            <span aria-hidden="true">🤖</span> AnalyticBot Dashboard
+                        </Typography>
+                        <Typography variant="subtitle1" color="text.secondary" gutterBottom sx={{ mb: 2 }}>
+                            PROFESSIONAL TELEGRAM ANALYTICS • REAL-TIME DATA • AI INSIGHTS
+                        </Typography>
+                        
+                        {/* Enhanced Service Status Cards */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            gap: 1, 
+                            justifyContent: 'center', 
+                            flexWrap: 'wrap', 
+                            mb: 3,
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: 'background.paper',
+                            boxShadow: 1
+                        }}
+                        role="status"
+                        aria-label="System status indicators"
                         >
-                            <Tab 
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        📝 <span>Post Management</span>
-                                    </Box>
-                                } 
-                            />
-                            <Tab 
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        📊 <span>Analytics Dashboard</span>
-                                    </Box>
-                                } 
-                            />
-                            <Tab 
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        🧠 <span>AI Services</span>
-                                    </Box>
-                                } 
-                            />
-                        </Tabs>
-                    </Paper>
+                            <Chip icon={<span aria-hidden="true">✅</span>} label="Bot Online" color="success" size="medium" sx={{ fontSize: '0.9rem' }} />
+                            <Chip icon={<span aria-hidden="true">📊</span>} label="Analytics Ready" color="primary" size="medium" sx={{ fontSize: '0.9rem' }} />
+                            <Chip icon={<span aria-hidden="true">🛡️</span>} label="Secure" color="secondary" size="medium" sx={{ fontSize: '0.9rem' }} />
+                            <Chip icon={<span aria-hidden="true">🧠</span>} label="AI Active" color="warning" size="medium" sx={{ fontSize: '0.9rem' }} />
+                            <Chip icon={<span aria-hidden="true">⚡</span>} label="Real-time" color="info" size="medium" sx={{ fontSize: '0.9rem' }} />
+                        </Box>
+                    </Box>
+                </header>
 
-                    {/* Post Management Tab */}
-                    <TabPanel value={activeTab} index={0}>
-                        <Container maxWidth="sm">
-                            <AddChannel />
-                            <EnhancedMediaUploader /> {/* NEW Enhanced uploader */}
-                            <MediaPreview /> {/* Keep existing for compatibility */}
-                            <PostCreator />
-                            <ScheduledPostsList />
-                            <StorageFileBrowser /> {/* NEW File browser */}
-                        </Container>
-                    </TabPanel>
+                <div id="main-content">
+                    {shouldShowLoading ? (
+                        <AppSkeleton />
+                    ) : (
+                        <Box>
+                            {/* Main Navigation Tabs */}
+                            <nav aria-label="Main navigation" role="navigation">
+                                <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+                                    <Tabs
+                                        value={activeTab}
+                                        onChange={handleTabChange}
+                                        sx={{ 
+                                            borderBottom: 1, 
+                                            borderColor: 'divider',
+                                            '& .MuiTab-root': {
+                                                fontWeight: 'bold',
+                                                fontSize: '1rem',
+                                                textTransform: 'none',
+                                                minHeight: 64,
+                                                '&.Mui-selected': {
+                                                    color: 'primary.main'
+                                                },
+                                                '&:focus-visible': {
+                                                    outline: '2px solid #2196F3',
+                                                    outlineOffset: '2px'
+                                                }
+                                            }
+                                        }}
+                                        variant="fullWidth"
+                                        TabIndicatorProps={{
+                                            style: {
+                                                height: 4,
+                                                borderRadius: '4px 4px 0 0'
+                                            }
+                                        }}
+                                        aria-label="Dashboard sections"
+                                    >
+                                        <Tab 
+                                            label={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <span aria-hidden="true">📝</span> <span>Post Management</span>
+                                                </Box>
+                                            }
+                                            id="main-tab-0"
+                                            aria-controls="main-tabpanel-0"
+                                        />
+                                        <Tab 
+                                            label={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <span aria-hidden="true">📊</span> <span>Analytics Dashboard</span>
+                                                </Box>
+                                            }
+                                            id="main-tab-1"
+                                            aria-controls="main-tabpanel-1"
+                                        />
+                                        <Tab 
+                                            label={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <span aria-hidden="true">🧠</span> <span>AI Services</span>
+                                                </Box>
+                                            }
+                                            id="main-tab-2"
+                                            aria-controls="main-tabpanel-2"
+                                        />
+                                    </Tabs>
+                                </Paper>
+                            </nav>
 
-                    {/* Analytics Dashboard Tab */}
-                    <TabPanel value={activeTab} index={1}>
-                        <AnalyticsDashboard /> {/* NEW Week 2 Analytics Dashboard */}
-                    </TabPanel>
+                            {/* Post Management Tab */}
+                            <TabPanel value={activeTab} index={0}>
+                                <Container maxWidth="sm">
+                                    <AddChannel />
+                                    <EnhancedMediaUploader /> {/* NEW Enhanced uploader */}
+                                    <MediaPreview /> {/* Keep existing for compatibility */}
+                                    <PostCreator />
+                                    <ScheduledPostsList />
+                                    <StorageFileBrowser /> {/* NEW File browser */}
+                                </Container>
+                            </TabPanel>
 
-                    {/* AI Services Tab */}
-                    <TabPanel value={activeTab} index={2}>
-                        <Container maxWidth="lg">
-                            <Grid container spacing={3}>
-                                <Grid item xs={12}>
-                                    <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        🧠 AI & Machine Learning Xizmatlari
-                                    </Typography>
-                                </Grid>
-                                
-                                {/* AI Service Cards */}
-                                <Grid item xs={12} md={6}>
-                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
-                                                🎯 Content Optimizer
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                                Matn va hashtag optimallashtirish, sentiment analysis
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                <Chip label="✅ Sentiment Analysis" size="small" color="success" />
-                                                <Chip label="✅ Hashtag AI" size="small" color="success" />
-                                                <Chip label="✅ Readability" size="small" color="success" />
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                            {/* Analytics Dashboard Tab */}
+                            <TabPanel value={activeTab} index={1}>
+                                <AnalyticsDashboard /> {/* NEW Week 2 Analytics Dashboard */}
+                            </TabPanel>
 
-                                <Grid item xs={12} md={6}>
-                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom sx={{ color: 'success.main' }}>
-                                                📈 Predictive Analytics
+                            {/* AI Services Tab */}
+                            <TabPanel value={activeTab} index={2}>
+                                <Container maxWidth="lg">
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <Typography variant="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <span aria-hidden="true">🧠</span> AI & Machine Learning Services
                                             </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                                ML algoritmlari orqali post performance prediction
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                <Chip label="✅ Engagement Prediction" size="small" color="success" />
-                                                <Chip label="✅ Best Time AI" size="small" color="success" />
-                                                <Chip label="✅ Audience Analysis" size="small" color="success" />
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                        </Grid>
+                                        
+                                        {/* AI Service Cards */}
+                                        <Grid item xs={12} md={6}>
+                                            <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                                <CardContent>
+                                                    <Typography variant="h3" gutterBottom sx={{ color: 'primary.main' }}>
+                                                        <span aria-hidden="true">🎯</span> Content Optimizer
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                        Text and hashtag optimization, sentiment analysis
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                        <Chip label="✅ Sentiment Analysis" size="small" color="success" />
+                                                        <Chip label="✅ Hashtag AI" size="small" color="success" />
+                                                        <Chip label="✅ Readability" size="small" color="success" />
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
 
-                                <Grid item xs={12} md={6}>
-                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom sx={{ color: 'warning.main' }}>
-                                                🔮 Churn Predictor
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                                Obunachilar aktivligini bashorat qilish va saqlash
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                <Chip label="✅ Risk Assessment" size="small" color="success" />
-                                                <Chip label="✅ Retention AI" size="small" color="success" />
-                                                <Chip label="✅ User Behavior" size="small" color="success" />
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                                <CardContent>
+                                                    <Typography variant="h3" gutterBottom sx={{ color: 'success.main' }}>
+                                                        <span aria-hidden="true">📈</span> Predictive Analytics
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                        ML algorithms for post performance prediction
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                        <Chip label="✅ Engagement Prediction" size="small" color="success" />
+                                                        <Chip label="✅ Best Time AI" size="small" color="success" />
+                                                        <Chip label="✅ Audience Analysis" size="small" color="success" />
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
 
-                                <Grid item xs={12} md={6}>
-                                    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-                                        <CardContent>
-                                            <Typography variant="h6" gutterBottom sx={{ color: 'error.main' }}>
-                                                🛡️ Security & Monitoring
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                                OAuth 2.0, MFA, RBAC va xavfsizlik monitoring
-                                            </Typography>
-                                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                                <Chip label="✅ OAuth 2.0" size="small" color="success" />
-                                                <Chip label="✅ Multi-Factor Auth" size="small" color="success" />
-                                                <Chip label="✅ Role-Based Access" size="small" color="success" />
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                                <CardContent>
+                                                    <Typography variant="h3" gutterBottom sx={{ color: 'warning.main' }}>
+                                                        <span aria-hidden="true">🔮</span> Churn Predictor
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                        Subscriber activity prediction and retention
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                        <Chip label="✅ Risk Assessment" size="small" color="success" />
+                                                        <Chip label="✅ Retention AI" size="small" color="success" />
+                                                        <Chip label="✅ User Behavior" size="small" color="success" />
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
 
-                                {/* Technology Stack */}
-                                <Grid item xs={12}>
-                                    <Paper sx={{ p: 3, mt: 2 }}>
-                                        <Typography variant="h6" gutterBottom>
-                                            🔧 Technology Stack
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                            <Chip label="Python 3.11" color="primary" />
-                                            <Chip label="scikit-learn" color="primary" />
-                                            <Chip label="pandas" color="primary" />
-                                            <Chip label="numpy" color="primary" />
-                                            <Chip label="MLflow" color="primary" />
-                                            <Chip label="FastAPI" color="secondary" />
-                                            <Chip label="aiogram 3.22" color="secondary" />
-                                            <Chip label="Redis" color="secondary" />
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            </Grid>
-                        </Container>
-                    </TabPanel>
-                </Box>
-            )}
-        </Container>
+                                        <Grid item xs={12} md={6}>
+                                            <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
+                                                <CardContent>
+                                                    <Typography variant="h3" gutterBottom sx={{ color: 'error.main' }}>
+                                                        <span aria-hidden="true">🛡️</span> Security & Monitoring
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                                        OAuth 2.0, MFA, RBAC and security monitoring
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                        <Chip label="✅ OAuth 2.0" size="small" color="success" />
+                                                        <Chip label="✅ Multi-Factor Auth" size="small" color="success" />
+                                                        <Chip label="✅ Role-Based Access" size="small" color="success" />
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
+
+                                        {/* Technology Stack */}
+                                        <Grid item xs={12}>
+                                            <Paper sx={{ p: 3, mt: 2 }}>
+                                                <Typography variant="h3" gutterBottom>
+                                                    <span aria-hidden="true">🔧</span> Technology Stack
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                    <Chip label="Python 3.11" color="primary" />
+                                                    <Chip label="scikit-learn" color="primary" />
+                                                    <Chip label="pandas" color="primary" />
+                                                    <Chip label="numpy" color="primary" />
+                                                    <Chip label="MLflow" color="primary" />
+                                                    <Chip label="FastAPI" color="secondary" />
+                                                    <Chip label="aiogram 3.22" color="secondary" />
+                                                    <Chip label="Redis" color="secondary" />
+                                                </Box>
+                                            </Paper>
+                                        </Grid>
+                                    </Grid>
+                                </Container>
+                            </TabPanel>
+                        </Box>
+                    )}
+                </div>
+            </Container>
+            
+            {/* Live region for announcements */}
+            <div aria-live="polite" aria-atomic="true" className="sr-only" id="live-announcements">
+                {/* Dynamic content updates will be announced here */}
+            </div>
+        </main>
     );
 }
 

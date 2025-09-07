@@ -231,7 +231,8 @@ const BestTimeRecommender = () => {
             warning: '⚠️',
             tip: '💡'
         };
-        return icons[insight.type] || '🤖';
+        const emoji = icons[insight.type] || '🤖';
+        return <span aria-hidden="true">{emoji}</span>;
     };
 
     // Heatmap data
@@ -336,7 +337,7 @@ const BestTimeRecommender = () => {
                                                     {index === 0 && (
                                                         <Chip 
                                                             size="small" 
-                                                            label="🏆 TOP" 
+                                                            label={<><span aria-hidden="true">🏆</span> TOP</>}
                                                             color="success" 
                                                             sx={{ mb: 1 }}
                                                         />
@@ -564,7 +565,7 @@ const BestTimeRecommender = () => {
                 <Box sx={{ display: 'flex', gap: 1 }}>
                     <Chip 
                         size="small" 
-                        label="🤖 AI Powered" 
+                        label={<><span aria-hidden="true">🤖</span> AI Powered</>}
                         color="primary" 
                         variant="outlined"
                     />

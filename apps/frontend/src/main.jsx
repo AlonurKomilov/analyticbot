@@ -1,10 +1,13 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as Sentry from '@sentry/react';
 
 import App from './App.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import theme from './theme.js'; // Use our enhanced theme
+import { initializeApp, showDataSourceNotification } from './utils/initializeApp.js';
 
 // Initialize Sentry (only if DSN is provided)
 if (import.meta.env.VITE_SENTRY_DSN) {
@@ -18,6 +21,18 @@ if (import.meta.env.VITE_SENTRY_DSN) {
     ],
   });
 }
+
+// Initialize app early
+initializeApp().then((result) => {
+  if (import.meta.env.DEV) {
+    console.log('🚀 App initialized:', result);
+  }
+  
+  // Show notification about data source
+  if (result.dataSource === 'mock' && result.error) {
+    showDataSourceNotification('mock', 'api_unavailable');
+  }
+});
 
 // TWA Mock for development
 const mockTelegram = {
@@ -58,42 +73,26 @@ if (typeof window !== 'undefined') {
   if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
-  }
+    }
 }
 
-// Material-UI Theme
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          margin: 0,
-          padding: 0,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
-        },
-      },
-    },
-  },
-});
-
-// Render App
+// Enhanced Material-UI Theme is now imported from theme.js
+// The theme includes:
+// - High contrast colors (WCAG AA compliance)
+// - Enhanced focus indicators
+// - Proper touch target sizes (44px minimum)
+// - Reduced motion support
+// - High contrast mode support// Render App with Error Boundary
 const container = document.getElementById('root');
 const root = createRoot(container);
 
 root.render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <App />
+      </ThemeProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

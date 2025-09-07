@@ -45,7 +45,15 @@ class ScheduleService:
         Create a new scheduled post with business validation
         """
         # Business rule: cannot schedule posts in the past
-        if scheduled_at <= datetime.utcnow():
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        
+        # Ensure scheduled_at is timezone-aware
+        if scheduled_at.tzinfo is None:
+            # Assume UTC if no timezone is provided
+            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
+        
+        if scheduled_at <= now:
             raise ValueError("Cannot schedule posts in the past")
 
         # Business rule: validate content requirements

@@ -32,28 +32,22 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Create a new scheduled post in PostgreSQL"""
         query = """
         INSERT INTO scheduled_posts (
-            id, title, content, channel_id, user_id,
-            scheduled_at, created_at, status, tags, metadata,
-            media_urls, media_types
+            user_id, channel_id, post_text, status, schedule_time
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+            $1, $2, $3, $4, $5
         ) RETURNING *
         """
 
+        # Map domain status to database status
+        db_status = self._map_status_to_db(post.status)
+
         result = await self.db.fetchrow(
             query,
-            post.id,
-            post.title,
-            post.content,
-            post.channel_id,
-            post.user_id,
-            post.scheduled_at,
-            post.created_at,
-            post.status.value,
-            post.tags,
-            json.dumps(post.metadata),
-            post.media_urls,
-            post.media_types,
+            int(post.user_id),  # Convert to int for bigint
+            int(post.channel_id),  # Convert to int for bigint
+            post.content,  # Map content to post_text
+            db_status,
+            post.scheduled_at,  # Map scheduled_at to schedule_time
         )
 
         return self._row_to_scheduled_post(result)
@@ -161,11 +155,11 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Get all posts that are ready for delivery"""
         query = """
         SELECT * FROM scheduled_posts 
-        WHERE status = $1 AND scheduled_at <= $2
-        ORDER BY scheduled_at ASC
+        WHERE status = $1 AND schedule_time <= $2
+        ORDER BY schedule_time ASC
         """
 
-        results = await self.db.fetch(query, PostStatus.SCHEDULED.value, datetime.utcnow())
+        results = await self.db.fetch(query, "pending", datetime.utcnow())
 
         return [self._row_to_scheduled_post(row) for row in results]
 
@@ -198,23 +192,41 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
     def _row_to_scheduled_post(self, row) -> ScheduledPost:
         """Convert database row to ScheduledPost domain model"""
-        metadata = json.loads(row["metadata"]) if row["metadata"] else {}
-
         return ScheduledPost(
             id=row["id"],
-            title=row["title"],
-            content=row["content"],
-            channel_id=row["channel_id"],
-            user_id=row["user_id"],
-            scheduled_at=row["scheduled_at"],
+            title="",  # Not stored in current schema
+            content=row["post_text"],  # Map post_text to content
+            channel_id=str(row["channel_id"]),  # Convert to string
+            user_id=str(row["user_id"]),  # Convert to string
+            scheduled_at=row["schedule_time"],  # Map schedule_time to scheduled_at
             created_at=row["created_at"],
-            updated_at=row["updated_at"],
-            status=PostStatus(row["status"]),
-            tags=row["tags"] or [],
-            metadata=metadata,
-            media_urls=row["media_urls"] or [],
-            media_types=row["media_types"] or [],
+            updated_at=None,  # Not available in current schema
+            status=self._map_status_from_db(row["status"]),
+            tags=[],  # Not stored in current schema
+            metadata={},  # Not stored in current schema
+            media_urls=[],  # Not stored in current schema
+            media_types=[],  # Not stored in current schema
         )
+
+    def _map_status_to_db(self, status: PostStatus) -> str:
+        """Map domain status to database status"""
+        mapping = {
+            PostStatus.SCHEDULED: "pending",
+            PostStatus.PUBLISHED: "sent", 
+            PostStatus.FAILED: "error",
+            PostStatus.DRAFT: "pending",  # Default to pending
+            PostStatus.CANCELLED: "error",  # Map to error
+        }
+        return mapping.get(status, "pending")
+
+    def _map_status_from_db(self, db_status: str) -> PostStatus:
+        """Map database status to domain status"""
+        mapping = {
+            "pending": PostStatus.SCHEDULED,
+            "sent": PostStatus.PUBLISHED,
+            "error": PostStatus.FAILED,
+        }
+        return mapping.get(db_status, PostStatus.SCHEDULED)
 
 
 class AsyncpgDeliveryRepository(DeliveryRepository):

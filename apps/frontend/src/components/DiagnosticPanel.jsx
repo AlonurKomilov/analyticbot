@@ -49,17 +49,19 @@ const DiagnosticPanel = () => {
     }, []);
 
     const getStoreStatus = () => {
+        const loadedIcon = <><span aria-hidden="true">✅</span> Loaded</>;
+        const notLoadedIcon = <><span aria-hidden="true">❌</span> Not loaded</>;
+        
         return {
-            dataSource: store.dataSource || 'unknown',
+            isConnected: store.isConnected,
+            dataSource: store.dataSource,
             channelsCount: store.channels?.length || 0,
             scheduledPostsCount: store.scheduledPosts?.length || 0,
-            user: store.user ? '✅ Loaded' : '❌ Not loaded',
-            plan: store.plan ? '✅ Loaded' : '❌ Not loaded',
-            analyticsData: store.analytics?.postDynamics ? '✅ Loaded' : '❌ Not loaded',
+            user: store.user ? loadedIcon : notLoadedIcon,
+            plan: store.plan ? loadedIcon : notLoadedIcon,
+            analyticsData: store.analytics?.postDynamics ? loadedIcon : notLoadedIcon,
         };
-    };
-
-    const storeStatus = getStoreStatus();
+    };    const storeStatus = getStoreStatus();
 
     return (
         <Paper sx={{ p: 2, mb: 2 }}>

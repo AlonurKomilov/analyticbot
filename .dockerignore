@@ -27,6 +27,13 @@ venv/
 # Testlash bilan bog'liq keshlar
 .pytest_cache/
 
+# Frontend applications (Node.js/React)
+apps/frontend/node_modules/
+apps/frontend/dist/
+apps/frontend/.env.local
+apps/frontend/.env.production
+apps/frontend/.vite/
+
 # Frontend (twa-frontend) papkasidagi keraksiz fayllar
 twa-frontend/node_modules/
 twa-frontend/dist/

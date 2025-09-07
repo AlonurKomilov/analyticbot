@@ -36,10 +36,10 @@ const ScheduledPostsList = () => {
                                 }
                                 secondary={
                                     <>
-                                        <Typography variant="body1" component="p" sx={{ mb: 0.5, wordBreak: 'break-word', color: 'text.primary' }}>
+                                        <Typography variant="body1" component="span" sx={{ mb: 0.5, wordBreak: 'break-word', color: 'text.primary', display: 'block' }}>
                                             {post.text || <em>(No caption)</em>}
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography variant="caption" color="text.secondary" component="span" sx={{ display: 'block' }}>
                                             At: {new Date(post.schedule_time).toLocaleString()}
                                         </Typography>
                                     </>

@@ -1,0 +1,44 @@
+# Production dependencies for AnalyticBot
+# Core framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Database
+sqlalchemy>=2.0.23
+alembic>=1.12.1
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+
+# Redis/Caching
+redis>=5.0.1
+aioredis>=2.0.1
+
+# Telegram
+aiogram>=3.2.0
+telethon>=1.30.3
+
+# Authentication & Security  
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Async HTTP
+aiohttp>=3.9.0
+httpx>=0.25.2
+
+# Data validation
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Task queue
+celery>=5.3.4
+
+# Monitoring
+prometheus-client>=0.19.0
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+
+# Utilities
+python-dotenv>=1.0.0
+pytz>=2023.3
+structlog>=23.2.0

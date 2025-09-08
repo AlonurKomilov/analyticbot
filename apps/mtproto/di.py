@@ -289,7 +289,9 @@ def configure_container(settings: MTProtoSettings) -> None:
 
 
 @inject
-def get_tg_client(tg_client: TGClient = Provide[MTProtoContainer.tg_client]) -> TGClient:
+def get_tg_client(
+    tg_client: TGClient = Provide[MTProtoContainer.tg_client],
+) -> TGClient:
     """Get configured TGClient instance."""
     return tg_client
 
@@ -314,7 +316,9 @@ def create_scalable_client(settings: MTProtoSettings) -> TGClient:
 
 
 @inject
-def get_settings(settings: MTProtoSettings = Provide[MTProtoContainer.settings]) -> MTProtoSettings:
+def get_settings(
+    settings: MTProtoSettings = Provide[MTProtoContainer.settings],
+) -> MTProtoSettings:
     """Get application settings."""
     return settings
 

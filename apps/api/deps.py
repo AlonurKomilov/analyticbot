@@ -32,7 +32,7 @@ async def get_db_pool() -> asyncpg.Pool:
         db_url = settings.DATABASE_URL
         if db_url and db_url.startswith("postgresql+asyncpg://"):
             db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-        
+
         _db_pool = await asyncpg.create_pool(
             db_url,
             min_size=settings.DB_POOL_SIZE,
@@ -93,16 +93,18 @@ async def cleanup_db_pool():
 
 # Authentication dependency (placeholder for now)
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """Get current authenticated user (placeholder implementation)"""
     # TODO: Implement proper JWT validation and user lookup
     # Raise an exception in production to prevent unauthorized access
     from config.settings import settings
+
     if settings.ENVIRONMENT != "development":
         from fastapi import HTTPException
+
         raise HTTPException(status_code=401, detail="Authentication required")
-    
+
     return {
         "id": "user_123",
         "username": "dev_user",

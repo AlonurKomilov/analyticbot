@@ -88,7 +88,7 @@ class AdvancedDataProcessor:
         except Exception as e:
             logger.error(f"Data ingestion failed: {str(e)}")
             raise
-    
+
     async def _setup_streaming(self, source: str, **kwargs) -> pd.DataFrame:
         """Setup streaming data source (placeholder implementation)"""
         logger.info(f"Setting up streaming from: {source}")
@@ -373,7 +373,9 @@ class AdvancedDataProcessor:
             analysis["missing_data"] = {
                 "total_missing": missing_data.sum(),
                 "columns_with_missing": (missing_data > 0).sum(),
-                "highest_missing_column": missing_data.idxmax() if missing_data.max() > 0 else None,
+                "highest_missing_column": (
+                    missing_data.idxmax() if missing_data.max() > 0 else None
+                ),
                 "highest_missing_percentage": (missing_data.max() / len(df)) * 100,
             }
 
@@ -394,7 +396,7 @@ class AdvancedDataProcessor:
                         corr_val = correlation_matrix.iloc[i, j]
                         try:
                             # Handle different types of correlation values
-                            if hasattr(corr_val, 'item') and callable(corr_val.item):
+                            if hasattr(corr_val, "item") and callable(corr_val.item):
                                 # For pandas/numpy scalars with .item() method
                                 corr_val_float = float(corr_val.item())
                             elif isinstance(corr_val, (int, float)):
@@ -403,7 +405,7 @@ class AdvancedDataProcessor:
                             else:
                                 # Skip non-numeric values
                                 continue
-                            
+
                             if abs(corr_val_float) > 0.7:  # High correlation threshold
                                 high_correlations.append(
                                     {
@@ -528,7 +530,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to datetime: {e}")
-                    pass
 
                 # Try numeric
                 try:
@@ -536,7 +537,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to numeric: {e}")
-                    pass
 
         return df
 

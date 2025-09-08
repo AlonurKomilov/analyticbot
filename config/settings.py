@@ -102,7 +102,7 @@ class Settings(BaseSettings):
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
-    
+
     # Export Settings
     MAX_EXPORT_SIZE_MB: int = 50
     RATE_LIMIT_PER_HOUR: int = 100
@@ -117,7 +117,10 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        env_parse_none_str="None",
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")

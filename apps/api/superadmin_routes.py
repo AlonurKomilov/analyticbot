@@ -174,7 +174,8 @@ async def admin_login(
 
     if not admin_user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # Create session
@@ -187,7 +188,7 @@ async def admin_login(
             "username": admin_user.username,
             "full_name": admin_user.full_name,
             "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "last_login": (admin_user.last_login.isoformat() if admin_user.last_login else None),
         },
     )
 

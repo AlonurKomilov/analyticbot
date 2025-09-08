@@ -328,17 +328,25 @@ async def get_repositories() -> RepositoryContainer:
     Returns:
         RepositoryContainer with initialized repositories
     """
-    # Use the same database pool creation pattern as API
+    # Use environment variables directly to avoid settings conflicts
     import asyncpg
+    import os
 
-    from config import settings
+    # Load from environment
+    database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot")
+    
+    # Convert database URL for asyncpg
+    if database_url.startswith("postgresql+asyncpg://"):
+        db_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
+    else:
+        db_url = database_url
 
     try:
         db_pool = await asyncpg.create_pool(
-            settings.DATABASE_URL,
-            min_size=settings.DB_POOL_SIZE,
-            max_size=settings.DB_MAX_OVERFLOW,
-            command_timeout=settings.DB_POOL_TIMEOUT,
+            db_url,
+            min_size=int(os.getenv("DB_POOL_SIZE", "10")),
+            max_size=int(os.getenv("DB_MAX_OVERFLOW", "20")),
+            command_timeout=int(os.getenv("DB_POOL_TIMEOUT", "30")),
         )
         return RepositoryContainer(db_pool)
     except Exception as e:

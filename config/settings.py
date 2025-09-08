@@ -92,10 +92,16 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: SecretStr | None = None  # For Smart Auto-Fixer
 
     # Phase 4.5: Bot UI & Alerts Integration Feature Flags
-    BOT_ANALYTICS_UI_ENABLED: bool = False
+    BOT_ANALYTICS_UI_ENABLED: bool = True
     ALERTS_ENABLED: bool = False
     EXPORT_ENABLED: bool = True
-    SHARE_LINKS_ENABLED: bool = False
+    SHARE_LINKS_ENABLED: bool = True
+
+    # Week 5-6: Content Protection Feature Flags
+    CONTENT_PROTECTION_ENABLED: bool = True
+    WATERMARK_ENABLED: bool = True
+    THEFT_DETECTION_ENABLED: bool = True
+    PREMIUM_FEATURES_ENABLED: bool = True
 
     # Analytics V2 Bot Client Settings
     ANALYTICS_V2_BASE_URL: str = "http://localhost:8000"
@@ -117,7 +123,7 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None", extra="ignore"
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")

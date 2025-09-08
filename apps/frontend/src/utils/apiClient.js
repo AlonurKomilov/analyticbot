@@ -387,6 +387,136 @@ class ApiClient {
     async getStorageFiles(limit = 20, offset = 0) {
         return this.get(`/api/v1/media/storage-files?limit=${limit}&offset=${offset}`);
     }
+
+    /**
+     * Export Analytics to CSV (Week 1-2 Quick Win)
+     */
+    async exportToCsv(type, channelId, period = '7d') {
+        return this.get(`/api/v2/exports/csv/${type}/${channelId}?period=${period}`);
+    }
+
+    /**
+     * Export Analytics to PNG (Week 1-2 Quick Win)
+     */
+    async exportToPng(type, channelId, period = '7d') {
+        return this.get(`/api/v2/exports/png/${type}/${channelId}?period=${period}`);
+    }
+
+    /**
+     * Get Export System Status (Week 1-2 Quick Win)
+     */
+    async getExportStatus() {
+        return this.get('/api/v2/exports/status');
+    }
+
+    /**
+     * Create Share Link (Week 1-2 Quick Win)
+     */
+    async createShareLink(type, channelId, ttl = '24h') {
+        return this.post(`/api/v2/share/create/${type}/${channelId}`, { ttl });
+    }
+
+    /**
+     * Get Shared Report (Week 1-2 Quick Win)
+     */
+    async getSharedReport(token) {
+        return this.get(`/api/v2/share/report/${token}`);
+    }
+
+    /**
+     * Get Share Link Info (Week 1-2 Quick Win)
+     */
+    async getShareInfo(token) {
+        return this.get(`/api/v2/share/info/${token}`);
+    }
+
+    /**
+     * Revoke Share Link (Week 1-2 Quick Win)
+     */
+    async revokeShareLink(token) {
+        return this.delete(`/api/v2/share/revoke/${token}`);
+    }
+
+    // ==========================================
+    // WEEK 3-4 ADVANCED ANALYTICS METHODS
+    // ==========================================
+
+    /**
+     * Get Advanced Analytics Dashboard (Week 3-4)
+     */
+    async getAdvancedDashboard(channelId, period = 30, includeAlerts = true, includeRecommendations = true) {
+        const params = new URLSearchParams({
+            period: period.toString(),
+            include_alerts: includeAlerts.toString(),
+            include_recommendations: includeRecommendations.toString()
+        });
+        return this.get(`/api/v2/analytics/advanced/dashboard/${channelId}?${params}`);
+    }
+
+    /**
+     * Get Real-time Metrics (Week 3-4)
+     */
+    async getRealTimeMetrics(channelId) {
+        return this.get(`/api/v2/analytics/advanced/metrics/real-time/${channelId}`);
+    }
+
+    /**
+     * Check Active Alerts (Week 3-4)
+     */
+    async checkAlerts(channelId) {
+        return this.get(`/api/v2/analytics/advanced/alerts/check/${channelId}`);
+    }
+
+    /**
+     * Get AI Recommendations (Week 3-4)
+     */
+    async getRecommendations(channelId) {
+        return this.get(`/api/v2/analytics/advanced/recommendations/${channelId}`);
+    }
+
+    /**
+     * Get Performance Score (Week 3-4)
+     */
+    async getPerformanceScore(channelId, period = 30) {
+        return this.get(`/api/v2/analytics/advanced/performance/score/${channelId}?period=${period}`);
+    }
+
+    /**
+     * Advanced Trending Analysis (Week 3-4)
+     */
+    async getAdvancedTrends(channelId, period = 7) {
+        return Promise.all([
+            this.get(`/api/v2/analytics/channels/${channelId}/trending?period=${period}`),
+            this.getRealTimeMetrics(channelId),
+            this.getPerformanceScore(channelId, period)
+        ]).then(([trends, realTime, performance]) => ({
+            trends,
+            realTime,
+            performance
+        }));
+    }
+
+    /**
+     * Batch Analytics Data (Week 3-4) - Optimized for dashboard
+     */
+    async getBatchAnalytics(channelId, period = 30) {
+        return Promise.all([
+            this.get(`/api/v2/analytics/channels/${channelId}/overview?period=${period}`),
+            this.get(`/api/v2/analytics/channels/${channelId}/growth?period=${period}`),
+            this.get(`/api/v2/analytics/channels/${channelId}/reach?period=${period}`),
+            this.get(`/api/v2/analytics/channels/${channelId}/top-posts?period=${period}`),
+            this.getRealTimeMetrics(channelId),
+            this.checkAlerts(channelId)
+        ]).then(([overview, growth, reach, topPosts, realTime, alerts]) => ({
+            overview,
+            growth,
+            reach,
+            topPosts,
+            realTime,
+            alerts,
+            timestamp: new Date().toISOString()
+        }));
+    }
 }
 
 // Create singleton instance

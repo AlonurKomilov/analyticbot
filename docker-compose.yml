@@ -36,22 +36,31 @@ services:
       timeout: 5s
       retries: 5
 
-  # ---------- MTProto Service (Feature Flagged) ----------
+  # ---------- MTProto Real Data Collection Service (Phase 2) ----------
   mtproto:
     build:
       context: .
       dockerfile: infra/docker/Dockerfile
       target: api  # Reuse API image for now
-    command: python -m apps.mtproto
+    command: python scripts/mtproto_service.py service
     container_name: analyticbot-mtproto
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
       REDIS_URL: redis://redis:6379/0
-      # MTProto feature flag - disabled by default
-      MTPROTO_ENABLED: ${MTPROTO_ENABLED:-false}
-      TELEGRAM_API_ID: ${TELEGRAM_API_ID:-}
-      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH:-}
-      TELEGRAM_SESSION_NAME: ${TELEGRAM_SESSION_NAME:-mtproto_session}
+      # Phase 2 MTProto Real Data Collection - ENABLED
+      MTPROTO_ENABLED: ${MTPROTO_ENABLED:-true}
+      MTPROTO_HISTORY_ENABLED: ${MTPROTO_HISTORY_ENABLED:-true}
+      MTPROTO_UPDATES_ENABLED: ${MTPROTO_UPDATES_ENABLED:-true}
+      MTPROTO_STATS_ENABLED: ${MTPROTO_STATS_ENABLED:-true}
+      # Telegram API credentials (required)
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      TELEGRAM_SESSION_NAME: ${TELEGRAM_SESSION_NAME:-analyticbot_session}
+      # Collection settings with SAFE RATE LIMITING
+      MTPROTO_PEERS: ${MTPROTO_PEERS:-}
+      MTPROTO_HISTORY_LIMIT_PER_RUN: ${MTPROTO_HISTORY_LIMIT_PER_RUN:-50}  # Reduced for safety
+      MTPROTO_CONCURRENCY: ${MTPROTO_CONCURRENCY:-1}  # Conservative for safety
+      MTPROTO_SLEEP_THRESHOLD: ${MTPROTO_SLEEP_THRESHOLD:-2.0}  # Increased sleep
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     env_file: 
       - .env
@@ -62,14 +71,17 @@ services:
       - ./apps/mtproto:/app/apps/mtproto:ro
       - ./core:/app/core:ro
       - ./infra:/app/infra:ro
+      - ./scripts:/app/scripts:ro
+      - ./data:/app/data  # For session storage
     profiles:
       - mtproto  # Only start when explicitly requested
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      test: ["CMD", "python", "-c", "import asyncio; asyncio.run(__import__('scripts.mtproto_service').MTProtoServiceManager().get_status())"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
 
   # ---------- Frontend Service ----------
   frontend:

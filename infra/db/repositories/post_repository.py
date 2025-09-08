@@ -3,7 +3,6 @@ Post Repository Implementation
 Repository for storing and managing Telegram posts/messages
 """
 
-import json
 from datetime import datetime
 from typing import Any
 
@@ -17,7 +16,7 @@ class AsyncpgPostRepository:
         self.pool = pool
 
     async def upsert_post(
-        self, channel_id: int, msg_id: int, date: datetime, text: str = "", links_json: list = None
+        self, channel_id: int, msg_id: int, date: datetime, text: str = "", links_json: list | None = None
     ) -> dict[str, Any]:
         """Insert or update a post with UPSERT behavior.
 
@@ -26,17 +25,15 @@ class AsyncpgPostRepository:
             msg_id: Message ID
             date: Message date
             text: Message text content
-            links_json: List of extracted links
+            links_json: List of extracted links (ignored for now, table doesn't have links column)
 
         Returns:
             Dictionary with upsert result information
         """
-        links_json = links_json or []
-
         async with self.pool.acquire() as conn:
             # Check if record exists
-            existing = await conn.fetchrow(
-                "SELECT id FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+            existing = await conn.fetchval(
+                "SELECT 1 FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
             )
 
             if existing:
@@ -45,28 +42,25 @@ class AsyncpgPostRepository:
                     """
                     UPDATE posts SET
                         text = $3,
-                        links = $4,
                         updated_at = NOW()
                     WHERE channel_id = $1 AND msg_id = $2
                     """,
                     channel_id,
                     msg_id,
                     text,
-                    json.dumps(links_json),
                 )
                 return {"inserted": False, "updated": True}
             else:
                 # Insert new post
                 await conn.execute(
                     """
-                    INSERT INTO posts (channel_id, msg_id, date, text, links, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+                    INSERT INTO posts (channel_id, msg_id, date, text, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, NOW(), NOW())
                     """,
                     channel_id,
                     msg_id,
                     date,
                     text,
-                    json.dumps(links_json),
                 )
                 return {"inserted": True, "updated": False}
 

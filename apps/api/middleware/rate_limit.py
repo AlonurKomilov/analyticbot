@@ -180,8 +180,7 @@ def get_rate_limiter() -> ShareLinkRateLimiter:
     global _rate_limiter
     if _rate_limiter is None:
         _rate_limiter = ShareLinkRateLimiter()
-        # Start cleanup task
-        asyncio.create_task(_rate_limiter.start_cleanup_task())
+        # Note: Cleanup task will be started when first used in async context
     return _rate_limiter
 
 

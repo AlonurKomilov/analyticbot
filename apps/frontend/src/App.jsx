@@ -19,7 +19,7 @@ import MediaPreview from './components/MediaPreview';
 import AddChannel from './components/AddChannel';
 import EnhancedMediaUploader from './components/EnhancedMediaUploader.jsx'; // NEW for Phase 2.1
 import StorageFileBrowser from './components/StorageFileBrowser.jsx'; // NEW for Phase 2.1
-import AnalyticsDashboard from './components/AnalyticsDashboard.jsx'; // NEW Week 2 Analytics
+import AnalyticsDashboard from './components/AnalyticsDashboard.jsx'; // NEW Week 3-4 Full Analytics
 import { useAppStore } from './store/appStore.js';
 
 const AppSkeleton = () => (
@@ -280,7 +280,7 @@ function App() {
 
                             {/* Analytics Dashboard Tab */}
                             <TabPanel value={activeTab} index={1}>
-                                <AnalyticsDashboard /> {/* NEW Week 2 Analytics Dashboard */}
+                                <AnalyticsDashboard /> {/* NEW Week 3-4 Full Analytics Dashboard */}
                             </TabPanel>
 
                             {/* AI Services Tab */}

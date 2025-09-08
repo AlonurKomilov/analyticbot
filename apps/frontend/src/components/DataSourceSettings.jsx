@@ -39,7 +39,8 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/health`, {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
         signal: controller.signal
       });

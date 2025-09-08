@@ -32,7 +32,8 @@ import {
     Home as HomeIcon,
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
-    NavigateNext as NavigateNextIcon
+    NavigateNext as NavigateNextIcon,
+    Security as SecurityIcon
 } from '@mui/icons-material';
 
 // Import our chart components
@@ -40,6 +41,11 @@ import PostViewDynamicsChart from './PostViewDynamicsChart';
 import TopPostsTable from './TopPostsTable';
 import BestTimeRecommender from './BestTimeRecommender';
 import DataSourceSettings from './DataSourceSettings';
+import ExportButton from './common/ExportButton';
+import ShareButton from './common/ShareButton';
+import AdvancedAnalyticsDashboard from './analytics/AdvancedAnalyticsDashboard';
+import RealTimeAlertsSystem from './analytics/RealTimeAlertsSystem';
+import ContentProtectionDashboard from './content/ContentProtectionDashboard';
 import { useAppStore } from '../store/appStore';
 
 // Tab Panel Component with improved accessibility
@@ -62,6 +68,9 @@ const AnalyticsDashboard = () => {
     const [lastUpdated, setLastUpdated] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    
+    // Channel configuration
+    const channelId = 'demo_channel'; // Default channel for analytics
     
     // Store integration
     const { dataSource, setDataSource, fetchData, isUsingRealAPI, clearAnalyticsData } = useAppStore();
@@ -142,26 +151,24 @@ const AnalyticsDashboard = () => {
                         Home
                     </Link>
                     <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <AnalyticsIcon fontSize="small" aria-hidden="true" />
-                        Analytics Dashboard
-                    </Typography>
-                </Breadcrumbs>
-            </nav>
+                            <AnalyticsIcon fontSize="small" aria-hidden="true" />
+                            Analytics Dashboard
+                        </Typography>
+                    </Breadcrumbs>
+                </nav>
 
-            {/* Header */}
-            <header>
-                <Paper sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box>
-                            <Typography variant="h1" sx={{ mb: 1, fontWeight: 'bold', fontSize: '2rem' }}>
-                                <span aria-hidden="true">📊</span> Rich Analytics Dashboard
-                            </Typography>
-                            <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
-                                Complete analysis of Telegram channel and AI recommendations
-                            </Typography>
-                        </Box>
-                        
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                {/* Header */}
+                <header>
+                    <Paper sx={{ p: 3, mb: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Box>
+                                <Typography variant="h1" sx={{ mb: 1, fontWeight: 'bold', fontSize: '2rem' }}>
+                                    <span aria-hidden="true">📊</span> Analytics & Content Protection
+                                </Typography>
+                                <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>
+                                    Complete analysis with Week 5-6 content protection features
+                                </Typography>
+                            </Box>                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}>
                                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     <Typography variant="caption" sx={{ opacity: 0.8 }}>
@@ -174,6 +181,31 @@ const AnalyticsDashboard = () => {
                                     </Typography>
                                 </CardContent>
                             </Card>
+                            
+                            {/* Quick Actions - Export & Share */}
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <ExportButton 
+                                    channelId="demo_channel"
+                                    dataType="engagement"
+                                    period="7d"
+                                    size="small"
+                                    sx={{ 
+                                        bgcolor: 'rgba(255,255,255,0.2)', 
+                                        color: 'white',
+                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+                                    }}
+                                />
+                                <ShareButton 
+                                    channelId="demo_channel"
+                                    dataType="engagement"
+                                    size="small"
+                                    sx={{ 
+                                        bgcolor: 'rgba(255,255,255,0.2)', 
+                                        color: 'white',
+                                        '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }
+                                    }}
+                                />
+                            </Box>
                             
                             <Chip 
                                 icon={<TrendingIcon aria-hidden="true" />} 
@@ -209,15 +241,15 @@ const AnalyticsDashboard = () => {
                 </div>
             </Collapse>
 
-            {/* Alert for Phase 2.1 Status */}
+            {/* Alert for Current Status */}
             <Alert 
-                severity="info" 
+                severity="success" 
                 sx={{ mb: 3 }}
-                icon={<AnalyticsIcon />}
+                icon={<SecurityIcon />}
                 role="status"
             >
-                <strong>Phase 2.1 - Week 2:</strong> Rich Analytics Dashboard and AI Best Time recommendations are active. 
-                All data is updated in real-time.
+                <strong>🛡️ NEW: Week 5-6 Content Protection Available!</strong> Click the "Content Protection" tab below to access watermarking and theft detection tools. 
+                Premium features include image watermarking, content scanning, and security tools.
             </Alert>
 
             {/* Main Tabs */}
@@ -260,6 +292,20 @@ const AnalyticsDashboard = () => {
                             sx={{ fontSize: '0.9rem', fontWeight: 'bold' }}
                             id="analytics-tab-2"
                             aria-controls="analytics-tabpanel-2"
+                        />
+                        <Tab 
+                            icon={<AnalyticsIcon />} 
+                            label="Advanced Analytics" 
+                            sx={{ fontSize: '0.9rem', fontWeight: 'bold' }}
+                            id="analytics-tab-3"
+                            aria-controls="analytics-tabpanel-3"
+                        />
+                        <Tab 
+                            icon={<SecurityIcon />} 
+                            label="🛡️ Content Protection" 
+                            sx={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'primary.main' }}
+                            id="analytics-tab-4"
+                            aria-controls="analytics-tabpanel-4"
                         />
                     </Tabs>
                 </Paper>
@@ -409,6 +455,27 @@ const AnalyticsDashboard = () => {
                     aria-labelledby="analytics-tab-2"
                 >
                     <BestTimeRecommender />
+                </TabPanel>
+
+                <TabPanel 
+                    value={activeTab} 
+                    index={3}
+                    id="analytics-tabpanel-3"
+                    aria-labelledby="analytics-tab-3"
+                >
+                    {/* Week 3-4 Advanced Analytics & Alerts */}
+                    <RealTimeAlertsSystem channelId={channelId} />
+                    <AdvancedAnalyticsDashboard channelId={channelId} />
+                </TabPanel>
+
+                <TabPanel 
+                    value={activeTab} 
+                    index={4}
+                    id="analytics-tabpanel-4"
+                    aria-labelledby="analytics-tab-4"
+                >
+                    {/* Week 5-6 Content Protection */}
+                    <ContentProtectionDashboard />
                 </TabPanel>
             </main>
 

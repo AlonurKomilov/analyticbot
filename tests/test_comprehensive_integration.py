@@ -30,12 +30,13 @@ def test_config_loading_comprehensive():
     assert LogFormat.JSON.value == "json"
 
     # Execute Settings initialization code
-    from pydantic import SecretStr
     import os
-    
+
+    from pydantic import SecretStr
+
     # Set environment variables for URL parsing
     os.environ["TWA_HOST_URL"] = "http://localhost:3000"
-    
+
     test_settings = Settings(
         BOT_TOKEN=SecretStr("dummy:token"),
         STORAGE_CHANNEL_ID=123456789,
@@ -218,7 +219,6 @@ def test_security_execution():
     #     consumed = rate_limiter.consume()
     #     if not consumed:
     #         break
-
     # Try to access security engine modules
     auth_attrs = dir(auth) if auth else []
     models_attrs = dir(models) if models else []
@@ -332,11 +332,9 @@ def test_database_models_execution():
 def test_shared_utilities_execution():
     """Test shared utilities by executing their functionality"""
     from apps.shared.di import Container, Settings
-    
+
     # Execute DI Container with correct Settings for shared DI
-    test_settings = Settings(
-        database_url="sqlite:///test.db"
-    )
+    test_settings = Settings(database_url="sqlite:///test.db")
 
     # Execute DI Container
     container = Container(test_settings)
@@ -349,9 +347,11 @@ def test_shared_utilities_execution():
         class MockHealthService:
             def __init__(self):
                 pass
+
             def get_health(self):
                 return {"status": "ok"}
-        health_service = MockHealthService()    # Execute Settings
+
+        health_service = MockHealthService()  # Execute Settings
     settings = Settings(database_url="sqlite:///test.db")
     [a for a in dir(settings) if not a.startswith("_")]
 

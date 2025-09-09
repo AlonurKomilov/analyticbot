@@ -26,7 +26,9 @@ from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    prefix="/analytics", tags=["Analytics"], responses={404: {"description": "Not found"}}
+    prefix="/analytics",
+    tags=["Analytics"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -203,9 +205,9 @@ def generate_top_posts(count: int = 10) -> list[TopPost]:
             comments=int(views * random.uniform(0.001, 0.02)),
             created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
             type=random.choice(post_types),
-            thumbnail=f"https://picsum.photos/64/64?random={i}"
-            if random.choice([True, False])
-            else None,
+            thumbnail=(
+                f"https://picsum.photos/64/64?random={i}" if random.choice([True, False]) else None
+            ),
         )
         for i in range(count)
     ]
@@ -271,7 +273,13 @@ async def analytics_health_check():
         "service": "analytics",
         "timestamp": datetime.utcnow(),
         "version": "2.0.0",
-        "modules": ["data_processor", "predictive_engine", "ai_insights", "dashboard", "reporting"],
+        "modules": [
+            "data_processor",
+            "predictive_engine",
+            "ai_insights",
+            "dashboard",
+            "reporting",
+        ],
     }
 
 
@@ -320,13 +328,15 @@ async def get_channels(
     except Exception as e:
         logger.error(f"Error fetching channels: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channels"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch channels",
         )
 
 
 @router.post("/channels", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)
 async def create_channel(
-    channel_data: ChannelCreate, channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository)
+    channel_data: ChannelCreate,
+    channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository),
 ):
     """Create a new channel"""
     try:
@@ -341,14 +351,14 @@ async def create_channel(
             channel_id=channel_data.telegram_id,
             user_id=1,  # Default user ID for API requests
             title=channel_data.name,
-            username=None
+            username=None,
         )
-        
+
         # Retrieve the created/updated channel
         channel = await channel_repo.get_channel_by_id(channel_data.telegram_id)
         if not channel:
             raise HTTPException(status_code=500, detail="Failed to retrieve created channel")
-        
+
         return ChannelResponse(
             id=channel["id"],
             name=channel.get("name", channel.get("title", "Unknown")),
@@ -362,13 +372,15 @@ async def create_channel(
     except Exception as e:
         logger.error(f"Error creating channel: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create channel"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create channel",
         )
 
 
 @router.get("/channels/{channel_id}", response_model=ChannelResponse)
 async def get_channel(
-    channel_id: int, channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository)
+    channel_id: int,
+    channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository),
 ):
     """Get a specific channel by ID"""
     try:
@@ -391,7 +403,8 @@ async def get_channel(
     except Exception as e:
         logger.error(f"Error fetching channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channel"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch channel",
         )
 
 
@@ -407,13 +420,13 @@ async def get_analytics_metrics(
     try:
         if channel_id is None:
             raise HTTPException(status_code=400, detail="channel_id parameter is required")
-        
+
         end_date = end_date or datetime.utcnow()
         start_date = start_date or end_date - timedelta(days=30)
         metrics = await analytics_service.get_analytics_data(
             channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
-        
+
         # Handle the case where service returns a dict instead of a list of metrics
         if isinstance(metrics, dict):
             # Return a single metric based on the service response
@@ -428,7 +441,7 @@ async def get_analytics_metrics(
                     timestamp=datetime.utcnow(),
                 )
             ]
-        
+
         # If metrics is a list (when properly implemented), handle each item
         return [
             AnalyticsMetrics(
@@ -472,7 +485,7 @@ async def get_channel_metrics(
         metrics = await analytics_service.get_analytics_data(
             channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
-        
+
         # Handle the case where service returns a dict instead of a list of metrics
         if isinstance(metrics, dict):
             # Return a single metric based on the service response
@@ -487,7 +500,7 @@ async def get_channel_metrics(
                     timestamp=datetime.utcnow(),
                 )
             ]
-        
+
         # If metrics is a list (when properly implemented), handle each item
         return [
             AnalyticsMetrics(
@@ -519,7 +532,8 @@ async def get_demo_post_dynamics(hours: int = Query(24, ge=1, le=168)):
     except Exception as e:
         logger.error(f"Error generating demo post dynamics: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo data",
         )
 
 
@@ -531,7 +545,8 @@ async def get_demo_top_posts(count: int = Query(10, ge=1, le=100)):
     except Exception as e:
         logger.error(f"Error generating demo top posts: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo data",
         )
 
 
@@ -543,7 +558,8 @@ async def get_demo_best_times():
     except Exception as e:
         logger.error(f"Error generating demo best times: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo data",
         )
 
 
@@ -555,13 +571,15 @@ async def get_demo_ai_recommendations():
     except Exception as e:
         logger.error(f"Error generating demo AI recommendations: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo data",
         )
 
 
 @router.post("/data-processing/analyze")
 async def analyze_data(
-    request: DataProcessingRequest, processor: AdvancedDataProcessor = Depends(get_data_processor)
+    request: DataProcessingRequest,
+    processor: AdvancedDataProcessor = Depends(get_data_processor),
 ):
     """Process and analyze data using advanced analytics engine"""
     try:
@@ -582,13 +600,15 @@ async def analyze_data(
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process data",
         )
 
 
 @router.post("/predictions/forecast")
 async def make_prediction(
-    request: PredictionRequest, engine: PredictiveAnalyticsEngine = Depends(get_predictive_engine)
+    request: PredictionRequest,
+    engine: PredictiveAnalyticsEngine = Depends(get_predictive_engine),
 ):
     """Make predictions using ML models"""
     try:
@@ -603,13 +623,15 @@ async def make_prediction(
     except Exception as e:
         logger.error(f"Error making prediction: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to make prediction"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to make prediction",
         )
 
 
 @router.get("/insights/{channel_id}")
 async def get_ai_insights(
-    channel_id: int, insights_generator: AIInsightsGenerator = Depends(get_ai_insights_generator)
+    channel_id: int,
+    insights_generator: AIInsightsGenerator = Depends(get_ai_insights_generator),
 ):
     """Generate AI-powered insights for a channel"""
     try:
@@ -637,13 +659,15 @@ async def get_ai_insights(
     except Exception as e:
         logger.error(f"Error generating AI insights: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate insights"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate insights",
         )
 
 
 @router.get("/dashboard/{channel_id}")
 async def get_dashboard_data(
-    channel_id: int, analytics_service: AnalyticsService = Depends(get_analytics_service)
+    channel_id: int,
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Get comprehensive dashboard data for a channel"""
     try:
@@ -663,7 +687,8 @@ async def get_dashboard_data(
 
 @router.post("/refresh/{channel_id}")
 async def refresh_channel_analytics(
-    channel_id: int, analytics_service: AnalyticsService = Depends(get_analytics_service)
+    channel_id: int,
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Manually trigger analytics refresh for a channel"""
     try:
@@ -675,7 +700,8 @@ async def refresh_channel_analytics(
     except Exception as e:
         logger.error(f"Error refreshing analytics for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to refresh analytics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to refresh analytics",
         )
 
 

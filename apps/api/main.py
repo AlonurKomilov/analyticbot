@@ -12,12 +12,12 @@ from fastapi import Depends, FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
+from apps.api.routers.analytics_advanced import router as analytics_advanced_router
 from apps.api.routers.analytics_router import router as analytics_router
 from apps.api.routers.analytics_v2 import router as analytics_v2_router
-from apps.api.routers.analytics_advanced import router as analytics_advanced_router
 from apps.api.routers.exports_v2 import router as exports_v2_router
-from apps.api.routers.share_v2 import router as share_v2_router
 from apps.api.routers.mobile_api import router as mobile_api_router
+from apps.api.routers.share_v2 import router as share_v2_router
 from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from config import settings
@@ -70,13 +70,18 @@ app.include_router(superadmin_router)
 
 # Include unified analytics router (best of both worlds)
 from apps.api.routers.analytics_unified import router as unified_analytics_router
+
 app.include_router(unified_analytics_router)
 
 
 @app.get("/health")
 def health():
     """Health check endpoint"""
-    return {"status": "ok", "environment": settings.ENVIRONMENT, "debug": settings.DEBUG}
+    return {
+        "status": "ok",
+        "environment": settings.ENVIRONMENT,
+        "debug": settings.DEBUG,
+    }
 
 
 # Schedule endpoints using dependency injection
@@ -175,7 +180,8 @@ async def cancel_scheduled_post(
 
 @app.get("/delivery/stats")
 async def get_delivery_stats(
-    channel_id: str | None = None, delivery_service: DeliveryService = Depends(get_delivery_service)
+    channel_id: str | None = None,
+    delivery_service: DeliveryService = Depends(get_delivery_service),
 ):
     """Get delivery statistics"""
     stats = await delivery_service.get_delivery_stats(channel_id=channel_id)

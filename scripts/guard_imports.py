@@ -46,7 +46,11 @@ class ImportGuard:
 
         # Define forbidden imports
         self.forbidden_imports = {
-            "core": ["apps", "infra", "infrastructure"],  # Core can't depend on outer layers
+            "core": [
+                "apps",
+                "infra",
+                "infrastructure",
+            ],  # Core can't depend on outer layers
             "infra": ["apps"],  # Infra can't depend on apps
         }
 

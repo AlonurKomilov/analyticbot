@@ -115,8 +115,7 @@ class AsyncpgChannelRepository:
         """Get all channels with pagination - API compatibility method"""
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
-                "SELECT * FROM channels ORDER BY id LIMIT $1 OFFSET $2",
-                limit, skip
+                "SELECT * FROM channels ORDER BY id LIMIT $1 OFFSET $2", limit, skip
             )
             return [dict(record) for record in records]
 

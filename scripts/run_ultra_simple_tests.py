@@ -47,7 +47,7 @@ async def test_async_performance():
         "single_task_time": single_time,
         "batch_time": batch_time,
         "concurrent_time": concurrent_time,
-        "concurrency_speedup": batch_time / concurrent_time if concurrent_time > 0 else 0,
+        "concurrency_speedup": (batch_time / concurrent_time if concurrent_time > 0 else 0),
     }
 
 

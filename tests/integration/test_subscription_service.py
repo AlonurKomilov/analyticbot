@@ -76,7 +76,10 @@ async def test_check_channel_limit_deny(
 
 
 async def test_check_channel_limit_unlimited(
-    subscription_service: SubscriptionService, setup_mocks, mock_user_repo, mock_plan_repo
+    subscription_service: SubscriptionService,
+    setup_mocks,
+    mock_user_repo,
+    mock_plan_repo,
 ):
     """Foydalanuvchi cheksiz kanal qo'sha olishi kerak."""
     mock_user_repo.get_user_plan_name.return_value = "premium"
@@ -136,7 +139,10 @@ async def test_check_post_limit_deny(
 
 
 async def test_check_post_limit_unlimited(
-    subscription_service: SubscriptionService, setup_full_mocks, mock_user_repo, mock_plan_repo
+    subscription_service: SubscriptionService,
+    setup_full_mocks,
+    mock_user_repo,
+    mock_plan_repo,
 ):
     """User with unlimited plan can post."""
     mock_user_repo.get_user_plan_name.return_value = "premium"

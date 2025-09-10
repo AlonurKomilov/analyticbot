@@ -90,7 +90,12 @@ class ReportTemplate:
 
     def add_section(self, section_type: str, title: str, content: Any, **kwargs):
         """Add a section to the report template"""
-        section = {"type": section_type, "title": title, "content": content, "options": kwargs}
+        section = {
+            "type": section_type,
+            "title": title,
+            "content": content,
+            "options": kwargs,
+        }
         self.sections.append(section)
 
     def set_styling(self, **styling_options):
@@ -293,7 +298,9 @@ class AutomatedReportingSystem:
                         if len(str(cell.value)) > max_length:
                             max_length = len(str(cell.value))
                     except Exception as e:
-                        logger.warning(f"Error processing cell value in column {column_letter}: {e}")
+                        logger.warning(
+                            f"Error processing cell value in column {column_letter}: {e}"
+                        )
                 adjusted_width = min(max_length + 2, 50)
                 worksheet.column_dimensions[column_letter].width = adjusted_width
 
@@ -422,9 +429,11 @@ class AutomatedReportingSystem:
                 section_data = {
                     "type": section["type"],
                     "title": section["title"],
-                    "content": str(section["content"])
-                    if not isinstance(section["content"], dict | list)
-                    else section["content"],
+                    "content": (
+                        str(section["content"])
+                        if not isinstance(section["content"], dict | list)
+                        else section["content"]
+                    ),
                 }
                 report_data["sections"].append(section_data)
 
@@ -446,12 +455,18 @@ class AutomatedReportingSystem:
                 if data[col].dtype in ["int64", "float64"]:
                     col_info.update(
                         {
-                            "mean": float(data[col].mean())
-                            if data[col].notna().sum() > 0
-                            else None,
-                            "std": float(data[col].std()) if data[col].notna().sum() > 0 else None,
-                            "min": float(data[col].min()) if data[col].notna().sum() > 0 else None,
-                            "max": float(data[col].max()) if data[col].notna().sum() > 0 else None,
+                            "mean": (
+                                float(data[col].mean()) if data[col].notna().sum() > 0 else None
+                            ),
+                            "std": (
+                                float(data[col].std()) if data[col].notna().sum() > 0 else None
+                            ),
+                            "min": (
+                                float(data[col].min()) if data[col].notna().sum() > 0 else None
+                            ),
+                            "max": (
+                                float(data[col].max()) if data[col].notna().sum() > 0 else None
+                            ),
                         }
                     )
 
@@ -576,7 +591,7 @@ class AutomatedReportingSystem:
             return {
                 "status": "scheduled",
                 "schedule_name": schedule_name,
-                "next_run": str(schedule.jobs[-1].next_run) if schedule.jobs else "Unknown",
+                "next_run": (str(schedule.jobs[-1].next_run) if schedule.jobs else "Unknown"),
             }
 
         except Exception as e:

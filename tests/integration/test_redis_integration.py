@@ -206,7 +206,10 @@ class TestRedisSessionManagement:
             "user_id": str(user_id),
             "created_at": datetime.now().isoformat(),
             "state": "active",
-            "context": {"current_action": "viewing_analytics", "channel_id": "987654321"},
+            "context": {
+                "current_action": "viewing_analytics",
+                "channel_id": "987654321",
+            },
         }
 
         # Store session data
@@ -264,7 +267,10 @@ class TestRedisSessionManagement:
             session_data = {
                 "user_id": str(user_id),
                 "preferences": json.dumps(
-                    {"language": "en" if user_id % 2 == 0 else "ru", "notifications": True}
+                    {
+                        "language": "en" if user_id % 2 == 0 else "ru",
+                        "notifications": True,
+                    }
                 ),
                 "last_activity": datetime.now().isoformat(),
             }
@@ -312,7 +318,10 @@ class TestRedisRateLimiting:
         limit_config = rate_limit_config["api_calls"]
 
         async def check_rate_limit(
-            user_id: int, action: str, config: dict[str, int], request_time: float = None
+            user_id: int,
+            action: str,
+            config: dict[str, int],
+            request_time: float = None,
         ) -> bool:
             """Simple sliding window rate limiter"""
             key = f"rate_limit:{action}:{user_id}"
@@ -415,7 +424,11 @@ class TestRedisCacheInvalidation:
                 "data": {"views": 2000},
                 "tags": ["analytics", "channel:456"],
             },
-            {"key": "user:profile:789", "data": {"name": "Test"}, "tags": ["user", "profile:789"]},
+            {
+                "key": "user:profile:789",
+                "data": {"name": "Test"},
+                "tags": ["user", "profile:789"],
+            },
         ]
 
         # Store cache entries and tag mappings

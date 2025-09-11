@@ -44,7 +44,12 @@ class AsyncpgStatsRawRepository:
                 fetched_at,
             )
 
-            return {"stored": True, "channel_id": channel_id, "key": key, "fetched_at": fetched_at}
+            return {
+                "stored": True,
+                "channel_id": channel_id,
+                "key": key,
+                "fetched_at": fetched_at,
+            }
 
     async def get_latest_stats(self, channel_id: int, key: str) -> dict[str, Any] | None:
         """Get the latest raw stats for a channel and key.

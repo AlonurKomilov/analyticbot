@@ -33,7 +33,12 @@ class Module2LocalTester:
         if message:
             print(f"   {message}")
         self.results["tests"].append(
-            {"name": test_name, "status": status, "message": message, "duration": duration}
+            {
+                "name": test_name,
+                "status": status,
+                "message": message,
+                "duration": duration,
+            }
         )
         if passed:
             self.results["summary"]["passed"] += 1
@@ -56,7 +61,11 @@ class Module2LocalTester:
             )
             conn.commit()
             conn.close()
-            self.log_test("Test Database Setup", True, f"SQLite database created at {self.db_path}")
+            self.log_test(
+                "Test Database Setup",
+                True,
+                f"SQLite database created at {self.db_path}",
+            )
             return True
         except Exception as e:
             self.log_test("Test Database Setup", False, f"Error: {str(e)}")

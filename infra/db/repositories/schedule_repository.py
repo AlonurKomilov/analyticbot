@@ -212,7 +212,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Map domain status to database status"""
         mapping = {
             PostStatus.SCHEDULED: "pending",
-            PostStatus.PUBLISHED: "sent", 
+            PostStatus.PUBLISHED: "sent",
             PostStatus.FAILED: "error",
             PostStatus.DRAFT: "pending",  # Default to pending
             PostStatus.CANCELLED: "error",  # Map to error

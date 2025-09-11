@@ -289,7 +289,9 @@ def configure_container(settings: MTProtoSettings) -> None:
 
 
 @inject
-def get_tg_client(tg_client: TGClient = Provide[MTProtoContainer.tg_client]) -> TGClient:
+def get_tg_client(
+    tg_client: TGClient = Provide[MTProtoContainer.tg_client],
+) -> TGClient:
     """Get configured TGClient instance."""
     return tg_client
 
@@ -314,7 +316,9 @@ def create_scalable_client(settings: MTProtoSettings) -> TGClient:
 
 
 @inject
-def get_settings(settings: MTProtoSettings = Provide[MTProtoContainer.settings]) -> MTProtoSettings:
+def get_settings(
+    settings: MTProtoSettings = Provide[MTProtoContainer.settings],
+) -> MTProtoSettings:
     """Get application settings."""
     return settings
 
@@ -329,12 +333,16 @@ async def get_repositories() -> RepositoryContainer:
         RepositoryContainer with initialized repositories
     """
     # Use environment variables directly to avoid settings conflicts
-    import asyncpg
     import os
 
+    import asyncpg
+
     # Load from environment
-    database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot")
-    
+    database_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot",
+    )
+
     # Convert database URL for asyncpg
     if database_url.startswith("postgresql+asyncpg://"):
         db_url = database_url.replace("postgresql+asyncpg://", "postgresql://")

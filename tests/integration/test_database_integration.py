@@ -441,6 +441,7 @@ class TestQueryPerformanceValidation:
 def create_test_database_url():
     """Create test database connection URL"""
     import os
+
     return os.getenv("DATABASE_URL", "sqlite:///./test_analyticbot.db")
 
 

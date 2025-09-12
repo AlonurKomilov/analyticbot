@@ -224,7 +224,9 @@ class TestTelegramBotIntegration:
 
         for test_case in formatting_tests:
             result = await mock_telegram_client.send_message(
-                chat_id=123456789, text=test_case["text"], parse_mode=test_case.get("parse_mode")
+                chat_id=123456789,
+                text=test_case["text"],
+                parse_mode=test_case.get("parse_mode"),
             )
 
             assert result["ok"] is True
@@ -457,7 +459,11 @@ class TestTelegramStateManagement:
 
         def manage_user_session(user_id: int, action: str, data: dict[str, Any] = None):
             if action == "create":
-                sessions[user_id] = {"user_id": user_id, "state": "active", "data": data or {}}
+                sessions[user_id] = {
+                    "user_id": user_id,
+                    "state": "active",
+                    "data": data or {},
+                }
             elif action == "get":
                 return sessions.get(user_id)
             elif action == "update":

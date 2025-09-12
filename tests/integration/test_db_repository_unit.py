@@ -164,7 +164,12 @@ class TestDatabaseTransactionPatterns:
         """Test concurrent transaction isolation pattern"""
 
         # Simulate different isolation levels
-        isolation_levels = ["READ_UNCOMMITTED", "READ_COMMITTED", "REPEATABLE_READ", "SERIALIZABLE"]
+        isolation_levels = [
+            "READ_UNCOMMITTED",
+            "READ_COMMITTED",
+            "REPEATABLE_READ",
+            "SERIALIZABLE",
+        ]
 
         for level in isolation_levels:
             mock_db_connection.set_type_codec.return_value = None
@@ -335,7 +340,11 @@ class TestQueryOptimizationValidation:
         index_usage_scenarios = [
             {
                 "query_type": "user_lookup_by_id",
-                "plan": {"Node Type": "Index Scan", "Index Name": "users_pkey", "Cost": 0.29},
+                "plan": {
+                    "Node Type": "Index Scan",
+                    "Index Name": "users_pkey",
+                    "Cost": 0.29,
+                },
             },
             {
                 "query_type": "channel_lookup_by_user",
@@ -521,7 +530,11 @@ def create_transaction_test_scenarios():
         },
         {
             "name": "analytics_data_aggregation",
-            "operations": ["insert_analytics", "update_aggregates", "notify_subscribers"],
+            "operations": [
+                "insert_analytics",
+                "update_aggregates",
+                "notify_subscribers",
+            ],
             "rollback_on": "notify_subscribers",
             "expected_rollback": ["insert_analytics", "update_aggregates"],
         },

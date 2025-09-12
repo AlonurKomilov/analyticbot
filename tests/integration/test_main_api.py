@@ -4,16 +4,17 @@ Integration tests for main FastAPI application endpoints.
 Tests cover the core API endpoints with dependency injection mocking.
 """
 
-import pytest
 from datetime import datetime
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
+
+import pytest
 from fastapi.testclient import TestClient
 
 
 class MockPost:
     """Mock post object for testing."""
-    
+
     def __init__(self):
         self.id = uuid4()
         self.title = "Test Post"
@@ -33,29 +34,31 @@ class TestMainAPIEndpoints:
     @pytest.fixture
     def mock_dependencies(self):
         """Mock all external dependencies."""
-        with patch('apps.api.deps.get_schedule_service') as mock_schedule_service, \
-             patch('apps.api.deps.get_delivery_service') as mock_delivery_service, \
-             patch('config.settings') as mock_settings, \
-             patch('apps.api.routers.analytics_router.router'), \
-             patch('apps.api.routers.analytics_v2.router'), \
-             patch('apps.api.superadmin_routes.router'), \
-             patch('apps.bot.api.content_protection_routes.router'):
-            
+        with (
+            patch("apps.api.deps.get_schedule_service") as mock_schedule_service,
+            patch("apps.api.deps.get_delivery_service") as mock_delivery_service,
+            patch("config.settings") as mock_settings,
+            patch("apps.api.routers.analytics_router.router"),
+            patch("apps.api.routers.analytics_v2.router"),
+            patch("apps.api.superadmin_routes.router"),
+            patch("apps.bot.api.content_protection_routes.router"),
+        ):
             # Configure mock settings
             mock_settings.DEBUG = True
             mock_settings.ENVIRONMENT = "test"
             mock_settings.api.CORS_ORIGINS = ["http://localhost"]
-            
+
             yield {
-                'schedule_service': mock_schedule_service,
-                'delivery_service': mock_delivery_service,
-                'settings': mock_settings
+                "schedule_service": mock_schedule_service,
+                "delivery_service": mock_delivery_service,
+                "settings": mock_settings,
             }
 
     @pytest.fixture
     def app(self, mock_dependencies):
         """Create FastAPI test application."""
         from apps.api.main import app
+
         return app
 
     @pytest.fixture
@@ -66,7 +69,7 @@ class TestMainAPIEndpoints:
     def test_health_endpoint(self, client):
         """Test health check endpoint."""
         response = client.get("/health")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "ok"
@@ -79,19 +82,19 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_post = MockPost()
         mock_service.create_scheduled_post.return_value = mock_post
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_data = {
             "title": "Test Post",
             "content": "Test Content",
             "channel_id": "test_channel",
             "user_id": "test_user",
             "scheduled_at": "2024-12-25T10:00:00",
-            "tags": ["test", "automation"]
+            "tags": ["test", "automation"],
         }
-        
+
         response = client.post("/schedule", params=post_data)
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "Test Post"
@@ -103,18 +106,18 @@ class TestMainAPIEndpoints:
         """Test creation of scheduled post with validation error."""
         mock_service = AsyncMock()
         mock_service.create_scheduled_post.side_effect = ValueError("Invalid date")
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_data = {
             "title": "Test Post",
-            "content": "Test Content", 
+            "content": "Test Content",
             "channel_id": "test_channel",
             "user_id": "test_user",
-            "scheduled_at": "invalid-date"
+            "scheduled_at": "invalid-date",
         }
-        
+
         response = client.post("/schedule", params=post_data)
-        
+
         assert response.status_code == 400
         data = response.json()
         assert "Invalid date" in data["detail"]
@@ -124,11 +127,11 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_post = MockPost()
         mock_service.get_post.return_value = mock_post
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_id = str(uuid4())
         response = client.get(f"/schedule/{post_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["title"] == "Test Post"
@@ -142,11 +145,11 @@ class TestMainAPIEndpoints:
         """Test retrieval of non-existent scheduled post."""
         mock_service = AsyncMock()
         mock_service.get_post.return_value = None
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_id = str(uuid4())
         response = client.get(f"/schedule/{post_id}")
-        
+
         assert response.status_code == 404
         data = response.json()
         assert data["detail"] == "Post not found"
@@ -156,11 +159,11 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_posts = [MockPost(), MockPost()]
         mock_service.get_user_posts.return_value = mock_posts
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         user_id = "test_user"
         response = client.get(f"/schedule/user/{user_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 2
@@ -173,27 +176,25 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_posts = [MockPost()]
         mock_service.get_user_posts.return_value = mock_posts
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         user_id = "test_user"
         response = client.get(f"/schedule/user/{user_id}?limit=10&offset=20")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["total"] == 1
-        mock_service.get_user_posts.assert_called_once_with(
-            user_id=user_id, limit=10, offset=20
-        )
+        mock_service.get_user_posts.assert_called_once_with(user_id=user_id, limit=10, offset=20)
 
     def test_cancel_scheduled_post_success(self, client, mock_dependencies):
         """Test successful cancellation of scheduled post."""
         mock_service = AsyncMock()
         mock_service.cancel_post.return_value = True
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_id = str(uuid4())
         response = client.delete(f"/schedule/{post_id}")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Post cancelled successfully"
@@ -202,11 +203,11 @@ class TestMainAPIEndpoints:
         """Test cancellation of non-existent scheduled post."""
         mock_service = AsyncMock()
         mock_service.cancel_post.return_value = False
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_id = str(uuid4())
         response = client.delete(f"/schedule/{post_id}")
-        
+
         assert response.status_code == 404
         data = response.json()
         assert data["detail"] == "Post not found"
@@ -215,11 +216,11 @@ class TestMainAPIEndpoints:
         """Test cancellation with validation error."""
         mock_service = AsyncMock()
         mock_service.cancel_post.side_effect = ValueError("Cannot cancel published post")
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         post_id = str(uuid4())
         response = client.delete(f"/schedule/{post_id}")
-        
+
         assert response.status_code == 400
         data = response.json()
         assert "Cannot cancel published post" in data["detail"]
@@ -232,13 +233,13 @@ class TestMainAPIEndpoints:
             "successful_deliveries": 950,
             "failed_deliveries": 50,
             "success_rate": 0.95,
-            "avg_delivery_time": 1.2
+            "avg_delivery_time": 1.2,
         }
         mock_service.get_delivery_stats.return_value = mock_stats
-        mock_dependencies['delivery_service'].return_value = mock_service
-        
+        mock_dependencies["delivery_service"].return_value = mock_service
+
         response = client.get("/delivery/stats")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["total_deliveries"] == 1000
@@ -254,13 +255,13 @@ class TestMainAPIEndpoints:
             "successful_deliveries": 98,
             "failed_deliveries": 2,
             "success_rate": 0.98,
-            "last_delivery": "2024-01-01T12:00:00"
+            "last_delivery": "2024-01-01T12:00:00",
         }
         mock_service.get_delivery_stats.return_value = mock_stats
-        mock_dependencies['delivery_service'].return_value = mock_service
-        
+        mock_dependencies["delivery_service"].return_value = mock_service
+
         response = client.get("/delivery/stats?channel_id=test_channel")
-        
+
         assert response.status_code == 200
         data = response.json()
         assert data["channel_id"] == "test_channel"
@@ -282,14 +283,14 @@ class TestMainAPIEndpoints:
             "title": "Test Post"
             # Missing content, channel_id, user_id, scheduled_at
         }
-        
+
         response = client.post("/schedule", params=incomplete_data)
         assert response.status_code == 422
 
     def test_cors_middleware_configuration(self, client):
         """Test CORS middleware is properly configured."""
         response = client.options("/health", headers={"Origin": "http://localhost"})
-        
+
         # Check that CORS headers are present
         assert response.status_code == 200
         # The actual CORS headers depend on the middleware configuration
@@ -299,17 +300,17 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_post = MockPost()
         mock_service.create_scheduled_post.return_value = mock_post
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         # ISO format
         post_data = {
             "title": "Test Post",
             "content": "Test Content",
-            "channel_id": "test_channel", 
+            "channel_id": "test_channel",
             "user_id": "test_user",
-            "scheduled_at": "2024-12-25T10:00:00Z"
+            "scheduled_at": "2024-12-25T10:00:00Z",
         }
-        
+
         response = client.post("/schedule", params=post_data)
         assert response.status_code == 200
 
@@ -318,17 +319,17 @@ class TestMainAPIEndpoints:
         mock_service = AsyncMock()
         mock_post = MockPost()
         mock_service.create_scheduled_post.return_value = mock_post
-        mock_dependencies['schedule_service'].return_value = mock_service
-        
+        mock_dependencies["schedule_service"].return_value = mock_service
+
         # Without tags
         post_data = {
             "title": "Test Post",
             "content": "Test Content",
             "channel_id": "test_channel",
-            "user_id": "test_user", 
-            "scheduled_at": "2024-12-25T10:00:00"
+            "user_id": "test_user",
+            "scheduled_at": "2024-12-25T10:00:00",
         }
-        
+
         response = client.post("/schedule", params=post_data)
         assert response.status_code == 200
 
@@ -341,10 +342,10 @@ class TestMainAPIEndpoints:
         """Test proper error handling from service layer."""
         mock_service = AsyncMock()
         mock_service.get_delivery_stats.side_effect = Exception("Database connection failed")
-        mock_dependencies['delivery_service'].return_value = mock_service
-        
+        mock_dependencies["delivery_service"].return_value = mock_service
+
         response = client.get("/delivery/stats")
-        
+
         # The exact response depends on the error handling implementation
         # It could be 500 (internal server error) or handled gracefully
         assert response.status_code in [500, 503, 200]

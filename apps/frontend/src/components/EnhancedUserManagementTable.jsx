@@ -63,23 +63,7 @@ const EnhancedUserManagementTable = ({
     const [editDialog, setEditDialog] = useState({ open: false, user: null });
     const [suspendReason, setSuspendReason] = useState('');
 
-    // Enhanced user data with computed fields
-    const enhancedUsers = useMemo(() => {
-        return users.map(user => ({
-            ...user,
-            id: user.id || user.telegram_id,
-            full_name_display: user.full_name || 'N/A',
-            username_display: user.username ? `@${user.username}` : 'No username',
-            status_priority: getStatusPriority(user.status),
-            subscription_tier_display: user.subscription_tier || 'free',
-            last_active: user.last_active ? new Date(user.last_active) : null,
-            created_at: user.created_at ? new Date(user.created_at) : new Date(),
-            risk_score: calculateRiskScore(user),
-            activity_level: getActivityLevel(user)
-        }));
-    }, [users]);
-
-    // Utility functions
+    // Utility functions (moved before usage to prevent hoisting issues)
     const getStatusPriority = (status) => {
         const priorities = { 'suspended': 1, 'inactive': 2, 'active': 3, 'premium': 4 };
         return priorities[status] || 0;
@@ -133,6 +117,22 @@ const EnhancedUserManagementTable = ({
         if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
         return `${Math.floor(diffDays / 30)} months ago`;
     };
+
+    // Enhanced user data with computed fields (added after utility functions to prevent hoisting issues)
+    const enhancedUsers = useMemo(() => {
+        return users.map(user => ({
+            ...user,
+            id: user.id || user.telegram_id,
+            full_name_display: user.full_name || 'N/A',
+            username_display: user.username ? `@${user.username}` : 'No username',
+            status_priority: getStatusPriority(user.status),
+            subscription_tier_display: user.subscription_tier || 'free',
+            last_active: user.last_active ? new Date(user.last_active) : null,
+            created_at: user.created_at ? new Date(user.created_at) : new Date(),
+            risk_score: calculateRiskScore(user),
+            activity_level: getActivityLevel(user)
+        }));
+    }, [users]);
 
     // Column definitions
     const columns = useMemo(() => [

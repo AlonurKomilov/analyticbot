@@ -87,14 +87,26 @@ class ErrorBoundary extends React.Component {
 
                             {process.env.NODE_ENV === 'development' && this.state.error && (
                                 <Alert severity="error" sx={{ mb: 3, textAlign: 'left' }}>
-                                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                        <strong>Error:</strong> {this.state.error.toString()}
-                                        <br />
-                                        <strong>Component Stack:</strong>
-                                        <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.7rem', marginTop: '8px' }}>
+                                    <Box sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                                        <Typography variant="body2" component="div" sx={{ fontFamily: 'inherit', fontSize: 'inherit' }}>
+                                            <strong>Error:</strong> {this.state.error.toString()}
+                                        </Typography>
+                                        <Typography variant="body2" component="div" sx={{ fontFamily: 'inherit', fontSize: 'inherit', mt: 1 }}>
+                                            <strong>Component Stack:</strong>
+                                        </Typography>
+                                        <pre style={{ 
+                                            whiteSpace: 'pre-wrap', 
+                                            fontSize: '0.7rem', 
+                                            marginTop: '8px',
+                                            fontFamily: 'inherit',
+                                            margin: '8px 0 0 0',
+                                            padding: 0,
+                                            background: 'transparent',
+                                            border: 'none'
+                                        }}>
                                             {this.state.errorInfo?.componentStack}
                                         </pre>
-                                    </Typography>
+                                    </Box>
                                 </Alert>
                             )}
 

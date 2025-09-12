@@ -134,7 +134,7 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        // Try real API first
+                        // Try real API first - correct endpoint
                         data = await apiClient.get('/initial-data');
                         console.log('✅ Successfully loaded data from real API');
                     } catch (apiError) {
@@ -470,7 +470,16 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/demo/post-dynamics?period=${period}`);
+                        // Use proper analytics v2 API with date range
+                        const getPeriodDateRange = (periodDays) => {
+                            const to = new Date();
+                            const from = new Date();
+                            from.setDate(from.getDate() - parseInt(periodDays.replace('h', '')) / 24);
+                            return { from: from.toISOString(), to: to.toISOString() };
+                        };
+                        
+                        const { from, to } = getPeriodDateRange(period);
+                        response = await apiClient.get(`/api/v2/analytics/channels/1/post-dynamics?from=${from}&to=${to}`);
                         console.log('✅ Post dynamics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for post dynamics, using demo data');
@@ -520,7 +529,18 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/demo/top-posts?period=${period}&sort=${sortBy}`);
+                        // Use proper analytics v2 API with date range
+                        const getPeriodDateRange = (periodDays) => {
+                            const periodMap = { 'today': 1, 'week': 7, 'month': 30 };
+                            const days = periodMap[period] || 7;
+                            const to = new Date();
+                            const from = new Date();
+                            from.setDate(from.getDate() - days);
+                            return { from: from.toISOString(), to: to.toISOString() };
+                        };
+                        
+                        const { from, to } = getPeriodDateRange(period);
+                        response = await apiClient.get(`/api/v2/analytics/channels/1/top-posts?from=${from}&to=${to}&sort=${sortBy}`);
                         console.log('✅ Top posts loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for top posts, using demo data');
@@ -570,7 +590,8 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/demo/best-times?timeframe=${timeframe}&content_type=${contentType}`);
+                        // Use proper analytics v2 API
+                        response = await apiClient.get(`/api/v2/analytics/channels/1/best-times?timeframe=${timeframe}&content_type=${contentType}`);
                         console.log('✅ Best time recommendations loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for best time, using demo data');
@@ -620,7 +641,17 @@ export const useAppStore = create(
                 
                 if (currentSource === 'api') {
                     try {
-                        response = await apiClient.get(`/analytics/demo/engagement?period=${period}`);
+                        // Use proper analytics v2 API with date range
+                        const getPeriodDateRange = (periodStr) => {
+                            const days = parseInt(periodStr.replace('d', '')) || 7;
+                            const to = new Date();
+                            const from = new Date();
+                            from.setDate(from.getDate() - days);
+                            return { from: from.toISOString(), to: to.toISOString() };
+                        };
+                        
+                        const { from, to } = getPeriodDateRange(period);
+                        response = await apiClient.get(`/api/v2/analytics/channels/1/engagement?from=${from}&to=${to}`);
                         console.log('✅ Engagement metrics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for engagement metrics, using demo data');

@@ -44,7 +44,7 @@ class AsyncpgUserRepository(IUserRepository):
         plan_id = user_data.get("plan_id", 1)  # Default plan
 
         row = await self._pool.fetchrow(query, user_id, username, plan_id)
-        return dict(row) if row else None
+        return dict(row) if row else {}
 
     async def update_user(self, user_id: int, **updates) -> bool:
         """Update user information"""
@@ -88,6 +88,16 @@ class AsyncpgUserRepository(IUserRepository):
         query = "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)"
         return await self._pool.fetchval(query, user_id)
 
+    async def get_user_plan_name(self, user_id: int) -> str | None:
+        """Get user's plan name"""
+        query = """
+            SELECT p.name
+            FROM users u
+            JOIN plans p ON u.plan_id = p.id
+            WHERE u.id = $1
+        """
+        return await self._pool.fetchval(query, user_id)
+
 
 class SQLAlchemyUserRepository(IUserRepository):
     """User repository implementation using SQLAlchemy (for new implementations)"""
@@ -106,10 +116,12 @@ class SQLAlchemyUserRepository(IUserRepository):
     async def create_user(self, user_data: dict) -> dict:
         """Create new user"""
         # TODO: Implement SQLAlchemy version
+        return {}
 
     async def update_user(self, user_id: int, **updates) -> bool:
         """Update user information"""
         # TODO: Implement SQLAlchemy version
+        return False
 
     async def get_user_subscription_tier(self, user_id: int) -> str:
         """Get user's subscription tier"""

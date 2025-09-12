@@ -435,3 +435,4 @@ pyphen==0.17.2
 xgboost==3.0.4
 nvidia-nccl-cu12==2.27.7
 passlib[bcrypt]>=1.7.0
+stripe>=7.0.0

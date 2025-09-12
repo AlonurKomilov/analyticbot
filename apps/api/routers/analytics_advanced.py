@@ -236,22 +236,23 @@ async def get_advanced_dashboard(
         
         # Combine metrics
         combined_metrics = {
-            'total_views': overview_data.get('total_views', 0),
-            'growth_rate': growth_data.get('growth_rate', 0),
-            'engagement_rate': overview_data.get('engagement_rate', 0),
-            'reach_score': reach_data.get('reach_score', 0),
-            'active_users': overview_data.get('active_users', 0),
+            'total_views': overview_data.overview.total_views,
+            'growth_rate': growth_data.growth.growth_rate,
+            'engagement_rate': overview_data.overview.engagement_rate,
+            'reach_score': reach_data.reach.view_reach_ratio,  # Use view_reach_ratio as reach_score
+            'active_users': reach_data.reach.unique_viewers,
         }
         
         # Create real-time metrics
+        # Create real-time metrics  
         real_time_metrics = RealTimeMetrics(
             timestamp=datetime.utcnow(),
-            total_views=combined_metrics['total_views'],
-            growth_rate=combined_metrics['growth_rate'],
-            engagement_rate=combined_metrics['engagement_rate'],
-            reach_score=combined_metrics['reach_score'],
-            active_users=combined_metrics['active_users'],
-            trending_score=75.0  # Placeholder for trending algorithm
+            total_views=overview_data.overview.total_views,
+            growth_rate=0,  # overview_data doesn't have growth_rate
+            engagement_rate=overview_data.overview.engagement_rate,
+            reach_score=0,  # overview_data doesn't have reach_score
+            active_users=0,  # overview_data doesn't have active_users
+            trending_score=50.0  # Placeholder for trending algorithm
         )
         
         # Generate alerts if requested
@@ -304,12 +305,12 @@ async def get_real_time_metrics(
         
         return RealTimeMetrics(
             timestamp=datetime.utcnow(),
-            total_views=overview_data.get('total_views', 0),
-            growth_rate=overview_data.get('growth_rate', 0),
-            engagement_rate=overview_data.get('engagement_rate', 0),
-            reach_score=overview_data.get('reach_score', 0),
-            active_users=overview_data.get('active_users', 0),
-            trending_score=overview_data.get('trending_score', 50.0)
+            total_views=getattr(overview_data, 'total_views', 0),
+            growth_rate=getattr(overview_data, 'growth_rate', 0),
+            engagement_rate=getattr(overview_data, 'engagement_rate', 0),
+            reach_score=getattr(overview_data, 'reach_score', 0),
+            active_users=getattr(overview_data, 'active_users', 0),
+            trending_score=getattr(overview_data, 'trending_score', 50.0)
         )
         
     except Exception as e:
@@ -331,9 +332,9 @@ async def check_alerts(
         reach_data = await analytics_client.reach(channel_id, 1)
         
         combined_metrics = {
-            'growth_rate': growth_data.get('growth_rate', 0),
-            'engagement_rate': overview_data.get('engagement_rate', 0),
-            'reach_score': reach_data.get('reach_score', 0),
+            'growth_rate': getattr(growth_data, 'growth_rate', 0),
+            'engagement_rate': getattr(overview_data, 'engagement_rate', 0),
+            'reach_score': getattr(reach_data, 'reach_score', 0),
         }
         
         return check_alert_conditions(combined_metrics, channel_id)
@@ -357,9 +358,9 @@ async def get_recommendations(
         reach_data = await analytics_client.reach(channel_id, 7)
         
         combined_metrics = {
-            'growth_rate': growth_data.get('growth_rate', 0),
-            'engagement_rate': overview_data.get('engagement_rate', 0),
-            'reach_score': reach_data.get('reach_score', 0),
+            'growth_rate': getattr(growth_data, 'growth_rate', 0),
+            'engagement_rate': getattr(overview_data, 'engagement_rate', 0),
+            'reach_score': getattr(reach_data, 'reach_score', 0),
         }
         
         # Get any active alerts for context
@@ -387,9 +388,9 @@ async def get_performance_score(
         reach_data = await analytics_client.reach(channel_id, period)
         
         metrics = {
-            'growth_rate': growth_data.get('growth_rate', 0),
-            'engagement_rate': overview_data.get('engagement_rate', 0),
-            'reach_score': reach_data.get('reach_score', 0),
+            'growth_rate': getattr(growth_data, 'growth_rate', 0),
+            'engagement_rate': getattr(overview_data, 'engagement_rate', 0),
+            'reach_score': getattr(reach_data, 'reach_score', 0),
         }
         
         # Calculate individual scores

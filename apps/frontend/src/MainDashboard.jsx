@@ -85,17 +85,16 @@ const AppSkeleton = () => (
 const MainDashboard = () => {
     const navigate = useNavigate();
     const [selectedTab, setSelectedTab] = useState(0);
+    const [localSelectedMedia, setLocalSelectedMedia] = useState([]);
     const { 
         isGlobalLoading,
         isLoading,
         fetchData,
         posts, 
         scheduledPosts, 
-        selectedMedia, 
         channels,
         addPost, 
         schedulePost, 
-        setSelectedMedia, 
         addChannel, 
         removeChannel 
     } = useAppStore();
@@ -331,18 +330,18 @@ const MainDashboard = () => {
                                 </Box>
                                 <Box>
                                     <Stack spacing={3}>
-                                        <EnhancedMediaUploader onMediaSelect={setSelectedMedia} />
-                                        {selectedMedia.length > 0 && (
+                                        <EnhancedMediaUploader onMediaSelect={setLocalSelectedMedia} />
+                                        {localSelectedMedia.length > 0 && (
                                             <MediaPreview 
-                                                media={selectedMedia} 
+                                                media={localSelectedMedia} 
                                                 onRemove={(index) => {
-                                                    const newMedia = [...selectedMedia];
+                                                    const newMedia = [...localSelectedMedia];
                                                     newMedia.splice(index, 1);
-                                                    setSelectedMedia(newMedia);
+                                                    setLocalSelectedMedia(newMedia);
                                                 }}
                                             />
                                         )}
-                                        <StorageFileBrowser onFileSelect={setSelectedMedia} />
+                                        <StorageFileBrowser onFileSelect={setLocalSelectedMedia} />
                                     </Stack>
                                 </Box>
                             </Box>

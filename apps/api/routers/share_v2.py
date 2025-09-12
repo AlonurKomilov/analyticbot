@@ -91,12 +91,12 @@ def generate_share_token() -> str:
 async def create_share_link(
     report_type: str,
     channel_id: str,
+    request: Request,
     period: int = Query(default=30, ge=1, le=365),
     format: str = Query(default="csv", regex="^(csv|png)$"),
     ttl_hours: int = Query(default=24, ge=1, le=168),  # Max 1 week
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
-    request: Request = None,
     _: None = Depends(check_share_enabled),
     __: None = Depends(check_creation_rate_limit),
 ) -> ShareLinkResponse:
@@ -114,6 +114,7 @@ async def create_share_link(
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Note: AnalyticsV2Client manages session internally
+            data = None  # Initialize data variable
 
             if report_type == "overview":
                 data = await analytics_client.overview(channel_id, period)
@@ -166,11 +167,11 @@ async def create_share_link(
 @router.get("/report/{share_token}")
 async def access_shared_report(
     share_token: str,
+    request: Request,
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     chart_renderer: ChartRenderer | None = Depends(get_chart_renderer),
-    request: Request = None,
     _: None = Depends(check_share_enabled),
     __: None = Depends(check_access_rate_limit),
 ):
@@ -199,6 +200,7 @@ async def access_shared_report(
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Note: AnalyticsV2Client manages session internally
+            data = None  # Initialize data variable
 
             if report_type == "overview":
                 data = await analytics_client.overview(channel_id, period)
@@ -218,24 +220,30 @@ async def access_shared_report(
 
         # Return data in requested format
         if format == "csv":
+            csv_content = None  # Initialize csv_content
             if report_type == "overview":
-                csv_content = csv_exporter.overview_to_csv(data)
+                csv_content = csv_exporter.overview_to_csv(data)  # type: ignore[arg-type]
             elif report_type == "growth":
-                csv_content = csv_exporter.growth_to_csv(data)
+                csv_content = csv_exporter.growth_to_csv(data)  # type: ignore[arg-type]
             elif report_type == "reach":
-                csv_content = csv_exporter.reach_to_csv(data)
+                csv_content = csv_exporter.reach_to_csv(data)  # type: ignore[arg-type]
             elif report_type == "top_posts":
-                csv_content = csv_exporter.top_posts_to_csv(data)
+                csv_content = csv_exporter.top_posts_to_csv(data)  # type: ignore[arg-type]
             elif report_type == "sources":
-                csv_content = csv_exporter.sources_to_csv(data)
+                csv_content = csv_exporter.sources_to_csv(data)  # type: ignore[arg-type]
             elif report_type == "trending":
-                csv_content = csv_exporter.trending_to_csv(data)
+                csv_content = csv_exporter.trending_to_csv(data)  # type: ignore[arg-type]
+            else:
+                raise HTTPException(status_code=400, detail=f"Unsupported report type for CSV: {report_type}")
 
             filename = csv_exporter.generate_filename(report_type, channel_id, period)
 
             import io
 
             from fastapi.responses import StreamingResponse
+
+            if csv_content is None:
+                raise HTTPException(status_code=500, detail="Failed to generate CSV content")
 
             return StreamingResponse(
                 io.BytesIO(csv_content.getvalue().encode('utf-8')),
@@ -249,11 +257,11 @@ async def access_shared_report(
 
             try:
                 if report_type == "growth":
-                    png_bytes = chart_renderer.render_growth_chart(data)
+                    png_bytes = chart_renderer.render_growth_chart(data)  # type: ignore[arg-type]
                 elif report_type == "reach":
-                    png_bytes = chart_renderer.render_reach_chart(data)
+                    png_bytes = chart_renderer.render_reach_chart(data)  # type: ignore[arg-type]
                 elif report_type == "sources":
-                    png_bytes = chart_renderer.render_sources_chart(data)
+                    png_bytes = chart_renderer.render_sources_chart(data)  # type: ignore[arg-type]
                 else:
                     raise HTTPException(
                         status_code=400, detail=f"PNG format not supported for {report_type}"

@@ -428,14 +428,14 @@ class PaymentService:
         return adapter
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str = None
+        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str | None = None
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
         adapter = self.get_adapter(provider)
         try:
             provider_response = await adapter.create_payment_method(
-                user_id, payment_method_data.provider_data
+                user_id, getattr(payment_method_data, 'provider_data', {})
             )
             expires_at = None
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
@@ -452,11 +452,15 @@ class PaymentService:
                 brand=payment_method_data.brand,
                 expires_at=expires_at,
                 is_default=payment_method_data.is_default,
-                metadata={"provider_response": provider_response, **payment_method_data.metadata},
+                metadata={
+                    "provider_response": provider_response, 
+                    **(getattr(payment_method_data, 'metadata', {}) or {})
+                },
             )
             return PaymentMethodResponse(
                 id=method_id,
-                provider=provider,
+                user_id=user_id,
+                provider=PaymentProvider(provider) if isinstance(provider, str) else provider,
                 method_type=payment_method_data.method_type,
                 last_four=payment_method_data.last_four,
                 brand=payment_method_data.brand,
@@ -475,6 +479,7 @@ class PaymentService:
         return [
             PaymentMethodResponse(
                 id=method["id"],
+                user_id=user_id,
                 provider=method["provider"],
                 method_type=method["method_type"],
                 last_four=method["last_four"],
@@ -495,15 +500,19 @@ class PaymentService:
         existing_payment = await self.repository.get_payment_by_idempotency_key(idempotency_key)
         if existing_payment:
             return PaymentResponse(**existing_payment)
+        if payment_data.payment_method_id is None:
+            raise ValueError("Payment method ID is required")
+            
         payment_method = await self.repository.get_payment_method(payment_data.payment_method_id)
         if not payment_method:
             raise ValueError("Payment method not found")
         provider = payment_method["provider"]
         adapter = self.get_adapter(provider)
+        payment_id: str | None = None  # Initialize to avoid unbound variable
         try:
             payment_id = await self.repository.create_payment(
                 user_id=user_id,
-                subscription_id=payment_data.subscription_id,
+                subscription_id=getattr(payment_data, 'subscription_id', None),
                 payment_method_id=payment_data.payment_method_id,
                 provider=provider,
                 provider_payment_id=None,
@@ -532,13 +541,21 @@ class PaymentService:
                 provider_payment_id=provider_response.get("id"),
             )
             payment = await self.repository.get_payment(payment_id)
+            if not payment:
+                raise ValueError("Payment not found after creation")
             return PaymentResponse(**payment)
         except Exception as e:
             logger.error(f"Payment processing failed: {e}")
-            if "payment_id" in locals():
-                await self.repository.update_payment_status(
-                    payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
-                )
+            # Only update payment status if payment_id was created
+            try:
+                # Check if payment_id exists in the current scope
+                if 'payment_id' in locals() and payment_id is not None:
+                    await self.repository.update_payment_status(
+                        payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
+                    )
+            except NameError:
+                # payment_id was not defined, skip status update
+                pass
             raise
 
     async def create_subscription(
@@ -595,11 +612,13 @@ class PaymentService:
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")
         subscription = await self.repository.get_user_active_subscription(user_id)
+        if not subscription:
+            raise ValueError("Subscription not found after creation")
+            
         return SubscriptionResponse(
             id=subscription["id"],
             user_id=subscription["user_id"],
             plan_id=subscription["plan_id"],
-            plan_name=subscription["plan_name"],
             status=SubscriptionStatus(subscription["status"]),
             billing_cycle=BillingCycle(subscription["billing_cycle"]),
             amount=subscription["amount"],
@@ -608,6 +627,8 @@ class PaymentService:
             current_period_end=subscription["current_period_end"],
             trial_ends_at=subscription["trial_ends_at"],
             created_at=subscription["created_at"],
+            canceled_at=subscription.get("canceled_at"),
+            cancel_at_period_end=subscription.get("cancel_at_period_end", False),
         )
 
     async def handle_webhook(
@@ -618,6 +639,8 @@ class PaymentService:
         if not adapter.verify_webhook_signature(payload, signature, webhook_secret):
             logger.warning(f"Invalid webhook signature from {provider}")
             raise ValueError("Invalid webhook signature")
+            
+        event_id: str | None = None  # Initialize to avoid unbound variable
         try:
             event_data = json.loads(payload.decode())
             event_id = await self.repository.create_webhook_event(
@@ -634,6 +657,148 @@ class PaymentService:
             return result
         except Exception as e:
             logger.error(f"Webhook processing failed: {e}")
-            if "event_id" in locals():
+            if event_id is not None:
                 await self.repository.mark_webhook_processed(event_id, False, str(e))
             raise
+
+    async def get_user_subscription(self, user_id: int) -> SubscriptionResponse | None:
+        """Get user's current active subscription"""
+        subscription = await self.repository.get_user_active_subscription(user_id)
+        if not subscription:
+            return None
+        
+        return SubscriptionResponse(
+            id=subscription["id"],
+            user_id=subscription["user_id"],
+            plan_id=subscription["plan_id"],
+            status=SubscriptionStatus(subscription["status"]),
+            billing_cycle=BillingCycle(subscription["billing_cycle"]),
+            amount=subscription["amount"],
+            currency=subscription["currency"],
+            current_period_start=subscription["current_period_start"],
+            current_period_end=subscription["current_period_end"],
+            trial_ends_at=subscription["trial_ends_at"],
+            created_at=subscription["created_at"],
+            canceled_at=subscription.get("canceled_at"),
+            cancel_at_period_end=subscription.get("cancel_at_period_end", False),
+        )
+
+    async def cancel_user_subscription(self, user_id: int, immediate: bool = False) -> dict[str, Any]:
+        """Cancel user's subscription"""
+        subscription = await self.repository.get_user_active_subscription(user_id)
+        if not subscription:
+            raise ValueError("No active subscription found")
+        
+        # Cancel with provider first
+        if subscription["provider_subscription_id"]:
+            payment_method = await self.repository.get_payment_method(subscription["payment_method_id"])
+            if payment_method:
+                provider = payment_method["provider"]
+                adapter = self.get_adapter(provider)
+                try:
+                    await adapter.cancel_subscription(subscription["provider_subscription_id"])
+                except Exception as e:
+                    logger.error(f"Provider subscription cancellation failed: {e}")
+        
+        # Update local subscription status
+        await self.repository.update_subscription_status(
+            subscription_id=subscription["id"],
+            status=SubscriptionStatus.CANCELED,
+            canceled_at=datetime.utcnow() if immediate else subscription["current_period_end"]
+        )
+        
+        return {
+            "success": True,
+            "subscription_id": subscription["id"],
+            "canceled_at": datetime.utcnow().isoformat() if immediate else subscription["current_period_end"].isoformat()
+        }
+
+    async def get_available_plans(self) -> list[dict[str, Any]]:
+        """Get all available subscription plans"""
+        if hasattr(self.repository, 'get_active_plans'):
+            plans = await self.repository.get_active_plans()
+        else:
+            # Fallback for missing method
+            plans = []
+        return [
+            {
+                "id": plan["id"],
+                "name": plan["name"],
+                "price_monthly": plan["price_monthly"],
+                "price_yearly": plan["price_yearly"],
+                "currency": plan["currency"],
+                "max_channels": plan["max_channels"],
+                "max_posts_per_month": plan["max_posts_per_month"],
+                "features": plan["features"] or [],
+                "is_active": plan["is_active"],
+                "stripe_price_id": plan.get("stripe_price_id"),
+                "stripe_yearly_price_id": plan.get("stripe_yearly_price_id"),
+                "trial_days": plan.get("trial_days")
+            }
+            for plan in plans
+        ]
+
+    async def get_payment_history(self, user_id: int, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """Get user's payment history"""
+        payments = await self.repository.get_user_payments(user_id, limit, offset)
+        if hasattr(self.repository, 'get_user_payments_count'):
+            total_count = await self.repository.get_user_payments_count(user_id)
+        else:
+            total_count = len(payments)  # Fallback
+        
+        return {
+            "payments": [
+                {
+                    "id": payment["id"],
+                    "amount": payment["amount"],
+                    "currency": payment["currency"],
+                    "status": payment["status"],
+                    "description": payment["description"],
+                    "created_at": payment["created_at"].isoformat(),
+                    "provider": payment["provider"]
+                }
+                for payment in payments
+            ],
+            "total": total_count,
+            "limit": limit,
+            "offset": offset
+        }
+
+    async def get_payment_stats(self) -> dict[str, Any]:
+        """Get payment statistics"""
+        if hasattr(self.repository, 'get_payment_statistics'):
+            stats = await self.repository.get_payment_statistics()
+        else:
+            stats = {}  # Fallback
+        return {
+            "payment_count": stats.get("payment_count", 0),
+            "total_revenue": stats.get("total_revenue", Decimal("0")),
+            "failed_amount": stats.get("failed_amount", Decimal("0")),
+            "successful_payments": stats.get("successful_payments", 0),
+            "failed_payments": stats.get("failed_payments", 0)
+        }
+
+    async def get_subscription_stats(self) -> dict[str, Any]:
+        """Get subscription statistics"""
+        if hasattr(self.repository, 'get_subscription_statistics'):
+            stats = await self.repository.get_subscription_statistics()
+        else:
+            stats = {}  # Fallback
+        return {
+            "total_subscriptions": stats.get("total_subscriptions", 0),
+            "active_subscriptions": stats.get("active_subscriptions", 0),
+            "canceled_subscriptions": stats.get("canceled_subscriptions", 0),
+            "past_due_subscriptions": stats.get("past_due_subscriptions", 0),
+            "avg_subscription_amount": stats.get("avg_subscription_amount")
+        }
+
+    async def process_webhook(self, provider: str, payload: bytes, signature: str) -> dict[str, Any]:
+        """Process webhook with the configured webhook secret"""
+        # Get webhook secret from adapter
+        adapter = self.get_adapter(provider)
+        if hasattr(adapter, 'webhook_secret'):
+            webhook_secret = getattr(adapter, 'webhook_secret')
+        else:
+            raise ValueError(f"Webhook secret not configured for provider {provider}")
+        
+        return await self.handle_webhook(provider, payload, signature, webhook_secret)

@@ -45,9 +45,9 @@ services:
       HEALTH_BIND: "0.0.0.0:8091"
       GRACEFUL_SHUTDOWN_TIMEOUT_S: "25"
       
-      # Database
-      DATABASE_URL: "postgresql://user:password@postgres:5432/analyticbot"
-      REDIS_URL: "redis://redis:6379"
+      # Database - Updated to match current configuration
+      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@postgres:5432/analytic_bot"
+      REDIS_URL: "redis://redis:6379/0"
       
       # Logging
       LOG_LEVEL: "INFO"
@@ -106,9 +106,9 @@ services:
       # Health checks
       HEALTH_BIND: "0.0.0.0:8092"  # Different port
       
-      # Database
-      DATABASE_URL: "postgresql://user:password@postgres:5432/analyticbot"
-      REDIS_URL: "redis://redis:6379"
+      # Database - Updated to match current configuration
+      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@postgres:5432/analytic_bot"
+      REDIS_URL: "redis://redis:6379/0"
     depends_on:
       - postgres
       - redis
@@ -163,9 +163,9 @@ services:
       # Health checks
       HEALTH_BIND: "0.0.0.0:8093"
       
-      # Database
-      DATABASE_URL: "postgresql://user:password@postgres:5432/analyticbot"
-      REDIS_URL: "redis://redis:6379"
+      # Database - Updated to match current configuration
+      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@postgres:5432/analytic_bot"
+      REDIS_URL: "redis://redis:6379/0"
     depends_on:
       - postgres
       - redis
@@ -185,7 +185,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - "9091:9090"  # Changed from 9090 to 9091 to avoid conflicts
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/rules:/etc/prometheus/rules:ro
@@ -205,7 +205,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "3002:3000"  # Changed from 3000 to 3002 to avoid conflicts with TWA frontend
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro

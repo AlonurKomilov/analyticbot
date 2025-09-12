@@ -55,7 +55,8 @@ class QuickAnalyticsResponse(BaseModel):
 # Dependency injection
 def get_analytics_client() -> AnalyticsV2Client:
     """Get analytics client instance"""
-    return AnalyticsV2Client()
+    from config.settings import settings
+    return AnalyticsV2Client(base_url=settings.API_HOST_URL)
 
 
 def compress_analytics_data(full_data: Dict, widget_type: str = "dashboard") -> Dict:
@@ -109,16 +110,16 @@ async def get_mobile_dashboard(
         
         # Compress data for mobile
         compressed_metrics = {
-            "views": overview_data.get("total_views", 0),
-            "growth": round(growth_data.get("growth_rate", 0), 1),
-            "engagement": round(overview_data.get("engagement_rate", 0), 1),
-            "reach": round(overview_data.get("reach_score", 75), 1),
-            "score": int(overview_data.get("performance_score", 70))
+            "views": getattr(overview_data, "total_views", 0),
+            "growth": round(getattr(growth_data, "growth_rate", 0), 1),
+            "engagement": round(getattr(overview_data, "engagement_rate", 0), 1),
+            "reach": round(getattr(overview_data, "reach_score", 75), 1),
+            "score": int(getattr(overview_data, "performance_score", 70))
         }
         
         # Simplified trends (last 7 days only)
         trends = [
-            {"day": i, "value": max(0, 1000 + (i * 150) + (i % 3 * 200))}
+            {"day": i, "value": float(max(0, 1000 + (i * 150) + (i % 3 * 200)))}
             for i in range(1, 8)
         ]
         
@@ -162,10 +163,10 @@ async def get_quick_analytics(
         
         # Compress to essential metrics only
         metrics = MobileMetrics(
-            views=overview_data.get("total_views", 0),
-            growth=round(overview_data.get("growth_rate", 0), 1),
-            engagement=round(overview_data.get("engagement_rate", 0), 1),
-            score=int(overview_data.get("performance_score", 70))
+            views=getattr(overview_data, "total_views", 0),
+            growth=round(getattr(overview_data, "growth_rate", 0), 1),
+            engagement=round(getattr(overview_data, "engagement_rate", 0), 1),
+            score=int(getattr(overview_data, "performance_score", 70))
         )
         
         # Determine trend direction
@@ -209,11 +210,11 @@ async def get_metrics_summary(
         
         # Combine data
         full_data = {
-            "total_views": overview_data.get("total_views", 0),
-            "growth_rate": growth_data.get("growth_rate", 0),
-            "engagement_rate": overview_data.get("engagement_rate", 0),
-            "reach_score": overview_data.get("reach_score", 75),
-            "performance_score": overview_data.get("performance_score", 70),
+            "total_views": getattr(overview_data, "total_views", 0),
+            "growth_rate": getattr(growth_data, "growth_rate", 0),
+            "engagement_rate": getattr(overview_data, "engagement_rate", 0),
+            "reach_score": getattr(overview_data, "reach_score", 75),
+            "performance_score": getattr(overview_data, "performance_score", 70),
             "daily_trend": 5.2,
             "weekly_trend": 3.1,
             "monthly_trend": 8.7

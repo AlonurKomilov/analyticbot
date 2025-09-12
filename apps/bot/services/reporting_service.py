@@ -29,44 +29,68 @@ import pandas as pd
 
 try:
     from jinja2 import Environment, FileSystemLoader
-
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
+    Environment = None
+    FileSystemLoader = None
 
 # Scheduling
+SCHEDULE_AVAILABLE = False
+schedule = None
+
 try:
     import schedule
-
     SCHEDULE_AVAILABLE = True
 except ImportError:
-    SCHEDULE_AVAILABLE = False
+    # Simple fallback - we'll handle the types at usage sites  
+    pass
 
-# Report generation libraries
+# PDF generation dependencies (optional)
+REPORTLAB_AVAILABLE = False
+letter = None
+SimpleDocTemplate = None
+Table = None
+TableStyle = None 
+Paragraph = None
+Spacer = None
+getSampleStyleSheet = None
+colors = None
+
 try:
-    from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
-    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-    from reportlab.platypus import (
-        Paragraph,
-        SimpleDocTemplate,
-        Spacer,
-        Table,
-        TableStyle,
-    )
-
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib import colors
     REPORTLAB_AVAILABLE = True
 except ImportError:
-    REPORTLAB_AVAILABLE = False
+    # Simple fallback - we'll handle the types at usage sites
+    pass
 
-# Excel reporting
+# Excel generation dependencies (optional)
+OPENPYXL_AVAILABLE = False
+openpyxl = None
+Fill = None
+Font = None
+
 try:
     import openpyxl
     from openpyxl.styles import Fill, Font
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    # Simple fallback - we'll handle the types at usage sites
+    pass
 
+# Excel reporting
+try:
+    import openpyxl  # type: ignore[import-untyped]
+    from openpyxl.styles import Fill, Font  # type: ignore[import-untyped]
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
+    openpyxl = None
+    Fill = None
+    Font = None
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +145,7 @@ class AutomatedReportingSystem:
         self.report_history = {}
 
         # Initialize Jinja2 environment if available
-        if JINJA2_AVAILABLE:
+        if JINJA2_AVAILABLE and Environment and FileSystemLoader:
             self.jinja_env = Environment(loader=FileSystemLoader("templates"), autoescape=True)
         else:
             self.jinja_env = None
@@ -131,7 +155,7 @@ class AutomatedReportingSystem:
         data: pd.DataFrame,
         template: ReportTemplate,
         output_format: str = "pdf",
-        filename: str = None,
+        filename: str | None = None,
     ) -> dict[str, Any]:
         """
         📊 Create a comprehensive report from data
@@ -181,7 +205,8 @@ class AutomatedReportingSystem:
             if not REPORTLAB_AVAILABLE:
                 return {"error": "ReportLab not available for PDF generation"}
 
-            doc = SimpleDocTemplate(str(output_path), pagesize=letter)
+            pagesize = letter
+            doc = SimpleDocTemplate(str(output_path), pagesize=pagesize)
             styles = getSampleStyleSheet()
             story = []
 
@@ -267,35 +292,42 @@ class AutomatedReportingSystem:
             if not OPENPYXL_AVAILABLE:
                 return {"error": "OpenPyXL not available for Excel generation"}
 
-            workbook = openpyxl.Workbook()
+            workbook = openpyxl.Workbook()  # type: ignore
 
             # Main data sheet
-            worksheet = workbook.active
-            worksheet.title = "Data"
+            worksheet = workbook.active  # type: ignore
+            worksheet.title = "Data"  # type: ignore
 
             # Write data to worksheet
             for col_num, column_title in enumerate(data.columns, 1):
-                cell = worksheet.cell(row=1, column=col_num)
-                cell.value = column_title
-                cell.font = Font(bold=True)
-                cell.fill = Fill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")
+                cell = worksheet.cell(row=1, column=col_num)  # type: ignore
+                cell.value = column_title  # type: ignore
+                if Font:
+                    cell.font = Font(bold=True)  # type: ignore
+                if Fill:
+                    from openpyxl.styles import PatternFill  # type: ignore
+                    cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")  # type: ignore
 
             for row_num, row_data in enumerate(data.iterrows(), 2):
                 for col_num, value in enumerate(row_data[1], 1):
-                    worksheet.cell(row=row_num, column=col_num, value=value)
+                    worksheet.cell(row=row_num, column=col_num, value=value)  # type: ignore
 
             # Auto-adjust column widths
-            for column in worksheet.columns:
+            for column in worksheet.columns:  # type: ignore
                 max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except Exception as e:
-                        logger.warning(f"Error processing cell value in column {column_letter}: {e}")
-                adjusted_width = min(max_length + 2, 50)
-                worksheet.column_dimensions[column_letter].width = adjusted_width
+                try:
+                    column_letter = column[0].column_letter  # type: ignore
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except Exception as e:
+                            logger.warning(f"Error processing cell value in column {column_letter}: {e}")
+                    adjusted_width = min(max_length + 2, 50)
+                    worksheet.column_dimensions[column_letter].width = adjusted_width  # type: ignore
+                except Exception as e:
+                    logger.warning(f"Error adjusting column width: {e}")
+                    continue
 
             # Add summary sheet if numeric data exists
             numeric_data = data.select_dtypes(include=[np.number])
@@ -309,7 +341,8 @@ class AutomatedReportingSystem:
                 ):
                     cell = summary_sheet.cell(row=1, column=col_num)
                     cell.value = column_title
-                    cell.font = Font(bold=True)
+                    if Font:
+                        cell.font = Font(bold=True)  # type: ignore
 
                 for row_num, (stat_name, row_data) in enumerate(summary_stats.iterrows(), 2):
                     summary_sheet.cell(row=row_num, column=1, value=stat_name)
@@ -511,7 +544,7 @@ class AutomatedReportingSystem:
         template: ReportTemplate,
         schedule_time: str,
         output_format: str = "pdf",
-        email_recipients: list[str] = None,
+        email_recipients: list[str] | None = None,
     ) -> dict[str, Any]:
         """Schedule automated report generation"""
         try:
@@ -551,15 +584,23 @@ class AutomatedReportingSystem:
                     logger.error(f"Scheduled report {schedule_name} failed: {e}")
 
             # Schedule the report
-            if schedule_time.lower() == "daily":
-                schedule.every().day.at("09:00").do(generate_scheduled_report)
-            elif schedule_time.lower() == "weekly":
-                schedule.every().monday.at("09:00").do(generate_scheduled_report)
-            elif schedule_time.lower() == "monthly":
-                schedule.every().month.do(generate_scheduled_report)
+            if schedule and SCHEDULE_AVAILABLE:
+                if schedule_time.lower() == "daily":
+                    schedule.every().day.at("09:00").do(generate_scheduled_report)
+                elif schedule_time.lower() == "weekly":
+                    schedule.every().monday.at("09:00").do(generate_scheduled_report)
+                elif schedule_time.lower() == "monthly":
+                    # Use monthly scheduling if available
+                    if hasattr(schedule.every(), 'month'):
+                        schedule.every().month.do(generate_scheduled_report)  # type: ignore[attr-defined]
+                    else:
+                        # Fallback to daily if month is not available
+                        schedule.every().day.at("09:00").do(generate_scheduled_report)
+                else:
+                    # Custom time (e.g., "10:30")
+                    schedule.every().day.at(schedule_time).do(generate_scheduled_report)
             else:
-                # Custom time (e.g., "10:30")
-                schedule.every().day.at(schedule_time).do(generate_scheduled_report)
+                return {"error": "Scheduling not available"}
 
             self.scheduled_reports[schedule_name] = {
                 "template": template.name,
@@ -576,7 +617,7 @@ class AutomatedReportingSystem:
             return {
                 "status": "scheduled",
                 "schedule_name": schedule_name,
-                "next_run": str(schedule.jobs[-1].next_run) if schedule.jobs else "Unknown",
+                "next_run": str(schedule.jobs[-1].next_run) if schedule and schedule.jobs else "Unknown",
             }
 
         except Exception as e:
@@ -588,8 +629,13 @@ class AutomatedReportingSystem:
 
         def run_scheduler():
             while True:
-                schedule.run_pending()
-                time.sleep(60)  # Check every minute
+                try:
+                    if schedule and SCHEDULE_AVAILABLE:
+                        schedule.run_pending()
+                    time.sleep(60)  # Check every minute
+                except Exception as e:
+                    logger.error(f"Scheduler error: {e}")
+                    time.sleep(60)
 
         self._scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
         self._scheduler_thread.start()

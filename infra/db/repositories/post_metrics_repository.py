@@ -23,9 +23,9 @@ class AsyncpgPostMetricsRepository:
         views: int = 0,
         forwards: int = 0,
         replies_count: int = 0,
-        reactions_json: list = None,
+        reactions_json: list | None = None,
         reactions_count: int = 0,
-        ts: datetime = None,
+        ts: datetime | None = None,
     ) -> dict[str, Any]:
         """Add or update a metrics snapshot for a post.
 
@@ -190,7 +190,7 @@ class AsyncpgPostMetricsRepository:
             }
 
     async def get_trending_posts(
-        self, channel_id: int = None, hours: int = 24, limit: int = 20
+        self, channel_id: int | None = None, hours: int = 24, limit: int = 20
     ) -> list[dict[str, Any]]:
         """Get trending posts based on engagement metrics.
 

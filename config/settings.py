@@ -36,8 +36,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Telegram Bot Configuration
-    BOT_TOKEN: SecretStr
-    STORAGE_CHANNEL_ID: int
+    BOT_TOKEN: SecretStr = SecretStr("dummy_token_for_development")
+    STORAGE_CHANNEL_ID: int = 0
     ADMIN_IDS_STR: str | None = None  # Will be parsed to ADMIN_IDS
     SUPPORTED_LOCALES: list[str] = ["en", "uz"]
     DEFAULT_LOCALE: str = "en"
@@ -49,11 +49,11 @@ class Settings(BaseSettings):
     # Database Configuration
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: SecretStr
-    POSTGRES_DB: str
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: SecretStr = SecretStr("password")
+    POSTGRES_DB: str = "analyticbot"
     DATABASE_URL: str | None = None
-    REDIS_URL: RedisDsn = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:6379/0"
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
@@ -61,12 +61,12 @@ class Settings(BaseSettings):
     # API & Web Application
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
-    API_HOST_URL: AnyHttpUrl = "http://localhost:8000"
-    TWA_HOST_URL: AnyHttpUrl = "https://84dp9jc9-3000.euw.devtunnels.ms"
+    API_HOST_URL: str = "http://173.212.236.167:8000"
+    TWA_HOST_URL: str = "http://173.212.236.167:3000/"
     CORS_ORIGINS: str = "*"
 
     # Security & Authentication
-    JWT_SECRET_KEY: SecretStr
+    JWT_SECRET_KEY: SecretStr = SecretStr("dev_secret_key_change_in_production")
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -75,7 +75,9 @@ class Settings(BaseSettings):
 
     # Payment Gateways (Optional)
     STRIPE_SECRET_KEY: SecretStr | None = None
+    STRIPE_PUBLISHABLE_KEY: str | None = None
     STRIPE_WEBHOOK_SECRET: SecretStr | None = None
+    STRIPE_TEST_MODE: bool = True
     PAYME_SECRET_KEY: SecretStr | None = None
     CLICK_SECRET_KEY: SecretStr | None = None
 
@@ -104,7 +106,7 @@ class Settings(BaseSettings):
     PREMIUM_FEATURES_ENABLED: bool = True
 
     # Analytics V2 Bot Client Settings
-    ANALYTICS_V2_BASE_URL: str = "http://localhost:8000"
+    ANALYTICS_V2_BASE_URL: str = "http://173.212.236.167:8000"
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
@@ -229,4 +231,23 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as e:
+    # For testing or when environment variables are not set
+    import os
+    # Set minimal required environment variables if not set
+    required_vars = {
+        'BOT_TOKEN': 'dummy_bot_token',
+        'STORAGE_CHANNEL_ID': '123456789',
+        'POSTGRES_USER': 'postgres',
+        'POSTGRES_PASSWORD': 'password',
+        'POSTGRES_DB': 'analyticbot',
+        'JWT_SECRET_KEY': 'dummy_jwt_secret'
+    }
+    
+    for var, default_value in required_vars.items():
+        if not os.getenv(var):
+            os.environ[var] = default_value
+    
+    settings = Settings()

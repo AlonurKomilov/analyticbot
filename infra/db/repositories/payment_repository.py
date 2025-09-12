@@ -407,6 +407,39 @@ class AsyncpgPaymentRepository:
             )
             return [dict(row) for row in rows]
 
+    async def get_active_plans(self) -> list[dict[str, Any]]:
+        """Get active subscription plans (alias for get_all_active_plans)"""
+        return await self.get_all_active_plans()
+
+    async def get_user_payments_count(self, user_id: int) -> int:
+        """Get total count of user payments"""
+        async with self.pool.acquire() as conn:
+            result = await conn.fetchval(
+                "SELECT COUNT(*) FROM payments WHERE user_id = $1", user_id
+            )
+            return result or 0
+
+    async def get_payment_statistics(self) -> dict[str, Any]:
+        """Get payment statistics"""
+        async with self.pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """
+                SELECT
+                    COUNT(*) as total_payments,
+                    COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments,
+                    COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments,
+                    COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
+                    SUM(CASE WHEN status = 'succeeded' THEN amount ELSE 0 END) as total_revenue,
+                    AVG(CASE WHEN status = 'succeeded' THEN amount END) as avg_payment_amount
+                FROM payments
+                """,
+            )
+            return dict(row) if row else {}
+
+    async def get_subscription_statistics(self) -> dict[str, Any]:
+        """Get subscription statistics (alias for get_subscription_stats)"""
+        return await self.get_subscription_stats()
+
     # 🚀 NEW GENERATOR-BASED MEMORY OPTIMIZATIONS
 
     async def iter_user_payments(self, user_id: int, batch_size: int = 1000):

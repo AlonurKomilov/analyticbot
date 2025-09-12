@@ -93,7 +93,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      VITE_API_URL: ${VITE_API_URL:-http://173.212.236.167:8000}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     depends_on:
       api:
@@ -116,7 +116,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      VITE_API_URL: ${VITE_API_URL:-http://173.212.236.167:8000}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     volumes:
       - ./apps/frontend:/app:delegated

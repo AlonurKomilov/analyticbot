@@ -28,6 +28,39 @@ services:
   # ==========================================
   # Core Application Services
   # ==========================================
+
+  # TWA Frontend Service
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.frontend
+      target: production
+    container_name: analyticbot-frontend-prod
+    environment:
+      - VITE_API_URL=${API_HOST_URL:-http://localhost/api}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+    networks:
+      - analyticbot-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
   
   postgres:
     image: postgres:15-alpine
@@ -100,7 +133,6 @@ services:
       context: ../../
       dockerfile: infra/docker/Dockerfile
       target: api
-    container_name: analyticbot-api-prod
     command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
@@ -176,7 +208,6 @@ services:
       context: ../../
       dockerfile: infra/docker/Dockerfile
       target: worker
-    container_name: analyticbot-celery-worker-prod
     command: celery -A infra.celery.celery_app worker --loglevel=info --concurrency=4
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-analyticuser}:${POSTGRES_PASSWORD:-secure_password}@postgres:5432/${POSTGRES_DB:-analyticbot}
@@ -282,4 +313,5 @@ services:
       - "443:443"
     depends_on:
       - api
+      - frontend
     restart: unless-stopped

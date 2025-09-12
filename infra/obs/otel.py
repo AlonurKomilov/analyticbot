@@ -8,6 +8,46 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
+
+# Create stub classes for when OTEL is not available or disabled
+class MockTracer:
+    def start_span(self, name: str, **kwargs):
+        return MockSpan()
+
+    def start_as_current_span(self, name: str, **kwargs):
+        return MockSpanContext()
+
+
+class MockSpan:
+    def set_attribute(self, key: str, value: Any):
+        pass
+
+    def set_status(self, status):
+        pass
+
+    def record_exception(self, exception):
+        pass
+
+    def end(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+
+class MockSpanContext:
+    def __enter__(self):
+        return MockSpan()
+
+    def __exit__(self, *args):
+        pass
+
+
 # Try to import OpenTelemetry components
 try:
     from opentelemetry import trace
@@ -22,43 +62,6 @@ try:
     OTEL_AVAILABLE = True
 except ImportError:
     OTEL_AVAILABLE = False
-
-    # Create stub classes for when OTEL is not available
-    class MockTracer:
-        def start_span(self, name: str, **kwargs):
-            return MockSpan()
-
-        def start_as_current_span(self, name: str, **kwargs):
-            return MockSpanContext()
-
-    class MockSpan:
-        def set_attribute(self, key: str, value: Any):
-            pass
-
-        def set_status(self, status):
-            pass
-
-        def record_exception(self, exception):
-            pass
-
-        def end(self):
-            pass
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *args):
-            pass
-
-    class MockSpanContext:
-        def __enter__(self):
-            return MockSpan()
-
-        def __exit__(self, *args):
-            pass
-
-
-logger = logging.getLogger(__name__)
 
 
 class MTProtoTracer:
@@ -89,9 +92,11 @@ class MTProtoTracer:
         try:
             yield span
         except Exception as e:
-            if self.enabled:
+            if self.enabled and OTEL_AVAILABLE:
                 span.record_exception(e)
-                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                # Safe to access trace here since OTEL_AVAILABLE is True
+                from opentelemetry import trace as otel_trace
+                span.set_status(otel_trace.Status(otel_trace.StatusCode.ERROR, str(e)))
             raise
         finally:
             span.end()
@@ -126,7 +131,7 @@ def setup_tracing(
     sampling_ratio: float = 0.05,
     service_name: str = "mtproto",
     service_version: str = "1.0.0",
-) -> MTProtoTracer | None:
+) -> MTProtoTracer:
     """
     Set up OpenTelemetry tracing.
 
@@ -137,7 +142,7 @@ def setup_tracing(
         service_version: Service version
 
     Returns:
-        MTProtoTracer instance or None if setup failed
+        MTProtoTracer instance (always returns a valid tracer)
     """
     if not OTEL_AVAILABLE:
         logger.warning("OpenTelemetry not available, tracing disabled")
@@ -146,6 +151,16 @@ def setup_tracing(
     if not endpoint:
         logger.info("No OTEL endpoint configured, tracing disabled")
         return MTProtoTracer(enabled=False)
+
+    # Import here to ensure they're available
+    from opentelemetry import trace as otel_trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 
     try:
         # Create resource with service information
@@ -168,11 +183,11 @@ def setup_tracing(
         provider.add_span_processor(processor)
 
         # Set as global tracer provider
-        trace.set_tracer_provider(provider)
+        otel_trace.set_tracer_provider(provider)
 
         # Create MTProto tracer
         tracer_instance = MTProtoTracer(enabled=True)
-        tracer_instance.tracer = trace.get_tracer(service_name, service_version)
+        tracer_instance.tracer = otel_trace.get_tracer(service_name, service_version)
 
         # Instrument HTTP requests and database queries
         try:
@@ -260,4 +275,5 @@ def get_global_tracer() -> MTProtoTracer:
     global _global_tracer
     if _global_tracer is None:
         _global_tracer = MTProtoTracer(enabled=False)
+    assert _global_tracer is not None  # Type checker hint
     return _global_tracer

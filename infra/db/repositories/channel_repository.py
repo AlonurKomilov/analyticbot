@@ -130,6 +130,14 @@ class AsyncpgChannelRepository:
         """Get channel by ID - alias for get_channel_by_id for API compatibility"""
         return await self.get_channel_by_id(channel_id)
 
+    async def get_tracked_channels(self) -> list[dict[str, Any]]:
+        """Get all tracked channels - channels that have data collection enabled"""
+        async with self.pool.acquire() as conn:
+            records = await conn.fetch(
+                "SELECT * FROM channels ORDER BY id"
+            )
+            return [dict(record) for record in records]
+
 
 # Alias for backwards compatibility and cleaner imports
 ChannelRepository = AsyncpgChannelRepository

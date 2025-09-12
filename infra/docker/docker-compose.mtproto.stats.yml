@@ -16,6 +16,9 @@ services:
     environment:
       - MTPROTO_ENABLED=true
       - MTPROTO_STATS_ENABLED=true
+      # Updated database configuration to match current setup
+      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:5432/analytic_bot
+      - REDIS_URL=redis://redis:6379/0
       # Configure your stats peers:
       # - MTPROTO_STATS_PEERS=["@channel1", "@channel2"]
       # - MTPROTO_STATS_CONCURRENCY=3

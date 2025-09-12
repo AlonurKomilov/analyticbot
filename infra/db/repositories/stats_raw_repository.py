@@ -17,7 +17,7 @@ class AsyncpgStatsRawRepository:
         self.pool = pool
 
     async def store_raw_stats(
-        self, channel_id: int, key: str, data: dict, fetched_at: datetime = None
+        self, channel_id: int, key: str, data: dict, fetched_at: datetime | None = None
     ) -> dict[str, Any]:
         """Store raw statistics data from MTProto.
 
@@ -82,8 +82,8 @@ class AsyncpgStatsRawRepository:
         self,
         channel_id: int,
         key: str,
-        from_dt: datetime = None,
-        to_dt: datetime = None,
+        from_dt: datetime | None = None,
+        to_dt: datetime | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Get statistics history for a channel and key.

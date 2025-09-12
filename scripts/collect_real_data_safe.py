@@ -14,26 +14,35 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-from config.settings import load_env
-
 
 async def create_real_repositories():
     """Create repositories for PostgreSQL (V2 system)."""
-    from infra.db.connection_manager import ConnectionManager
+    import asyncpg
     from infra.db.repositories.channel_repository import ChannelRepository
     from infra.db.repositories.post_repository import PostRepository
-    from infra.db.repositories.user_repository import UserRepository
+    from infra.db.repositories.user_repository import AsyncpgUserRepository
+    from config.settings import settings
     
-    # Initialize connection manager
-    conn_manager = ConnectionManager()
-    await conn_manager.connect()
+    # Create asyncpg pool directly
+    pool = await asyncpg.create_pool(
+        host=settings.POSTGRES_HOST,
+        port=settings.POSTGRES_PORT,
+        user=settings.POSTGRES_USER,
+        password=settings.POSTGRES_PASSWORD.get_secret_value(),
+        database=settings.POSTGRES_DB,
+        min_size=1,
+        max_size=5
+    )
+    
+    if not pool:
+        raise RuntimeError("Failed to create database pool")
     
     # Create repositories
     class Repositories:
         def __init__(self):
-            self.channel_repo = ChannelRepository(conn_manager)
-            self.post_repo = PostRepository(conn_manager)
-            self.user_repo = UserRepository(conn_manager)
+            self.channel_repo = ChannelRepository(pool)
+            self.post_repo = PostRepository(pool)
+            self.user_repo = AsyncpgUserRepository(pool)
     
     return Repositories()
 
@@ -129,10 +138,7 @@ async def main():
     print("🛡️ WITH RATE LIMITING PROTECTION")
     print("=" * 50)
     
-    # Load environment
-    load_env()
-    
-    # Import after loading env
+    # Import settings
     from apps.mtproto.config import MTProtoSettings
     from infra.tg.telethon_client import TelethonTGClient
     
@@ -160,16 +166,16 @@ async def main():
         print("✅ Database connection established")
         
         # Create Telegram client
-        client = TelethonTGClient(
-            api_id=settings.TELEGRAM_API_ID,
-            api_hash=settings.TELEGRAM_API_HASH,
-            session_name="analyticbot_session"
-        )
+        client = TelethonTGClient(settings)
         
-        # Connect to Telegram
-        if not await client.connect():
-            print("❌ Failed to connect to Telegram")
-            return False
+        # Connect to Telegram - check if connect method exists
+        if hasattr(client, 'connect'):
+            if not await client.connect():
+                print("❌ Failed to connect to Telegram")
+                return False
+        else:
+            # Use start method instead
+            await client.start()
         
         print("✅ Connected to Telegram safely")
         

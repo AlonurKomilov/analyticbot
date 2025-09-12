@@ -91,7 +91,7 @@ class ScalingContainer:
                 def tg_client_factory(session_name: str) -> TGClient:
                     client_settings = self.settings.copy()
                     client_settings.TELEGRAM_SESSION_NAME = session_name
-                    return TelethonTGClient(client_settings)
+                    return TelethonTGClient(client_settings)  # type: ignore[return-value]
 
                 self.account_pool = AccountPool(
                     factory=tg_client_factory,
@@ -147,12 +147,14 @@ class ScalingContainer:
         """Get a client instance (pooled if available, otherwise single)."""
         if self.account_pool and self.account_pool.is_ready:
             # Return a wrapper that uses the pool
+            if self.rate_limiter is None:
+                raise ValueError("RateLimitManager is required but not available")
             return PooledClientWrapper(
                 self.account_pool, self.rate_limiter, self.metrics, self.dc_router
             )
         else:
             # Fallback to single client
-            return TelethonTGClient(self.settings)
+            return TelethonTGClient(self.settings)  # type: ignore[return-value]
 
     def get_stats(self) -> dict:
         """Get stats from all scaling components."""
@@ -209,14 +211,66 @@ class PooledClientWrapper(TGClient):
         """Check if pool has healthy accounts."""
         return self.pool.is_ready
 
+    async def iter_history(
+        self, peer: Any, *, offset_id: int = 0, limit: int = 200
+    ) -> Any:
+        """Iterate through message history using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            async for message in client.iter_history(peer, offset_id=offset_id, limit=limit):
+                yield message
+
+    async def get_broadcast_stats(self, channel: Any) -> Any:
+        """Get broadcast stats using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            return await client.get_broadcast_stats(channel)
+
+    async def get_megagroup_stats(self, chat: Any) -> Any:
+        """Get megagroup stats using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            return await client.get_megagroup_stats(chat)
+
+    async def load_async_graph(self, token: str) -> Any:
+        """Load async graph using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            return await client.load_async_graph(token)
+
+    async def get_full_channel(self, peer: Any) -> Any:
+        """Get full channel using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            return await client.get_full_channel(peer)
+
+    async def iter_updates(self) -> Any:
+        """Iterate updates using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            async for update in client.iter_updates():
+                yield update
+
+    async def get_me(self) -> Any:
+        """Get current user using pooled client."""
+        lease = await self.pool.lease()
+        async with lease as client:
+            return await client.get_me()
+
+    async def disconnect(self) -> None:
+        """Disconnect pooled clients."""
+        await self.stop()
+
     async def get_entity(self, entity):
         """Get entity using pooled client."""
-        async with self.pool.lease() as client:
+        lease = await self.pool.lease()
+        async with lease as client:
             return await client.get_entity(entity)
 
     async def iter_messages(self, entity, limit=None, offset_date=None, reverse=False):
         """Iterate messages using pooled client with DC routing."""
-        async with self.pool.lease() as client:
+        lease = await self.pool.lease()
+        async with lease as client:
             # Use DC router for better reliability
             return await self.dc_router.run_with_dc_retry(
                 client,
@@ -304,7 +358,7 @@ def get_scaling_container(
 
 def create_tg_client(settings: MTProtoSettings) -> TGClient:
     """Create TGClient instance directly (for tasks)."""
-    return TelethonTGClient(settings)
+    return TelethonTGClient(settings)  # type: ignore[return-value]
 
 
 def create_scalable_client(settings: MTProtoSettings) -> TGClient:
@@ -362,14 +416,9 @@ async def get_repositories() -> RepositoryContainer:
 
 def create_stats_loader(tg_client: TGClient, repos: RepositoryContainer, settings: MTProtoSettings):
     """Create stats loader instance with dependencies."""
-    from apps.mtproto.collectors.stats_loader import StatsLoader
+    from apps.mtproto.tasks.stats_loader import StatsLoaderTask
 
-    return StatsLoader(
-        tg_client=tg_client,
-        channel_daily_repo=repos.channel_daily_repo,
-        stats_raw_repo=repos.stats_raw_repo,
-        settings=settings,
-    )
+    return StatsLoaderTask()
 
 
 async def initialize_application(settings: MTProtoSettings) -> ScalingContainer:

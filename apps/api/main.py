@@ -20,6 +20,8 @@ from apps.api.routers.share_v2 import router as share_v2_router
 from apps.api.routers.mobile_api import router as mobile_api_router
 from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
+from apps.bot.api.payment_routes import router as payment_router
+from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, ScheduledPost
 from config import settings
 from core import DeliveryService, ScheduleService
 from infra.db.connection_manager import close_database, init_database
@@ -67,6 +69,7 @@ app.include_router(share_v2_router)  # Share functionality
 app.include_router(mobile_api_router)  # Mobile-optimized API endpoints
 app.include_router(content_protection_router)
 app.include_router(superadmin_router)
+app.include_router(payment_router)  # Payment system
 
 # Include unified analytics router (best of both worlds)
 from apps.api.routers.analytics_unified import router as unified_analytics_router
@@ -77,6 +80,67 @@ app.include_router(unified_analytics_router)
 def health():
     """Health check endpoint"""
     return {"status": "ok", "environment": settings.ENVIRONMENT, "debug": settings.DEBUG}
+
+
+@app.get("/initial-data", response_model=InitialDataResponse)
+async def get_initial_data(
+    user_id: int = 12345,  # TODO: Get from authentication
+):
+    """Get initial application data for frontend startup
+    
+    Returns user info, subscription plan, channels, and scheduled posts.
+    Currently uses mock data - should be replaced with real data sources.
+    """
+    try:
+        # TODO: Replace with real data from repositories
+        # For now, return mock data that matches the expected structure
+        
+        # Mock user data
+        user = User(
+            id=user_id,
+            username="demo_user"  # TODO: Get from user repository
+        )
+        
+        # Mock plan data
+        plan = Plan(
+            name="Pro",
+            max_channels=10,
+            max_posts_per_month=1000
+        )
+        
+        # Mock channels data
+        channels = [
+            Channel(id=1, title="Tech News", username="@technews"),
+            Channel(id=2, title="Daily Updates", username="@dailyupdates"),
+            Channel(id=3, title="Business Insights", username="@bizinsights")
+        ]
+        
+        # Mock scheduled posts data
+        scheduled_posts = [
+            ScheduledPost(
+                id=1,
+                channel_id=1,
+                scheduled_at=datetime.now(),
+                text="Sample scheduled post 1"
+            ),
+            ScheduledPost(
+                id=2,
+                channel_id=2,
+                scheduled_at=datetime.now(),
+                text="Sample scheduled post 2"
+            )
+        ]
+        
+        return InitialDataResponse(
+            user=user,
+            plan=plan,
+            channels=channels,
+            scheduled_posts=scheduled_posts
+        )
+    
+    except Exception as e:
+        logger.error(f"Error fetching initial data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch initial data")
 
 
 # Schedule endpoints using dependency injection

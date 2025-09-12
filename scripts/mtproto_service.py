@@ -22,19 +22,24 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 os.environ.setdefault("MTPROTO_STANDALONE", "true")
 
 from apps.mtproto.config import MTProtoSettings
-from apps.mtproto.di import get_repositories, create_tg_client, ScalingContainer
+from apps.mtproto.di import get_repositories, create_tg_client, ScalingContainer, RepositoryContainer
 from apps.mtproto.collectors.history import HistoryCollector
 from apps.mtproto.collectors.updates import UpdatesCollector
+from typing import Optional
+from core.ports.tg_client import TGClient
 
+
+from typing import Optional
+from core.ports.tg_client import TGClient
 
 class MTProtoServiceManager:
     """Service manager for MTProto real data collection."""
     
     def __init__(self):
         self.settings = MTProtoSettings()
-        self.repos = None
-        self.tg_client = None
-        self.scaling_container = None
+        self.repos: Optional[RepositoryContainer] = None
+        self.tg_client: Optional[TGClient] = None
+        self.scaling_container: Optional[ScalingContainer] = None
         self.running = False
         self.tasks = []
         
@@ -60,6 +65,9 @@ class MTProtoServiceManager:
         
     async def start_history_collection(self) -> bool:
         """Start historical data collection."""
+        if self.tg_client is None:
+            raise RuntimeError("MTProtoServiceManager not initialized. Call initialize() first.")
+            
         if not self.settings.MTPROTO_HISTORY_ENABLED:
             print("⚠️  History collection disabled")
             return False
@@ -90,6 +98,9 @@ class MTProtoServiceManager:
             
     async def start_updates_stream(self):
         """Start real-time updates collection."""
+        if self.tg_client is None:
+            raise RuntimeError("MTProtoServiceManager not initialized. Call initialize() first.")
+            
         if not self.settings.MTPROTO_UPDATES_ENABLED:
             print("⚠️  Updates collection disabled")
             return
@@ -247,6 +258,9 @@ async def main():
             
         elif args.command == "test":
             print("🧪 Testing MTProto configuration...")
+            
+            if manager.repos is None or manager.tg_client is None:
+                raise RuntimeError("MTProtoServiceManager not properly initialized")
             
             # Test database
             channels = await manager.repos.channel_repo.get_tracked_channels()

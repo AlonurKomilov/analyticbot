@@ -163,31 +163,107 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         return [self._row_to_scheduled_post(row) for row in results]
 
-    async def count(self, filter_criteria: ScheduleFilter) -> int:
-        """Count scheduled posts matching filter criteria"""
-        query = "SELECT COUNT(*) FROM scheduled_posts WHERE 1=1"
+    async def count(self, filter_criteria: DeliveryFilter) -> int:
+        """Count deliveries matching filter criteria"""
+        query = "SELECT COUNT(*) FROM deliveries WHERE 1=1"
         params = []
         param_count = 0
 
-        # Build same WHERE clause as find()
-        if filter_criteria.user_id:
+        if filter_criteria.post_id:
             param_count += 1
-            query += f" AND user_id = ${param_count}"
-            params.append(filter_criteria.user_id)
-
-        if filter_criteria.channel_id:
-            param_count += 1
-            query += f" AND channel_id = ${param_count}"
-            params.append(filter_criteria.channel_id)
+            query += f" AND post_id = ${param_count}"
+            params.append(filter_criteria.post_id)
 
         if filter_criteria.status:
             param_count += 1
+            db_status = self._map_delivery_status_to_db(filter_criteria.status)
             query += f" AND status = ${param_count}"
-            params.append(filter_criteria.status.value)
-
-        # ... (similar filter conditions as find())
+            params.append(db_status)
 
         result = await self.db.fetchval(query, *params)
+        return result or 0
+
+    async def update_post_status(self, post_id: int, status: str) -> bool:
+        """Update the status of a scheduled post"""
+        query = """
+        UPDATE scheduled_posts 
+        SET status = $2, updated_at = NOW()
+        WHERE id = $1
+        """
+        try:
+            result = await self.db.execute(query, post_id, status)
+            return result == "UPDATE 1"
+        except Exception:
+            return False
+
+    async def create_scheduled_post(
+        self,
+        user_id: int,
+        channel_id: int,
+        post_text: str,
+        schedule_time: datetime,
+        media_id: str | None = None,
+        media_type: str | None = None,
+        inline_buttons: dict | None = None,
+    ) -> int:
+        """Create a new scheduled post and return its ID"""
+        query = """
+        INSERT INTO scheduled_posts (
+            user_id, channel_id, post_text, schedule_time, 
+            media_id, media_type, inline_buttons, status, created_at
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, 'pending', NOW()
+        ) RETURNING id
+        """
+        
+        inline_buttons_json = json.dumps(inline_buttons) if inline_buttons else None
+        
+        result = await self.db.fetchval(
+            query,
+            user_id,
+            channel_id,
+            post_text,
+            schedule_time,
+            media_id,
+            media_type,
+            inline_buttons_json,
+        )
+        return result
+
+    async def get_pending_posts(self, limit: int = 50) -> list[dict]:
+        """Get pending posts that are ready to be sent"""
+        query = """
+        SELECT id, user_id, channel_id, post_text, schedule_time,
+               media_id, media_type, inline_buttons, status, created_at
+        FROM scheduled_posts 
+        WHERE status = 'pending' AND schedule_time <= NOW()
+        ORDER BY schedule_time ASC
+        LIMIT $1
+        """
+        
+        rows = await self.db.fetch(query, limit)
+        posts = []
+        for row in rows:
+            post_dict = dict(row)
+            # Parse inline_buttons JSON if present
+            if post_dict.get('inline_buttons'):
+                try:
+                    post_dict['inline_buttons'] = json.loads(post_dict['inline_buttons'])
+                except (json.JSONDecodeError, TypeError):
+                    post_dict['inline_buttons'] = None
+            posts.append(post_dict)
+        
+        return posts
+
+    async def count_user_posts_this_month(self, user_id: int) -> int:
+        """Count posts created by user in current month"""
+        query = """
+        SELECT COUNT(*) FROM scheduled_posts 
+        WHERE user_id = $1 
+        AND created_at >= date_trunc('month', CURRENT_DATE)
+        AND created_at < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+        """
+        result = await self.db.fetchval(query, user_id)
         return result or 0
 
     def _row_to_scheduled_post(self, row) -> ScheduledPost:

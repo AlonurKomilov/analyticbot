@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Any, Dict
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -62,7 +63,7 @@ class SchedulerService:
             ErrorHandler.log_error(e, context)
             return None
 
-    async def send_post_to_channel(self, post_data: dict) -> dict[str, any]:
+    async def send_post_to_channel(self, post_data: dict) -> dict[str, Any]:
         """
         Send scheduled post to channel with enhanced error handling, idempotency, and rate limiting.
 
@@ -169,7 +170,7 @@ class SchedulerService:
                     await self.analytics_repo.log_sent_post(
                         scheduled_post_id=post_data["id"],
                         channel_id=post_data["channel_id"],
-                        message_id=sent_message_id,
+                        message_id=sent_message_id or 0,  # Provide default value
                     )
                 except Exception as e:
                     analytics_context = context.add("sub_operation", "log_sent_post")

@@ -146,7 +146,11 @@ class TestUserOnboardingWorkflow:
         # Step 1: User sends /start command
         update_workflow_state(
             workflow_id,
-            {"stage": "start_command", "user_id": user_id, "timestamp": datetime.now().isoformat()},
+            {
+                "stage": "start_command",
+                "user_id": user_id,
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
         # Mock bot receives /start
@@ -201,7 +205,12 @@ class TestUserOnboardingWorkflow:
         # API call to create user
         await mock_api_client_workflow.post(
             "/api/users",
-            json={"user_id": user_id, "username": "testuser", "language": "en", "plan_id": 1},
+            json={
+                "user_id": user_id,
+                "username": "testuser",
+                "language": "en",
+                "plan_id": 1,
+            },
         )
 
         # Step 5: Store user session in Redis
@@ -221,7 +230,12 @@ class TestUserOnboardingWorkflow:
             text="✅ Your profile has been created! Ready to connect your first channel?",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📊 Connect Channel", "callback_data": "connect_channel"}],
+                    [
+                        {
+                            "text": "📊 Connect Channel",
+                            "callback_data": "connect_channel",
+                        }
+                    ],
                     [{"text": "ℹ️ Learn More", "callback_data": "learn_more"}],
                 ]
             },
@@ -247,7 +261,10 @@ class TestUserOnboardingWorkflow:
 
     @pytest.mark.asyncio
     async def test_user_onboarding_with_error_recovery(
-        self, mock_telegram_bot_workflow, mock_api_client_workflow, mock_database_workflow
+        self,
+        mock_telegram_bot_workflow,
+        mock_api_client_workflow,
+        mock_database_workflow,
     ):
         """Test user onboarding workflow with error recovery"""
         workflow_id = str(uuid.uuid4())
@@ -324,7 +341,12 @@ class TestChannelConnectionWorkflow:
             text="📊 To connect your channel, please:\n1. Add me as admin to your channel\n2. Send me the channel username or forward a message",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📝 Send Channel Info", "callback_data": "send_channel_info"}]
+                    [
+                        {
+                            "text": "📝 Send Channel Info",
+                            "callback_data": "send_channel_info",
+                        }
+                    ]
                 ]
             },
         )
@@ -413,14 +435,20 @@ class TestChannelConnectionWorkflow:
                             "callback_data": f"view_analytics_{channel_id}",
                         }
                     ],
-                    [{"text": "⚙️ Settings", "callback_data": f"channel_settings_{channel_id}"}],
+                    [
+                        {
+                            "text": "⚙️ Settings",
+                            "callback_data": f"channel_settings_{channel_id}",
+                        }
+                    ],
                 ]
             },
         )
 
         # Workflow completion
         update_workflow_state(
-            workflow_id, {"stage": "channel_connection_complete", "channel_connected": True}
+            workflow_id,
+            {"stage": "channel_connection_complete", "channel_connected": True},
         )
 
         # Validate workflow
@@ -449,14 +477,18 @@ class TestChannelConnectionWorkflow:
 
         # Setup workflow
         update_workflow_state(
-            workflow_id, {"stage": "permission_check", "user_id": user_id, "channel_id": channel_id}
+            workflow_id,
+            {"stage": "permission_check", "user_id": user_id, "channel_id": channel_id},
         )
 
         # Mock insufficient permissions
         mock_api_client_workflow.get.return_value = AsyncMock(
             status_code=403,
             json=AsyncMock(
-                return_value={"success": False, "error": "Bot is not admin in the channel"}
+                return_value={
+                    "success": False,
+                    "error": "Bot is not admin in the channel",
+                }
             ),
         )
 
@@ -469,14 +501,20 @@ class TestChannelConnectionWorkflow:
             text="❌ I don't have admin permissions in this channel.\n\nPlease:\n1. Add me as admin\n2. Grant necessary permissions\n3. Try again",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "🔄 Retry", "callback_data": f"retry_permissions_{channel_id}"}],
+                    [
+                        {
+                            "text": "🔄 Retry",
+                            "callback_data": f"retry_permissions_{channel_id}",
+                        }
+                    ],
                     [{"text": "📖 Help", "callback_data": "permission_help"}],
                 ]
             },
         )
 
         update_workflow_state(
-            workflow_id, {"stage": "permission_failed", "error": "insufficient_permissions"}
+            workflow_id,
+            {"stage": "permission_failed", "error": "insufficient_permissions"},
         )
 
         # Validate error handling
@@ -505,7 +543,8 @@ class TestSubscriptionWorkflow:
 
         # Step 1: User initiates upgrade
         update_workflow_state(
-            workflow_id, {"stage": "upgrade_initiated", "user_id": user_id, "current_plan": "free"}
+            workflow_id,
+            {"stage": "upgrade_initiated", "user_id": user_id, "current_plan": "free"},
         )
 
         # Show subscription plans
@@ -514,7 +553,12 @@ class TestSubscriptionWorkflow:
             text="💎 Choose your subscription plan:",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "🚀 Pro - $9.99/month", "callback_data": "plan_pro_monthly"}],
+                    [
+                        {
+                            "text": "🚀 Pro - $9.99/month",
+                            "callback_data": "plan_pro_monthly",
+                        }
+                    ],
                     [
                         {
                             "text": "💼 Premium - $29.99/month",
@@ -626,7 +670,12 @@ class TestSubscriptionWorkflow:
             text="🎉 Payment successful! Your Premium subscription is now active.\n\n✨ You now have access to:\n• Advanced analytics\n• Priority support\n• Custom reports",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📊 View Premium Analytics", "callback_data": "premium_analytics"}]
+                    [
+                        {
+                            "text": "📊 View Premium Analytics",
+                            "callback_data": "premium_analytics",
+                        }
+                    ]
                 ]
             },
         )
@@ -679,7 +728,11 @@ class TestContentWorkflow:
         # Step 1: User initiates content scheduling
         update_workflow_state(
             workflow_id,
-            {"stage": "content_creation_start", "user_id": user_id, "channel_id": channel_id},
+            {
+                "stage": "content_creation_start",
+                "user_id": user_id,
+                "channel_id": channel_id,
+            },
         )
 
         # Bot requests content
@@ -700,7 +753,8 @@ class TestContentWorkflow:
         }
 
         update_workflow_state(
-            workflow_id, {"stage": "content_received", "content_text": content_message["text"]}
+            workflow_id,
+            {"stage": "content_received", "content_text": content_message["text"]},
         )
 
         # Step 3: Bot asks for scheduling time
@@ -710,7 +764,12 @@ class TestContentWorkflow:
             reply_markup={
                 "inline_keyboard": [
                     [{"text": "🕐 In 1 hour", "callback_data": "schedule_1h"}],
-                    [{"text": "📅 Tomorrow 9 AM", "callback_data": "schedule_tomorrow_9am"}],
+                    [
+                        {
+                            "text": "📅 Tomorrow 9 AM",
+                            "callback_data": "schedule_tomorrow_9am",
+                        }
+                    ],
                     [{"text": "📝 Custom time", "callback_data": "schedule_custom"}],
                 ]
             },
@@ -720,7 +779,10 @@ class TestContentWorkflow:
         scheduled_time = datetime.now() + timedelta(hours=1)
         update_workflow_state(
             workflow_id,
-            {"stage": "schedule_time_selected", "scheduled_time": scheduled_time.isoformat()},
+            {
+                "stage": "schedule_time_selected",
+                "scheduled_time": scheduled_time.isoformat(),
+            },
         )
 
         # Step 5: Create scheduled post in database
@@ -776,7 +838,12 @@ class TestContentWorkflow:
             text=f"✅ Post scheduled successfully!\n\n📅 Will be published: {scheduled_time.strftime('%Y-%m-%d %H:%M')}\n📊 Channel: Test Analytics Channel",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📝 Schedule Another", "callback_data": "schedule_another"}],
+                    [
+                        {
+                            "text": "📝 Schedule Another",
+                            "callback_data": "schedule_another",
+                        }
+                    ],
                     [{"text": "📋 View Scheduled", "callback_data": "view_scheduled"}],
                 ]
             },
@@ -785,7 +852,11 @@ class TestContentWorkflow:
         # Workflow completion
         update_workflow_state(
             workflow_id,
-            {"stage": "content_scheduled", "post_id": post_id, "delivery_pending": True},
+            {
+                "stage": "content_scheduled",
+                "post_id": post_id,
+                "delivery_pending": True,
+            },
         )
 
         # Validate workflow
@@ -821,7 +892,11 @@ class TestAnalyticsWorkflow:
         # Step 1: User requests analytics
         update_workflow_state(
             workflow_id,
-            {"stage": "analytics_requested", "user_id": user_id, "channel_id": channel_id},
+            {
+                "stage": "analytics_requested",
+                "user_id": user_id,
+                "channel_id": channel_id,
+            },
         )
 
         # Step 2: Fetch analytics data from API
@@ -852,7 +927,8 @@ class TestAnalyticsWorkflow:
         )
 
         analytics_response = await mock_api_client_workflow.get(
-            f"/api/analytics/channels/{channel_id}", params={"period": "7_days", "user_id": user_id}
+            f"/api/analytics/channels/{channel_id}",
+            params={"period": "7_days", "user_id": user_id},
         )
 
         analytics_data = await analytics_response.json()
@@ -894,7 +970,12 @@ class TestAnalyticsWorkflow:
                             "callback_data": f"analytics_period_{channel_id}",
                         }
                     ],
-                    [{"text": "📧 Email Report", "callback_data": f"email_report_{channel_id}"}],
+                    [
+                        {
+                            "text": "📧 Email Report",
+                            "callback_data": f"email_report_{channel_id}",
+                        }
+                    ],
                     [
                         {
                             "text": "📊 Detailed View",
@@ -920,7 +1001,8 @@ class TestAnalyticsWorkflow:
 
         # Workflow completion
         update_workflow_state(
-            workflow_id, {"stage": "analytics_delivered", "report_generated": True, "cached": True}
+            workflow_id,
+            {"stage": "analytics_delivered", "report_generated": True, "cached": True},
         )
 
         # Validate workflow

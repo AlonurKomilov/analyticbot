@@ -8,9 +8,6 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from infra.celery.celery_app import critical_message_task, enhanced_retry_task
-from apps.bot.container import container
-from config.settings import Settings
-from pydantic import SecretStr
 
 try:
     from aiogram.client.bot import Bot as _AioBot
@@ -46,7 +43,7 @@ def send_message_task(
         try:
             # Import inside task to avoid circular imports
             from apps.bot.container import container
-            from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+            from apps.bot.utils.error_handler import ErrorContext
             from core.common_helpers.idempotency import IdempotencyGuard
             from core.common_helpers.ratelimit import TokenBucketRateLimiter
 
@@ -55,7 +52,10 @@ def send_message_task(
                 .add("task", "send_message_task")
                 .add("chat_id", chat_id)
                 .add("idempotency_key", idempotency_key)
-                .add("retry", self.request.retries if hasattr(self.request, "retries") else 0)
+                .add(
+                    "retry",
+                    self.request.retries if hasattr(self.request, "retries") else 0,
+                )
             )
 
             # Generate idempotency key if not provided
@@ -81,9 +81,9 @@ def send_message_task(
                 )
                 return {
                     "success": True,
-                    "message_id": existing_status.result.get("message_id")
-                    if existing_status.result
-                    else None,
+                    "message_id": (
+                        existing_status.result.get("message_id") if existing_status.result else None
+                    ),
                     "chat_id": chat_id,
                     "duplicate": True,
                     "cached_result": existing_status.result,
@@ -122,10 +122,10 @@ def send_message_task(
                 if isinstance(bot_instance, list):
                     # If multiple bots, use the first one
                     bot_instance = bot_instance[0] if bot_instance else None
-                
+
                 if bot_instance is None:
                     raise Exception("Bot instance not available")
-                
+
                 result = await bot_instance.send_message(chat_id=chat_id, text=message, **kwargs)
 
                 logger.info(f"Message sent successfully to {chat_id}: {result.message_id}")
@@ -231,14 +231,14 @@ def process_analytics(self, channel_id: str, post_id: str | None = None) -> dict
     async def _process():
         # Initialize error handling context outside try block
         from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-        
+
         context = (
             ErrorContext()
             .add("task", "process_analytics")
             .add("channel_id", channel_id)
             .add("post_id", post_id)
         )
-        
+
         try:
             from apps.bot.container import container
             from apps.bot.services.analytics_service import AnalyticsService
@@ -310,7 +310,7 @@ def cleanup_old_data(self, days_old: int = 30) -> dict[str, Any]:
 
     async def _cleanup():
         try:
-            from apps.bot.container import container
+            pass
 
             logger.info(f"Starting cleanup of data older than {days_old} days")
 
@@ -381,7 +381,10 @@ def health_check_task(self) -> dict[str, Any]:
 
             logger.debug("Running system health check")
 
-            health_results = {"timestamp": datetime.utcnow().isoformat(), "components": {}}
+            health_results = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "components": {},
+            }
 
             # Check database health
             try:
@@ -394,7 +397,10 @@ def health_check_task(self) -> dict[str, Any]:
                 }
             except Exception as e:
                 logger.warning(f"Database health check failed: {e}")
-                health_results["components"]["database"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["database"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Redis health
             try:
@@ -406,8 +412,7 @@ def health_check_task(self) -> dict[str, Any]:
                 # Try to create settings, fallback to test values if needed
                 settings = None
                 import os
-                from pydantic import SecretStr
-                
+
                 # Always use environment variables with fallbacks
                 settings = Settings(
                     BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
@@ -415,21 +420,24 @@ def health_check_task(self) -> dict[str, Any]:
                     POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
                     POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
                     POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
-                    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+                    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key")),
                 )
                 redis_client = redis.from_url(str(settings.REDIS_URL))
                 redis_client.ping()
                 health_results["components"]["redis"] = {"status": "healthy"}
             except Exception as e:
                 logger.warning(f"Redis health check failed: {e}")
-                health_results["components"]["redis"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["redis"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Check Telegram API health
             try:
                 bot_instance = container.resolve(_AioBot)
                 if isinstance(bot_instance, list):
                     bot_instance = bot_instance[0] if bot_instance else None
-                
+
                 if bot_instance:
                     me = await bot_instance.get_me()
                     health_results["components"]["telegram"] = {
@@ -438,12 +446,15 @@ def health_check_task(self) -> dict[str, Any]:
                     }
                 else:
                     health_results["components"]["telegram"] = {
-                        "status": "unhealthy", 
-                        "error": "Bot not available"
+                        "status": "unhealthy",
+                        "error": "Bot not available",
                     }
             except Exception as e:
                 logger.warning(f"Telegram health check failed: {e}")
-                health_results["components"]["telegram"] = {"status": "unhealthy", "error": str(e)}
+                health_results["components"]["telegram"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                }
 
             # Overall health status
             all_healthy = all(

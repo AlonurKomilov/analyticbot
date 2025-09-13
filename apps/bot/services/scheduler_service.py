@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -51,9 +51,9 @@ class SchedulerService:
                     button = InlineKeyboardButton(
                         text=btn.text,
                         url=str(btn.url) if btn.url else None,
-                        callback_data=btn.callback_data
-                        if btn.callback_data and (not btn.url)
-                        else None,
+                        callback_data=(
+                            btn.callback_data if btn.callback_data and (not btn.url) else None
+                        ),
                     )
                     button_row.append(button)
                 rows.append(button_row)

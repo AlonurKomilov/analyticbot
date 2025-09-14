@@ -230,7 +230,7 @@ async def cmd_myplan(
 async def cmd_dashboard(message: types.Message, i18n: I18nContext):
     kb, is_webapp = _build_dashboard_kb(i18n)
     if not kb:
-        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun Codespaces/Ngrok HTTPS URL qo'ying:\nWEBAPP_URL=https://84dp9jc9-3000.euw.devtunnels.ms/"
+        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun server IP URL qo'ying:\nTWA_HOST_URL=http://173.212.236.167:3000/"
         await message.answer(msg)
         return
     await message.answer(i18n.get("menu-button-dashboard"), reply_markup=kb)

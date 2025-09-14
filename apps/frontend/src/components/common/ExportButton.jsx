@@ -15,11 +15,12 @@ import {
     Image as PngIcon,
     ExpandMore as ExpandIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../utils/apiClient.js';
+import { dataServiceFactory } from '../../services/dataService.js';
+import { useDataSource } from '../../hooks/useDataSource.js';
 
 /**
  * Export Button Component for Analytics Data
- * Week 1-2 Quick Win Implementation
+ * Updated to use new mock/real data source architecture
  */
 const ExportButton = ({ 
     channelId = 'demo_channel', 
@@ -29,6 +30,7 @@ const ExportButton = ({
     size = 'medium',
     ...props 
 }) => {
+    const { dataSource } = useDataSource();
     const [anchorEl, setAnchorEl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -85,33 +87,26 @@ const ExportButton = ({
         handleClose();
 
         try {
+            // Use dependency injection - no conditional logic
+            const dataService = dataServiceFactory.getService(dataSource);
             let response;
             let filename;
-
+            
             if (format === 'csv') {
-                response = await apiClient.exportToCsv(dataType, channelId, period);
+                response = await dataService.exportToCsv(dataType, channelId, period);
                 filename = `${dataType}_${channelId}_${period}.csv`;
-                
-                // Handle different response formats
-                if (typeof response === 'string') {
-                    downloadFile(response, filename, 'csv');
-                } else if (response.csv_data) {
-                    downloadFile(response.csv_data, filename, 'csv');
-                } else {
-                    throw new Error('Invalid CSV response format');
-                }
             } else if (format === 'png') {
-                response = await apiClient.exportToPng(dataType, channelId, period);
+                response = await dataService.exportToPng(dataType, channelId, period);
                 filename = `${dataType}_${channelId}_${period}.png`;
-                
-                // Handle different response formats
-                if (typeof response === 'string') {
-                    downloadFile(response, filename, 'png');
-                } else if (response.png_data) {
-                    downloadFile(response.png_data, filename, 'png');
-                } else {
-                    throw new Error('Invalid PNG response format');
-                }
+            }
+            
+            // Handle different response formats
+            if (typeof response === 'string') {
+                downloadFile(response, filename, format);
+            } else if (response.csv_data || response.png_data) {
+                downloadFile(response.csv_data || response.png_data, filename, format);
+            } else {
+                throw new Error(`Invalid ${format.toUpperCase()} response format`);
             }
 
             setSuccess(`${format.toUpperCase()} exported successfully!`);

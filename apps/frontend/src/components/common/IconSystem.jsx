@@ -23,6 +23,7 @@ import {
     Download as DownloadIcon,
     Share as ShareIcon,
     Settings as SettingsIcon,
+    Add as CreateIcon,
     
     // Data Icons
     Visibility as ViewsIcon,
@@ -60,6 +61,7 @@ export const ICON_COMPONENTS = {
     download: DownloadIcon,
     share: ShareIcon,
     settings: SettingsIcon,
+    create: CreateIcon,
     
     // Data
     views: ViewsIcon,
@@ -127,7 +129,11 @@ export const StatusChip = ({
         analytics: 'analytics', 
         secure: 'secure',
         ai: 'ai',
-        realtime: 'realtime'
+        realtime: 'realtime',
+        success: 'secure',
+        info: 'analytics',
+        warning: 'optimize',
+        error: 'security'
     };
     
     return (

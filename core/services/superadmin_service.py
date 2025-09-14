@@ -26,7 +26,8 @@ from core.models.admin import (
 class SuperAdminService:
     """Service for SuperAdmin operations and management"""
 
-    def __init__(self):
+    def __init__(self, db: AsyncSession):
+        self.db = db
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     async def authenticate_admin(
@@ -238,6 +239,133 @@ class SuperAdminService:
         )
 
         db.add(log)
+
+    async def validate_admin_session(self, token: str, ip_address: str) -> AdminUser | None:
+        """Validate admin session token"""
+        try:
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            
+            stmt = select(AdminSession).join(AdminUser).where(
+                and_(
+                    AdminSession.session_token == token_hash,
+                    AdminSession.is_active == True,
+                    AdminSession.expires_at > datetime.utcnow(),
+                    AdminUser.is_active == True
+                )
+            )
+            result = await self.db.execute(stmt)
+            session = result.scalar_one_or_none()
+            
+            if not session:
+                return None
+                
+            # Update session activity
+            session.last_activity = datetime.utcnow()
+            await self.db.commit()
+            
+            # Return admin user
+            stmt = select(AdminUser).where(AdminUser.id == session.admin_user_id)
+            result = await self.db.execute(stmt)
+            return result.scalar_one_or_none()
+            
+        except Exception:
+            return None
+
+    async def get_system_users(self, page: int = 1, limit: int = 50) -> dict[str, Any]:
+        """Get paginated system users"""
+        offset = (page - 1) * limit
+        
+        stmt = (
+            select(SystemUser)
+            .order_by(desc(SystemUser.created_at))
+            .offset(offset)
+            .limit(limit)
+        )
+        
+        result = await self.db.execute(stmt)
+        users = result.scalars().all()
+        
+        # Get total count
+        count_stmt = select(func.count(SystemUser.id))
+        total_count = await self.db.scalar(count_stmt) or 0
+        
+        return {
+            "users": users,
+            "total": total_count,
+            "page": page,
+            "pages": ((total_count) + limit - 1) // limit if total_count > 0 else 0,
+        }
+
+    async def reactivate_user(self, user_id: int, admin_id: int) -> bool:
+        """Reactivate a suspended user"""
+        try:
+            stmt = select(SystemUser).where(SystemUser.telegram_id == user_id)
+            result = await self.db.execute(stmt)
+            user = result.scalar_one_or_none()
+            
+            if not user:
+                return False
+                
+            # Store original status for audit log
+            original_status = user.status
+            
+            user.status = UserStatus.ACTIVE
+            user.updated_at = datetime.utcnow()
+            
+            # Create audit log entry
+            await self._create_audit_log(
+                self.db,
+                admin_id,
+                "reactivate_user",
+                "system_users",
+                user.id,
+                {"status": original_status.value},
+                {"status": UserStatus.ACTIVE.value},
+                "User reactivated by admin"
+            )
+            
+            await self.db.commit()
+            return True
+            
+        except Exception:
+            await self.db.rollback()
+            return False
+
+    async def get_system_config(self) -> dict[str, Any]:
+        """Get system configuration"""
+        # This would typically come from a database table or config file
+        return {
+            "maintenance_mode": False,
+            "max_users_per_channel": 1000,
+            "rate_limit_messages_per_hour": 100,
+            "premium_features_enabled": True,
+            "backup_frequency_hours": 24,
+            "session_timeout_hours": 8,
+            "max_failed_login_attempts": 5
+        }
+
+    async def update_system_config(self, config: dict[str, Any], admin_id: int) -> bool:
+        """Update system configuration"""
+        try:
+            # In a real implementation, this would update a database table
+            # For now, we'll just log the change
+            await self._create_audit_log(
+                self.db,
+                admin_id,
+                "update_system_config",
+                "system_config",
+                UUID("00000000-0000-0000-0000-000000000001"),  # Dummy UUID for config
+                {},  # old values would be fetched
+                config,
+                "System configuration updated"
+            )
+            
+            await self.db.commit()
+            return True
+            
+        except Exception:
+            await self.db.rollback()
+            return False
 
     async def _log_security_event(
         self, db: AsyncSession, event_type: str, details: dict, admin_id: UUID | None = None

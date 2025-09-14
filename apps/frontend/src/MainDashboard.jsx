@@ -21,10 +21,11 @@ import MediaPreview from './components/MediaPreview';
 import AddChannel from './components/AddChannel';
 import EnhancedMediaUploader from './components/EnhancedMediaUploader.jsx';
 import StorageFileBrowser from './components/StorageFileBrowser.jsx';
-import AnalyticsDashboard from './components/AnalyticsDashboard.jsx';
+import { AnalyticsDashboard } from './components/dashboard/AnalyticsDashboard';
 import { useAppStore } from './store/appStore.js';
 import { Icon, StatusChip } from './components/common/IconSystem.jsx';
 import { TouchTargetProvider } from './components/common/TouchTargetCompliance.jsx';
+import GlobalDataSourceSwitch from './components/common/GlobalDataSourceSwitch.jsx';
 import {
     AutoFixHigh as ContentIcon,
     TrendingUp as PredictiveIcon,
@@ -34,12 +35,12 @@ import {
 } from '@mui/icons-material';
 
 const AppSkeleton = () => (
-    <Stack spacing={3} sx={{ mt: 2 }}>
+    <Stack variant="page">
         {/* Header skeleton */}
-        <Paper sx={{ p: 3, borderRadius: 2 }}>
-            <Skeleton variant="text" width="60%" height={40} sx={{ mx: 'auto' }} />
-            <Skeleton variant="text" width="40%" height={20} sx={{ mx: 'auto', mt: 1 }} />
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 2 }}>
+        <Paper variant="card">
+            <Skeleton variant="centered" width="60%" height={40} />
+            <Skeleton variant="centeredWithMargin" width="40%" height={20} />
+            <Box variant="flexCenter" sx={{ mt: 2, gap: 1 }}>
                 {[...Array(5)].map((_, i) => (
                     <Skeleton key={i} variant="rounded" width={80} height={32} />
                 ))}
@@ -48,7 +49,7 @@ const AppSkeleton = () => (
         
         {/* Tabs skeleton */}
         <Paper sx={{ borderRadius: 2 }}>
-            <Box sx={{ display: 'flex', borderBottom: '1px solid #e0e0e0' }}>
+            <Box variant="borderBox">
                 {[...Array(3)].map((_, i) => (
                     <Skeleton key={i} variant="rectangular" width="33.33%" height={64} />
                 ))}
@@ -56,7 +57,7 @@ const AppSkeleton = () => (
         </Paper>
         
         {/* Dashboard content skeleton */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
+        <Box variant="responsiveGrid">
             {/* Main chart area */}
             <Stack spacing={3}>
                 <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
@@ -90,7 +91,7 @@ const MainDashboard = () => {
         isGlobalLoading,
         isLoading,
         fetchData,
-        posts, 
+        // posts, // TODO: Implement posts display functionality
         scheduledPosts, 
         channels,
         addPost, 
@@ -104,7 +105,6 @@ const MainDashboard = () => {
     
     // Initialize app data on component mount
     useEffect(() => {
-        console.log('MainDashboard: Initializing app data');
         fetchData();
     }, [fetchData]);
 
@@ -156,7 +156,7 @@ const MainDashboard = () => {
     if (isLoadingData) {
         return (
             <TouchTargetProvider>
-                <Container maxWidth="xl" sx={{ py: 3, minHeight: '100vh' }}>
+                <Container variant="dashboard">
                     <AppSkeleton />
                 </Container>
             </TouchTargetProvider>
@@ -165,7 +165,7 @@ const MainDashboard = () => {
 
     return (
         <TouchTargetProvider>
-            <Container maxWidth="xl" sx={{ py: 3, minHeight: '100vh' }}>
+            <Container variant="dashboard">
                 {/* System Status Overview */}
                 <Paper 
                     elevation={1}
@@ -178,25 +178,26 @@ const MainDashboard = () => {
                         borderColor: 'divider'
                     }}
                 >
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    <Typography variant="pageTitle">
                         System Status
                     </Typography>
                     <Stack 
                         direction="row" 
                         spacing={2} 
-                        sx={{ flexWrap: 'wrap', gap: 1 }}
+                        variant="wrapped"
                     >
                         <StatusChip label="Analytics Active" status="success" />
                         <StatusChip label="AI Services Running" status="success" />
                         <StatusChip label="Real-time Monitoring" status="info" />
                         <StatusChip label="Security Enabled" status="success" />
                         <StatusChip label="Performance Optimized" status="warning" />
+                        <GlobalDataSourceSwitch size="medium" />
                     </Stack>
                 </Paper>
 
                 {/* AI Services Quick Access */}
-                <Paper sx={{ mb: 4, p: 3, borderRadius: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Paper variant="card">
+                    <Box variant="headerControls">
                         <Typography variant="h5" fontWeight={600}>
                             AI Services
                         </Typography>
@@ -204,7 +205,6 @@ const MainDashboard = () => {
                             variant="outlined"
                             endIcon={<LaunchIcon />}
                             onClick={() => navigate('/services')}
-                            sx={{ minHeight: 44 }}
                         >
                             View All Services
                         </Button>
@@ -227,8 +227,8 @@ const MainDashboard = () => {
                                         }}
                                         onClick={() => navigate(service.path)}
                                     >
-                                        <CardContent sx={{ p: 3 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <CardContent variant="service">
+                                            <Box variant="flexRow" sx={{ mb: 2 }}>
                                                 <IconComponent 
                                                     sx={{ 
                                                         fontSize: 28, 
@@ -255,7 +255,7 @@ const MainDashboard = () => {
                                                 {service.description}
                                             </Typography>
                                             
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                            <Box variant="flexBetween" sx={{ fontSize: '0.85rem' }}>
                                                 {Object.entries(service.metrics).map(([key, value]) => (
                                                     <Box key={key} sx={{ textAlign: 'center' }}>
                                                         <Typography variant="caption" color="text.secondary">
@@ -280,32 +280,25 @@ const MainDashboard = () => {
                     <Tabs 
                         value={selectedTab} 
                         onChange={(_, newValue) => setSelectedTab(newValue)}
-                        sx={{ 
-                            borderBottom: '1px solid',
-                            borderColor: 'divider',
-                            px: 2
-                        }}
+                        variant="fullWidth"
                     >
                         <Tab 
                             label="Dashboard" 
                             icon={<Icon name="dashboard" />} 
-                            sx={{ minHeight: 64, fontSize: '1rem' }}
                         />
                         <Tab 
                             label="Create Post" 
                             icon={<Icon name="create" />} 
-                            sx={{ minHeight: 64, fontSize: '1rem' }}
                         />
                         <Tab 
                             label="Analytics" 
                             icon={<Icon name="analytics" />} 
-                            sx={{ minHeight: 64, fontSize: '1rem' }}
                         />
                     </Tabs>
 
-                    <Box sx={{ p: 3 }}>
+                    <Box variant="tabContent">
                         {selectedTab === 0 && (
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
+                            <Box variant="responsiveGrid">
                                 {/* Main Content */}
                                 <Box>
                                     <AnalyticsDashboard />
@@ -324,7 +317,7 @@ const MainDashboard = () => {
                         )}
                         
                         {selectedTab === 1 && (
-                            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 3 }}>
+                            <Box variant="responsiveGridLg">
                                 <Box>
                                     <PostCreator onSubmit={addPost} onSchedule={schedulePost} />
                                 </Box>

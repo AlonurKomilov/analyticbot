@@ -61,8 +61,8 @@ class Settings(BaseSettings):
     # API & Web Application
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
-    API_HOST_URL: str = "http://173.212.236.167:8000"
-    TWA_HOST_URL: str = "http://173.212.236.167:3000/"
+    API_HOST_URL: str = "http://localhost:8000"
+    TWA_HOST_URL: str = "http://localhost:3000/"
     CORS_ORIGINS: str = "*"
 
     # Security & Authentication

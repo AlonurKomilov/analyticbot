@@ -86,7 +86,7 @@ const ServicesLayout = () => {
     };
 
     return (
-        <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
+        <Box variant="mainLayout">
             {/* Services Navigation Drawer */}
             <Drawer
                 variant="permanent"
@@ -104,14 +104,10 @@ const ServicesLayout = () => {
                     }
                 }}
             >
-                <Box sx={{ p: 2 }}>
+                <Box variant="drawerContent">
                     <Typography 
-                        variant="h6" 
-                        sx={{ 
-                            mb: 2, 
-                            fontWeight: 600,
-                            color: 'text.secondary'
-                        }}
+                        variant="h6"
+                        sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}
                     >
                         AI Services
                     </Typography>
@@ -125,30 +121,19 @@ const ServicesLayout = () => {
                                 <ListItem 
                                     key={service.id} 
                                     disablePadding
-                                    sx={{ mb: 1 }}
+                                    variant="navigation"
                                 >
                                     <ListItemButton
                                         onClick={() => navigate(service.path)}
                                         selected={isActive}
+                                        variant="navigation"
                                         sx={{
-                                            minHeight: 56, // Touch target compliance
-                                            borderRadius: 2,
-                                            '&.Mui-selected': {
-                                                backgroundColor: 'primary.main',
-                                                color: 'primary.contrastText',
-                                                '& .MuiListItemIcon-root': {
-                                                    color: 'inherit'
-                                                },
-                                                '&:hover': {
-                                                    backgroundColor: 'primary.dark'
-                                                }
-                                            },
                                             '&:hover': {
                                                 backgroundColor: isActive ? 'primary.dark' : 'action.hover'
                                             }
                                         }}
                                     >
-                                        <ListItemIcon sx={{ minWidth: 40 }}>
+                                        <ListItemIcon variant="compact">
                                             <IconComponent />
                                         </ListItemIcon>
                                         <ListItemText 
@@ -171,13 +156,7 @@ const ServicesLayout = () => {
                                             size="small"
                                             color={getStatusColor(service.status)}
                                             variant={isActive ? 'filled' : 'outlined'}
-                                            sx={{ 
-                                                fontSize: '0.7rem',
-                                                height: 20,
-                                                '& .MuiChip-label': {
-                                                    px: 1
-                                                }
-                                            }}
+                                            sx={{ fontSize: '0.7rem', height: 20, '& .MuiChip-label': { px: 1 } }}
                                         />
                                     </ListItemButton>
                                 </ListItem>
@@ -190,12 +169,7 @@ const ServicesLayout = () => {
             {/* Main Content Area */}
             <Box 
                 component="main" 
-                sx={{ 
-                    flexGrow: 1, 
-                    bgcolor: 'background.default',
-                    minHeight: 'calc(100vh - 64px)',
-                    p: 3
-                }}
+                variant="mainContent"
             >
                 <Outlet />
             </Box>

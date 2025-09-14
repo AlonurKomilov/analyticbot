@@ -94,7 +94,7 @@ describe('TopPostsTable', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Top Posts')).toBeInTheDocument();
+    expect(screen.getByText('Top Performing Posts')).toBeInTheDocument();
   });
 
   it('shows loading state initially', () => {
@@ -104,7 +104,7 @@ describe('TopPostsTable', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Top posts yuklanmoqda...')).toBeInTheDocument();
+    expect(screen.getByText('Loading top posts...')).toBeInTheDocument();
   });
 
   it('renders filter controls', () => {
@@ -114,8 +114,8 @@ describe('TopPostsTable', () => {
       </TestWrapper>
     );
 
-    expect(screen.getAllByText('Vaqt')).toHaveLength(2); // label and legend
-    expect(screen.getAllByText('Tartiblash')).toHaveLength(2); // label and legend
+    expect(screen.getAllByText('Time Period')).toHaveLength(2); // label and legend
+    expect(screen.getAllByText('Sort By')).toHaveLength(2); // label and legend
   });
 
   it('displays table headers correctly', async () => {
@@ -127,13 +127,13 @@ describe('TopPostsTable', () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText('Post')).toBeInTheDocument();
+      expect(screen.getByText('Post Content')).toBeInTheDocument();
     });
 
-    expect(screen.getAllByText('Ko\'rishlar')).toHaveLength(2); // select and table header
-    expect(screen.getByText('Yoqtirishlar')).toBeInTheDocument();
-    expect(screen.getByText('Izohlar')).toBeInTheDocument();
-    expect(screen.getByText('Faollik %')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /views/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /likes/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /comments/i })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: /engagement rate/i })).toBeInTheDocument();
   });
 
   it('displays post data correctly', async () => {
@@ -145,10 +145,10 @@ describe('TopPostsTable', () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText('Amazing Post About AI')).toBeInTheDocument();
+      expect(screen.getByText(/AI Analytics Dashboard/)).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Machine Learning Insights')).toBeInTheDocument();
-    expect(screen.getByText('Data Science Tips')).toBeInTheDocument();
+    expect(screen.getByText(/Weekly Performance Report/)).toBeInTheDocument();
+    expect(screen.getByText(/Best Practices for Content/)).toBeInTheDocument();
   });
 });

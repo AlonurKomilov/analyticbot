@@ -447,9 +447,11 @@ export const EnhancedDataTable = ({
                     {/* Refresh */}
                     {enableRefresh && onRefresh && (
                         <Tooltip title="Refresh Data">
-                            <IconButton onClick={onRefresh} disabled={loading}>
-                                <RefreshIcon />
-                            </IconButton>
+                            <span>
+                                <IconButton onClick={onRefresh} disabled={loading}>
+                                    <RefreshIcon />
+                                </IconButton>
+                            </span>
                         </Tooltip>
                     )}
                 </Box>
@@ -660,16 +662,16 @@ export const EnhancedDataTable = ({
                                         <TableCell align="center" sx={{ py: currentDensity.padding / 8 }}>
                                             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                 {rowActions.map((action, actionIndex) => (
-                                                    <Tooltip key={actionIndex} title={action.label}>
+                                                    <Tooltip key={actionIndex} title={typeof action.label === 'function' ? action.label(row) : action.label || ''}>
                                                         <IconButton
                                                             size="small"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 action.onClick(row);
                                                             }}
-                                                            color={action.color || 'default'}
+                                                            color={typeof action.color === 'function' ? action.color(row) : (action.color || 'default')}
                                                         >
-                                                            {action.icon}
+                                                            {typeof action.icon === 'function' ? action.icon(row) : action.icon}
                                                         </IconButton>
                                                     </Tooltip>
                                                 ))}

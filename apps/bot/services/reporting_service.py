@@ -47,50 +47,21 @@ except ImportError:
     pass
 
 # PDF generation dependencies (optional)
-REPORTLAB_AVAILABLE = False
-letter = None
-SimpleDocTemplate = None
-Table = None
-TableStyle = None 
-Paragraph = None
-Spacer = None
-getSampleStyleSheet = None
-colors = None
-
 try:
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter as _letter
+    from reportlab.lib.styles import ParagraphStyle as _ParagraphStyle, getSampleStyleSheet as _getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate as _SimpleDocTemplate, Table as _Table, TableStyle as _TableStyle, Paragraph as _Paragraph, Spacer as _Spacer
+    from reportlab.lib import colors as _colors
     REPORTLAB_AVAILABLE = True
 except ImportError:
-    # Simple fallback - we'll handle the types at usage sites
-    pass
+    REPORTLAB_AVAILABLE = False
 
 # Excel generation dependencies (optional)
-OPENPYXL_AVAILABLE = False
-openpyxl = None
-Fill = None
-Font = None
-
 try:
-    import openpyxl
-    from openpyxl.styles import Fill, Font
-    OPENPYXL_AVAILABLE = True
-except ImportError:
-    # Simple fallback - we'll handle the types at usage sites
-    pass
-
-# Excel reporting
-try:
-    import openpyxl  # type: ignore[import-untyped]
-    from openpyxl.styles import Fill, Font  # type: ignore[import-untyped]
+    import openpyxl  # type: ignore
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
-    openpyxl = None
-    Fill = None
-    Font = None
 
 logger = logging.getLogger(__name__)
 
@@ -203,7 +174,13 @@ class AutomatedReportingSystem:
         """Generate PDF report"""
         try:
             if not REPORTLAB_AVAILABLE:
-                return {"error": "ReportLab not available for PDF generation"}
+                return {"error": "ReportLab not available for PDF generation. Install with: pip install reportlab"}
+
+            # Import locally to ensure they're available
+            from reportlab.lib.pagesizes import letter
+            from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib import colors
 
             pagesize = letter
             doc = SimpleDocTemplate(str(output_path), pagesize=pagesize)
@@ -290,7 +267,11 @@ class AutomatedReportingSystem:
         """Generate Excel report"""
         try:
             if not OPENPYXL_AVAILABLE:
-                return {"error": "OpenPyXL not available for Excel generation"}
+                return {"error": "OpenPyXL not available for Excel generation. Install with: pip install openpyxl"}
+
+            # Import locally to ensure they're available
+            import openpyxl  # type: ignore
+            from openpyxl.styles import Fill, Font  # type: ignore
 
             workbook = openpyxl.Workbook()  # type: ignore
 
@@ -302,8 +283,7 @@ class AutomatedReportingSystem:
             for col_num, column_title in enumerate(data.columns, 1):
                 cell = worksheet.cell(row=1, column=col_num)  # type: ignore
                 cell.value = column_title  # type: ignore
-                if Font:
-                    cell.font = Font(bold=True)  # type: ignore
+                cell.font = Font(bold=True)  # type: ignore
                 if Fill:
                     from openpyxl.styles import PatternFill  # type: ignore
                     cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")  # type: ignore

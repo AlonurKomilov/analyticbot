@@ -3,12 +3,12 @@ import { Container, Box, Typography, Alert } from '@mui/material';
 
 const App = () => {
     return (
-        <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Container variant="page">
             <Box textAlign="center">
                 <Typography variant="h3" component="h1" gutterBottom>
                     🚀 AnalyticBot
                 </Typography>
-                <Alert severity="success" sx={{ mt: 3 }}>
+                <Alert variant="topSpaced" severity="success">
                     ✅ React app is working! The error was in one of the component imports.
                 </Alert>
                 <Typography variant="body1" sx={{ mt: 2 }}>

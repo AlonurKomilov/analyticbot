@@ -40,12 +40,14 @@ const useNavigationAnalytics = () => {
         });
 
         // Analytics tracking (could integrate with Google Analytics, etc.)
-        console.log('Navigation Analytics:', {
-            path,
-            title,
-            sessionTime: Date.now() - sessionStart
-        });
-    }, [sessionStart]);
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Navigation Analytics:', {
+                path,
+                title,
+                sessionTime: Date.now() - sessionStart
+            });
+        }
+    }, []); // Remove sessionStart dependency since it never changes
 
     return {
         pageViews,
@@ -103,33 +105,39 @@ const useNavigationHistoryInternal = () => {
     const { preferences, updatePreferences } = useUserPreferences();
 
     const addToRecentPages = useCallback((page) => {
-        const recent = preferences.recentPages || [];
-        const filtered = recent.filter(p => p.path !== page.path);
-        const updated = [page, ...filtered].slice(0, 10); // Keep last 10
-
-        updatePreferences({ recentPages: updated });
-    }, [preferences.recentPages, updatePreferences]);
+        updatePreferences(prev => {
+            const recent = prev.recentPages || [];
+            const filtered = recent.filter(p => p.path !== page.path);
+            const updated = [page, ...filtered].slice(0, 10); // Keep last 10
+            return { recentPages: updated };
+        });
+    }, [updatePreferences]);
 
     const addBookmark = useCallback((bookmark) => {
-        const bookmarks = preferences.bookmarks || [];
-        const exists = bookmarks.find(b => b.path === bookmark.path);
-        
-        if (!exists) {
-            const updated = [bookmark, ...bookmarks].slice(0, 20); // Max 20 bookmarks
-            updatePreferences({ bookmarks: updated });
-        }
-    }, [preferences.bookmarks, updatePreferences]);
+        updatePreferences(prev => {
+            const bookmarks = prev.bookmarks || [];
+            const exists = bookmarks.find(b => b.path === bookmark.path);
+            
+            if (!exists) {
+                const updated = [bookmark, ...bookmarks].slice(0, 20); // Max 20 bookmarks
+                return { bookmarks: updated };
+            }
+            return {};
+        });
+    }, [updatePreferences]);
 
     const removeBookmark = useCallback((path) => {
-        const bookmarks = preferences.bookmarks || [];
-        const updated = bookmarks.filter(b => b.path !== path);
-        updatePreferences({ bookmarks: updated });
-    }, [preferences.bookmarks, updatePreferences]);
+        updatePreferences(prev => {
+            const bookmarks = prev.bookmarks || [];
+            const updated = bookmarks.filter(b => b.path !== path);
+            return { bookmarks: updated };
+        });
+    }, [updatePreferences]);
 
     const isBookmarked = useCallback((path) => {
         const bookmarks = preferences.bookmarks || [];
         return bookmarks.some(b => b.path === path);
-    }, [preferences.bookmarks]);
+    }, [preferences]);
 
     // Track current page
     useEffect(() => {
@@ -141,12 +149,20 @@ const useNavigationHistoryInternal = () => {
                 .join(' ')
             : 'Dashboard';
 
-        addToRecentPages({
+        const page = {
             path: location.pathname,
             title,
             timestamp: Date.now()
+        };
+
+        // Use updatePreferences directly to avoid dependency loop
+        updatePreferences(prev => {
+            const recent = prev.recentPages || [];
+            const filtered = recent.filter(p => p.path !== page.path);
+            const updated = [page, ...filtered].slice(0, 10);
+            return { recentPages: updated };
         });
-    }, [location.pathname, addToRecentPages]);
+    }, [location.pathname, updatePreferences]);
 
     return {
         recentPages: preferences.recentPages || [],
@@ -164,15 +180,16 @@ const useNavigationSearchInternal = () => {
     const addSearchHistory = useCallback((query) => {
         if (!query.trim()) return;
 
-        const history = preferences.searchHistory || [];
-        const filtered = history.filter(h => h.query !== query);
-        const updated = [
-            { query, timestamp: Date.now() },
-            ...filtered
-        ].slice(0, 20); // Keep last 20 searches
-
-        updatePreferences({ searchHistory: updated });
-    }, [preferences.searchHistory, updatePreferences]);
+        updatePreferences(prev => {
+            const history = prev.searchHistory || [];
+            const filtered = history.filter(h => h.query !== query);
+            const updated = [
+                { query, timestamp: Date.now() },
+                ...filtered
+            ].slice(0, 20); // Keep last 20 searches
+            return { searchHistory: updated };
+        });
+    }, [updatePreferences]);
 
     const clearSearchHistory = useCallback(() => {
         updatePreferences({ searchHistory: [] });
@@ -247,15 +264,12 @@ export const NavigationProvider = ({ children }) => {
     const notificationSystem = useNotificationsInternal();
 
     // Theme management
-    const [isDarkMode, setIsDarkMode] = useState(() => 
-        preferences.theme === 'dark'
-    );
+    const isDarkMode = preferences.theme === 'dark';
 
     const toggleTheme = useCallback(() => {
-        const newTheme = isDarkMode ? 'light' : 'dark';
-        setIsDarkMode(!isDarkMode);
+        const newTheme = preferences.theme === 'dark' ? 'light' : 'dark';
         updatePreferences({ theme: newTheme });
-    }, [isDarkMode, updatePreferences]);
+    }, [preferences.theme, updatePreferences]);
 
     // Navigation helpers
     const navigateWithTracking = useCallback((path, options = {}) => {

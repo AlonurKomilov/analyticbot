@@ -47,8 +47,9 @@ const EnhancedTopPostsTable = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [actionMenuAnchor, setActionMenuAnchor] = useState(null);
-    const [selectedPost, setSelectedPost] = useState(null);
+    // TODO: Implement action menu functionality
+    // const [actionMenuAnchor, setActionMenuAnchor] = useState(null);
+    // const [selectedPost, setSelectedPost] = useState(null);
     
     // Get store methods and data source
     const { fetchTopPosts, dataSource } = useAppStore();
@@ -59,12 +60,12 @@ const EnhancedTopPostsTable = () => {
             setLoading(true);
             setError(null);
             
-            // Get fresh store reference to avoid dependency issues
-            const { fetchTopPosts } = useAppStore.getState();
-            const result = await fetchTopPosts('month', 'views'); // Load all data for enhanced table
+            // Use store method that respects data source
+            const result = await fetchTopPosts('demo_channel', 'month', 'views'); // Load all data for enhanced table
             
-            // Transform data for enhanced table format
-            const transformedPosts = (result.posts || []).map(post => ({
+            // Transform data for enhanced table format - handle different data structures
+            const postsData = result?.posts || result || [];
+            const transformedPosts = (Array.isArray(postsData) ? postsData : []).map(post => ({
                 ...post,
                 id: post.id || Math.random().toString(36).substr(2, 9),
                 engagement_rate: calculateEngagementRate(post),
@@ -88,14 +89,35 @@ const EnhancedTopPostsTable = () => {
         loadTopPosts();
     }, [loadTopPosts]);
 
+    // Listen for data source changes
+    useEffect(() => {
+        const handleDataSourceChange = () => {
+            console.log('EnhancedTopPostsTable: Data source changed, reloading...');
+            loadTopPosts();
+        };
+
+        window.addEventListener('dataSourceChanged', handleDataSourceChange);
+        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
+    }, [loadTopPosts]);
+
     // Utility functions
     const formatNumber = (num) => {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
-        } else if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
+        // Handle invalid values
+        if (num === null || num === undefined || isNaN(num)) {
+            return '0';
         }
-        return num?.toString() || '0';
+        
+        const validNum = Number(num);
+        if (isNaN(validNum)) {
+            return '0';
+        }
+        
+        if (validNum >= 1000000) {
+            return (validNum / 1000000).toFixed(1) + 'M';
+        } else if (validNum >= 1000) {
+            return (validNum / 1000).toFixed(1) + 'K';
+        }
+        return validNum.toString();
     };
 
     const formatDate = (dateString) => {

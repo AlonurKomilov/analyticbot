@@ -38,6 +38,8 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigation } from './NavigationProvider';
 import GlobalSearchDialog from './GlobalSearchDialog';
+import ExportButton from './ExportButton';
+import ShareButton from './ShareButton';
 import {
     Search as SearchIcon,
     Menu as MenuIcon,
@@ -259,6 +261,8 @@ export const NavigationBar = () => {
 
     // Quick actions
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
     
     // Derive recent searches from search history
     const recentSearches = useMemo(() => {
@@ -298,6 +302,39 @@ export const NavigationBar = () => {
             setSearchQuery('');
         }
     }, [navigate, addSearchHistory]);
+
+    // Quick action handlers
+    const handleExportData = useCallback(() => {
+        setExportDialogOpen(true);
+    }, []);
+
+    const handleShareDashboard = useCallback(() => {
+        setShareDialogOpen(true);
+    }, []);
+
+    const handleQuickAction = useCallback((action) => {
+        switch (action.id) {
+            case 'export-data':
+                handleExportData();
+                break;
+            case 'share-dashboard':
+                handleShareDashboard();
+                break;
+            case 'create-post':
+                if (action.target) {
+                    navigate(action.target);
+                }
+                break;
+            case 'help-support':
+                if (action.target) {
+                    navigate(action.target);
+                }
+                break;
+            default:
+                console.log(`Quick action ${action.id} not implemented`);
+        }
+        setSpeedDialOpen(false);
+    }, [handleExportData, handleShareDashboard, navigate]);
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -707,10 +744,8 @@ export const NavigationBar = () => {
                                     icon={<action.icon />}
                                     label={action.label}
                                     onClick={() => {
-                                        if (action.action === 'navigate' && action.target) {
-                                            navigate(action.target);
-                                            // Dialog will close automatically
-                                        }
+                                        handleQuickAction(action);
+                                        setSearchDialogOpen(false);
                                     }}
                                     variant="outlined"
                                     sx={{ mb: 1 }}
@@ -811,12 +846,7 @@ export const NavigationBar = () => {
                         key={action.id}
                         icon={<action.icon />}
                         tooltipTitle={action.label}
-                        onClick={() => {
-                            if (action.action === 'navigate' && action.target) {
-                                navigate(action.target);
-                            }
-                            setSpeedDialOpen(false);
-                        }}
+                        onClick={() => handleQuickAction(action)}
                     />
                 ))}
             </SpeedDial>
@@ -826,6 +856,51 @@ export const NavigationBar = () => {
                 open={searchDialogOpen}
                 onClose={handleSearchClose}
             />
+
+            {/* Export Dialog */}
+            <Dialog
+                open={exportDialogOpen}
+                onClose={() => setExportDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Export Dashboard Data</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ p: 2 }}>
+                        <ExportButton 
+                            channelId="dashboard"
+                            dataType="analytics"
+                            period="current"
+                            size="large"
+                            fullWidth
+                            variant="contained"
+                            onClose={() => setExportDialogOpen(false)}
+                        />
+                    </Box>
+                </DialogContent>
+            </Dialog>
+
+            {/* Share Dialog */}
+            <Dialog
+                open={shareDialogOpen}
+                onClose={() => setShareDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Share Dashboard</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ p: 2 }}>
+                        <ShareButton 
+                            channelId="dashboard"
+                            dataType="analytics"
+                            size="large"
+                            fullWidth
+                            variant="contained"
+                            onClose={() => setShareDialogOpen(false)}
+                        />
+                    </Box>
+                </DialogContent>
+            </Dialog>
         </>
     );
 };

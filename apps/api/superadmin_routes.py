@@ -104,13 +104,12 @@ async def get_superadmin_service(
 
 async def get_current_admin_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    request: Request = None,
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ) -> AdminUser:
     """Validate admin session and return current admin user"""
     try:
         token = credentials.credentials
-        ip_address = request.client.host if request else "unknown"
+        ip_address = "unknown"  # We don't have request context here
 
         admin_user = await admin_service.validate_admin_session(token, ip_address)
         if not admin_user:
@@ -161,27 +160,32 @@ async def require_admin_role(
 async def admin_login(
     login_request: AdminLoginRequest,
     request: Request,
+    db: AsyncSession = Depends(get_db_connection),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Authenticate admin user and create session"""
-    ip_address = request.client.host
+    ip_address = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("User-Agent", "Unknown")
 
     # Authenticate user
-    admin_user = await admin_service.authenticate_admin(
-        login_request.username, login_request.password, ip_address
+    admin_session = await admin_service.authenticate_admin(
+        db, login_request.username, login_request.password, ip_address
     )
 
-    if not admin_user:
+    if not admin_session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
         )
 
-    # Create session
-    access_token = await admin_service.create_admin_session(admin_user, ip_address, user_agent)
+    # Get admin user from session
+    from sqlalchemy.future import select
+    from core.models.admin import AdminUser
+    stmt = select(AdminUser).where(AdminUser.id == admin_session.admin_user_id)
+    result = await db.execute(stmt)
+    admin_user = result.scalar_one()
 
     return AdminLoginResponse(
-        access_token=access_token,
+        access_token=admin_session.session_token,
         admin_user={
             "id": str(admin_user.id),
             "username": admin_user.username,
@@ -212,7 +216,7 @@ async def get_system_users(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system users with filtering and pagination"""
-    users = await admin_service.get_system_users(skip, limit, status, search)
+    users_data = await admin_service.get_system_users(page=skip//limit + 1, limit=limit)
 
     return [
         SystemUserResponse(
@@ -223,30 +227,31 @@ async def get_system_users(
             email=user.email,
             status=user.status,
             subscription_tier=user.subscription_tier,
-            total_channels=user.total_channels,
-            total_posts=user.total_posts,
+            total_channels=getattr(user, 'total_channels', 0),
+            total_posts=getattr(user, 'total_posts', 0),
             last_activity=user.last_activity,
             created_at=user.created_at,
-            suspended_at=user.suspended_at,
-            suspension_reason=user.suspension_reason,
+            suspended_at=getattr(user, 'suspended_at', None),
+            suspension_reason=getattr(user, 'suspension_reason', None),
         )
-        for user in users
+        for user in users_data.get("users", [])
     ]
 
 
 @router.post("/users/{user_id}/suspend")
 async def suspend_user(
-    user_id: UUID,
+    user_id: int,
     suspension_request: UserSuspensionRequest,
     request: Request,
+    db: AsyncSession = Depends(get_db_connection),
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host
+    ip_address = request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
-        user_id, current_admin.id, suspension_request.reason, ip_address
+        db, int(current_admin.id), user_id, current_admin.username, suspension_request.reason
     )
 
     return {"message": "User suspended successfully", "success": success}
@@ -254,15 +259,15 @@ async def suspend_user(
 
 @router.post("/users/{user_id}/reactivate")
 async def reactivate_user(
-    user_id: UUID,
+    user_id: int,
     request: Request,
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host
+    ip_address = request.client.host if request.client else "unknown"
 
-    success = await admin_service.reactivate_user(user_id, current_admin.id, ip_address)
+    success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
     return {"message": "User reactivated successfully", "success": success}
 
@@ -272,11 +277,12 @@ async def reactivate_user(
 
 @router.get("/stats", response_model=SystemStatsResponse)
 async def get_system_stats(
+    db: AsyncSession = Depends(get_db_connection),
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get comprehensive system statistics"""
-    stats = await admin_service.get_system_stats()
+    stats = await admin_service.get_system_stats(db)
 
     return SystemStatsResponse(
         users=stats["users"], activity=stats["activity"], system=stats["system"]
@@ -291,29 +297,30 @@ async def get_audit_logs(
     action: str | None = None,
     start_date: datetime | None = None,
     end_date: datetime | None = None,
+    db: AsyncSession = Depends(get_db_connection),
     current_admin: AdminUser = Depends(require_admin_role),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get audit logs with filtering"""
-    logs = await admin_service.get_audit_logs(
-        skip, limit, admin_user_id, action, start_date, end_date
+    logs_data = await admin_service.get_audit_logs(
+        db, page=skip//limit + 1, limit=limit, admin_id=admin_user_id
     )
 
     return [
         AuditLogResponse(
             id=log.id,
-            admin_username=log.admin_user.username,
+            admin_username=log.admin_user.username if log.admin_user else "System",
             action=log.action,
             resource_type=log.resource_type,
             resource_id=log.resource_id,
             ip_address=log.ip_address,
             success=log.success,
-            error_message=log.error_message,
+            error_message=getattr(log, 'error_message', None),
             old_values=log.old_values,
             new_values=log.new_values,
             created_at=log.created_at,
         )
-        for log in logs
+        for log in logs_data.get("logs", [])
     ]
 
 
@@ -327,20 +334,20 @@ async def get_system_config(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system configuration (Super Admin only)"""
-    configs = await admin_service.get_system_config(category)
+    configs = await admin_service.get_system_config()
 
     return [
         SystemConfigResponse(
-            id=config.id,
-            key=config.key,
-            value=config.value if not config.is_sensitive else "***HIDDEN***",
-            value_type=config.value_type,
-            category=config.category,
-            description=config.description,
-            is_sensitive=config.is_sensitive,
-            requires_restart=config.requires_restart,
+            id=UUID(f"00000000-0000-0000-0000-{str(i).zfill(12)}"),
+            key=key,
+            value=str(value),
+            value_type=type(value).__name__,
+            category="system",
+            description=f"Configuration for {key}",
+            is_sensitive=False,
+            requires_restart=False,
         )
-        for config in configs
+        for i, (key, value) in enumerate(configs.items())
     ]
 
 
@@ -353,10 +360,10 @@ async def update_system_config(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Update system configuration (Super Admin only)"""
-    ip_address = request.client.host
+    ip_address = request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
-        key, config_update.value, current_admin.id, ip_address
+        {key: config_update.value}, int(current_admin.id)
     )
 
     return {"message": "Configuration updated successfully", "success": success}

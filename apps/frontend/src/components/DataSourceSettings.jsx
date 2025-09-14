@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -24,7 +24,13 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   const [useRealAPI, setUseRealAPI] = useState(() => {
     // Check localStorage for user preference
     const saved = localStorage.getItem('useRealAPI');
-    return saved !== null ? JSON.parse(saved) : false;
+    if (saved === null || saved === 'undefined') return false;
+    try {
+      return JSON.parse(saved);
+    } catch {
+      console.warn('Invalid JSON in localStorage for useRealAPI:', saved);
+      return false;
+    }
   });
   
   const [apiStatus, setApiStatus] = useState('unknown'); // unknown, online, offline
@@ -32,14 +38,14 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   const [isChecking, setIsChecking] = useState(false);
 
   // Check API availability
-  const checkAPIStatus = async () => {
+  const checkAPIStatus = useCallback(async () => {
     setIsChecking(true);
     try {
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':8000');
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
         signal: controller.signal
@@ -62,12 +68,12 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       setLastChecked(new Date());
       setIsChecking(false);
     }
-  };
+  }, []);
 
   // Initial API check
   useEffect(() => {
     checkAPIStatus();
-  }, []);
+  }, [checkAPIStatus]);
 
   // Handle toggle change
   const handleToggleChange = (event) => {

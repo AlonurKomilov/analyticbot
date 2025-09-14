@@ -1,35 +1,49 @@
 # Frontend Dockerfile for AnalyticBot
-# Multi-stage build for optimized production image
+# Multi-stage build for optimized production image with enhanced performance
 
 # ---------- Base (dependencies) ----------
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 WORKDIR /app
+
+# Set environment to reduce warnings
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies for building native modules
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    git
+    git \
+    curl
 
 # Copy package files
 COPY apps/frontend/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev --no-optional && npm cache clean --force
 
 # ---------- Development ----------
-FROM node:18-alpine AS development
+FROM node:20-alpine AS development
 WORKDIR /app
+
+# Set environment to reduce warnings
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    git
+    git \
+    curl
 
 # Copy package files
 COPY apps/frontend/package*.json ./
-RUN npm ci
+RUN npm ci --no-optional
 
 # Copy source code
 COPY apps/frontend/ ./
@@ -49,19 +63,26 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 CMD ["npm", "run", "dev"]
 
 # ---------- Build ----------
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Set environment to reduce warnings
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies
 RUN apk add --no-cache \
     python3 \
     make \
     g++ \
-    git
+    git \
+    curl
 
 # Copy package files and install all dependencies
 COPY apps/frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --no-optional
 
 # Copy source code
 COPY apps/frontend/ ./
@@ -73,6 +94,9 @@ RUN npm run build
 FROM nginx:alpine AS production
 LABEL maintainer="AnalyticBot Team"
 LABEL description="AnalyticBot Frontend - Production Ready"
+
+# Set environment to reduce warnings
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install curl for health checks
 RUN apk add --no-cache curl

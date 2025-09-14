@@ -340,6 +340,12 @@ const PostCreator = React.memo(() => {
                                     size="small"
                                     deleteIcon={<CloseIcon />}
                                     aria-label={`Remove button: ${button.text}`}
+                                    sx={{ 
+                                        minHeight: '36px',
+                                        '@media (hover: none)': {
+                                            minHeight: '44px'
+                                        }
+                                    }}
                                 />
                             </ListItem>
                         ))}

@@ -163,22 +163,37 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         return [self._row_to_scheduled_post(row) for row in results]
 
-    async def count(self, filter_criteria: DeliveryFilter) -> int:
-        """Count deliveries matching filter criteria"""
-        query = "SELECT COUNT(*) FROM deliveries WHERE 1=1"
+    async def count(self, filter_criteria: ScheduleFilter) -> int:
+        """Count scheduled posts matching filter criteria"""
+        query = "SELECT COUNT(*) FROM scheduled_posts WHERE 1=1"
         params = []
         param_count = 0
 
-        if filter_criteria.post_id:
+        if filter_criteria.user_id:
             param_count += 1
-            query += f" AND post_id = ${param_count}"
-            params.append(filter_criteria.post_id)
+            query += f" AND user_id = ${param_count}"
+            params.append(filter_criteria.user_id)
+
+        if filter_criteria.channel_id:
+            param_count += 1
+            query += f" AND channel_id = ${param_count}"
+            params.append(filter_criteria.channel_id)
 
         if filter_criteria.status:
             param_count += 1
-            db_status = self._map_delivery_status_to_db(filter_criteria.status)
+            db_status = self._map_status_to_db(filter_criteria.status)
             query += f" AND status = ${param_count}"
             params.append(db_status)
+
+        if filter_criteria.from_date:
+            param_count += 1
+            query += f" AND scheduled_time >= ${param_count}"
+            params.append(filter_criteria.from_date)
+
+        if filter_criteria.to_date:
+            param_count += 1
+            query += f" AND scheduled_time <= ${param_count}"
+            params.append(filter_criteria.to_date)
 
         result = await self.db.fetchval(query, *params)
         return result or 0

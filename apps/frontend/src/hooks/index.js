@@ -1,6 +1,19 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAppStore } from '../store/appStore.js';
 
+// Export admin hooks
+export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
+
+// Export unified analytics system
+export { useUnifiedAnalytics, ANALYTICS_PRESETS } from './useUnifiedAnalytics';
+export { 
+    useDashboardAnalytics,
+    useAdminAnalytics,
+    useMobileAnalytics, 
+    usePerformanceAnalytics,
+    useHighFrequencyAnalytics
+} from './useSpecializedAnalytics';
+
 /**
  * Custom hook for managing loading states with debouncing
  */

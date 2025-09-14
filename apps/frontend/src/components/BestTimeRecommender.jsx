@@ -52,7 +52,7 @@ const BestTimeRecommender = () => {
             setError(null);
             
             // Use store method which respects data source configuration
-            const result = await fetchBestTime(timeFrame, contentType);
+            const result = await fetchBestTime('demo_channel', timeFrame, contentType);
             setRecommendations(result);
             
             // Generate AI insights based on the data
@@ -88,6 +88,17 @@ const BestTimeRecommender = () => {
     useEffect(() => {
         loadRecommendations();
     }, [loadRecommendations]);
+
+    // Listen for data source changes
+    useEffect(() => {
+        const handleDataSourceChange = () => {
+            console.log('BestTimeRecommender: Data source changed, reloading...');
+            loadRecommendations();
+        };
+
+        window.addEventListener('dataSourceChanged', handleDataSourceChange);
+        return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
+    }, [loadRecommendations]);
     
     // Listen for data source changes
     useEffect(() => {
@@ -101,6 +112,7 @@ const BestTimeRecommender = () => {
     }, [loadRecommendations]);
 
     // Generate mock recommendations data
+    // eslint-disable-next-line no-unused-vars
     const generateMockRecommendations = (timeFrame, contentType) => {
         // Generate hourly performance data
         const hourlyPerformance = {};

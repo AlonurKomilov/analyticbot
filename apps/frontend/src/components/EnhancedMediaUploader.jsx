@@ -266,7 +266,18 @@ const EnhancedMediaUploader = () => {
                     severity="success" 
                     sx={{ mt: 2 }}
                     action={
-                        <IconButton size="small" onClick={handleClear}>
+                        <IconButton 
+                            onClick={handleClear}
+                            sx={{ 
+                                minWidth: '44px', 
+                                minHeight: '44px',
+                                '@media (hover: none)': {
+                                    minWidth: '44px',
+                                    minHeight: '44px'
+                                }
+                            }}
+                            aria-label="Clear uploaded media"
+                        >
                             <DeleteIcon />
                         </IconButton>
                     }
@@ -280,6 +291,12 @@ const EnhancedMediaUploader = () => {
                                     label={`${formatSpeed(uploadStats.speed)}`}
                                     size="small"
                                     variant="outlined"
+                                    sx={{ 
+                                        minHeight: '32px',
+                                        '@media (hover: none)': {
+                                            minHeight: '36px'
+                                        }
+                                    }}
                                 />
                             </Grid>
                             <Grid item xs={6}>
@@ -289,6 +306,12 @@ const EnhancedMediaUploader = () => {
                                     size="small"
                                     variant="outlined"
                                     color={uploadStats.uploadType === 'direct_channel' ? 'primary' : 'default'}
+                                    sx={{ 
+                                        minHeight: '32px',
+                                        '@media (hover: none)': {
+                                            minHeight: '36px'
+                                        }
+                                    }}
                                 />
                             </Grid>
                         </Grid>

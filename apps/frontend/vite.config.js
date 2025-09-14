@@ -4,30 +4,93 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react({
+      // React performance optimizations
+      jsxImportSource: '@emotion/react'
+    })
+  ],
   
   // Build optimizations
   build: {
     // Target modern browsers for smaller bundles
     target: 'es2020',
     
-    // Enable minification
+    // Enable minification with advanced options
     minify: 'terser',
     
-    // Optimize chunks
+    // Terser options for better compression
+    terserOptions: {
+      compress: {
+        drop_console: process.env.NODE_ENV === 'production',
+        drop_debugger: process.env.NODE_ENV === 'production',
+        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info'] : []
+      }
+    },
+    
+    // Optimize chunks with advanced splitting
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks for better caching
-          'react-vendor': ['react', 'react-dom'],
-          'mui-vendor': [
-            '@mui/material',
-            '@mui/icons-material'
-          ],
-          'utils': [
-            './src/utils/apiClient.js',
-            './src/utils/errorHandler.js'
-          ]
+        manualChunks(id) {
+          // Core React ecosystem
+          if (id.includes('node_modules/react') || id.includes('node_modules/@types/react')) {
+            return 'react-core';
+          }
+          
+          // React Router
+          if (id.includes('react-router')) {
+            return 'react-router';
+          }
+          
+          // MUI Core Components (split into smaller chunks)
+          if (id.includes('@mui/material') && !id.includes('icons')) {
+            return 'mui-core';
+          }
+          
+          // MUI Icons (separate chunk - lazy loaded)
+          if (id.includes('@mui/icons-material')) {
+            return 'mui-icons';
+          }
+          
+          // Emotion styling
+          if (id.includes('@emotion')) {
+            return 'emotion';
+          }
+          
+          // Charts library
+          if (id.includes('recharts')) {
+            return 'charts-vendor';
+          }
+          
+          // Analytics components (app-specific)
+          if (id.includes('/components/analytics/') || id.includes('/components/dashboard/')) {
+            return 'analytics-app';
+          }
+          
+          // Admin components
+          if (id.includes('/components/domains/admin/') || id.includes('/components/SuperAdmin')) {
+            return 'admin-app';
+          }
+          
+          // Services components  
+          if (id.includes('/services/') && id.includes('Service')) {
+            return 'services-app';
+          }
+          
+          // Utilities and shared code
+          if (id.includes('/utils/') || id.includes('/hooks/') || id.includes('/store/')) {
+            return 'shared-utils';
+          }
+          
+          // Common components
+          if (id.includes('/components/common/')) {
+            return 'common-components';
+          }
+          
+          // All other vendor dependencies
+          if (id.includes('node_modules')) {
+            return 'vendor-misc';
+          }
         },
         // Clean chunk names
         chunkFileNames: 'js/[name]-[hash].js',
@@ -42,14 +105,27 @@ export default defineConfig({
           }
           return `assets/[name]-[hash][extname]`;
         }
+      },
+      // Enhanced tree shaking
+      treeshake: {
+        preset: 'recommended',
+        moduleSideEffects: false,
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false
       }
     },
     
     // Source maps for debugging
     sourcemap: process.env.NODE_ENV !== 'production',
     
-    // Optimize assets
-    assetsInlineLimit: 4096, // 4kb
+    // Optimize assets with better thresholds
+    assetsInlineLimit: 8192, // 8kb - inline small assets
+    
+    // Chunk size warnings
+    chunkSizeWarningLimit: 1000, // 1MB warning threshold
+    
+    // CSS code splitting
+    cssCodeSplit: true
   },
   
   // Development optimizations

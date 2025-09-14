@@ -55,8 +55,19 @@ const TopPostsTable = () => {
             
             // Get fresh store reference to avoid dependency issues
             const { fetchTopPosts } = useAppStore.getState();
-            const result = await fetchTopPosts(timeFilter, sortBy);
-            setPosts(result.posts || []);
+            const result = await fetchTopPosts('demo_channel', timeFilter, sortBy);
+            
+            // Ensure we always set an array
+            let postsData = [];
+            if (Array.isArray(result)) {
+                postsData = result;
+            } else if (result && Array.isArray(result.posts)) {
+                postsData = result.posts;
+            } else if (result && result.data && Array.isArray(result.data)) {
+                postsData = result.data;
+            }
+            
+            setPosts(postsData);
             
         } catch (err) {
             setError(err.message);
@@ -270,7 +281,7 @@ const TopPostsTable = () => {
 
     // Summary statistics
     const summaryStats = useMemo(() => {
-        if (!posts || posts.length === 0) return null;
+        if (!posts || !Array.isArray(posts) || posts.length === 0) return null;
 
         const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
         const totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
@@ -311,7 +322,18 @@ const TopPostsTable = () => {
                 
                 <Box sx={{ display: 'flex', gap: 2 }} role="group" aria-label="Filter options">
                     {/* Time Filter */}
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl 
+                        size="small" 
+                        sx={{ 
+                            minWidth: 120,
+                            '& .MuiOutlinedInput-root': {
+                                minHeight: '44px',
+                                '@media (hover: none)': {
+                                    minHeight: '48px'
+                                }
+                            }
+                        }}
+                    >
                         <InputLabel id="time-filter-label">Time Period</InputLabel>
                         <Select
                             labelId="time-filter-label"
@@ -328,7 +350,18 @@ const TopPostsTable = () => {
                     </FormControl>
 
                     {/* Sort Filter */}
-                    <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <FormControl 
+                        size="small" 
+                        sx={{ 
+                            minWidth: 120,
+                            '& .MuiOutlinedInput-root': {
+                                minHeight: '44px',
+                                '@media (hover: none)': {
+                                    minHeight: '48px'
+                                }
+                            }
+                        }}
+                    >
                         <InputLabel id="sort-filter-label">Sort By</InputLabel>
                         <Select
                             labelId="sort-filter-label"
@@ -451,7 +484,7 @@ const TopPostsTable = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {posts.map((post, index) => {
+                                {Array.isArray(posts) && posts.map((post, index) => {
                                     const badge = getPerformanceBadge(post);
                                     return (
                                         <TableRow 

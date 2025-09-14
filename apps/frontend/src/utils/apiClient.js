@@ -1,16 +1,20 @@
 import { ErrorHandler } from './errorHandler.js';
+import { dataSourceManager } from './dataSourceManager.js';
+import { dataServiceFactory } from '../services/dataService.js';
 
-const VITE_API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const VITE_API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
 
 /**
  * Enhanced API client with retry logic, timeout, and comprehensive error handling
+ * Now integrated with mock/real data source management
  */
 class ApiClient {
     constructor() {
-        this.baseURL = VITE_API_URL;
+        // Use relative URLs if VITE_API_URL is empty
+        this.baseURL = VITE_API_URL ? VITE_API_URL : '';
         this.defaultHeaders = {
             'Content-Type': 'application/json',
         };
@@ -20,9 +24,62 @@ class ApiClient {
             console.log('🔧 API Client Configuration:', {
                 baseURL: this.baseURL,
                 timeout: REQUEST_TIMEOUT,
-                maxRetries: MAX_RETRIES
+                maxRetries: MAX_RETRIES,
+                dataSourceIntegration: 'enabled'
             });
         }
+    }
+
+    /**
+     * Check if we should use the data service (for routes handled by our mock/real system)
+     */
+    isDataServiceRoute(url) {
+        const dataServiceRoutes = [
+            '/api/analytics/',
+            '/api/v2/analytics/',
+            '/initial-data',
+            '/health'
+        ];
+        return dataServiceRoutes.some(route => url.includes(route));
+    }
+
+    /**
+     * Route request through data service if applicable
+     */
+    async routeThroughDataService(method, url, data = null) {
+        const currentSource = dataSourceManager.getDataSource();
+        const dataService = dataServiceFactory.getService(currentSource);
+        
+        // Map common API endpoints to data service methods
+        if (url.includes('/initial-data')) {
+            return await dataService.getInitialData();
+        }
+        if (url.includes('/health')) {
+            return await dataService.healthCheck();
+        }
+        if (url.includes('/analytics/overview')) {
+            const channelId = this.extractChannelId(url) || 'demo_channel';
+            return await dataService.getAnalyticsOverview(channelId);
+        }
+        if (url.includes('/analytics/growth')) {
+            const channelId = this.extractChannelId(url) || 'demo_channel';
+            return await dataService.getAnalyticsGrowth(channelId);
+        }
+        if (url.includes('/post-dynamics')) {
+            const channelId = this.extractChannelId(url) || 'demo_channel';
+            return await dataService.getPostDynamics(channelId);
+        }
+        
+        // Fallback to original fetch for unhandled routes
+        return null;
+    }
+
+    /**
+     * Extract channel ID from URL
+     */
+    extractChannelId(url) {
+        const match = url.match(/channels\/([^\/\?]+)/);
+        return match ? match[1] : null;
     }
 
     /**
@@ -54,13 +111,32 @@ class ApiClient {
 
     /**
      * Make HTTP request with timeout and retry logic
+     * Now with data source management integration
      */
     async request(endpoint, options = {}, attempt = 1) {
+        // Check if this request should go through the data service
+        if (this.isDataServiceRoute(endpoint)) {
+            try {
+                const dataServiceResult = await this.routeThroughDataService(
+                    options.method || 'GET',
+                    endpoint,
+                    options.body ? JSON.parse(options.body) : null
+                );
+                if (dataServiceResult !== null) {
+                    return dataServiceResult;
+                }
+            } catch (error) {
+                console.warn('Data service routing failed, falling back to direct API:', error);
+                // Continue with direct API call as fallback
+            }
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         try {
-            const url = `${this.baseURL}${endpoint}`;
+            // Use relative URL if baseURL is empty
+            const url = this.baseURL ? `${this.baseURL}${endpoint}` : endpoint;
             const config = {
                 ...options,
                 headers: {
@@ -392,14 +468,20 @@ class ApiClient {
      * Export Analytics to CSV (Week 1-2 Quick Win)
      */
     async exportToCsv(type, channelId, period = '7d') {
-        return this.get(`/api/v2/exports/csv/${type}/${channelId}?period=${period}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        const periodDays = parseInt(period.replace('d', '')) || 7;
+        const { from, to } = this.getPeriodDateRange(periodDays);
+        return this.get(`/api/v2/exports/csv/${type}/${numericChannelId}?from=${from}&to=${to}`);
     }
 
     /**
      * Export Analytics to PNG (Week 1-2 Quick Win)
      */
     async exportToPng(type, channelId, period = '7d') {
-        return this.get(`/api/v2/exports/png/${type}/${channelId}?period=${period}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        const periodDays = parseInt(period.replace('d', '')) || 7;
+        const { from, to } = this.getPeriodDateRange(periodDays);
+        return this.get(`/api/v2/exports/png/${type}/${numericChannelId}?from=${from}&to=${to}`);
     }
 
     /**
@@ -413,7 +495,8 @@ class ApiClient {
      * Create Share Link (Week 1-2 Quick Win)
      */
     async createShareLink(type, channelId, ttl = '24h') {
-        return this.post(`/api/v2/share/create/${type}/${channelId}`, { ttl });
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        return this.post(`/api/v2/share/create/${type}/${numericChannelId}`, { ttl });
     }
 
     /**
@@ -457,37 +540,45 @@ class ApiClient {
      * Get Real-time Metrics (Week 3-4)
      */
     async getRealTimeMetrics(channelId) {
-        return this.get(`/api/v2/analytics/advanced/metrics/real-time/${channelId}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        return this.get(`/api/v2/analytics/advanced/metrics/real-time/${numericChannelId}`);
     }
 
     /**
      * Check Active Alerts (Week 3-4)
      */
     async checkAlerts(channelId) {
-        return this.get(`/api/v2/analytics/advanced/alerts/check/${channelId}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        return this.get(`/api/v2/analytics/advanced/alerts/check/${numericChannelId}`);
     }
 
     /**
      * Get AI Recommendations (Week 3-4)
      */
     async getRecommendations(channelId) {
-        return this.get(`/api/v2/analytics/advanced/recommendations/${channelId}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        return this.get(`/api/v2/analytics/advanced/recommendations/${numericChannelId}`);
     }
 
     /**
      * Get Performance Score (Week 3-4)
      */
     async getPerformanceScore(channelId, period = 30) {
-        return this.get(`/api/v2/analytics/advanced/performance/score/${channelId}?period=${period}`);
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        const { from, to } = this.getPeriodDateRange(period);
+        return this.get(`/api/v2/analytics/advanced/performance/score/${numericChannelId}?from=${from}&to=${to}`);
     }
 
     /**
      * Advanced Trending Analysis (Week 3-4)
      */
     async getAdvancedTrends(channelId, period = 7) {
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        const { from, to } = this.getPeriodDateRange(period);
+        
         return Promise.all([
-            this.get(`/api/v2/analytics/channels/${channelId}/trending?period=${period}`),
-            this.getRealTimeMetrics(channelId),
+            this.get(`/api/v2/analytics/channels/${numericChannelId}/trending?from=${from}&to=${to}`),
+            this.getRealTimeMetrics(numericChannelId),
             this.getPerformanceScore(channelId, period)
         ]).then(([trends, realTime, performance]) => ({
             trends,
@@ -497,16 +588,34 @@ class ApiClient {
     }
 
     /**
+     * Helper function to convert period to datetime range
+     */
+    getPeriodDateRange(periodDays = 30) {
+        const to = new Date();
+        const from = new Date();
+        from.setDate(from.getDate() - periodDays);
+        
+        return {
+            from: from.toISOString(),
+            to: to.toISOString()
+        };
+    }
+
+    /**
      * Batch Analytics Data (Week 3-4) - Optimized for dashboard
      */
     async getBatchAnalytics(channelId, period = 30) {
+        // Convert string channel ID to integer and period to date range
+        const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
+        const { from, to } = this.getPeriodDateRange(period);
+        
         return Promise.all([
-            this.get(`/api/v2/analytics/channels/${channelId}/overview?period=${period}`),
-            this.get(`/api/v2/analytics/channels/${channelId}/growth?period=${period}`),
-            this.get(`/api/v2/analytics/channels/${channelId}/reach?period=${period}`),
-            this.get(`/api/v2/analytics/channels/${channelId}/top-posts?period=${period}`),
-            this.getRealTimeMetrics(channelId),
-            this.checkAlerts(channelId)
+            this.get(`/api/v2/analytics/channels/${numericChannelId}/overview?from=${from}&to=${to}`),
+            this.get(`/api/v2/analytics/channels/${numericChannelId}/growth?from=${from}&to=${to}`),
+            this.get(`/api/v2/analytics/channels/${numericChannelId}/reach?from=${from}&to=${to}`),
+            this.get(`/api/v2/analytics/channels/${numericChannelId}/top-posts?from=${from}&to=${to}`),
+            this.getRealTimeMetrics(numericChannelId),
+            this.checkAlerts(numericChannelId)
         ]).then(([overview, growth, reach, topPosts, realTime, alerts]) => ({
             overview,
             growth,

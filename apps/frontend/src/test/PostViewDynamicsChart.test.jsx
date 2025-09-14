@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import PostViewDynamicsChart from '../components/PostViewDynamicsChart';
+import PostViewDynamicsChart from '../components/charts/PostViewDynamics';
 
 // Mock recharts components completely
 vi.mock('recharts', () => ({
@@ -74,6 +74,6 @@ describe('PostViewDynamicsChart', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Ma\'lumotlar yuklanmoqda...')).toBeInTheDocument();
+    expect(screen.getByText('Loading analytics data...')).toBeInTheDocument();
   });
 });

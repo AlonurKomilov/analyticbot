@@ -42,6 +42,9 @@ import {
     AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 
+// Import unified admin hook
+import { useAdminDashboard } from '../hooks/useAdminAPI';
+
 // Tab Panel Component
 const TabPanel = ({ children, value, index, ...other }) => (
     <div
@@ -57,66 +60,28 @@ const TabPanel = ({ children, value, index, ...other }) => (
 
 const SuperAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [auditLogs, setAuditLogs] = useState([]);
     const [suspendDialog, setSuspendDialog] = useState({ open: false, user: null });
     const [suspensionReason, setSuspensionReason] = useState('');
-    const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+
+    // Use unified admin dashboard hook
+    const {
+        stats,
+        users,
+        auditLogs,
+        isLoading: loading,
+        error,
+        setError,
+        fetchDashboardData,
+        suspendUser,
+        reactivateUser
+    } = useAdminDashboard();
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [fetchDashboardData]);
 
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-            
-            // Fetch system statistics
-            const statsResponse = await fetch('/api/v1/superadmin/stats', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (statsResponse.ok) {
-                const statsData = await statsResponse.json();
-                setStats(statsData);
-            }
-
-            // Fetch users
-            const usersResponse = await fetch('/api/v1/superadmin/users?limit=100', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (usersResponse.ok) {
-                const usersData = await usersResponse.json();
-                setUsers(usersData);
-            }
-
-            // Fetch audit logs
-            const auditResponse = await fetch('/api/v1/superadmin/audit-logs?limit=50', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (auditResponse.ok) {
-                const auditData = await auditResponse.json();
-                setAuditLogs(auditData);
-            }
-
-        } catch (err) {
-            setError('Failed to fetch dashboard data');
-            console.error('Dashboard fetch error:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // fetchDashboardData is now provided by useAdminDashboard hook
 
     const handleSuspendUser = async () => {
         if (!suspendDialog.user || !suspensionReason.trim()) {
@@ -125,48 +90,24 @@ const SuperAdminDashboard = () => {
         }
 
         try {
-            const response = await fetch(`/api/v1/superadmin/users/${suspendDialog.user.id}/suspend`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                },
-                body: JSON.stringify({ reason: suspensionReason })
-            });
-
-            if (response.ok) {
-                setSuccess('User suspended successfully');
-                setSuspendDialog({ open: false, user: null });
-                setSuspensionReason('');
-                fetchDashboardData(); // Refresh data
-            } else {
-                const errorData = await response.json();
-                setError(errorData.detail || 'Failed to suspend user');
-            }
+            await suspendUser(suspendDialog.user.id, suspensionReason);
+            setSuccess('User suspended successfully');
+            setSuspendDialog({ open: false, user: null });
+            setSuspensionReason('');
+            fetchDashboardData(); // Refresh data
         } catch (err) {
-            setError('Network error occurred');
+            setError(err.message || 'Failed to suspend user');
             console.error('Suspend user error:', err);
         }
     };
 
     const handleReactivateUser = async (userId) => {
         try {
-            const response = await fetch(`/api/v1/superadmin/users/${userId}/reactivate`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-
-            if (response.ok) {
-                setSuccess('User reactivated successfully');
-                fetchDashboardData(); // Refresh data
-            } else {
-                const errorData = await response.json();
-                setError(errorData.detail || 'Failed to reactivate user');
-            }
+            await reactivateUser(userId);
+            setSuccess('User reactivated successfully');
+            fetchDashboardData(); // Refresh data
         } catch (err) {
-            setError('Network error occurred');
+            setError(err.message || 'Failed to reactivate user');
             console.error('Reactivate user error:', err);
         }
     };

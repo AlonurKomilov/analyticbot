@@ -51,7 +51,7 @@ const ButtonConstructor = ({ onAddButton }) => {
                 Button Configuration
             </legend>
             
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box variant="flexColumn" sx={{ gap: 2 }}>
                 <TextField
                     label="Button Text"
                     value={buttonText}

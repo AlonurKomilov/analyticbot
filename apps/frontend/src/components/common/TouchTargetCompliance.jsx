@@ -185,19 +185,21 @@ export const useTouchTargetAudit = (enabled = process.env.NODE_ENV === 'developm
                 }
             });
             
-            if (violations.length > 0) {
-                console.group('🎯 Touch Target Compliance Violations');
-                violations.forEach((violation, index) => {
-                    console.warn(`${index + 1}. ${violation.tagName}`, {
-                        size: violation.size,
-                        className: violation.className,
-                        id: violation.id,
-                        element: violation.element
+            if (process.env.NODE_ENV === 'development') {
+                if (violations.length > 0) {
+                    console.group('🎯 Touch Target Compliance Violations');
+                    violations.forEach((violation, index) => {
+                        console.warn(`${index + 1}. ${violation.tagName}`, {
+                            size: violation.size,
+                            className: violation.className,
+                            id: violation.id,
+                            element: violation.element
+                        });
                     });
-                });
-                console.groupEnd();
-            } else {
-                console.log('✅ All interactive elements meet touch target requirements');
+                    console.groupEnd();
+                } else {
+                    console.log('✅ All interactive elements meet touch target requirements');
+                }
             }
         };
         

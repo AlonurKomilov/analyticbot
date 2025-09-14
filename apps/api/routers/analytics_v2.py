@@ -249,7 +249,7 @@ async def get_trends_top_posts(
         if channel_id:
             # Get top posts for specific channel
             posts_data = await service.get_top_posts(channel_id, from_date, to_date, limit)
-            trends_data = posts_data.get("posts", [])
+            trends_data = posts_data
         else:
             # For now, return sample trending data across all channels
             # In a real implementation, this would aggregate across multiple channels

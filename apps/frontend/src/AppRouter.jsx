@@ -1,41 +1,130 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Box } from '@mui/material';
+import React, { Suspense, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress, LinearProgress } from '@mui/material';
 
-// Import main app components
-import MainDashboard from './MainDashboard';
-import ServicesLayout from './services/ServicesLayout';
-import ContentOptimizerService from './services/ContentOptimizerService';
-import PredictiveAnalyticsService from './services/PredictiveAnalyticsService';
-import ChurnPredictorService from './services/ChurnPredictorService';
-import SecurityMonitoringService from './services/SecurityMonitoringService';
-import DataTablesShowcase from './components/DataTablesShowcase';
+// Import optimized lazy loading system
+import {
+    CriticalComponents,
+    AdminComponents,
+    ServiceComponents,
+    UtilityComponents,
+    preloadByRoute,
+    initializePerformanceOptimizations
+} from './utils/lazyLoading';
 
-// Import navigation system
+// Destructure components for cleaner code
+const {
+    MainDashboard,
+    AnalyticsDashboard
+} = CriticalComponents;
+
+const {
+    SuperAdminDashboard
+} = AdminComponents;
+
+const {
+    ServicesLayout,
+    ContentOptimizerService,
+    PredictiveAnalyticsService,
+    ChurnPredictorService,
+    SecurityMonitoringService
+} = ServiceComponents;
+
+const {
+    DataTablesShowcase,
+    SettingsPage,
+    HelpPage,
+    ServicesOverview
+} = UtilityComponents;
+
+// Import navigation system from domain structure
 import { NavigationProvider } from './components/common/NavigationProvider';
-import NavigationBar from './components/common/NavigationBar';
+import NavigationBar from './components/domains/navigation/NavigationBar';
 
 /**
- * Professional App Router
- * Implements multi-page architecture with enterprise-grade navigation
+ * Performance-optimized loading component
+ */
+const OptimizedSuspense = ({ children, fallback }) => {
+    return (
+        <Suspense 
+            fallback={
+                fallback || (
+                    <Box sx={{ 
+                        minHeight: '400px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: 2
+                    }}>
+                        <CircularProgress size={40} />
+                        <LinearProgress 
+                            sx={{ width: '200px', borderRadius: 1 }}
+                            variant="indeterminate"
+                        />
+                        <Box sx={{ 
+                            fontSize: '0.875rem', 
+                            color: 'text.secondary',
+                            fontWeight: 500
+                        }}>
+                            Loading component...
+                        </Box>
+                    </Box>
+                )
+            }
+        >
+            {children}
+        </Suspense>
+    );
+};
+
+/**
+ * Route-aware preloading component
+ */
+const RoutePreloader = () => {
+    const location = useLocation();
+    
+    useEffect(() => {
+        // Preload components based on current route
+        preloadByRoute(location.pathname);
+    }, [location.pathname]);
+    
+    return null;
+};
+
+/**
+ * Professional App Router with Performance Optimizations
+ * Implements multi-page architecture with enterprise-grade navigation and smart preloading
  */
 const AppRouter = () => {
+    useEffect(() => {
+        // Initialize performance optimizations on app start
+        initializePerformanceOptimizations();
+    }, []);
+    
     return (
-        <Router>
+        <Router
+            future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true
+            }}
+        >
             <NavigationProvider>
+                <RoutePreloader />
                 <Box sx={{ minHeight: '100vh' }}>
                     {/* Global Navigation Bar */}
                     <NavigationBar />
                     
                     {/* Main Content Area */}
                     <Box sx={{ pt: { xs: 7, sm: 8 } }}>
-                        <Routes>
-                            {/* Main Dashboard Routes */}
-                            <Route path="/" element={<MainDashboard />} />
-                            <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                            
-                            {/* AI Services Routes */}
-                            <Route path="/services" element={<ServicesLayout />}>
+                        <OptimizedSuspense>
+                            <Routes>
+                                {/* Main Dashboard Routes */}
+                                <Route path="/" element={<MainDashboard />} />
+                                <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                                
+                                {/* AI Services Routes */}
+                                <Route path="/services" element={<ServicesLayout />}>
                                 <Route index element={<Navigate to="/services/overview" replace />} />
                                 <Route path="overview" element={<ServicesOverview />} />
                                 <Route path="content-optimizer" element={<ContentOptimizerService />} />
@@ -59,9 +148,10 @@ const AppRouter = () => {
                             {/* Help & Support */}
                             <Route path="/help" element={<HelpPage />} />
                             
-                            {/* Redirect old routes */}
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
+                                {/* Redirect old routes */}
+                                <Route path="*" element={<Navigate to="/" replace />} />
+                            </Routes>
+                        </OptimizedSuspense>
                     </Box>
                 </Box>
             </NavigationProvider>
@@ -69,54 +159,10 @@ const AppRouter = () => {
     );
 };
 
-// Services Overview Component
-const ServicesOverview = () => {
-    return (
-        <Box sx={{ p: 3 }}>
-            <h2>AI Services Overview</h2>
-            <p>Select a service from the sidebar to get started.</p>
-        </Box>
-    );
-};
+// ServicesOverview component moved to separate file - see /components/services/
 
-// Analytics Dashboard Component (placeholder)
-const AnalyticsDashboard = () => {
-    return (
-        <Box sx={{ p: 3 }}>
-            <h2>Analytics Dashboard</h2>
-            <p>Advanced analytics and reporting tools.</p>
-        </Box>
-    );
-};
+// Placeholder components removed - using actual implementations from imports above
 
-// Super Admin Dashboard Component (placeholder)
-const SuperAdminDashboard = () => {
-    return (
-        <Box sx={{ p: 3 }}>
-            <h2>Super Admin Dashboard</h2>
-            <p>Advanced administrative controls and monitoring.</p>
-        </Box>
-    );
-};
-
-// Settings Page Component
-const SettingsPage = () => {
-    return (
-        <Box sx={{ p: 3 }}>
-            <h2>Settings</h2>
-            <p>Configure your preferences and account settings.</p>
-        </Box>
-    );
-};
-
-// Help Page Component
-const HelpPage = () => {
-    return (
-        <Box sx={{ p: 3 }}>
-            <h2>Help & Support</h2>
-            <p>Find answers to frequently asked questions and get support.</p>
-        </Box>
-    );
-};
+// Page components moved to separate files - see /components/pages/
 
 export default AppRouter;

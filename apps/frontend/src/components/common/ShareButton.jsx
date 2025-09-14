@@ -25,11 +25,12 @@ import {
     AccessTime as TimeIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../utils/apiClient.js';
+import { dataServiceFactory } from '../../services/dataService.js';
+import { useDataSource } from '../../hooks/useDataSource.js';
 
 /**
  * Share Button Component for Analytics Reports
- * Week 1-2 Quick Win Implementation
+ * Updated to use new mock/real data source architecture
  */
 const ShareButton = ({ 
     channelId = 'demo_channel', 
@@ -38,6 +39,7 @@ const ShareButton = ({
     size = 'medium',
     ...props 
 }) => {
+    const { dataSource, isUsingRealAPI } = useDataSource();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [shareLink, setShareLink] = useState(null);
@@ -70,13 +72,28 @@ const ShareButton = ({
         setError(null);
 
         try {
-            const response = await apiClient.createShareLink(dataType, channelId, ttl);
+            const dataService = dataServiceFactory.getService(dataSource);
             
-            if (response.share_url) {
-                setShareLink(response);
-                setSuccess('Share link created successfully!');
+            if (isUsingRealAPI) {
+                // Use real API
+                const response = await dataService.createShareLink(dataType, channelId, ttl);
+                if (response.share_url) {
+                    setShareLink(response);
+                    setSuccess('Share link created successfully!');
+                } else {
+                    throw new Error('Invalid response format');
+                }
             } else {
-                throw new Error('Invalid response format');
+                // Use mock service for demonstration
+                const mockResponse = {
+                    share_url: `https://analyticbot.com/share/mock-${channelId}-${dataType}-${Date.now()}`,
+                    expires_at: new Date(Date.now() + (ttl === '1h' ? 3600000 : ttl === '6h' ? 21600000 : 86400000)).toISOString(),
+                    share_id: `mock-share-${Date.now()}`,
+                    data_type: dataType,
+                    channel_id: channelId
+                };
+                setShareLink(mockResponse);
+                setSuccess('Mock share link created successfully! (Demo mode)');
             }
         } catch (err) {
             console.error('Share creation failed:', err);

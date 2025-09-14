@@ -5,7 +5,7 @@ Centralized settings with proper security handling
 
 from enum import Enum
 
-from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -110,7 +110,7 @@ class Settings(BaseSettings):
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
-    
+
     # Export Settings
     MAX_EXPORT_SIZE_MB: int = 50
     RATE_LIMIT_PER_HOUR: int = 100
@@ -125,7 +125,11 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None", extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        env_parse_none_str="None",
+        extra="ignore",
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")
@@ -233,21 +237,22 @@ class Settings(BaseSettings):
 # Global settings instance
 try:
     settings = Settings()
-except Exception as e:
+except Exception:
     # For testing or when environment variables are not set
     import os
+
     # Set minimal required environment variables if not set
     required_vars = {
-        'BOT_TOKEN': 'dummy_bot_token',
-        'STORAGE_CHANNEL_ID': '123456789',
-        'POSTGRES_USER': 'postgres',
-        'POSTGRES_PASSWORD': 'password',
-        'POSTGRES_DB': 'analyticbot',
-        'JWT_SECRET_KEY': 'dummy_jwt_secret'
+        "BOT_TOKEN": "dummy_bot_token",
+        "STORAGE_CHANNEL_ID": "123456789",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "password",
+        "POSTGRES_DB": "analyticbot",
+        "JWT_SECRET_KEY": "dummy_jwt_secret",
     }
-    
+
     for var, default_value in required_vars.items():
         if not os.getenv(var):
             os.environ[var] = default_value
-    
+
     settings = Settings()

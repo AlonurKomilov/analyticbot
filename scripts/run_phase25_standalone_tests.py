@@ -55,7 +55,9 @@ async def test_ml_services_standalone():
         content_optimizer = ContentOptimizer(cache_service=None, analytics_service=None)
         test_content = "\n        🚀 Exciting news! Our new AI-powered analytics feature is now live!\n        \n        This revolutionary update will help you:\n        • Boost engagement by 40-60%\n        • Predict optimal posting times\n        • Analyze content performance in real-time\n        \n        Try it now and transform your social media strategy! \n        \n        #analytics #AI #socialmedia #growth #innovation #tech\n        "
         analysis = await content_optimizer.analyze_content(
-            text=test_content, media_urls=["https://example.com/image.jpg"], target_audience="tech"
+            text=test_content,
+            media_urls=["https://example.com/image.jpg"],
+            target_audience="tech",
         )
         print(f"   📊 Content Score: {analysis.overall_score:.1f}/100")
         print(f"   😊 Sentiment: {analysis.sentiment_label} ({analysis.sentiment_score:.2f})")

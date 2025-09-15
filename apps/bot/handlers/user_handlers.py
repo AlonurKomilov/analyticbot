@@ -144,7 +144,12 @@ async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18
     uname = message.from_user.username if message.from_user else None
     if uid is not None:
         try:
-            await user_repo.create_user(uid, uname)
+            user_data = {
+                "id": uid,
+                "username": uname,
+                "plan_id": 1  # Default to free plan
+            }
+            await user_repo.create_user(user_data)
         except Exception as e:
             log.warning("create_user failed: %s", e)
     await _set_webapp_menu_or_default(message, i18n)
@@ -193,12 +198,7 @@ async def cmd_myplan(
     status: Any = None
     if uid is not None:
         try:
-            if hasattr(subscription_service, "get_user_subscription_status"):
-                status = await subscription_service.get_user_subscription_status(uid)
-            elif hasattr(subscription_service, "get_subscription_status"):
-                status = await subscription_service.get_subscription_status(uid)
-            elif hasattr(subscription_service, "get_user_plan"):
-                status = await subscription_service.get_user_plan(uid)
+            status = await subscription_service.get_usage_status(uid)
         except Exception as e:
             log.warning("subscription status fetch failed: %s", e)
     if not status:
@@ -230,7 +230,7 @@ async def cmd_myplan(
 async def cmd_dashboard(message: types.Message, i18n: I18nContext):
     kb, is_webapp = _build_dashboard_kb(i18n)
     if not kb:
-        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun server IP URL qo'ying:\nTWA_HOST_URL=http://173.212.236.167:3000/"
+        msg = "Dashboard URL topilmadi yoki HTTPS emas.\nDev uchun server IP URL qo'ying:\nTWA_HOST_URL=https://84dp9jc9-3000.euw.devtunnels.ms/"
         await message.answer(msg)
         return
     await message.answer(i18n.get("menu-button-dashboard"), reply_markup=kb)

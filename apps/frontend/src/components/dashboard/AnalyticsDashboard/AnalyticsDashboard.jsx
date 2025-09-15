@@ -23,7 +23,7 @@ import TabPanel from './TabPanel';
 // Import existing components
 import PostViewDynamicsChart from '../../charts/PostViewDynamics';
 import EnhancedTopPostsTable from '../../EnhancedTopPostsTable';
-import BestTimeRecommender from '../../BestTimeRecommender';
+import BestTimeRecommender from '../../analytics/BestTimeRecommender';
 import { AdvancedAnalyticsDashboard } from '../../analytics/AdvancedAnalyticsDashboard';
 import RealTimeAlertsSystem from '../../alerts/RealTimeAlerts';
 import ContentProtectionDashboard from '../../content/ContentProtectionDashboard';

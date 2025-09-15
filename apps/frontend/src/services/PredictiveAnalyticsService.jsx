@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
-    Card,
-    CardContent,
     Button,
     Grid,
     Chip,
@@ -20,7 +18,9 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    Card,
+    CardContent
 } from '@mui/material';
 import {
     TrendingUp as PredictiveIcon,
@@ -30,6 +30,16 @@ import {
     TrendingDown as DownIcon,
     TrendingFlat as FlatIcon
 } from '@mui/icons-material';
+import ModernCard, { ModernCardHeader } from '../components/common/ModernCard.jsx';
+import { SEMANTIC_SPACING } from '../theme/spacingSystem.js';
+
+// Import centralized mock data
+import { 
+    predictiveStats, 
+    mockForecasts, 
+    trendInsights, 
+    forecastModels 
+} from '../__mocks__/aiServices/predictiveAnalytics.js';
 
 /**
  * Predictive Analytics Service Page
@@ -40,76 +50,10 @@ const PredictiveAnalyticsService = () => {
     const [timeRange, setTimeRange] = useState('30d');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const serviceStats = {
-        accuracy: '94.2%',
-        predictions: 156,
-        trends: 8,
-        status: 'active'
-    };
-
-    const predictions = [
-        { 
-            metric: 'Engagement Rate', 
-            current: '3.2%', 
-            predicted: '4.1%', 
-            trend: 'up', 
-            confidence: '92%',
-            timeframe: '7 days'
-        },
-        { 
-            metric: 'Follower Growth', 
-            current: '2.1K', 
-            predicted: '2.8K', 
-            trend: 'up', 
-            confidence: '88%',
-            timeframe: '30 days'
-        },
-        { 
-            metric: 'Content Performance', 
-            current: '67%', 
-            predicted: '71%', 
-            trend: 'up', 
-            confidence: '95%',
-            timeframe: '14 days'
-        },
-        { 
-            metric: 'User Activity', 
-            current: '89%', 
-            predicted: '85%', 
-            trend: 'down', 
-            confidence: '79%',
-            timeframe: '7 days'
-        },
-        { 
-            metric: 'Revenue Impact', 
-            current: '$12.4K', 
-            predicted: '$13.8K', 
-            trend: 'up', 
-            confidence: '91%',
-            timeframe: '30 days'
-        }
-    ];
-
-    const trendInsights = [
-        {
-            title: 'Peak Engagement Hours',
-            insight: '2-4 PM shows highest engagement potential',
-            impact: 'High',
-            action: 'Schedule content during peak hours'
-        },
-        {
-            title: 'Content Type Preference',
-            insight: 'Video content outperforming text by 340%',
-            impact: 'Very High',
-            action: 'Increase video content production'
-        },
-        {
-            title: 'Seasonal Trend',
-            insight: 'Holiday season traffic expected +45%',
-            impact: 'Medium',
-            action: 'Prepare seasonal content strategy'
-        }
-    ];
+    // Use centralized mock data
+    const serviceStats = predictiveStats;
+    const predictions = mockForecasts;
+    const trendData = trendInsights;
 
     const getTrendIcon = (trend) => {
         switch (trend) {
@@ -148,59 +92,101 @@ const PredictiveAnalyticsService = () => {
     );
 
     return (
-        <Box>
-            {/* Service Header */}
-            <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <PredictiveIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-                    <Typography variant="h4" component="h1" fontWeight={600}>
-                        Predictive Analytics
-                    </Typography>
+        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: '100%' }}>
+            {/* Professional Service Header */}
+            <Box sx={{ mb: 5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            mr: 3
+                        }}
+                    >
+                        <PredictiveIcon sx={{ fontSize: 40 }} />
+                    </Box>
+                    <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="h3" component="h1" fontWeight={700} sx={{ mb: 0.5 }}>
+                            Predictive Analytics
+                        </Typography>
+                        <Typography variant="h6" color="text.secondary" sx={{ fontWeight: 400 }}>
+                            Advanced AI predictions for future performance trends and optimization opportunities
+                        </Typography>
+                    </Box>
                     <Chip 
                         label="Active" 
                         color="success" 
                         variant="filled"
-                        sx={{ ml: 'auto' }}
+                        sx={{ 
+                            fontWeight: 600, 
+                            fontSize: '0.9rem',
+                            height: 36,
+                            boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                        }}
                     />
                 </Box>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-                    Advanced AI predictions for future performance trends and optimization opportunities
-                </Typography>
 
-                {/* Quick Stats */}
+                {/* Enhanced Statistics Grid */}
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="primary.main" fontWeight={600}>
+                        <ModernCard 
+                            variant="elevated"
+                            sx={{ 
+                                textAlign: 'center',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    boxShadow: '0 12px 40px rgba(102, 126, 234, 0.3)'
+                                }
+                            }}
+                        >
+                            <Typography 
+                                variant="h3" 
+                                fontWeight={700} 
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
                                 {serviceStats.accuracy}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Model Accuracy
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="success.main" fontWeight={600}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                color="success.main" 
+                                fontWeight={600}
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
                                 {serviceStats.predictions}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Active Predictions
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="warning.main" fontWeight={600}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                color="warning.main" 
+                                fontWeight={600}
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
                                 {serviceStats.trends}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Trend Alerts
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center', display: 'flex', alignItems: 'center' }}>
                             <Button
                                 variant="contained"
                                 size="large"
@@ -211,7 +197,7 @@ const PredictiveAnalyticsService = () => {
                             >
                                 {isAnalyzing ? 'Analyzing...' : 'Run Analysis'}
                             </Button>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                 </Grid>
             </Box>
@@ -299,7 +285,7 @@ const PredictiveAnalyticsService = () => {
                         </Typography>
                         
                         <Grid container spacing={3}>
-                            {trendInsights.map((insight, index) => (
+                            {trendData.map((insight, index) => (
                                 <Grid item xs={12} md={6} key={index}>
                                     <Card sx={{ p: 2, height: '100%' }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>

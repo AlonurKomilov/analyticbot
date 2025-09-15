@@ -6,10 +6,14 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [
     react({
-      // React performance optimizations
-      jsxImportSource: '@emotion/react'
+      // Use standard React JSX runtime for better compatibility
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react'
     })
   ],
+  
+  // Environment variable prefix
+  envPrefix: ['VITE_', 'REACT_APP_'],
   
   // Build optimizations
   build: {
@@ -22,14 +26,18 @@ export default defineConfig({
     // Terser options for better compression
     terserOptions: {
       compress: {
-        drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production',
-        pure_funcs: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info'] : []
+        drop_console: true, // Always drop console in production builds
+        drop_debugger: true, // Always drop debugger in production builds
+        pure_funcs: ['console.log', 'console.info'] // Remove specific console methods
       }
     },
     
     // Optimize chunks with advanced splitting
     rollupOptions: {
+      external: (id) => {
+        // Don't externalize anything - keep everything bundled
+        return false;
+      },
       output: {
         manualChunks(id) {
           // Core React ecosystem
@@ -42,12 +50,12 @@ export default defineConfig({
             return 'react-router';
           }
           
-          // MUI Core Components (split into smaller chunks)
+          // MUI Core Components
           if (id.includes('@mui/material') && !id.includes('icons')) {
             return 'mui-core';
           }
           
-          // MUI Icons (separate chunk - lazy loaded)
+          // MUI Icons - ensure React is available
           if (id.includes('@mui/icons-material')) {
             return 'mui-icons';
           }
@@ -115,8 +123,8 @@ export default defineConfig({
       }
     },
     
-    // Source maps for debugging
-    sourcemap: process.env.NODE_ENV !== 'production',
+    // Source maps - disable in production to avoid dev file references
+    sourcemap: process.env.NODE_ENV === 'development',
     
     // Optimize assets with better thresholds
     assetsInlineLimit: 8192, // 8kb - inline small assets
@@ -157,16 +165,35 @@ export default defineConfig({
   
   // Environment variables
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    // Define process.env for browser compatibility
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL || 'http://localhost:8000'),
+    'process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || process.env.VITE_STRIPE_PUBLISHABLE_KEY || ''),
+    // Ensure React is available globally for JSX runtime
+    'global': 'globalThis',
   },
   
   // Performance optimizations
   esbuild: {
     // Tree shaking for better bundle size
     treeShaking: true,
-    // Drop console logs in production
-    ...(process.env.NODE_ENV === 'production' && {
-      drop: ['console', 'debugger']
-    })
+    // Keep console logs in development for debugging
+    drop: []
+  },
+
+  // Dependency optimization
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled'
+    ],
+    force: true
   }
 })

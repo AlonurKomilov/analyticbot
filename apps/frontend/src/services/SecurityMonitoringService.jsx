@@ -36,6 +36,15 @@ import {
     Block as BlockedIcon
 } from '@mui/icons-material';
 
+// Import centralized mock data
+import { 
+    securityStats, 
+    mockSecurityAlerts, 
+    securityMetrics, 
+    threatCategories,
+    riskAssessment 
+} from '../__mocks__/aiServices/securityMonitor.js';
+
 /**
  * Security Monitoring Service Page
  * Real-time security analysis and threat detection
@@ -44,62 +53,12 @@ const SecurityMonitoringService = () => {
     const [currentTab, setCurrentTab] = useState(0);
     const [realTimeMonitoring, setRealTimeMonitoring] = useState(true);
     const [threats, setThreats] = useState([]);
-    const [securityScore, setSecurityScore] = useState(87);
+    const [securityScore, setSecurityScore] = useState(securityStats.securityScore);
 
-    const serviceStats = {
-        threatsBlocked: 156,
-        securityScore: '87%',
-        activeMonitors: 12,
-        status: 'active'
-    };
-
-    const securityAlerts = [
-        {
-            id: 1,
-            type: 'Suspicious Login',
-            severity: 'high',
-            timestamp: '2 minutes ago',
-            source: 'Unknown IP: 192.168.1.100',
-            action: 'Blocked',
-            description: 'Multiple failed login attempts detected'
-        },
-        {
-            id: 2,
-            type: 'Rate Limit Exceeded',
-            severity: 'medium',
-            timestamp: '15 minutes ago',
-            source: 'API Endpoint: /api/posts',
-            action: 'Throttled',
-            description: 'Unusual request pattern detected'
-        },
-        {
-            id: 3,
-            type: 'Data Export Attempt',
-            severity: 'critical',
-            timestamp: '1 hour ago',
-            source: 'User: @suspicious_account',
-            action: 'Quarantined',
-            description: 'Unauthorized bulk data access attempt'
-        },
-        {
-            id: 4,
-            type: 'Malicious Content',
-            severity: 'high',
-            timestamp: '2 hours ago',
-            source: 'Content Upload',
-            action: 'Removed',
-            description: 'Potentially harmful file detected'
-        }
-    ];
-
-    const securityMetrics = [
-        { metric: 'Login Security', score: 92, status: 'excellent' },
-        { metric: 'Data Protection', score: 88, status: 'good' },
-        { metric: 'API Security', score: 85, status: 'good' },
-        { metric: 'Content Filtering', score: 90, status: 'excellent' },
-        { metric: 'Network Security', score: 79, status: 'needs-attention' },
-        { metric: 'Access Control', score: 94, status: 'excellent' }
-    ];
+    // Use centralized mock data
+    const serviceStats = securityStats;
+    const alerts = mockSecurityAlerts;
+    const metrics = securityMetrics;
 
     const activeMonitors = [
         { name: 'Brute Force Detection', status: 'active', lastUpdate: '30s ago' },
@@ -270,7 +229,7 @@ const SecurityMonitoringService = () => {
                 >
                     <Tab 
                         label={
-                            <Badge badgeContent={securityAlerts.length} color="error">
+                            <Badge badgeContent={alerts.length} color="error">
                                 Threat Alerts
                             </Badge>
                         } 
@@ -288,13 +247,13 @@ const SecurityMonitoringService = () => {
                             Recent Security Alerts
                         </Typography>
                         
-                        {securityAlerts.length === 0 ? (
+                        {alerts.length === 0 ? (
                             <Alert severity="success">
                                 No security threats detected. Your system is secure.
                             </Alert>
                         ) : (
                             <List>
-                                {[...securityAlerts, ...threats].map((alert) => (
+                                {[...alerts, ...threats].map((alert) => (
                                     <ListItem 
                                         key={alert.id}
                                         sx={{ 

@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image with enhanced performance
 
 # ---------- Base (dependencies) ----------
-FROM node:20-alpine AS base
+FROM node:20-slim AS base
 WORKDIR /app
 
 # Set environment to reduce warnings
@@ -12,19 +12,20 @@ ENV NPM_CONFIG_FUND=false
 ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies for building native modules
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
     g++ \
     git \
-    curl
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY apps/frontend/package*.json ./
 RUN npm ci --omit=dev --no-optional && npm cache clean --force
 
 # ---------- Development ----------
-FROM node:20-alpine AS development
+FROM node:20-slim AS development
 WORKDIR /app
 
 # Set environment to reduce warnings
@@ -34,16 +35,20 @@ ENV NPM_CONFIG_FUND=false
 ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
     g++ \
     git \
-    curl
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY apps/frontend/package*.json ./
 RUN npm ci --no-optional
+
+# Install rollup native module for GNU libc compatibility
+RUN npm install @rollup/rollup-linux-x64-gnu --save-optional
 
 # Copy source code
 COPY apps/frontend/ ./
@@ -63,7 +68,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
 CMD ["npm", "run", "dev"]
 
 # ---------- Build ----------
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # Set environment to reduce warnings
@@ -73,16 +78,19 @@ ENV NPM_CONFIG_FUND=false
 ENV NPM_CONFIG_AUDIT=false
 
 # Install dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
     g++ \
     git \
-    curl
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files and install all dependencies
 COPY apps/frontend/package*.json ./
-RUN npm ci --no-optional
+RUN npm ci --no-optional && \
+    npm install @rollup/rollup-linux-x64-gnu --save-optional && \
+    npm cache clean --force
 
 # Copy source code
 COPY apps/frontend/ ./

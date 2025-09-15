@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
-    Card,
-    CardContent,
     Button,
     Grid,
     Chip,
@@ -20,7 +18,9 @@ import {
     Select,
     MenuItem,
     Switch,
-    FormControlLabel
+    FormControlLabel,
+    Card,
+    CardContent
 } from '@mui/material';
 import {
     PersonRemove as ChurnIcon,
@@ -31,6 +31,16 @@ import {
     Settings as SettingsIcon,
     Shield as ProtectionIcon
 } from '@mui/icons-material';
+import ModernCard, { ModernCardHeader } from '../components/common/ModernCard.jsx';
+import { SEMANTIC_SPACING } from '../theme/spacingSystem.js';
+
+// Import centralized mock data
+import { 
+    churnPredictorStats, 
+    mockChurnPredictions, 
+    retentionStrategies, 
+    riskSegments 
+} from '../__mocks__/aiServices/churnPredictor.js';
 
 /**
  * Churn Predictor Service Page
@@ -42,72 +52,10 @@ const ChurnPredictorService = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [autoMonitoring, setAutoMonitoring] = useState(true);
 
-    const serviceStats = {
-        churnRate: '12.3%',
-        atRiskUsers: 47,
-        savedCustomers: 23,
-        status: 'beta'
-    };
-
-    const riskUsers = [
-        {
-            id: 1,
-            username: '@marketingpro',
-            riskScore: 85,
-            riskLevel: 'high',
-            lastActive: '3 days ago',
-            engagementDrop: '-45%',
-            factors: ['Decreased activity', 'No recent purchases', 'Support complaints']
-        },
-        {
-            id: 2,
-            username: '@socialmedia_exp',
-            riskScore: 72,
-            riskLevel: 'high',
-            lastActive: '1 day ago',
-            engagementDrop: '-32%',
-            factors: ['Reduced engagement', 'Payment issues', 'Feature complaints']
-        },
-        {
-            id: 3,
-            username: '@content_creator',
-            riskScore: 58,
-            riskLevel: 'medium',
-            lastActive: '2 hours ago',
-            engagementDrop: '-18%',
-            factors: ['Irregular usage pattern', 'Competitor mentions']
-        },
-        {
-            id: 4,
-            username: '@business_growth',
-            riskScore: 34,
-            riskLevel: 'low',
-            lastActive: '30 minutes ago',
-            engagementDrop: '-8%',
-            factors: ['Slight activity decrease']
-        }
-    ];
-
-    const retentionStrategies = [
-        {
-            strategy: 'Personalized Re-engagement Campaign',
-            effectiveness: '78%',
-            targetGroup: 'High Risk Users',
-            description: 'Customized content and offers based on user behavior'
-        },
-        {
-            strategy: 'Feature Education Program',
-            effectiveness: '65%',
-            targetGroup: 'Medium Risk Users',
-            description: 'Guided tutorials for underutilized features'
-        },
-        {
-            strategy: 'Premium Support Access',
-            effectiveness: '82%',
-            targetGroup: 'All Risk Levels',
-            description: 'Priority customer support and dedicated assistance'
-        }
-    ];
+    // Use centralized mock data
+    const serviceStats = churnPredictorStats;
+    const riskUsers = mockChurnPredictions;
+    const strategies = retentionStrategies;
 
     const getRiskColor = (level) => {
         switch (level) {
@@ -161,37 +109,52 @@ const ChurnPredictorService = () => {
                 {/* Quick Stats */}
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="error.main" fontWeight={600}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                color="error.main" 
+                                fontWeight={600}
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
                                 {serviceStats.churnRate}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Current Churn Rate
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="warning.main" fontWeight={600}>
-                                {serviceStats.atRiskUsers}
+                        <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                color="warning.main" 
+                                fontWeight={600}
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
+                                {serviceStats.highRiskUsers}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Users at Risk
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
-                            <Typography variant="h4" color="success.main" fontWeight={600}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
+                            <Typography 
+                                variant="h4" 
+                                color="success.main" 
+                                fontWeight={600}
+                                sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
+                            >
                                 {serviceStats.savedCustomers}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Customers Saved
                             </Typography>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card sx={{ textAlign: 'center', p: 2 }}>
+                        <ModernCard variant="standard" sx={{ textAlign: 'center', display: 'flex', alignItems: 'center' }}>
                             <Button
                                 variant="contained"
                                 size="large"
@@ -202,13 +165,13 @@ const ChurnPredictorService = () => {
                             >
                                 {isAnalyzing ? 'Analyzing...' : 'Analyze Risk'}
                             </Button>
-                        </Card>
+                        </ModernCard>
                     </Grid>
                 </Grid>
             </Box>
 
             {/* Service Tabs */}
-            <Card>
+            <ModernCard variant="elevated">
                 <Tabs 
                     value={currentTab} 
                     onChange={(e, newValue) => setCurrentTab(newValue)}
@@ -386,7 +349,7 @@ const ChurnPredictorService = () => {
                         </Box>
                     </CardContent>
                 </TabPanel>
-            </Card>
+            </ModernCard>
         </Box>
     );
 };

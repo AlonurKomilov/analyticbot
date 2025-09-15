@@ -51,7 +51,7 @@ export const lazyWithPreload = (importFn, preloadConditions = {}) => {
  */
 export const CriticalComponents = {
     MainDashboard: lazyWithPreload(
-        () => import('../MainDashboard'),
+        () => import('../MainDashboard.jsx'),
         { preloadAfter: 0 } // Immediate preload
     ),
     
@@ -66,7 +66,7 @@ export const CriticalComponents = {
  */
 export const AdminComponents = {
     SuperAdminDashboard: lazyWithPreload(
-        () => import('../components/domains/admin/SuperAdminDashboard'),
+        () => import('../components/domains/admin/SuperAdminDashboard.jsx'),
         { preloadAfter: 3000, preloadOnHover: true }
     )
 };
@@ -76,27 +76,27 @@ export const AdminComponents = {
  */
 export const ServiceComponents = {
     ServicesLayout: lazyWithPreload(
-        () => import('../services/ServicesLayout'),
+        () => import('../services/ServicesLayout.jsx'),
         { preloadAfter: 5000 }
     ),
     
     ContentOptimizerService: lazyWithPreload(
-        () => import('../services/ContentOptimizerService'),
+        () => import('../services/ContentOptimizerService.jsx'),
         { preloadAfter: 8000 }
     ),
     
     PredictiveAnalyticsService: lazyWithPreload(
-        () => import('../services/PredictiveAnalyticsService'),
+        () => import('../services/PredictiveAnalyticsService.jsx'),
         { preloadAfter: 10000 }
     ),
     
     ChurnPredictorService: lazyWithPreload(
-        () => import('../services/ChurnPredictorService'),
+        () => import('../services/ChurnPredictorService.jsx'),
         { preloadAfter: 12000 }
     ),
     
     SecurityMonitoringService: lazyWithPreload(
-        () => import('../services/SecurityMonitoringService'),
+        () => import('../services/SecurityMonitoringService.jsx'),
         { preloadAfter: 15000 }
     )
 };
@@ -106,22 +106,22 @@ export const ServiceComponents = {
  */
 export const UtilityComponents = {
     DataTablesShowcase: lazyWithPreload(
-        () => import('../components/DataTablesShowcase'),
+        () => import('../components/DataTablesShowcase.jsx'),
         { preloadAfter: 20000 }
     ),
     
     SettingsPage: lazyWithPreload(
-        () => import('../components/pages/SettingsPage'),
+        () => import('../components/pages/SettingsPage.jsx'),
         { preloadOnHover: true }
     ),
     
     HelpPage: lazyWithPreload(
-        () => import('../components/pages/HelpPage'),
+        () => import('../components/pages/HelpPage.jsx'),
         { preloadOnHover: true }
     ),
     
     ServicesOverview: lazyWithPreload(
-        () => import('../components/domains/services/ServicesOverview'),
+        () => import('../components/domains/services/ServicesOverview.jsx'),
         { preloadAfter: 7000 }
     )
 };

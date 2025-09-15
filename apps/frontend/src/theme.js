@@ -1,7 +1,14 @@
 import { createTheme } from '@mui/material/styles';
+import { SPACING_SCALE, SEMANTIC_SPACING } from './theme/spacingSystem.js';
 
 // Enhanced theme with improved accessibility and color contrast
 const theme = createTheme({
+  // Standardized spacing system
+  spacing: 8, // Base unit: 8px
+  
+  // Custom spacing scale for consistent design
+  spacingScale: SPACING_SCALE,
+  semanticSpacing: SEMANTIC_SPACING,
   palette: {
     mode: 'dark',
     primary: {

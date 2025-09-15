@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import BestTimeRecommender from '../components/BestTimeRecommender';
+import BestTimeRecommender from '../components/analytics/BestTimeRecommender/BestTimeRecommender';
 
 const theme = createTheme();
 

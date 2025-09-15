@@ -36,10 +36,10 @@ import {
     Collapse
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useNavigation } from './NavigationProvider';
-import GlobalSearchDialog from './GlobalSearchDialog';
-import ExportButton from './ExportButton';
-import ShareButton from './ShareButton';
+import { useNavigation } from '../common/NavigationProvider';
+import GlobalSearchDialog from '../common/GlobalSearchDialog';
+import ExportButton from '../common/ExportButton';
+import ShareButton from '../common/ShareButton';
 import {
     Search as SearchIcon,
     Menu as MenuIcon,
@@ -68,7 +68,7 @@ import {
     ExpandMore,
     Launch as LaunchIcon
 } from '@mui/icons-material';
-import { Icon } from './IconSystem';
+import { Icon } from '../common/IconSystem';
 
 /**
  * Advanced Navigation System

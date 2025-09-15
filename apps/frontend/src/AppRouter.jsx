@@ -12,6 +12,11 @@ import {
     initializePerformanceOptimizations
 } from './utils/lazyLoading';
 
+// Import new page components
+import DashboardPage from './components/pages/DashboardPage.jsx';
+import CreatePostPage from './components/pages/CreatePostPage.jsx';
+import AnalyticsPage from './components/pages/AnalyticsPage.jsx';
+
 // Destructure components for cleaner code
 const {
     MainDashboard,
@@ -120,8 +125,11 @@ const AppRouter = () => {
                         <OptimizedSuspense>
                             <Routes>
                                 {/* Main Dashboard Routes */}
-                                <Route path="/" element={<MainDashboard />} />
+                                <Route path="/" element={<DashboardPage />} />
                                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                                
+                                {/* Post Creation Route */}
+                                <Route path="/create" element={<CreatePostPage />} />
                                 
                                 {/* AI Services Routes */}
                                 <Route path="/services" element={<ServicesLayout />}>
@@ -137,7 +145,7 @@ const AppRouter = () => {
                             <Route path="/tables" element={<DataTablesShowcase />} />
                             
                             {/* Analytics Dashboard */}
-                            <Route path="/analytics" element={<AnalyticsDashboard />} />
+                            <Route path="/analytics" element={<AnalyticsPage />} />
                             
                             {/* Super Admin Dashboard */}
                             <Route path="/admin" element={<SuperAdminDashboard />} />

@@ -1,8 +1,8 @@
 // Main Components Export
 // Core Analytics Components
 export { AnalyticsDashboard } from './dashboard/AnalyticsDashboard';
-export { default as TopPostsTable } from './TopPostsTable';
-export { default as BestTimeRecommender } from './BestTimeRecommender';
+export { default as TopPostsTable } from './analytics/TopPostsTable';
+export { default as BestTimeRecommender } from './analytics/BestTimeRecommender';
 export { default as DataSourceSettings } from './DataSourceSettings';
 
 // Channel Management

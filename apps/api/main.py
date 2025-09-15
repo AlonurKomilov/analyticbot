@@ -71,6 +71,10 @@ app.include_router(content_protection_router)
 app.include_router(superadmin_router)
 app.include_router(payment_router)  # Payment system
 
+# Include AI services router
+from apps.api.routers.ai_services import router as ai_services_router
+app.include_router(ai_services_router)
+
 # Include unified analytics router (best of both worlds)
 from apps.api.routers.analytics_unified import router as unified_analytics_router
 app.include_router(unified_analytics_router)

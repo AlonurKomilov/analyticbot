@@ -22,6 +22,15 @@ export const NAVIGATION_CONFIG = {
             category: 'Core'
         },
         {
+            id: 'create',
+            label: 'Create Post',
+            path: '/create',
+            icon: AddIcon,
+            description: 'Create and schedule posts',
+            keywords: ['create', 'post', 'compose', 'new'],
+            category: 'Core'
+        },
+        {
             id: 'analytics',
             label: 'Analytics',
             path: '/analytics',
@@ -85,7 +94,7 @@ export const NAVIGATION_CONFIG = {
             label: 'Create Post',
             icon: AddIcon,
             action: 'navigate',
-            target: '/?tab=1',
+            target: '/create',
             shortcut: 'Ctrl+N'
         },
         {

@@ -5,10 +5,10 @@ Combines V1 (Bot API) real-time data with V2 (MTProto) deep analytics
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from apps.api.routers.analytics_router import (
     generate_ai_recommendations,
@@ -21,74 +21,81 @@ logger = logging.getLogger(__name__)
 
 # Create unified router
 router = APIRouter(
-    prefix="/unified-analytics", 
-    tags=["Unified Analytics"], 
-    responses={404: {"description": "Not found"}}
+    prefix="/unified-analytics",
+    tags=["Unified Analytics"],
+    responses={404: {"description": "Not found"}},
 )
+
 
 # Response models for unified analytics
 class UnifiedMetrics(BaseModel):
     """Unified metrics combining V1 and V2 data"""
+
     # Real-time data (V1)
     current_views: int
     recent_posts: int
     live_engagement: float
-    
+
     # Historical data (V2 - when available)
-    total_growth: Optional[int] = None
-    reach_trend: Optional[float] = None
-    trending_score: Optional[float] = None
-    
+    total_growth: int | None = None
+    reach_trend: float | None = None
+    trending_score: float | None = None
+
     # Metadata
-    data_sources: List[str]
+    data_sources: list[str]
     last_updated: datetime
     v1_available: bool
     v2_available: bool
 
+
 class UnifiedDashboardData(BaseModel):
     """Complete dashboard data from both systems"""
+
     metrics: UnifiedMetrics
-    live_charts: Dict[str, Any]
-    historical_analysis: Optional[Dict[str, Any]] = None
-    recommendations: List[Dict[str, Any]]
+    live_charts: dict[str, Any]
+    historical_analysis: dict[str, Any] | None = None
+    recommendations: list[dict[str, Any]]
+
 
 class DataSourceHealth(BaseModel):
     """Health status of both analytics systems"""
+
     v1_status: str
     v2_status: str
     overall_status: str
-    capabilities: Dict[str, List[str]]
+    capabilities: dict[str, list[str]]
 
 
 @router.get("/health", response_model=DataSourceHealth)
 async def unified_health_check():
     """Health check for both analytics systems with proper V2 testing"""
-    
+
     v1_status = "healthy"  # V1 is always available with demo data
-    
+
     # Test V2 status by actually checking the analytics fusion service
     v2_status = "degraded"
     try:
         from apps.api.di_analytics_v2 import get_analytics_fusion_service
-        
+
         # Try to initialize the V2 service
         v2_service = await get_analytics_fusion_service()
         if v2_service:
             # Test if we can actually query the database
             from apps.api.di_analytics_v2 import get_database_pool
+
             pool = await get_database_pool()
-            
+
             if pool:
                 try:
                     # Try different pool types
-                    if hasattr(pool, 'fetchval'):
+                    if hasattr(pool, "fetchval"):
                         # Direct pool test
-                        result = await pool.fetchval('SELECT 1')  # type: ignore
+                        result = await pool.fetchval("SELECT 1")  # type: ignore
                         v2_status = "healthy" if result == 1 else "degraded"
-                    elif hasattr(pool, 'acquire'):
+                    elif hasattr(pool, "acquire"):
                         # AsyncPG pool test
                         async with pool.acquire() as conn:  # type: ignore
-                            result = await conn.fetchval('SELECT 1')
+                            result = await conn.fetchval("SELECT 1")
                             v2_status = "healthy" if result == 1 else "degraded"
                     else:
                         # Mock pool - limited functionality but working
@@ -98,57 +105,65 @@ async def unified_health_check():
                     v2_status = "degraded"
             else:
                 v2_status = "degraded"
-                
+
         logger.info(f"V2 health check result: {v2_status}")
-        
+
     except Exception as e:
         logger.warning(f"V2 health check failed: {e}")
         v2_status = "degraded"
-    
+
     capabilities = {
         "v1_capabilities": [
             "Real-time monitoring",
-            "Demo analytics data", 
+            "Demo analytics data",
             "Basic post metrics",
             "Channel management",
-            "AI recommendations"
+            "AI recommendations",
         ],
         "v2_capabilities": [
             "Advanced growth analysis",
-            "Reach optimization", 
+            "Reach optimization",
             "Trending detection",
             "Traffic source analysis",
-            "MTProto data integration"
-        ]
+            "MTProto data integration",
+        ],
     }
-    
+
     # Overall status is healthy if either system is working well
-    overall_status = "healthy" if v1_status == "healthy" or v2_status in ["healthy", "limited"] else "degraded"
-    
+    overall_status = (
+        "healthy" if v1_status == "healthy" or v2_status in ["healthy", "limited"] else "degraded"
+    )
+
     return DataSourceHealth(
         v1_status=v1_status,
         v2_status=v2_status,
         overall_status=overall_status,
-        capabilities=capabilities
+        capabilities=capabilities,
     )
 
 
 @router.get("/dashboard/{channel_id}", response_model=UnifiedDashboardData)
 async def get_unified_dashboard(
     channel_id: str,
-    period_hours: int = Query(24, ge=1, le=168, description="Time period in hours")
+    period_hours: int = Query(24, ge=1, le=168, description="Time period in hours"),
 ):
     """Get unified dashboard combining real-time and historical data"""
-    
+
     try:
         # V1 Data - Real-time and demo data (always available)
         live_post_dynamics = generate_post_dynamics(period_hours)
-        recent_posts_count = len([p for p in live_post_dynamics if p.timestamp > datetime.now() - timedelta(hours=6)])
+        recent_posts_count = len(
+            [p for p in live_post_dynamics if p.timestamp > datetime.now() - timedelta(hours=6)]
+        )
         current_views = sum(p.views for p in live_post_dynamics[-6:]) if live_post_dynamics else 0
-        live_engagement = sum(p.likes + p.shares + p.comments for p in live_post_dynamics[-6:]) / max(current_views, 1) * 100
-        
+        live_engagement = (
+            sum(p.likes + p.shares + p.comments for p in live_post_dynamics[-6:])
+            / max(current_views, 1)
+            * 100
+        )
+
         ai_recommendations = generate_ai_recommendations()
-        
+
         # Create unified metrics
         metrics = UnifiedMetrics(
             current_views=current_views,
@@ -157,9 +172,9 @@ async def get_unified_dashboard(
             data_sources=["v1_demo"],
             last_updated=datetime.now(),
             v1_available=True,
-            v2_available=False  # Set to False until V2 is fully working
+            v2_available=False,  # Set to False until V2 is fully working
         )
-        
+
         # Live charts data (V1)
         live_charts = {
             "post_dynamics": [
@@ -168,7 +183,7 @@ async def get_unified_dashboard(
                     "views": p.views,
                     "likes": p.likes,
                     "shares": p.shares,
-                    "comments": p.comments
+                    "comments": p.comments,
                 }
                 for p in live_post_dynamics
             ],
@@ -177,7 +192,7 @@ async def get_unified_dashboard(
                     "id": p.id,
                     "title": p.title,
                     "views": p.views,
-                    "engagement": p.likes + p.shares + p.comments
+                    "engagement": p.likes + p.shares + p.comments,
                 }
                 for p in generate_top_posts(5)
             ],
@@ -186,12 +201,12 @@ async def get_unified_dashboard(
                     "day": bt.day,
                     "hour": bt.hour,
                     "confidence": bt.confidence,
-                    "engagement": bt.avg_engagement
+                    "engagement": bt.avg_engagement,
                 }
                 for bt in generate_best_time_recommendations()
-            ]
+            ],
         }
-        
+
         # V2 Data - Try to get historical analysis (when working)
         historical_analysis = None
         try:
@@ -200,7 +215,7 @@ async def get_unified_dashboard(
             pass
         except Exception as e:
             logger.warning(f"V2 historical data not available: {e}")
-        
+
         # Recommendations (V1)
         recommendations = [
             {
@@ -208,63 +223,77 @@ async def get_unified_dashboard(
                 "title": rec.title,
                 "description": rec.description,
                 "confidence": rec.confidence,
-                "source": "v1_ai"
+                "source": "v1_ai",
             }
             for rec in ai_recommendations
         ]
-        
+
         return UnifiedDashboardData(
             metrics=metrics,
             live_charts=live_charts,
             historical_analysis=historical_analysis,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get unified dashboard: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load unified dashboard"
+            detail="Failed to load unified dashboard",
         )
 
 
 @router.get("/live-metrics/{channel_id}")
 async def get_live_metrics(
     channel_id: str,
-    hours: int = Query(6, ge=1, le=24, description="Hours of recent data")
+    hours: int = Query(6, ge=1, le=24, description="Hours of recent data"),
 ):
     """Get real-time metrics optimized for live monitoring"""
-    
+
     try:
         # Use V1 for real-time data
         recent_dynamics = generate_post_dynamics(hours)
-        
+
         # Calculate live metrics
         if recent_dynamics:
             current_views = recent_dynamics[-1].views
-            view_trend = recent_dynamics[-1].views - recent_dynamics[-2].views if len(recent_dynamics) > 1 else 0
-            engagement_rate = (recent_dynamics[-1].likes + recent_dynamics[-1].shares + recent_dynamics[-1].comments) / max(recent_dynamics[-1].views, 1) * 100
+            view_trend = (
+                recent_dynamics[-1].views - recent_dynamics[-2].views
+                if len(recent_dynamics) > 1
+                else 0
+            )
+            engagement_rate = (
+                (
+                    recent_dynamics[-1].likes
+                    + recent_dynamics[-1].shares
+                    + recent_dynamics[-1].comments
+                )
+                / max(recent_dynamics[-1].views, 1)
+                * 100
+            )
         else:
             current_views = 0
             view_trend = 0
             engagement_rate = 0
-        
+
         return {
             "channel_id": channel_id,
             "current_views": current_views,
             "view_trend": view_trend,
             "engagement_rate": round(engagement_rate, 2),
-            "posts_last_hour": len([p for p in recent_dynamics if p.timestamp > datetime.now() - timedelta(hours=1)]),
+            "posts_last_hour": len(
+                [p for p in recent_dynamics if p.timestamp > datetime.now() - timedelta(hours=1)]
+            ),
             "data_freshness": "real-time",
             "source": "v1_optimized",
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get live metrics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get live metrics"
+            detail="Failed to get live metrics",
         )
 
 
@@ -272,15 +301,15 @@ async def get_live_metrics(
 async def get_analytical_report(
     channel_id: str,
     report_type: str = Query("growth", regex="^(growth|reach|trending|comprehensive)$"),
-    days: int = Query(30, ge=7, le=365, description="Days of historical data")
+    days: int = Query(30, ge=7, le=365, description="Days of historical data"),
 ):
     """Get detailed analytical reports (will use V2 when available)"""
-    
+
     try:
         # For now, provide V1-based reporting with enhanced analytics
         base_data = generate_post_dynamics(days * 24)  # Convert days to hours
-        top_posts = generate_top_posts(20)
-        
+        generate_top_posts(20)
+
         if report_type == "growth":
             # Simulate growth analysis
             daily_views = []
@@ -289,86 +318,98 @@ async def get_analytical_report(
                 day_end = len(base_data) - day * 24
                 if day_start >= 0:
                     day_views = sum(p.views for p in base_data[day_start:day_end])
-                    daily_views.append({
-                        "date": (datetime.now() - timedelta(days=day)).date().isoformat(),
-                        "views": day_views
-                    })
-            
+                    daily_views.append(
+                        {
+                            "date": (datetime.now() - timedelta(days=day)).date().isoformat(),
+                            "views": day_views,
+                        }
+                    )
+
             # Calculate growth rate
             if len(daily_views) >= 2:
                 recent_avg = sum(d["views"] for d in daily_views[:7]) / 7
-                previous_avg = sum(d["views"] for d in daily_views[7:14]) / 7 if len(daily_views) >= 14 else recent_avg
+                previous_avg = (
+                    sum(d["views"] for d in daily_views[7:14]) / 7
+                    if len(daily_views) >= 14
+                    else recent_avg
+                )
                 growth_rate = ((recent_avg - previous_avg) / max(previous_avg, 1)) * 100
             else:
                 growth_rate = 0
-            
+
             return {
                 "report_type": "growth",
                 "channel_id": channel_id,
                 "period_days": days,
                 "growth_rate_percent": round(growth_rate, 2),
                 "daily_views": daily_views,
-                "trend_analysis": "improving" if growth_rate > 5 else "stable" if growth_rate > -5 else "declining",
+                "trend_analysis": (
+                    "improving"
+                    if growth_rate > 5
+                    else "stable"
+                    if growth_rate > -5
+                    else "declining"
+                ),
                 "data_source": "v1_enhanced",
                 "note": "Enhanced V1 analysis. V2 MTProto analysis coming soon.",
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
-        
+
         # Add other report types...
         return {
             "report_type": report_type,
             "channel_id": channel_id,
             "message": f"{report_type.title()} report will be available when V2 MTProto integration is complete",
             "fallback_available": True,
-            "data_source": "v1_fallback"
+            "data_source": "v1_fallback",
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to generate report: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to generate analytical report"
+            detail="Failed to generate analytical report",
         )
 
 
 @router.get("/comparison/{channel_id}")
 async def get_data_source_comparison(channel_id: str):
     """Compare data availability between V1 and V2 systems"""
-    
+
     v1_features = {
         "available": [
             "Real-time post dynamics",
-            "Demo analytics data", 
+            "Demo analytics data",
             "Top posts ranking",
             "Best posting times",
             "AI recommendations",
-            "Channel management"
+            "Channel management",
         ],
         "limitations": [
             "Mock data only",
             "No official Telegram stats",
             "Limited historical analysis",
-            "No MTProto integration"
-        ]
+            "No MTProto integration",
+        ],
     }
-    
+
     v2_features = {
         "potential": [
             "Official Telegram analytics",
             "MTProto data access",
-            "Advanced growth analysis", 
+            "Advanced growth analysis",
             "Reach optimization",
             "Trending detection",
-            "Traffic source analysis"
+            "Traffic source analysis",
         ],
         "current_issues": [
             "Database connection problems",
             "Service initialization errors",
             "Missing data collection",
-            "API endpoints not functional"
-        ]
+            "API endpoints not functional",
+        ],
     }
-    
+
     return {
         "channel_id": channel_id,
         "v1_system": v1_features,
@@ -377,17 +418,17 @@ async def get_data_source_comparison(channel_id: str):
         "recommendation": "Use V1 for current operations, V2 development in progress",
         "next_steps": [
             "Fix V2 database connection",
-            "Enable MTProto data collection", 
+            "Enable MTProto data collection",
             "Test V2 endpoints",
-            "Implement smart routing"
-        ]
+            "Implement smart routing",
+        ],
     }
 
 
 # Smart routing utilities for future use
 async def smart_route_request(request_type: str, channel_id: str, **params):
     """Smart routing between V1 and V2 based on request type and availability"""
-    
+
     if request_type in ["real-time", "live", "current", "monitoring"]:
         # Use V1 for real-time data
         return "v1"

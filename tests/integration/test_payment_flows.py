@@ -195,7 +195,11 @@ class TestPaymentFlowIntegration:
 
         # Simulate payment processing logic
         if webhook["event_type"] == "payment.completed":
-            return {"success": True, "payment_id": payload["payment_id"], "status": "completed"}
+            return {
+                "success": True,
+                "payment_id": payload["payment_id"],
+                "status": "completed",
+            }
         elif webhook["event_type"] == "payment.failed":
             return {
                 "success": False,
@@ -226,7 +230,8 @@ class TestPaymentFlowIntegration:
             try:
                 # Simulate payment processing
                 await payment_repo._pool.execute(
-                    "UPDATE payments SET status = 'completed' WHERE id = $1", payment["id"]
+                    "UPDATE payments SET status = 'completed' WHERE id = $1",
+                    payment["id"],
                 )
                 return {"success": True, "retry_count": attempt}
             except Exception as e:

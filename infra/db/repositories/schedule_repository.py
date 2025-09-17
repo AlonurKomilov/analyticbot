@@ -32,7 +32,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Create a new scheduled post in PostgreSQL"""
         query = """
         INSERT INTO scheduled_posts (
-            user_id, channel_id, post_text, status, schedule_time
+            user_id, channel_id, content, status, scheduled_at
         ) VALUES (
             $1, $2, $3, $4, $5
         ) RETURNING *
@@ -43,11 +43,11 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         result = await self.db.fetchrow(
             query,
-            int(post.user_id),  # Convert to int for bigint
-            int(post.channel_id),  # Convert to int for bigint
-            post.content,  # Map content to post_text
+            str(post.user_id),  # Keep as string for VARCHAR(100)
+            str(post.channel_id),  # Keep as string for VARCHAR(100)
+            post.content,  # Map to content column
             db_status,
-            post.scheduled_at,  # Map scheduled_at to schedule_time
+            post.scheduled_at,  # Map to scheduled_at column
         )
 
         return self._row_to_scheduled_post(result)
@@ -155,11 +155,11 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Get all posts that are ready for delivery"""
         query = """
         SELECT * FROM scheduled_posts 
-        WHERE status = $1 AND schedule_time <= $2
-        ORDER BY schedule_time ASC
+        WHERE status = $1 AND scheduled_at <= $2
+        ORDER BY scheduled_at ASC
         """
 
-        results = await self.db.fetch(query, "pending", datetime.utcnow())
+        results = await self.db.fetch(query, "scheduled", datetime.utcnow())
 
         return [self._row_to_scheduled_post(row) for row in results]
 
@@ -187,12 +187,12 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         if filter_criteria.from_date:
             param_count += 1
-            query += f" AND scheduled_time >= ${param_count}"
+            query += f" AND scheduled_at >= ${param_count}"
             params.append(filter_criteria.from_date)
 
         if filter_criteria.to_date:
             param_count += 1
-            query += f" AND scheduled_time <= ${param_count}"
+            query += f" AND scheduled_at <= ${param_count}"
             params.append(filter_criteria.to_date)
 
         result = await self.db.fetchval(query, *params)
@@ -302,22 +302,24 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     def _map_status_to_db(self, status: PostStatus) -> str:
         """Map domain status to database status"""
         mapping = {
-            PostStatus.SCHEDULED: "pending",
-            PostStatus.PUBLISHED: "sent", 
-            PostStatus.FAILED: "error",
-            PostStatus.DRAFT: "pending",  # Default to pending
-            PostStatus.CANCELLED: "error",  # Map to error
+            PostStatus.SCHEDULED: "scheduled",
+            PostStatus.PUBLISHED: "published", 
+            PostStatus.FAILED: "failed",
+            PostStatus.DRAFT: "draft",
+            PostStatus.CANCELLED: "cancelled",
         }
-        return mapping.get(status, "pending")
+        return mapping.get(status, "draft")
 
     def _map_status_from_db(self, db_status: str) -> PostStatus:
         """Map database status to domain status"""
         mapping = {
-            "pending": PostStatus.SCHEDULED,
-            "sent": PostStatus.PUBLISHED,
-            "error": PostStatus.FAILED,
+            "draft": PostStatus.DRAFT,
+            "scheduled": PostStatus.SCHEDULED,
+            "published": PostStatus.PUBLISHED,
+            "failed": PostStatus.FAILED,
+            "cancelled": PostStatus.CANCELLED,
         }
-        return mapping.get(db_status, PostStatus.SCHEDULED)
+        return mapping.get(db_status, PostStatus.DRAFT)
 
 
 class AsyncpgDeliveryRepository(DeliveryRepository):

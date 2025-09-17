@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List
 
-from apps.api.routers.analytics_advanced import AlertEvent
+from apps.shared.models.alerts import AlertEvent
 
 logger = logging.getLogger(__name__)
 

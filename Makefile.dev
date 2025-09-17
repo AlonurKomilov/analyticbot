@@ -1,0 +1,60 @@
+# Development-specific Makefile targets
+# Use this for venv-based development
+
+.PHONY: dev-help dev-start dev-stop dev-status dev-logs dev-install dev-migrate dev-test dev-clean
+
+dev-help:
+	@echo "🔥 Development Commands (venv-based)"
+	@echo "===================================="
+	@echo "  dev-install    - Install dependencies in venv"
+	@echo "  dev-start      - Start development servers"
+	@echo "  dev-stop       - Stop all development services"
+	@echo "  dev-status     - Check service status"
+	@echo "  dev-logs       - Show development logs"
+	@echo "  dev-migrate    - Run database migrations"
+	@echo "  dev-test       - Run tests in venv"
+	@echo "  dev-clean      - Clean development artifacts"
+	@echo ""
+	@echo "🐳 Production Commands (Docker-based)"
+	@echo "====================================="
+	@echo "  up             - Start production services"
+	@echo "  down           - Stop production services"
+	@echo "  logs           - Show production logs"
+	@echo "  migrate        - Run migrations in Docker"
+
+dev-install:
+	@echo "📦 Installing development dependencies..."
+	python -m venv venv --upgrade-deps
+	venv/bin/pip install -r requirements.txt
+	cd apps/frontend && npm install
+
+dev-start:
+	@echo "🚀 Starting development environment..."
+	./scripts/dev-start.sh all
+
+dev-stop:
+	@echo "🛑 Stopping development environment..."
+	./scripts/dev-start.sh stop
+
+dev-status:
+	@echo "📊 Checking development status..."
+	./scripts/dev-start.sh status
+
+dev-logs:
+	@echo "📋 Available log files:"
+	@ls -la var/logs/dev_*.log 2>/dev/null || echo "No log files found"
+
+dev-migrate:
+	@echo "🗄️  Running database migrations in development..."
+	source venv/bin/activate && export $$(grep -v '^#' .env.dev | xargs) && alembic upgrade head
+
+dev-test:
+	@echo "🧪 Running tests in development environment..."
+	source venv/bin/activate && export $$(grep -v '^#' .env.dev | xargs) && pytest tests/ -v
+
+dev-clean:
+	@echo "🧹 Cleaning development artifacts..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -name "*.pyc" -delete 2>/dev/null || true
+	rm -rf var/logs/dev_*.log var/logs/dev_*.pid
+	rm -rf apps/frontend/dist apps/frontend/.vite

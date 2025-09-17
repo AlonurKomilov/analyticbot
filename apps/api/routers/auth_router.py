@@ -110,17 +110,13 @@ async def login(
             )
         
         # Create session
-        session = security_manager.create_user_session(user, request)
-        
+        session = get_security_manager().create_user_session(user, request)
+
         # Generate tokens
-        access_token = security_manager.create_access_token(
-            user, 
-            expires_delta=timedelta(minutes=30),
-            session_id=session.token
+        access_token = get_security_manager().create_access_token(
+            user=user, session_id=session.token
         )
-        refresh_token = security_manager.create_refresh_token(user.id, session.token)
-        
-        # Update last login
+        refresh_token = get_security_manager().create_refresh_token(user.id, session.token)        # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
         
         logger.info(f"Successful login for user: {user.username}")
@@ -232,7 +228,7 @@ async def refresh_token(
     """
     try:
         # Validate refresh token and get new access token
-        new_access_token = security_manager.refresh_access_token(refresh_token)
+        new_access_token = get_security_manager().refresh_access_token(refresh_token)
         
         return {
             "access_token": new_access_token,
@@ -259,7 +255,7 @@ async def logout(
     try:
         user_id = current_user["id"]
         # Revoke all user sessions
-        security_manager.revoke_user_sessions(str(user_id))
+        get_security_manager().revoke_user_sessions(str(user_id))
         
         logger.info(f"User logged out: {current_user.get('username', user_id)}")
         
@@ -349,7 +345,7 @@ async def forgot_password(
         
         if user:
             # Generate reset token
-            reset_token = security_manager.generate_password_reset_token(request.email)
+            reset_token = get_security_manager().generate_password_reset_token(request.email)
             
             # In a production system, you would send an email here
             # For now, we'll just log the token (remove this in production!)
@@ -383,7 +379,7 @@ async def reset_password(
     """
     try:
         # Verify reset token
-        reset_data = security_manager.verify_password_reset_token(request.token)
+        reset_data = get_security_manager().verify_password_reset_token(request.token)
         if not reset_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -408,12 +404,10 @@ async def reset_password(
         await update_user_password(user["id"], hashed_password, user_repository)
         
         # Consume the reset token (mark as used)
-        security_manager.consume_password_reset_token(request.token)
-        
-        # Revoke all existing sessions for security
-        security_manager.terminate_all_user_sessions(str(user["id"]))
-        
-        logger.info(f"Password reset successful for user: {user_email}")
+        get_security_manager().consume_password_reset_token(request.token)
+
+        # Terminate all user sessions for security
+        get_security_manager().terminate_all_user_sessions(str(user["id"]))        logger.info(f"Password reset successful for user: {user_email}")
         
         return {
             "message": "Password reset successful. Please log in with your new password.",

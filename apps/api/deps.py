@@ -91,20 +91,16 @@ async def cleanup_db_pool():
         _db_pool = None
 
 
-# Authentication dependency (placeholder for now)
+# Authentication dependency - implement proper JWT validation
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> dict:
-    """Get current authenticated user (placeholder implementation)"""
-    # TODO: Implement proper JWT validation and user lookup
-    # Raise an exception in production to prevent unauthorized access
-    from config.settings import settings
-    if settings.ENVIRONMENT != "development":
-        from fastapi import HTTPException
-        raise HTTPException(status_code=401, detail="Authentication required")
+    """Get current authenticated user with proper JWT validation"""
+    # Import the proper auth implementation
+    from apps.api.middleware.auth import get_current_user as auth_get_current_user, get_user_repository
     
-    return {
-        "id": "user_123",
-        "username": "dev_user",
-        "tier": "pro",  # free, basic, pro, enterprise
-    }
+    # Get user repository dependency
+    user_repo = await get_user_repository()
+    
+    # Call the proper authentication function
+    return await auth_get_current_user(credentials, user_repo)

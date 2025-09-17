@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 import httpx
 from fastapi import HTTPException, status
 
-from .config import SecurityConfig
+from .config import SecurityConfig, get_security_config
 from .models import AuthProvider, User, UserStatus
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class OAuthManager:
     """
 
     def __init__(self):
-        self.config = SecurityConfig()
+        self.config = get_security_config()
         self.client = httpx.AsyncClient()
 
         # OAuth provider configurations
@@ -343,4 +343,12 @@ class OAuthManager:
 
 
 # Global OAuth manager instance
-oauth_manager = OAuthManager()
+# Global OAuth manager instance - lazy initialization
+_oauth_manager = None
+
+def get_oauth_manager() -> OAuthManager:
+    """Get the global OAuth manager instance"""
+    global _oauth_manager
+    if _oauth_manager is None:
+        _oauth_manager = OAuthManager()
+    return _oauth_manager

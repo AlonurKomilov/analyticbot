@@ -157,19 +157,27 @@ class Container:
             await self._engine.dispose()
 
 
-# Global container instance (to be initialized in main)
+# Global container instance (auto-initialized with default settings)
 _container: Container | None = None
 
 
 def get_container() -> Container:
     """Get global container instance"""
+    global _container
     if _container is None:
-        raise RuntimeError("Container not initialized. Call init_container() first.")
+        # Auto-initialize with default settings from environment
+        import os
+        default_settings = Settings(
+            database_url=os.getenv("DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"),
+            database_pool_size=int(os.getenv("DATABASE_POOL_SIZE", "10")),
+            database_max_overflow=int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))
+        )
+        _container = Container(default_settings)
     return _container
 
 
 def init_container(settings: Settings) -> Container:
-    """Initialize global container"""
+    """Initialize global container with custom settings"""
     global _container
     _container = Container(settings)
     return _container
@@ -181,3 +189,7 @@ async def close_container():
     if _container:
         await _container.close()
         _container = None
+
+
+# Create container alias for backward compatibility
+container = get_container

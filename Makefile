@@ -5,54 +5,91 @@ ifeq (,$(wildcard ./.env))
     $(shell cp .env.example .env)
 endif
 
+# Include development commands
+include Makefile.dev
+
 .PHONY: help up down logs ps migrate lint typecheck test test-all export-reqs
 
 help:
-	@echo "Usage: make [target]"
-	@echo "Targets:"
-	@echo "  up          - Start all services in detached mode"
-	@echo "  down        - Stop and remove all services"
-	@echo "  logs        - Follow logs for all services"
-	@echo "  ps          - List running services"
+	@echo "🚀 AnalyticBot - Hybrid Development Environment"
+	@echo "=============================================="
+	@echo ""
+	@echo "🔥 DEVELOPMENT (Fast, venv-based):"
+	@echo "  dev-start   - Start development servers (ports 8001, 5174)"
+	@echo "  dev-stop    - Stop development services"
+	@echo "  dev-status  - Check development status"
+	@echo "  dev-logs    - Show development logs"
+	@echo "  dev-test    - Run tests in venv"
+	@echo "  dev-install - Install dependencies"
+	@echo ""
+	@echo "🐳 PRODUCTION (Docker-based):"
+	@echo "  up          - Start Docker services (ports 8000, 3000)"
+	@echo "  down        - Stop and remove Docker services"
+	@echo "  logs        - Follow Docker logs"
+	@echo "  ps          - List running Docker services"
 	@echo "  migrate     - Run database migrations"
-	@echo "  lint        - Run ruff linter"
-	@echo "  typecheck   - Run mypy type checker"
-	@echo "  test        - Run pytest"
-	@echo "  export-reqs - Export Poetry deps to requirements.txt files"
+	@echo ""
+	@echo "🔄 SYNC & DEPLOY:"
+	@echo "  sync        - Sync dev changes to Docker"
+	@echo "  lint        - Run code linting"
+	@echo "  typecheck   - Run type checking"
+	@echo ""
+	@echo "💡 Workflow: dev-start → code → test → sync → deploy"
 
-
+# Production Docker commands
 up:
+	@echo "🐳 Starting Docker services..."
 	docker compose up -d
+	@echo "✅ Services available at:"
+	@echo "   • API: http://localhost:8000"
+	@echo "   • Frontend: http://localhost:3000"
 
 down:
+	@echo "🛑 Stopping Docker services..."
 	docker compose down
 
 logs:
+	@echo "📋 Following Docker logs..."
 	docker compose logs -f
 
 ps:
+	@echo "📊 Docker services status:"
 	docker compose ps
 
 migrate:
+	@echo "🔄 Running database migrations..."
 	docker compose run --rm migrate
 
+# Sync development changes to Docker
+sync:
+	@echo "🔄 Syncing development changes to Docker..."
+	./scripts/sync-to-docker.sh
+
+# Code quality
 lint:
+	@echo "🔍 Running linter..."
 	ruff check .
 
 typecheck:
+	@echo "🏷️ Running type checker..."
 	mypy .
 
+# Testing
 test:
+	@echo "🧪 Running unit tests..."
 	pytest -q -m "not integration" --maxfail=1 --disable-warnings --cov=bot --cov-report=term-missing
 
 test-all:
+	@echo "🧪 Running all tests..."
 	pytest -q --maxfail=1 --disable-warnings --cov=bot --cov-report=term-missing
 
-# Poetry dependency management
+# Dependency management
 .PHONY: export-reqs
 export-reqs:
+	@echo "📦 Exporting requirements..."
 	poetry export -f requirements.txt --output requirements.txt --without-hashes
 	poetry export -f requirements.txt --output requirements.prod.txt --without-hashes --only=main
+	@echo "✅ Requirements exported to requirements.txt and requirements.prod.txt"
 
 # Additional Docker development commands
 .PHONY: build shell clean-docker dev-setup backup restore

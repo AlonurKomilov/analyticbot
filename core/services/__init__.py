@@ -90,7 +90,9 @@ class ScheduleService:
             raise ValueError("Cannot modify published posts")
 
         # Business rule: validate rescheduling
-        if post.scheduled_at <= datetime.utcnow() and post.status == PostStatus.SCHEDULED:
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        if post.scheduled_at <= now and post.status == PostStatus.SCHEDULED:
             raise ValueError("Cannot reschedule to past time")
 
         updated_post = await self.schedule_repo.update(post)

@@ -119,7 +119,7 @@ async def get_analytics_service() -> AnalyticsService:
 
 async def get_channel_management_service() -> ChannelManagementService:
     """Get channel management service from container"""
-    service_container = container
+    service_container = container()
     return service_container.channel_management_service()
 
 

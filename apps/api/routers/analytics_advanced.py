@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from apps.shared.models.alerts import AlertEvent as SharedAlertEvent, AlertRule
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
 from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
 from apps.bot.services.alerting_service import AlertingService
@@ -32,26 +33,8 @@ class RealTimeMetrics(BaseModel):
     trending_score: float
 
 
-class AlertCondition(BaseModel):
-    rule_id: str
-    name: str
-    type: str  # 'growth', 'engagement', 'subscribers', 'views'
-    condition: str  # 'greater_than', 'less_than', 'milestone', 'surge'
-    threshold: float
-    enabled: bool
-    description: str
-
-
-class AlertEvent(BaseModel):
-    id: str
-    rule_id: str
-    title: str
-    message: str
-    severity: str  # 'info', 'warning', 'error', 'success'
-    timestamp: datetime
-    channel_id: str
-    triggered_value: float
-    threshold: float
+# Alert models imported from apps.shared.models.alerts
+AlertEvent = SharedAlertEvent  # Type alias for consistency
 
 
 class AdvancedAnalyticsResponse(BaseModel):

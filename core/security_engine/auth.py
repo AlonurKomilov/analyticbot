@@ -20,7 +20,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
-from .config import SecurityConfig
+from .config import SecurityConfig, get_security_config
 from .models import User, UserRole, UserSession
 from .rbac import RBACManager, Permission
 
@@ -41,7 +41,7 @@ class SecurityManager:
     """
 
     def __init__(self):
-        self.config = SecurityConfig()
+        self.config = get_security_config()
         self.redis_client = redis.Redis(
             host=self.config.REDIS_HOST,
             port=self.config.REDIS_PORT,
@@ -553,8 +553,15 @@ class SecurityManager:
         self.redis_client.setex(f"revoked_token:{token}", 3600, "expired")
 
 
-# Global security manager instance
-security_manager = SecurityManager()
+# Global security manager instance - lazy initialization
+_security_manager = None
+
+def get_security_manager() -> SecurityManager:
+    """Get the global security manager instance"""
+    global _security_manager
+    if _security_manager is None:
+        _security_manager = SecurityManager()
+    return _security_manager
 
 
 # FastAPI dependency functions
@@ -568,7 +575,7 @@ def get_current_user(
         User payload from JWT token
     """
     token = credentials.credentials
-    return security_manager.verify_token(token)
+    return get_security_manager().verify_token(token)
 
 
 def require_role(required_role: UserRole):
@@ -607,5 +614,9 @@ def require_role(required_role: UserRole):
 
 
 # Export convenience functions
-create_access_token = security_manager.create_access_token
-verify_token = security_manager.verify_token
+# Convenience functions - these will initialize SecurityManager when first called
+def create_access_token(*args, **kwargs):
+    return get_security_manager().create_access_token(*args, **kwargs)
+
+def verify_token(*args, **kwargs):
+    return get_security_manager().verify_token(*args, **kwargs)

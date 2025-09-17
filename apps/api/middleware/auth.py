@@ -11,13 +11,13 @@ from typing import Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from core.security_engine import SecurityManager
+from core.security_engine import SecurityManager, get_security_manager
 from core.security_engine.rbac import RBACManager, Permission
 from core.security_engine.models import User, UserRole
 from core.repositories.interfaces import UserRepository, ChannelRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository  
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from apps.bot.container import container
+from apps.shared.di import container
 
 logger = logging.getLogger(__name__)
 
@@ -39,24 +39,28 @@ def get_rbac_manager() -> RBACManager:
 
 async def get_user_repository() -> UserRepository:
     """Get user repository dependency"""
-    pool = container.db_session()
-    if pool is None:
+    try:
+        pool = await container().asyncpg_pool()
+        return AsyncpgUserRepository(pool)
+    except Exception as e:
+        logger.error(f"Failed to get database pool: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database connection not available"
         )
-    return AsyncpgUserRepository(pool)
 
 
 async def get_channel_repository() -> ChannelRepository:
     """Get channel repository dependency"""
-    pool = container.db_session()
-    if pool is None:
+    try:
+        pool = await container().asyncpg_pool()
+        return AsyncpgChannelRepository(pool)
+    except Exception as e:
+        logger.error(f"Failed to get database pool: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database connection not available"
         )
-    return AsyncpgChannelRepository(pool)
 
 
 async def get_current_user(
@@ -78,7 +82,7 @@ async def get_current_user(
     """
     try:
         # Verify JWT token using SecurityManager
-        payload = security_manager.verify_token(credentials.credentials)
+        payload = get_security_manager().verify_token(credentials.credentials)
         user_id = payload.get("sub")
         
         if not user_id:

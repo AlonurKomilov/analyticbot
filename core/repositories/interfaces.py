@@ -55,6 +55,62 @@ class AdminRepository(Protocol):
         ...
 
 
+class ChannelRepository(Protocol):
+    """Channel repository interface using Protocol"""
+
+    async def create_channel(
+        self, channel_id: int, user_id: int, title: str, username: str | None = None
+    ) -> None:
+        """Create a new channel"""
+        ...
+
+    async def get_channel_by_id(self, channel_id: int) -> dict | None:
+        """Get channel by ID"""
+        ...
+
+    async def count_user_channels(self, user_id: int) -> int:
+        """Count user's channels"""
+        ...
+
+    async def get_user_channels(self, user_id: int) -> list[dict]:
+        """Get all channels for a user"""
+        ...
+
+    async def delete_channel(self, channel_id: int) -> bool:
+        """Delete a channel"""
+        ...
+
+    async def count(self) -> int:
+        """Get total number of channels"""
+        ...
+
+    async def ensure_channel(
+        self,
+        channel_id: int,
+        username: str | None = None,
+        title: str | None = None,
+        is_supergroup: bool = False,
+    ) -> dict:
+        """Ensure channel exists with UPSERT behavior"""
+        ...
+
+    async def get_channels(self, skip: int = 0, limit: int = 100) -> list[dict]:
+        """Get all channels with pagination"""
+        ...
+
+    async def get_channel_by_telegram_id(self, telegram_id: int) -> dict | None:
+        """Get channel by telegram ID"""
+        ...
+
+    async def get_channel(self, channel_id: int) -> dict | None:
+        """Get channel by ID (alias)"""
+        ...
+
+    async def get_tracked_channels(self) -> list[dict]:
+        """Get all tracked channels"""
+        ...
+
+
 class ScheduleRepository(Protocol):
     """
     Abstract interface for scheduled post persistence

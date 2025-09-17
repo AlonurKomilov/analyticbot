@@ -11,14 +11,15 @@ This module provides comprehensive security services including:
 - Password security
 """
 
-from .auth import SecurityManager, create_access_token, verify_token
+from .auth import SecurityManager, get_security_manager, create_access_token, verify_token
 from .mfa import MFAManager
 from .models import User, UserRole, UserSession, UserStatus, AuthProvider
 from .oauth import OAuthManager
 from .rbac import RBACManager
 
 __all__ = [
-    "SecurityManager",
+    "SecurityManager", 
+    "get_security_manager",
     "create_access_token",
     "verify_token",
     "User",

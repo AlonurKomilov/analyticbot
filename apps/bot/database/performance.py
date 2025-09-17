@@ -303,7 +303,11 @@ class PerformanceManager:
             )
 
         # Get Redis stats
-        if self.cache._is_connected and hasattr(self.cache, '_redis') and self.cache._redis is not None:
+        if (
+            self.cache._is_connected
+            and hasattr(self.cache, "_redis")
+            and self.cache._redis is not None
+        ):
             try:
                 redis_info = await self.cache._redis.info()
                 if redis_info:  # Check if redis_info is not None

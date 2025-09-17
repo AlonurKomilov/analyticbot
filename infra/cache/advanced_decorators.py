@@ -3,13 +3,13 @@ Enhanced Caching Decorators for Performance Optimization
 Provides advanced caching strategies for API endpoints and database operations
 """
 
-import asyncio
 import functools
 import hashlib
 import json
 import logging
 import time
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import redis.asyncio as redis
 from pydantic import SecretStr
@@ -19,15 +19,15 @@ logger = logging.getLogger(__name__)
 
 class CacheConfig:
     """Cache configuration constants"""
-    
+
     # TTL values in seconds
-    ANALYTICS_SUMMARY_TTL = 600      # 10 minutes
-    USER_CHANNELS_TTL = 300          # 5 minutes  
-    SUBSCRIPTION_PLANS_TTL = 3600    # 1 hour
-    POST_METRICS_TTL = 180          # 3 minutes
-    CHANNEL_STATS_TTL = 420         # 7 minutes
-    DEFAULT_TTL = 300               # 5 minutes
-    
+    ANALYTICS_SUMMARY_TTL = 600  # 10 minutes
+    USER_CHANNELS_TTL = 300  # 5 minutes
+    SUBSCRIPTION_PLANS_TTL = 3600  # 1 hour
+    POST_METRICS_TTL = 180  # 3 minutes
+    CHANNEL_STATS_TTL = 420  # 7 minutes
+    DEFAULT_TTL = 300  # 5 minutes
+
     # Cache key prefixes
     PREFIX_ANALYTICS = "analytics"
     PREFIX_USER = "user"
@@ -38,13 +38,13 @@ class CacheConfig:
 
 class AdvancedCache:
     """Advanced Redis cache with enhanced features"""
-    
-    def __init__(self, redis_client: Optional[redis.Redis] = None):
+
+    def __init__(self, redis_client: redis.Redis | None = None):
         self.redis = redis_client
         self.enabled = redis_client is not None
         self._local_cache = {}  # Small local cache for hot data
         self._local_cache_size = 100
-        
+
     @classmethod
     async def create(cls, redis_url: str = "redis://localhost:6379/0"):
         """Factory method to create cache with Redis connection"""
@@ -55,7 +55,7 @@ class AdvancedCache:
                 decode_responses=True,
                 socket_keepalive=True,
                 retry_on_timeout=True,
-                max_connections=20
+                max_connections=20,
             )
             await redis_client.ping()
             logger.info("✅ Advanced cache connected to Redis")
@@ -63,7 +63,7 @@ class AdvancedCache:
         except Exception as e:
             logger.warning(f"❌ Redis connection failed, using no-op cache: {e}")
             return cls(None)
-    
+
     def _generate_cache_key(self, prefix: str, *args, **kwargs) -> str:
         """Generate consistent cache key"""
         key_parts = [str(arg) for arg in args]
@@ -71,14 +71,14 @@ class AdvancedCache:
             # Sort kwargs for consistent key generation
             sorted_kwargs = sorted(kwargs.items())
             key_parts.append(json.dumps(sorted_kwargs, default=str, sort_keys=True))
-        
+
         key_data = f"{prefix}:{':'.join(key_parts)}"
         # Use hash for long keys
         if len(key_data) > 200:
             key_hash = hashlib.sha256(key_data.encode()).hexdigest()
             return f"{prefix}:{key_hash}"
         return key_data
-    
+
     async def get(self, key: str) -> Any:
         """Get value from cache with local cache fallback"""
         # Check local cache first
@@ -86,10 +86,10 @@ class AdvancedCache:
             data, timestamp = self._local_cache[key]
             if time.time() - timestamp < 60:  # Local cache valid for 1 minute
                 return data
-        
+
         if not self.enabled or self.redis is None:
             return None
-            
+
         try:
             value = await self.redis.get(key)
             if value:
@@ -99,16 +99,16 @@ class AdvancedCache:
                 return data
         except Exception as e:
             logger.warning(f"Cache get error for key {key}: {e}")
-        
+
         return None
-    
+
     async def set(self, key: str, value: Any, ttl: int = CacheConfig.DEFAULT_TTL) -> bool:
         """Set value in cache with local cache update"""
         self._update_local_cache(key, value)
-        
+
         if not self.enabled or self.redis is None:
             return False
-            
+
         try:
             serialized = json.dumps(value, default=str)
             await self.redis.setex(key, ttl, serialized)
@@ -116,27 +116,27 @@ class AdvancedCache:
         except Exception as e:
             logger.warning(f"Cache set error for key {key}: {e}")
             return False
-    
+
     async def delete(self, key: str) -> bool:
         """Delete key from cache"""
         # Remove from local cache
         self._local_cache.pop(key, None)
-        
+
         if not self.enabled or self.redis is None:
             return False
-            
+
         try:
             result = await self.redis.delete(key)
             return bool(result)
         except Exception as e:
             logger.warning(f"Cache delete error for key {key}: {e}")
             return False
-    
+
     async def delete_pattern(self, pattern: str) -> int:
         """Delete all keys matching pattern"""
         if not self.enabled or self.redis is None:
             return 0
-            
+
         try:
             keys = await self.redis.keys(pattern)
             if keys:
@@ -149,44 +149,45 @@ class AdvancedCache:
                 return deleted
         except Exception as e:
             logger.warning(f"Cache pattern delete error for pattern {pattern}: {e}")
-        
+
         return 0
-    
+
     def _update_local_cache(self, key: str, data: Any):
         """Update local cache with size limit"""
         if len(self._local_cache) >= self._local_cache_size:
             # Remove oldest entry
-            oldest_key = min(self._local_cache.keys(), 
-                           key=lambda k: self._local_cache[k][1])
+            oldest_key = min(self._local_cache.keys(), key=lambda k: self._local_cache[k][1])
             self._local_cache.pop(oldest_key, None)
-        
+
         self._local_cache[key] = (data, time.time())
-    
+
     async def get_stats(self) -> dict:
         """Get cache statistics"""
         stats = {
             "enabled": self.enabled,
             "local_cache_size": len(self._local_cache),
-            "local_cache_max": self._local_cache_size
+            "local_cache_max": self._local_cache_size,
         }
-        
+
         if self.enabled and self.redis is not None:
             try:
                 info = await self.redis.info()
-                stats.update({
-                    "redis_memory": info.get("used_memory_human", "N/A"),
-                    "redis_connections": info.get("connected_clients", 0),
-                    "redis_hits": info.get("keyspace_hits", 0),
-                    "redis_misses": info.get("keyspace_misses", 0)
-                })
+                stats.update(
+                    {
+                        "redis_memory": info.get("used_memory_human", "N/A"),
+                        "redis_connections": info.get("connected_clients", 0),
+                        "redis_hits": info.get("keyspace_hits", 0),
+                        "redis_misses": info.get("keyspace_misses", 0),
+                    }
+                )
             except Exception as e:
                 logger.warning(f"Error getting Redis stats: {e}")
-        
+
         return stats
 
 
 # Global cache instance
-_global_cache: Optional[AdvancedCache] = None
+_global_cache: AdvancedCache | None = None
 
 
 async def get_cache() -> AdvancedCache:
@@ -195,59 +196,71 @@ async def get_cache() -> AdvancedCache:
     if _global_cache is None:
         # Try to get Redis URL from settings
         try:
-            from config.settings import Settings
             import os
+
+            from config.settings import Settings
+
             settings = Settings(
                 BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
                 STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
                 POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
                 POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
                 POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
-                JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+                JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key")),
             )
-            redis_url = str(settings.REDIS_URL) if hasattr(settings, 'REDIS_URL') else "redis://localhost:6379/0"
+            redis_url = (
+                str(settings.REDIS_URL)
+                if hasattr(settings, "REDIS_URL")
+                else "redis://localhost:6379/0"
+            )
         except Exception:
             redis_url = "redis://localhost:6379/0"
-        
+
         _global_cache = await AdvancedCache.create(redis_url)
-    
+
     return _global_cache
 
 
-def cache_result(prefix: str, ttl: int = CacheConfig.DEFAULT_TTL, 
-                key_func: Optional[Callable] = None, 
-                invalidate_on_error: bool = True):
+def cache_result(
+    prefix: str,
+    ttl: int = CacheConfig.DEFAULT_TTL,
+    key_func: Callable | None = None,
+    invalidate_on_error: bool = True,
+):
     """
     Enhanced caching decorator with advanced features
-    
+
     Args:
         prefix: Cache key prefix
         ttl: Time to live in seconds
         key_func: Custom function to generate cache key
         invalidate_on_error: Whether to delete cache on function error
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             cache = await get_cache()
-            
+
             # Generate cache key
             if key_func:
                 cache_key = key_func(*args, **kwargs)
             else:
                 cache_key = cache._generate_cache_key(prefix, *args, **kwargs)
-            
+
             # Try to get from cache
             start_time = time.time()
             cached_result = await cache.get(cache_key)
             if cached_result is not None:
                 cache_time = time.time() - start_time
-                logger.debug(f"💾 Cache HIT for {prefix} (key: {cache_key[:50]}...) in {cache_time:.3f}s")
+                logger.debug(
+                    f"💾 Cache HIT for {prefix} (key: {cache_key[:50]}...) in {cache_time:.3f}s"
+                )
                 return cached_result
-            
+
             # Cache miss - execute function
             logger.debug(f"🔄 Cache MISS for {prefix} (key: {cache_key[:50]}...)")
-            
+
             try:
                 result = await func(*args, **kwargs)
                 # Store in cache
@@ -259,7 +272,7 @@ def cache_result(prefix: str, ttl: int = CacheConfig.DEFAULT_TTL,
                 if invalidate_on_error:
                     await cache.delete(cache_key)
                 raise e
-        
+
         # Add cache management methods to function
         async def invalidate_cache(*args, **kwargs):
             """Invalidate cache for this function call"""
@@ -269,18 +282,18 @@ def cache_result(prefix: str, ttl: int = CacheConfig.DEFAULT_TTL,
             else:
                 cache_key = cache._generate_cache_key(prefix, *args, **kwargs)
             return await cache.delete(cache_key)
-        
+
         async def warm_cache(*args, **kwargs):
             """Warm cache by executing function"""
             return await wrapper(*args, **kwargs)
-        
+
         # Add methods as attributes with proper typing
         wrapper.invalidate_cache = invalidate_cache  # type: ignore
         wrapper.warm_cache = warm_cache  # type: ignore
         wrapper.cache_prefix = prefix  # type: ignore
-        
+
         return wrapper
-    
+
     return decorator
 
 
@@ -289,7 +302,7 @@ def cache_analytics_summary(ttl: int = CacheConfig.ANALYTICS_SUMMARY_TTL):
     return cache_result(
         prefix=CacheConfig.PREFIX_ANALYTICS,
         ttl=ttl,
-        key_func=lambda channel_id, period=7, **kwargs: f"summary:{channel_id}:{period}"
+        key_func=lambda channel_id, period=7, **kwargs: f"summary:{channel_id}:{period}",
     )
 
 
@@ -298,7 +311,7 @@ def cache_user_channels(ttl: int = CacheConfig.USER_CHANNELS_TTL):
     return cache_result(
         prefix=CacheConfig.PREFIX_USER,
         ttl=ttl,
-        key_func=lambda user_id, **kwargs: f"channels:{user_id}"
+        key_func=lambda user_id, **kwargs: f"channels:{user_id}",
     )
 
 
@@ -307,7 +320,7 @@ def cache_subscription_plans(ttl: int = CacheConfig.SUBSCRIPTION_PLANS_TTL):
     return cache_result(
         prefix=CacheConfig.PREFIX_SUBSCRIPTION,
         ttl=ttl,
-        key_func=lambda **kwargs: "plans:all"
+        key_func=lambda **kwargs: "plans:all",
     )
 
 
@@ -316,7 +329,7 @@ def cache_post_metrics(ttl: int = CacheConfig.POST_METRICS_TTL):
     return cache_result(
         prefix=CacheConfig.PREFIX_POST,
         ttl=ttl,
-        key_func=lambda post_id, metric_type="all", **kwargs: f"metrics:{post_id}:{metric_type}"
+        key_func=lambda post_id, metric_type="all", **kwargs: f"metrics:{post_id}:{metric_type}",
     )
 
 
@@ -325,30 +338,30 @@ def cache_channel_stats(ttl: int = CacheConfig.CHANNEL_STATS_TTL):
     return cache_result(
         prefix=CacheConfig.PREFIX_CHANNEL,
         ttl=ttl,
-        key_func=lambda channel_id, period=30, **kwargs: f"stats:{channel_id}:{period}"
+        key_func=lambda channel_id, period=30, **kwargs: f"stats:{channel_id}:{period}",
     )
 
 
 class CacheInvalidator:
     """Utility class for cache invalidation patterns"""
-    
+
     @staticmethod
     async def invalidate_user_data(user_id: int):
         """Invalidate all cache data for a user"""
         cache = await get_cache()
         patterns = [
             f"{CacheConfig.PREFIX_USER}:*{user_id}*",
-            f"{CacheConfig.PREFIX_ANALYTICS}:*{user_id}*"
+            f"{CacheConfig.PREFIX_ANALYTICS}:*{user_id}*",
         ]
-        
+
         total_deleted = 0
         for pattern in patterns:
             deleted = await cache.delete_pattern(pattern)
             total_deleted += deleted
-        
+
         logger.info(f"🗑️ Invalidated {total_deleted} cache entries for user {user_id}")
         return total_deleted
-    
+
     @staticmethod
     async def invalidate_channel_data(channel_id: int):
         """Invalidate all cache data for a channel"""
@@ -356,17 +369,17 @@ class CacheInvalidator:
         patterns = [
             f"{CacheConfig.PREFIX_CHANNEL}:*{channel_id}*",
             f"{CacheConfig.PREFIX_ANALYTICS}:*{channel_id}*",
-            f"{CacheConfig.PREFIX_POST}:*{channel_id}*"
+            f"{CacheConfig.PREFIX_POST}:*{channel_id}*",
         ]
-        
+
         total_deleted = 0
         for pattern in patterns:
             deleted = await cache.delete_pattern(pattern)
             total_deleted += deleted
-        
+
         logger.info(f"🗑️ Invalidated {total_deleted} cache entries for channel {channel_id}")
         return total_deleted
-    
+
     @staticmethod
     async def invalidate_analytics_data():
         """Invalidate all analytics cache data"""

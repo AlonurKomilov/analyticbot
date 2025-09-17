@@ -73,7 +73,12 @@ async def run_api_tests():
     print("🧪 Starting Standalone AI/ML API Tests")
     print("=" * 50)
 
-    test_results = {"total_tests": 0, "passed_tests": 0, "failed_tests": 0, "test_details": []}
+    test_results = {
+        "total_tests": 0,
+        "passed_tests": 0,
+        "failed_tests": 0,
+        "test_details": [],
+    }
 
     async with APITester() as tester:
         # Test 1: Root endpoint
@@ -134,7 +139,11 @@ async def run_api_tests():
             test_results["failed_tests"] += 1
 
         test_results["test_details"].append(
-            {"test": "Content analysis", "success": success, "response_time_ms": time_ms}
+            {
+                "test": "Content analysis",
+                "success": success,
+                "response_time_ms": time_ms,
+            }
         )
 
         # Test 4: Real-time Scoring
@@ -155,7 +164,11 @@ async def run_api_tests():
             test_results["failed_tests"] += 1
 
         test_results["test_details"].append(
-            {"test": "Real-time scoring", "success": success, "response_time_ms": time_ms}
+            {
+                "test": "Real-time scoring",
+                "success": success,
+                "response_time_ms": time_ms,
+            }
         )
 
         # Test 5: Demo Analysis

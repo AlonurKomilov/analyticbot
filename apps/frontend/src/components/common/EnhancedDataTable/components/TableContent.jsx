@@ -67,12 +67,33 @@ const TableContent = ({
     };
     
     const renderCellContent = (column, row, rowIndex) => {
+        // Support both 'render' and 'Cell' properties for flexibility
         if (column.render) {
             return column.render(row, rowIndex);
         }
         
+        if (column.Cell) {
+            const value = column.accessor ? column.accessor(row) : row[column.id];
+            return <column.Cell value={value} row={row} rowIndex={rowIndex} />;
+        }
+        
         const value = column.accessor ? column.accessor(row) : row[column.id];
-        return value;
+        
+        // Handle different value types safely
+        if (value === null || value === undefined) {
+            return '-';
+        }
+        
+        if (typeof value === 'object') {
+            // If it's an object, try to stringify it or return a fallback
+            if (Array.isArray(value)) {
+                return value.join(', ');
+            }
+            // For other objects, return a string representation or a fallback
+            return JSON.stringify(value);
+        }
+        
+        return String(value);
     };
     
     return (

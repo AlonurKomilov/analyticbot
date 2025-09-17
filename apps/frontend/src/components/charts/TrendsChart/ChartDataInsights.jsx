@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box } from '@mui/material';
+import { StatusChip } from '../../common';
 
 const ChartDataInsights = React.memo(({ data }) => {
     if (!data || data.length === 0) {
@@ -12,23 +13,20 @@ const ChartDataInsights = React.memo(({ data }) => {
 
     return (
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-            <Chip 
+            <StatusChip 
                 label={`${dataPointsCount} data points`} 
                 size="small" 
-                color="primary" 
-                variant="outlined" 
+                variant="primary"
             />
-            <Chip 
+            <StatusChip 
                 label={`Peak: ${peakViews.toLocaleString()} views`} 
                 size="small" 
-                color="success" 
-                variant="outlined" 
+                variant="success"
             />
-            <Chip 
+            <StatusChip 
                 label={`Avg engagement: ${avgEngagement}`} 
                 size="small" 
-                color="info" 
-                variant="outlined" 
+                variant="info"
             />
         </Box>
     );

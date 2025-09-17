@@ -11,6 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
+from apps.bot.services.alerting_service import AlertingService
+from apps.bot.container import Container
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -66,36 +69,17 @@ def get_analytics_client() -> AnalyticsV2Client:
     return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
 
 
-def calculate_performance_score(metrics: Dict[str, Any]) -> int:
-    """Calculate overall performance score based on multiple metrics"""
-    try:
-        # Weighted scoring algorithm
-        weights = {
-            'growth_rate': 0.3,
-            'engagement_rate': 0.4,
-            'reach_score': 0.2,
-            'consistency': 0.1
-        }
-        
-        # Normalize metrics to 0-100 scale
-        growth_score = min(100, max(0, (metrics.get('growth_rate', 0) / 20) * 100))
-        engagement_score = min(100, max(0, (metrics.get('engagement_rate', 0) / 10) * 100))
-        reach_score = metrics.get('reach_score', 0)
-        
-        # Consistency score based on variance (simplified)
-        consistency_score = 75  # Default good consistency
-        
-        total_score = (
-            growth_score * weights['growth_rate'] +
-            engagement_score * weights['engagement_rate'] +
-            reach_score * weights['reach_score'] +
-            consistency_score * weights['consistency']
-        )
-        
-        return int(total_score)
-    except Exception as e:
-        logger.error(f"Error calculating performance score: {e}")
-        return 50  # Default middle score
+def get_performance_analytics_service() -> PerformanceAnalyticsService:
+    """Get performance analytics service instance"""
+    container = Container()
+    return container.performance_analytics_service()
+
+
+def get_alerting_service() -> AlertingService:
+    """Get alerting service instance"""
+    container = Container()
+    return container.alerting_service()
+
 
 
 def generate_recommendations(metrics: Dict[str, Any], alerts: List[AlertEvent]) -> List[str]:
@@ -144,78 +128,6 @@ def generate_recommendations(metrics: Dict[str, Any], alerts: List[AlertEvent]) 
         return ["📊 Unable to generate recommendations at this time"]
 
 
-def check_alert_conditions(metrics: Dict[str, Any], channel_id: str) -> List[AlertEvent]:
-    """Check current metrics against alert conditions and generate alerts"""
-    alerts = []
-    
-    try:
-        current_time = datetime.utcnow()
-        
-        # Default alert conditions (in a real app, these would be user-configurable)
-        alert_conditions = [
-            {
-                'rule_id': 'growth-spike',
-                'name': 'Growth Spike Alert',
-                'type': 'growth',
-                'condition': 'greater_than',
-                'threshold': 15.0,
-                'enabled': True,
-            },
-            {
-                'rule_id': 'low-engagement',
-                'name': 'Low Engagement Warning',
-                'type': 'engagement',
-                'condition': 'less_than',
-                'threshold': 3.0,
-                'enabled': True,
-            },
-            {
-                'rule_id': 'high-reach',
-                'name': 'Excellent Reach Achievement',
-                'type': 'reach',
-                'condition': 'greater_than',
-                'threshold': 80.0,
-                'enabled': True,
-            }
-        ]
-        
-        for condition in alert_conditions:
-            if not condition['enabled']:
-                continue
-            
-            metric_value = metrics.get(condition['type'] + '_rate', 0)
-            if condition['type'] == 'reach':
-                metric_value = metrics.get('reach_score', 0)
-            
-            should_alert = False
-            severity = 'info'
-            
-            if condition['condition'] == 'greater_than' and metric_value > condition['threshold']:
-                should_alert = True
-                severity = 'success' if condition['type'] == 'growth' else 'info'
-            elif condition['condition'] == 'less_than' and metric_value < condition['threshold']:
-                should_alert = True
-                severity = 'warning'
-            
-            if should_alert:
-                alert = AlertEvent(
-                    id=f"{condition['rule_id']}-{int(current_time.timestamp())}",
-                    rule_id=condition['rule_id'],
-                    title=condition['name'],
-                    message=f"{condition['type'].title()} is {metric_value:.1f} (threshold: {condition['threshold']})",
-                    severity=severity,
-                    timestamp=current_time,
-                    channel_id=channel_id,
-                    triggered_value=metric_value,
-                    threshold=condition['threshold']
-                )
-                alerts.append(alert)
-        
-        return alerts
-    
-    except Exception as e:
-        logger.error(f"Error checking alert conditions: {e}")
-        return []
 
 
 @router.get("/dashboard/{channel_id}")
@@ -225,6 +137,8 @@ async def get_advanced_dashboard(
     include_alerts: bool = Query(default=True),
     include_recommendations: bool = Query(default=True),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    performance_service: PerformanceAnalyticsService = Depends(get_performance_analytics_service),
+    alerting_service: AlertingService = Depends(get_alerting_service),
 ) -> AdvancedAnalyticsResponse:
     """Get comprehensive advanced analytics dashboard data"""
     
@@ -258,7 +172,7 @@ async def get_advanced_dashboard(
         # Generate alerts if requested
         alerts = []
         if include_alerts:
-            alerts = check_alert_conditions(combined_metrics, channel_id)
+            alerts = alerting_service.check_alert_conditions(combined_metrics, channel_id)
         
         # Generate recommendations if requested
         recommendations = []
@@ -266,7 +180,7 @@ async def get_advanced_dashboard(
             recommendations = generate_recommendations(combined_metrics, alerts)
         
         # Calculate performance score
-        performance_score = calculate_performance_score(combined_metrics)
+        performance_score = performance_service.calculate_performance_score(combined_metrics)
         
         # Trend analysis (simplified)
         trend_analysis = {
@@ -322,6 +236,7 @@ async def get_real_time_metrics(
 async def check_alerts(
     channel_id: str,
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    alerting_service: AlertingService = Depends(get_alerting_service),
 ) -> List[AlertEvent]:
     """Check for active alerts for a channel"""
     
@@ -337,7 +252,7 @@ async def check_alerts(
             'reach_score': getattr(reach_data, 'reach_score', 0),
         }
         
-        return check_alert_conditions(combined_metrics, channel_id)
+        return alerting_service.check_alert_conditions(combined_metrics, channel_id)
         
     except Exception as e:
         logger.error(f"Error checking alerts: {e}")
@@ -348,6 +263,7 @@ async def check_alerts(
 async def get_recommendations(
     channel_id: str,
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    alerting_service: AlertingService = Depends(get_alerting_service),
 ) -> List[str]:
     """Get AI-powered recommendations for a channel"""
     
@@ -364,7 +280,7 @@ async def get_recommendations(
         }
         
         # Get any active alerts for context
-        alerts = check_alert_conditions(combined_metrics, channel_id)
+        alerts = alerting_service.check_alert_conditions(combined_metrics, channel_id)
         
         return generate_recommendations(combined_metrics, alerts)
         
@@ -378,6 +294,7 @@ async def get_performance_score(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    performance_service: PerformanceAnalyticsService = Depends(get_performance_analytics_service),
 ) -> Dict[str, Any]:
     """Get detailed performance score breakdown"""
     
@@ -399,7 +316,7 @@ async def get_performance_score(
         reach_score = metrics['reach_score']
         consistency_score = 75  # Placeholder
         
-        overall_score = calculate_performance_score(metrics)
+        overall_score = performance_service.calculate_performance_score(metrics)
         
         return {
             'overall_score': overall_score,

@@ -1,18 +1,26 @@
 """
 Integration tests for main FastAPI application endpoints.
 
-Tests cover the core API endpoints with dependency injection mocking.
+Tests cover the core API endpoints using centralized mock factory.
 """
 
 import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
-from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, MagicMock, patch, Mock
+
+# Import centralized mock factory
+from tests.factories.mock_factory import MockFactory, TestDataFactory
+
+# Mock TestClient for cases where FastAPI isn't available
+try:
+    from fastapi.testclient import TestClient
+except ImportError:
+    TestClient = Mock
 
 
 class MockPost:
-    """Mock post object for testing."""
+    """Mock post object for testing using test data factory."""
     
     def __init__(self):
         self.id = uuid4()
@@ -21,30 +29,33 @@ class MockPost:
         self.channel_id = "test_channel"
         self.user_id = "test_user"
         self.scheduled_at = datetime(2024, 12, 25, 10, 0, 0)
-        self.status = MagicMock()
-        self.status.value = "SCHEDULED"
+        self.status = MockFactory.create_config_mock({'value': 'SCHEDULED'})
         self.tags = ["test", "automation"]
         self.created_at = datetime(2024, 1, 1, 12, 0, 0)
 
 
 class TestMainAPIEndpoints:
-    """Test main API application endpoints."""
+    """Test main API application endpoints using mock factory."""
 
     @pytest.fixture
     def mock_dependencies(self):
-        """Mock all external dependencies."""
-        with patch('apps.api.deps.get_schedule_service') as mock_schedule_service, \
-             patch('apps.api.deps.get_delivery_service') as mock_delivery_service, \
-             patch('config.settings') as mock_settings, \
+        """Mock all dependencies using centralized factory."""
+        # Create services using factory
+        schedule_service = MockFactory.create_bot_service()
+        delivery_service = MockFactory.create_export_service()
+        config = MockFactory.create_config_mock({
+            'DEBUG': True,
+            'ENVIRONMENT': 'test',
+            'api': MockFactory.create_config_mock({'CORS_ORIGINS': ['http://localhost']})
+        })
+        
+        with patch('apps.api.deps.get_schedule_service', return_value=schedule_service) as mock_schedule_service, \
+             patch('apps.api.deps.get_delivery_service', return_value=delivery_service) as mock_delivery_service, \
+             patch('config.settings', config) as mock_settings, \
              patch('apps.api.routers.analytics_router.router'), \
              patch('apps.api.routers.analytics_v2.router'), \
              patch('apps.api.superadmin_routes.router'), \
              patch('apps.bot.api.content_protection_routes.router'):
-            
-            # Configure mock settings
-            mock_settings.DEBUG = True
-            mock_settings.ENVIRONMENT = "test"
-            mock_settings.api.CORS_ORIGINS = ["http://localhost"]
             
             yield {
                 'schedule_service': mock_schedule_service,
@@ -333,8 +344,9 @@ class TestMainAPIEndpoints:
         assert response.status_code == 200
 
         # With tags (depends on FastAPI query parameter handling)
-        post_data["tags"] = ["tag1", "tag2"]
-        response = client.post("/schedule", params=post_data)
+        post_data_with_tags = post_data.copy()
+        post_data_with_tags["tags"] = "tag1,tag2"  # Convert list to comma-separated string
+        response = client.post("/schedule", params=post_data_with_tags)
         assert response.status_code == 200
 
     def test_service_layer_error_handling(self, client, mock_dependencies):

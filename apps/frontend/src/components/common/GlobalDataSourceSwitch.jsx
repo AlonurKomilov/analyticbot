@@ -1,5 +1,6 @@
 import React from 'react';
-import { Chip, Box, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Tooltip, CircularProgress } from '@mui/material';
+import { StatusChip } from './index.js';
 import { useDataSource } from '../../hooks/useDataSource';
 
 /**
@@ -37,11 +38,11 @@ const GlobalDataSourceSwitch = ({
   
   if (switching) {
     return (
-      <Chip
+      <StatusChip
         icon={<CircularProgress size={14} />}
         label="Switching..."
         size={size}
-        variant={variant}
+        variant="info"
         sx={{ ...sx, cursor: 'wait' }}
       />
     );
@@ -52,11 +53,10 @@ const GlobalDataSourceSwitch = ({
       title={`Currently using ${isUsingRealAPI ? 'real API data from your channels' : 'professional demo data'}. Click to switch to ${isUsingRealAPI ? 'demo' : 'real API'} data.`}
       arrow
     >
-      <Chip
+      <StatusChip
         label={showLabel ? (isUsingRealAPI ? '🔴 Real API' : '🟡 Demo Data') : (isUsingRealAPI ? '🔴' : '🟡')}
-        color={isUsingRealAPI ? 'success' : 'warning'}
+        variant={isUsingRealAPI ? 'success' : 'warning'}
         size={size}
-        variant={variant}
         onClick={handleSwitch}
         sx={{ 
           cursor: 'pointer', 

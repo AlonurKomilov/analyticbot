@@ -4,10 +4,10 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip,
-  IconButton,
   Badge
 } from '@mui/material';
+import { IconButton } from '../../common/TouchTargetCompliance.jsx';
+import { StatusChip } from '../../common';
 import {
   Notifications as NotificationsIcon,
   NotificationsActive as NotificationsActiveIcon,
@@ -167,11 +167,10 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
               )}
             </Badge>
             <Typography variant="h6">Real-time Alerts</Typography>
-            <Chip 
+            <StatusChip 
               label={`${alertRules.filter(rule => rule.enabled).length} rules active`}
               size="small" 
-              color="primary"
-              variant="outlined"
+              variant="primary"
             />
           </Box>
           

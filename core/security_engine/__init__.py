@@ -13,7 +13,7 @@ This module provides comprehensive security services including:
 
 from .auth import SecurityManager, create_access_token, verify_token
 from .mfa import MFAManager
-from .models import User, UserRole, UserSession
+from .models import User, UserRole, UserSession, UserStatus, AuthProvider
 from .oauth import OAuthManager
 from .rbac import RBACManager
 
@@ -24,6 +24,8 @@ __all__ = [
     "User",
     "UserRole",
     "UserSession",
+    "UserStatus",
+    "AuthProvider",
     "OAuthManager",
     "MFAManager",
     "RBACManager",

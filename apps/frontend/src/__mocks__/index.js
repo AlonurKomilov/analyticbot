@@ -9,9 +9,10 @@
 import * as analytics from './analytics/index.js';
 import * as channels from './channels/index.js';
 import * as user from './user/index.js';
+import * as system from './system/index.js';
 
 // Re-export everything for easy access
-export { analytics, channels, user };
+export { analytics, channels, user, system };
 
 // Backward compatibility - recreate the original mockAnalyticsData structure
 export const mockAnalyticsData = {
@@ -21,7 +22,7 @@ export const mockAnalyticsData = {
   engagementMetrics: analytics.engagementData,
   channels: channels.channelsData,
   plan: user.planData,
-  systemStatus: user.systemStatusData
+  systemStatus: system.systemStatusData
 };
 
 // Mock API functions for backward compatibility

@@ -102,7 +102,9 @@ const WatermarkTool = () => {
             formData.append('color', watermarkConfig.color);
             formData.append('add_shadow', watermarkConfig.addShadow.toString());
 
-            const response = await fetch('http://localhost:8000/api/v1/content-protection/watermark/image', {
+            // Use proper base URL from apiClient instead of hardcoded localhost
+            const baseURL = apiClient.baseURL || '';
+            const response = await fetch(`${baseURL}/api/v1/content-protection/watermark/image`, {
                 method: 'POST',
                 body: formData,
                 headers: {

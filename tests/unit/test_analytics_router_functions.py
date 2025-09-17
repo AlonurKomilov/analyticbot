@@ -1,7 +1,7 @@
 """
 Unit tests for Analytics Router functions.
 
-Direct testing of router functions with dependency injection mocking.
+Direct testing of router functions using centralized mock factory.
 This achieves coverage without complex import dependencies.
 """
 
@@ -14,22 +14,36 @@ import os
 # Add the project root to the path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
+# Import centralized mock factory
+from tests.factories.mock_factory import MockFactory, TestDataFactory
+
 
 class TestAnalyticsRouterFunctions:
-    """Test individual functions from analytics router."""
+    """Test individual functions from analytics router using mock factory."""
 
     @pytest.fixture(autouse=True)
-    def setup_mocks(self):
-        """Setup mocks for all external dependencies."""
+    def setup_dependencies(self):
+        """Setup test dependencies using centralized factory."""
+        # Create consistent mocks using factory
+        self.analytics_service = MockFactory.create_analytics_service()
+        self.channel_repository = MockFactory.create_channel_repository()
+        self.db_pool = MockFactory.create_db_pool()
+        self.config = MockFactory.create_config_mock()
+        
+        # Create test data
+        self.sample_analytics = TestDataFactory.create_analytics_data()
+        self.sample_channels = [TestDataFactory.create_channel_data()]
+        
+        # Setup patches with factory-created mocks
         self.patches = [
             patch('apps.bot.analytics.AdvancedDataProcessor'),
             patch('apps.bot.analytics.AIInsightsGenerator'),
             patch('apps.bot.analytics.DashboardFactory'), 
             patch('apps.bot.analytics.PredictiveAnalyticsEngine'),
             patch('apps.bot.container.container'),
-            patch('apps.bot.services.analytics_service.AnalyticsService'),
+            patch('apps.bot.services.analytics_service.AnalyticsService', return_value=self.analytics_service),
             patch('infra.db.repositories.analytics_repository.AsyncpgAnalyticsRepository'),
-            patch('infra.db.repositories.channel_repository.AsyncpgChannelRepository'),
+            patch('infra.db.repositories.channel_repository.AsyncpgChannelRepository', return_value=self.channel_repository),
             patch('apps.bot.handlers.alerts'),
             patch('apps.bot.handlers.analytics_v2'),
             patch('apps.bot.handlers.exports'),

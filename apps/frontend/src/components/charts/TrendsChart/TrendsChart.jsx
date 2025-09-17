@@ -4,9 +4,9 @@ import {
     CardContent,
     Typography,
     Box,
-    IconButton,
     Tooltip
 } from '@mui/material';
+import { IconButton } from '../../common/TouchTargetCompliance.jsx';
 import {
     ShowChart as ChartIcon,
     Refresh as RefreshIcon,

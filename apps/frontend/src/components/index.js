@@ -34,14 +34,33 @@ export { TrendsChart } from './charts/TrendsChart';
 
 // Common Components (Barrel Export)
 export { 
-    AccessibleButton, 
     AccessibleFormField, 
     ErrorBoundary, 
     ExportButton, 
-    LoadingButton, 
     ShareButton, 
-    ToastNotification 
+    ToastNotification,
+    UnifiedButton  // New consolidated button component
 } from './common';
+
+// Layout Components (Enhanced Visual Hierarchy)
+export {
+    EnhancedDashboardLayout,
+    EnhancedSection,
+    EnhancedCard
+} from './layout';
+
+// Showcase Components (Decomposed from DataTablesShowcase)
+export {
+    TablesShowcase,
+    ShowcaseNavigation
+} from './showcase';
+
+// Payment Components (Refactored SubscriptionDashboard)
+export {
+    SubscriptionCard,
+    UsageMetrics,
+    PaymentHistory
+} from './payment';
 
 // Domain Components (Clean Architecture)
 export { 

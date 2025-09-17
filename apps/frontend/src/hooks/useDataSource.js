@@ -1,146 +1,177 @@
 /**
- * React Hooks for Data Source Management
- * Clean hooks to replace scattered event listeners and provide centralized data source control
+ * Clean Data Source Hook - Production Code
+ * Uses dependency injection to avoid mixed mock/production logic
+ * Now supports optional AuthContext integration for JWT authentication
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { dataSourceManager } from '../utils/dataSourceManager.js';
-import { mockService } from '../services/mockService.js';
-import { configUtils } from '../config/mockConfig.js';
+import { productionDataProvider } from '../providers/DataProvider.js';
 
 /**
- * Main hook for data source management
- * Replaces scattered event listeners with clean React patterns
+ * Clean hook for data management using dependency injection
+ * NO mock switching logic - uses provider pattern instead
  */
-export const useDataSource = (options = {}) => {
+export const useDataSource = (dataProvider = productionDataProvider, options = {}) => {
     const {
-        autoCheckApi = true,
-        onSourceChange = null,
-        enableApiStatusPolling = false,
-        pollingInterval = 30000 // 30 seconds
+        onProviderChange = null,
+        enableStatusPolling = false,
+        pollingInterval = 30000, // 30 seconds
+        autoCheckAvailability = true
     } = options;
     
-    const [dataSource, setDataSource] = useState(dataSourceManager.getDataSource());
-    const [apiStatus, setApiStatus] = useState(dataSourceManager.getApiStatus());
+    const [isAvailable, setIsAvailable] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [lastCheck, setLastCheck] = useState(null);
     
-    const logger = configUtils.createLogger('useDataSource');
     const pollingRef = useRef(null);
+    const providerRef = useRef(dataProvider);
     
-    // Handle data source changes
-    const handleDataSourceChange = useCallback((eventData) => {
-        setDataSource(eventData.source);
-        setError(null);
+    // Update provider reference when it changes
+    useEffect(() => {
+        providerRef.current = dataProvider;
         
-        if (onSourceChange) {
-            onSourceChange(eventData);
+        if (onProviderChange) {
+            onProviderChange({
+                provider: dataProvider.getProviderName(),
+                timestamp: new Date().toISOString()
+            });
+        }
+    }, [dataProvider, onProviderChange]);
+    
+    // Check provider availability
+    const checkAvailability = useCallback(async (force = false) => {
+        // Don't check too frequently unless forced
+        if (!force && lastCheck && (Date.now() - lastCheck) < 10000) {
+            return isAvailable;
         }
         
-        logger.info('Data source changed:', eventData);
-    }, [onSourceChange, logger]);
-    
-    // Handle API status changes
-    const handleApiStatusChange = useCallback((eventData) => {
-        if (eventData.type === 'api_status_changed') {
-            setApiStatus(eventData.status);
-            logger.info('API status changed:', eventData.status);
-        }
-    }, [logger]);
-    
-    // Switch data source
-    const switchDataSource = useCallback(async (newSource, reason = 'user_choice') => {
         setIsLoading(true);
         setError(null);
         
         try {
-            let success = false;
-            
-            if (newSource === 'api') {
-                success = await dataSourceManager.switchToApi(reason);
-            } else if (newSource === 'mock') {
-                success = await dataSourceManager.switchToMock(reason);
-            }
-            
-            if (!success) {
-                throw new Error(`Failed to switch to ${newSource}`);
-            }
-            
-            return true;
+            const available = await providerRef.current.isAvailable();
+            setIsAvailable(available);
+            setLastCheck(Date.now());
+            return available;
         } catch (err) {
-            setError(err.message);
-            logger.error('Failed to switch data source:', err);
+            setError(`Availability check failed: ${err.message}`);
+            setIsAvailable(false);
+            console.error('Provider availability check failed:', err);
             return false;
         } finally {
             setIsLoading(false);
         }
-    }, [logger]);
+    }, [isAvailable, lastCheck]);
     
-    // Check API status
-    const checkApiStatus = useCallback(async (force = false) => {
+    // Get analytics data
+    const getAnalytics = useCallback(async (channelId) => {
         setIsLoading(true);
+        setError(null);
         
         try {
-            const status = await dataSourceManager.checkApiStatus(force);
-            setApiStatus(status);
-            return status;
+            const data = await providerRef.current.getAnalytics(channelId);
+            return data;
         } catch (err) {
-            setError(err.message);
-            logger.error('API status check failed:', err);
-            return 'offline';
+            setError(`Failed to get analytics: ${err.message}`);
+            console.error('Analytics fetch failed:', err);
+            throw err;
         } finally {
             setIsLoading(false);
         }
-    }, [logger]);
+    }, []);
     
-    // Setup event listeners and polling
-    useEffect(() => {
-        // Subscribe to data source manager events
-        const unsubscribeSource = dataSourceManager.subscribe(handleDataSourceChange);
-        const unsubscribeStatus = dataSourceManager.subscribe(handleApiStatusChange, {
-            eventType: 'api_status_changed'
-        });
+    // Get top posts
+    const getTopPosts = useCallback(async (channelId, options = {}) => {
+        setIsLoading(true);
+        setError(null);
         
-        // Initial API check if enabled
-        if (autoCheckApi) {
-            checkApiStatus(true);
+        try {
+            const data = await providerRef.current.getTopPosts(channelId, options);
+            return data;
+        } catch (err) {
+            setError(`Failed to get top posts: ${err.message}`);
+            console.error('Top posts fetch failed:', err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+    
+    // Get engagement metrics
+    const getEngagementMetrics = useCallback(async (channelId, options = {}) => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const data = await providerRef.current.getEngagementMetrics(channelId, options);
+            return data;
+        } catch (err) {
+            setError(`Failed to get engagement metrics: ${err.message}`);
+            console.error('Engagement metrics fetch failed:', err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+    
+    // Get recommendations
+    const getRecommendations = useCallback(async (channelId) => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const data = await providerRef.current.getRecommendations(channelId);
+            return data;
+        } catch (err) {
+            setError(`Failed to get recommendations: ${err.message}`);
+            console.error('Recommendations fetch failed:', err);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+    
+    // Setup availability polling and initial check
+    useEffect(() => {
+        // Initial availability check if enabled
+        if (autoCheckAvailability) {
+            checkAvailability(true);
         }
         
-        // Setup API status polling if enabled
-        if (enableApiStatusPolling) {
+        // Setup availability polling if enabled
+        if (enableStatusPolling) {
             pollingRef.current = setInterval(() => {
-                checkApiStatus(false);
+                checkAvailability(false);
             }, pollingInterval);
         }
         
         return () => {
-            unsubscribeSource();
-            unsubscribeStatus();
-            
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
                 pollingRef.current = null;
             }
         };
-    }, [autoCheckApi, enableApiStatusPolling, pollingInterval, checkApiStatus, handleDataSourceChange, handleApiStatusChange]);
+    }, [autoCheckAvailability, enableStatusPolling, pollingInterval, checkAvailability]);
     
     return {
         // State
-        dataSource,
-        apiStatus,
+        isAvailable,
         isLoading,
         error,
+        lastCheck,
+        providerName: dataProvider.getProviderName(),
         
-        // Actions
-        switchDataSource,
-        checkApiStatus,
-        switchToMock: (reason) => switchDataSource('mock', reason),
-        switchToApi: (reason) => switchDataSource('api', reason),
+        // Data fetching methods
+        getAnalytics,
+        getTopPosts,
+        getEngagementMetrics,
+        getRecommendations,
         
         // Utilities
-        isUsingRealAPI: dataSource === 'api',
-        isApiOnline: apiStatus === 'online',
-        canUseApi: apiStatus === 'online',
+        checkAvailability,
+        isOnline: isAvailable === true,
+        isOffline: isAvailable === false,
         
         // Clear error
         clearError: () => setError(null),
@@ -148,15 +179,12 @@ export const useDataSource = (options = {}) => {
 };
 
 /**
- * Hook for analytics data with automatic source switching
+ * Clean analytics hook using data provider
  */
-export const useAnalytics = (channelId = 'demo_channel', options = {}) => {
-    const { dataSource, isUsingRealAPI } = useDataSource();
+export const useAnalytics = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
-    const logger = configUtils.createLogger('useAnalytics');
     
     const fetchAnalytics = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
@@ -165,35 +193,22 @@ export const useAnalytics = (channelId = 'demo_channel', options = {}) => {
         setError(null);
         
         try {
-            let analyticsData;
-            
-            if (isUsingRealAPI) {
-                // Use real API (would be imported from apiClient or store)
-                logger.info('Fetching analytics from real API');
-                // This would call the real API method
-                // analyticsData = await apiClient.getAnalytics(channelId);
-                throw new Error('Real API not implemented in this hook yet');
-            } else {
-                // Use mock service
-                logger.info('Fetching analytics from mock service');
-                analyticsData = await mockService.getAnalyticsOverview(channelId);
-            }
-            
+            const analyticsData = await dataProvider.getAnalytics(channelId);
             setData(analyticsData);
             return analyticsData;
         } catch (err) {
             setError(err.message);
-            logger.error('Analytics fetch failed:', err);
+            console.error('Analytics fetch failed:', err);
             return null;
         } finally {
             setIsLoading(false);
         }
-    }, [channelId, isUsingRealAPI, data, logger]);
+    }, [channelId, dataProvider, data]);
     
-    // Auto-fetch on mount and data source change
+    // Auto-fetch on mount and provider change
     useEffect(() => {
         fetchAnalytics();
-    }, [dataSource]); // Re-fetch when data source changes
+    }, [dataProvider, channelId]);
     
     return {
         data,
@@ -205,68 +220,12 @@ export const useAnalytics = (channelId = 'demo_channel', options = {}) => {
 };
 
 /**
- * Hook for post dynamics data
+ * Clean top posts hook using data provider
  */
-export const usePostDynamics = (channelId = 'demo_channel', period = '24h') => {
-    const { dataSource, isUsingRealAPI } = useDataSource();
+export const useTopPosts = (channelId = 'demo_channel', options = {}, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
-    const logger = configUtils.createLogger('usePostDynamics');
-    
-    const fetchPostDynamics = useCallback(async (forceRefresh = false) => {
-        if (!forceRefresh && data) return data;
-        
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            let dynamicsData;
-            
-            if (isUsingRealAPI) {
-                logger.info('Fetching post dynamics from real API');
-                // Real API call would go here
-                throw new Error('Real API not implemented in this hook yet');
-            } else {
-                logger.info('Fetching post dynamics from mock service');
-                dynamicsData = await mockService.getPostDynamics(channelId, period);
-            }
-            
-            setData(dynamicsData);
-            return dynamicsData;
-        } catch (err) {
-            setError(err.message);
-            logger.error('Post dynamics fetch failed:', err);
-            return null;
-        } finally {
-            setIsLoading(false);
-        }
-    }, [channelId, period, isUsingRealAPI, data, logger]);
-    
-    useEffect(() => {
-        fetchPostDynamics();
-    }, [dataSource, period]);
-    
-    return {
-        data,
-        isLoading,
-        error,
-        refetch: fetchPostDynamics,
-        clearError: () => setError(null),
-    };
-};
-
-/**
- * Hook for top posts data
- */
-export const useTopPosts = (channelId = 'demo_channel', period = 'today', sortBy = 'views') => {
-    const { dataSource, isUsingRealAPI } = useDataSource();
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    
-    const logger = configUtils.createLogger('useTopPosts');
     
     const fetchTopPosts = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
@@ -275,31 +234,21 @@ export const useTopPosts = (channelId = 'demo_channel', period = 'today', sortBy
         setError(null);
         
         try {
-            let postsData;
-            
-            if (isUsingRealAPI) {
-                logger.info('Fetching top posts from real API');
-                // Real API call would go here
-                throw new Error('Real API not implemented in this hook yet');
-            } else {
-                logger.info('Fetching top posts from mock service');
-                postsData = await mockService.getTopPosts(channelId, period, sortBy);
-            }
-            
+            const postsData = await dataProvider.getTopPosts(channelId, options);
             setData(postsData);
             return postsData;
         } catch (err) {
             setError(err.message);
-            logger.error('Top posts fetch failed:', err);
+            console.error('Top posts fetch failed:', err);
             return null;
         } finally {
             setIsLoading(false);
         }
-    }, [channelId, period, sortBy, isUsingRealAPI, data, logger]);
+    }, [channelId, options, dataProvider, data]);
     
     useEffect(() => {
         fetchTopPosts();
-    }, [dataSource, period, sortBy]);
+    }, [dataProvider, channelId, options]);
     
     return {
         data,
@@ -311,96 +260,123 @@ export const useTopPosts = (channelId = 'demo_channel', period = 'today', sortBy
 };
 
 /**
- * Hook for best time recommendations
+ * Clean engagement metrics hook using data provider
  */
-export const useBestTime = (channelId = 'demo_channel', timeframe = 'week') => {
-    const { dataSource, isUsingRealAPI } = useDataSource();
+export const useEngagementMetrics = (channelId = 'demo_channel', options = {}, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     
-    const logger = configUtils.createLogger('useBestTime');
-    
-    const fetchBestTime = useCallback(async (forceRefresh = false) => {
+    const fetchEngagementMetrics = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
         
         setIsLoading(true);
         setError(null);
         
         try {
-            let bestTimeData;
-            
-            if (isUsingRealAPI) {
-                logger.info('Fetching best time from real API');
-                // Real API call would go here
-                throw new Error('Real API not implemented in this hook yet');
-            } else {
-                logger.info('Fetching best time from mock service');
-                bestTimeData = await mockService.getBestTime(channelId, timeframe);
-            }
-            
-            setData(bestTimeData);
-            return bestTimeData;
+            const metricsData = await dataProvider.getEngagementMetrics(channelId, options);
+            setData(metricsData);
+            return metricsData;
         } catch (err) {
             setError(err.message);
-            logger.error('Best time fetch failed:', err);
+            console.error('Engagement metrics fetch failed:', err);
             return null;
         } finally {
             setIsLoading(false);
         }
-    }, [channelId, timeframe, isUsingRealAPI, data, logger]);
+    }, [channelId, options, dataProvider, data]);
     
     useEffect(() => {
-        fetchBestTime();
-    }, [dataSource, timeframe]);
+        fetchEngagementMetrics();
+    }, [dataProvider, channelId, options]);
     
     return {
         data,
         isLoading,
         error,
-        refetch: fetchBestTime,
+        refetch: fetchEngagementMetrics,
         clearError: () => setError(null),
     };
 };
 
 /**
- * Composite hook for all analytics data
+ * Clean recommendations hook using data provider
  */
-export const useAllAnalytics = (channelId = 'demo_channel') => {
-    const overview = useAnalytics(channelId);
-    const postDynamics = usePostDynamics(channelId);
-    const topPosts = useTopPosts(channelId);
-    const bestTime = useBestTime(channelId);
+export const useRecommendations = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
+    const [data, setData] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     
-    const isLoading = overview.isLoading || postDynamics.isLoading || topPosts.isLoading || bestTime.isLoading;
-    const hasError = overview.error || postDynamics.error || topPosts.error || bestTime.error;
+    const fetchRecommendations = useCallback(async (forceRefresh = false) => {
+        if (!forceRefresh && data) return data;
+        
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const recommendationsData = await dataProvider.getRecommendations(channelId);
+            setData(recommendationsData);
+            return recommendationsData;
+        } catch (err) {
+            setError(err.message);
+            console.error('Recommendations fetch failed:', err);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [channelId, dataProvider, data]);
     
-    const refetchAll = useCallback(() => {
-        overview.refetch(true);
-        postDynamics.refetch(true);
-        topPosts.refetch(true);
-        bestTime.refetch(true);
-    }, [overview, postDynamics, topPosts, bestTime]);
-    
-    const clearAllErrors = useCallback(() => {
-        overview.clearError();
-        postDynamics.clearError();
-        topPosts.clearError();
-        bestTime.clearError();
-    }, [overview, postDynamics, topPosts, bestTime]);
+    useEffect(() => {
+        fetchRecommendations();
+    }, [dataProvider, channelId]);
     
     return {
-        overview: overview.data,
-        postDynamics: postDynamics.data,
+        data,
+        isLoading,
+        error,
+        refetch: fetchRecommendations,
+        clearError: () => setError(null),
+    };
+};
+
+/**
+ * Composite hook for all analytics data using dependency injection
+ */
+export const useAllAnalytics = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
+    const analytics = useAnalytics(channelId, dataProvider);
+    const topPosts = useTopPosts(channelId, {}, dataProvider);
+    const engagementMetrics = useEngagementMetrics(channelId, {}, dataProvider);
+    const recommendations = useRecommendations(channelId, dataProvider);
+    
+    const isLoading = analytics.isLoading || topPosts.isLoading || engagementMetrics.isLoading || recommendations.isLoading;
+    const hasError = analytics.error || topPosts.error || engagementMetrics.error || recommendations.error;
+    
+    const refetchAll = useCallback(() => {
+        analytics.refetch(true);
+        topPosts.refetch(true);
+        engagementMetrics.refetch(true);
+        recommendations.refetch(true);
+    }, [analytics, topPosts, engagementMetrics, recommendations]);
+    
+    const clearAllErrors = useCallback(() => {
+        analytics.clearError();
+        topPosts.clearError();
+        engagementMetrics.clearError();
+        recommendations.clearError();
+    }, [analytics, topPosts, engagementMetrics, recommendations]);
+    
+    return {
+        analytics: analytics.data,
         topPosts: topPosts.data,
-        bestTime: bestTime.data,
+        engagementMetrics: engagementMetrics.data,
+        recommendations: recommendations.data,
         isLoading,
         hasError,
         errors: {
-            overview: overview.error,
-            postDynamics: postDynamics.error,
+            analytics: analytics.error,
             topPosts: topPosts.error,
-            bestTime: bestTime.error,
+            engagementMetrics: engagementMetrics.error,
+            recommendations: recommendations.error,
         },
         actions: {
             refetchAll,

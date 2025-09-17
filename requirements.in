@@ -16,3 +16,6 @@ pre-commit>=3.6.0
 
 # Development servers
 watchdog>=3.0.0
+
+# Package management
+pip-tools>=7.4.0

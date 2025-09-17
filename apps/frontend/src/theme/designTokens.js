@@ -28,6 +28,61 @@ export const DESIGN_TOKENS = {
     }
   },
 
+  // Color system with consistent palette
+  colors: {
+    primary: {
+      main: '#1976d2',
+      light: '#42a5f5',
+      dark: '#1565c0',
+      contrastText: '#ffffff'
+    },
+    background: {
+      primary: '#ffffff',
+      secondary: '#f8f9fa',
+      tertiary: '#f1f3f4',
+      paper: '#ffffff',
+      default: '#fafbfc'
+    },
+    text: {
+      primary: '#1c2128',
+      secondary: '#656d76',
+      disabled: '#8b949e',
+      hint: '#656d76'
+    },
+    border: {
+      default: '#d0d7de',
+      muted: '#f1f3f4',
+      subtle: '#eaeef2'
+    },
+    focus: {
+      ring: '#1976d2',
+      background: 'rgba(25, 118, 210, 0.08)'
+    }
+  },
+
+  // Shape system for consistent styling
+  shape: {
+    borderRadius: {
+      none: '0px',
+      sm: '4px',
+      md: '8px',
+      lg: '12px',
+      xl: '16px',
+      '2xl': '24px',
+      full: '9999px'
+    }
+  },
+
+  // Elevation system for shadows and depth
+  elevation: {
+    none: '0',
+    low: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
+    medium: '0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)',
+    high: '0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23)',
+    higher: '0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22)',
+    highest: '0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22)'
+  },
+
   // Component sizing standards
   components: {
     button: {
@@ -42,6 +97,14 @@ export const DESIGN_TOKENS = {
         tertiary: { variant: 'text', color: 'primary' },
         danger: { variant: 'contained', color: 'error' },
         success: { variant: 'contained', color: 'success' }
+      }
+    },
+
+    input: {
+      sizes: {
+        small: { height: 32, fontSize: '0.875rem', padding: '6px 12px' },
+        medium: { height: 40, fontSize: '1rem', padding: '8px 16px' },
+        large: { height: 48, fontSize: '1.125rem', padding: '12px 20px' }
       }
     },
     
@@ -87,6 +150,49 @@ export const DESIGN_TOKENS = {
     }
   },
 
+  // Spacing system for consistent layouts
+  spacing: {
+    section: {
+      padding: {
+        xs: '16px',
+        sm: '24px',
+        md: '32px',
+        lg: '48px',
+        xl: '64px'
+      },
+      margin: {
+        xs: '8px',
+        sm: '16px',
+        md: '24px',
+        lg: '32px',
+        xl: '48px'
+      },
+      gap: {
+        xs: '8px',
+        sm: '16px',
+        md: '24px',
+        lg: '32px',
+        xl: '48px'
+      }
+    },
+    component: {
+      padding: {
+        xs: '8px',
+        sm: '12px',
+        md: '16px',
+        lg: '20px',
+        xl: '24px'
+      },
+      gap: {
+        xs: '4px',
+        sm: '8px',
+        md: '12px',
+        lg: '16px',
+        xl: '20px'
+      }
+    }
+  },
+
   // Layout and spacing standards
   layout: {
     maxWidth: {
@@ -95,6 +201,16 @@ export const DESIGN_TOKENS = {
       lg: '1024px',
       xl: '1280px',
       '2xl': '1536px'
+    },
+    
+    borderRadius: {
+      none: '0px',
+      sm: '4px',
+      md: '8px',
+      lg: '12px',
+      xl: '16px',
+      '2xl': '24px',
+      full: '9999px'
     },
     
     container: {

@@ -4,7 +4,8 @@
  */
 
 import { MOCK_CONFIG, MOCK_DATA_CONFIG, configUtils } from '../config/mockConfig.js';
-import { mockAnalyticsData, getMockInitialData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics } from '../utils/mockData.js';
+import { mockAnalyticsData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics } from '../__mocks__/index.js';
+import { getMockInitialData } from '../utils/mockData.js'; // Keep this one until migrated
 
 class MockService {
     constructor() {

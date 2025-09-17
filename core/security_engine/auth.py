@@ -22,6 +22,7 @@ from jose import JWTError, jwt
 
 from .config import SecurityConfig
 from .models import User, UserRole, UserSession
+from .rbac import RBACManager, Permission
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ class SecurityManager:
             decode_responses=True,
         )
         self.security = HTTPBearer()
+        self.rbac_manager = RBACManager()
 
     def create_access_token(
         self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
@@ -349,6 +351,184 @@ class SecurityManager:
 
         except JWTError:
             return False
+
+    def generate_password_reset_token(self, user_email: str) -> str:
+        """
+        Generate password reset token
+        
+        Args:
+            user_email: User email for password reset
+            
+        Returns:
+            Password reset token
+        """
+        # Generate secure token
+        reset_token = secrets.token_urlsafe(32)
+        
+        # Store in Redis with expiration (15 minutes)
+        reset_data = {
+            "email": user_email,
+            "created_at": datetime.utcnow().isoformat(),
+            "used": False
+        }
+        
+        self.redis_client.setex(
+            f"password_reset:{reset_token}", 
+            900,  # 15 minutes
+            json.dumps(reset_data)
+        )
+        
+        logger.info(f"Password reset token generated for {user_email}")
+        return reset_token
+
+    def verify_password_reset_token(self, reset_token: str) -> dict[str, Any] | None:
+        """
+        Verify password reset token
+        
+        Args:
+            reset_token: Password reset token to verify
+            
+        Returns:
+            Token data if valid, None otherwise
+        """
+        try:
+            reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
+            if not reset_data_str:
+                return None
+                
+            reset_data = json.loads(reset_data_str)
+            
+            # Check if token was already used
+            if reset_data.get("used", False):
+                return None
+                
+            return reset_data
+            
+        except (json.JSONDecodeError, redis.RedisError) as e:
+            logger.error(f"Error verifying reset token: {e}")
+            return None
+
+    def consume_password_reset_token(self, reset_token: str) -> bool:
+        """
+        Mark password reset token as used
+        
+        Args:
+            reset_token: Token to consume
+            
+        Returns:
+            Success status
+        """
+        try:
+            reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
+            if not reset_data_str:
+                return False
+                
+            reset_data = json.loads(reset_data_str)
+            reset_data["used"] = True
+            
+            # Update with shorter expiration (1 hour for audit trail)
+            self.redis_client.setex(
+                f"password_reset:{reset_token}",
+                3600,
+                json.dumps(reset_data)
+            )
+            
+            return True
+            
+        except (json.JSONDecodeError, redis.RedisError) as e:
+            logger.error(f"Error consuming reset token: {e}")
+            return False
+
+    def refresh_access_token(self, refresh_token: str) -> str:
+        """
+        Refresh access token using valid refresh token
+        
+        Args:
+            refresh_token: Valid refresh token
+            
+        Returns:
+            New access token
+            
+        Raises:
+            HTTPException: If refresh token is invalid or expired
+        """
+        try:
+            # Validate refresh token
+            refresh_data_str = self.redis_client.get(f"refresh_token:{refresh_token}")
+            if not refresh_data_str:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token"
+                )
+                
+            refresh_data = json.loads(refresh_data_str)
+            user_id = refresh_data.get("user_id")
+            session_id = refresh_data.get("session_id")
+            
+            if not user_id or not session_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid refresh token data"
+                )
+            
+            # Verify session still exists
+            session = self.get_session(session_id)
+            if not session:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session expired"
+                )
+            
+            # Create new access token with minimal user data
+            # In a real implementation, you'd fetch full user data from database
+            from core.security_engine.models import User, UserRole, UserStatus, AuthProvider
+            
+            # Mock user object for token creation - replace with actual user lookup
+            user = User(
+                id=user_id,
+                email=f"user_{user_id}@example.com",  # This should come from database
+                username=f"user_{user_id}",           # This should come from database
+                role=UserRole.USER,                   # This should come from database
+                status=UserStatus.ACTIVE,             # This should come from database
+                auth_provider=AuthProvider.LOCAL      # This should come from database
+            )
+            
+            # Create new access token
+            new_access_token = self.create_access_token(
+                user,
+                expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
+                session_id=session_id
+            )
+            
+            logger.info(f"Access token refreshed for user {user_id}")
+            return new_access_token
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing refresh token data: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error refreshing access token: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Token refresh failed"
+            )
+
+    def revoke_user_sessions(self, user_id: str) -> int:
+        """
+        Revoke all active sessions for a user
+        
+        Args:
+            user_id: User ID to revoke sessions for
+            
+        Returns:
+            Number of sessions revoked
+        """
+        return self.terminate_all_user_sessions(user_id)
 
     def _cache_token(self, token: str, payload: dict[str, Any], expire: datetime) -> None:
         """Cache token in Redis for fast validation"""

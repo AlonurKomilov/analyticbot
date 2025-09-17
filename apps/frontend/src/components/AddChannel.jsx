@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Typography, Alert, CircularProgress } from '@mui/material';
+import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
 import { useAppStore } from '../store/appStore.js';
+import UnifiedButton, { PrimaryButton } from './common/UnifiedButton.jsx';
 
 const AddChannel = () => {
     const { addChannel, isLoading, getError } = useAppStore();
@@ -106,7 +107,7 @@ const AddChannel = () => {
                         maxLength: 50
                     }}
                 />
-                <Button
+                <UnifiedButton
                     type="submit"
                     variant="contained"
                     disabled={!canSubmit}
@@ -127,7 +128,7 @@ const AddChannel = () => {
                     ) : (
                         'Add Channel'
                     )}
-                </Button>
+                </UnifiedButton>
             </Box>
             
             {validationError && (

@@ -55,14 +55,16 @@ export default defineConfig({
             return 'mui-core';
           }
           
-          // MUI Icons - ensure React is available
-          if (id.includes('@mui/icons-material')) {
-            return 'mui-icons';
-          }
-          
           // Emotion styling
           if (id.includes('@emotion')) {
             return 'emotion';
+          }
+          
+          // MUI Icons - CRITICAL: Must load with React JSX runtime available
+          if (id.includes('@mui/icons-material')) {
+            // Don't split MUI icons into separate chunk to avoid JSX runtime issues
+            // Force them into react-core chunk to ensure React is available
+            return 'react-core';
           }
           
           // Charts library

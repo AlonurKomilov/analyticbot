@@ -1,28 +1,32 @@
 import React from 'react';
-import { Button, ButtonGroup } from '@mui/material';
+import { Box } from '@mui/material';
+import { Button } from '../../common';
 
 const ChartTypeSelector = React.memo(({ chartType, onChartTypeChange }) => {
     return (
-        <ButtonGroup size="small" variant="outlined">
+        <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Button 
-                variant={chartType === 'line' ? 'contained' : 'outlined'}
+                variant={chartType === 'line' ? 'primary' : 'secondary'}
+                size="small"
                 onClick={() => onChartTypeChange('line')}
             >
                 Line
             </Button>
             <Button 
-                variant={chartType === 'area' ? 'contained' : 'outlined'}
+                variant={chartType === 'area' ? 'primary' : 'secondary'}
+                size="small"
                 onClick={() => onChartTypeChange('area')}
             >
                 Area
             </Button>
             <Button 
-                variant={chartType === 'bar' ? 'contained' : 'outlined'}
+                variant={chartType === 'bar' ? 'primary' : 'secondary'}
+                size="small"
                 onClick={() => onChartTypeChange('bar')}
             >
                 Bar
             </Button>
-        </ButtonGroup>
+        </Box>
     );
 });
 

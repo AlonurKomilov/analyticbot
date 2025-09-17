@@ -1,6 +1,7 @@
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, LinearProgress } from '@mui/material';
+import { ProtectedRoute, PublicRoute } from './components/guards';
 
 // Import optimized lazy loading system
 import {
@@ -16,6 +17,10 @@ import {
 import DashboardPage from './components/pages/DashboardPage.jsx';
 import CreatePostPage from './components/pages/CreatePostPage.jsx';
 import AnalyticsPage from './components/pages/AnalyticsPage.jsx';
+import AuthPage from './pages/AuthPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
+import ResetPasswordForm from './components/auth/ResetPasswordForm.jsx';
+import AdminDashboard from './pages/AdminDashboard.jsx';
 
 // Destructure components for cleaner code
 const {
@@ -117,50 +122,130 @@ const AppRouter = () => {
             <NavigationProvider>
                 <RoutePreloader />
                 <Box sx={{ minHeight: '100vh' }}>
-                    {/* Global Navigation Bar */}
-                    <NavigationBar />
-                    
-                    {/* Main Content Area */}
-                    <Box sx={{ pt: { xs: 7, sm: 8 } }}>
-                        <OptimizedSuspense>
+                    <OptimizedSuspense>
                             <Routes>
-                                {/* Main Dashboard Routes */}
-                                <Route path="/" element={<DashboardPage />} />
+                                {/* Public Routes - Authentication */}
+                                <Route 
+                                    path="/auth" 
+                                    element={
+                                        <PublicRoute>
+                                            <AuthPage />
+                                        </PublicRoute>
+                                    } 
+                                />
+                                <Route path="/login" element={<Navigate to="/auth?mode=login" replace />} />
+                                <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
+                                <Route 
+                                    path="/reset-password" 
+                                    element={
+                                        <PublicRoute>
+                                            <ResetPasswordForm />
+                                        </PublicRoute>
+                                    } 
+                                />
+
+                                {/* Protected Routes - Main Application */}
+                                <Route 
+                                    path="/" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <DashboardPage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
                                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
                                 
                                 {/* Post Creation Route */}
-                                <Route path="/create" element={<CreatePostPage />} />
+                                <Route 
+                                    path="/create" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <CreatePostPage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
                                 
                                 {/* AI Services Routes */}
-                                <Route path="/services" element={<ServicesLayout />}>
-                                <Route index element={<Navigate to="/services/overview" replace />} />
-                                <Route path="overview" element={<ServicesOverview />} />
-                                <Route path="content-optimizer" element={<ContentOptimizerService />} />
-                                <Route path="predictive-analytics" element={<PredictiveAnalyticsService />} />
-                                <Route path="churn-predictor" element={<ChurnPredictorService />} />
-                                <Route path="security-monitoring" element={<SecurityMonitoringService />} />
-                            </Route>
-                            
-                            {/* Enhanced Data Tables Showcase */}
-                            <Route path="/tables" element={<DataTablesShowcase />} />
-                            
-                            {/* Analytics Dashboard */}
-                            <Route path="/analytics" element={<AnalyticsPage />} />
-                            
-                            {/* Super Admin Dashboard */}
-                            <Route path="/admin" element={<SuperAdminDashboard />} />
-                            
-                            {/* Settings */}
-                            <Route path="/settings" element={<SettingsPage />} />
-                            
-                            {/* Help & Support */}
-                            <Route path="/help" element={<HelpPage />} />
-                            
-                                {/* Redirect old routes */}
-                                <Route path="*" element={<Navigate to="/" replace />} />
+                                <Route 
+                                    path="/services" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <ServicesLayout />
+                                        </ProtectedRoute>
+                                    }
+                                >
+                                    <Route index element={<Navigate to="/services/overview" replace />} />
+                                    <Route path="overview" element={<ServicesOverview />} />
+                                    <Route path="content-optimizer" element={<ContentOptimizerService />} />
+                                    <Route path="predictive-analytics" element={<PredictiveAnalyticsService />} />
+                                    <Route path="churn-predictor" element={<ChurnPredictorService />} />
+                                    <Route path="security-monitoring" element={<SecurityMonitoringService />} />
+                                </Route>
+                                
+                                {/* Enhanced Data Tables Showcase */}
+                                <Route 
+                                    path="/tables" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <DataTablesShowcase />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+                                
+                                {/* Analytics Dashboard */}
+                                <Route 
+                                    path="/analytics" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <AnalyticsPage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+                                
+                                {/* Admin Dashboard - Role-based protection */}
+                                <Route 
+                                    path="/admin" 
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <AdminDashboard />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+                                
+                                {/* User Profile */}
+                                <Route 
+                                    path="/profile" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <ProfilePage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+
+                                {/* Settings */}
+                                <Route 
+                                    path="/settings" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <SettingsPage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+                                
+                                {/* Help & Support */}
+                                <Route 
+                                    path="/help" 
+                                    element={
+                                        <ProtectedRoute>
+                                            <HelpPage />
+                                        </ProtectedRoute>
+                                    } 
+                                />
+                                
+                                {/* Fallback Routes */}
+                                <Route path="*" element={<Navigate to="/auth" replace />} />
                             </Routes>
                         </OptimizedSuspense>
-                    </Box>
                 </Box>
             </NavigationProvider>
         </Router>

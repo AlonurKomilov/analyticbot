@@ -1,6 +1,19 @@
 /**
- * Mock data service for immediate dashboard functionality
- * Provides realistic demo data for the TWA dashboard
+ * @deprecated This file is deprecated - use __mocks__ structure instead
+ * 
+ * MIGRATION NOTICE:
+ * This 380-line monolithic mock data file has been migrated to a modular structure:
+ * 
+ * OLD: import { mockAnalyticsData } from './utils/mockData.js'
+ * NEW: import { mockAnalyticsData } from '../__mocks__/index.js'
+ * 
+ * Benefits of new structure:
+ * - Modular organization by domain (analytics, user, channels, system)
+ * - Easier to maintain and find specific mock data
+ * - Better separation of concerns
+ * - TypeScript-ready structure
+ * 
+ * This file will be removed in a future version.
  */
 
 export const mockAnalyticsData = {

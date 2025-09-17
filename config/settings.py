@@ -4,6 +4,7 @@ Centralized settings with proper security handling
 """
 
 from enum import Enum
+from typing import Union
 
 from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -63,7 +64,7 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     API_HOST_URL: str = "http://localhost:8000"
     TWA_HOST_URL: str = "http://localhost:3000/"
-    CORS_ORIGINS: str = "*"
+    CORS_ORIGINS: Union[str, list[str]] = "*"
 
     # Security & Authentication
     JWT_SECRET_KEY: SecretStr = SecretStr("dev_secret_key_change_in_production")
@@ -192,8 +193,16 @@ class Settings(BaseSettings):
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
-        """Parse comma-separated CORS origins to return as is for now"""
-        return v if v else "*"
+        """Parse comma-separated CORS origins string to list"""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            if v == "*":
+                return ["*"]
+            # Remove quotes if present
+            v = v.strip('"\'')
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return ["*"]
 
     @field_validator("SUPPORTED_LOCALES", mode="before")
     @classmethod

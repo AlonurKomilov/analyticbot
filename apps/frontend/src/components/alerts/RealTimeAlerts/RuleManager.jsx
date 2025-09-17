@@ -7,13 +7,13 @@ import {
   FormControlLabel,
   Switch,
   Box,
-  Button,
   Divider,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions
 } from '@mui/material';
+import { Button } from '../../common';
 import {
   Add as AddIcon
 } from '@mui/icons-material';
@@ -48,7 +48,7 @@ const RuleManager = React.memo(({
             in your channel analytics.
           </Box>
           <Button
-            variant="contained"
+            variant="primary"
             startIcon={<AddIcon />}
             onClick={onAddRule}
           >
@@ -87,7 +87,7 @@ const RuleManager = React.memo(({
         </List>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button variant="secondary" onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>
   );

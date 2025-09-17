@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAppStore } from '../store/appStore.js';
-import { Box, Typography, List, ListItem, ListItemText, IconButton, Chip, Paper } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
+import { IconButton } from './common/TouchTargetCompliance.jsx';
+import { StatusChip } from './common';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const ScheduledPostsList = () => {
@@ -28,7 +30,7 @@ const ScheduledPostsList = () => {
                             <ListItemText
                                 primary={
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                        {post.file_type && <Chip label={post.file_type.toUpperCase()} size="small" variant="outlined" />}
+                                        {post.file_type && <StatusChip label={post.file_type.toUpperCase()} size="small" variant="info" />}
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                             To: {post.channel_name}
                                         </Typography>

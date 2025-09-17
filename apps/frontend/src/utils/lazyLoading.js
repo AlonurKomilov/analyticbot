@@ -107,7 +107,7 @@ export const ServiceComponents = {
 export const UtilityComponents = {
     DataTablesShowcase: lazyWithPreload(
         () => import('../components/DataTablesShowcase.jsx'),
-        { preloadAfter: 20000 }
+        { preloadAfter: 5000 }
     ),
     
     SettingsPage: lazyWithPreload(

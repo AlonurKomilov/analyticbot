@@ -4,10 +4,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import AppRouter from './AppRouter';
 import theme from './theme';
 import PerformanceMonitor from './utils/performanceMonitor';
+import { AuthProvider } from './contexts/AuthContext';
 
 /**
  * Main App Component with Professional Router Architecture
- * Provides theme, routing, and performance monitoring for enterprise-grade application
+ * Provides theme, routing, authentication, and performance monitoring for enterprise-grade application
  */
 const App = () => {
     useEffect(() => {
@@ -25,7 +26,9 @@ const App = () => {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <AppRouter />
+            <AuthProvider>
+                <AppRouter />
+            </AuthProvider>
         </ThemeProvider>
     );
 };

@@ -50,9 +50,17 @@ ENV PATH="/opt/venv/bin:${PATH}"
 # Copy application code
 COPY . .
 
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser \
+    && chown -R appuser:appuser /app /opt/venv
+
 # Create entrypoint script
 RUN echo '#!/bin/bash\nset -e\nexec "$@"' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+    chmod +x /entrypoint.sh && \
+    chown appuser:appuser /entrypoint.sh
+
+# Switch to non-root user
+USER appuser
 
 # ---------- API Service ----------
 FROM final AS api

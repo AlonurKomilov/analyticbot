@@ -18,6 +18,7 @@ from apps.api.routers.analytics_advanced import router as analytics_advanced_rou
 from apps.api.routers.exports_v2 import router as exports_v2_router
 from apps.api.routers.share_v2 import router as share_v2_router
 from apps.api.routers.mobile_api import router as mobile_api_router
+from apps.api.routers.auth_router import router as auth_router
 from apps.api.superadmin_routes import router as superadmin_router
 from apps.bot.api.content_protection_routes import router as content_protection_router
 from apps.bot.api.payment_routes import router as payment_router
@@ -25,6 +26,7 @@ from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, Schedu
 from config import settings
 from core import DeliveryService, ScheduleService
 from infra.db.connection_manager import close_database, init_database
+from apps.api.middleware.auth import get_current_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +70,7 @@ app.include_router(exports_v2_router)  # Export functionality
 app.include_router(share_v2_router)  # Share functionality
 app.include_router(mobile_api_router)  # Mobile-optimized API endpoints
 app.include_router(content_protection_router)
+app.include_router(auth_router)  # Authentication endpoints
 app.include_router(superadmin_router)
 app.include_router(payment_router)  # Payment system
 
@@ -88,12 +91,12 @@ def health():
 
 @app.get("/initial-data", response_model=InitialDataResponse)
 async def get_initial_data(
-    user_id: int = 12345,  # TODO: Get from authentication
+    current_user_id: int = Depends(get_current_user_id),
 ):
-    """Get initial application data for frontend startup
+    """Get initial application data for authenticated user
     
-    Returns user info, subscription plan, channels, and scheduled posts.
-    Currently uses mock data - should be replaced with real data sources.
+    Returns user info, subscription plan, channels, and scheduled posts
+    for the authenticated user.
     """
     try:
         # TODO: Replace with real data from repositories
@@ -101,7 +104,7 @@ async def get_initial_data(
         
         # Mock user data
         user = User(
-            id=user_id,
+            id=current_user_id,
             username="demo_user"  # TODO: Get from user repository
         )
         

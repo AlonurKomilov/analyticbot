@@ -187,7 +187,7 @@ export const useAppStore = create(
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                const newChannel = await apiClient.post('/channels', {
+                const newChannel = await apiClient.post('/analytics/channels', {
                     channel_username: channelUsername
                 });
                 
@@ -425,7 +425,7 @@ export const useAppStore = create(
                 get().setLoading(operation, true);
                 get().clearError(operation);
                 
-                await apiClient.delete(`/posts/${postId}`);
+                await apiClient.delete(`/schedule/${postId}`);
                 
                 set(state => ({
                     scheduledPosts: state.scheduledPosts.filter(post => post.id !== postId)

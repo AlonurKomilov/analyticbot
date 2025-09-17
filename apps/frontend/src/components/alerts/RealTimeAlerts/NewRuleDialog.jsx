@@ -5,11 +5,11 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Button,
   Grid,
   Typography,
   Slider
 } from '@mui/material';
+import { Button } from '../../common';
 
 /**
  * NewRuleDialog - Memoized component for creating new alert rules
@@ -106,10 +106,10 @@ const NewRuleDialog = React.memo(({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
         <Button 
           onClick={onSubmit} 
-          variant="contained"
+          variant="primary"
           disabled={!newRule.name.trim()}
         >
           Create Rule

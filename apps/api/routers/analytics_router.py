@@ -21,8 +21,20 @@ from apps.bot.analytics import (
 )
 from apps.bot.container import container
 from apps.bot.services.analytics_service import AnalyticsService
+from apps.bot.services.channel_management_service import ChannelManagementService, ChannelCreate, ChannelResponse
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from apps.api.middleware.auth import (
+    get_current_user, 
+    require_channel_access, 
+    get_current_user_id,
+    require_analytics_read,
+    require_analytics_create,
+    require_analytics_update,
+    require_analytics_delete,
+    require_analytics_export,
+    require_admin_role
+)
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
@@ -30,19 +42,7 @@ router = APIRouter(
 )
 
 
-class ChannelCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    telegram_id: int
-    description: str | None = None
 
-
-class ChannelResponse(BaseModel):
-    id: int
-    name: str
-    telegram_id: int
-    description: str | None
-    created_at: datetime
-    is_active: bool
 
 
 class PostDynamic(BaseModel):
@@ -116,11 +116,11 @@ async def get_analytics_service() -> AnalyticsService:
     return service
 
 
-async def get_channel_repository() -> AsyncpgChannelRepository:
-    """Get channel repository from container"""
-    repo = container.resolve(AsyncpgChannelRepository)
-    assert isinstance(repo, AsyncpgChannelRepository)
-    return repo
+
+async def get_channel_management_service() -> ChannelManagementService:
+    """Get channel management service from container"""
+    service_container = container
+    return service_container.channel_management_service()
 
 
 async def get_analytics_repository() -> AsyncpgAnalyticsRepository:
@@ -131,13 +131,25 @@ async def get_analytics_repository() -> AsyncpgAnalyticsRepository:
 
 
 async def get_data_processor() -> AdvancedDataProcessor:
-    """Get advanced data processor"""
-    return AdvancedDataProcessor()
+    """Get advanced data processor from container"""
+    try:
+        processor = container.resolve(AdvancedDataProcessor)
+        assert isinstance(processor, AdvancedDataProcessor)
+        return processor
+    except Exception:
+        # Fallback to direct instantiation if container resolution fails
+        return AdvancedDataProcessor()
 
 
 async def get_predictive_engine() -> PredictiveAnalyticsEngine:
-    """Get predictive analytics engine"""
-    return PredictiveAnalyticsEngine()
+    """Get predictive analytics engine from container"""
+    try:
+        engine = container.resolve(PredictiveAnalyticsEngine)
+        assert isinstance(engine, PredictiveAnalyticsEngine)
+        return engine
+    except Exception:
+        # Fallback to direct instantiation if container resolution fails
+        return PredictiveAnalyticsEngine()
 
 
 async def get_ai_insights_generator() -> AIInsightsGenerator:
@@ -297,121 +309,64 @@ async def analytics_status():
         )
 
 
-@router.get("/channels", response_model=list[ChannelResponse])
+@router.get("/channels", response_model=list[dict])
 async def get_channels(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository),
+    current_user_id: int = Depends(get_current_user_id),
 ):
-    """Get list of all channels with pagination"""
-    try:
-        channels = await channel_repo.get_channels(skip=skip, limit=limit)
-        return [
-            ChannelResponse(
-                id=channel["id"],
-                name=channel.get("name", channel.get("title", "Unknown")),
-                telegram_id=channel.get("telegram_id", channel["id"]),
-                description=channel.get("description", ""),
-                created_at=channel.get("created_at") or datetime.now(),
-                is_active=channel.get("is_active", True),
-            )
-            for channel in channels
-        ]
-    except Exception as e:
-        logger.error(f"Error fetching channels: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channels"
-        )
+    """Get list of channels owned by the current user"""
+    from apps.api.middleware.auth import get_channel_repository
+    
+    channel_repo = await get_channel_repository()
+    user_channels = await channel_repo.get_user_channels(user_id=current_user_id)
+    
+    # Apply pagination manually since we're filtering by user
+    paginated_channels = user_channels[skip:skip + limit]
+    return paginated_channels
 
 
 @router.post("/channels", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)
 async def create_channel(
-    channel_data: ChannelCreate, channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository)
+    channel_data: ChannelCreate,  
+    current_user_id: int = Depends(get_current_user_id),
+    current_user: dict[str, Any] = Depends(require_analytics_create),
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
-    """Create a new channel"""
-    try:
-        existing_channel = await channel_repo.get_channel_by_telegram_id(channel_data.telegram_id)
-        if existing_channel:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Channel with telegram_id {channel_data.telegram_id} already exists",
-            )
-        # Create the channel (returns None)
-        await channel_repo.create_channel(
-            channel_id=channel_data.telegram_id,
-            user_id=1,  # Default user ID for API requests
-            title=channel_data.name,
-            username=None
-        )
-        
-        # Retrieve the created/updated channel
-        channel = await channel_repo.get_channel_by_id(channel_data.telegram_id)
-        if not channel:
-            raise HTTPException(status_code=500, detail="Failed to retrieve created channel")
-        
-        return ChannelResponse(
-            id=channel["id"],
-            name=channel.get("name", channel.get("title", "Unknown")),
-            telegram_id=channel.get("telegram_id", channel["id"]),
-            description=channel.get("description", ""),
-            created_at=channel.get("created_at") or datetime.now(),
-            is_active=channel.get("is_active", True),
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error creating channel: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create channel"
-        )
+    """Create a new channel for the current user"""
+    # Set the user_id on the channel data to ensure ownership
+    channel_data_dict = channel_data.dict()
+    channel_data_dict['user_id'] = current_user_id
+    updated_channel_data = ChannelCreate(**channel_data_dict)
+    
+    return await channel_service.create_channel(updated_channel_data)
 
 
 @router.get("/channels/{channel_id}", response_model=ChannelResponse)
 async def get_channel(
-    channel_id: int, channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository)
+    channel_id: int = Depends(require_channel_access),
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
-    """Get a specific channel by ID"""
-    try:
-        channel = await channel_repo.get_channel(channel_id)
-        if not channel:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Channel with ID {channel_id} not found",
-            )
-        return ChannelResponse(
-            id=channel["id"],
-            name=channel.get("name", channel.get("title", "Unknown")),
-            telegram_id=channel.get("telegram_id", channel["id"]),
-            description=channel.get("description", ""),
-            created_at=channel.get("created_at") or datetime.now(),
-            is_active=channel.get("is_active", True),
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching channel {channel_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channel"
-        )
+    """Get a specific channel by ID (only if user owns it)"""
+    return await channel_service.get_channel_by_id(channel_id)
 
 
 @router.get("/metrics", response_model=list[AnalyticsMetrics])
 async def get_analytics_metrics(
-    channel_id: int | None = Query(None),
+    channel_id: int = Query(..., description="Channel ID (required)"),
     start_date: datetime | None = Query(None),
     end_date: datetime | None = Query(None),
     limit: int = Query(100, ge=1, le=1000),
+    validated_channel_id: int = Depends(require_channel_access),
+    current_user: dict[str, Any] = Depends(require_analytics_read),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
-    """Get analytics metrics with optional filtering"""
+    """Get analytics metrics for a channel owned by the current user"""
     try:
-        if channel_id is None:
-            raise HTTPException(status_code=400, detail="channel_id parameter is required")
-        
         end_date = end_date or datetime.utcnow()
         start_date = start_date or end_date - timedelta(days=30)
         metrics = await analytics_service.get_analytics_data(
-            channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
+            channel_id=validated_channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
         
         # Handle the case where service returns a dict instead of a list of metrics
@@ -419,7 +374,7 @@ async def get_analytics_metrics(
             # Return a single metric based on the service response
             return [
                 AnalyticsMetrics(
-                    channel_id=channel_id,
+                    channel_id=validated_channel_id,
                     views=0,
                     reactions=0,
                     shares=0,
@@ -432,7 +387,7 @@ async def get_analytics_metrics(
         # If metrics is a list (when properly implemented), handle each item
         return [
             AnalyticsMetrics(
-                channel_id=channel_id,
+                channel_id=validated_channel_id,
                 views=0,
                 reactions=0,
                 shares=0,
@@ -452,16 +407,16 @@ async def get_analytics_metrics(
 
 @router.get("/channels/{channel_id}/metrics", response_model=list[AnalyticsMetrics])
 async def get_channel_metrics(
-    channel_id: int,
+    channel_id: int = Depends(require_channel_access),
     start_date: datetime | None = Query(None),
     end_date: datetime | None = Query(None),
     limit: int = Query(100, ge=1, le=1000),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
-    channel_repo: AsyncpgChannelRepository = Depends(get_channel_repository),
+    channel_service: ChannelManagementService = Depends(get_channel_management_service),
 ):
-    """Get analytics metrics for a specific channel"""
+    """Get analytics metrics for a specific channel owned by current user"""
     try:
-        channel = await channel_repo.get_channel(channel_id)
+        channel = await channel_service.get_channel_by_id(channel_id)
         if not channel:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -780,4 +735,109 @@ async def get_analytics_summary(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate analytics summary",
+        )
+
+
+# Admin-only endpoints for system management
+@router.get("/admin/all-channels", response_model=list[dict])
+async def get_all_channels_admin(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    current_user: dict[str, Any] = Depends(require_admin_role)
+):
+    """Admin endpoint: Get all channels across all users"""
+    try:
+        # For admin, we'll return mock data for now
+        # In production, this would query all channels from database
+        all_channels = [
+            {
+                "id": 1,
+                "name": f"Channel {i}",
+                "user_id": i % 5 + 1,  # Distribute across 5 users
+                "created_at": datetime.utcnow().isoformat(),
+                "total_subscribers": random.randint(100, 10000)
+            }
+            for i in range(skip + 1, skip + limit + 1)
+        ]
+        logger.info(f"Admin {current_user['username']} accessed all channels")
+        return all_channels
+    except Exception as e:
+        logger.error(f"Error fetching all channels for admin: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch all channels"
+        )
+
+
+@router.get("/admin/user/{user_id}/channels", response_model=list[dict])
+async def get_user_channels_admin(
+    user_id: int,
+    current_user: dict[str, Any] = Depends(require_admin_role)
+):
+    """Admin endpoint: Get all channels for a specific user"""
+    try:
+        # Mock user channels for admin view
+        user_channels = [
+            {
+                "id": i,
+                "name": f"User {user_id} Channel {i}",
+                "user_id": user_id,
+                "created_at": datetime.utcnow().isoformat(),
+                "total_subscribers": random.randint(50, 5000)
+            }
+            for i in range(1, 4)  # Mock 3 channels per user
+        ]
+        logger.info(f"Admin {current_user['username']} accessed channels for user {user_id}")
+        return user_channels
+    except Exception as e:
+        logger.error(f"Error fetching channels for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch channels for user {user_id}"
+        )
+
+
+@router.delete("/admin/channels/{channel_id}")
+async def delete_channel_admin(
+    channel_id: int,
+    current_user: dict[str, Any] = Depends(require_admin_role)
+):
+    """Admin endpoint: Delete any channel"""
+    try:
+        # Mock channel deletion for admin
+        # In production, this would actually delete the channel from database
+        logger.warning(f"Admin {current_user['username']} deleted channel {channel_id}")
+        return {"message": f"Channel {channel_id} deleted successfully", "success": True}
+    except Exception as e:
+        logger.error(f"Error deleting channel {channel_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete channel {channel_id}"
+        )
+
+
+@router.get("/admin/system-stats")
+async def get_system_analytics_stats(
+    current_user: dict[str, Any] = Depends(require_admin_role),
+    analytics_service: AnalyticsService = Depends(get_analytics_service)
+):
+    """Admin endpoint: Get system-wide analytics statistics"""
+    try:
+        # This would typically query aggregated data across all users
+        stats = {
+            "total_channels": 0,  # Would be calculated from database
+            "total_users": 0,     # Would be calculated from database  
+            "total_metrics_collected": 0,  # From analytics tables
+            "system_health": "healthy",
+            "last_updated": datetime.utcnow(),
+            "admin_user": current_user["username"]
+        }
+        
+        logger.info(f"Admin {current_user['username']} accessed system analytics stats")
+        return stats
+    except Exception as e:
+        logger.error(f"Error fetching system analytics stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch system analytics statistics"
         )

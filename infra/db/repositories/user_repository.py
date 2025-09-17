@@ -98,6 +98,30 @@ class AsyncpgUserRepository(IUserRepository):
         """
         return await self._pool.fetchval(query, user_id)
 
+    async def get_user_by_email(self, email: str) -> dict | None:
+        """Get user by email address"""
+        query = """
+            SELECT u.id, u.username, u.created_at, u.hashed_password,
+                   p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login
+            FROM users u 
+            LEFT JOIN plans p ON u.plan_id = p.id
+            WHERE u.email = $1
+        """
+        row = await self._pool.fetchrow(query, email)
+        return dict(row) if row else None
+
+    async def get_user_by_username(self, username: str) -> dict | None:
+        """Get user by username"""
+        query = """
+            SELECT u.id, u.username, u.created_at, u.hashed_password,
+                   p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login
+            FROM users u 
+            LEFT JOIN plans p ON u.plan_id = p.id
+            WHERE u.username = $1
+        """
+        row = await self._pool.fetchrow(query, username)
+        return dict(row) if row else None
+
 
 class SQLAlchemyUserRepository(IUserRepository):
     """User repository implementation using SQLAlchemy (for new implementations)"""

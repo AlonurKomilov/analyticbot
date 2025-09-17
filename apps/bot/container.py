@@ -44,6 +44,21 @@ def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
 class Container(punq.Container):
     config = Singleton(Settings)
     db_session = Singleton(init_db)
+    
+    def performance_analytics_service(self):
+        """Get performance analytics service instance"""
+        from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
+        return _resolve(PerformanceAnalyticsService)
+    
+    def alerting_service(self):
+        """Get alerting service instance"""
+        from apps.bot.services.alerting_service import AlertingService
+        return _resolve(AlertingService)
+    
+    def channel_management_service(self):
+        """Get channel management service instance"""
+        from apps.bot.services.channel_management_service import ChannelManagementService
+        return _resolve(ChannelManagementService)
 
 
 container = Container()
@@ -200,6 +215,24 @@ def _register_services():
 
         container.register(
             AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
+        )
+
+        from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
+
+        container.register(
+            PerformanceAnalyticsService, factory=as_singleton(lambda: _make_service(PerformanceAnalyticsService))
+        )
+
+        from apps.bot.services.alerting_service import AlertingService
+
+        container.register(
+            AlertingService, factory=as_singleton(lambda: _make_service(AlertingService))
+        )
+
+        from apps.bot.services.channel_management_service import ChannelManagementService
+
+        container.register(
+            ChannelManagementService, factory=as_singleton(lambda: _make_service(ChannelManagementService))
         )
     except Exception as e:
         logger.warning(f"Could not register some services: {e}")

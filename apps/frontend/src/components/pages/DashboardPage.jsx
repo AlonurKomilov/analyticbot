@@ -1,14 +1,22 @@
 /**
  * DashboardPage - Main dashboard overview page
  * 
- * Simplified dashboard focusing on system overview and quick navigation.
- * Extracted from the monolithic MainDashboard component.
+ * Enhanced with improved visual hierarchy:
+ * - Uses new EnhancedDashboardLayout for better organization
+ * - Improved content grouping and spacing
+ * - Clearer visual emphasis and flow
+ * - Maintained backward compatibility
  */
 
 import React, { useEffect } from 'react';
-import { Container, Stack } from '@mui/material';
 import { useAppStore } from '../../store/appStore.js';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
+
+// Import the enhanced dashboard component
+import EnhancedDashboardPage from './EnhancedDashboardPage.jsx';
+
+// Legacy imports for backward compatibility
+import { Container, Stack } from '@mui/material';
 import { PageContainer, SectionHeader } from '../common/StandardComponents.jsx';
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import SystemStatusWidget from '../dashboard/SystemStatusWidget.jsx';
@@ -25,6 +33,12 @@ const AppSkeleton = () => (
 );
 
 const DashboardPage = () => {
+  // Enhanced version with improved visual hierarchy
+  return <EnhancedDashboardPage />;
+};
+
+// Legacy implementation (preserved for backward compatibility)
+const LegacyDashboardPage = () => {
   const { 
     isGlobalLoading,
     isLoading,
@@ -78,7 +92,7 @@ const DashboardPage = () => {
             <AddChannel 
               channels={channels} 
               onAdd={addChannel} 
-              onRemove={removeChannel} 
+              removeChannel={removeChannel} 
             />
           </Stack>
         </Stack>

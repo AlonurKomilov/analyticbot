@@ -143,7 +143,7 @@ class SecurityManager:
         try:
             # Check Redis cache first for performance
             cached_payload = self.redis_client.get(f"token:{token}")
-            if cached_payload:
+            if cached_payload and isinstance(cached_payload, str):
                 payload = json.loads(cached_payload)
 
                 # Verify expiration
@@ -228,7 +228,7 @@ class SecurityManager:
             UserSession object or None
         """
         session_data = self.redis_client.get(f"session:{session_id}")
-        if not session_data:
+        if not session_data or not isinstance(session_data, str):
             return None
 
         try:
@@ -307,7 +307,12 @@ class SecurityManager:
             Number of sessions terminated
         """
         session_ids = self.redis_client.smembers(f"user_sessions:{user_id}")
+        if not session_ids:
+            return 0
+            
         terminated_count = 0
+        # Type hint: session_ids should be a set of strings due to decode_responses=True
+        session_ids = session_ids if isinstance(session_ids, set) else set()
 
         for session_id in session_ids:
             if self.terminate_session(session_id):
@@ -393,7 +398,7 @@ class SecurityManager:
         """
         try:
             reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
-            if not reset_data_str:
+            if not reset_data_str or not isinstance(reset_data_str, str):
                 return None
                 
             reset_data = json.loads(reset_data_str)
@@ -420,7 +425,7 @@ class SecurityManager:
         """
         try:
             reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
-            if not reset_data_str:
+            if not reset_data_str or not isinstance(reset_data_str, str):
                 return False
                 
             reset_data = json.loads(reset_data_str)
@@ -455,7 +460,7 @@ class SecurityManager:
         try:
             # Validate refresh token
             refresh_data_str = self.redis_client.get(f"refresh_token:{refresh_token}")
-            if not refresh_data_str:
+            if not refresh_data_str or not isinstance(refresh_data_str, str):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid refresh token"

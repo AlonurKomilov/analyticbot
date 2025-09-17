@@ -473,7 +473,7 @@ async def get_mfa_status(
         import json
         mfa_data_str = mfa_manager.redis_client.get(f"mfa_data:{current_user['id']}")
         
-        if mfa_data_str:
+        if mfa_data_str and isinstance(mfa_data_str, str):
             mfa_data = json.loads(mfa_data_str)
             return {
                 "enabled": True,

@@ -9,8 +9,6 @@ import json
 import os
 import secrets
 import warnings
-import json
-from typing import List, Union
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
@@ -71,14 +69,14 @@ class SecurityConfig(BaseSettings):
     MFA_TOKEN_INTERVAL: int = 30
 
     # CORS Configuration - flexible input, validated to List[str]
-    CORS_ORIGINS: Union[str, List[str]] = [
+    CORS_ORIGINS: str | list[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
         "https://yourdomain.com",
     ]
     CORS_ALLOW_CREDENTIALS: bool = True
-    CORS_ALLOW_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    CORS_ALLOW_HEADERS: List[str] = ["*"]
+    CORS_ALLOW_METHODS: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    CORS_ALLOW_HEADERS: list[str] = ["*"]
 
     # Email Configuration (for verification)
     SMTP_SERVER: str | None = os.getenv("SMTP_SERVER")
@@ -107,7 +105,7 @@ class SecurityConfig(BaseSettings):
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v) -> List[str]:
+    def parse_cors_origins(cls, v) -> list[str]:
         """Parse CORS_ORIGINS from string or list format"""
         # Handle None or empty values
         if not v:
@@ -116,7 +114,7 @@ class SecurityConfig(BaseSettings):
                 "http://localhost:8000",
                 "https://yourdomain.com",
             ]
-        
+
         if isinstance(v, str):
             # Handle empty string
             if not v.strip():
@@ -125,15 +123,15 @@ class SecurityConfig(BaseSettings):
                     "http://localhost:8000",
                     "https://yourdomain.com",
                 ]
-            
+
             # Try to parse as JSON first (for bracket format)
             v = v.strip()
-            if v.startswith('[') and v.endswith(']'):
+            if v.startswith("[") and v.endswith("]"):
                 try:
                     return json.loads(v)
                 except json.JSONDecodeError:
                     pass
-            
+
             # Handle comma-separated string format
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         elif isinstance(v, list):
@@ -173,6 +171,7 @@ class SecurityConfig(BaseSettings):
 
 # Global configuration instance - lazy initialization
 _security_config = None
+
 
 def get_security_config() -> SecurityConfig:
     """Get the global security configuration instance"""

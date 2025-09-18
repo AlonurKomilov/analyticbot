@@ -119,7 +119,7 @@ echo "======================="
 if command -v docker >/dev/null 2>&1; then
     run_test "Docker Available" "docker --version"
     run_test "Docker Compose File" "test -f docker-compose.yml"
-    run_test "Dockerfile Present" "test -f infra/docker/Dockerfile"
+    run_test "Dockerfile Present" "test -f docker/Dockerfile"
 else
     print_warn "Docker not available - skipping Docker tests"
 fi

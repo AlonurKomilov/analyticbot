@@ -254,7 +254,8 @@ class OAuthManager:
 
         # Extract user information based on provider
         if provider == "google":
-            username = user_info.get("email").split("@")[0]  # Use email prefix as username
+            email = user_info.get("email")
+            username = email.split("@")[0] if email else "unknown"  # Use email prefix as username
             full_name = user_info.get("name")
             avatar_url = user_info.get("picture")
             provider_id = user_info.get("id")
@@ -276,9 +277,9 @@ class OAuthManager:
             f"{username}_{provider}" if username else f"user_{provider}_{secrets.token_hex(4)}"
         )
 
-        # Create user object
+        # Create user object  
         user = User(
-            email=email,
+            email=email or f"noemail_{secrets.token_hex(8)}@{provider}.com",
             username=username,
             full_name=full_name,
             auth_provider=AuthProvider(provider),

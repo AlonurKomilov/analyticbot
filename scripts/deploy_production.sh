@@ -14,7 +14,7 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_NAME="analyticbot"
 DOCKER_COMPOSE_FILE="docker-compose.yml"
-DOCKER_COMPOSE_PROD_FILE="infra/docker/docker-compose.prod.yml"
+DOCKER_COMPOSE_PROD_FILE="docker/docker-compose.prod.yml"
 
 echo -e "${BLUE}🚀 AnalyticBot Payment System - Production Deployment${NC}"
 echo -e "${BLUE}========================================================${NC}"
@@ -64,9 +64,9 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
 fi
 print_status "Docker Compose is available"
 
-# Check if environment files exist
-if [[ ! -f ".env.example" ]]; then
-    print_error ".env.example not found"
+# Check if environment template files exist
+if [[ ! -f ".env.production.example" ]]; then
+    print_error ".env.production.example template not found"
     exit 1
 fi
 
@@ -86,7 +86,7 @@ echo "----------------------------------------"
 if [[ ! -f ".env.production" ]]; then
     print_warning "Production environment file not found"
     echo "Creating .env.production from template..."
-    cp .env.example .env.production
+    cp .env.production.example .env.production
     print_info "Please edit .env.production with your actual production values:"
     print_info "  - STRIPE_SECRET_KEY (Live secret key)"
     print_info "  - STRIPE_PUBLISHABLE_KEY (Live publishable key)"

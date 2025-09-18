@@ -217,19 +217,27 @@ public
 # ========================
 # Environment Variables & Secrets
 # ========================
-# Environment files
+# Environment files - Two-File Clean Architecture System
 .env
 .env.*
+# Allow only the two main environment files and their examples
+.env.development
+.env.production
+!.env.development.example
+!.env.production.example
 !.env.example
 env.bak
 .env.bak
 .venv
 
-# Local environment overrides
+# Local environment overrides (contains real secrets) - Not used in two-file system
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Environment backups
+.env-backup/
 
 # Secret files
 secrets/

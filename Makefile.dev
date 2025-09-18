@@ -46,11 +46,23 @@ dev-logs:
 
 dev-migrate:
 	@echo "🗄️  Running database migrations in development..."
-	source venv/bin/activate && export $$(grep -v '^#' .env.dev | xargs) && alembic upgrade head
+	@if [ -f ".env.development" ]; then \
+		source venv/bin/activate && export $$(grep -v '^#' .env.development | xargs) && \
+		alembic upgrade head; \
+	else \
+		echo "❌ .env.development not found. Please create it from .env.development.example"; \
+		exit 1; \
+	fi
 
 dev-test:
 	@echo "🧪 Running tests in development environment..."
-	source venv/bin/activate && export $$(grep -v '^#' .env.dev | xargs) && pytest tests/ -v
+	@if [ -f ".env.development" ]; then \
+		source venv/bin/activate && export $$(grep -v '^#' .env.development | xargs) && \
+		pytest tests/ -v; \
+	else \
+		echo "❌ .env.development not found. Please create it from .env.development.example"; \
+		exit 1; \
+	fi
 
 dev-clean:
 	@echo "🧹 Cleaning development artifacts..."

@@ -15,26 +15,27 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Check if venv exists
-if [ ! -d "venv" ]; then
-    echo -e "${RED}❌ Virtual environment not found. Please run: python -m venv venv${NC}"
+if [ ! -d ".venv" ]; then
+    echo -e "${RED}❌ Virtual environment not found. Please run: python -m venv .venv${NC}"
     exit 1
 fi
 
 # Activate venv
 echo -e "${BLUE}🐍 Activating virtual environment...${NC}"
-source venv/bin/activate
+source .venv/bin/activate
 
-# Load development environment variables
-if [ -f ".env.dev" ]; then
-    echo -e "${BLUE}⚙️  Loading development environment...${NC}"
+# Load development environment variables - Clean Architecture (Two-File System)
+if [ -f ".env.development" ]; then
+    echo -e "${BLUE}⚙️  Loading development environment (.env.development)...${NC}"
     set -a  # automatically export all variables
-    source .env.dev
+    source .env.development
+    # Two-file architecture: only .env.development and .env.production
     set +a  # turn off automatic export
 else
-    echo -e "${YELLOW}⚠️  .env.dev not found, using default .env${NC}"
-    set -a  # automatically export all variables
-    source .env
-    set +a  # turn off automatic export
+    echo -e "${RED}❌ .env.development not found!${NC}"
+    echo -e "${BLUE}💡 Please create .env.development from .env.development.example${NC}"
+    echo -e "${BLUE}   cp .env.development.example .env.development${NC}"
+    exit 1
 fi
 
 # Check if required infrastructure is running
@@ -42,7 +43,7 @@ echo -e "${BLUE}🔍 Checking infrastructure...${NC}"
 
     # Check PostgreSQL
     if ! nc -z localhost 5432 2>/dev/null; then
-        echo "⚠️  PostgreSQL not running on port 5432"
+        echo "⚠️  PostgreSQL not running on port 11100"
         echo "🐳 Starting PostgreSQL container..."
         docker-compose up -d db || echo "⚠️  Could not start PostgreSQL container (Docker permission issue?)"
         sleep 3
@@ -50,7 +51,7 @@ echo -e "${BLUE}🔍 Checking infrastructure...${NC}"
     
     # Check Redis
     if ! nc -z localhost 6379 2>/dev/null; then
-        echo "⚠️  Redis not running on port 6379"
+        echo "⚠️  Redis not running on port 11200"
         echo "🐳 Starting Redis container..."
         docker-compose up -d redis || echo "⚠️  Could not start Redis container (Docker permission issue?)"
         sleep 2
@@ -100,30 +101,30 @@ fi
 
 case $SERVICE in
     "api"|"")
-        # Start API with hot reload
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 8001 --reload --log-level debug' 8001
+        # Start API with hot reload - Development Environment Port 11300
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11300 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11300
         ;;
     "bot")
         # Start Bot
         start_service "bot" 'python -m apps.bot.run_bot' ""
         ;;
     "frontend")
-        # Start Frontend (in frontend directory)
+        # Start Frontend (in frontend directory) - Development Environment Port 11400
         cd apps/frontend
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing frontend dependencies...${NC}"
             npm install
         fi
-        start_service "frontend" 'npm run dev -- --port 5174 --host 0.0.0.0' 5174
+        start_service "frontend" 'npm run dev -- --port 11400 --host 0.0.0.0' 11400
         cd ../..
         ;;
     "all")
-        # Start all services
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 8001 --reload --log-level debug' 8001
+        # Start all services - Development Environment Ports 11xxx
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11300 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11300
         sleep 2
         start_service "bot" 'python -m apps.bot.run_bot' ""
         sleep 2
-        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 5174 --host 0.0.0.0' 5174 && cd ../..
+        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11400 --host 0.0.0.0' 11400 && cd ../..
         ;;
     "stop")
         # Stop all development services
@@ -142,7 +143,7 @@ case $SERVICE in
             fi
         done
         # Kill any remaining processes on our dev ports
-        for port in 8001 5174; do
+        for port in 11300 11400; do
             if lsof -ti:${port} >/dev/null 2>&1; then
                 echo -e "${YELLOW}🔄 Killing remaining process on port ${port}${NC}"
                 kill -9 $(lsof -ti:${port}) 2>/dev/null || true
@@ -156,18 +157,18 @@ case $SERVICE in
         echo -e "${BLUE}📊 Development Services Status:${NC}"
         echo "=================================="
         
-        # Check API
-        if curl -s http://localhost:8001/health >/dev/null 2>&1; then
-            echo -e "API (8001):      ${GREEN}✅ Running${NC}"
+        # Check API - Development Environment Port 11300
+        if curl -s http://localhost:11300/health >/dev/null 2>&1; then
+            echo -e "API (11300):     ${GREEN}✅ Running${NC}"
         else
-            echo -e "API (8001):      ${RED}❌ Stopped${NC}"
+            echo -e "API (11300):     ${RED}❌ Stopped${NC}"
         fi
         
-        # Check Frontend
-        if curl -s http://localhost:5174 >/dev/null 2>&1; then
-            echo -e "Frontend (5174): ${GREEN}✅ Running${NC}"
+        # Check Frontend - Development Environment Port 11400
+        if curl -s http://localhost:11400 >/dev/null 2>&1; then
+            echo -e "Frontend (11400): ${GREEN}✅ Running${NC}"
         else
-            echo -e "Frontend (5174): ${RED}❌ Stopped${NC}"
+            echo -e "Frontend (11400): ${RED}❌ Stopped${NC}"
         fi
         
         # Check Bot (by PID file)
@@ -212,9 +213,9 @@ case $SERVICE in
         echo -e "${YELLOW}Usage: $0 [service]${NC}"
         echo ""
         echo "Services:"
-        echo "  api       - Start API server with hot reload (port 8001)"
+        echo "  api       - Start API server with hot reload (port 11300)"
         echo "  bot       - Start Telegram bot"
-        echo "  frontend  - Start frontend development server (port 5174)"
+        echo "  frontend  - Start frontend development server (port 11400)"
         echo "  all       - Start all services"
         echo "  stop      - Stop all services"
         echo "  status    - Check service status"
@@ -239,9 +240,9 @@ if [ "$SERVICE" != "stop" ] && [ "$SERVICE" != "status" ] && [ "$SERVICE" != "lo
     echo "  • $0 stop      - Stop all services"
     echo ""
     echo -e "${BLUE}🌐 Development URLs:${NC}"
-    echo "  • API:      http://localhost:8001"
-    echo "  • API Docs: http://localhost:8001/docs"
-    echo "  • Frontend: http://localhost:5174"
+    echo "  • API:      http://localhost:11300"
+    echo "  • API Docs: http://localhost:11300/docs"
+    echo "  • Frontend: http://localhost:11400"
     echo ""
     echo -e "${YELLOW}📝 Note: Services run in background. Use '$0 stop' to stop them.${NC}"
 fi

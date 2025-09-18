@@ -28,7 +28,7 @@
 - **Bot ID**: 7900046521
 - **Polling**: Active, receiving and processing updates
 - **Database**: SQLite (`data/analytics.db`)
-- **Admin IDs**: [8034732332, 1527638770]
+- **Admin IDs**: [1527638770]
 - **Locales**: en, uz (default: en)
 
 ### Database Layer

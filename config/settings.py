@@ -3,10 +3,11 @@ Enhanced configuration settings for AnalyticBot
 Centralized settings with proper security handling
 """
 
+import os
 from enum import Enum
 from typing import Union
 
-from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator
+from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -40,30 +41,30 @@ class Settings(BaseSettings):
     BOT_TOKEN: SecretStr = SecretStr("dummy_token_for_development")
     STORAGE_CHANNEL_ID: int = 0
     ADMIN_IDS_STR: str | None = None  # Will be parsed to ADMIN_IDS
-    SUPPORTED_LOCALES: list[str] = ["en", "uz"]
+    SUPPORTED_LOCALES: Union[str, list[str]] = ["en", "uz"]
     DEFAULT_LOCALE: str = "en"
     ENFORCE_PLAN_LIMITS: bool = True
 
     # Computed field
     _admin_ids: list[int] | None = None
 
-    # Database Configuration
+    # Database Configuration - Production Environment 10xxx
     POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_PORT: int = 10100
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: SecretStr = SecretStr("password")
     POSTGRES_DB: str = "analyticbot"
     DATABASE_URL: str | None = None
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:10200/0"
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
 
-    # API & Web Application
+    # API & Web Application - Environment Configurable
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = 8000
-    API_HOST_URL: str = "http://localhost:8000"
-    TWA_HOST_URL: str = "http://localhost:3000/"
+    API_PORT: int = Field(default=10300)
+    API_HOST_URL: str = Field(default="http://localhost:10300")
+    TWA_HOST_URL: str = Field(default="http://localhost:10400/")
     CORS_ORIGINS: Union[str, list[str]] = "*"
 
     # Security & Authentication
@@ -88,7 +89,7 @@ class Settings(BaseSettings):
     LOG_FORMAT: LogFormat = LogFormat.TEXT
     LOG_FILE: str | None = None
     PROMETHEUS_ENABLED: bool = True
-    PROMETHEUS_PORT: int = 9090
+    PROMETHEUS_PORT: int = 10500
 
     # External Services
     OPENAI_API_KEY: SecretStr | None = None
@@ -107,7 +108,7 @@ class Settings(BaseSettings):
     PREMIUM_FEATURES_ENABLED: bool = True
 
     # Analytics V2 Bot Client Settings
-    ANALYTICS_V2_BASE_URL: str = "http://173.212.236.167:8000"
+    ANALYTICS_V2_BASE_URL: str = Field(default="http://localhost:11300")
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
@@ -126,7 +127,11 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=True, env_parse_none_str="None", extra="ignore"
+        env_file=[".env.development", ".env.production"] if os.getenv("ENVIRONMENT") == "development" else [".env.production", ".env.development"],
+        env_file_encoding="utf-8", 
+        case_sensitive=True, 
+        env_parse_none_str="None", 
+        extra="ignore"
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")
@@ -181,7 +186,7 @@ class Settings(BaseSettings):
         user = values.get("POSTGRES_USER")
         password = values.get("POSTGRES_PASSWORD")
         host = values.get("POSTGRES_HOST", "localhost")
-        port = values.get("POSTGRES_PORT", 5432)
+        port = values.get("POSTGRES_PORT", 10100)
         db = values.get("POSTGRES_DB")
 
         # Always extract secret value if it's a SecretStr

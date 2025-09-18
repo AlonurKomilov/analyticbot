@@ -27,7 +27,8 @@
 5. **Development Infrastructure Created**
    - `scripts/dev-start.sh` - Comprehensive service management
    - `Makefile.dev` - Development-specific commands  
-   - `.env.dev` - Development environment configuration
+   - `.env.development` - Development environment configuration (11xxx ports)
+   - `.env.production` - Production environment configuration (10xxx ports)
    - `scripts/sync-to-docker.sh` - Sync dev changes to production
 
 ### 🚀 **Development Workflow Ready**

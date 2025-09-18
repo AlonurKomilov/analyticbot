@@ -88,8 +88,10 @@ make up
 
 ## Environment Files
 
-- `.env` - Production configuration
-- `.env.dev` - Development configuration (different ports, debug flags)
+- `.env.production` - Production configuration (10xxx ports, Docker internal)
+- `.env.development` - Development configuration (11xxx ports, external Docker access)
+- `.env.production.example` - Production template with CHANGE_ME placeholders
+- `.env.development.example` - Development template with CHANGE_ME placeholders
 
 ## Database & Redis
 

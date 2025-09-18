@@ -336,7 +336,7 @@ validate_migration() {
     info "🏥 Checking application health..."
     sleep 5  # Give services time to stabilize
     
-    if curl -f -s http://localhost:8000/health >/dev/null 2>&1; then
+    if curl -f -s http://localhost:10300/health >/dev/null 2>&1; then
         success "✅ Application health check passed"
         ((validation_passed++))
     else

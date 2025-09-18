@@ -64,11 +64,11 @@ USER appuser
 
 # ---------- API Service ----------
 FROM final AS api
-EXPOSE 8000
+EXPOSE 10300
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:10300/health || exit 1
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "10300"]
 
 # ---------- Bot Service ----------  
 FROM final AS bot

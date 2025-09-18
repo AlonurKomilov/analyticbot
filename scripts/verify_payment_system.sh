@@ -64,7 +64,7 @@ run_test "API Client" "test -f apps/frontend/src/services/apiClient.js"
 echo -e "${BLUE}Configuration Files:${NC}"
 run_test "Environment Template" "test -f .env.example"
 run_test "Frontend Environment Template" "test -f apps/frontend/.env.example"
-run_test "Production Docker Compose" "test -f infra/docker/docker-compose.prod.yml"
+run_test "Production Docker Compose" "test -f docker/docker-compose.prod.yml"
 run_test "Deployment Script" "test -f deploy_production.sh && test -x deploy_production.sh"
 run_test "Stripe Webhook Guide" "test -f STRIPE_WEBHOOK_SETUP_GUIDE.md"
 

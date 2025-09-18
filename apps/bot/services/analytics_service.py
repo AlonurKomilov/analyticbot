@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class AnalyticsService:
     """🚀 Unified high-performance analytics service with advanced optimization"""
 
-    def __init__(self, bot: Bot, analytics_repository: Any):
+    def __init__(self, bot: Bot | None, analytics_repository: Any):
         self.analytics_repository = analytics_repository
         self.bot = bot
         self._rate_limit_delay = 0.1
@@ -677,6 +677,11 @@ class AnalyticsService:
 
     async def _get_post_views_with_cache(self, channel_id: int, post: dict) -> int | None:
         """📦 Get post views with intelligent caching"""
+        # If bot is None (API-only deployment), return None for views
+        if self.bot is None:
+            logger.debug("Bot not available for view fetching in API-only deployment")
+            return None
+            
         if not hasattr(performance_manager, "cache"):
             return await self._get_single_post_views(channel_id, post)
         message_id = post["message_id"]

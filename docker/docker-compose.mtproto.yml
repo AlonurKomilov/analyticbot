@@ -1,0 +1,113 @@
+# Docker Compose configuration for MTProto services
+# Usage: docker compose -f docker/docker-compose.yml -f docker/docker-compose.mtproto.yml up
+
+version: '3.8'
+
+networks:
+  analyticbot_network:
+    external: true
+
+services:
+  # MTProto Stats Loader
+  mtproto-stats:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: api
+    command: python -m apps.mtproto.tasks.load_stats
+    env_file:
+      - ../.env.production
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    environment:
+      - MTPROTO_ENABLED=true
+      - MTPROTO_STATS_ENABLED=true
+      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot
+      - REDIS_URL=redis://redis:10200/0
+      # Configure your stats peers:
+      # - MTPROTO_STATS_PEERS=["@channel1", "@channel2"]
+      # - MTPROTO_STATS_CONCURRENCY=3
+      # - MTPROTO_STATS_PERIOD_DAYS=30
+    networks:
+      - analyticbot_network
+    profiles:
+      - mtproto-stats
+
+  # MTProto Updates Collector (Horizontally Scalable)
+  mtproto-updates:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: api
+    command: python -m apps.mtproto.tasks.poll_updates
+    env_file:
+      - ../.env.production
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        delay: 10s
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.2'
+    environment:
+      # Enable scaling features
+      MTPROTO_ENABLED: "true"
+      MTPROTO_UPDATES_ENABLED: "true"
+      MTPROTO_POOL_ENABLED: "true"
+      
+      # Account pool configuration
+      MTPROTO_ACCOUNTS: "session1,session2,session3"
+      MTPROTO_RPS_PER_ACCOUNT: "0.7"
+      MTPROTO_MAX_CONCURRENCY_PER_ACCOUNT: "2"
+      MTPROTO_GLOBAL_RPS: "2.5"
+      
+      # Proxy pool (optional)
+      MTPROTO_PROXY_ENABLED: "false"
+      # MTPROTO_PROXIES: "socks5://user:pass@proxy1:1080,socks5://user:pass@proxy2:1080"
+      
+      # Observability
+      OBS_PROMETHEUS_ENABLED: "true"
+      PROMETHEUS_PORT: "9108"
+      
+      # Health checks
+      HEALTH_BIND: "0.0.0.0:8091"
+      GRACEFUL_SHUTDOWN_TIMEOUT_S: "25"
+      
+      # Database - Updated to match current configuration
+      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot"
+      REDIS_URL: "redis://redis:10200/0"
+    networks:
+      - analyticbot_network
+    profiles:
+      - mtproto-scaling
+
+  # MTProto Session Manager
+  mtproto-session-manager:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: api
+    command: python -m apps.mtproto.session_manager
+    env_file:
+      - ../.env.production
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    environment:
+      - MTPROTO_ENABLED=true
+      - MTPROTO_SESSION_MANAGER_ENABLED=true
+      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot
+      - REDIS_URL=redis://redis:10200/0
+    networks:
+      - analyticbot_network
+    profiles:
+      - mtproto-session

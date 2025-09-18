@@ -1,8 +1,13 @@
 # Makefile for AnalyticBot
 
-# Ensure .env file exists
-ifeq (,$(wildcard ./.env))
-    $(shell cp .env.example .env)
+# Ensure environment files exist - Two-File Clean Architecture
+ifeq (,$(wildcard ./.env.development))
+    $(shell echo "⚠️  Creating .env.development from template...")
+    $(shell cp .env.development.example .env.development)
+endif
+ifeq (,$(wildcard ./.env.production))
+    $(shell echo "⚠️  Creating .env.production from template...")
+    $(shell cp .env.production.example .env.production)
 endif
 
 # Include development commands
@@ -39,26 +44,26 @@ help:
 # Production Docker commands
 up:
 	@echo "🐳 Starting Docker services..."
-	docker compose up -d
+	docker-compose -f docker/docker-compose.yml up -d
 	@echo "✅ Services available at:"
-	@echo "   • API: http://localhost:8000"
-	@echo "   • Frontend: http://localhost:3000"
+	@echo "   • API: http://localhost:10300"
+	@echo "   • Frontend: http://localhost:10400"
 
 down:
 	@echo "🛑 Stopping Docker services..."
-	docker compose down
+	docker-compose -f docker/docker-compose.yml down
 
 logs:
 	@echo "📋 Following Docker logs..."
-	docker compose logs -f
+	docker-compose -f docker/docker-compose.yml logs -f
 
 ps:
 	@echo "📊 Docker services status:"
-	docker compose ps
+	docker-compose -f docker/docker-compose.yml ps
 
 migrate:
 	@echo "🔄 Running database migrations..."
-	docker compose run --rm migrate
+	docker-compose -f docker/docker-compose.yml run --rm migrate
 
 # Sync development changes to Docker
 sync:
@@ -95,55 +100,55 @@ export-reqs:
 .PHONY: build shell clean-docker dev-setup backup restore
 
 build:
-	docker compose build --no-cache
+	docker-compose -f docker/docker-compose.yml build --no-cache
 
 shell:
-	docker compose exec api bash
+	docker-compose -f docker/docker-compose.yml exec api bash
 
 clean-docker:
-	docker compose down -v --remove-orphans
+	docker-compose -f docker/docker-compose.yml down -v --remove-orphans
 	docker system prune -f
 	@echo "✅ Docker environment cleaned"
 
 dev-setup:
 	@echo "🚀 Setting up development environment..."
-	cp .env.example .env 2>/dev/null || echo "⚠️ .env.example not found, please create .env manually"
-	docker compose up --build -d
+	@echo "📁 Environment files are managed automatically (see Makefile setup at top)"
+	docker-compose -f docker/docker-compose.yml up --build -d
 	@echo "✅ Development environment ready!"
 	@echo "📊 Services running:"
-	@echo "   • API: http://localhost:8000"
-	@echo "   • Frontend: http://localhost:3000"
-	@echo "   • Docs: http://localhost:8000/docs"
-	docker compose logs -f api
+	@echo "   • API: http://localhost:10300"
+	@echo "   • Frontend: http://localhost:10400"
+	@echo "   • Docs: http://localhost:10300/docs"
+	docker-compose -f docker/docker-compose.yml logs -f api
 
 backup:
 	@mkdir -p backups
 	@echo "📦 Creating database backup..."
-	docker compose exec db pg_dump -U analytic analytic_bot > backups/backup_$(shell date +%Y%m%d_%H%M%S).sql
+	docker-compose -f docker/docker-compose.yml exec db pg_dump -U analytic analytic_bot > backups/backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "✅ Database backed up to backups/"
 
 restore:
 	@if [ -z "$(BACKUP_FILE)" ]; then echo "❌ Usage: make restore BACKUP_FILE=backups/backup_file.sql"; exit 1; fi
 	@echo "📦 Restoring from $(BACKUP_FILE)..."
-	docker compose exec -T db psql -U analytic analytic_bot < $(BACKUP_FILE)
+	docker-compose -f docker/docker-compose.yml exec -T db psql -U analytic analytic_bot < $(BACKUP_FILE)
 	@echo "✅ Database restored from $(BACKUP_FILE)"
 
 # Enhanced Docker operations
 .PHONY: rebuild restart status
 
 rebuild:
-	docker compose down
-	docker compose build --no-cache
-	docker compose up -d
+	docker-compose -f docker/docker-compose.yml down
+	docker-compose -f docker/docker-compose.yml build --no-cache
+	docker-compose -f docker/docker-compose.yml up -d
 	@echo "✅ Services rebuilt and restarted"
 
 restart:
-	docker compose restart
+	docker-compose -f docker/docker-compose.yml restart
 	@echo "✅ All services restarted"
 
 status:
 	@echo "📊 Docker Services Status:"
-	@docker compose ps --format "table {{.Name}}\t{{.State}}\t{{.Status}}\t{{.Ports}}"
+	@docker-compose ps --format "table {{.Name}}\t{{.State}}\t{{.Status}}\t{{.Ports}}"
 	@echo ""
 	@echo "💾 Resource Usage:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
@@ -153,24 +158,24 @@ status:
 
 prod-up:
 	@echo "🚀 Starting production environment..."
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
 	@echo "✅ Production environment started!"
 	@echo "📊 Production services:"
-	@echo "   • API: http://localhost:8000"
-	@echo "   • Frontend: http://localhost:3000"
+	@echo "   • API: http://localhost:10300"
+	@echo "   • Frontend: http://localhost:10400"
 	@echo "   • No external database ports (secure)"
 
 prod-down:
 	@echo "🛑 Stopping production environment..."
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml down
 	@echo "✅ Production environment stopped"
 
 prod-logs:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml logs -f
 
 prod-status:
 	@echo "📊 Production Services Status:"
-	@docker compose -f docker-compose.yml -f docker-compose.prod.yml ps --format "table {{.Name}}\t{{.State}}\t{{.Status}}\t{{.Ports}}"
+	@docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml ps --format "table {{.Name}}\t{{.State}}\t{{.Status}}\t{{.Ports}}"
 	@echo ""
 	@echo "💾 Production Resource Usage:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"

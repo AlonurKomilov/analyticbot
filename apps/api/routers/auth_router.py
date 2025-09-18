@@ -407,7 +407,8 @@ async def reset_password(
         get_security_manager().consume_password_reset_token(request.token)
 
         # Terminate all user sessions for security
-        get_security_manager().terminate_all_user_sessions(str(user["id"]))        logger.info(f"Password reset successful for user: {user_email}")
+        get_security_manager().terminate_all_user_sessions(str(user["id"]))
+        logger.info(f"Password reset successful for user: {user_email}")
         
         return {
             "message": "Password reset successful. Please log in with your new password.",

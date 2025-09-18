@@ -149,7 +149,8 @@ class MTProtoSettings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", description="Logging level for MTProto application")
 
     model_config = {
-        "env_file": ".env",
+        # Clean Architecture: Load environment-specific files
+        "env_file": [".env.production", ".env.development"] if os.getenv("ENVIRONMENT") != "development" else [".env.development", ".env.production"],
         "case_sensitive": False,
         "extra": "ignore",  # Ignore extra environment variables
     }

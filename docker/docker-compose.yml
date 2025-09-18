@@ -13,10 +13,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/db/init:/docker-entrypoint-initdb.d:ro
-    # NOTE: Ports commented out for production security
-    # Uncomment for development if direct database access needed
-    # ports:
-    #   - "5433:5432"
+    # Production Environment Database - Port 10100
+    ports:
+      - "10100:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}"]
       interval: 10s
@@ -38,10 +37,9 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redisdata:/data
-    # NOTE: Ports commented out for production security
-    # Uncomment for development if direct Redis access needed
-    # ports:
-    #   - "6380:6379"
+    # Production Environment Redis - Port 10200
+    ports:
+      - "10200:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -59,8 +57,8 @@ services:
   # ---------- MTProto Real Data Collection Service (Phase 2) ----------
   mtproto:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: api  # Reuse API image for now
     command: python scripts/mtproto_service.py service
     container_name: analyticbot-mtproto
@@ -82,8 +80,8 @@ services:
       MTPROTO_CONCURRENCY: ${MTPROTO_CONCURRENCY:-1}  # Conservative for safety
       MTPROTO_SLEEP_THRESHOLD: ${MTPROTO_SLEEP_THRESHOLD:-2.0}  # Increased sleep
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    env_file: 
-      - .env
+    env_file:
+      - ../.env.production
     depends_on:
       - db
       - redis
@@ -114,14 +112,14 @@ services:
   # ---------- Frontend Service ----------
   frontend:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile.frontend
-      target: production
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: frontend
     container_name: analyticbot-frontend
     ports:
-      - "3000:80"
+      - "10400:80"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://api:8000}
+      VITE_API_URL: ${VITE_API_URL:-http://api:10300}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     depends_on:
       api:
@@ -145,14 +143,14 @@ services:
   # ---------- Frontend Development (optional) ----------
   frontend-dev:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile.frontend
-      target: development
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: frontend-dev
     container_name: analyticbot-frontend-dev
     ports:
-      - "5173:5173"
+      - "11400:5173"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://api:8000}
+      VITE_API_URL: ${VITE_API_URL:-http://api:10300}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     volumes:
       - ./apps/frontend:/app:delegated
@@ -175,25 +173,25 @@ services:
   # ---------- API Service ----------
   api:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: api
-    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 10300
     container_name: analyticbot-api
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
       REDIS_URL: redis://redis:6379/0
-    env_file: 
-      - .env
+    env_file:
+      - ../.env.production
     ports:
-      - "8000:8000"
+      - "10300:10300"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:10300/health"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -212,8 +210,8 @@ services:
   # ---------- Bot Service ----------
   bot:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: bot
     command: python -m apps.bot.run_bot
     container_name: analyticbot-bot
@@ -221,14 +219,14 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
       REDIS_URL: redis://redis:6379/0
     env_file:
-      - .env
+      - ../.env.production
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://api:8000/health', timeout=5)"]
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://api:10300/health', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -246,8 +244,8 @@ services:
   # ---------- Celery Worker (optional) ----------
   worker:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: worker
     command: celery -A infra.celery.celery_app worker -l info
     container_name: analyticbot-worker
@@ -255,7 +253,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
       REDIS_URL: redis://redis:6379/0
     env_file:
-      - .env
+      - ../.env.production
     depends_on:
       db:
         condition: service_healthy
@@ -282,8 +280,8 @@ services:
   # ---------- Celery Beat (optional) ----------
   beat:
     build:
-      context: .
-      dockerfile: infra/docker/Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: beat
     command: celery -A infra.celery.celery_app beat -l info
     container_name: analyticbot-beat
@@ -291,7 +289,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
       REDIS_URL: redis://redis:6379/0
     env_file:
-      - .env
+      - ../.env.production
     depends_on:
       db:
         condition: service_healthy

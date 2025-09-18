@@ -110,24 +110,46 @@ class PredictionRequest(BaseModel):
 
 
 async def get_analytics_service() -> AnalyticsService:
-    """Get analytics service from container"""
-    service = container.resolve(AnalyticsService)
-    assert isinstance(service, AnalyticsService)
-    return service
+    """Get analytics service with proper API dependencies (no bot required)"""
+    # Import here to avoid circular imports
+    from apps.shared.di import container as shared_container
+    
+    try:
+        # Get the container instance and asyncpg pool for the analytics repository
+        container_instance = shared_container()
+        pool = await container_instance.asyncpg_pool()
+        analytics_repo = AsyncpgAnalyticsRepository(pool)
+        
+        # Create AnalyticsService with None bot (API-only deployment)
+        return AnalyticsService(bot=None, analytics_repository=analytics_repo)
+    except Exception as e:
+        logger.error(f"Failed to create analytics service: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Analytics service unavailable - database connection failed"
+        )
 
 
 
 async def get_channel_management_service() -> ChannelManagementService:
     """Get channel management service from container"""
-    service_container = container()
-    return service_container.channel_management_service()
+    return container.channel_management_service()
 
 
 async def get_analytics_repository() -> AsyncpgAnalyticsRepository:
-    """Get analytics repository from container"""
-    repo = container.resolve(AsyncpgAnalyticsRepository)
-    assert isinstance(repo, AsyncpgAnalyticsRepository)
-    return repo
+    """Get analytics repository with proper API dependencies"""
+    from apps.shared.di import container as shared_container
+    
+    try:
+        container_instance = shared_container()
+        pool = await container_instance.asyncpg_pool()
+        return AsyncpgAnalyticsRepository(pool)
+    except Exception as e:
+        logger.error(f"Failed to create analytics repository: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Database connection not available"
+        )
 
 
 async def get_data_processor() -> AdvancedDataProcessor:

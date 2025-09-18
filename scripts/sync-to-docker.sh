@@ -40,7 +40,7 @@ sleep 10
 # Check service health
 echo -e "${BLUE}🔍 Checking service health...${NC}"
 for i in {1..30}; do
-    if curl -s http://localhost:8000/health >/dev/null 2>&1; then
+    if curl -s http://localhost:10300/health >/dev/null 2>&1; then
         echo -e "${GREEN}✅ API is healthy${NC}"
         break
     fi
@@ -53,9 +53,9 @@ echo ""
 echo -e "${GREEN}🎉 SYNC COMPLETE!${NC}"
 echo "=================="
 echo -e "${BLUE}🌐 Docker URLs:${NC}"
-echo "  • API:      http://localhost:8000"
-echo "  • API Docs: http://localhost:8000/docs"
-echo "  • Frontend: http://localhost:3000"
+echo "  • API:      http://localhost:10300"
+echo "  • API Docs: http://localhost:10300/docs"
+echo "  • Frontend: http://localhost:10400"
 echo ""
 echo -e "${BLUE}💡 Commands:${NC}"
 echo "  • make logs     - View Docker logs"
@@ -66,7 +66,7 @@ echo "  • make dev-start - Switch back to development mode"
 if [ "$1" == "--test" ]; then
     echo ""
     echo -e "${BLUE}🧪 Running quick integration test...${NC}"
-    if curl -s http://localhost:8000/health | grep -q "ok"; then
+    if curl -s http://localhost:10300/health | grep -q "ok"; then
         echo -e "${GREEN}✅ Integration test passed${NC}"
     else
         echo -e "${RED}❌ Integration test failed${NC}"

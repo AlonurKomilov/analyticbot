@@ -117,7 +117,7 @@ bot_token = settings.BOT_TOKEN.get_secret_value()
 ```bash
 # .env - CONTAINED REAL SECRETS
 BOT_TOKEN=7900046521:AAGgnLxHfXuKMfR0u1Fn6V6YliPnywkUu9E
-ADMIN_IDS=8034732332,1527638770
+ADMIN_IDS=1527638770
 JWT_SECRET_KEY=change_me_min_32_chars
 ```
 
@@ -162,7 +162,7 @@ from bot.config import settings  # Legacy import works
 from config import settings      # New import works
 
 # Both access the same secure configuration
-assert settings.ADMIN_IDS == [8034732332, 1527638770]  # ✅ Parsed correctly
+assert settings.ADMIN_IDS == [1527638770]  # ✅ Parsed correctly
 assert bool(settings.BOT_TOKEN)  # ✅ Secret loaded
 ```
 

@@ -140,7 +140,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f infra/docker/Dockerfile --target api -t analyticbot:test .
+          docker build -f docker/Dockerfile --target api -t analyticbot:test .
           echo "✅ Docker build successful"
 
       - name: Test Docker image

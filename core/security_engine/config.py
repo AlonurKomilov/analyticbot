@@ -35,18 +35,18 @@ class SecurityConfig(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # Redis Configuration
+    # Redis Configuration - Production Environment 10xxx
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "10200"))
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
     REDIS_PASSWORD: str | None = os.getenv("REDIS_PASSWORD")
 
-    # OAuth Configuration
+    # OAuth Configuration - Production Environment 10xxx
     GOOGLE_CLIENT_ID: str | None = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str | None = os.getenv("GOOGLE_CLIENT_SECRET")
     GITHUB_CLIENT_ID: str | None = os.getenv("GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET: str | None = os.getenv("GITHUB_CLIENT_SECRET")
-    OAUTH_REDIRECT_URL: str = os.getenv("OAUTH_REDIRECT_URL", "http://localhost:8000/auth/callback")
+    OAUTH_REDIRECT_URL: str = os.getenv("OAUTH_REDIRECT_URL", "http://localhost:10300/auth/callback")
 
     # Security Policies
     MAX_LOGIN_ATTEMPTS: int = 5
@@ -70,10 +70,12 @@ class SecurityConfig(BaseSettings):
     MFA_TOKEN_LENGTH: int = 6
     MFA_TOKEN_INTERVAL: int = 30
 
-    # CORS Configuration - flexible input, validated to List[str]
+    # CORS Configuration - Production Environment 10xxx
     CORS_ORIGINS: Union[str, List[str]] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
+        "http://localhost:10400",
+        "http://localhost:10300",
+        "http://localhost:11400",
+        "http://localhost:11300",
         "https://yourdomain.com",
     ]
     CORS_ALLOW_CREDENTIALS: bool = True
@@ -112,8 +114,10 @@ class SecurityConfig(BaseSettings):
         # Handle None or empty values
         if not v:
             return [
-                "http://localhost:3000",
-                "http://localhost:8000",
+                "http://localhost:10400",
+                "http://localhost:10300",
+                "http://localhost:11400",
+                "http://localhost:11300",
                 "https://yourdomain.com",
             ]
         
@@ -121,8 +125,10 @@ class SecurityConfig(BaseSettings):
             # Handle empty string
             if not v.strip():
                 return [
-                    "http://localhost:3000",
-                    "http://localhost:8000",
+                    "http://localhost:10400",
+                    "http://localhost:10300",
+                    "http://localhost:11400",
+                    "http://localhost:11300",
                     "https://yourdomain.com",
                 ]
             
@@ -142,8 +148,10 @@ class SecurityConfig(BaseSettings):
         else:
             # Return default if neither
             return [
-                "http://localhost:3000",
-                "http://localhost:8000",
+                "http://localhost:10400",
+                "http://localhost:10300",
+                "http://localhost:11400",
+                "http://localhost:11300",
                 "https://yourdomain.com",
             ]
 
@@ -166,7 +174,8 @@ class SecurityConfig(BaseSettings):
         return v
 
     class Config:
-        env_file = ".env"
+        # Clean Architecture: Load environment-specific files
+        env_file = [".env.production", ".env.development"] if os.getenv("ENVIRONMENT") != "development" else [".env.development", ".env.production"]
         case_sensitive = True
         extra = "ignore"  # Ignore extra environment variables
 

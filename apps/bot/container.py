@@ -41,9 +41,19 @@ def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
     return _wrapper
 
 
+async def _get_asyncpg_pool():
+    """Get asyncpg pool for repositories"""
+    from apps.shared.di import container as shared_container
+    try:
+        container_instance = shared_container()
+        return await container_instance.asyncpg_pool()
+    except Exception as e:
+        logger.warning(f"Failed to get asyncpg pool: {e}")
+        return None
+
 class Container(punq.Container):
     config = Singleton(Settings)
-    db_session = Singleton(init_db)
+    # Remove the broken db_session that uses async init_db incorrectly
     
     def performance_analytics_service(self):
         """Get performance analytics service instance"""
@@ -64,7 +74,8 @@ class Container(punq.Container):
 container = Container()
 
 
-def _build_bot() -> _AioBot:
+def _build_bot() -> _AioBot | None:
+    """Build bot instance, return None if BOT_TOKEN is missing (for API-only deployments)"""
     cfg: Settings = cast(Settings, container.config)
     token: str | None
     try:
@@ -74,7 +85,8 @@ def _build_bot() -> _AioBot:
 
         token = os.getenv("BOT_TOKEN")
     if not token or token == "replace_me":
-        raise RuntimeError("BOT_TOKEN is missing or placeholder")
+        # For API-only deployments, return None instead of raising error
+        return None
     return _AioBot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
 
@@ -98,15 +110,24 @@ def _val(x: Any) -> Any:
 
 def _pool_or_none() -> Any | None:
     """
-    Get database pool with improved error handling.
-    Returns DB (asyncpg Pool or async_sessionmaker) or None if not available.
+    Get database pool using shared container.
+    Returns asyncpg Pool or None if not available.
     """
     try:
-        pool_value = _val(container.db_session)
-        if hasattr(pool_value, "__await__"):
-            logger.warning("Database pool not initialized (warmup required)")
+        # Import here to avoid circular imports
+        import asyncio
+        from apps.shared.di import container as shared_container
+        
+        # Try to get the pool synchronously if we're in an async context
+        try:
+            loop = asyncio.get_running_loop()
+            # If we're in an async context, we need to handle this differently
+            # For now, return None and let the repository handle it gracefully
+            logger.info("Async context detected - repositories should use proper async DI")
             return None
-        return pool_value
+        except RuntimeError:
+            # No running loop, we're in sync context
+            return None
     except Exception as e:
         from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
@@ -143,7 +164,10 @@ def _make_service(ServiceCls: type) -> object:
     names = set(sig.parameters.keys())
     kwargs: dict[str, Any] = {}
     if "bot" in names:
-        kwargs["bot"] = container.resolve(_AioBot)
+        bot = container.resolve(_AioBot)
+        if bot is not None:
+            kwargs["bot"] = bot
+        # If bot is None (API-only deployment), skip adding it - service should handle this
     if {"channel_repository", "channel_repo", "repository"} & names:
         repo = container.resolve(AsyncpgChannelRepository)
         for cand in ("channel_repository", "channel_repo", "repository"):

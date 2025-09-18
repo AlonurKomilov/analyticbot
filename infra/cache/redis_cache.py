@@ -67,7 +67,9 @@ class RedisJSONCache:
             logger.error(f"Cache exists error for key {key}: {e}")
             return False
 
-    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime | None = None) -> str:
+    def generate_cache_key(
+        self, endpoint: str, params: dict, last_updated: datetime | None = None
+    ) -> str:
         """Generate a consistent cache key from endpoint and parameters"""
         # Sort parameters for consistent key generation
         sorted_params = sorted(params.items())
@@ -104,7 +106,9 @@ class NoOpCache:
     async def exists(self, key: str) -> bool:
         return False
 
-    def generate_cache_key(self, endpoint: str, params: dict, last_updated: datetime | None = None) -> str:
+    def generate_cache_key(
+        self, endpoint: str, params: dict, last_updated: datetime | None = None
+    ) -> str:
         return f"noop:{endpoint}"
 
 

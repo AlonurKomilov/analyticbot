@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 import httpx
 from fastapi import HTTPException, status
 
-from .config import SecurityConfig, get_security_config
+from .config import get_security_config
 from .models import AuthProvider, User, UserStatus
 
 logger = logging.getLogger(__name__)
@@ -183,7 +183,10 @@ class OAuthManager:
 
         provider_config = self.providers[provider]
 
-        headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        }
 
         try:
             response = await self.client.get(provider_config["user_info_url"], headers=headers)
@@ -207,7 +210,10 @@ class OAuthManager:
 
     async def _get_github_email(self, access_token: str) -> str | None:
         """Get primary email from GitHub API"""
-        headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        }
 
         try:
             response = await self.client.get("https://api.github.com/user/emails", headers=headers)
@@ -292,7 +298,12 @@ class OAuthManager:
         return user
 
     async def complete_oauth_flow(
-        self, provider: str, code: str, state: str, expected_state: str, redirect_uri: str
+        self,
+        provider: str,
+        code: str,
+        state: str,
+        expected_state: str,
+        redirect_uri: str,
     ) -> User:
         """
         Complete full OAuth authentication flow
@@ -314,7 +325,8 @@ class OAuthManager:
         if state != expected_state:
             logger.warning(f"OAuth state mismatch for {provider}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state parameter"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid state parameter",
             )
 
         # Exchange code for token
@@ -323,7 +335,8 @@ class OAuthManager:
 
         if not access_token:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="No access token received"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No access token received",
             )
 
         # Get user information
@@ -345,6 +358,7 @@ class OAuthManager:
 # Global OAuth manager instance
 # Global OAuth manager instance - lazy initialization
 _oauth_manager = None
+
 
 def get_oauth_manager() -> OAuthManager:
     """Get the global OAuth manager instance"""

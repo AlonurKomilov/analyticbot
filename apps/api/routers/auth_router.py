@@ -8,12 +8,22 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
-from core.security_engine import SecurityManager, User, UserRole, UserStatus, AuthProvider
+from apps.api.middleware.auth import (
+    get_current_user,
+    get_security_manager,
+    get_user_repository,
+)
+from core.security_engine import (
+    AuthProvider,
+    SecurityManager,
+    User,
+    UserRole,
+    UserStatus,
+)
 from core.security_engine.mfa import MFAManager
-from apps.api.middleware.auth import get_user_repository, get_security_manager, get_current_user
 from infra.db.repositories.user_repository import AsyncpgUserRepository
 
 logger = logging.getLogger(__name__)
@@ -427,7 +437,6 @@ async def reset_password(
 # MFA Management Models
 class MFASetupRequest(BaseModel):
     """MFA setup initiation request"""
-    pass
 
 
 class MFAVerifySetupRequest(BaseModel):

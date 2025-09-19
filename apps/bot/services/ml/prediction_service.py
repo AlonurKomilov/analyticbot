@@ -393,9 +393,11 @@ class PredictionService:
             content_metrics.hashtag_count,  # hashtag_count
             content_metrics.media_count,  # media_count
             content_metrics.sentiment_score,  # sentiment_score
-            np.mean(content_metrics.engagement_history)
-            if content_metrics.engagement_history
-            else 100,  # historical_avg
+            (
+                np.mean(content_metrics.engagement_history)
+                if content_metrics.engagement_history
+                else 100
+            ),  # historical_avg
             1000,  # subscriber_count (placeholder)
             30,  # channel_age (placeholder)
         ]

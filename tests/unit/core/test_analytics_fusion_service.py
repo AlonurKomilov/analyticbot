@@ -76,8 +76,8 @@ class TestAnalyticsFusionServiceTrending:
                     "forwards": views // 50,
                     "replies": views // 100,
                     "reactions": {"👍": views // 20, "❤️": views // 30},
-                    "title": f"Normal Post {i+1}",
-                    "permalink": f"https://t.me/test/{i+1}",
+                    "title": f"Normal Post {i + 1}",
+                    "permalink": f"https://t.me/test/{i + 1}",
                 }
             )
 
@@ -122,9 +122,13 @@ class TestAnalyticsFusionServiceTrending:
                     "views": views,
                     "forwards": views // 30,  # Trending posts get more forwards
                     "replies": views // 80,
-                    "reactions": {"👍": views // 15, "❤️": views // 25, "🔥": views // 40},
-                    "title": f"Post {i+1}" + (" - VIRAL!" if views > 3000 else ""),
-                    "permalink": f"https://t.me/test/{i+1}",
+                    "reactions": {
+                        "👍": views // 15,
+                        "❤️": views // 25,
+                        "🔥": views // 40,
+                    },
+                    "title": f"Post {i + 1}" + (" - VIRAL!" if views > 3000 else ""),
+                    "permalink": f"https://t.me/test/{i + 1}",
                 }
             )
 
@@ -163,9 +167,9 @@ class TestAnalyticsFusionServiceTrending:
         for post in trending:
             if "trend_score" in post:
                 expected_zscore = (post["views"] - mean_views) / std_dev
-                assert (
-                    abs(post["trend_score"] - expected_zscore) < 0.1
-                ), f"Z-score {post['trend_score']} should match calculated {expected_zscore:.2f}"
+                assert abs(post["trend_score"] - expected_zscore) < 0.1, (
+                    f"Z-score {post['trend_score']} should match calculated {expected_zscore:.2f}"
+                )
                 assert post["trend_score"] > 1.5, "Trending posts should have z-score > 1.5"
 
     async def test_zscore_baseline_no_false_positives(
@@ -185,16 +189,16 @@ class TestAnalyticsFusionServiceTrending:
 
         # Verify minimal or no trending posts from normal distribution
         # In a normal distribution, very few points should exceed z-score > 1.5
-        assert (
-            len(trending) <= 2
-        ), f"Normal distribution should produce minimal trending signals, got {len(trending)}"
+        assert len(trending) <= 2, (
+            f"Normal distribution should produce minimal trending signals, got {len(trending)}"
+        )
 
         # If any trending posts exist, verify their z-scores
         if trending:
             for post in trending:
-                assert (
-                    post.get("trend_score", 0) > 1.5
-                ), "Any detected trending post should have z-score > 1.5"
+                assert post.get("trend_score", 0) > 1.5, (
+                    "Any detected trending post should have z-score > 1.5"
+                )
 
     async def test_zscore_edge_cases(self, fusion_service, mock_repos):
         """Test z-score calculation edge cases"""
@@ -217,8 +221,8 @@ class TestAnalyticsFusionServiceTrending:
                     "forwards": 20,
                     "replies": 10,
                     "reactions": {},
-                    "title": f"Post {i+1}",
-                    "permalink": f"https://t.me/test/{i+1}",
+                    "title": f"Post {i + 1}",
+                    "permalink": f"https://t.me/test/{i + 1}",
                 }
             )
 
@@ -226,9 +230,9 @@ class TestAnalyticsFusionServiceTrending:
         trending = await fusion_service.get_trending(12345, datetime.now(), datetime.now())
 
         # Should handle zero variance gracefully (no posts will be trending)
-        assert all(
-            post.get("trend_score", 0) == 0 for post in trending
-        ), "Identical values should produce zero z-scores"
+        assert all(post.get("trend_score", 0) == 0 for post in trending), (
+            "Identical values should produce zero z-scores"
+        )
 
     async def test_trending_score_sorting(self, fusion_service, mock_repos, spike_posts):
         """Test that trending posts are sorted by trend_score descending"""
@@ -241,14 +245,14 @@ class TestAnalyticsFusionServiceTrending:
         # Verify sorting by trend_score descending
         if len(trending) > 1:
             trend_scores = [post.get("trend_score", 0) for post in trending]
-            assert trend_scores == sorted(
-                trend_scores, reverse=True
-            ), "Trending posts should be sorted by trend_score descending"
+            assert trend_scores == sorted(trend_scores, reverse=True), (
+                "Trending posts should be sorted by trend_score descending"
+            )
 
             # Highest z-score should be the 8500 views post (biggest spike)
-            assert (
-                trending[0]["views"] == 8500
-            ), "Post with most views (biggest spike) should be ranked first"
+            assert trending[0]["views"] == 8500, (
+                "Post with most views (biggest spike) should be ranked first"
+            )
 
     async def test_ewma_trending_comparison(self, fusion_service, mock_repos, spike_posts):
         """Test EWMA trending method as comparison to z-score"""
@@ -275,12 +279,12 @@ class TestAnalyticsFusionServiceTrending:
         zscore_detections = major_spikes.intersection(zscore_views)
         ewma_detections = major_spikes.intersection(ewma_views)
 
-        assert (
-            len(zscore_detections) >= 2
-        ), f"Z-score should detect at least 2 major spikes, found {len(zscore_detections)}"
-        assert (
-            len(ewma_detections) >= 2
-        ), f"EWMA should detect at least 2 major spikes, found {len(ewma_detections)}"
+        assert len(zscore_detections) >= 2, (
+            f"Z-score should detect at least 2 major spikes, found {len(zscore_detections)}"
+        )
+        assert len(ewma_detections) >= 2, (
+            f"EWMA should detect at least 2 major spikes, found {len(ewma_detections)}"
+        )
 
     async def test_trending_with_repository_error(self, fusion_service, mock_repos):
         """Test graceful handling of repository errors"""
@@ -314,7 +318,7 @@ class TestAnalyticsFusionServiceTrending:
         # Verify
         assert len(trending) == 1, "Should detect exactly one trending post (1000 views)"
         assert trending[0]["msg_id"] == 4, "Should identify the 1000-view post"
-        assert (
-            abs(trending[0]["trend_score"] - expected_zscore_1000) < 0.01
-        ), f"Z-score should be {expected_zscore_1000:.2f}, got {trending[0]['trend_score']}"
+        assert abs(trending[0]["trend_score"] - expected_zscore_1000) < 0.01, (
+            f"Z-score should be {expected_zscore_1000:.2f}, got {trending[0]['trend_score']}"
+        )
         assert trending[0]["trend_score"] > 1.5, "Outlier should have z-score > 1.5"

@@ -59,7 +59,10 @@ def mock_stripe_workflow():
         "id": "pi_test_workflow",
         "status": "succeeded",
         "amount": 2999,
-        "payment_method": {"id": "pm_test_card", "card": {"brand": "visa", "last4": "4242"}},
+        "payment_method": {
+            "id": "pm_test_card",
+            "card": {"brand": "visa", "last4": "4242"},
+        },
     }
 
     client.create_subscription.return_value = {
@@ -147,7 +150,11 @@ class TestSubscriptionPurchaseWorkflow:
 
     @pytest.mark.asyncio
     async def test_complete_stripe_subscription_purchase(
-        self, mock_stripe_workflow, mock_payment_api, mock_payment_bot, mock_payment_redis
+        self,
+        mock_stripe_workflow,
+        mock_payment_api,
+        mock_payment_bot,
+        mock_payment_redis,
     ):
         """Test complete Stripe subscription purchase workflow"""
         workflow_id = str(uuid.uuid4())
@@ -177,7 +184,11 @@ class TestSubscriptionPurchaseWorkflow:
                         "amount": 2999,
                         "currency": "usd",
                         "interval": "monthly",
-                        "features": ["Advanced Analytics", "Priority Support", "Custom Reports"],
+                        "features": [
+                            "Advanced Analytics",
+                            "Priority Support",
+                            "Custom Reports",
+                        ],
                     },
                 }
             ),
@@ -190,7 +201,11 @@ class TestSubscriptionPurchaseWorkflow:
         payment_intent = await mock_stripe_workflow.create_payment_intent(
             amount=plan_data["data"]["amount"],
             currency=plan_data["data"]["currency"],
-            metadata={"user_id": str(user_id), "plan_id": plan_id, "workflow_id": workflow_id},
+            metadata={
+                "user_id": str(user_id),
+                "plan_id": plan_id,
+                "workflow_id": workflow_id,
+            },
         )
 
         # Step 4: Store payment session
@@ -209,7 +224,10 @@ class TestSubscriptionPurchaseWorkflow:
 
         update_payment_workflow_state(
             workflow_id,
-            {"stage": "payment_intent_created", "payment_intent_id": payment_intent["id"]},
+            {
+                "stage": "payment_intent_created",
+                "payment_intent_id": payment_intent["id"],
+            },
         )
 
         # Step 5: User completes payment (simulated)
@@ -217,7 +235,10 @@ class TestSubscriptionPurchaseWorkflow:
 
         update_payment_workflow_state(
             workflow_id,
-            {"stage": "payment_confirmed", "payment_status": confirmed_payment["status"]},
+            {
+                "stage": "payment_confirmed",
+                "payment_status": confirmed_payment["status"],
+            },
         )
 
         # Step 6: Create subscription
@@ -275,7 +296,12 @@ class TestSubscriptionPurchaseWorkflow:
             + "\n".join([f"• {feature}" for feature in plan_data["data"]["features"]]),
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "🚀 Explore Features", "callback_data": "explore_premium_features"}]
+                    [
+                        {
+                            "text": "🚀 Explore Features",
+                            "callback_data": "explore_premium_features",
+                        }
+                    ]
                 ]
             },
         )
@@ -283,7 +309,8 @@ class TestSubscriptionPurchaseWorkflow:
         # Step 10: Schedule first renewal
         renewal_date = datetime.now() + timedelta(days=30)
         await mock_payment_redis.zadd(
-            "subscription_renewals", {f"{user_id}:{subscription['id']}": renewal_date.timestamp()}
+            "subscription_renewals",
+            {f"{user_id}:{subscription['id']}": renewal_date.timestamp()},
         )
 
         # Workflow completion
@@ -318,7 +345,11 @@ class TestSubscriptionPurchaseWorkflow:
 
     @pytest.mark.asyncio
     async def test_payme_subscription_purchase_workflow(
-        self, mock_payme_workflow, mock_payment_api, mock_payment_bot, mock_payment_redis
+        self,
+        mock_payme_workflow,
+        mock_payment_api,
+        mock_payment_bot,
+        mock_payment_redis,
     ):
         """Test Payme subscription purchase workflow"""
         workflow_id = str(uuid.uuid4())
@@ -431,14 +462,20 @@ class TestSubscriptionPurchaseWorkflow:
             text="🎉 Подписка успешно активирована!\n\n💎 Добро пожаловать в Pro!\n\nТеперь доступны:\n• Расширенная аналитика\n• Приоритетная поддержка",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "🚀 Изучить функции", "callback_data": "explore_pro_features"}]
+                    [
+                        {
+                            "text": "🚀 Изучить функции",
+                            "callback_data": "explore_pro_features",
+                        }
+                    ]
                 ]
             },
         )
 
         # Workflow completion
         update_payment_workflow_state(
-            workflow_id, {"stage": "payme_subscription_activated", "transaction_id": transaction_id}
+            workflow_id,
+            {"stage": "payme_subscription_activated", "transaction_id": transaction_id},
         )
 
         # Validate workflow
@@ -457,7 +494,11 @@ class TestPaymentFailureWorkflow:
 
     @pytest.mark.asyncio
     async def test_card_declined_recovery_workflow(
-        self, mock_stripe_workflow, mock_payment_api, mock_payment_bot, mock_payment_redis
+        self,
+        mock_stripe_workflow,
+        mock_payment_api,
+        mock_payment_bot,
+        mock_payment_redis,
     ):
         """Test payment failure recovery workflow for declined cards"""
         workflow_id = str(uuid.uuid4())
@@ -465,7 +506,8 @@ class TestPaymentFailureWorkflow:
 
         # Step 1: Initialize failed payment scenario
         update_payment_workflow_state(
-            workflow_id, {"stage": "payment_attempt", "user_id": user_id, "attempt_count": 1}
+            workflow_id,
+            {"stage": "payment_attempt", "user_id": user_id, "attempt_count": 1},
         )
 
         # Step 2: Simulate declined payment
@@ -501,8 +543,18 @@ class TestPaymentFailureWorkflow:
             text="❌ Payment failed: Your card was declined.\n\n💡 This usually means insufficient funds. Would you like to try a different payment method?",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "💳 Try Different Card", "callback_data": "retry_different_card"}],
-                    [{"text": "🏦 Bank Transfer", "callback_data": "try_bank_transfer"}],
+                    [
+                        {
+                            "text": "💳 Try Different Card",
+                            "callback_data": "retry_different_card",
+                        }
+                    ],
+                    [
+                        {
+                            "text": "🏦 Bank Transfer",
+                            "callback_data": "try_bank_transfer",
+                        }
+                    ],
                     [{"text": "❌ Cancel", "callback_data": "cancel_payment"}],
                 ]
             },
@@ -520,7 +572,11 @@ class TestPaymentFailureWorkflow:
         # Step 5: User chooses retry with different card
         update_payment_workflow_state(
             workflow_id,
-            {"stage": "retry_initiated", "retry_method": "different_card", "attempt_count": 2},
+            {
+                "stage": "retry_initiated",
+                "retry_method": "different_card",
+                "attempt_count": 2,
+            },
         )
 
         # Step 6: Create new payment intent for retry
@@ -563,7 +619,12 @@ class TestPaymentFailureWorkflow:
             text="🎉 Payment successful on retry!\n\nYour subscription is now active. Thank you for your patience!",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "🚀 Get Started", "callback_data": "start_using_subscription"}]
+                    [
+                        {
+                            "text": "🚀 Get Started",
+                            "callback_data": "start_using_subscription",
+                        }
+                    ]
                 ]
             },
         )
@@ -574,7 +635,11 @@ class TestPaymentFailureWorkflow:
         # Workflow completion
         update_payment_workflow_state(
             workflow_id,
-            {"stage": "payment_recovered", "final_status": "succeeded", "retry_succeeded": True},
+            {
+                "stage": "payment_recovered",
+                "final_status": "succeeded",
+                "retry_succeeded": True,
+            },
         )
 
         # Validate recovery workflow
@@ -659,7 +724,12 @@ class TestPaymentFailureWorkflow:
                                     "callback_data": f"retry_payment_{attempt_count}",
                                 }
                             ],
-                            [{"text": "❌ Cancel", "callback_data": "cancel_after_failures"}],
+                            [
+                                {
+                                    "text": "❌ Cancel",
+                                    "callback_data": "cancel_after_failures",
+                                }
+                            ],
                         ]
                     },
                 )
@@ -675,8 +745,18 @@ class TestPaymentFailureWorkflow:
             text="😔 We're unable to process your payment after multiple attempts.\n\n🆘 Our support team has been notified and will contact you shortly to resolve this issue.",
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "💬 Contact Support", "callback_data": "contact_support_payment"}],
-                    [{"text": "📧 Email Support", "callback_data": "email_support_payment"}],
+                    [
+                        {
+                            "text": "💬 Contact Support",
+                            "callback_data": "contact_support_payment",
+                        }
+                    ],
+                    [
+                        {
+                            "text": "📧 Email Support",
+                            "callback_data": "email_support_payment",
+                        }
+                    ],
                 ]
             },
         )
@@ -710,7 +790,11 @@ class TestSubscriptionRenewalWorkflow:
 
     @pytest.mark.asyncio
     async def test_successful_subscription_renewal_workflow(
-        self, mock_stripe_workflow, mock_payment_api, mock_payment_bot, mock_payment_redis
+        self,
+        mock_stripe_workflow,
+        mock_payment_api,
+        mock_payment_bot,
+        mock_payment_redis,
     ):
         """Test successful automated subscription renewal"""
         workflow_id = str(uuid.uuid4())
@@ -720,7 +804,11 @@ class TestSubscriptionRenewalWorkflow:
         # Step 1: Setup renewal scenario
         update_payment_workflow_state(
             workflow_id,
-            {"stage": "renewal_scheduled", "user_id": user_id, "subscription_id": subscription_id},
+            {
+                "stage": "renewal_scheduled",
+                "user_id": user_id,
+                "subscription_id": subscription_id,
+            },
         )
 
         # Step 2: Get current subscription details
@@ -749,7 +837,11 @@ class TestSubscriptionRenewalWorkflow:
             "status": "active",
             "current_period_start": int(datetime.now().timestamp()),
             "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
-            "latest_invoice": {"id": "in_renewal_invoice", "status": "paid", "amount_paid": 2999},
+            "latest_invoice": {
+                "id": "in_renewal_invoice",
+                "status": "paid",
+                "amount_paid": 2999,
+            },
         }
 
         renewed_subscription = await mock_stripe_workflow.retrieve_subscription(subscription_id)
@@ -785,7 +877,8 @@ class TestSubscriptionRenewalWorkflow:
         # Step 5: Update Redis renewal schedule
         next_renewal = datetime.fromtimestamp(renewed_subscription["current_period_end"])
         await mock_payment_redis.zadd(
-            "subscription_renewals", {f"{user_id}:{subscription_id}": next_renewal.timestamp()}
+            "subscription_renewals",
+            {f"{user_id}:{subscription_id}": next_renewal.timestamp()},
         )
 
         # Step 6: Send renewal confirmation
@@ -795,8 +888,18 @@ class TestSubscriptionRenewalWorkflow:
             + next_renewal.strftime("%B %d, %Y"),
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📊 View Benefits", "callback_data": "view_premium_benefits"}],
-                    [{"text": "⚙️ Manage Subscription", "callback_data": "manage_subscription"}],
+                    [
+                        {
+                            "text": "📊 View Benefits",
+                            "callback_data": "view_premium_benefits",
+                        }
+                    ],
+                    [
+                        {
+                            "text": "⚙️ Manage Subscription",
+                            "callback_data": "manage_subscription",
+                        }
+                    ],
                 ]
             },
         )
@@ -832,7 +935,11 @@ class TestRefundWorkflow:
 
     @pytest.mark.asyncio
     async def test_complete_refund_workflow(
-        self, mock_stripe_workflow, mock_payment_api, mock_payment_bot, mock_payment_redis
+        self,
+        mock_stripe_workflow,
+        mock_payment_api,
+        mock_payment_bot,
+        mock_payment_redis,
     ):
         """Test complete refund processing workflow"""
         workflow_id = str(uuid.uuid4())
@@ -881,7 +988,9 @@ class TestRefundWorkflow:
         }
 
         refund_result = await mock_stripe_workflow.create_refund(
-            payment_intent=payment_intent_id, amount=refund_amount, reason="requested_by_customer"
+            payment_intent=payment_intent_id,
+            amount=refund_amount,
+            reason="requested_by_customer",
         )
 
         # Step 4: Update subscription status
@@ -926,7 +1035,7 @@ class TestRefundWorkflow:
         # Step 7: Send refund confirmation
         await mock_payment_bot.send_message(
             chat_id=user_id,
-            text=f"✅ Refund processed successfully!\n\n💰 Amount: ${refund_amount/100:.2f}\n⏱️ Processing time: 5-10 business days\n\n📧 You'll receive an email confirmation shortly.",
+            text=f"✅ Refund processed successfully!\n\n💰 Amount: ${refund_amount / 100:.2f}\n⏱️ Processing time: 5-10 business days\n\n📧 You'll receive an email confirmation shortly.",
             reply_markup={
                 "inline_keyboard": [
                     [

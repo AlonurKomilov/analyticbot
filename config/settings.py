@@ -5,9 +5,8 @@ Centralized settings with proper security handling
 
 import os
 from enum import Enum
-from typing import Union
 
-from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator, Field
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -41,7 +40,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: SecretStr = SecretStr("dummy_token_for_development")
     STORAGE_CHANNEL_ID: int = 0
     ADMIN_IDS_STR: str | None = None  # Will be parsed to ADMIN_IDS
-    SUPPORTED_LOCALES: Union[str, list[str]] = ["en", "uz"]
+    SUPPORTED_LOCALES: str | list[str] = ["en", "uz"]
     DEFAULT_LOCALE: str = "en"
     ENFORCE_PLAN_LIMITS: bool = True
 
@@ -65,7 +64,7 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=10300)
     API_HOST_URL: str = Field(default="http://localhost:10300")
     TWA_HOST_URL: str = Field(default="http://localhost:10400/")
-    CORS_ORIGINS: Union[str, list[str]] = "*"
+    CORS_ORIGINS: str | list[str] = "*"
 
     # Security & Authentication
     JWT_SECRET_KEY: SecretStr = SecretStr("dev_secret_key_change_in_production")
@@ -112,7 +111,7 @@ class Settings(BaseSettings):
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
-    
+
     # Export Settings
     MAX_EXPORT_SIZE_MB: int = 50
     RATE_LIMIT_PER_HOUR: int = 100
@@ -127,11 +126,15 @@ class Settings(BaseSettings):
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
 
     model_config = SettingsConfigDict(
-        env_file=[".env.development", ".env.production"] if os.getenv("ENVIRONMENT") == "development" else [".env.production", ".env.development"],
-        env_file_encoding="utf-8", 
-        case_sensitive=True, 
-        env_parse_none_str="None", 
-        extra="ignore"
+        env_file=(
+            [".env.development", ".env.production"]
+            if os.getenv("ENVIRONMENT") == "development"
+            else [".env.production", ".env.development"]
+        ),
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        env_parse_none_str="None",
+        extra="ignore",
     )
 
     @field_validator("ADMIN_IDS_STR", mode="before")
@@ -205,7 +208,7 @@ class Settings(BaseSettings):
             if v == "*":
                 return ["*"]
             # Remove quotes if present
-            v = v.strip('"\'')
+            v = v.strip("\"'")
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return ["*"]
 
@@ -247,21 +250,22 @@ class Settings(BaseSettings):
 # Global settings instance
 try:
     settings = Settings()
-except Exception as e:
+except Exception:
     # For testing or when environment variables are not set
     import os
+
     # Set minimal required environment variables if not set
     required_vars = {
-        'BOT_TOKEN': 'dummy_bot_token',
-        'STORAGE_CHANNEL_ID': '123456789',
-        'POSTGRES_USER': 'postgres',
-        'POSTGRES_PASSWORD': 'password',
-        'POSTGRES_DB': 'analyticbot',
-        'JWT_SECRET_KEY': 'dummy_jwt_secret'
+        "BOT_TOKEN": "dummy_bot_token",
+        "STORAGE_CHANNEL_ID": "123456789",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "password",
+        "POSTGRES_DB": "analyticbot",
+        "JWT_SECRET_KEY": "dummy_jwt_secret",
     }
-    
+
     for var, default_value in required_vars.items():
         if not os.getenv(var):
             os.environ[var] = default_value
-    
+
     settings = Settings()

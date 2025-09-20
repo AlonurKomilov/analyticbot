@@ -115,7 +115,10 @@ except Exception as e:
 
     try:
         result = subprocess.run(
-            [str(venv_python), "-c", validation_script], capture_output=True, text=True, timeout=60
+            [str(venv_python), "-c", validation_script],
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
 
         if result.returncode == 0:
@@ -143,7 +146,16 @@ except Exception as e:
         try:
             print(f"\n🧪 Running {test_file}...")
             result = subprocess.run(
-                [str(venv_python), "-m", "pytest", test_file, "-v", "--tb=short", "-x", "--no-cov"],
+                [
+                    str(venv_python),
+                    "-m",
+                    "pytest",
+                    test_file,
+                    "-v",
+                    "--tb=short",
+                    "-x",
+                    "--no-cov",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=300,

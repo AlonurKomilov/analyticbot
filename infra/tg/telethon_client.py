@@ -6,7 +6,6 @@ from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 from core.ports.mtproto_config import MTProtoConfigProtocol
-from core.ports.tg_client import TGClient
 
 # Type-only imports for Telethon
 if TYPE_CHECKING:
@@ -81,27 +80,27 @@ class TelethonTGClient:
             # Initialize Telethon client
             proxy = self._parse_proxy(self.settings.TELEGRAM_PROXY)
             client_kwargs = {
-                'session': self.settings.TELEGRAM_SESSION_NAME,
-                'api_id': self.settings.TELEGRAM_API_ID,
-                'api_hash': self.settings.TELEGRAM_API_HASH,
+                "session": self.settings.TELEGRAM_SESSION_NAME,
+                "api_id": self.settings.TELEGRAM_API_ID,
+                "api_hash": self.settings.TELEGRAM_API_HASH,
             }
             if proxy is not None:
-                client_kwargs['proxy'] = proxy
-                
+                client_kwargs["proxy"] = proxy
+
             if not TELETHON_AVAILABLE or TelegramClient is None:
                 raise RuntimeError("Telethon is not available")
-                
+
             self._client = TelegramClient(**client_kwargs)
-            
+
             if self._client is None:
                 raise RuntimeError("Failed to create TelegramClient instance")
 
             # Set raw mode for minimal parsing overhead
-            if hasattr(self._client, 'parse_mode'):
-                setattr(self._client, 'parse_mode', None)  # Use setattr for dynamic assignment
+            if hasattr(self._client, "parse_mode"):
+                self._client.parse_mode = None  # Use setattr for dynamic assignment
 
             # Start the client
-            if hasattr(self._client, 'start') and callable(getattr(self._client, 'start')):
+            if hasattr(self._client, "start") and callable(self._client.start):
                 await self._client.start()  # type: ignore[misc]
             self._started = True
             self.logger.info("Telethon client started successfully")
@@ -112,11 +111,13 @@ class TelethonTGClient:
 
     async def stop(self) -> None:
         """Stop the Telegram client."""
-        if (self._client and 
-            hasattr(self._client, 'is_connected') and 
-            callable(getattr(self._client, 'is_connected', None)) and
-            self._client.is_connected() and
-            hasattr(self._client, 'disconnect')):
+        if (
+            self._client
+            and hasattr(self._client, "is_connected")
+            and callable(getattr(self._client, "is_connected", None))
+            and self._client.is_connected()
+            and hasattr(self._client, "disconnect")
+        ):
             await self._client.disconnect()  # type: ignore[misc]
             self.logger.info("Telethon client stopped")
         self._started = False
@@ -156,8 +157,8 @@ class TelethonTGClient:
 
         except Exception as e:
             # Handle FloodWaitError if it's available
-            if TELETHON_AVAILABLE and hasattr(e, 'seconds'):
-                wait_time = getattr(e, 'seconds', 60)  # Use getattr for safe access
+            if TELETHON_AVAILABLE and hasattr(e, "seconds"):
+                wait_time = getattr(e, "seconds", 60)  # Use getattr for safe access
                 self.logger.warning(f"Rate limited, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time * self.settings.MTPROTO_RETRY_BACKOFF)
             else:
@@ -183,8 +184,8 @@ class TelethonTGClient:
 
         try:
             # Simple update iteration if available
-            if TELETHON_AVAILABLE and hasattr(self._client, 'iter_updates'):
-                iter_updates_method = getattr(self._client, 'iter_updates', None)
+            if TELETHON_AVAILABLE and hasattr(self._client, "iter_updates"):
+                iter_updates_method = getattr(self._client, "iter_updates", None)
                 if iter_updates_method and callable(iter_updates_method):
                     async for update in iter_updates_method():  # type: ignore[misc]
                         yield update
@@ -197,8 +198,8 @@ class TelethonTGClient:
 
         except Exception as e:
             # Handle FloodWaitError if it's available
-            if TELETHON_AVAILABLE and hasattr(e, 'seconds'):
-                wait_time = getattr(e, 'seconds', 60)  # Use getattr for safe access
+            if TELETHON_AVAILABLE and hasattr(e, "seconds"):
+                wait_time = getattr(e, "seconds", 60)  # Use getattr for safe access
                 self.logger.warning(f"Updates rate limited, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time * self.settings.MTPROTO_RETRY_BACKOFF)
             else:
@@ -248,11 +249,11 @@ class TelethonTGClient:
 
         try:
             entity = await self._client.get_entity(peer)  # type: ignore[misc]
-            if hasattr(self._client, 'get_full_channel'):
-                get_full_channel_method = getattr(self._client, 'get_full_channel', None)
+            if hasattr(self._client, "get_full_channel"):
+                get_full_channel_method = getattr(self._client, "get_full_channel", None)
                 if get_full_channel_method and callable(get_full_channel_method):
                     return await get_full_channel_method(entity)  # type: ignore[misc]
-            
+
             # Fallback - just return the entity
             return entity
 

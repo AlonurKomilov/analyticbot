@@ -73,7 +73,7 @@ export class ApiDataProvider extends DataProvider {
         this.baseUrl = baseUrl || 
                       import.meta.env.VITE_API_BASE_URL || 
                       import.meta.env.VITE_API_URL || 
-                      'http://localhost:8000';
+                      'http://localhost:11400';
         this.authContext = authContext;
     }
 

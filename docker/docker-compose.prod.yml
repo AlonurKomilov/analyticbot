@@ -80,7 +80,7 @@ services:
         max-file: "3"
     # Production health check with tighter intervals
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:10300/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:10400/health"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -197,15 +197,56 @@ services:
         max-size: "10m"
         max-file: "3"
 
-# Production-specific networks with custom configuration
+  # ---------- Database Admin (Production Management) ----------
+  db-admin:
+    image: postgres:16
+    container_name: analyticbot-db-admin
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-analytic_bot}
+      POSTGRES_USER: ${POSTGRES_USER:-analytic}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    networks:
+      - database
+    profiles:
+      - admin  # Only start when explicitly requested: --profile admin
+    command: ["tail", "-f", "/dev/null"]  # Keep container running for admin access
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+
+# Production-specific networks with enhanced security
 networks:
-  default:
+  # Override networks from base compose with production settings
+  frontend:
     driver: bridge
+    name: analyticbot_frontend_prod
     driver_opts:
-      com.docker.network.bridge.name: analyticbot-prod
+      com.docker.network.bridge.name: analyticbot-frontend-prod
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.21.1.0/24
+  
+  backend:
+    driver: bridge
+    name: analyticbot_backend_prod
+    internal: false  # Allow internet access for external API calls
+    driver_opts:
+      com.docker.network.bridge.name: analyticbot-backend-prod
+    ipam:
+      config:
+        - subnet: 172.21.2.0/24
+  
+  database:
+    driver: bridge
+    name: analyticbot_database_prod
+    internal: true  # Maximum security - no internet access
+    driver_opts:
+      com.docker.network.bridge.name: analyticbot-database-prod
+    ipam:
+      config:
+        - subnet: 172.21.3.0/24
 
 # Production volume configuration with backup-friendly settings
 volumes:

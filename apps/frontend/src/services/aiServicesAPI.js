@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from './apiClient';
+import { aiServicesStatsMock } from '../__mocks__/aiServices/statsService.js';
 
 const AI_SERVICES_BASE = '/ai-services';
 
@@ -150,33 +151,8 @@ export const AIServicesAPI = {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch AI services stats:', error);
-            // Return mock data as fallback
-            return {
-                content_optimizer: {
-                    total_optimized: 1247,
-                    today_count: 23,
-                    avg_improvement: '+34%',
-                    status: 'active'
-                },
-                predictive_analytics: {
-                    accuracy: '94.2%',
-                    predictions: 156,
-                    trends: 8,
-                    status: 'active'
-                },
-                churn_predictor: {
-                    users_analyzed: 892,
-                    high_risk_users: 47,
-                    retention_success: '78%',
-                    status: 'beta'
-                },
-                security_monitor: {
-                    threats_detected: 12,
-                    security_score: '92.5%',
-                    monitoring_active: true,
-                    status: 'active'
-                }
-            };
+            // Return centralized mock data as fallback
+            return aiServicesStatsMock;
         }
     }
 };

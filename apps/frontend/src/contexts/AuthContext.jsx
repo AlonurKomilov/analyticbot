@@ -6,6 +6,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiClient } from '../utils/apiClient.js';
 
 // Authentication context interface
 const AuthContext = createContext({
@@ -71,18 +72,11 @@ export const AuthProvider = ({ children }) => {
 
                 if (storedToken && storedUser) {
                     // Verify token is still valid by making a test request
-                    const response = await fetch('/api/auth/login', {
-                        headers: {
-                            'Authorization': `Bearer ${storedToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        const userData = await response.json();
+                    try {
+                        const userData = await apiClient.get('/auth/me');
                         setToken(storedToken);
                         setUser(userData);
-                    } else {
+                    } catch (error) {
                         // Token invalid, try refresh
                         const refreshSuccess = await refreshToken();
                         if (!refreshSuccess) {
@@ -106,73 +100,42 @@ export const AuthProvider = ({ children }) => {
         try {
             setIsLoading(true);
             
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const { access_token, refresh_token, user: userData } = data;
-                
-                // Store auth data
-                setStoredAuth(access_token, refresh_token, userData);
-                setToken(access_token);
-                setUser(userData);
-                
-                console.log('Login successful:', userData.username);
-                return { success: true };
-            } else {
-                const errorData = await response.json();
-                return { 
-                    success: false, 
-                    error: errorData.detail || 'Login failed' 
-                };
-            }
+            const data = await apiClient.post('/auth/login', { email, password });
+            const { access_token, refresh_token, user: userData } = data;
+            
+            // Store tokens securely
+            localStorage.setItem('access_token', access_token);
+            localStorage.setItem('refresh_token', refresh_token);
+            localStorage.setItem('user', JSON.stringify(userData));
+            
+            // Update state
+            setToken(access_token);
+            setUser(userData);
+            
+            console.log('Login successful:', userData.username);
+            return { success: true };
         } catch (error) {
             console.error('Login error:', error);
             return { 
                 success: false, 
-                error: 'Network error. Please try again.' 
+                error: error.message || 'Network error. Please try again.' 
             };
         } finally {
             setIsLoading(false);
         }
-    }, []);
-
-    // Register function
+    }, []);    // Register function
     const register = useCallback(async (userData) => {
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const { access_token, refresh_token, user: userInfo } = data;
-                
-                // Store auth data
-                setStoredAuth(access_token, refresh_token, userInfo);
-                setToken(access_token);
-                setUser(userInfo);
-                
-                console.log('Registration successful:', userInfo.username);
-                return { success: true };
-            } else {
-                const errorData = await response.json();
-                return { 
-                    success: false, 
-                    error: errorData.detail || 'Registration failed' 
-                };
-            }
+            const data = await apiClient.post('/auth/register', userData);
+            const { access_token, refresh_token, user: userInfo } = data;
+            
+            // Store auth data
+            setStoredAuth(access_token, refresh_token, userInfo);
+            setToken(access_token);
+            setUser(userInfo);
+            
+            return { success: true };
         } catch (error) {
             console.error('Registration error:', error);
             return { 
@@ -189,13 +152,7 @@ export const AuthProvider = ({ children }) => {
         try {
             // Call logout endpoint if we have a token
             if (token) {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                await apiClient.post('/auth/logout');
             }
         } catch (error) {
             console.error('Logout error:', error);
@@ -218,26 +175,14 @@ export const AuthProvider = ({ children }) => {
                 return false;
             }
 
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ refresh_token: storedRefreshToken })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const newToken = data.access_token;
-                
-                // Update stored token
-                localStorage.setItem(TOKEN_KEY, newToken);
-                setToken(newToken);
-                
-                return true;
-            } else {
-                return false;
-            }
+            const data = await apiClient.post('/auth/refresh', { refresh_token: storedRefreshToken });
+            const newToken = data.access_token;
+            
+            // Update stored token
+            localStorage.setItem(TOKEN_KEY, newToken);
+            setToken(newToken);
+            
+            return true;
         } catch (error) {
             console.error('Token refresh error:', error);
             return false;

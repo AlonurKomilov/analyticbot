@@ -20,7 +20,7 @@ help:
 	@echo "=============================================="
 	@echo ""
 	@echo "🔥 DEVELOPMENT (Fast, venv-based):"
-	@echo "  dev-start   - Start development servers (ports 8001, 5174)"
+	@echo "  dev-start   - Start development servers (ports 11300, 11400)"
 	@echo "  dev-stop    - Stop development services"
 	@echo "  dev-status  - Check development status"
 	@echo "  dev-logs    - Show development logs"
@@ -28,18 +28,39 @@ help:
 	@echo "  dev-install - Install dependencies"
 	@echo ""
 	@echo "🐳 PRODUCTION (Docker-based):"
-	@echo "  up          - Start Docker services (ports 8000, 3000)"
+	@echo "  up          - Start Docker services (ports 10300, 10400)"
 	@echo "  down        - Stop and remove Docker services"
+	@echo "  prod-up     - Start production with security hardening"
+	@echo "  prod-proxy  - Start production with reverse proxy & SSL"
 	@echo "  logs        - Follow Docker logs"
 	@echo "  ps          - List running Docker services"
+	@echo ""
+	@echo "🔒 SSL & SECURITY:"
+	@echo "  ssl-dev     - Setup development SSL certificate"
+	@echo "  ssl-prod    - Setup production SSL (DOMAIN=domain.com)"
+	@echo "  proxy-logs  - Show reverse proxy logs"
+	@echo "  proxy-status- Check SSL certificate status"
+	@echo ""
+	@echo "� BUILD & OPTIMIZATION:"
+	@echo "  build       - Build all services (optimized caching)"
+	@echo "  build-nocache - Build all services (no cache)"
+	@echo "  build-api   - Build API service only"
+	@echo "  build-bot   - Build Bot service only"
+	@echo "  build-worker - Build Worker service only"
+	@echo "  build-frontend - Build Frontend service only"
+	@echo "  build-analysis - Analyze build cache and images"
+	@echo ""
+	@echo "�🗄️  DATABASE:"
 	@echo "  migrate     - Run database migrations"
+	@echo "  backup      - Create database backup"
+	@echo "  prod-db-shell - Secure production DB access"
 	@echo ""
 	@echo "🔄 SYNC & DEPLOY:"
 	@echo "  sync        - Sync dev changes to Docker"
 	@echo "  lint        - Run code linting"
 	@echo "  typecheck   - Run type checking"
 	@echo ""
-	@echo "💡 Workflow: dev-start → code → test → sync → deploy"
+	@echo "💡 Workflow: dev-start → code → test → ssl-dev → prod-proxy"
 
 # Production Docker commands
 up:
@@ -100,7 +121,39 @@ export-reqs:
 .PHONY: build shell clean-docker dev-setup backup restore
 
 build:
-	docker-compose -f docker/docker-compose.yml build --no-cache
+	@echo "🔨 Building all services with optimized caching..."
+	DOCKER_BUILDKIT=1 docker-compose -f docker/docker-compose.yml build
+
+build-nocache:
+	@echo "🔨 Building all services without cache..."
+	DOCKER_BUILDKIT=1 docker-compose -f docker/docker-compose.yml build --no-cache
+
+# Optimized individual service builds
+.PHONY: build-api build-bot build-worker build-frontend build-analysis
+
+build-api:
+	@echo "🚀 Building API service with optimized caching..."
+	./scripts/build-optimized.sh --target api
+
+build-bot:
+	@echo "🤖 Building Bot service with optimized caching..."
+	./scripts/build-optimized.sh --target bot
+
+build-worker:
+	@echo "⚙️ Building Worker service with optimized caching..."
+	./scripts/build-optimized.sh --target worker
+
+build-frontend:
+	@echo "🌐 Building Frontend service with optimized caching..."
+	./scripts/build-optimized.sh --target frontend
+
+build-analysis:
+	@echo "📊 Analyzing Docker build layers and cache efficiency..."
+	@echo "Docker BuildKit cache usage:"
+	@docker system df --format "table {{.Type}}\t{{.Total}}\t{{.Active}}\t{{.Size}}\t{{.Reclaimable}}"
+	@echo ""
+	@echo "Recent images:"
+	@docker images analyticbot* --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
 
 shell:
 	docker-compose -f docker/docker-compose.yml exec api bash
@@ -179,3 +232,67 @@ prod-status:
 	@echo ""
 	@echo "💾 Production Resource Usage:"
 	@docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
+
+# Production database management (secure access)
+.PHONY: prod-db-shell prod-db-backup prod-db-restore
+
+prod-db-shell:
+	@echo "🔧 Opening secure database shell..."
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml --profile admin up -d db-admin
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml exec db-admin psql -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot}
+
+prod-db-backup:
+	@mkdir -p backups/production
+	@echo "📦 Creating production database backup..."
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml --profile admin up -d db-admin
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml exec db-admin pg_dump -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot} > backups/production/backup_$(shell date +%Y%m%d_%H%M%S).sql
+	@echo "✅ Production database backed up to backups/production/"
+
+prod-db-restore:
+	@if [ -z "$(BACKUP_FILE)" ]; then echo "❌ Usage: make prod-db-restore BACKUP_FILE=backups/production/backup_file.sql"; exit 1; fi
+	@echo "📦 Restoring production database from $(BACKUP_FILE)..."
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml --profile admin up -d db-admin
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml exec -T db-admin psql -U ${POSTGRES_USER:-analytic} -d ${POSTGRES_DB:-analytic_bot} < $(BACKUP_FILE)
+	@echo "✅ Production database restored from $(BACKUP_FILE)"
+
+# Production deployment with reverse proxy and SSL
+.PHONY: prod-proxy ssl-setup ssl-dev ssl-prod proxy-logs proxy-status
+
+prod-proxy:
+	@echo "🚀 Starting production environment with reverse proxy..."
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml up -d
+	@echo "✅ Production environment with proxy started!"
+	@echo "📊 Services:"
+	@echo "   • HTTPS: https://localhost"
+	@echo "   • HTTP:  http://localhost (redirects to HTTPS)"
+	@echo "   • API:   https://localhost/api/"
+	@echo "   • Health: https://localhost/health"
+
+ssl-setup:
+	@echo "🔒 SSL Certificate Setup"
+	@echo "Usage: make ssl-dev OR make ssl-prod DOMAIN=your-domain.com"
+
+ssl-dev:
+	@echo "🔧 Setting up development SSL certificate..."
+	./scripts/setup-ssl.sh self-signed localhost
+	@echo "✅ Development SSL ready! Use: make prod-proxy"
+
+ssl-prod:
+	@if [ -z "$(DOMAIN)" ]; then echo "❌ Usage: make ssl-prod DOMAIN=your-domain.com"; exit 1; fi
+	@echo "🔐 Setting up production SSL certificate for $(DOMAIN)..."
+	./scripts/setup-ssl.sh letsencrypt $(DOMAIN)
+	@echo "✅ Production SSL ready!"
+
+proxy-logs:
+	docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml logs -f nginx-proxy
+
+proxy-status:
+	@echo "📊 Proxy Status:"
+	@docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml ps nginx-proxy
+	@echo ""
+	@echo "🔒 SSL Certificate Info:"
+	@if [ -f "docker/nginx/ssl/cert.pem" ]; then \
+		openssl x509 -in docker/nginx/ssl/cert.pem -noout -subject -dates; \
+	else \
+		echo "No SSL certificate found. Run 'make ssl-dev' or 'make ssl-prod'"; \
+	fi

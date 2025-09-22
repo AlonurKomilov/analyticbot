@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from apps.api.middleware.auth import get_current_user
 from apps.shared.models.alerts import AlertEvent as SharedAlertEvent, AlertRule
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
 from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
@@ -19,7 +20,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v2/analytics/advanced", tags=["advanced-analytics"])
+router = APIRouter(prefix="/analytics/advanced", tags=["Advanced Analytics"])
 
 
 # Enhanced Response Models
@@ -191,10 +192,11 @@ async def get_advanced_dashboard(
 
 @router.get("/metrics/real-time/{channel_id}")
 async def get_real_time_metrics(
-    channel_id: str,
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
-) -> RealTimeMetrics:
-    """Get current real-time metrics for a channel"""
+    channel_id: int,
+    current_user: dict = Depends(get_current_user),
+    analytics_client: AnalyticsV2Client = Depends(get_analytics_client)
+):
+    """Get current realtime metrics for a channel"""
     
     try:
         # Fetch latest data

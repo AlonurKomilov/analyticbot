@@ -13,7 +13,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./infra/db/init:/docker-entrypoint-initdb.d:ro
-    # Production Environment Database - Port 10100
+    # Production Environment Database - Port 
     ports:
       - "10100:5432"
     healthcheck:
@@ -21,6 +21,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - database
     deploy:
       resources:
         limits:
@@ -37,7 +39,7 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redisdata:/data
-    # Production Environment Redis - Port 10200
+    # Redis External Port - Production 10200
     ports:
       - "10200:6379"
     healthcheck:
@@ -45,6 +47,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - database
     deploy:
       resources:
         limits:
@@ -99,6 +103,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - backend   # Internal service communication (needs internet for Telegram API)
+      - database  # Database access
     deploy:
       resources:
         limits:
@@ -117,9 +124,9 @@ services:
       target: frontend
     container_name: analyticbot-frontend
     ports:
-      - "10400:80"
+      - "10300:80"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://api:10300}
+      VITE_API_URL: ${VITE_API_URL:-http://api:10400}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     depends_on:
       api:
@@ -130,6 +137,8 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - frontend  # Only needs frontend network access
     deploy:
       resources:
         limits:
@@ -148,9 +157,9 @@ services:
       target: frontend-dev
     container_name: analyticbot-frontend-dev
     ports:
-      - "11400:5173"
+      - "10300:5173"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://api:10300}
+      VITE_API_URL: ${VITE_API_URL:-http://api:10400}
       VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     volumes:
       - ./apps/frontend:/app:delegated
@@ -158,6 +167,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    networks:
+      - frontend  # Only needs frontend network access for dev
     deploy:
       resources:
         limits:
@@ -176,7 +187,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: api
-    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 10300
+    command: uvicorn apps.api.main:app --host 0.0.0.0 --port 10400
     container_name: analyticbot-api
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-analytic}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-analytic_bot}
@@ -184,19 +195,23 @@ services:
     env_file:
       - ../.env.production
     ports:
-      - "10300:10300"
+      - "10400:10400"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:10300/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:10400/health"]
       interval: 10s
       timeout: 3s
       retries: 10
     volumes:
       - ./var/results:/app/results
+    networks:
+      - frontend  # Exposed to external traffic
+      - backend   # Communicates with internal services
+      - database  # Direct database access
     deploy:
       resources:
         limits:
@@ -226,11 +241,14 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://api:10300/health', timeout=5)"]
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://api:10400/health', timeout=5)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
+    networks:
+      - backend   # Internal service communication
+      - database  # Database access
     deploy:
       resources:
         limits:
@@ -265,6 +283,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - backend   # Internal service communication
+      - database  # Database access
     deploy:
       resources:
         limits:
@@ -301,6 +322,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    networks:
+      - backend   # Internal service communication
+      - database  # Database access
     deploy:
       resources:
         limits:
@@ -320,5 +344,28 @@ volumes:
     name: analyticbot_redisdata
 
 networks:
-  default:
-    name: analyticbot_network
+  # Frontend network - for user-facing services (API, Frontend)
+  frontend:
+    driver: bridge
+    name: analyticbot_frontend
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+  
+  # Backend network - for internal service communication
+  backend:
+    driver: bridge
+    name: analyticbot_backend
+    internal: false  # Allow internet access for external API calls
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+  
+  # Database network - isolated for data services only
+  database:
+    driver: bridge
+    name: analyticbot_database
+    internal: true  # No internet access - maximum security
+    ipam:
+      config:
+        - subnet: 172.20.3.0/24

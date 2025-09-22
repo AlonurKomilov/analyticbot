@@ -42,16 +42,16 @@ fi
 echo -e "${BLUE}🔍 Checking infrastructure...${NC}"
 
     # Check PostgreSQL
-    if ! nc -z localhost 5432 2>/dev/null; then
-        echo "⚠️  PostgreSQL not running on port 11100"
+    if ! nc -z localhost 10100 2>/dev/null; then
+        echo "⚠️  PostgreSQL not running on port 10100"
         echo "🐳 Starting PostgreSQL container..."
         docker-compose up -d db || echo "⚠️  Could not start PostgreSQL container (Docker permission issue?)"
         sleep 3
     fi
     
     # Check Redis
-    if ! nc -z localhost 6379 2>/dev/null; then
-        echo "⚠️  Redis not running on port 11200"
+    if ! nc -z localhost 10200 2>/dev/null; then
+        echo "⚠️  Redis not running on port 10200"
         echo "🐳 Starting Redis container..."
         docker-compose up -d redis || echo "⚠️  Could not start Redis container (Docker permission issue?)"
         sleep 2
@@ -101,8 +101,8 @@ fi
 
 case $SERVICE in
     "api"|"")
-        # Start API with hot reload - Development Environment Port 11300
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11300 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11300
+        # Start API with hot reload - Development Environment Port 11400
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
         ;;
     "bot")
         # Start Bot
@@ -115,16 +115,16 @@ case $SERVICE in
             echo -e "${BLUE}📦 Installing frontend dependencies...${NC}"
             npm install
         fi
-        start_service "frontend" 'npm run dev -- --port 11400 --host 0.0.0.0' 11400
+        start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300
         cd ../..
         ;;
     "all")
         # Start all services - Development Environment Ports 11xxx
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11300 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11300
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
         sleep 2
         start_service "bot" 'python -m apps.bot.run_bot' ""
         sleep 2
-        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11400 --host 0.0.0.0' 11400 && cd ../..
+        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
         ;;
     "stop")
         # Stop all development services
@@ -157,18 +157,18 @@ case $SERVICE in
         echo -e "${BLUE}📊 Development Services Status:${NC}"
         echo "=================================="
         
-        # Check API - Development Environment Port 11300
-        if curl -s http://localhost:11300/health >/dev/null 2>&1; then
-            echo -e "API (11300):     ${GREEN}✅ Running${NC}"
+        # Check API - Development Environment Port 11400
+        if curl -s http://localhost:11400/health >/dev/null 2>&1; then
+            echo -e "API (11400):     ${GREEN}✅ Running${NC}"
         else
-            echo -e "API (11300):     ${RED}❌ Stopped${NC}"
+            echo -e "API (11400):     ${RED}❌ Stopped${NC}"
         fi
         
-        # Check Frontend - Development Environment Port 11400
-        if curl -s http://localhost:11400 >/dev/null 2>&1; then
-            echo -e "Frontend (11400): ${GREEN}✅ Running${NC}"
+        # Check Frontend - Development Environment Port 11300
+        if curl -s http://localhost:11300 >/dev/null 2>&1; then
+            echo -e "Frontend (11300): ${GREEN}✅ Running${NC}"
         else
-            echo -e "Frontend (11400): ${RED}❌ Stopped${NC}"
+            echo -e "Frontend (11300): ${RED}❌ Stopped${NC}"
         fi
         
         # Check Bot (by PID file)
@@ -213,9 +213,9 @@ case $SERVICE in
         echo -e "${YELLOW}Usage: $0 [service]${NC}"
         echo ""
         echo "Services:"
-        echo "  api       - Start API server with hot reload (port 11300)"
+        echo "  api       - Start API server with hot reload (port 11400)"
         echo "  bot       - Start Telegram bot"
-        echo "  frontend  - Start frontend development server (port 11400)"
+        echo "  frontend  - Start frontend development server (port 11300)"
         echo "  all       - Start all services"
         echo "  stop      - Stop all services"
         echo "  status    - Check service status"
@@ -240,9 +240,9 @@ if [ "$SERVICE" != "stop" ] && [ "$SERVICE" != "status" ] && [ "$SERVICE" != "lo
     echo "  • $0 stop      - Stop all services"
     echo ""
     echo -e "${BLUE}🌐 Development URLs:${NC}"
-    echo "  • API:      http://localhost:11300"
-    echo "  • API Docs: http://localhost:11300/docs"
-    echo "  • Frontend: http://localhost:11400"
+    echo "  • API:      http://localhost:11400"
+    echo "  • API Docs: http://localhost:11400/docs"
+    echo "  • Frontend: http://localhost:11300"
     echo ""
     echo -e "${YELLOW}📝 Note: Services run in background. Use '$0 stop' to stop them.${NC}"
 fi

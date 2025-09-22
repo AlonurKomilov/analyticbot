@@ -60,7 +60,7 @@ const MFASetup = ({ onComplete }) => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/mfa/setup', {
+      const response = await fetch('/auth/mfa/setup', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -95,7 +95,7 @@ const MFASetup = ({ onComplete }) => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/mfa/verify-setup', {
+      const response = await fetch('/auth/mfa/verify-setup', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

@@ -1,57 +1,139 @@
-# Git va versiyalarni boshqarish
-.git
-.gitignore
+# .dockerignore for AnalyticBot - Optimized for build performance
+# ================================================================
 
-# Python bilan bog'liq kesh va virtual muhitlar
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.egg-info/
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Python cache and virtual environments
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.egg-info/
 .build/
 .venv/
-env/
 venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
 
-# Muhit o'zgaruvchilari fayllari (xavfsizlik uchun)
+# Environment files (security - exclude actual env files)
 .env
-*.env.local
-.venv/
+.env.local
+.env.development
+.env.production
+.env.test
 .envrc
+# But keep examples
+!.env.*.example
 
-# IDE va muharrirlar sozlamalari
+# IDE and editor settings
 .idea/
 .vscode/
 *.swp
-
-# Testlash bilan bog'liq keshlar
-.pytest_cache/
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
 # Frontend applications (Node.js/React)
-apps/frontend/node_modules/
-apps/frontend/dist/
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/.next/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
 apps/frontend/.env.local
 apps/frontend/.env.production
-apps/frontend/.vite/
 
-# Frontend (twa-frontend) papkasidagi keraksiz fayllar
-twa-frontend/node_modules/
-twa-frontend/dist/
-twa-frontend/.env
-twa-frontend/.env.local
+# Logs and temporary files
+logs/
+var/logs/
+*.log
+tmp/
+temp/
+.tmp/
 
-# Celery va boshqa vaqtinchalik fayllar
+# Database and session files
+*.db
+*.sqlite
+*.sqlite3
+data/*.session
+
+# Backup files
+backups/
+*.backup
+*.bak
+*.sql.gz
+
+# Testing and CI/CD artifacts
+tests/
+test_*.py
+*_test.py
+test-results/
+coverage.xml
+junit.xml
+.travis.yml
+.circleci/
+Jenkinsfile
+
+# Documentation
+docs/
+examples/
+README.md
+CHANGELOG.md
+*.md
+!requirements*.txt
+
+# Archive and deprecated
+archive/
+old/
+deprecated/
+
+# Celery and background task files
 celerybeat-schedule
+celerybeat.pid
 
-# GitHub & tests artifacts
-.github/
-.coverage
-htmlcov/
+# Package management lock files (we use requirements.txt)
+poetry.lock
+Pipfile.lock
+yarn.lock
+package-lock.json
 
-# Docker config files SHOULD be included for builds; don't ignore them.
-# Keep this section empty intentionally.
+# Binary and compiled files
+*.exe
+*.dll
+*.so  
+*.dylib
 
-# Node modules generic (in case other folders appear)
-node_modules/
-dist/
-build/
+# OS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Development and debug files
+dev_*.py
+test_local_*.py
+debug_*.py
+profile_*.prof
+*.prof
+
+# Jupyter and IPython
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Performance monitoring
+*.prof

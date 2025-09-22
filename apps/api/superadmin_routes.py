@@ -88,7 +88,7 @@ class ConfigUpdateRequest(BaseModel):
 
 # ===== ROUTER SETUP =====
 
-router = APIRouter(prefix="/api/v1/superadmin", tags=["SuperAdmin Management"])
+router = APIRouter(prefix="/superadmin", tags=["SuperAdmin Management"])
 security = HTTPBearer()
 
 

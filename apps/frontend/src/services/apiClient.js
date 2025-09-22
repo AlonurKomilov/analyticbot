@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // Create base API client
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:11400',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -44,7 +44,12 @@ apiClient.interceptors.response.use(
           // Unauthorized - clear tokens and redirect to login
           localStorage.removeItem('authToken');
           sessionStorage.removeItem('authToken');
-          window.location.href = '/login';
+          // Don't auto-redirect in demo mode, let user choose
+          const isDemoEnvironment = window.location.hostname.includes('demo') || 
+                                   window.location.search.includes('demo=true');
+          if (!isDemoEnvironment) {
+            window.location.href = '/login';
+          }
           break;
         case 403:
           // Forbidden

@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # Computed field
     _admin_ids: list[int] | None = None
 
-    # Database Configuration - Production Environment 10xxx
+    # Database Configuration - Environment Configurable
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 10100
     POSTGRES_USER: str = "postgres"
@@ -62,9 +62,9 @@ class Settings(BaseSettings):
 
     # API & Web Application - Environment Configurable
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = Field(default=10300)
-    API_HOST_URL: str = Field(default="http://localhost:10300")
-    TWA_HOST_URL: str = Field(default="http://localhost:10400/")
+    API_PORT: int = Field(default=10400)
+    API_HOST_URL: str = Field(default="http://localhost:10400")
+    TWA_HOST_URL: str = Field(default="http://localhost:10300/")
     CORS_ORIGINS: Union[str, list[str]] = "*"
 
     # Security & Authentication

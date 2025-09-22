@@ -20,14 +20,14 @@ class ApiClient {
         };
         
         // Debug logging for API configuration
-        if (import.meta.env.VITE_DEBUG === 'true') {
-            console.log('🔧 API Client Configuration:', {
-                baseURL: this.baseURL,
-                timeout: REQUEST_TIMEOUT,
-                maxRetries: MAX_RETRIES,
-                dataSourceIntegration: 'enabled'
-            });
-        }
+        console.log('🔧 API Client Configuration:', {
+            baseURL: this.baseURL,
+            VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+            VITE_API_URL: import.meta.env.VITE_API_URL,
+            timeout: REQUEST_TIMEOUT,
+            maxRetries: MAX_RETRIES,
+            dataSourceIntegration: 'enabled'
+        });
     }
 
     /**

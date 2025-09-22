@@ -1,0 +1,73 @@
+# docker-compose.proxy.yml
+# Nginx Reverse Proxy for Production
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.proxy.yml up -d
+
+services:
+  # ---------- Nginx Reverse Proxy ----------
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: analyticbot-nginx-proxy
+    ports:
+      - "80:80"    # HTTP (redirects to HTTPS)
+      - "443:443"  # HTTPS
+    volumes:
+      - ./docker/nginx/prod.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - frontend
+    depends_on:
+      - api
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ---------- SSL Certificate Manager (Let's Encrypt) ----------
+  certbot:
+    image: certbot/certbot:latest
+    container_name: analyticbot-certbot
+    volumes:
+      - ./docker/nginx/ssl:/etc/letsencrypt
+      - ./docker/nginx/ssl-challenges:/var/www/certbot
+    networks:
+      - frontend
+    profiles:
+      - ssl  # Only start when SSL setup is needed
+    command: >
+      sh -c "
+        while :; do
+          sleep 12h & wait $${!};
+          certbot renew --quiet --webroot --webroot-path=/var/www/certbot;
+        done
+      "
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    restart: unless-stopped
+
+  # Override services to remove direct port exposure
+  api:
+    ports: []  # Remove direct port exposure - access through proxy only
+    
+  frontend:
+    ports: []  # Remove direct port exposure - access through proxy only

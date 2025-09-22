@@ -31,7 +31,7 @@ from infra.rendering.charts import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v2/share", tags=["sharing"])
+router = APIRouter(prefix="/share", tags=["Sharing"])
 
 
 # Response models
@@ -148,7 +148,7 @@ async def create_share_link(
 
         # Build share URL
         base_url = str(request.base_url).rstrip("/")
-        share_url = f"{base_url}/api/v2/share/report/{share_token}"
+        share_url = f"{base_url}/share/report/{share_token}"
 
         logger.info(f"Created share link {share_token} for {report_type}/{channel_id}")
 

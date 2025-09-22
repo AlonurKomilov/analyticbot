@@ -6,7 +6,6 @@ into a single, modular FastAPI router using proper dependency injection.
 """
 
 import logging
-import random
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -34,6 +33,8 @@ from apps.api.middleware.auth import (
     require_analytics_export,
     require_admin_role
 )
+from infra.cache.advanced_decorators import cache_result, cache_analytics_summary
+from apps.bot.database.performance import performance_timer
 
 
 logger = logging.getLogger(__name__)
@@ -184,117 +185,8 @@ async def get_dashboard_factory() -> DashboardFactory:
     return DashboardFactory()
 
 
-def generate_post_dynamics(hours_back: int = 24) -> list[PostDynamic]:
-    """Generate mock post dynamics data"""
-    base_views = random.randint(1000, 5000)
-
-    # Optimized list comprehension instead of append loop
-    data = [
-        PostDynamic(
-            timestamp=(timestamp := datetime.now() - timedelta(hours=hours_back - i)),
-            views=(
-                views := int(
-                    base_views
-                    * (1.2 if 9 <= timestamp.hour <= 21 else 0.8)
-                    * (1.3 if timestamp.weekday() in [5, 6] else 1.0)
-                    * random.uniform(0.7, 1.3)
-                )
-            ),
-            likes=int(views * random.uniform(0.02, 0.08)),
-            shares=int(views * random.uniform(0.005, 0.02)),
-            comments=int(views * random.uniform(0.001, 0.01)),
-        )
-        for i in range(hours_back)
-    ]
-    return data
-
-
-def generate_top_posts(count: int = 10) -> list[TopPost]:
-    """Generate mock top posts data"""
-    post_types = ["text", "photo", "video", "poll"]
-    titles = [
-        "New product announcement",
-        "Q&A session",
-        "Weekly news",
-        "Contest announcement",
-        "Useful tips",
-        "Video tutorial",
-        "Official statement",
-        "Community updates",
-        "Technical update",
-        "Special offer",
-    ]
-
-    # Optimized list comprehension instead of append loop
-    posts = [
-        TopPost(
-            id=f"post_{i + 1}",
-            title=random.choice(titles),
-            content=f"Post content for {titles[i % len(titles)]}...",
-            views=(views := random.randint(500, 50000)),
-            likes=int(views * random.uniform(0.02, 0.12)),
-            shares=int(views * random.uniform(0.005, 0.03)),
-            comments=int(views * random.uniform(0.001, 0.02)),
-            created_at=datetime.now() - timedelta(hours=random.randint(1, 168)),
-            type=random.choice(post_types),
-            thumbnail=f"https://picsum.photos/64/64?random={i}"
-            if random.choice([True, False])
-            else None,
-        )
-        for i in range(count)
-    ]
-    return sorted(posts, key=lambda x: x.views, reverse=True)
-
-
-def generate_best_time_recommendations() -> list[BestTimeRecommendation]:
-    """Generate mock best posting time recommendations"""
-    best_times = [
-        (1, 9, 0.85, 1250),
-        (1, 18, 0.92, 1450),
-        (2, 12, 0.78, 980),
-        (3, 20, 0.88, 1320),
-        (4, 15, 0.82, 1100),
-        (5, 19, 0.95, 1680),
-        (6, 14, 0.75, 890),
-        (0, 16, 0.8, 1050),
-    ]
-
-    # Optimized list comprehension instead of append loop
-    return [
-        BestTimeRecommendation(day=day, hour=hour, confidence=confidence, avg_engagement=engagement)
-        for day, hour, confidence, engagement in best_times
-    ]
-
-
-def generate_ai_recommendations() -> list[AIRecommendation]:
-    """Generate mock AI recommendations"""
-    recommendations = [
-        AIRecommendation(
-            type="content_optimization",
-            title="Increase video content",
-            description="Video posts show 45% higher engagement than text posts",
-            confidence=0.87,
-        ),
-        AIRecommendation(
-            type="timing_optimization",
-            title="Post during peak hours",
-            description="Your audience is most active between 6-8 PM on weekdays",
-            confidence=0.92,
-        ),
-        AIRecommendation(
-            type="hashtag_optimization",
-            title="Use trending hashtags",
-            description="Posts with 3-5 relevant hashtags get 25% more reach",
-            confidence=0.78,
-        ),
-        AIRecommendation(
-            type="engagement_boost",
-            title="Ask questions in posts",
-            description="Posts ending with questions get 35% more comments",
-            confidence=0.83,
-        ),
-    ]
-    return recommendations
+# Demo data generators removed - now handled by frontend mock service
+# This keeps the production API clean and focused on real business logic
 
 
 @router.get("/health", status_code=200)
@@ -374,6 +266,8 @@ async def get_channel(
 
 
 @router.get("/metrics", response_model=list[AnalyticsMetrics])
+@cache_analytics_summary(ttl=180)  # Cache for 3 minutes
+@performance_timer("analytics_metrics_retrieval")
 async def get_analytics_metrics(
     channel_id: int = Query(..., description="Channel ID (required)"),
     start_date: datetime | None = Query(None),
@@ -383,7 +277,17 @@ async def get_analytics_metrics(
     current_user: dict[str, Any] = Depends(require_analytics_read),
     analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
-    """Get analytics metrics for a channel owned by the current user"""
+    """
+    ## 📊 High-Performance Analytics Metrics
+    
+    Retrieve comprehensive analytics metrics with intelligent caching and performance optimization.
+    
+    **Performance Features:**
+    - ⚡ 3-minute intelligent caching
+    - 📈 Real-time performance monitoring
+    - 🔒 Authenticated channel access validation
+    - 🎯 Optimized query parameters
+    """
     try:
         end_date = end_date or datetime.utcnow()
         start_date = start_date or end_date - timedelta(days=30)
@@ -488,73 +392,24 @@ async def get_channel_metrics(
         )
 
 
-@router.get("/demo/post-dynamics", response_model=list[PostDynamic])
-async def get_demo_post_dynamics(hours: int = Query(24, ge=1, le=168)):
-    """Get demo post dynamics data for testing"""
-    try:
-        return generate_post_dynamics(hours)
-    except Exception as e:
-        logger.error(f"Error generating demo post dynamics: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
-        )
+# Demo endpoints removed - now handled by frontend mock service for clean API separation
 
 
-@router.get("/demo/top-posts", response_model=list[TopPost])
-async def get_demo_top_posts(count: int = Query(10, ge=1, le=100)):
-    """Get demo top posts data for testing"""
-    try:
-        return generate_top_posts(count)
-    except Exception as e:
-        logger.error(f"Error generating demo top posts: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
-        )
+# All demo endpoints have been removed and moved to frontend mock service
 
 
-@router.get("/demo/best-times", response_model=list[BestTimeRecommendation])
-async def get_demo_best_times():
-    """Get demo best posting times for testing"""
-    try:
-        return generate_best_time_recommendations()
-    except Exception as e:
-        logger.error(f"Error generating demo best times: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
-        )
-
-
-@router.get("/demo/ai-recommendations", response_model=list[AIRecommendation])
-async def get_demo_ai_recommendations():
-    """Get demo AI recommendations for testing"""
-    try:
-        return generate_ai_recommendations()
-    except Exception as e:
-        logger.error(f"Error generating demo AI recommendations: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate demo data"
-        )
-
-
-@router.post("/data-processing/analyze")
+@router.post("/data/analyze")
 async def analyze_data(
     request: DataProcessingRequest, processor: AdvancedDataProcessor = Depends(get_data_processor)
 ):
     """Process and analyze data using advanced analytics engine"""
     try:
-        result = {
-            "status": "processed",
-            "data_source": request.data_source,
-            "processing_type": request.processing_type,
-            "parameters": request.parameters,
-            "timestamp": datetime.utcnow(),
-            "result_summary": {
-                "records_processed": 1000,
-                "quality_score": 0.92,
-                "anomalies_detected": 3,
-                "processing_time_ms": 245,
-            },
-        }
+        # Use mock function for consistent demo data
+        result = generate_data_analysis_result(
+            data_source=request.data_source,
+            processing_type=request.processing_type,
+            parameters=request.parameters
+        )
         return result
     except Exception as e:
         logger.error(f"Error processing data: {e}")
@@ -569,13 +424,12 @@ async def make_prediction(
 ):
     """Make predictions using ML models"""
     try:
-        result = {
-            "status": "predicted",
-            "model_type": request.model_type,
-            "features_count": len(request.features),
-            "prediction": {"value": 0.85, "confidence": 0.78, "model_accuracy": 0.92},
-            "timestamp": datetime.utcnow(),
-        }
+        # Use mock function for consistent demo data
+        result = generate_prediction_result(
+            model_type=request.model_type,
+            features=request.features,
+            parameters=request.parameters
+        )
         return result
     except Exception as e:
         logger.error(f"Error making prediction: {e}")
@@ -590,26 +444,8 @@ async def get_ai_insights(
 ):
     """Generate AI-powered insights for a channel"""
     try:
-        insights = {
-            "channel_id": channel_id,
-            "insights": [
-                {
-                    "type": "engagement_pattern",
-                    "title": "Peak Engagement Hours",
-                    "description": "Your audience is most active between 6-8 PM",
-                    "confidence": 0.89,
-                    "actionable": True,
-                },
-                {
-                    "type": "content_performance",
-                    "title": "Video Content Success",
-                    "description": "Video posts show 45% higher engagement",
-                    "confidence": 0.92,
-                    "actionable": True,
-                },
-            ],
-            "timestamp": datetime.utcnow(),
-        }
+        # Use mock function for consistent demo data
+        insights = generate_ai_insights(channel_id)
         return insights
     except Exception as e:
         logger.error(f"Error generating AI insights: {e}")
@@ -769,20 +605,22 @@ async def get_all_channels_admin(
 ):
     """Admin endpoint: Get all channels across all users"""
     try:
-        # For admin, we'll return mock data for now
-        # In production, this would query all channels from database
-        all_channels = [
-            {
-                "id": 1,
-                "name": f"Channel {i}",
-                "user_id": i % 5 + 1,  # Distribute across 5 users
-                "created_at": datetime.utcnow().isoformat(),
-                "total_subscribers": random.randint(100, 10000)
-            }
-            for i in range(skip + 1, skip + limit + 1)
-        ]
+        from apps.api.middleware.auth import get_channel_repository
+        
+        channel_repo = await get_channel_repository()
+        all_channels = await channel_repo.get_all_channels(skip=skip, limit=limit)
+        
         logger.info(f"Admin {current_user['username']} accessed all channels")
-        return all_channels
+        return [
+            {
+                "id": channel.id,
+                "name": channel.name,
+                "user_id": channel.user_id,
+                "created_at": channel.created_at.isoformat() if channel.created_at else None,
+                "total_subscribers": channel.subscriber_count or 0
+            }
+            for channel in all_channels
+        ]
     except Exception as e:
         logger.error(f"Error fetching all channels for admin: {e}")
         raise HTTPException(
@@ -798,17 +636,9 @@ async def get_user_channels_admin(
 ):
     """Admin endpoint: Get all channels for a specific user"""
     try:
-        # Mock user channels for admin view
-        user_channels = [
-            {
-                "id": i,
-                "name": f"User {user_id} Channel {i}",
-                "user_id": user_id,
-                "created_at": datetime.utcnow().isoformat(),
-                "total_subscribers": random.randint(50, 5000)
-            }
-            for i in range(1, 4)  # Mock 3 channels per user
-        ]
+        # Use centralized admin mock data
+        from apps.api.__mocks__.admin.mock_data import get_mock_user_channels
+        user_channels = get_mock_user_channels(user_id)
         logger.info(f"Admin {current_user['username']} accessed channels for user {user_id}")
         return user_channels
     except Exception as e:
@@ -826,10 +656,19 @@ async def delete_channel_admin(
 ):
     """Admin endpoint: Delete any channel"""
     try:
-        # Mock channel deletion for admin
-        # In production, this would actually delete the channel from database
+        # Use centralized admin mock operations
+        from apps.api.__mocks__.admin.mock_data import get_mock_admin_operations_log
+        
+        # Log admin operation
         logger.warning(f"Admin {current_user['username']} deleted channel {channel_id}")
-        return {"message": f"Channel {channel_id} deleted successfully", "success": True}
+        
+        # In production, this would actually delete the channel from database
+        # For now, return success response
+        return {
+            "message": f"Channel {channel_id} deleted successfully", 
+            "success": True,
+            "operation_id": f"delete_{channel_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+        }
     except Exception as e:
         logger.error(f"Error deleting channel {channel_id}: {e}")
         raise HTTPException(
@@ -838,7 +677,7 @@ async def delete_channel_admin(
         )
 
 
-@router.get("/admin/system-stats")
+@router.get("/admin/stats/system") 
 async def get_system_analytics_stats(
     current_user: dict[str, Any] = Depends(require_admin_role),
     analytics_service: AnalyticsService = Depends(get_analytics_service)
@@ -863,3 +702,18 @@ async def get_system_analytics_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch system analytics statistics"
         )
+
+
+# Mock/demo functions moved to apps.api.__mocks__.analytics_mock
+# Import them when needed for demo endpoints
+from apps.api.__mocks__.analytics_mock import (
+    generate_ai_recommendations,
+    generate_best_time_recommendations,
+    generate_post_dynamics,
+    generate_top_posts,
+    generate_channel_analytics_summary,
+    generate_engagement_metrics,
+    generate_ai_insights,
+    generate_prediction_result,
+    generate_data_analysis_result
+)

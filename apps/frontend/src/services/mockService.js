@@ -4,8 +4,8 @@
  */
 
 import { MOCK_CONFIG, MOCK_DATA_CONFIG, configUtils } from '../config/mockConfig.js';
-import { mockAnalyticsData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics } from '../__mocks__/index.js';
-import { getMockInitialData } from '../utils/mockData.js'; // Keep this one until migrated
+import { mockAnalyticsData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics, getMockInitialData } from '../__mocks__/index.js';  
+import { demoAnalyticsService } from '../__mocks__/analytics/demoAnalyticsService.js';
 
 class MockService {
     constructor() {
@@ -362,10 +362,88 @@ class MockService {
         };
     }
     
+    // Demo Analytics Endpoints (moved from backend API)
+    async getDemoPostDynamics(hours = 24) {
+        this.startPerformanceTimer('demo_post_dynamics');
+        
+        const cacheKey = `demo_post_dynamics_${hours}`;
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            this.endPerformanceTimer('demo_post_dynamics');
+            return cached;
+        }
+        
+        await this.simulateNetworkDelay('demo_data');
+        
+        const data = demoAnalyticsService.getPostDynamics(hours);
+        this.setCache(cacheKey, data, 5 * 60 * 1000); // 5 minutes cache
+        
+        this.endPerformanceTimer('demo_post_dynamics');
+        return data;
+    }
+    
+    async getDemoTopPosts(count = 10) {
+        this.startPerformanceTimer('demo_top_posts');
+        
+        const cacheKey = `demo_top_posts_${count}`;
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            this.endPerformanceTimer('demo_top_posts');
+            return cached;
+        }
+        
+        await this.simulateNetworkDelay('demo_data');
+        
+        const data = demoAnalyticsService.getTopPosts(count);
+        this.setCache(cacheKey, data, 10 * 60 * 1000); // 10 minutes cache
+        
+        this.endPerformanceTimer('demo_top_posts');
+        return data;
+    }
+    
+    async getDemoBestTimes() {
+        this.startPerformanceTimer('demo_best_times');
+        
+        const cacheKey = 'demo_best_times';
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            this.endPerformanceTimer('demo_best_times');
+            return cached;
+        }
+        
+        await this.simulateNetworkDelay('demo_data');
+        
+        const data = demoAnalyticsService.getBestTimes();
+        this.setCache(cacheKey, data, 30 * 60 * 1000); // 30 minutes cache
+        
+        this.endPerformanceTimer('demo_best_times');
+        return data;
+    }
+    
+    async getDemoAIRecommendations() {
+        this.startPerformanceTimer('demo_ai_recommendations');
+        
+        const cacheKey = 'demo_ai_recommendations';
+        const cached = this.getCache(cacheKey);
+        if (cached) {
+            this.endPerformanceTimer('demo_ai_recommendations');
+            return cached;
+        }
+        
+        await this.simulateNetworkDelay('ai_processing');
+        
+        const data = demoAnalyticsService.getAIRecommendations();
+        this.setCache(cacheKey, data, 15 * 60 * 1000); // 15 minutes cache
+        
+        this.endPerformanceTimer('demo_ai_recommendations');
+        return data;
+    }
+
     // Cleanup
     destroy() {
         this.clearCache();
         this.performanceTracker.clear();
+        demoAnalyticsService.clearCache(); // Clear demo service cache too
         this.logger.info('MockService destroyed');
     }
 }
@@ -378,6 +456,11 @@ export { MockService };
 
 // Convenience exports for direct use
 export const getMockData = {
+    // Demo Analytics Data (clean API replacement)
+    demoPostDynamics: (hours = 24) => mockService.getDemoPostDynamics(hours),
+    demoTopPosts: (count = 10) => mockService.getDemoTopPosts(count),
+    demoBestTimes: () => mockService.getDemoBestTimes(),
+    demoAIRecommendations: () => mockService.getDemoAIRecommendations(),
     initialData: () => mockService.getInitialData(),
     analytics: (channelId) => mockService.getAnalyticsOverview(channelId),
     postDynamics: (channelId, period) => mockService.getPostDynamics(channelId, period),

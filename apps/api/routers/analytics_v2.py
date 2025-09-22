@@ -27,8 +27,8 @@ logger = logging.getLogger(__name__)
 
 # Create router with v2 prefix
 router = APIRouter(
-    prefix="/api/v2/analytics",
-    tags=["analytics-v2"],
+    prefix="/analytics/v2",
+    tags=["Analytics V2"],
     responses={
         404: {"model": ErrorResponse, "description": "Channel not found"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
@@ -216,8 +216,8 @@ async def get_performance_metrics(
         )
 
 
-@router.get("/trends/top-posts")
-async def get_trends_top_posts(
+@router.get("/trends/posts/top")
+async def get_top_posts_trends(
     period: int = Query(default=7, ge=1, le=30, description="Period in days"),
     limit: int = Query(default=10, ge=1, le=50, description="Number of top posts"),
     channel_id: Optional[int] = Query(default=None, description="Specific channel ID"),

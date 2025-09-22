@@ -25,7 +25,7 @@ from apps.bot.services.content_protection import (
     PremiumEmojiService,
 )
 
-router = APIRouter(prefix="/api/v1/content-protection", tags=["Content Protection"])
+router = APIRouter(prefix="/content", tags=["Content Protection"])
 
 
 @router.post("/watermark/image", response_model=ContentProtectionResponse)

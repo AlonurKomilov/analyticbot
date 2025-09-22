@@ -10,13 +10,16 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from apps.api.middleware.auth import get_current_user_id
 
 from apps.bot.services.ml.content_optimizer import ContentOptimizer, ContentAnalysis
 from apps.bot.services.ml.churn_predictor import ChurnPredictor, ChurnRiskAssessment, UserBehaviorData
+from infra.cache.advanced_decorators import cache_result
+from apps.bot.database.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai-services", tags=["AI Services"])
+router = APIRouter(prefix="/ai", tags=["AI Services"])
 
 
 # =====================================
@@ -97,19 +100,28 @@ async def get_churn_predictor() -> ChurnPredictor:
 # Content Optimizer Endpoints
 # =====================================
 
-@router.post("/content-optimizer/analyze", response_model=ContentOptimizationResponse)
+@router.post("/content/analyze", response_model=ContentOptimizationResponse)
+@cache_result("ai_content_analysis", ttl=900)  # Cache for 15 minutes
+@performance_timer("ai_content_optimization")
 async def optimize_content(
     request: ContentOptimizationRequest,
     optimizer: ContentOptimizer = Depends(get_content_optimizer)
 ):
     """
-    🎯 Optimize content with AI-powered analysis
+    ## 🤖 AI-Powered Content Optimization
     
-    Provides comprehensive content analysis including:
-    - Sentiment analysis and readability scoring
-    - Hashtag optimization suggestions
-    - Performance prediction
-    - Real-time content scoring
+    High-performance content analysis with intelligent caching and real-time optimization.
+    
+    **AI Features:**
+    - 🎯 Sentiment analysis and readability scoring
+    - 📊 Hashtag optimization suggestions  
+    - 📈 Performance prediction algorithms
+    - ⚡ Real-time content scoring
+    
+    **Performance Features:**
+    - 💾 15-minute intelligent caching
+    - 📈 AI processing time monitoring
+    - 🔄 Automatic result optimization
     """
     try:
         # Analyze original content
@@ -145,7 +157,7 @@ async def optimize_content(
         )
 
 
-@router.get("/content-optimizer/stats", response_model=ServiceStatsResponse)
+@router.get("/content/stats", response_model=ServiceStatsResponse)
 async def get_content_optimizer_stats():
     """Get content optimizer service statistics"""
     return ServiceStatsResponse(
@@ -161,7 +173,7 @@ async def get_content_optimizer_stats():
 # Churn Predictor Endpoints  
 # =====================================
 
-@router.post("/churn-predictor/analyze", response_model=ChurnPredictionResponse)
+@router.post("/churn/analyze", response_model=ChurnPredictionResponse)
 async def predict_churn(
     request: ChurnPredictionRequest,
     predictor: ChurnPredictor = Depends(get_churn_predictor)
@@ -198,7 +210,7 @@ async def predict_churn(
         )
 
 
-@router.get("/churn-predictor/stats", response_model=ServiceStatsResponse)
+@router.get("/churn/stats", response_model=ServiceStatsResponse)
 async def get_churn_predictor_stats():
     """Get churn predictor service statistics"""
     return ServiceStatsResponse(
@@ -214,8 +226,11 @@ async def get_churn_predictor_stats():
 # Security Monitoring Endpoints
 # =====================================
 
-@router.post("/security-monitor/analyze", response_model=SecurityAnalysisResponse)
-async def analyze_security(request: SecurityAnalysisRequest):
+@router.post("/security/analyze", response_model=SecurityAnalysisResponse)
+async def analyze_security(
+    request: SecurityAnalysisRequest,
+    current_user_id: int = Depends(get_current_user_id)
+):
     """
     🔒 Analyze content and user behavior for security threats
     
@@ -226,35 +241,47 @@ async def analyze_security(request: SecurityAnalysisRequest):
     - Security recommendations
     """
     try:
-        # Mock security analysis (implement actual logic later)
-        threat_level = "low"
-        security_score = 92.5
-        detected_risks = []
-        recommendations = ["Enable 2FA", "Monitor unusual activity"]
+        # Check if this is a demo user and get appropriate demo data
+        from apps.api.__mocks__.auth.mock_users import is_demo_user_by_id, get_demo_user_type_by_id
+        from apps.api.__mocks__.ai_services.mock_data import get_mock_security_analysis
         
-        if request.content and any(keyword in request.content.lower() 
-                                  for keyword in ["hack", "malicious", "spam"]):
-            threat_level = "medium"
-            security_score = 65.0
-            detected_risks.append("Suspicious content detected")
-            recommendations.append("Review content for policy violations")
+        # Check if current user is a demo user (authenticated via JWT)
+        if current_user_id and is_demo_user_by_id(str(current_user_id)):
+            demo_type = get_demo_user_type_by_id(str(current_user_id))
+            security_data = get_mock_security_analysis(demo_type, request.content)
+            
+            return SecurityAnalysisResponse(
+                threat_level=security_data["threat_level"],  
+                security_score=security_data["security_score"],
+                detected_risks=security_data["detected_risks"],
+                recommendations=security_data["recommendations"],
+                analysis_metadata=security_data["analysis_metadata"]
+            )
         
-        return SecurityAnalysisResponse(
-            threat_level=threat_level,
-            security_score=security_score,
-            detected_risks=detected_risks,
-            recommendations=recommendations
-        )
-    
-    except Exception as e:
-        logger.error(f"Security analysis error: {e}")
+        # For non-demo users, implement actual AI security analysis
+        # TODO: Implement real AI security analysis service
+        # Real implementation would:
+        # 1. Analyze content using AI models
+        # 2. Check against security databases
+        # 3. Generate real threat assessment
+        
+        # For now, return error indicating feature not available for non-demo users
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Security analysis failed: {str(e)}"
+            status_code=503,
+            detail="AI Security Analysis is currently available for demo users only. Full implementation coming soon."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"AI Security Analysis error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="AI Security Analysis service temporarily unavailable"
         )
 
 
-@router.get("/security-monitor/stats", response_model=ServiceStatsResponse)
+@router.get("/security/stats", response_model=ServiceStatsResponse)
 async def get_security_monitor_stats():
     """Get security monitoring service statistics"""
     return ServiceStatsResponse(

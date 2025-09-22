@@ -94,7 +94,7 @@ class CancelSubscriptionRequest(BaseModel):
 
 
 # Initialize router
-router = APIRouter(prefix="/api/payments", tags=["payments"])
+router = APIRouter(prefix="/payments", tags=["Payments"])
 security = HTTPBearer()
 
 
@@ -123,7 +123,7 @@ async def get_payment_service() -> PaymentService:
     return payment_service
 
 
-@router.post("/create-subscription", response_model=SubscriptionResponse)
+@router.post("/subscriptions", response_model=SubscriptionResponse)
 async def create_subscription(
     request: SubscriptionCreateRequest,
     payment_service: PaymentService = Depends(get_payment_service)
@@ -183,8 +183,9 @@ async def get_user_subscription(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/cancel-subscription")
+@router.delete("/subscriptions/{subscription_id}")
 async def cancel_subscription(
+    subscription_id: int,
     request: CancelSubscriptionRequest,
     payment_service: PaymentService = Depends(get_payment_service)
 ):

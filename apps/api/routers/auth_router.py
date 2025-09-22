@@ -291,20 +291,24 @@ async def get_current_user_profile(
 # Helper functions for user operations
 async def get_user_by_email(email: str, user_repository: AsyncpgUserRepository) -> dict | None:
     """Get user by email from the repository"""
-    # This is a placeholder - we need to implement email-based user lookup
-    # For now, we'll create a mock user lookup
-    # In a real implementation, this would query the user database
+    # Check if this is a demo user first
+    from apps.api.__mocks__.auth.mock_users import get_demo_user_by_email
     
-    # Mock implementation - replace with actual database query
-    mock_users = {
-        "test@example.com": {
-            "id": "12345",
-            "email": "test@example.com", 
-            "username": "testuser",
-            "hashed_password": "$2b$12$example_hash"
-        }
-    }
-    return mock_users.get(email)
+    demo_user = get_demo_user_by_email(email)
+    if demo_user:
+        return demo_user
+    
+    # For non-demo users, try to get from database
+    # This is a placeholder - we need to implement email-based user lookup
+    # In a real implementation, this would query the user database
+    try:
+        # TODO: Implement actual database lookup
+        # user = await user_repository.get_by_email(email)
+        # return user if user else None
+        return None
+    except Exception as e:
+        logger.error(f"Error getting user by email: {e}")
+        return None
 
 
 async def update_user_password(user_id: str, hashed_password: str, user_repository: AsyncpgUserRepository) -> bool:
@@ -327,7 +331,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=8)
 
 
-@router.post("/forgot-password")
+@router.post("/password/forgot")
 async def forgot_password(
     request: ForgotPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
@@ -368,7 +372,7 @@ async def forgot_password(
         }
 
 
-@router.post("/reset-password")  
+@router.post("/password/reset")
 async def reset_password(
     request: ResetPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),

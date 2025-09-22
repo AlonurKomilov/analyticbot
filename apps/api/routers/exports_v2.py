@@ -23,7 +23,7 @@ from infra.rendering.charts import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v2/exports", tags=["exports"])
+router = APIRouter(prefix="/exports", tags=["Exports"])
 
 
 # Response models

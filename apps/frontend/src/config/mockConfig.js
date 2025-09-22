@@ -5,27 +5,19 @@
 
 // Environment-based configuration
 export const MOCK_CONFIG = {
-    // Data source preferences
-    USE_REAL_API: (() => {
-        // Check environment variable first, then localStorage
-        const envForce = import.meta.env.VITE_FORCE_MOCK_MODE;
-        if (envForce === 'true') return false;
-        if (envForce === 'false') return true;
-        
-        // Fall back to user preference
-        const userPref = localStorage.getItem('useRealAPI');
-        return userPref === 'true';
-    })(),
+    // Data source preferences - Always use real API
+    // Mock data is now controlled by backend demo user authentication
+    USE_REAL_API: true,
     
     // API configuration
     API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT) || 5000,
     API_RETRY_COUNT: parseInt(import.meta.env.VITE_API_RETRY_COUNT) || 3,
     API_RETRY_DELAY: parseInt(import.meta.env.VITE_API_RETRY_DELAY) || 1000,
     
-    // Mock behavior configuration
+    // Mock behavior configuration - Disabled auto-fallbacks
     MOCK_DELAY: parseInt(import.meta.env.VITE_MOCK_API_DELAY) || 300,
-    FALLBACK_TO_MOCK: import.meta.env.VITE_FALLBACK_TO_MOCK !== 'false',
-    ENABLE_MOCK_SWITCHING: import.meta.env.VITE_ENABLE_MOCK_SWITCHING !== 'false',
+    FALLBACK_TO_MOCK: false, // Disabled - no auto-fallback to frontend mocks
+    ENABLE_MOCK_SWITCHING: false, // Disabled - mock data controlled by backend auth
     
     // Development features
     ENABLE_CONSOLE_LOGS: import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_LOGS !== 'false',
@@ -44,7 +36,7 @@ export const MOCK_CONFIG = {
 export const API_CONFIG = {
     BASE_URL: import.meta.env.VITE_API_BASE_URL || 
               import.meta.env.VITE_API_URL || 
-              'http://localhost:8000',
+              'http://localhost:11400',
     
     ENDPOINTS: {
         HEALTH: '/health',

@@ -49,13 +49,9 @@ export const useApiFailureDialog = () => {
     };
 
     const handleSwitchToMock = async () => {
-        try {
-            await switchToMockWithUserConsent();
-            handleCloseDialog();
-        } catch (error) {
-            console.error('Failed to switch to mock data:', error);
-            throw error;
-        }
+        // No longer support switching to mock data - redirect to demo login instead
+        const demoLoginUrl = `/login?demo=true&redirect=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = demoLoginUrl;
     };
 
     const handleCloseDialog = () => {

@@ -15,7 +15,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/mobile/v1", tags=["mobile"])
+router = APIRouter(prefix="/mobile", tags=["Mobile"])
 
 
 # Mobile-optimized request/response models

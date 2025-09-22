@@ -24,8 +24,8 @@ services:
     environment:
       - MTPROTO_ENABLED=true
       - MTPROTO_STATS_ENABLED=true
-      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot
-      - REDIS_URL=redis://redis:10200/0
+      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:5432/analytic_bot
+      - REDIS_URL=redis://redis:6379/0
       # Configure your stats peers:
       # - MTPROTO_STATS_PEERS=["@channel1", "@channel2"]
       # - MTPROTO_STATS_CONCURRENCY=3
@@ -81,9 +81,9 @@ services:
       HEALTH_BIND: "0.0.0.0:8091"
       GRACEFUL_SHUTDOWN_TIMEOUT_S: "25"
       
-      # Database - Updated to match current configuration
-      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot"
-      REDIS_URL: "redis://redis:10200/0"
+      # Database - Internal Docker network ports
+      DATABASE_URL: "postgresql+asyncpg://analytic:change_me@db:5432/analytic_bot"
+      REDIS_URL: "redis://redis:6379/0"
     networks:
       - analyticbot_network
     profiles:
@@ -105,8 +105,8 @@ services:
     environment:
       - MTPROTO_ENABLED=true
       - MTPROTO_SESSION_MANAGER_ENABLED=true
-      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:10100/analytic_bot
-      - REDIS_URL=redis://redis:10200/0
+      - DATABASE_URL=postgresql+asyncpg://analytic:change_me@db:5432/analytic_bot
+      - REDIS_URL=redis://redis:6379/0
     networks:
       - analyticbot_network
     profiles:

@@ -207,7 +207,9 @@ async def test_ml_services():
             "target_audience": "general",
         }
         content_analysis = await content_optimizer.analyze_content(
-            api_request["text"], api_request["media_urls"], api_request["target_audience"]
+            api_request["text"],
+            api_request["media_urls"],
+            api_request["target_audience"],
         )
         api_response = {
             "overall_score": content_analysis.overall_score,

@@ -4,6 +4,8 @@
  * Moved from backend API to keep production endpoints clean
  */
 
+import { DEFAULT_DEMO_CHANNEL_ID } from '../constants.js';
+
 import { MOCK_CONFIG } from '../../config/mockConfig.js';
 
 /**
@@ -65,7 +67,7 @@ export function generateTopPosts(count = 10) {
             comments: Math.floor(baseViews * 0.05), // ~5% comment rate
             engagement_rate: Math.round((Math.random() * 12 + 3) * 100) / 100, // 3-15%
             published_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            channel_id: `demo_channel_${Math.floor(Math.random() * 3) + 1}`,
+            channel_id: `${DEFAULT_DEMO_CHANNEL_ID}_${Math.floor(Math.random() * 3) + 1}`,
             performance_score: Math.round((Math.random() * 40 + 60) * 100) / 100, // 60-100
             trending: Math.random() > 0.7
         });

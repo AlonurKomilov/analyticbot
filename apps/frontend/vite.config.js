@@ -161,7 +161,12 @@ export default defineConfig({
       '@components': resolve(__dirname, 'src/components'),
       '@utils': resolve(__dirname, 'src/utils'),
       '@store': resolve(__dirname, 'src/store'),
-      '@hooks': resolve(__dirname, 'src/hooks')
+      '@hooks': resolve(__dirname, 'src/hooks'),
+      // Force single React instance
+      'react': resolve(__dirname, 'node_modules/react'),
+      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
+      '@emotion/react': resolve(__dirname, 'node_modules/@emotion/react'),
+      '@emotion/styled': resolve(__dirname, 'node_modules/@emotion/styled')
     }
   },
   

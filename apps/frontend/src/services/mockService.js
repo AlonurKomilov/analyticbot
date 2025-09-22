@@ -6,6 +6,7 @@
 import { MOCK_CONFIG, MOCK_DATA_CONFIG, configUtils } from '../config/mockConfig.js';
 import { mockAnalyticsData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics, getMockInitialData } from '../__mocks__/index.js';  
 import { demoAnalyticsService } from '../__mocks__/analytics/demoAnalyticsService.js';
+import { DEFAULT_DEMO_CHANNEL_ID } from '../__mocks__/constants.js';
 
 class MockService {
     constructor() {
@@ -146,7 +147,7 @@ class MockService {
         return data;
     }
     
-    async getAnalyticsOverview(channelId = 'demo_channel') {
+    async getAnalyticsOverview(channelId = DEFAULT_DEMO_CHANNEL_ID) {
         const operation = 'analytics';
         this.startPerformanceTimer(operation);
         
@@ -178,7 +179,7 @@ class MockService {
         return data;
     }
     
-    async getPostDynamics(channelId = 'demo_channel', period = '24h') {
+    async getPostDynamics(channelId = DEFAULT_DEMO_CHANNEL_ID, period = '24h') {
         const operation = 'post_dynamics';
         this.startPerformanceTimer(operation);
         
@@ -206,7 +207,7 @@ class MockService {
         return data;
     }
     
-    async getTopPosts(channelId = 'demo_channel', period = 'today', sortBy = 'views') {
+    async getTopPosts(channelId = DEFAULT_DEMO_CHANNEL_ID, period = 'today', sortBy = 'views') {
         const operation = 'top_posts';
         this.startPerformanceTimer(operation);
         
@@ -234,7 +235,7 @@ class MockService {
         return data;
     }
     
-    async getBestTime(channelId = 'demo_channel', timeframe = 'week') {
+    async getBestTime(channelId = DEFAULT_DEMO_CHANNEL_ID, timeframe = 'week') {
         const operation = 'best_time';
         this.startPerformanceTimer(operation);
         
@@ -262,7 +263,7 @@ class MockService {
         return data;
     }
     
-    async getEngagementMetrics(channelId = 'demo_channel', period = '7d') {
+    async getEngagementMetrics(channelId = DEFAULT_DEMO_CHANNEL_ID, period = '7d') {
         const operation = 'engagement';
         this.startPerformanceTimer(operation);
         

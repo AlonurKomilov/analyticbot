@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '../../../../store/appStore.js';
+import { DEFAULT_DEMO_CHANNEL_ID } from '../../../../__mocks__/constants.js';
 
 export const useRecommenderLogic = () => {
     const [timeFrame, setTimeFrame] = useState('week');
@@ -18,7 +19,7 @@ export const useRecommenderLogic = () => {
             setLoading(true);
             setError(null);
             
-            const result = await fetchBestTime('demo_channel', timeFrame, contentType);
+            const result = await fetchBestTime(DEFAULT_DEMO_CHANNEL_ID, timeFrame, contentType);
             
             let recommendationsData = null;
             if (result && typeof result === 'object') {

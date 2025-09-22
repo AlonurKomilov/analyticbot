@@ -1,6 +1,6 @@
 from .churn_predictor import ChurnPredictor
 from .content_optimizer import ContentAnalysis, ContentOptimizer
-from .prediction_service import ContentMetrics, PredictionResult, PredictionService
+from .predictive_engine import ContentMetrics, PredictionResult, PredictiveAnalyticsEngine as PredictionService
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any

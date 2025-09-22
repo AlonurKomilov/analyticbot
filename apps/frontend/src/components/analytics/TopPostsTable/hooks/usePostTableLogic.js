@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppStore } from '../../../../store/appStore.js';
 import { calculateSummaryStats } from '../utils/postTableUtils.js';
+import { DEFAULT_DEMO_CHANNEL_ID } from '../../../../__mocks__/constants.js';
 
 export const usePostTableLogic = () => {
     const [timeFilter, setTimeFilter] = useState('today');
@@ -22,7 +23,7 @@ export const usePostTableLogic = () => {
             
             // Get fresh store reference to avoid dependency issues
             const { fetchTopPosts } = useAppStore.getState();
-            const result = await fetchTopPosts('demo_channel', timeFilter, sortBy);
+            const result = await fetchTopPosts(DEFAULT_DEMO_CHANNEL_ID, timeFilter, sortBy);
             
             // Ensure we always set an array
             let postsData = [];

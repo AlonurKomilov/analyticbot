@@ -5,6 +5,9 @@
 from .churn_predictor import ChurnPredictor
 from .content_optimizer import ContentOptimizer
 from .engagement_analyzer import EngagementAnalyzer
-from .prediction_service import PredictionService
+from .predictive_engine import PredictiveAnalyticsEngine, PredictionResult, ContentMetrics
 
-__all__ = ["PredictionService", "ContentOptimizer", "ChurnPredictor", "EngagementAnalyzer"]
+# For backward compatibility
+PredictionService = PredictiveAnalyticsEngine
+
+__all__ = ["PredictiveAnalyticsEngine", "PredictionService", "PredictionResult", "ContentMetrics", "ContentOptimizer", "ChurnPredictor", "EngagementAnalyzer"]

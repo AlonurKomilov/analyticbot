@@ -3,8 +3,10 @@
  * Separated from the main mockData.js for better organization
  */
 
+import { DEFAULT_DEMO_USERNAME } from '../constants.js';
+
 export const userData = {
-  id: 'demo_user_123',
+  id: `${DEFAULT_DEMO_USERNAME}_123`,
   username: 'analytics_pro',
   first_name: 'Analytics',
   last_name: 'Pro',

@@ -55,10 +55,7 @@ class Container(punq.Container):
     config = Singleton(Settings)
     # Remove the broken db_session that uses async init_db incorrectly
     
-    def performance_analytics_service(self):
-        """Get performance analytics service instance"""
-        from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
-        return _resolve(PerformanceAnalyticsService)
+    # performance_analytics_service removed - functionality consolidated into AnalyticsFusionService
     
     def alerting_service(self):
         """Get alerting service instance"""
@@ -241,11 +238,7 @@ def _register_services():
             AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
         )
 
-        from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
-
-        container.register(
-            PerformanceAnalyticsService, factory=as_singleton(lambda: _make_service(PerformanceAnalyticsService))
-        )
+        # PerformanceAnalyticsService removed - functionality consolidated into AnalyticsFusionService
 
         from apps.bot.services.alerting_service import AlertingService
 
@@ -281,9 +274,9 @@ class MLCompatibilityLayer:
     def prediction_service(self):
         """ML service compatibility - returns None if not available"""
         try:
-            from apps.bot.services.ml.prediction_service import PredictionService
+            from apps.bot.services.ml.predictive_engine import PredictiveAnalyticsEngine
 
-            return container.resolve(PredictionService)
+            return container.resolve(PredictiveAnalyticsEngine)
         except (ImportError, Exception):
             return None
 

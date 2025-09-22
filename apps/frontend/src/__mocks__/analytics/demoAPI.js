@@ -194,7 +194,7 @@ export class DemoAPIService {
      */
     async clearCache() {
         demoAnalyticsService.clearCache();
-        mockService.clearCache('demo_');
+        mockService.clearCache('demo');
         
         return this._formatResponse({
             message: 'Demo cache cleared successfully',

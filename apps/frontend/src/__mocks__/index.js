@@ -5,6 +5,8 @@
  * while maintaining the modular structure.
  */
 
+import { DEFAULT_DEMO_CHANNEL_ID } from './constants.js';
+
 // Import all mock data modules
 import * as analytics from './analytics/index.js';
 import * as channels from './channels/index.js';
@@ -43,7 +45,7 @@ const generateMockInitialDataEnhanced = () => ({
   },
   channels: [
     {
-      id: 'demo_channel_1',
+      id: `${DEFAULT_DEMO_CHANNEL_ID}_1`,
       username: '@demo_tech_channel',
       title: 'Tech Innovations',
       member_count: 15420,

@@ -6,6 +6,7 @@
 import { dataSourceManager } from '../utils/dataSourceManager.js';
 import { mockService } from '../services/mockService.js';
 import { API_CONFIG, configUtils } from '../config/mockConfig.js';
+import { DEFAULT_DEMO_CHANNEL_ID } from '../__mocks__/constants.js';
 
 class ApiAdapter {
     constructor() {
@@ -156,27 +157,27 @@ export class UnifiedDataService {
         return await adapter.getInitialData();
     }
     
-    async getAnalyticsOverview(channelId = 'demo_channel') {
+    async getAnalyticsOverview(channelId = DEFAULT_DEMO_CHANNEL_ID) {
         const adapter = await this.factory.getCurrentAdapter();
         return await adapter.getAnalyticsOverview(channelId);
     }
     
-    async getPostDynamics(channelId = 'demo_channel', period = '24h') {
+    async getPostDynamics(channelId = DEFAULT_DEMO_CHANNEL_ID, period = '24h') {
         const adapter = await this.factory.getCurrentAdapter();
         return await adapter.getPostDynamics(channelId, period);
     }
     
-    async getTopPosts(channelId = 'demo_channel', period = 'today', sortBy = 'views') {
+    async getTopPosts(channelId = DEFAULT_DEMO_CHANNEL_ID, period = 'today', sortBy = 'views') {
         const adapter = await this.factory.getCurrentAdapter();
         return await adapter.getTopPosts(channelId, period, sortBy);
     }
     
-    async getBestTime(channelId = 'demo_channel', timeframe = 'week') {
+    async getBestTime(channelId = DEFAULT_DEMO_CHANNEL_ID, timeframe = 'week') {
         const adapter = await this.factory.getCurrentAdapter();
         return await adapter.getBestTime(channelId, timeframe);
     }
     
-    async getEngagementMetrics(channelId = 'demo_channel', period = '7d') {
+    async getEngagementMetrics(channelId = DEFAULT_DEMO_CHANNEL_ID, period = '7d') {
         const adapter = await this.factory.getCurrentAdapter();
         return await adapter.getEngagementMetrics(channelId, period);
     }
@@ -187,7 +188,7 @@ export class UnifiedDataService {
     }
     
     // Batch operations
-    async getAllAnalytics(channelId = 'demo_channel') {
+    async getAllAnalytics(channelId = DEFAULT_DEMO_CHANNEL_ID) {
         const adapter = await this.factory.getCurrentAdapter();
         
         try {

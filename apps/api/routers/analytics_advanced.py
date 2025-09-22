@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from apps.api.middleware.auth import get_current_user
 from apps.shared.models.alerts import AlertEvent as SharedAlertEvent, AlertRule
 from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
-from apps.bot.services.performance_analytics_service import PerformanceAnalyticsService
+from core.services.analytics_fusion_service import AnalyticsFusionService
 from apps.bot.services.alerting_service import AlertingService
 from apps.bot.container import Container
 from config import settings
@@ -53,10 +53,10 @@ def get_analytics_client() -> AnalyticsV2Client:
     return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_performance_analytics_service() -> PerformanceAnalyticsService:
-    """Get performance analytics service instance"""
+def get_analytics_fusion_service() -> AnalyticsFusionService:
+    """Get analytics fusion service instance (now includes performance analytics)"""
     container = Container()
-    return container.performance_analytics_service()
+    return container.analytics_fusion_service()
 
 
 def get_alerting_service() -> AlertingService:
@@ -121,7 +121,7 @@ async def get_advanced_dashboard(
     include_alerts: bool = Query(default=True),
     include_recommendations: bool = Query(default=True),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
-    performance_service: PerformanceAnalyticsService = Depends(get_performance_analytics_service),
+    analytics_fusion_service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     alerting_service: AlertingService = Depends(get_alerting_service),
 ) -> AdvancedAnalyticsResponse:
     """Get comprehensive advanced analytics dashboard data"""
@@ -164,7 +164,7 @@ async def get_advanced_dashboard(
             recommendations = generate_recommendations(combined_metrics, alerts)
         
         # Calculate performance score
-        performance_score = performance_service.calculate_performance_score(combined_metrics)
+        performance_score = analytics_fusion_service.calculate_performance_score(combined_metrics)
         
         # Trend analysis (simplified)
         trend_analysis = {
@@ -279,7 +279,7 @@ async def get_performance_score(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
     analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
-    performance_service: PerformanceAnalyticsService = Depends(get_performance_analytics_service),
+    analytics_fusion_service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
 ) -> Dict[str, Any]:
     """Get detailed performance score breakdown"""
     
@@ -301,7 +301,7 @@ async def get_performance_score(
         reach_score = metrics['reach_score']
         consistency_score = 75  # Placeholder
         
-        overall_score = performance_service.calculate_performance_score(metrics)
+        overall_score = analytics_fusion_service.calculate_performance_score(metrics)
         
         return {
             'overall_score': overall_score,

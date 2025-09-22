@@ -2,13 +2,143 @@
 Analytics Mock Data Generator
 ============================
 
-This module provides mock/demo data generation for analytics endpoints.
+This module provides comprehensive mock/demo data generation for analytics endpoints.
+Consolidated from both backend and frontend to create single source of truth.
 Moved from analytics_router.py to maintain clean separation of concerns.
 """
 
 import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
+from .constants import (
+    DEFAULT_DEMO_CHANNEL_ID,
+    DEFAULT_DEMO_ENGAGEMENT_RATE,
+    DEMO_POSTS_COUNT,
+    DEMO_METRICS_DAYS
+)
+
+
+def generate_post_dynamics(hours_back: int = 24) -> List[Dict[str, Any]]:
+    """
+    Generate demo post dynamics data
+    Consolidated from frontend demoAnalyticsService.js
+    """
+    dynamics = []
+    now = datetime.now()
+    
+    for i in range(hours_back, -1, -1):
+        timestamp = now - timedelta(hours=i)
+        dynamics.append({
+            "id": len(dynamics) + 1,
+            "timestamp": timestamp.isoformat(),
+            "views": random.randint(100, 1100),
+            "reactions": random.randint(5, 55),
+            "shares": random.randint(1, 21),
+            "comments": random.randint(2, 32),
+            "engagement_rate": round(random.uniform(2.0, 10.0), 2),
+            "hour": timestamp.hour,
+            "day_of_week": timestamp.weekday(),
+            "performance_score": round(random.uniform(60.0, 100.0), 2)
+        })
+    
+    return dynamics
+
+
+def generate_top_posts(count: int = DEMO_POSTS_COUNT) -> List[Dict[str, Any]]:
+    """
+    Generate demo top posts data
+    Consolidated from frontend demoAnalyticsService.js
+    """
+    posts = []
+    post_titles = [
+        "Breaking: Major Tech Innovation Announced",
+        "Market Analysis: Q3 Performance Review", 
+        "Tutorial: Advanced Analytics Techniques",
+        "Industry News: Partnership Deal Confirmed",
+        "Expert Opinion: Future Technology Trends",
+        "Product Launch: New Features Available",
+        "Research: User Behavior Insights",
+        "Update: Platform Security Enhancements"
+    ]
+    
+    for i in range(count):
+        base_views = random.randint(1000, 10000)
+        posts.append({
+            "id": f"post_{i+1}",
+            "title": random.choice(post_titles),
+            "views": base_views,
+            "likes": int(base_views * random.uniform(0.05, 0.15)),
+            "shares": int(base_views * random.uniform(0.01, 0.05)),
+            "comments": int(base_views * random.uniform(0.02, 0.08)),
+            "engagement_rate": round(random.uniform(3.0, 15.0), 2),
+            "published_at": (datetime.now() - timedelta(days=random.randint(0, 7))).isoformat(),
+            "channel_id": f"{DEFAULT_DEMO_CHANNEL_ID}_{random.randint(1, 3)}",
+            "performance_score": round(random.uniform(60.0, 100.0), 2),
+            "trending": random.random() > 0.7
+        })
+    
+    return sorted(posts, key=lambda x: x["views"], reverse=True)
+
+
+def generate_best_time_recommendations() -> Dict[str, Any]:
+    """
+    Generate demo best time posting recommendations
+    Consolidated from frontend demoAnalyticsService.js
+    """
+    optimal_hours = [9, 12, 15, 18, 20]
+    best_hour = random.choice(optimal_hours)
+    
+    return {
+        "optimal_times": [
+            {
+                "hour": best_hour,
+                "day": "weekday",
+                "engagement_rate": DEFAULT_DEMO_ENGAGEMENT_RATE,
+                "confidence": 0.85,
+                "reason": f"Peak engagement observed at {best_hour}:00"
+            },
+            {
+                "hour": best_hour + 2,
+                "day": "weekend", 
+                "engagement_rate": DEFAULT_DEMO_ENGAGEMENT_RATE * 0.9,
+                "confidence": 0.78,
+                "reason": "Weekend audience preferences"
+            }
+        ],
+        "recommendations": [
+            "Post during lunch hours (12-13:00) for maximum reach",
+            "Evening posts (18-20:00) show higher engagement",
+            "Avoid early morning posts (6-8:00) due to low activity"
+        ],
+        "analysis_period": f"Last {DEMO_METRICS_DAYS} days",
+        "data_points": random.randint(100, 500)
+    }
+
+
+def generate_engagement_metrics(period: str = "7d") -> Dict[str, Any]:
+    """
+    Generate demo engagement metrics
+    Consolidated from frontend demoAnalyticsService.js
+    """
+    days = {"1d": 1, "7d": 7, "30d": 30}.get(period, 7)
+    
+    return {
+        "period": period,
+        "total_views": random.randint(10000, 50000),
+        "total_engagements": random.randint(1000, 5000),
+        "average_engagement_rate": DEFAULT_DEMO_ENGAGEMENT_RATE,
+        "growth_rate": round(random.uniform(-5.0, 15.0), 2),
+        "top_performing_content": "video",
+        "daily_breakdown": [
+            {
+                "date": (datetime.now() - timedelta(days=i)).date().isoformat(),
+                "views": random.randint(1000, 3000),
+                "engagements": random.randint(100, 400),
+                "engagement_rate": round(random.uniform(5.0, 12.0), 2)
+            }
+            for i in range(days)
+        ]
+    }
 
 
 def generate_ai_recommendations() -> List[Dict[str, Any]]:

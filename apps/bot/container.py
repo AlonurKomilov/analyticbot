@@ -16,13 +16,13 @@ try:
     from aiogram.client.bot import Bot as _AioBot
 except Exception:
     from aiogram import Bot as _AioBot
+
 from aiogram import Bot as _ClientBot
 from aiogram import Dispatcher as _AioDispatcher
 from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import Settings
-from apps.bot.database.sqlite_engine import init_db
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
@@ -44,6 +44,7 @@ def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
 async def _get_asyncpg_pool():
     """Get asyncpg pool for repositories"""
     from apps.shared.di import container as shared_container
+
     try:
         container_instance = shared_container()
         return await container_instance.asyncpg_pool()
@@ -51,20 +52,25 @@ async def _get_asyncpg_pool():
         logger.warning(f"Failed to get asyncpg pool: {e}")
         return None
 
+
 class Container(punq.Container):
     config = Singleton(Settings)
     # Remove the broken db_session that uses async init_db incorrectly
-    
+
     # performance_analytics_service removed - functionality consolidated into AnalyticsFusionService
-    
+
     def alerting_service(self):
         """Get alerting service instance"""
         from apps.bot.services.alerting_service import AlertingService
+
         return _resolve(AlertingService)
-    
+
     def channel_management_service(self):
         """Get channel management service instance"""
-        from apps.bot.services.channel_management_service import ChannelManagementService
+        from apps.bot.services.channel_management_service import (
+            ChannelManagementService,
+        )
+
         return _resolve(ChannelManagementService)
 
 
@@ -113,11 +119,10 @@ def _pool_or_none() -> Any | None:
     try:
         # Import here to avoid circular imports
         import asyncio
-        from apps.shared.di import container as shared_container
-        
+
         # Try to get the pool synchronously if we're in an async context
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # If we're in an async context, we need to handle this differently
             # For now, return None and let the repository handle it gracefully
             logger.info("Async context detected - repositories should use proper async DI")
@@ -144,7 +149,15 @@ def _make_repo(RepoCls: type) -> object:
         return RepoCls(pool)
     except TypeError:
         pass
-    for kw in ("session_pool", "session", "pool", "db", "database", "redis", "redis_client"):
+    for kw in (
+        "session_pool",
+        "session",
+        "pool",
+        "db",
+        "database",
+        "redis",
+        "redis_client",
+    ):
         try:
             return RepoCls(**{kw: pool})
         except TypeError:
@@ -196,19 +209,24 @@ def _make_service(ServiceCls: type) -> object:
 container.register(AsyncPGPool, factory=lambda: cast(AsyncPGPool, _pool_or_none()))
 container.register(async_sessionmaker, factory=lambda: cast(async_sessionmaker, _pool_or_none()))
 container.register(
-    AsyncpgUserRepository, factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository))
+    AsyncpgUserRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgUserRepository)),
 )
 container.register(
-    AsyncpgPlanRepository, factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository))
+    AsyncpgPlanRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgPlanRepository)),
 )
 container.register(
-    AsyncpgChannelRepository, factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository))
+    AsyncpgChannelRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgChannelRepository)),
 )
 container.register(
-    AsyncpgScheduleRepository, factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository))
+    AsyncpgScheduleRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgScheduleRepository)),
 )
 container.register(
-    AsyncpgAnalyticsRepository, factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository))
+    AsyncpgAnalyticsRepository,
+    factory=as_singleton(lambda: _make_repo(AsyncpgAnalyticsRepository)),
 )
 
 
@@ -223,19 +241,22 @@ def _register_services():
         from apps.bot.services.subscription_service import SubscriptionService
 
         container.register(
-            SubscriptionService, factory=as_singleton(lambda: _make_service(SubscriptionService))
+            SubscriptionService,
+            factory=as_singleton(lambda: _make_service(SubscriptionService)),
         )
 
         from apps.bot.services.scheduler_service import SchedulerService
 
         container.register(
-            SchedulerService, factory=as_singleton(lambda: _make_service(SchedulerService))
+            SchedulerService,
+            factory=as_singleton(lambda: _make_service(SchedulerService)),
         )
 
         from apps.bot.services.analytics_service import AnalyticsService
 
         container.register(
-            AnalyticsService, factory=as_singleton(lambda: _make_service(AnalyticsService))
+            AnalyticsService,
+            factory=as_singleton(lambda: _make_service(AnalyticsService)),
         )
 
         # PerformanceAnalyticsService removed - functionality consolidated into AnalyticsFusionService
@@ -243,13 +264,17 @@ def _register_services():
         from apps.bot.services.alerting_service import AlertingService
 
         container.register(
-            AlertingService, factory=as_singleton(lambda: _make_service(AlertingService))
+            AlertingService,
+            factory=as_singleton(lambda: _make_service(AlertingService)),
         )
 
-        from apps.bot.services.channel_management_service import ChannelManagementService
+        from apps.bot.services.channel_management_service import (
+            ChannelManagementService,
+        )
 
         container.register(
-            ChannelManagementService, factory=as_singleton(lambda: _make_service(ChannelManagementService))
+            ChannelManagementService,
+            factory=as_singleton(lambda: _make_service(ChannelManagementService)),
         )
     except Exception as e:
         logger.warning(f"Could not register some services: {e}")

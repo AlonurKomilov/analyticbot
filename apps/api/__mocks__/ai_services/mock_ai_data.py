@@ -10,20 +10,19 @@ def create_mock_security_analysis(content: str = "") -> dict:
     security_score = 92.5
     detected_risks = []
     recommendations = ["Enable 2FA", "Monitor unusual activity"]
-    
+
     # Simple content-based risk detection for demo
-    if content and any(keyword in content.lower() 
-                      for keyword in ["hack", "malicious", "spam"]):
+    if content and any(keyword in content.lower() for keyword in ["hack", "malicious", "spam"]):
         threat_level = "medium"
         security_score = 65.0
         detected_risks.append("Suspicious content detected")
         recommendations.append("Review content for policy violations")
-    
+
     return {
         "threat_level": threat_level,
         "security_score": security_score,
         "detected_risks": detected_risks,
-        "recommendations": recommendations
+        "recommendations": recommendations,
     }
 
 
@@ -36,12 +35,9 @@ def create_mock_content_optimization(content: str = "") -> dict:
         "suggested_improvements": [
             "Add more engaging call-to-action",
             "Consider shorter paragraphs",
-            "Include relevant hashtags"
+            "Include relevant hashtags",
         ],
-        "sentiment_analysis": {
-            "overall": "positive",
-            "confidence": 0.87
-        }
+        "sentiment_analysis": {"overall": "positive", "confidence": 0.87},
     }
 
 
@@ -54,12 +50,12 @@ def create_mock_churn_prediction(user_id: str = "") -> dict:
         "contributing_factors": [
             "Consistent engagement",
             "Regular posting schedule",
-            "Positive user feedback"
+            "Positive user feedback",
         ],
         "retention_recommendations": [
             "Continue current engagement strategy",
-            "Consider premium feature promotion"
-        ]
+            "Consider premium feature promotion",
+        ],
     }
 
 
@@ -69,16 +65,12 @@ def create_mock_ai_service_stats() -> dict:
         "content_optimizer": {
             "total_analyzed": 1247,
             "avg_improvement": 34.2,
-            "status": "active"
+            "status": "active",
         },
         "security_monitor": {
             "threats_detected": 12,
             "security_score": 92.5,
-            "status": "active"
+            "status": "active",
         },
-        "churn_predictor": {
-            "users_analyzed": 892,
-            "accuracy": 89.3,
-            "status": "beta"
-        }
+        "churn_predictor": {"users_analyzed": 892, "accuracy": 89.3, "status": "beta"},
     }

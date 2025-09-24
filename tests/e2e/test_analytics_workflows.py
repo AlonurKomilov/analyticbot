@@ -149,7 +149,11 @@ class TestAnalyticsDataCollectionWorkflow:
 
     @pytest.mark.asyncio
     async def test_channel_data_collection_workflow(
-        self, mock_analytics_api, mock_telegram_analytics, mock_analytics_redis, mock_data_processor
+        self,
+        mock_analytics_api,
+        mock_telegram_analytics,
+        mock_analytics_redis,
+        mock_data_processor,
     ):
         """Test complete channel analytics data collection workflow"""
         workflow_id = str(uuid.uuid4())
@@ -264,7 +268,8 @@ class TestAnalyticsDataCollectionWorkflow:
         # Step 9: Schedule next collection
         next_collection = datetime.now() + timedelta(hours=6)
         await mock_analytics_redis.zadd(
-            "scheduled_collections", {f"{channel_id}:{workflow_id}": next_collection.timestamp()}
+            "scheduled_collections",
+            {f"{channel_id}:{workflow_id}": next_collection.timestamp()},
         )
 
         # Workflow completion
@@ -330,7 +335,8 @@ class TestAnalyticsDataCollectionWorkflow:
 
             # Store individual channel data
             await mock_analytics_redis.hset(
-                f"channel_data:{channel_id}", mapping={str(k): str(v) for k, v in data.items()}
+                f"channel_data:{channel_id}",
+                mapping={str(k): str(v) for k, v in data.items()},
             )
 
         # Step 3: Calculate aggregate metrics
@@ -367,7 +373,10 @@ class TestAnalyticsDataCollectionWorkflow:
         mock_analytics_api.post.return_value = AsyncMock(
             status_code=201,
             json=AsyncMock(
-                return_value={"success": True, "data": {"aggregate_id": str(uuid.uuid4())}}
+                return_value={
+                    "success": True,
+                    "data": {"aggregate_id": str(uuid.uuid4())},
+                }
             ),
         )
 
@@ -499,7 +508,8 @@ class TestReportGenerationWorkflow:
 
         # Step 5: Generate Excel report
         excel_report = await mock_report_generator.create_excel_report(
-            data=report_data["data"], sheets=["Overview", "Detailed_Metrics", "Historical_Data"]
+            data=report_data["data"],
+            sheets=["Overview", "Detailed_Metrics", "Historical_Data"],
         )
 
         # Step 6: Store generated reports
@@ -532,14 +542,19 @@ class TestReportGenerationWorkflow:
 
         # Send charts as images
         await mock_telegram_analytics.send_photo(
-            chat_id=user_id, photo=chart_data, caption="📈 Subscriber Growth Trend Chart"
+            chat_id=user_id,
+            photo=chart_data,
+            caption="📈 Subscriber Growth Trend Chart",
         )
 
         # Step 8: Log report delivery
         mock_analytics_api.post.return_value = AsyncMock(
             status_code=201,
             json=AsyncMock(
-                return_value={"success": True, "data": {"delivery_id": str(uuid.uuid4())}}
+                return_value={
+                    "success": True,
+                    "data": {"delivery_id": str(uuid.uuid4())},
+                }
             ),
         )
 
@@ -588,7 +603,11 @@ class TestScheduledAnalyticsWorkflow:
 
     @pytest.mark.asyncio
     async def test_daily_scheduled_analytics_workflow(
-        self, mock_analytics_api, mock_data_processor, mock_telegram_analytics, mock_analytics_redis
+        self,
+        mock_analytics_api,
+        mock_data_processor,
+        mock_telegram_analytics,
+        mock_analytics_redis,
     ):
         """Test daily scheduled analytics processing and delivery"""
         workflow_id = str(uuid.uuid4())
@@ -694,7 +713,12 @@ class TestScheduledAnalyticsWorkflow:
             text=summary_text,
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📋 Detailed Report", "callback_data": "detailed_daily_report"}],
+                    [
+                        {
+                            "text": "📋 Detailed Report",
+                            "callback_data": "detailed_daily_report",
+                        }
+                    ],
                     [{"text": "📊 View Charts", "callback_data": "daily_charts"}],
                     [{"text": "⚙️ Schedule Settings", "callback_data": "edit_schedule"}],
                 ]
@@ -706,7 +730,8 @@ class TestScheduledAnalyticsWorkflow:
             hour=9, minute=0, second=0, microsecond=0
         ) + timedelta(days=1)
         await mock_analytics_redis.zadd(
-            "scheduled_deliveries", {f"{schedule_id}:{workflow_id}": next_delivery.timestamp()}
+            "scheduled_deliveries",
+            {f"{schedule_id}:{workflow_id}": next_delivery.timestamp()},
         )
 
         # Step 8: Log delivery
@@ -841,7 +866,7 @@ class TestRealTimeAnalyticsWorkflow:
                     chat_id=user_id,
                     text=f"🚀 Engagement Spike Detected!\n\n"
                     f"📊 Current metrics:\n"
-                    f"• Views: {data_point['views']} (📈 {(data_point['views']/baseline_metrics['avg_views_per_hour']-1)*100:.1f}%)\n"
+                    f"• Views: {data_point['views']} (📈 {(data_point['views'] / baseline_metrics['avg_views_per_hour'] - 1) * 100:.1f}%)\n"
                     f"• Engagement: {data_point['engagement']} reactions\n"
                     f"• Rate: {engagement_rate:.3f}\n\n"
                     f"🕐 Detected at: {data_point['timestamp'].strftime('%H:%M')}\n\n"
@@ -854,7 +879,12 @@ class TestRealTimeAnalyticsWorkflow:
                                     "callback_data": f"view_spiking_post_{channel_id}",
                                 }
                             ],
-                            [{"text": "📊 Live Dashboard", "callback_data": "open_live_dashboard"}],
+                            [
+                                {
+                                    "text": "📊 Live Dashboard",
+                                    "callback_data": "open_live_dashboard",
+                                }
+                            ],
                         ]
                     },
                 )
@@ -1077,8 +1107,18 @@ class TestCrossChannelAnalyticsWorkflow:
             text=comparison_text,
             reply_markup={
                 "inline_keyboard": [
-                    [{"text": "📊 View Chart", "callback_data": "cross_platform_chart"}],
-                    [{"text": "📋 Detailed Report", "callback_data": "cross_platform_report"}],
+                    [
+                        {
+                            "text": "📊 View Chart",
+                            "callback_data": "cross_platform_chart",
+                        }
+                    ],
+                    [
+                        {
+                            "text": "📋 Detailed Report",
+                            "callback_data": "cross_platform_report",
+                        }
+                    ],
                 ]
             },
         )
@@ -1094,7 +1134,10 @@ class TestCrossChannelAnalyticsWorkflow:
         mock_analytics_api.post.return_value = AsyncMock(
             status_code=201,
             json=AsyncMock(
-                return_value={"success": True, "data": {"analysis_id": str(uuid.uuid4())}}
+                return_value={
+                    "success": True,
+                    "data": {"analysis_id": str(uuid.uuid4())},
+                }
             ),
         )
 

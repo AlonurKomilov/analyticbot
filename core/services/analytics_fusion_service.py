@@ -17,7 +17,12 @@ class AnalyticsFusionService:
     """Core service for unified analytics combining MTProto and legacy data"""
 
     def __init__(
-        self, channel_daily_repo, post_repo, metrics_repo, edges_repo, stats_raw_repo=None
+        self,
+        channel_daily_repo,
+        post_repo,
+        metrics_repo,
+        edges_repo,
+        stats_raw_repo=None,
     ):
         self._daily = channel_daily_repo
         self._posts = post_repo
@@ -129,13 +134,21 @@ class AnalyticsFusionService:
             return []
 
     async def get_sources(
-        self, channel_id: int, frm: datetime, to: datetime, kind: Literal["mention", "forward"]
+        self,
+        channel_id: int,
+        frm: datetime,
+        to: datetime,
+        kind: Literal["mention", "forward"],
     ) -> list[dict]:
         """Get traffic sources (mentions/forwards)"""
         try:
             rows = await self._edges.top_edges(channel_id, frm, to, kind)
             return [
-                {"src": r.get("src", 0), "dst": r.get("dst", 0), "count": r.get("count", 0)}
+                {
+                    "src": r.get("src", 0),
+                    "dst": r.get("dst", 0),
+                    "count": r.get("count", 0),
+                }
                 for r in rows
             ]
         except Exception as e:
@@ -293,7 +306,7 @@ class AnalyticsFusionService:
             logger.error(f"Error getting last updated time for channel {channel_id}: {e}")
             return None
 
-    # CONSOLIDATED PERFORMANCE ANALYTICS METHODS (from PerformanceAnalyticsService)           
+    # CONSOLIDATED PERFORMANCE ANALYTICS METHODS (from PerformanceAnalyticsService)
     def calculate_performance_score(self, metrics: dict) -> int:
         """
         Calculate overall performance score based on multiple metrics
@@ -302,34 +315,46 @@ class AnalyticsFusionService:
         try:
             # Configuration for performance scoring weights
             weights = {
-                'growth_rate': 0.3,
-                'engagement_rate': 0.4,
-                'reach_score': 0.2,
-                'consistency': 0.1
+                "growth_rate": 0.3,
+                "engagement_rate": 0.4,
+                "reach_score": 0.2,
+                "consistency": 0.1,
             }
-            
+
             # Thresholds for normalization
             thresholds = {
-                'growth_rate_max': 20,
-                'engagement_rate_max': 10,
+                "growth_rate_max": 20,
+                "engagement_rate_max": 10,
             }
-            
+
             # Normalize metrics to 0-100 scale
-            growth_score = min(100, max(0, (metrics.get('growth_rate', 0) / thresholds['growth_rate_max']) * 100))
-            engagement_score = min(100, max(0, (metrics.get('engagement_rate', 0) / thresholds['engagement_rate_max']) * 100))
-            reach_score = metrics.get('reach_score', 0)
+            growth_score = min(
+                100,
+                max(
+                    0,
+                    (metrics.get("growth_rate", 0) / thresholds["growth_rate_max"]) * 100,
+                ),
+            )
+            engagement_score = min(
+                100,
+                max(
+                    0,
+                    (metrics.get("engagement_rate", 0) / thresholds["engagement_rate_max"]) * 100,
+                ),
+            )
+            reach_score = metrics.get("reach_score", 0)
             consistency_score = 75.0  # Default good consistency
-            
+
             # Calculate weighted total score
             total_score = (
-                growth_score * weights['growth_rate'] +
-                engagement_score * weights['engagement_rate'] +
-                reach_score * weights['reach_score'] +
-                consistency_score * weights['consistency']
+                growth_score * weights["growth_rate"]
+                + engagement_score * weights["engagement_rate"]
+                + reach_score * weights["reach_score"]
+                + consistency_score * weights["consistency"]
             )
-            
+
             return int(min(100, max(0, total_score)))
-            
+
         except Exception as e:
             logger.error(f"Error calculating performance score: {e}")
             return 50  # Default middle score on error
@@ -341,51 +366,53 @@ class AnalyticsFusionService:
         """
         if not historical_metrics:
             return {
-                'trend_direction': 'unknown',
-                'stability': 'unknown',
-                'recommendation': 'Insufficient data for analysis'
+                "trend_direction": "unknown",
+                "stability": "unknown",
+                "recommendation": "Insufficient data for analysis",
             }
 
         # Calculate trend direction
         scores = [self.calculate_performance_score(metrics) for metrics in historical_metrics]
-        
+
         if len(scores) < 2:
-            trend_direction = 'stable'
+            trend_direction = "stable"
         else:
             recent_avg = sum(scores[-3:]) / len(scores[-3:])  # Last 3 periods
             earlier_avg = sum(scores[:-3]) / len(scores[:-3]) if len(scores) > 3 else scores[0]
-            
+
             if recent_avg > earlier_avg + 5:
-                trend_direction = 'improving'
+                trend_direction = "improving"
             elif recent_avg < earlier_avg - 5:
-                trend_direction = 'declining'
+                trend_direction = "declining"
             else:
-                trend_direction = 'stable'
+                trend_direction = "stable"
 
         # Calculate stability (coefficient of variation)
         if len(scores) > 1:
             mean_score = sum(scores) / len(scores)
             variance = sum((score - mean_score) ** 2 for score in scores) / len(scores)
-            std_dev = variance ** 0.5
+            std_dev = variance**0.5
             cv = std_dev / mean_score if mean_score > 0 else 0
-            
+
             if cv < 0.1:
-                stability = 'very_stable'
+                stability = "very_stable"
             elif cv < 0.2:
-                stability = 'stable'
+                stability = "stable"
             elif cv < 0.3:
-                stability = 'moderate'
+                stability = "moderate"
             else:
-                stability = 'volatile'
+                stability = "volatile"
         else:
-            stability = 'unknown'
+            stability = "unknown"
 
         return {
-            'trend_direction': trend_direction,
-            'stability': stability,
-            'current_score': scores[-1] if scores else 0,
-            'average_score': sum(scores) / len(scores) if scores else 0,
-            'score_range': {'min': min(scores), 'max': max(scores)} if scores else {'min': 0, 'max': 0}
+            "trend_direction": trend_direction,
+            "stability": stability,
+            "current_score": scores[-1] if scores else 0,
+            "average_score": sum(scores) / len(scores) if scores else 0,
+            "score_range": (
+                {"min": min(scores), "max": max(scores)} if scores else {"min": 0, "max": 0}
+            ),
         }
 
     def get_performance_recommendations(self, metrics: dict, score: int) -> list[str]:
@@ -394,10 +421,12 @@ class AnalyticsFusionService:
         Consolidated from PerformanceAnalyticsService
         """
         recommendations = []
-        
+
         # Score-based recommendations
         if score < 30:
-            recommendations.append("Performance is critically low. Consider comprehensive strategy review.")
+            recommendations.append(
+                "Performance is critically low. Consider comprehensive strategy review."
+            )
         elif score < 50:
             recommendations.append("Performance needs improvement. Focus on key growth metrics.")
         elif score < 70:
@@ -406,20 +435,30 @@ class AnalyticsFusionService:
             recommendations.append("Excellent performance! Maintain current strategies.")
 
         # Metric-specific recommendations
-        growth_rate = metrics.get('growth_rate', 0)
+        growth_rate = metrics.get("growth_rate", 0)
         if growth_rate < 0:
-            recommendations.append("Negative growth detected. Review content strategy and engagement tactics.")
+            recommendations.append(
+                "Negative growth detected. Review content strategy and engagement tactics."
+            )
         elif growth_rate < 2:
-            recommendations.append("Low growth rate. Consider increasing posting frequency or content variety.")
+            recommendations.append(
+                "Low growth rate. Consider increasing posting frequency or content variety."
+            )
 
-        engagement_rate = metrics.get('engagement_rate', 0)
+        engagement_rate = metrics.get("engagement_rate", 0)
         if engagement_rate < 2:
-            recommendations.append("Low engagement. Try interactive content like polls, questions, or contests.")
+            recommendations.append(
+                "Low engagement. Try interactive content like polls, questions, or contests."
+            )
         elif engagement_rate < 5:
-            recommendations.append("Moderate engagement. Focus on community building and response time.")
+            recommendations.append(
+                "Moderate engagement. Focus on community building and response time."
+            )
 
-        reach_score = metrics.get('reach_score', 0)
+        reach_score = metrics.get("reach_score", 0)
         if reach_score < 30:
-            recommendations.append("Limited reach. Optimize posting times and use relevant hashtags.")
+            recommendations.append(
+                "Limited reach. Optimize posting times and use relevant hashtags."
+            )
 
         return recommendations

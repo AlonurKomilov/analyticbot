@@ -32,7 +32,7 @@ async def get_db_pool() -> asyncpg.Pool:
         db_url = settings.DATABASE_URL
         if db_url and db_url.startswith("postgresql+asyncpg://"):
             db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
-        
+
         _db_pool = await asyncpg.create_pool(
             db_url,
             min_size=settings.DB_POOL_SIZE,
@@ -93,14 +93,15 @@ async def cleanup_db_pool():
 
 # Authentication dependency - implement proper JWT validation
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """Get current authenticated user with proper JWT validation"""
     # Import the proper auth implementation
-    from apps.api.middleware.auth import get_current_user as auth_get_current_user, get_user_repository
-    
+    from apps.api.middleware.auth import get_current_user as auth_get_current_user
+    from apps.api.middleware.auth import get_user_repository
+
     # Get user repository dependency
     user_repo = await get_user_repository()
-    
+
     # Call the proper authentication function
     return await auth_get_current_user(credentials, user_repo)

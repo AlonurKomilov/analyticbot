@@ -6,10 +6,11 @@ Combines MTProto data with existing analytics in stable API v2 surface
 import hashlib
 import logging
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel
 
 from apps.api.di_analytics_v2 import get_analytics_fusion_service, get_cache
 from apps.api.schemas.analytics_v2 import (
@@ -20,7 +21,6 @@ from apps.api.schemas.analytics_v2 import (
     PostListResponse,
     SeriesResponse,
 )
-from pydantic import BaseModel
 from core.services.analytics_fusion_service import AnalyticsFusionService
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ async def get_channel_data(
     """Get real-time channel analytics data with configurable format"""
     try:
         channel_id = int(request.channel_id)
-        
+
         # Generate cache key for real-time data (shorter TTL)
         cache_params = {
             "channel_id": channel_id,
@@ -88,15 +88,15 @@ async def get_channel_data(
 
         # Get fresh data with real-time components
         from datetime import datetime, timedelta
-        
+
         # Default to last 30 days for comprehensive data
         to_date = datetime.utcnow()
         from_date = to_date - timedelta(days=30)
-        
+
         # Get overview and growth data
         overview_data = await service.get_overview(channel_id, from_date, to_date)
         growth_data = await service.get_growth(channel_id, from_date, to_date, "D")
-        
+
         # Enhance with real-time components if requested
         response_data = {
             "channel_id": request.channel_id,
@@ -109,8 +109,8 @@ async def get_channel_data(
             "meta": {
                 "cache_hit": False,
                 "last_updated": last_updated.isoformat() if last_updated else None,
-                "data_freshness": "real_time" if request.include_real_time else "cached"
-            }
+                "data_freshness": ("real_time" if request.include_real_time else "cached"),
+            },
         }
 
         # Cache the response (shorter TTL for real-time data)
@@ -137,9 +137,9 @@ async def get_performance_metrics(
     try:
         # Parse period (e.g., "30d" -> 30 days)
         period_days = 30
-        if request.period.endswith('d'):
+        if request.period.endswith("d"):
             period_days = int(request.period[:-1])
-        
+
         # Generate cache key
         cache_params = {
             "channels": request.channels,
@@ -155,26 +155,26 @@ async def get_performance_metrics(
 
         # Get performance data for each channel
         from datetime import datetime, timedelta
-        
+
         to_date = datetime.utcnow()
         from_date = to_date - timedelta(days=period_days)
-        
+
         channels_metrics = []
         for channel_id_str in request.channels:
             try:
                 channel_id = int(channel_id_str)
-                
+
                 # Get overview and reach data for performance calculation
                 overview_data = await service.get_overview(channel_id, from_date, to_date)
                 reach_data = await service.get_reach(channel_id, from_date, to_date)
-                
+
                 # Calculate performance score
                 total_views = overview_data.get("total_views", 0)
                 avg_reach = reach_data.get("avg_reach", 0)
-                
+
                 # Simple performance scoring algorithm
                 performance_score = min(100, max(0, (total_views / 1000) + (avg_reach / 100)))
-                
+
                 channel_metrics = {
                     "channel_id": channel_id_str,
                     "total_views": total_views,
@@ -184,9 +184,9 @@ async def get_performance_metrics(
                     "growth_rate": overview_data.get("growth_rate", 0),
                     "engagement_rate": overview_data.get("engagement_rate", 0),
                 }
-                
+
                 channels_metrics.append(channel_metrics)
-                
+
             except (ValueError, Exception) as e:
                 logger.warning(f"Failed to get metrics for channel {channel_id_str}: {e}")
                 continue
@@ -195,12 +195,16 @@ async def get_performance_metrics(
             "channels": channels_metrics,
             "period": request.period,
             "timestamp": datetime.utcnow().isoformat(),
-            "performance_score": sum(m["performance_score"] for m in channels_metrics) / len(channels_metrics) if channels_metrics else 0,
+            "performance_score": (
+                sum(m["performance_score"] for m in channels_metrics) / len(channels_metrics)
+                if channels_metrics
+                else 0
+            ),
             "meta": {
                 "cache_hit": False,
                 "channels_processed": len(channels_metrics),
-                "channels_requested": len(request.channels)
-            }
+                "channels_requested": len(request.channels),
+            },
         }
 
         # Cache the response
@@ -220,7 +224,7 @@ async def get_performance_metrics(
 async def get_top_posts_trends(
     period: int = Query(default=7, ge=1, le=30, description="Period in days"),
     limit: int = Query(default=10, ge=1, le=50, description="Number of top posts"),
-    channel_id: Optional[int] = Query(default=None, description="Specific channel ID"),
+    channel_id: int | None = Query(default=None, description="Specific channel ID"),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -242,10 +246,10 @@ async def get_top_posts_trends(
 
         # Get trending posts data
         from datetime import datetime, timedelta
-        
+
         to_date = datetime.utcnow()
         from_date = to_date - timedelta(days=period)
-        
+
         if channel_id:
             # Get top posts for specific channel
             posts_data = await service.get_top_posts(channel_id, from_date, to_date, limit)
@@ -277,9 +281,9 @@ async def get_top_posts_trends(
                 "total_posts": len(trends_data),
                 "date_range": {
                     "from": from_date.isoformat(),
-                    "to": to_date.isoformat()
-                }
-            }
+                    "to": to_date.isoformat(),
+                },
+            },
         }
 
         # Cache the response
@@ -307,7 +311,11 @@ async def get_channel_overview(
     """Get channel overview analytics"""
     try:
         # Generate cache key and ETag
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("overview", cache_params, last_updated)
         last_updated_str = last_updated.isoformat() if last_updated else ""
@@ -321,7 +329,8 @@ async def get_channel_overview(
         if_none_match = request.headers.get("if-none-match")
         if etag and if_none_match == etag:
             return Response(
-                status_code=304, headers={"Cache-Control": "public, max-age=60", "ETag": etag}
+                status_code=304,
+                headers={"Cache-Control": "public, max-age=60", "ETag": etag},
             )
 
         # Try cache first
@@ -332,10 +341,8 @@ async def get_channel_overview(
         headers = {"Cache-Control": "public, max-age=60"}
         if etag:
             headers["ETag"] = etag
-        
-        return JSONResponse(
-            content=cached_data, headers=headers
-        )        # Get fresh data
+
+        return JSONResponse(content=cached_data, headers=headers)  # Get fresh data
         overview_data = await service.get_overview(channel_id, from_, to_)
 
         response_data = OverviewResponse(data=overview_data)  # type: ignore
@@ -349,10 +356,8 @@ async def get_channel_overview(
         headers = {"Cache-Control": "public, max-age=60"}
         if etag:
             headers["ETag"] = etag
-        
-        return JSONResponse(
-            content=response_dict, headers=headers
-        )
+
+        return JSONResponse(content=response_dict, headers=headers)
 
     except Exception as e:
         logger.error(f"Error getting overview for channel {channel_id}: {e}")
@@ -419,7 +424,11 @@ async def get_channel_reach(
     """Get channel reach time series (avg views per post)"""
     try:
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("reach", cache_params, last_updated)
 
@@ -489,7 +498,8 @@ async def get_top_posts(
     except Exception as e:
         logger.error(f"Error getting top posts for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get top posts"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get top posts",
         )
 
 
@@ -524,7 +534,7 @@ async def get_channel_sources(
         # Validate kind parameter
         if kind not in ("mention", "forward"):
             raise HTTPException(status_code=400, detail="kind must be 'mention' or 'forward'")
-        
+
         sources_data = await service.get_sources(channel_id, from_, to_, kind)  # type: ignore
 
         response_data = EdgeListResponse(data=sources_data)  # type: ignore
@@ -586,7 +596,8 @@ async def get_trending_posts(
     except Exception as e:
         logger.error(f"Error getting trending posts for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get trending posts"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get trending posts",
         )
 
 

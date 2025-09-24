@@ -171,12 +171,15 @@ const RegisterForm = ({ onToggleMode = null }) => {
         setRegisterError('');
 
         try {
-            const result = await register({
+            const payload = {
                 email: formData.email,
                 password: formData.password,
                 username: formData.username,
                 full_name: formData.fullName
-            });
+            };
+            console.log('🚀 Registration payload:', payload);
+            
+            const result = await register(payload);
             
             if (!result.success) {
                 setRegisterError(result.error || 'Registration failed. Please try again.');

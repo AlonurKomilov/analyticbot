@@ -27,7 +27,7 @@ import {
     Security as SecurityIcon,
     Palette as PaletteIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../utils/apiClient';
+import { apiClient } from '../../api/client.js';
 
 const WatermarkTool = () => {
     const [file, setFile] = useState(null);

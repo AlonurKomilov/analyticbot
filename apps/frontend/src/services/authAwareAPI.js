@@ -4,7 +4,7 @@
  * No frontend mock switching - all demo data served by backend
  */
 
-import { apiClient } from './apiClient';
+import { apiClient } from '../api/client.js';
 
 class AuthAwareAPIService {
     constructor() {

@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppStore } from '../store/appStore';
-import { apiClient } from '../utils/apiClient';
+import { apiClient } from '../api/client.js';
 
 // Hook configuration presets for different use cases
 export const ANALYTICS_PRESETS = {

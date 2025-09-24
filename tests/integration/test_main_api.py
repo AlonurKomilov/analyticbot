@@ -55,7 +55,7 @@ class TestMainAPIEndpoints:
              patch('apps.api.routers.analytics_router.router'), \
              patch('apps.api.routers.analytics_v2.router'), \
              patch('apps.api.superadmin_routes.router'), \
-             patch('apps.bot.api.content_protection_routes.router'):
+             patch('apps.bot.api.content_protection_router.router'):
             
             yield {
                 'schedule_service': mock_schedule_service,

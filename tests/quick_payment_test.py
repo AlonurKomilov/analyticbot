@@ -60,7 +60,7 @@ def main():
     print("\n📝 BACKEND INFRASTRUCTURE:")
     backend_files = [
         ("/home/alonur/analyticbot/apps/bot/services/stripe_adapter.py", "Stripe Adapter"),
-        ("/home/alonur/analyticbot/apps/bot/api/payment_routes.py", "Payment API Routes"),
+        ("/home/alonur/analyticbot/apps/bot/api/payment_router.py", "Payment API Routes"),
         ("/home/alonur/analyticbot/config/settings.py", "Settings Configuration"),
         ("/home/alonur/analyticbot/apps/bot/services/payment_service.py", "Payment Service")
     ]

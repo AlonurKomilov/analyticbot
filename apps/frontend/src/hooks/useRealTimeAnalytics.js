@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '../store/appStore';
-import apiClient from '../utils/apiClient';
+import { apiClient } from '../api/client.js';
 
 /**
  * Custom hook for real-time analytics data

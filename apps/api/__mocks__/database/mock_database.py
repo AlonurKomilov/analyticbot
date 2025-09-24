@@ -1,6 +1,6 @@
 """
 Database Mock Data Module
-Extracted from di_analytics_v2.py to maintain clean separation of mock data
+Extracted from di_analytics.py to maintain clean separation of mock data
 """
 
 from datetime import datetime, UTC

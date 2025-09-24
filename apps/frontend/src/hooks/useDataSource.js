@@ -181,7 +181,9 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
 /**
  * Clean analytics hook using data provider
  */
-export const useAnalytics = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
+import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+
+export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -222,7 +224,7 @@ export const useAnalytics = (channelId = 'demo_channel', dataProvider = producti
 /**
  * Clean top posts hook using data provider
  */
-export const useTopPosts = (channelId = 'demo_channel', options = {}, dataProvider = productionDataProvider) => {
+export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -262,7 +264,7 @@ export const useTopPosts = (channelId = 'demo_channel', options = {}, dataProvid
 /**
  * Clean engagement metrics hook using data provider
  */
-export const useEngagementMetrics = (channelId = 'demo_channel', options = {}, dataProvider = productionDataProvider) => {
+export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -302,7 +304,7 @@ export const useEngagementMetrics = (channelId = 'demo_channel', options = {}, d
 /**
  * Clean recommendations hook using data provider
  */
-export const useRecommendations = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
+export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -342,7 +344,7 @@ export const useRecommendations = (channelId = 'demo_channel', dataProvider = pr
 /**
  * Composite hook for all analytics data using dependency injection
  */
-export const useAllAnalytics = (channelId = 'demo_channel', dataProvider = productionDataProvider) => {
+export const useAllAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
     const analytics = useAnalytics(channelId, dataProvider);
     const topPosts = useTopPosts(channelId, {}, dataProvider);
     const engagementMetrics = useEngagementMetrics(channelId, {}, dataProvider);

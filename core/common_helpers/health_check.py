@@ -1,5 +1,10 @@
 """
-Enhanced Health Check System for AnalyticBot Services
+DEPRECATED: Enhanced Health Check System for AnalyticBot Services
+
+⚠️  THIS FILE IS DEPRECATED ⚠️  
+Use core.common.health instead for all health check functionality.
+
+This file is kept for backward compatibility but will be removed in a future version.
 Provides comprehensive health monitoring with dependency verification
 """
 
@@ -10,16 +15,31 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from enum import Enum
 from dataclasses import dataclass
+from core.common.health.models import HealthStatus, ComponentHealth
 
 logger = logging.getLogger(__name__)
 
+class DependencyType(str, Enum):
+    """Types of service dependencies"""
+    DATABASE = "database"
+    CACHE = "cache"
+    EXTERNAL_API = "external_api"
+    QUEUE = "queue"
+    STORAGE = "storage"
+    SERVICE = "service"
 
-class HealthStatus(str, Enum):
-    """Health status levels"""
-    HEALTHY = "healthy"
-    DEGRADED = "degraded"
-    UNHEALTHY = "unhealthy"
-    UNKNOWN = "unknown"
+@dataclass
+class DependencyCheck:
+    """Individual dependency health check result - DEPRECATED: Use ComponentHealth instead"""
+    name: str
+    type: DependencyType
+    status: HealthStatus
+    response_time_ms: float
+    error: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    last_checked: Optional[datetime] = None
+
+    # Deprecated: use core.common.health.models.HealthStatus
 
 
 class DependencyType(str, Enum):
@@ -32,16 +52,7 @@ class DependencyType(str, Enum):
     SERVICE = "service"
 
 
-@dataclass
-class DependencyCheck:
-    """Individual dependency health check result"""
-    name: str
-    type: DependencyType
-    status: HealthStatus
-    response_time_ms: float
-    error: Optional[str] = None
-    details: Optional[Dict[str, Any]] = None
-    last_checked: Optional[datetime] = None
+    # Deprecated: use core.common.health.models.ComponentHealth
 
 
 @dataclass

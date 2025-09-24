@@ -1,6 +1,12 @@
 """
-Enhanced Health Check Endpoints for AnalyticBot API
-Provides comprehensive health monitoring endpoints with dependency verification
+Health System Router - Comprehensive Health Monitoring
+=====================================================
+
+Provides centralized health monitoring endpoints for the entire system.
+Consolidates health checks from all services and components.
+
+UPDATED: Renamed from enhanced_health.py for clarity
+PHASE 3B: Will consolidate health endpoints from all other routers
 """
 
 from datetime import datetime
@@ -9,8 +15,10 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from apps.shared.enhanced_health import health_checker, HealthStatus
+from core.common.health.checker import health_checker
+from core.common.health.models import HealthStatus, SystemHealth
 
+# Global health checker instance now imported from unified system
 
 class HealthResponse(BaseModel):
     """Standard health response format"""
@@ -18,7 +26,6 @@ class HealthResponse(BaseModel):
     timestamp: str
     service: str
     version: str
-
 
 class DetailedHealthResponse(BaseModel):
     """Detailed health response with components"""
@@ -30,7 +37,6 @@ class DetailedHealthResponse(BaseModel):
     components: Dict[str, Dict[str, Any]]
     performance_metrics: Dict[str, Any]
     alerts: list[str]
-
 
 class ReadinessResponse(BaseModel):
     """Readiness probe response"""
@@ -69,12 +75,12 @@ async def basic_health_check():
     - `service`: Service identifier
     - `version`: Application version
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_checker.get_system_health()
     
     return HealthResponse(
         status=system_health.status.value,
         timestamp=system_health.timestamp.isoformat(),
-        service="analyticbot-api",
+        service=system_health.service_name,
         version=system_health.version
     )
 
@@ -108,7 +114,7 @@ async def detailed_health_check():
     - Performance analysis
     - Capacity planning
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_checker.get_system_health()
     
     # Convert components to serializable format
     components_dict = {}

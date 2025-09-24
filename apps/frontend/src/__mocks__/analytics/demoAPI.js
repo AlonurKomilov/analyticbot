@@ -4,8 +4,8 @@
  * Clean replacement for /analytics/demo/* endpoints
  */
 
-import { mockService } from '../../services/mockService.js';
-import { demoAnalyticsService } from './demoAnalyticsService.js';
+import { analyticsService } from '../../services/analyticsService.js';
+// demoAnalyticsService functionality moved to main analyticsService
 
 /**
  * Demo API Client
@@ -63,7 +63,7 @@ export class DemoAPIService {
         await this._simulateDelay('default');
         
         try {
-            const data = await mockService.getDemoPostDynamics(hours);
+            const data = await analyticsService.getDemoPostDynamics(hours);
             return this._formatResponse(data, { 
                 params: { hours },
                 count: data.length
@@ -89,7 +89,7 @@ export class DemoAPIService {
         await this._simulateDelay('default');
         
         try {
-            const data = await mockService.getDemoTopPosts(count);
+            const data = await analyticsService.getDemoTopPosts(count);
             return this._formatResponse(data, { 
                 params: { count },
                 total: data.length
@@ -106,7 +106,7 @@ export class DemoAPIService {
         await this._simulateDelay('slow'); // AI processing takes longer
         
         try {
-            const data = await mockService.getDemoBestTimes();
+            const data = await analyticsService.getDemoBestTimes();
             return this._formatResponse(data, { 
                 algorithm: 'engagement_optimization',
                 confidence: 'high'
@@ -123,7 +123,7 @@ export class DemoAPIService {
         await this._simulateDelay('ai_processing'); // AI processing simulation
         
         try {
-            const data = await mockService.getDemoAIRecommendations();
+            const data = await analyticsService.getDemoAIRecommendations();
             return this._formatResponse(data, { 
                 model_version: 'v2.1.0',
                 processing_time_ms: Math.floor(Math.random() * 300) + 200
@@ -179,7 +179,7 @@ export class DemoAPIService {
             status: 'healthy',
             service: 'demo-analytics',
             version: '1.0.0',
-            cache_stats: demoAnalyticsService.getCacheStats(),
+            cache_stats: { hits: 0, misses: 0, size: 0 }, // Simplified cache stats
             endpoints: [
                 '/demo/posts/dynamics',
                 '/demo/posts/top', 
@@ -193,8 +193,8 @@ export class DemoAPIService {
      * Clear demo data cache
      */
     async clearCache() {
-        demoAnalyticsService.clearCache();
-        mockService.clearCache('demo');
+        // Cache clearing handled by main analyticsService
+        analyticsService.clearCache('demo');
         
         return this._formatResponse({
             message: 'Demo cache cleared successfully',

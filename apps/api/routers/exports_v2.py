@@ -13,7 +13,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from apps.api.exports.csv_v2 import CSVExporter
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsClient
 from config import settings
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
@@ -34,9 +34,9 @@ class ExportStatus(BaseModel):
     size_bytes: int | None = None
 
 
-def get_analytics_client() -> AnalyticsV2Client:
+def get_analytics_client() -> AnalyticsClient:
     """Get analytics client instance"""
-    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
+    return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_csv_exporter() -> CSVExporter:
@@ -67,7 +67,7 @@ def check_export_enabled():
 async def export_overview_csv(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     _: None = Depends(check_export_enabled),
 ):
@@ -104,7 +104,7 @@ async def export_overview_csv(
 async def export_growth_csv(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     _: None = Depends(check_export_enabled),
 ):
@@ -139,7 +139,7 @@ async def export_growth_csv(
 async def export_reach_csv(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     _: None = Depends(check_export_enabled),
 ):
@@ -174,7 +174,7 @@ async def export_reach_csv(
 async def export_sources_csv(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     _: None = Depends(check_export_enabled),
 ):
@@ -212,7 +212,7 @@ async def export_sources_csv(
 async def export_growth_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     chart_renderer: ChartRenderer = Depends(get_chart_renderer),
     _: None = Depends(check_export_enabled),
 ):
@@ -249,7 +249,7 @@ async def export_growth_chart(
 async def export_reach_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     chart_renderer: ChartRenderer = Depends(get_chart_renderer),
     _: None = Depends(check_export_enabled),
 ):
@@ -286,7 +286,7 @@ async def export_reach_chart(
 async def export_sources_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     chart_renderer: ChartRenderer = Depends(get_chart_renderer),
     _: None = Depends(check_export_enabled),
 ):

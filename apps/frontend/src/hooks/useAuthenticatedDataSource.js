@@ -31,7 +31,9 @@ export const useAuthenticatedDataProvider = (baseUrl = null) => {
  * @param {Object} options - Additional options
  * @returns {Object} Analytics data with auth-aware loading states
  */
-export const useAuthenticatedAnalytics = (channelId = 'demo_channel', options = {}) => {
+import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+
+export const useAuthenticatedAnalytics = (channelId = DEFAULT_CHANNEL_ID, options = {}) => {
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
     const [data, setData] = useState(null);
@@ -85,7 +87,7 @@ export const useAuthenticatedAnalytics = (channelId = 'demo_channel', options = 
  * @param {Object} options - Hook options
  * @returns {Object} Top posts data with auth-aware loading states
  */
-export const useAuthenticatedTopPosts = (channelId = 'demo_channel', queryOptions = {}, options = {}) => {
+export const useAuthenticatedTopPosts = (channelId = DEFAULT_CHANNEL_ID, queryOptions = {}, options = {}) => {
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
     const [data, setData] = useState(null);
@@ -139,7 +141,7 @@ export const useAuthenticatedTopPosts = (channelId = 'demo_channel', queryOption
  * @param {Object} options - Hook options
  * @returns {Object} Engagement metrics with auth-aware loading states
  */
-export const useAuthenticatedEngagementMetrics = (channelId = 'demo_channel', queryOptions = {}, options = {}) => {
+export const useAuthenticatedEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, queryOptions = {}, options = {}) => {
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
     const [data, setData] = useState(null);
@@ -192,7 +194,7 @@ export const useAuthenticatedEngagementMetrics = (channelId = 'demo_channel', qu
  * @param {Object} options - Hook options
  * @returns {Object} Recommendations data with auth-aware loading states
  */
-export const useAuthenticatedRecommendations = (channelId = 'demo_channel', options = {}) => {
+export const useAuthenticatedRecommendations = (channelId = DEFAULT_CHANNEL_ID, options = {}) => {
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
     const [data, setData] = useState(null);
@@ -299,7 +301,7 @@ export const useAuthenticatedDataSourceStatus = (options = {}) => {
  * @param {Object} options - Combined options for all data operations
  * @returns {Object} All data operations with shared auth state
  */
-export const useAuthenticatedDataSource = (channelId = 'demo_channel', options = {}) => {
+export const useAuthenticatedDataSource = (channelId = DEFAULT_CHANNEL_ID, options = {}) => {
     const analytics = useAuthenticatedAnalytics(channelId, options);
     const topPosts = useAuthenticatedTopPosts(channelId, options.topPostsOptions || {}, options);
     const engagement = useAuthenticatedEngagementMetrics(channelId, options.engagementOptions || {}, options);

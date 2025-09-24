@@ -2,16 +2,16 @@
  * Application initialization utilities
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:11400';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://84dp9jc9-11400.euw.devtunnels.ms';
 
 /**
  * Check if API is available and auto-configure data source
  */
 export const initializeDataSource = async () => {
     try {
-        // Quick API health check with short timeout
+        // API health check with reasonable timeout for devtunnel connections
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+        const timeoutId = setTimeout(() => controller.abort('Connection timeout after 5 seconds'), 5000); // 5 second timeout
         
         const response = await fetch(`${API_BASE_URL}/health`, {
             method: 'GET',
@@ -21,26 +21,26 @@ export const initializeDataSource = async () => {
         clearTimeout(timeoutId);
         
         if (response.ok) {
-            // API is available, keep current preference or default to mock for better UX
+            // API is available, keep current preference or default to API
             const savedPreference = localStorage.getItem('useRealAPI');
             if (savedPreference === null) {
-                // First time user, default to demo mode for better initial experience
-                localStorage.setItem('useRealAPI', 'false');
-                return 'mock';
+                // First time user, default to API mode - user can sign in to demo if needed
+                localStorage.setItem('useRealAPI', 'true');
+                return 'api';
             }
             return savedPreference === 'true' ? 'api' : 'mock';
         } else {
-            // API returned error, use demo mode
-            localStorage.setItem('useRealAPI', 'false');
-            return 'mock';
+            // API returned error, don't auto-switch - user should sign in to demo account
+            console.info('API health check returned error - continuing with API mode for demo authentication');
+            return 'api'; // Keep API mode, let backend handle demo authentication
         }
     } catch (error) {
         // API is not available (connection refused, timeout, etc.)
         if (import.meta.env.DEV) {
-            console.log('API check failed, using demo mode:', error.message);
+            console.log('API health check failed - continuing with API mode for demo authentication:', error.name === 'AbortError' ? 'Connection timeout' : error.message);
         }
-        localStorage.setItem('useRealAPI', 'false');
-        return 'mock';
+        // Don't auto-switch to mock - user should sign in to demo account instead
+        return 'api'; // Keep API mode, let backend handle demo authentication
     }
 };
 
@@ -61,13 +61,13 @@ export const initializeApp = async () => {
     } catch (error) {
         console.error('App initialization error:', error);
         
-        // Fallback to demo mode
-        localStorage.setItem('useRealAPI', 'false');
+        // Don't fallback to demo mode - user should sign in to demo account instead
+        console.info('App initialization encountered an error - continuing with API mode for demo authentication');
         window.dispatchEvent(new CustomEvent('appInitialized', { 
-            detail: { dataSource: 'mock', error: error.message, timestamp: Date.now() }
+            detail: { dataSource: 'api', error: error.message, timestamp: Date.now() }
         }));
         
-        return { success: false, dataSource: 'mock', error: error.message };
+        return { success: false, dataSource: 'api', error: error.message };
     }
 };
 

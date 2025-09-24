@@ -297,20 +297,8 @@ async def get_security_monitor_stats():
 # General AI Services Endpoints
 # =====================================
 
-@router.get("/health")
-async def health_check():
-    """Health check for AI services"""
-    return {
-        "status": "healthy",
-        "services": {
-            "content_optimizer": "active",
-            "churn_predictor": "active", 
-            "security_monitor": "active",
-            "predictive_analytics": "active"
-        },
-        "timestamp": "2024-01-15T10:30:00Z"
-    }
-
+# NOTE: Health endpoint moved to health_system_router.py for consolidation
+# AI service health is now monitored at /health/services
 
 @router.get("/stats")
 async def get_all_stats():

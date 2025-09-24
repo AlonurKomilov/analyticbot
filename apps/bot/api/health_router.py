@@ -8,11 +8,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 
 from apps.bot.database.db import db_manager, is_db_healthy
-from core.common_helpers.health_check import (
-    HealthChecker, 
-    DependencyType, 
-    StandardHealthChecks
-)
+from core.common.health.models import HealthStatus, DependencyType
+from core.common.health.checker import HealthChecker, health_checker
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -29,13 +26,13 @@ bot_health_checker = HealthChecker(
 
 async def check_database_health():
     """Database health check for bot service"""
-    return await StandardHealthChecks.database_health_check(db_manager)
+    return await health_checker.check_database(db_manager)
 
 
 async def check_telegram_api_health():
     """Telegram API health check"""
     bot_token = settings.BOT_TOKEN.get_secret_value()
-    return await StandardHealthChecks.telegram_api_health_check(bot_token)
+    return await health_checker.check_http(f"https://api.telegram.org/bot{bot_token}/getMe")
 
 
 async def check_storage_channel_health():

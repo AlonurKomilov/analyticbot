@@ -3,7 +3,7 @@
  * Handles all payment-related API calls
  */
 
-import { apiClient } from './apiClient';
+import { apiClient } from '../api/client.js';
 
 class PaymentAPI {
   constructor(baseURL = '/api/payments') {

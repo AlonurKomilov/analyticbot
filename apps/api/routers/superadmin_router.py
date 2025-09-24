@@ -371,13 +371,5 @@ async def update_system_config(
 
 # ===== HEALTH AND STATUS ENDPOINTS =====
 
-
-@router.get("/health")
-async def superadmin_health_check():
-    """Health check for SuperAdmin system"""
-    return {
-        "status": "healthy",
-        "service": "SuperAdmin Management Panel",
-        "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
-    }
+# NOTE: Health endpoint moved to health_system_router.py for consolidation  
+# SuperAdmin health is now monitored at /health/services

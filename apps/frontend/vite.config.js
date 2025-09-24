@@ -175,7 +175,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
     // Define process.env for browser compatibility
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-    'process.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL || 'http://localhost:8000'),
+    'process.env.REACT_APP_API_BASE_URL': JSON.stringify(process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_URL || 'https://84dp9jc9-11400.euw.devtunnels.ms'),
     'process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || process.env.VITE_STRIPE_PUBLISHABLE_KEY || ''),
     // Ensure React is available globally for JSX runtime
     'global': 'globalThis',

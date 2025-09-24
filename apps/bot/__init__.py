@@ -8,7 +8,8 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from apps.bot.handlers import alerts, analytics_v2, exports
+from apps.bot.handlers import alerts, exports
+from apps.bot.handlers.bot_microhandlers import bot_microhandlers_router
 from apps.bot.middleware.throttle import ThrottleMiddleware
 from config.settings import Settings
 
@@ -32,20 +33,19 @@ class AnalyticBot:
 
     def _register_handlers(self):
         """Register bot handlers"""
-        # Core analytics handlers (always enabled)
-        if self.settings.BOT_ANALYTICS_UI_ENABLED:
-            self.dp.include_router(analytics_v2.router)
-            logger.info("Analytics V2 handlers registered")
+        # Bot Microhandlers (always enabled - replaces monolithic analytics_v2)
+        self.dp.include_router(bot_microhandlers_router)
+        logger.info("Bot Microhandlers registered (analytics, export, alerts)")
 
-        # Alert handlers (if enabled)
+        # Legacy alert handlers (if enabled and needed)
         if self.settings.ALERTS_ENABLED:
             self.dp.include_router(alerts.router)
-            logger.info("Alert handlers registered")
+            logger.info("Legacy alert handlers registered")
 
-        # Export handlers (if enabled)
+        # Legacy export handlers (if enabled and needed)
         if self.settings.EXPORT_ENABLED:
             self.dp.include_router(exports.router)
-            logger.info("Export handlers registered")
+            logger.info("Legacy export handlers registered")
 
     async def start_polling(self):
         """Start bot polling"""

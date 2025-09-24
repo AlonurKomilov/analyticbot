@@ -574,7 +574,7 @@
       "nosec": 0,
       "skipped_tests": 0
     },
-    "apps/bot/handlers/phase_45_integration.py": {
+    "apps/bot/handlers/bot_microhandlers.py": {
       "CONFIDENCE.HIGH": 0,
       "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,

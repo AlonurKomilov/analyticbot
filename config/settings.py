@@ -9,6 +9,7 @@ from typing import Union
 
 from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from config.demo_mode_config import DemoModeConfig
 
 
 class LogLevel(str, Enum):
@@ -125,6 +126,11 @@ class Settings(BaseSettings):
     # Share Links Settings
     SHARE_LINK_DEFAULT_TTL_SECONDS: int = 3600
     SHARE_LINK_MAX_TTL_SECONDS: int = 86400  # 24 hours
+
+    # ============================================================================
+    # DEMO MODE CONFIGURATION
+    # ============================================================================
+    demo_mode: DemoModeConfig = Field(default_factory=DemoModeConfig)
 
     model_config = SettingsConfigDict(
         env_file=[".env.development", ".env.production"] if os.getenv("ENVIRONMENT") == "development" else [".env.production", ".env.development"],

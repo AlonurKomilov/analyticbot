@@ -25,7 +25,7 @@ import {
     AccessTime as TimeIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import { dataServiceFactory } from '../../services/dataService.js';
+import { analyticsService } from '../../services/analyticsService.js';
 import { useDataSource } from '../../hooks/useDataSource.js';
 
 /**

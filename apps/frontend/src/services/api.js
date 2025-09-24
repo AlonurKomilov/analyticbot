@@ -5,7 +5,7 @@
  */
 
 // Import services
-import { apiClient } from './apiClient';
+import { apiClient } from '../api/client.js';
 import { paymentAPI } from './paymentAPI';
 import { authAwareAPI } from './authAwareAPI';
 

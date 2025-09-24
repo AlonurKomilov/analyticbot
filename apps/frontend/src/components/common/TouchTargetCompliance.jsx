@@ -159,12 +159,13 @@ export const TextField = styled(MuiTextField)(({ theme, size }) => ({
  */
 export const useTouchTargetAudit = (enabled = process.env.NODE_ENV === 'development') => {
     React.useEffect(() => {
-        if (!enabled) return;
+        if (!enabled || !document || !document.body) return;
         
         const auditElements = () => {
-            const interactiveElements = document.querySelectorAll(
-                'button, [role="button"], input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
-            );
+            try {
+                const interactiveElements = document.querySelectorAll(
+                    'button, [role="button"], input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
+                );
             
             const violations = [];
             
@@ -200,6 +201,9 @@ export const useTouchTargetAudit = (enabled = process.env.NODE_ENV === 'developm
                 } else {
                     console.log('✅ All interactive elements meet touch target requirements');
                 }
+            }
+            } catch (error) {
+                console.warn('Touch target audit failed:', error);
             }
         };
         

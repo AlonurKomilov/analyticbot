@@ -10,7 +10,7 @@ from typing import Any
 
 import aiohttp
 
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsV2Client
 from config.settings import Settings
 from core.repositories.alert_repository import AlertRepository
 from infra.db.repositories.alert_repository import AsyncPgAlertRepository
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class AlertDetector:
     """Service for detecting analytics alerts"""
 
-    def __init__(self, analytics_client: AnalyticsV2Client, alert_repository: AlertRepository):
+    def __init__(self, analytics_client: AnalyticsClient, alert_repository: AlertRepository):
         self.analytics_client = analytics_client
         self.alert_repository = alert_repository
 
@@ -169,7 +169,7 @@ class AlertRunner:
 
     def __init__(self):
         self.settings = Settings()
-        self.analytics_client = AnalyticsV2Client(self.settings.ANALYTICS_API_URL)
+        self.analytics_client = AnalyticsClient(self.settings.ANALYTICS_API_URL)
         self.alert_repository = AsyncPgAlertRepository()
         self.detector = AlertDetector(self.analytics_client, self.alert_repository)
         self.running = False

@@ -188,7 +188,7 @@ health_check() {
     API_POD=$(kubectl get pods -n $NAMESPACE -l app=api -o jsonpath="{.items[0].metadata.name}")
     if [ ! -z "$API_POD" ]; then
         echo -e "${YELLOW}Testing API health endpoint...${NC}"
-        if kubectl exec -n $NAMESPACE $API_POD -- curl -f http://localhost:8000/health &> /dev/null; then
+        if kubectl exec -n $NAMESPACE $API_POD -- curl -f http://localhost:11400/health &> /dev/null; then
             echo -e "${GREEN}✅ API health check passed${NC}"
         else
             echo -e "${RED}❌ API health check failed${NC}"

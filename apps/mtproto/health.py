@@ -6,13 +6,8 @@ from typing import Any, Dict
 
 from apps.mtproto.di import get_settings, get_tg_client
 from core.ports.tg_client import TGClient
-from core.common_helpers.health_check import (
-    HealthChecker, 
-    DependencyType, 
-    StandardHealthChecks
-)
-
-
+from core.common.health.models import HealthStatus, DependencyType
+from core.common.health.checker import HealthChecker
 class HealthCheck:
     """Health check service for MTProto application.
 

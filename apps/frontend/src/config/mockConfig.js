@@ -36,7 +36,7 @@ export const MOCK_CONFIG = {
 export const API_CONFIG = {
     BASE_URL: import.meta.env.VITE_API_BASE_URL || 
               import.meta.env.VITE_API_URL || 
-              'http://localhost:11400',
+              'https://84dp9jc9-11400.euw.devtunnels.ms',
     
     ENDPOINTS: {
         HEALTH: '/health',

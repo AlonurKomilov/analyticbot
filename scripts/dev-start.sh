@@ -109,7 +109,7 @@ case $SERVICE in
         start_service "bot" 'python -m apps.bot.run_bot' ""
         ;;
     "frontend")
-        # Start Frontend (in frontend directory) - Development Environment Port 11400
+        # Start Frontend (in frontend directory) - Development Environment Port 11300
         cd apps/frontend
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing frontend dependencies...${NC}"
@@ -129,6 +129,8 @@ case $SERVICE in
     "stop")
         # Stop all development services
         echo -e "${YELLOW}🛑 Stopping all development services...${NC}"
+        
+        # Stop services by PID file (safer approach)
         for pid_file in logs/dev_*.pid; do
             if [ -f "$pid_file" ]; then
                 pid=$(cat "$pid_file")
@@ -136,20 +138,43 @@ case $SERVICE in
                 if kill -0 $pid 2>/dev/null; then
                     echo -e "${YELLOW}🔄 Stopping ${service_name} (PID: ${pid})${NC}"
                     kill $pid
+                    # Wait for graceful shutdown
+                    sleep 2
+                    # Force kill if still running
+                    if kill -0 $pid 2>/dev/null; then
+                        echo -e "${YELLOW}⚡ Force stopping ${service_name}${NC}"
+                        kill -9 $pid 2>/dev/null || true
+                    fi
                 else
                     echo -e "${BLUE}ℹ️  ${service_name} already stopped${NC}"
                 fi
                 rm -f "$pid_file"
             fi
         done
-        # Kill any remaining processes on our dev ports
-        for port in 11300 11400; do
-            if lsof -ti:${port} >/dev/null 2>&1; then
-                echo -e "${YELLOW}🔄 Killing remaining process on port ${port}${NC}"
-                kill -9 $(lsof -ti:${port}) 2>/dev/null || true
-            fi
-        done
-        echo -e "${GREEN}✅ All services stopped${NC}"
+        
+        # More selective port cleanup - only kill our specific processes
+        echo -e "${BLUE}🔍 Checking for remaining development processes...${NC}"
+        
+        # Check for uvicorn (API) processes specifically
+        if pgrep -f "uvicorn.*11400" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping remaining API processes${NC}"
+            pkill -f "uvicorn.*11400" || true
+        fi
+        
+        # Check for npm/vite (Frontend) processes specifically  
+        if pgrep -f "vite.*11300" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping remaining frontend processes${NC}"
+            pkill -f "vite.*11300" || true
+        fi
+        
+        # Check for bot processes
+        if pgrep -f "apps.bot.run_bot" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping remaining bot processes${NC}"
+            pkill -f "apps.bot.run_bot" || true
+        fi
+        
+        echo -e "${GREEN}✅ All development services stopped${NC}"
+        echo -e "${BLUE}ℹ️  Note: External tunnels (devtunnels, ngrok) remain active${NC}"
         exit 0
         ;;
     "status")

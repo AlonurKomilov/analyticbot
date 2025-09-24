@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { apiClient } from '../utils/apiClient.js';
+import { apiClient } from '../api/client.js';
 import { ErrorHandler } from '../utils/errorHandler.js';
 
 // Loading states interface
@@ -153,10 +153,10 @@ export const useAppStore = create(
                         throw apiError;
                     }
                 } else {
-                    // Use mock data directly
+                    // Use unified analytics service
                     console.log('📊 Loading professional demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    data = await mockService.getInitialData();
+                    const { analyticsService } = await import('../services/analyticsService.js');
+                    data = await analyticsService.getAnalyticsOverview();
                 }
                 
                 set({
@@ -168,13 +168,13 @@ export const useAppStore = create(
                 
                 get().setLoading(operation, false);
             } catch (error) {
-                // Fallback to basic demo data if everything fails
+                // Fallback to empty state if everything fails
                 console.warn('Error loading data:', error);
                 set({
                     channels: [],
                     scheduledPosts: [],
-                    plan: { name: "Demo", max_channels: 10 },
-                    user: { username: "demo_user", first_name: "Demo" },
+                    plan: { name: "Free", max_channels: 3 },
+                    user: { username: "user", first_name: "User" },
                 });
                 get().setLoading(operation, false);
             }
@@ -340,14 +340,14 @@ export const useAppStore = create(
                         console.log('Storage API Error:', apiError.message);
                         
                         // Fallback to mock storage files
-                        const { mockService } = await import('../services/mockService.js');
-                        response = await mockService.getStorageFiles(limit, offset);
+                        const { storageMockService } = await import('../services/storageMockService.js');
+                        response = await storageMockService.getStorageFiles(limit, offset);
                     }
                 } else {
                     // Load from mock data
                     console.log('📊 Loading storage files demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    response = await mockService.getStorageFiles(limit, offset);
+                    const { storageMockService } = await import('../services/storageMockService.js');
+                    response = await storageMockService.getStorageFiles(limit, offset);
                 }
                 
                 set(() => ({
@@ -486,14 +486,14 @@ export const useAppStore = create(
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for post dynamics, using demo data');
                         console.log('Analytics API Error:', apiError.message);
-                        const { mockService } = await import('../services/mockService.js');
-                        response = await mockService.getPostDynamics(channelId);
+                        const { analyticsService } = await import('../services/analyticsService.js');
+                        response = await analyticsService.getPostDynamics(channelId);
                     }
                 } else {
-                    // Load from mock data
+                    // Load from unified analytics service
                     console.log('📊 Loading post dynamics demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    response = await mockService.getPostDynamics(channelId);
+                    const { analyticsService } = await import('../services/analyticsService.js');
+                    response = await analyticsService.getPostDynamics(channelId);
                 }
                 
                 set(state => ({
@@ -546,14 +546,14 @@ export const useAppStore = create(
                         console.log('✅ Top posts loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for top posts, using demo data');
-                        const { mockService } = await import('../services/mockService.js');
-                        response = await mockService.getTopPosts(channelId, period, sortBy);
+                        const { analyticsService } = await import('../services/analyticsService.js');
+                        response = await analyticsService.getTopPosts(channelId, period, sortBy);
                     }
                 } else {
-                    // Load from mock data
+                    // Load from unified analytics service
                     console.log('📊 Loading top posts demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    response = await mockService.getTopPosts(channelId, period, sortBy);
+                    const { analyticsService } = await import('../services/analyticsService.js');
+                    response = await analyticsService.getTopPosts(channelId, period, sortBy);
                 }
                 
                 set(state => ({
@@ -597,14 +597,14 @@ export const useAppStore = create(
                         console.log('✅ Best time recommendations loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for best time, using demo data');
-                        const { mockService } = await import('../services/mockService.js');
-                        response = await mockService.getBestTime(channelId);
+                        const { analyticsService } = await import('../services/analyticsService.js');
+                        response = await analyticsService.getBestTime(channelId);
                     }
                 } else {
-                    // Load from mock data
+                    // Load from unified analytics service
                     console.log('📊 Loading best time demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    response = await mockService.getBestTime(channelId);
+                    const { analyticsService } = await import('../services/analyticsService.js');
+                    response = await analyticsService.getBestTime(channelId);
                 }
                 
                 set(state => ({
@@ -657,14 +657,14 @@ export const useAppStore = create(
                         console.log('✅ Engagement metrics loaded from real API');
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for engagement metrics, using demo data');
-                        const { mockService } = await import('../services/mockService.js');
-                        response = await mockService.getEngagementMetrics(channelId);
+                        const { analyticsService } = await import('../services/analyticsService.js');
+                        response = await analyticsService.getEngagementMetrics(channelId);
                     }
                 } else {
-                    // Load from mock data
+                    // Load from unified analytics service
                     console.log('📊 Loading engagement metrics demo data');
-                    const { mockService } = await import('../services/mockService.js');
-                    response = await mockService.getEngagementMetrics(channelId);
+                    const { analyticsService } = await import('../services/analyticsService.js');
+                    response = await analyticsService.getEngagementMetrics(channelId);
                 }
                 
                 set(state => ({
@@ -725,28 +725,15 @@ export const useAppStore = create(
             }
         },
 
-        // User-controlled data source switching methods
+        // No longer allow switching to mock - redirect to demo login instead
         switchToMockWithUserConsent: async () => {
-            console.log('🔄 User approved switch to mock data');
-            const previousSource = get().dataSource;
+            console.log('❌ Frontend mock switching disabled - redirecting to demo login');
             
-            // Switch to mock data source
-            get().setDataSource('mock');
+            // Redirect to demo login instead of switching to frontend mock
+            const demoLoginUrl = `/login?demo=true&redirect=${encodeURIComponent(window.location.pathname)}`;
+            window.location.href = demoLoginUrl;
             
-            // Clear any API errors since we're switching to mock
-            get().clearError('fetchData');
-            
-            try {
-                // Reload data with mock source
-                await get().fetchData('mock');
-                console.log('✅ Successfully switched to mock data');
-                return true;
-            } catch (error) {
-                console.error('❌ Failed to load mock data:', error);
-                // Revert to previous source if mock fails
-                get().setDataSource(previousSource);
-                throw error;
-            }
+            return false; // No switch occurred
         },
 
         retryApiConnection: async () => {

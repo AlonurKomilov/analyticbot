@@ -1,6 +1,7 @@
 """
-Analytics V2 API Client for Bot Integration
-Provides async HTTP client for accessing Analytics Fusion API v2
+Analytics API Client for Bot Integration - Clean Architecture
+Provides async HTTP client for accessing Analytics Fusion API
+Clean Architecture: Domain-driven client for analytics service integration
 """
 
 import asyncio
@@ -78,8 +79,8 @@ class TrendingData(BaseModel):
     analysis: str
 
 
-class AnalyticsV2Response(BaseModel):
-    """Base analytics response with metadata"""
+class AnalyticsResponse(BaseModel):
+    """Base analytics response with metadata - Clean Architecture naming"""
 
     channel_id: str
     period: int
@@ -90,50 +91,58 @@ class AnalyticsV2Response(BaseModel):
     last_updated: datetime
 
 
-class OverviewResponse(AnalyticsV2Response):
+class OverviewResponse(AnalyticsResponse):
     """Complete overview response"""
 
     overview: AnalyticsOverview
 
 
-class GrowthResponse(AnalyticsV2Response):
+class GrowthResponse(AnalyticsResponse):
     """Complete growth response"""
 
     growth: GrowthData
 
 
-class ReachResponse(AnalyticsV2Response):
+class ReachResponse(AnalyticsResponse):
     """Complete reach response"""
 
     reach: ReachData
 
 
-class TopPostsResponse(AnalyticsV2Response):
+class TopPostsResponse(AnalyticsResponse):
     """Complete top posts response"""
 
     top_posts: list[TopPost]
 
 
-class SourcesResponse(AnalyticsV2Response):
+class SourcesResponse(AnalyticsResponse):
     """Complete sources response"""
 
     sources: SourceData
 
 
-class TrendingResponse(AnalyticsV2Response):
+class TrendingResponse(AnalyticsResponse):
     """Complete trending response"""
 
     trending: TrendingData
 
 
-class AnalyticsV2ClientError(Exception):
-    """Analytics V2 client error"""
+class AnalyticsClientError(Exception):
+    """Analytics client error - Clean Architecture naming"""
 
 
-class AnalyticsV2Client:
+class AnalyticsClient:
     """
-    Async HTTP client for Analytics Fusion API v2
-    Provides bot-friendly interface to analytics endpoints
+    Async HTTP client for Analytics Fusion API - Clean Architecture
+    
+    Provides bot-friendly interface to analytics endpoints following clean architecture principles.
+    Abstracts HTTP communication details and provides domain-specific methods.
+    
+    Clean Architecture Benefits:
+    - Domain-driven method naming
+    - Service abstraction pattern
+    - Consistent error handling
+    - Async context management
     """
 
     def __init__(
@@ -191,14 +200,14 @@ class AnalyticsV2Client:
                 if response.status_code == 200:
                     return response.json()
                 elif response.status_code == 401:
-                    raise AnalyticsV2ClientError("Authentication required or token invalid")
+                    raise AnalyticsClientError("Authentication required or token invalid")
                 elif response.status_code == 403:
-                    raise AnalyticsV2ClientError("Insufficient permissions for this channel")
+                    raise AnalyticsClientError("Insufficient permissions for this channel")
                 elif response.status_code == 404:
-                    raise AnalyticsV2ClientError("Channel not found")
+                    raise AnalyticsClientError("Channel not found")
                 elif response.status_code == 503:
                     data = response.json()
-                    raise AnalyticsV2ClientError(
+                    raise AnalyticsClientError(
                         f"Service unavailable: {data.get('message', 'Unknown error')}"
                     )
                 else:
@@ -207,7 +216,7 @@ class AnalyticsV2Client:
             except httpx.RequestError as e:
                 logger.warning(f"Request error (attempt {attempt + 1}/{self.max_retries}): {e}")
                 if attempt == self.max_retries - 1:
-                    raise AnalyticsV2ClientError(
+                    raise AnalyticsClientError(
                         f"Request failed after {self.max_retries} attempts: {e}"
                     )
 
@@ -216,7 +225,7 @@ class AnalyticsV2Client:
 
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error {e.response.status_code}: {e}")
-                raise AnalyticsV2ClientError(f"API returned error {e.response.status_code}")
+                raise AnalyticsClientError(f"API returned error {e.response.status_code}")
 
     async def overview(self, channel_id: str, days: int = 30) -> OverviewResponse:
         """Get channel overview analytics"""
@@ -228,7 +237,7 @@ class AnalyticsV2Client:
             return OverviewResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get overview for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Overview request failed: {e}")
+            raise AnalyticsClientError(f"Overview request failed: {e}")
 
     async def growth(self, channel_id: str, days: int = 30) -> GrowthResponse:
         """Get channel growth analytics"""
@@ -240,7 +249,7 @@ class AnalyticsV2Client:
             return GrowthResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get growth for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Growth request failed: {e}")
+            raise AnalyticsClientError(f"Growth request failed: {e}")
 
     async def reach(self, channel_id: str, days: int = 30) -> ReachResponse:
         """Get channel reach analytics"""
@@ -252,7 +261,7 @@ class AnalyticsV2Client:
             return ReachResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get reach for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Reach request failed: {e}")
+            raise AnalyticsClientError(f"Reach request failed: {e}")
 
     async def top_posts(self, channel_id: str, days: int = 30, limit: int = 10) -> TopPostsResponse:
         """Get channel top posts"""
@@ -264,7 +273,7 @@ class AnalyticsV2Client:
             return TopPostsResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get top posts for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Top posts request failed: {e}")
+            raise AnalyticsClientError(f"Top posts request failed: {e}")
 
     async def sources(self, channel_id: str, days: int = 30) -> SourcesResponse:
         """Get channel traffic sources"""
@@ -276,7 +285,7 @@ class AnalyticsV2Client:
             return SourcesResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get sources for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Sources request failed: {e}")
+            raise AnalyticsClientError(f"Sources request failed: {e}")
 
     async def trending(self, channel_id: str, days: int = 30) -> TrendingResponse:
         """Get channel trending analysis"""
@@ -288,7 +297,7 @@ class AnalyticsV2Client:
             return TrendingResponse(**data)
         except Exception as e:
             logger.error(f"Failed to get trending for channel {channel_id}: {e}")
-            raise AnalyticsV2ClientError(f"Trending request failed: {e}")
+            raise AnalyticsClientError(f"Trending request failed: {e}")
 
     async def health_check(self) -> dict[str, Any]:
         """Check API health"""
@@ -297,4 +306,9 @@ class AnalyticsV2Client:
             return data
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            raise AnalyticsV2ClientError(f"Health check failed: {e}")
+            raise AnalyticsClientError(f"Health check failed: {e}")
+
+
+# Clean Architecture Aliases for backward compatibility
+AnalyticsV2Client = AnalyticsClient  # Backward compatibility alias
+AnalyticsV2ClientError = AnalyticsClientError  # Backward compatibility alias

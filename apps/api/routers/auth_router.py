@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr, Field
 
 from core.security_engine import SecurityManager, User, UserRole, UserStatus, AuthProvider
+from core.security_engine.auth_utils import auth_utils
 from core.security_engine.mfa import MFAManager
 from apps.api.middleware.auth import get_user_repository, get_security_manager, get_current_user
 from infra.db.repositories.user_repository import AsyncpgUserRepository
@@ -112,11 +113,9 @@ async def login(
         # Create session
         session = get_security_manager().create_user_session(user, request)
 
-        # Generate tokens
-        access_token = get_security_manager().create_access_token(
-            user=user, session_id=session.token
-        )
-        refresh_token = get_security_manager().create_refresh_token(user.id, session.token)        # Update last login
+        # Generate tokens using centralized auth utilities
+        access_token = auth_utils.create_access_token(user)
+        refresh_token = auth_utils.create_refresh_token(user.id, session.token)        # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
         
         logger.info(f"Successful login for user: {user.username}")
@@ -155,6 +154,10 @@ async def register(
     
     Creates a new user with email verification required.
     """
+    print(f"🎯 Registration endpoint received: {register_data}")
+    print(f"🎯 Email: {register_data.email}")
+    print(f"🎯 Username: {register_data.username}")
+    print(f"🎯 Full name: {register_data.full_name}")
     try:
         # Check if email already exists
         existing_user = await user_repo.get_user_by_email(register_data.email)
@@ -173,6 +176,11 @@ async def register(
             )
         
         # Create User object
+        print(f"🏗️ Creating User object with:")
+        print(f"   email: {register_data.email}")
+        print(f"   username: {register_data.username}")
+        print(f"   full_name: {register_data.full_name}")
+        
         user = User(
             email=register_data.email,
             username=register_data.username,
@@ -228,7 +236,7 @@ async def refresh_token(
     """
     try:
         # Validate refresh token and get new access token
-        new_access_token = get_security_manager().refresh_access_token(refresh_token)
+        new_access_token = auth_utils.refresh_access_token(refresh_token)
         
         return {
             "access_token": new_access_token,
@@ -255,7 +263,7 @@ async def logout(
     try:
         user_id = current_user["id"]
         # Revoke all user sessions
-        get_security_manager().revoke_user_sessions(str(user_id))
+        auth_utils.revoke_user_sessions(str(user_id))
         
         logger.info(f"User logged out: {current_user.get('username', user_id)}")
         
@@ -291,16 +299,8 @@ async def get_current_user_profile(
 # Helper functions for user operations
 async def get_user_by_email(email: str, user_repository: AsyncpgUserRepository) -> dict | None:
     """Get user by email from the repository"""
-    # Check if this is a demo user first
-    from apps.api.__mocks__.auth.mock_users import get_demo_user_by_email
-    
-    demo_user = get_demo_user_by_email(email)
-    if demo_user:
-        return demo_user
-    
-    # For non-demo users, try to get from database
-    # This is a placeholder - we need to implement email-based user lookup
-    # In a real implementation, this would query the user database
+    # For production users, query the database
+    # Demo user logic is handled by middleware, not here
     try:
         # TODO: Implement actual database lookup
         # user = await user_repository.get_by_email(email)

@@ -6,7 +6,10 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { apiClient } from '../utils/apiClient.js';
+import { toast } from 'react-toastify';
+import { authAwareAPI } from '../services/authAwareAPI.js';
+import { apiClient } from '../api/client.js';
+import { useNavigate } from 'react-router-dom';
 
 // Authentication context interface
 const AuthContext = createContext({
@@ -100,19 +103,44 @@ export const AuthProvider = ({ children }) => {
         try {
             setIsLoading(true);
             
-            const data = await apiClient.post('/auth/login', { email, password });
+            const response = await apiClient.post('/auth/login', { email, password });
+            console.log('Login API full response:', response); // Debug log
+            console.log('Login API response data:', response.data); // Debug log
+            
+            const data = response.data;
             const { access_token, refresh_token, user: userData } = data;
+            
+            // Validate required fields
+            if (!access_token || !userData) {
+                console.error('Invalid login response structure:', { access_token: !!access_token, userData: !!userData });
+                throw new Error('Invalid login response: missing required fields');
+            }
             
             // Store tokens securely
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
             localStorage.setItem('user', JSON.stringify(userData));
             
+            // Check if this is a demo user based on email or user data
+            const isDemoUser = email.includes('demo@') || 
+                              email.includes('viewer@') || 
+                              email.includes('guest@') ||
+                              userData.is_demo === true ||
+                              userData.email?.includes('demo') ||
+                              window.location.search.includes('demo=true'); // URL param for testing
+            
+            if (isDemoUser) {
+                localStorage.setItem('is_demo_user', 'true');
+                console.info('🎭 Demo user detected - enhanced demo experience enabled');
+            } else {
+                localStorage.removeItem('is_demo_user');
+            }
+            
             // Update state
             setToken(access_token);
             setUser(userData);
             
-            console.log('Login successful:', userData.username);
+            console.log('Login successful:', userData?.username || userData?.email || 'user');
             return { success: true };
         } catch (error) {
             console.error('Login error:', error);
@@ -126,6 +154,7 @@ export const AuthProvider = ({ children }) => {
     }, []);    // Register function
     const register = useCallback(async (userData) => {
         setIsLoading(true);
+        console.log('🔐 AuthContext register called with:', userData);
         try {
             const data = await apiClient.post('/auth/register', userData);
             const { access_token, refresh_token, user: userInfo } = data;

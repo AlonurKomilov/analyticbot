@@ -1,6 +1,6 @@
 import { ErrorHandler } from './errorHandler.js';
 import { dataSourceManager } from './dataSourceManager.js';
-import { dataServiceFactory } from '../services/dataService.js';
+import { analyticsService } from '../services/analyticsService.js';
 
 const VITE_API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 const REQUEST_TIMEOUT = 30000; // 30 seconds
@@ -200,25 +200,25 @@ class ApiClient {
                 throw timeoutError;
             }
 
-            // Handle connection refused - auto-switch to demo mode
+            // Handle connection refused - NO auto-switch, user should sign in to demo account
             if (error.message.includes('ERR_CONNECTION_REFUSED') || 
                 error.message.includes('Failed to fetch') ||
                 error.message.includes('Network request failed')) {
                 
                 // Only log in development mode
                 if (import.meta.env.DEV) {
-                    console.warn('API connection failed, auto-switching to demo mode');
+                    console.warn('API connection failed - user should sign in to demo account for mock data');
                 }
                 
-                // Automatically switch to demo mode
-                localStorage.setItem('useRealAPI', 'false');
-                window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
-                    detail: { source: 'mock', reason: 'api_unavailable' }
-                }));
+                // NO automatic switching - user should sign in to demo account instead
+                // localStorage.setItem('useRealAPI', 'false'); // REMOVED - no auto-switch
+                // window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
+                //     detail: { source: 'mock', reason: 'api_unavailable' }
+                // })); // REMOVED - no auto-switch
                 
-                // Create a user-friendly error
-                const connectionError = new Error('API is currently unavailable. Switched to demo mode automatically.');
-                connectionError.response = { status: 503, autoSwitched: true };
+                // Create a user-friendly error without auto-switching
+                const connectionError = new Error('API is currently unavailable. Please sign in to a demo account for mock data.');
+                connectionError.response = { status: 503, autoSwitched: false };
                 throw connectionError;
             }
 

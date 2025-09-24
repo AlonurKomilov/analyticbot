@@ -95,12 +95,13 @@ export const usePostTableLogic = () => {
         setLoading(false);
     }, []);
 
-    // Use mock data if no real data is available
+    // No auto-mock generation - data should come from backend (including demo data)
     useEffect(() => {
         if (!loading && posts.length === 0 && !error) {
-            generateMockPosts();
+            console.info('No posts available - user should sign in to demo account for mock data');
+            // Don't auto-generate mock posts - let backend handle demo data through proper auth
         }
-    }, [loading, posts.length, error, generateMockPosts]);
+    }, [loading, posts.length, error]);
 
     // Calculate summary statistics
     const summaryStats = useMemo(() => {

@@ -5,7 +5,8 @@
 
 import { MOCK_CONFIG, MOCK_DATA_CONFIG, configUtils } from '../config/mockConfig.js';
 import { mockAnalyticsData, getMockPostDynamics, getMockTopPosts, getMockBestTime, getMockEngagementMetrics, getMockInitialData } from '../__mocks__/index.js';  
-import { demoAnalyticsService } from '../__mocks__/analytics/demoAnalyticsService.js';
+import { analyticsAPIService } from '../__mocks__/analytics/analyticsAPIService.js';
+import { aiServicesAPIService } from '../__mocks__/aiServices/aiServicesAPIService.js';
 import { DEFAULT_DEMO_CHANNEL_ID } from '../__mocks__/constants.js';
 
 class MockService {
@@ -140,7 +141,8 @@ class MockService {
         this.logger.info('Generating fresh initial data');
         await this.simulateNetworkDelay(operation);
         
-        const data = await getMockInitialData();
+        // Use backend API service for initial data
+        const data = await analyticsAPIService.getAnalyticsOverview(DEFAULT_DEMO_CHANNEL_ID);
         this.setCache(cacheKey, data);
         
         this.endPerformanceTimer(operation);
@@ -199,7 +201,8 @@ class MockService {
         
         await this.simulateNetworkDelay(operation);
         
-        const data = await getMockPostDynamics(period);
+        // Use backend API service instead of frontend mock generation
+        const data = await analyticsAPIService.getPostDynamics(channelId, period);
         data.channelId = channelId;
         
         this.setCache(cacheKey, data);
@@ -227,7 +230,8 @@ class MockService {
         
         await this.simulateNetworkDelay(operation);
         
-        const data = await getMockTopPosts(period, sortBy);
+        // Use backend API service instead of frontend mock generation
+        const data = await analyticsAPIService.getTopPosts(channelId, period, sortBy);
         data.channelId = channelId;
         
         this.setCache(cacheKey, data);
@@ -255,7 +259,8 @@ class MockService {
         
         await this.simulateNetworkDelay(operation);
         
-        const data = await getMockBestTime(timeframe);
+        // Use backend API service instead of frontend mock generation
+        const data = await analyticsAPIService.getBestTimeRecommendations(channelId, timeframe);
         data.channelId = channelId;
         
         this.setCache(cacheKey, data);
@@ -283,7 +288,8 @@ class MockService {
         
         await this.simulateNetworkDelay(operation);
         
-        const data = await getMockEngagementMetrics(period);
+        // Use backend API service instead of frontend mock generation
+        const data = await analyticsAPIService.getEngagementMetrics(channelId, period);
         data.channelId = channelId;
         
         this.setCache(cacheKey, data);
@@ -376,7 +382,7 @@ class MockService {
         
         await this.simulateNetworkDelay('demo_data');
         
-        const data = demoAnalyticsService.getPostDynamics(hours);
+        const data = await analyticsAPIService.getPostDynamics(DEFAULT_DEMO_CHANNEL_ID, period);
         this.setCache(cacheKey, data, 5 * 60 * 1000); // 5 minutes cache
         
         this.endPerformanceTimer('demo_post_dynamics');
@@ -395,7 +401,7 @@ class MockService {
         
         await this.simulateNetworkDelay('demo_data');
         
-        const data = demoAnalyticsService.getTopPosts(count);
+        const data = await analyticsAPIService.getTopPosts(DEFAULT_DEMO_CHANNEL_ID, period, sortBy);
         this.setCache(cacheKey, data, 10 * 60 * 1000); // 10 minutes cache
         
         this.endPerformanceTimer('demo_top_posts');
@@ -414,7 +420,7 @@ class MockService {
         
         await this.simulateNetworkDelay('demo_data');
         
-        const data = demoAnalyticsService.getBestTimes();
+        const data = await analyticsAPIService.getBestTimeRecommendations(DEFAULT_DEMO_CHANNEL_ID, timeframe);
         this.setCache(cacheKey, data, 30 * 60 * 1000); // 30 minutes cache
         
         this.endPerformanceTimer('demo_best_times');
@@ -433,7 +439,8 @@ class MockService {
         
         await this.simulateNetworkDelay('ai_processing');
         
-        const data = demoAnalyticsService.getAIRecommendations();
+        // Use AI services API for recommendations 
+        const data = await aiServicesAPIService.getPredictiveAnalyticsStats();
         this.setCache(cacheKey, data, 15 * 60 * 1000); // 15 minutes cache
         
         this.endPerformanceTimer('demo_ai_recommendations');
@@ -444,7 +451,7 @@ class MockService {
     destroy() {
         this.clearCache();
         this.performanceTracker.clear();
-        demoAnalyticsService.clearCache(); // Clear demo service cache too
+        // Note: Backend API services manage their own caching
         this.logger.info('MockService destroyed');
     }
 }

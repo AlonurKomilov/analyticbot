@@ -1,7 +1,7 @@
 import csv
 import io
 import logging
-from apps.bot.clients.analytics_v2_client import (
+from apps.bot.clients.analytics_client import (
     GrowthResponse,
     OverviewResponse,
     ReachResponse,

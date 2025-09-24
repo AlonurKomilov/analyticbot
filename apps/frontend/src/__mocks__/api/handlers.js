@@ -16,7 +16,7 @@ import {
 
 export const handlers = [
   // Health check endpoint for DataSourceSettings
-  http.get('http://localhost:11400/health', () => {
+  http.get('https://84dp9jc9-11400.euw.devtunnels.ms/health', () => {
     return HttpResponse.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString() 

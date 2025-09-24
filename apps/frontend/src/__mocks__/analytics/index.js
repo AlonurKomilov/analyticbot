@@ -8,8 +8,7 @@ export { topPostsData, getTopPosts } from './topPosts.js';
 export { engagementData, getEngagementMetrics } from './engagementMetrics.js';
 export { bestTimeData, getBestTime } from './bestTime.js';
 
-// Demo Analytics Services (moved from backend API)
-export { demoAnalyticsService, generatePostDynamics, generateTopPosts, generateBestTimeRecommendations, generateAIRecommendations } from './demoAnalyticsService.js';
+// Demo API service for compatibility
 export { demoAPI, demoEndpoints, DemoAPIService } from './demoAPI.js';
 
 // Combined analytics data for backward compatibility

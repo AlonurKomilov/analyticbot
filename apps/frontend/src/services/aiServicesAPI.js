@@ -4,7 +4,7 @@
  * content optimization, churn prediction, and security monitoring.
  */
 
-import { apiClient } from './apiClient';
+import { apiClient } from '../api/client.js';
 import { aiServicesStatsMock } from '../__mocks__/aiServices/statsService.js';
 
 const AI_SERVICES_BASE = '/ai-services';

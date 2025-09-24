@@ -66,13 +66,13 @@ alembic upgrade head
 
 # 5. Start services
 # Terminal 1: API Server
-uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 10400
 
 # Terminal 2: Telegram Bot
 python -m apps.bot.run_bot
 
 # 6. Health check
-curl http://localhost:8000/health
+curl http://localhost:10400/health
 ```
 
 #### 📝 **Managing Dependencies**
@@ -95,7 +95,7 @@ cp .env.example .env
 docker compose up -d
 
 # 3. Health checks
-curl http://localhost:8000/health  # API
+curl http://localhost:10400/health  # API
 docker compose logs bot            # Bot logs
 docker compose ps                  # Service status
 ```
@@ -146,7 +146,7 @@ Copy `.env.example` to `.env` and configure:
 ### Running in Development Mode
 ```bash
 # Start API with auto-reload
-poetry run uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 10400
 
 # Start bot with development logging
 ENVIRONMENT=development poetry run python -m apps.bot.run_bot
@@ -214,7 +214,7 @@ docker compose logs -f api
 docker compose logs -f bot
 
 # Health monitoring
-curl http://localhost:8000/health
+curl http://localhost:10400/health
 ```
 
 ### Kubernetes (Production)

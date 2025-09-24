@@ -15,7 +15,7 @@ import {
     Image as PngIcon,
     ExpandMore as ExpandIcon
 } from '@mui/icons-material';
-import { dataServiceFactory } from '../../services/dataService.js';
+import { analyticsService } from '../../services/analyticsService.js';
 import { useDataSource } from '../../hooks/useDataSource.js';
 
 /**

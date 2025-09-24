@@ -45,7 +45,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':8000');
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':11400');
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
         signal: controller.signal
@@ -89,17 +89,12 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   };
 
-  // Auto-fallback to mock if API is offline and user tries to use real API
+  // No auto-fallback to mock - user should sign in to demo account for mock data
   useEffect(() => {
     if (useRealAPI && apiStatus === 'offline') {
-      // Show notification and auto-switch to mock
-      setTimeout(() => {
-        setUseRealAPI(false);
-        localStorage.setItem('useRealAPI', 'false');
-        if (onDataSourceChange) {
-          onDataSourceChange('mock');
-        }
-      }, 3000);
+      // Show notification but don't auto-switch - user should sign in to demo account
+      console.info('API is offline - user should sign in to demo account for mock data');
+      // No automatic switching to preserve backend demo authentication security
     }
   }, [apiStatus, useRealAPI, onDataSourceChange]);
 

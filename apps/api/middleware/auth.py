@@ -11,7 +11,8 @@ from typing import Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from core.security_engine import SecurityManager, get_security_manager
+from core.security_engine import SecurityManager, get_security_manager, get_rbac_manager
+from core.security_engine.auth_utils import auth_utils, AuthError, security_scheme
 from core.security_engine.rbac import RBACManager, Permission
 from core.security_engine.models import User, UserRole
 from core.repositories.interfaces import UserRepository, ChannelRepository
@@ -21,20 +22,11 @@ from apps.shared.di import container
 
 logger = logging.getLogger(__name__)
 
-# Security dependencies
-security = HTTPBearer()
-security_manager = SecurityManager()
-rbac_manager = RBACManager()
+# Security dependencies - now using centralized container
+# HTTPBearer scheme is now imported from auth_utils to avoid duplication
 
-
-def get_security_manager() -> SecurityManager:
-    """Get SecurityManager instance"""
-    return security_manager
-
-
-def get_rbac_manager() -> RBACManager:
-    """Get RBACManager instance"""
-    return rbac_manager
+# These functions now delegate to the centralized container and auth_utils
+# No more local SecurityManager instances or redundant JWT logic!
 
 
 async def get_user_repository() -> UserRepository:
@@ -64,56 +56,39 @@ async def get_channel_repository() -> ChannelRepository:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     user_repo: UserRepository = Depends(get_user_repository)
 ) -> dict[str, Any]:
     """
     Extract and validate current user from JWT token
     
+    SIMPLIFIED: Now uses centralized auth_utils instead of duplicate JWT logic
+    
     Args:
-        credentials: HTTP Bearer token
-        user_repo: User repository for database access
+        credentials: HTTP Bearer credentials
+        user_repo: Database user repository
         
     Returns:
-        User dictionary with user information
+        User dictionary from database
         
     Raises:
         HTTPException: If token is invalid or user not found
     """
     try:
-        # Verify JWT token using SecurityManager
-        payload = get_security_manager().verify_token(credentials.credentials)
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            logger.warning("JWT token missing user ID")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token: missing user ID",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        
-        # Get user from database
-        user = await user_repo.get_user_by_id(int(user_id))
-        if not user:
-            logger.warning(f"User not found for ID: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        
-        logger.info(f"Authenticated user: {user.get('username', user_id)}")
+        # Use centralized auth utilities - eliminates duplicate JWT verification
+        user = await auth_utils.get_user_from_token(credentials, user_repo)
+        logger.info(f"Authenticated user: {user.get('username', user.get('id'))}")
         return user
         
-    except HTTPException:
-        raise
+    except AuthError as e:
+        # AuthError already has proper HTTP status and headers
+        logger.warning(f"Authentication failed: {e.detail}")
+        raise e
     except Exception as e:
-        logger.error(f"Authentication error: {str(e)}")
+        logger.error(f"Unexpected authentication error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"}
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service error"
         )
 
 

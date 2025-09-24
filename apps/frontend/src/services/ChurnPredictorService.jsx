@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -20,7 +20,8 @@ import {
     Switch,
     FormControlLabel,
     Card,
-    CardContent
+    CardContent,
+    CircularProgress
 } from '@mui/material';
 import {
     PersonRemove as ChurnIcon,
@@ -33,14 +34,7 @@ import {
 } from '@mui/icons-material';
 import ModernCard, { ModernCardHeader } from '../components/common/ModernCard.jsx';
 import { SEMANTIC_SPACING } from '../theme/spacingSystem.js';
-
-// Import centralized mock data
-import { 
-    churnPredictorStats, 
-    mockChurnPredictions, 
-    retentionStrategies, 
-    riskSegments 
-} from '../__mocks__/aiServices/churnPredictor.js';
+import { apiClient } from '../api/client.js';
 
 /**
  * Churn Predictor Service Page
@@ -49,13 +43,42 @@ import {
 const ChurnPredictorService = () => {
     const [currentTab, setCurrentTab] = useState(0);
     const [riskThreshold, setRiskThreshold] = useState('medium');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [autoMonitoring, setAutoMonitoring] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    
+    // Real data state
+    const [stats, setStats] = useState(null);
+    const [riskUsers, setRiskUsers] = useState([]);
+    const [strategies, setStrategies] = useState([]);
 
-    // Use centralized mock data
-    const serviceStats = churnPredictorStats;
-    const riskUsers = mockChurnPredictions;
-    const strategies = retentionStrategies;
+    // Load real churn prediction data
+    useEffect(() => {
+        const loadChurnData = async () => {
+            setLoading(true);
+            setError(null);
+            
+            try {
+                // Real API calls would go here
+                const [statsResponse, usersResponse, strategiesResponse] = await Promise.all([
+                    apiClient.get('/ai/churn/stats'),
+                    apiClient.get('/ai/churn/predictions'),
+                    apiClient.get('/ai/churn/strategies')
+                ]);
+                
+                setStats(statsResponse.data);
+                setRiskUsers(usersResponse.data);
+                setStrategies(strategiesResponse.data);
+            } catch (err) {
+                setError('Failed to load churn prediction data');
+                console.error('Churn data loading error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadChurnData();
+    }, []);
 
     const getRiskColor = (level) => {
         switch (level) {
@@ -85,6 +108,30 @@ const ChurnPredictorService = () => {
             {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
         </div>
     );
+
+    // Show loading state
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                <CircularProgress />
+                <Typography sx={{ ml: 2 }}>Loading churn prediction data...</Typography>
+            </Box>
+        );
+    }
+
+    // Show error state  
+    if (error) {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+                <Button variant="contained" onClick={() => window.location.reload()}>
+                    Retry
+                </Button>
+            </Box>
+        );
+    }
 
     return (
         <Box>
@@ -116,7 +163,7 @@ const ChurnPredictorService = () => {
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
-                                {serviceStats.churnRate}
+                                {stats?.churnRate || 'N/A'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Current Churn Rate
@@ -131,7 +178,7 @@ const ChurnPredictorService = () => {
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
-                                {serviceStats.highRiskUsers}
+                                {stats?.highRiskUsers || 'N/A'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Users at Risk
@@ -146,7 +193,7 @@ const ChurnPredictorService = () => {
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
-                                {serviceStats.savedCustomers}
+                                {stats?.savedCustomers || 'N/A'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Customers Saved
@@ -213,9 +260,9 @@ const ChurnPredictorService = () => {
                         )}
 
                         <List>
-                            {riskUsers.map((user) => (
+                            {riskUsers && riskUsers.length > 0 ? riskUsers.map((user) => (
                                 <ListItem 
-                                    key={user.id}
+                                    key={user.userId || user.id}
                                     sx={{ 
                                         border: 1, 
                                         borderColor: 'divider', 
@@ -250,7 +297,7 @@ const ChurnPredictorService = () => {
                                             <strong>Risk Factors:</strong>
                                         </Typography>
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                            {user.factors.map((factor, index) => (
+                                            {(user.factors || []).map((factor, index) => (
                                                 <Chip 
                                                     key={index}
                                                     label={factor}
@@ -261,7 +308,13 @@ const ChurnPredictorService = () => {
                                         </Box>
                                     </Box>
                                 </ListItem>
-                            ))}
+                            )) : (
+                                <ListItem>
+                                    <Typography variant="body2" color="text.secondary">
+                                        No risk users data available. Please check your connection or try again later.
+                                    </Typography>
+                                </ListItem>
+                            )}
                         </List>
                     </CardContent>
                 </TabPanel>
@@ -274,7 +327,7 @@ const ChurnPredictorService = () => {
                         </Typography>
                         
                         <Grid container spacing={3}>
-                            {retentionStrategies.map((strategy, index) => (
+                            {strategies && strategies.length > 0 ? strategies.map((strategy, index) => (
                                 <Grid item xs={12} md={6} key={index}>
                                     <Card sx={{ p: 3, height: '100%' }}>
                                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -310,7 +363,13 @@ const ChurnPredictorService = () => {
                                         </Button>
                                     </Card>
                                 </Grid>
-                            ))}
+                            )) : (
+                                <Grid item xs={12}>
+                                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                                        No retention strategies available. Please check your connection or try again later.
+                                    </Typography>
+                                </Grid>
+                            )}
                         </Grid>
                     </CardContent>
                 </TabPanel>

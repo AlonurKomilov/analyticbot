@@ -10,7 +10,7 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsClient
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -53,10 +53,10 @@ class QuickAnalyticsResponse(BaseModel):
 
 
 # Dependency injection
-def get_analytics_client() -> AnalyticsV2Client:
+def get_analytics_client() -> AnalyticsClient:
     """Get analytics client instance"""
     from config.settings import settings
-    return AnalyticsV2Client(base_url=settings.API_HOST_URL)
+    return AnalyticsClient(base_url=settings.API_HOST_URL)
 
 
 def compress_analytics_data(full_data: Dict, widget_type: str = "dashboard") -> Dict:
@@ -100,7 +100,7 @@ async def get_mobile_dashboard(
     user_id: int,
     channel_id: str = Query(..., description="Channel to analyze"),
     period: int = Query(default=7, ge=1, le=30, description="Analysis period in days"),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
 ):
     """Get optimized dashboard data for mobile apps"""
     try:
@@ -154,7 +154,7 @@ async def get_mobile_dashboard(
 @router.post("/analytics/quick", response_model=QuickAnalyticsResponse)
 async def get_quick_analytics(
     request: QuickAnalyticsRequest,
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
 ):
     """Fast analytics for mobile widgets and notifications"""
     try:
@@ -200,7 +200,7 @@ async def get_quick_analytics(
 async def get_metrics_summary(
     channel_id: str,
     format: str = Query(default="compact", regex="^(compact|widget|notification)$"),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
 ):
     """Get metrics summary in various mobile-optimized formats"""
     try:
@@ -235,18 +235,5 @@ async def get_metrics_summary(
         logger.error(f"Error fetching metrics summary: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch metrics summary")
 
-
-@router.get("/health")
-async def mobile_api_health():
-    """Health check for mobile API"""
-    return {
-        "status": "healthy",
-        "timestamp": datetime.utcnow(),
-        "version": "1.0.0",
-        "features": [
-            "dashboard_data",
-            "quick_analytics", 
-            "metrics_summary",
-            "offline_support"
-        ]
-    }
+# NOTE: Health endpoint moved to health_system_router.py for consolidation
+# Mobile API health is now monitored at /health/services

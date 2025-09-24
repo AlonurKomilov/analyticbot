@@ -29,7 +29,7 @@
   },
 
   // Foydali portlar (ixtiyoriy): API, Postgres, Redis
-  "forwardPorts": [8000, 5432, 6379],
+  "forwardPorts": [10400, 5432, 6379],
 
   // Docker ma'lumotlarini konteyner ichida saqlash uchun nomli volume (rebuildlarda saqlanadi)
   "mounts": [

@@ -31,7 +31,7 @@ import {
     Error as ErrorIcon,
     Info as InfoIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../utils/apiClient';
+import { apiClient } from '../../api/client.js';
 
 const TheftDetection = () => {
     const [contentHash, setContentHash] = useState('');

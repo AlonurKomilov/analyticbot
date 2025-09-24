@@ -134,7 +134,7 @@ def process_conflicts():
                 "index.html",
                 "*.yaml",
                 "*.yml",
-                "payment_routes.py",
+                "payment_router.py",
             ]
 
             is_important = any(

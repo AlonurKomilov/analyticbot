@@ -337,7 +337,7 @@ async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
 # Cleanup function
 
 
-async def cleanup_analytics_v2():
+async def cleanup_analytics():
     """Cleanup function for graceful shutdown"""
     global _analytics_fusion_service, _cache_adapter
 

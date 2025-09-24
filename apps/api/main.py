@@ -12,16 +12,24 @@ from fastapi import Depends, FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
-from apps.api.routers.analytics_router import router as analytics_router
-from apps.api.routers.analytics_v2 import router as analytics_v2_router
-from apps.api.routers.analytics_advanced import router as analytics_advanced_router
+# ✅ NEW MICROROUTER ARCHITECTURE
+# analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
+# from apps.api.routers.analytics_microrouter import router as analytics_router  # REMOVED - merged into analytics_core_router
+from apps.api.routers.channels_microrouter import router as channels_router
+from apps.api.routers.admin_microrouter import router as admin_router
+from apps.api.routers.core_microrouter import router as core_router
+from apps.api.routers.health_system_router import router as health_system_router
+# Legacy routers (keeping for compatibility during transition)
+# DEPRECATED ROUTERS REMOVED - cleanup
+# from apps.api.routers.analytics_v2 import router as analytics_v2_router  # REMOVED - superseded by analytics_core_router  
+# from apps.api.routers.analytics_advanced import router as analytics_advanced_router  # REMOVED - superseded by realtime + alerts routers
 from apps.api.routers.exports_v2 import router as exports_v2_router
 from apps.api.routers.share_v2 import router as share_v2_router
 from apps.api.routers.mobile_api import router as mobile_api_router
 from apps.api.routers.auth_router import router as auth_router
-from apps.api.superadmin_routes import router as superadmin_router
-from apps.bot.api.content_protection_routes import router as content_protection_router
-from apps.bot.api.payment_routes import router as payment_router
+from apps.api.routers.superadmin_router import router as superadmin_router
+from apps.bot.api.content_protection_router import router as content_protection_router
+from apps.bot.api.payment_router import router as payment_router
 from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, ScheduledPost
 from config import settings
 from core import DeliveryService, ScheduleService
@@ -167,311 +175,80 @@ app.add_middleware(
 
 # Add demo mode detection middleware
 from apps.api.middleware.demo_mode import DemoModeMiddleware
+from core.di_container import container, configure_services
 app.add_middleware(DemoModeMiddleware)
 
-# Include routers
-app.include_router(analytics_router)
-app.include_router(analytics_v2_router)  # New Analytics Fusion API v2
-app.include_router(analytics_advanced_router)  # Advanced Analytics with Alerts
-app.include_router(exports_v2_router)  # Export functionality
-app.include_router(share_v2_router)  # Share functionality
-app.include_router(mobile_api_router)  # Mobile-optimized API endpoints
-app.include_router(content_protection_router)
-app.include_router(auth_router)  # Authentication endpoints
-app.include_router(superadmin_router)
-app.include_router(payment_router)  # Payment system
+# ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
+app.include_router(core_router)          # Core system operations (performance, scheduling) 
+app.include_router(health_system_router) # Comprehensive health monitoring (consolidated)
+# app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
+app.include_router(channels_router)      # Channel management (CRUD)
+app.include_router(admin_router)         # Administrative operations
+
+# ✅ PHASE 3: NEW ANALYTICS DOMAIN ARCHITECTURE
+from apps.api.routers.analytics_core_router import router as analytics_core_router
+from apps.api.routers.analytics_realtime_router import router as analytics_realtime_router  
+from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
+from apps.api.routers.analytics_insights_router import router as analytics_insights_router
+from apps.api.routers.analytics_predictive_router import router as analytics_predictive_router
+from apps.api.routers.demo_router import router as demo_router
+
+app.include_router(analytics_core_router)     # Core analytics functionality (dashboard, metrics, overview, trends, refresh)
+app.include_router(analytics_realtime_router) # Real-time analytics and live monitoring
+app.include_router(analytics_alerts_router)   # Alert management and notifications
+app.include_router(analytics_insights_router) # Advanced insights, reports, and system analysis
+app.include_router(analytics_predictive_router) # AI/ML predictions, forecasting, and advanced data analysis
+app.include_router(demo_router)               # Consolidated demo/mock data endpoints
+
+# 🚨 PHASE 3B: ANALYTICS CONSOLIDATION COMPLETE ✅
+# ALL legacy analytics routers successfully consolidated into clean 5-router architecture:
+# - analytics_v2_router         → MIGRATED to analytics_core_router + analytics_insights_router (ARCHIVED)
+# - analytics_advanced_router   → SUPERSEDED by analytics_realtime_router + analytics_alerts_router (ARCHIVED)
+# - analytics_microrouter        → SPLIT into analytics_core_router + analytics_predictive_router (ARCHIVED)
+# - analytics_unified_router    → MIGRATED to analytics_insights_router (ARCHIVED)
+# 
+# Current Clean Architecture: 5 Domain-Separated Analytics Routers
+# 1. Core: Dashboard, metrics, overview, trends, top-posts, sources, refresh
+# 2. Realtime: Live metrics, performance scoring, monitoring, recommendations
+# 3. Alerts: Thresholds, notifications, alert management, monitoring
+# 4. Insights: Advanced reports, capabilities, comparisons, channel-data, performance-metrics, trends
+# 5. Predictive: AI/ML insights, forecasting, advanced analysis, predictions
+# app.include_router(analytics_v2_router)      # ❌ REMOVED: Use /analytics/core/* + /analytics/insights/* instead
+# app.include_router(analytics_advanced_router) # ❌ REMOVED: Use /analytics/realtime/* + /analytics/alerts/* instead
+# ✅ KEEP THESE ROUTERS (No duplicates, still needed)
+# ❌ REMOVED: clean_analytics_router - endpoints migrated to proper domain routers (Sept 24, 2025)
+app.include_router(exports_v2_router)         # Export functionality (unique)
+app.include_router(share_v2_router)           # Share functionality (unique)  
+app.include_router(mobile_api_router)         # Mobile-optimized endpoints (unique)
+app.include_router(content_protection_router) # Content protection (unique)
+app.include_router(auth_router)               # Authentication (unique)
+app.include_router(superadmin_router)         # Super admin operations (unique)
+app.include_router(payment_router)            # Payment system (unique)
 
 # Include AI services router
 from apps.api.routers.ai_services import router as ai_services_router
 app.include_router(ai_services_router)
 
-# Include unified analytics router (best of both worlds)
-from apps.api.routers.analytics_unified import router as unified_analytics_router
-app.include_router(unified_analytics_router)
+# PHASE 3B COMPLETE: All legacy analytics routers successfully migrated and archived
+# ✅ ALL CORE ENDPOINTS MOVED TO MICROROUTERS
+# 
+# The following endpoints have been moved to their respective microrouters:
+# - /health, /performance, /initial-data → core_microrouter.py
+# - /schedule endpoints → core_microrouter.py  
+# - /delivery/stats → core_microrouter.py
+# 
+# This follows Clean Architecture principles with proper domain separation.
 
 
-@app.get("/health", tags=["Core"], summary="System Health Check")
-async def health():
-    """
-    ## 🏥 System Health Status
+# Initialize DI Container immediately
+try:
+    configure_services(container, settings.demo_mode)
+    logger.info("✅ DI Container initialized successfully")
     
-    Enhanced health check providing system status, environment info, API readiness, and dependency health.
+    # Log service configuration
+    services = container.get_registered_services()
+    logger.info(f"📋 Registered services: {services}")
     
-    **Returns:**
-    - System status (ok/error)
-    - Environment information
-    - Debug mode status
-    - API version
-    - Database health
-    - Dependency status
-    """
-    from infra.db.connection_manager import check_db_health
-    db_health = await check_db_health()
-    status = "ok" if db_health.get("healthy", False) else "error"
-    dependencies = {
-        "database": db_health,
-        # Add more dependencies here (e.g., cache, external APIs)
-    }
-    return {
-        "status": status,
-        "environment": settings.ENVIRONMENT,
-        "debug": settings.DEBUG,
-        "version": "2.1.0",
-        "api_title": "AnalyticBot Enterprise API",
-        "timestamp": datetime.now().isoformat(),
-        "dependencies": dependencies
-    }
-
-
-@app.get("/performance", tags=["Core"], summary="Performance Metrics")
-async def get_performance_metrics():
-    """
-    ## ⚡ Real-Time Performance Metrics
-    
-    Comprehensive performance monitoring including cache hit rates, response times, and system metrics.
-    
-    **Metrics Include:**
-    - 📊 Cache performance statistics
-    - ⏱️ Average response times
-    - 💾 Memory usage patterns
-    - 🔄 Request throughput metrics
-    """
-    try:
-        from apps.bot.database.performance import performance_manager
-        
-        # Get performance stats if available
-        if hasattr(performance_manager, 'get_performance_stats'):
-            stats = await performance_manager.get_performance_stats()
-        else:
-            stats = {"cache_connected": False, "performance_optimizations": "enabled"}
-        
-        return {
-            "api_performance": {
-                "status": "optimized",
-                "cache_enabled": True,
-                "compression_enabled": True,
-                "security_middleware": True
-            },
-            "system_stats": stats,
-            "optimization_features": [
-                "Intelligent caching with Redis",
-                "GZip compression middleware", 
-                "Performance timing decorators",
-                "Advanced cache decorators",
-                "Database connection pooling"
-            ],
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        logger.warning(f"Performance metrics unavailable: {e}")
-        return {
-            "api_performance": {
-                "status": "baseline",
-                "optimization_features": ["Professional endpoint structure", "Enhanced documentation"]
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-
-
-@app.get("/initial-data", response_model=InitialDataResponse, tags=["Core"], summary="Application Startup Data")
-async def get_initial_data(
-    current_user_id: int = Depends(get_current_user_id),
-):
-    """
-    ## 🚀 Initialize Application State
-    
-    Fetches essential data required for application startup including user profile, 
-    subscription details, managed channels, and scheduled content.
-    
-    **Authentication Required:** JWT token via Authorization header
-    
-    **Returns:**
-    - **User Profile**: ID, username, and basic account info
-    - **Subscription Plan**: Current plan limits and features  
-    - **Managed Channels**: List of accessible Telegram channels
-    - **Scheduled Posts**: Upcoming scheduled content
-    
-    **Used by:** Frontend applications, mobile TWA, and dashboard initialization
-    """
-    try:
-        # Check if this is a demo user by ID
-        from apps.api.__mocks__.auth.mock_users import is_demo_user_by_id, get_demo_user_type_by_id
-        
-        if is_demo_user_by_id(str(current_user_id)):
-            demo_type = get_demo_user_type_by_id(str(current_user_id))
-            demo_data = demo_data_service.get_initial_data(demo_type)
-            
-            return InitialDataResponse(
-                user=User(
-                    id=demo_data["user"]["id"],
-                    username=demo_data["user"]["username"]
-                ),
-                plan=Plan(
-                    name=demo_data["plan"]["name"],
-                    max_channels=demo_data["plan"]["max_channels"],
-                    max_posts_per_month=demo_data["plan"]["max_posts_per_month"]
-                ),
-                channels=[
-                    Channel(
-                        id=channel["id"],
-                        title=channel["title"],
-                        username=channel["username"]
-                    ) for channel in demo_data["channels"]
-                ],
-                scheduled_posts=[
-                    ScheduledPost(
-                        id=post["id"],
-                        channel_id=post["channel_id"],
-                        scheduled_at=datetime.fromisoformat(post["scheduled_at"]),
-                        text=post["text"]
-                    ) for post in demo_data["scheduled_posts"]
-                ]
-            )
-        
-        # For regular users, fetch data from actual repositories
-        # TODO: Replace with actual user repository implementation
-        try:
-            # Attempt to get user data from database
-            # user = await user_repository.get_by_id(current_user_id)
-            # plan = await subscription_service.get_user_plan(current_user_id)
-            # channels = await channel_repository.get_user_channels(current_user_id)
-            # scheduled_posts = await schedule_service.get_user_scheduled_posts(current_user_id)
-            
-            # Temporary fallback until repositories are implemented
-            user = User(
-                id=current_user_id,
-                username="user"
-            )
-            
-            plan = Plan(
-                name="Free",
-                max_channels=3,
-                max_posts_per_month=100
-            )
-            
-            channels = []  # No channels until user creates them
-            scheduled_posts = []  # No scheduled posts until user creates them
-            
-            return InitialDataResponse(
-                user=user,
-                plan=plan,
-                channels=channels,
-                scheduled_posts=scheduled_posts
-            )
-            
-        except Exception as e:
-            logger.error(f"Error fetching user data for user {current_user_id}: {e}")
-            # Return minimal data structure - no mock data fallback
-            return InitialDataResponse(
-                user=User(id=current_user_id, username="user"),
-                plan=Plan(name="Free", max_channels=3, max_posts_per_month=100),
-                channels=[],
-                scheduled_posts=[]
-            )
-    
-    except Exception as e:
-        logger.error(f"Error fetching initial data: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch initial data")
-
-
-# Schedule endpoints using dependency injection
-@app.post("/schedule", response_model=dict)
-async def create_scheduled_post(
-    title: str,
-    content: str,
-    channel_id: str,
-    user_id: str,
-    scheduled_at: datetime,
-    tags: list[str] | None = None,
-    schedule_service: ScheduleService = Depends(get_schedule_service),
-):
-    """Create a new scheduled post"""
-    try:
-        post = await schedule_service.create_scheduled_post(
-            title=title,
-            content=content,
-            channel_id=channel_id,
-            user_id=user_id,
-            scheduled_at=scheduled_at,
-            tags=tags,
-        )
-
-        return {
-            "id": str(post.id),
-            "title": post.title,
-            "scheduled_at": post.scheduled_at.isoformat(),
-            "status": post.status.value,
-        }
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/schedule/{post_id}")
-async def get_scheduled_post(
-    post_id: UUID, schedule_service: ScheduleService = Depends(get_schedule_service)
-):
-    """Get a scheduled post by ID"""
-    post = await schedule_service.get_post(post_id)
-
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-
-    return {
-        "id": str(post.id),
-        "title": post.title,
-        "content": post.content,
-        "channel_id": post.channel_id,
-        "user_id": post.user_id,
-        "scheduled_at": post.scheduled_at.isoformat(),
-        "status": post.status.value,
-        "tags": post.tags,
-        "created_at": post.created_at.isoformat(),
-    }
-
-
-@app.get("/schedule/user/{user_id}")
-async def get_user_posts(
-    user_id: str,
-    limit: int = 50,
-    offset: int = 0,
-    schedule_service: ScheduleService = Depends(get_schedule_service),
-):
-    """Get all scheduled posts for a user"""
-    posts = await schedule_service.get_user_posts(user_id=user_id, limit=limit, offset=offset)
-
-    return {
-        "posts": [
-            {
-                "id": str(post.id),
-                "title": post.title,
-                "scheduled_at": post.scheduled_at.isoformat(),
-                "status": post.status.value,
-            }
-            for post in posts
-        ],
-        "total": len(posts),
-    }
-
-
-@app.delete("/schedule/{post_id}")
-async def cancel_scheduled_post(
-    post_id: UUID, schedule_service: ScheduleService = Depends(get_schedule_service)
-):
-    """Cancel a scheduled post"""
-    try:
-        success = await schedule_service.cancel_post(post_id)
-        if success:
-            return {"message": "Post cancelled successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="Post not found")
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.get("/delivery/stats")
-async def get_delivery_stats(
-    channel_id: str | None = None, delivery_service: DeliveryService = Depends(get_delivery_service)
-):
-    """Get delivery statistics"""
-    stats = await delivery_service.get_delivery_stats(channel_id=channel_id)
-    return stats
+except Exception as e:
+    logger.error(f"❌ Failed to initialize DI container: {e}")
+    # Continue without DI container for now

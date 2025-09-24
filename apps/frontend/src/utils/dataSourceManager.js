@@ -79,7 +79,7 @@ class DataSourceManager {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
                                 import.meta.env.VITE_API_URL || 
-                                'http://localhost:11400';
+                                'https://84dp9jc9-11400.euw.devtunnels.ms';
             
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -107,9 +107,11 @@ class DataSourceManager {
                 });
             }
             
-            // If API went offline and user is using API, auto-switch to mock
+            // No auto-switch - let user decide through proper demo login
             if (statusChanged && newStatus === 'offline' && this.isUsingRealAPI()) {
-                this.setDataSource('mock', 'api_unavailable');
+                console.info('API unavailable - user should sign in to demo account for mock data');
+                // Emit event but don't auto-switch
+                this.emit('apiStatusChanged', { status: newStatus, suggestion: 'demo_login' });
             }
             
             return newStatus;
@@ -118,9 +120,10 @@ class DataSourceManager {
             this.apiStatus = 'offline';
             this.lastApiCheck = Date.now();
             
-            // Auto-switch to mock if currently using API
+            // No auto-switch - suggest demo login instead
             if (this.isUsingRealAPI()) {
-                this.setDataSource('mock', 'api_connection_failed');
+                console.info('API connection failed - user should sign in to demo account for mock data');
+                this.emit('apiConnectionFailed', { suggestion: 'demo_login' });
             }
             
             return 'offline';
@@ -162,9 +165,15 @@ class DataSourceManager {
         });
     }
     
-    // Convenience methods
+    // Convenience methods - DEPRECATED: No longer allow switching to frontend mock
     async switchToMock(reason = 'user_choice') {
-        return this.setDataSource('mock', reason);
+        console.warn('switchToMock is deprecated - user should sign in to demo account for mock data');
+        
+        // Redirect to demo login instead of switching to frontend mock
+        const demoLoginUrl = `/login?demo=true&redirect=${encodeURIComponent(window.location.pathname)}`;
+        window.location.href = demoLoginUrl;
+        
+        return false; // No switch occurred
     }
     
     async switchToApi(reason = 'user_choice') {
@@ -189,9 +198,10 @@ class DataSourceManager {
         // Check API status on startup
         await this.checkApiStatus(true);
         
-        // Auto-switch to mock if API is offline and user prefers API
+        // No auto-switch during initialization - maintain user preference
         if (this.isUsingRealAPI() && this.apiStatus === 'offline') {
-            this.setDataSource('mock', 'auto_initialization');
+            console.info('API offline during initialization - user should sign in to demo account for mock data');
+            this.emit('initializationApiOffline', { suggestion: 'demo_login' });
         }
         
         return {

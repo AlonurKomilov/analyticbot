@@ -60,22 +60,40 @@ class DataSourceHealth(BaseModel):
     capabilities: Dict[str, List[str]]
 
 
-@router.get("/health", response_model=DataSourceHealth)
-async def unified_health_check():
-    """Health check for both analytics systems with proper V2 testing"""
+# NOTE: Health endpoint moved to health_system_router.py for consolidation
+# This unified analytics router is being phased out
+
+@router.get("/capabilities", response_model=DataSourceHealth)
+async def get_data_source_capabilities():
+    """Check capabilities and health of both analytics data sources"""
+    logger.info("Checking data source capabilities...")
     
-    v1_status = "healthy"  # V1 is always available with demo data
+    # Check V1 (telegram-based) analytics
+    v1_status = "healthy"
     
-    # Test V2 status by actually checking the analytics fusion service
-    v2_status = "degraded"
     try:
-        from apps.api.di_analytics_v2 import get_analytics_fusion_service
+        # Quick health check - ensure core analytics service is accessible
+        from core.services.analytics.analytics_service import AnalyticsService
+        from core.di_container import get_container
         
+        container = get_container()
+        v1_analytics = container.analytics_service()
+        # If service instantiates without error, it's working
+        logger.info("V1 analytics service accessible")
+        
+    except Exception as e:
+        logger.warning(f"V1 analytics check failed: {e}")
+        v1_status = "degraded"
+    
+    # Check V2 (database-backed) analytics
+    v2_status = "degraded"  # Default to degraded
+    
+    try:
         # Try to initialize the V2 service
         v2_service = await get_analytics_fusion_service()
         if v2_service:
             # Test if we can actually query the database
-            from apps.api.di_analytics_v2 import get_database_pool
+            from apps.api.di_analytics import get_database_pool
             pool = await get_database_pool()
             
             if pool:
@@ -414,3 +432,110 @@ async def get_v2_data_when_available(endpoint: str, **params):
     except Exception as e:
         logger.warning(f"V2 endpoint {endpoint} not available: {e}")
         return None
+
+
+# Demo/Mock API endpoints - Single source of truth for frontend mock data
+@router.get("/demo/post-dynamics")
+async def get_demo_post_dynamics(
+    channel_id: int = Query(default=1),
+    hours: int = Query(default=24, ge=1, le=168)
+):
+    """Demo endpoint: Get mock post dynamics data from backend"""
+    try:
+        dynamics = generate_post_dynamics(hours)
+        return {
+            "success": True,
+            "data": {
+                "channel_id": channel_id,
+                "time_range": f"{hours} hours",
+                "dynamics": dynamics,
+                "source": "backend_mock",
+                "generated_at": datetime.utcnow()
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error generating demo post dynamics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo post dynamics"
+        )
+
+
+@router.get("/demo/top-posts")
+async def get_demo_top_posts(
+    channel_id: int = Query(default=1),
+    limit: int = Query(default=10, ge=1, le=100),
+    period: str = Query(default="today"),
+    sort_by: str = Query(default="views")
+):
+    """Demo endpoint: Get mock top posts data from backend"""
+    try:
+        posts = generate_top_posts(limit)
+        return {
+            "success": True,
+            "data": {
+                "channel_id": channel_id,
+                "posts": posts,
+                "total_count": len(posts),
+                "period": period,
+                "sort_by": sort_by,
+                "source": "backend_mock",
+                "generated_at": datetime.utcnow()
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error generating demo top posts: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo top posts"
+        )
+
+
+@router.get("/demo/best-time")
+async def get_demo_best_time(
+    channel_id: int = Query(default=1),
+    timeframe: str = Query(default="week")
+):
+    """Demo endpoint: Get mock best time recommendations from backend"""
+    try:
+        recommendations = generate_best_time_recommendations()
+        return {
+            "success": True,
+            "data": {
+                "channel_id": channel_id,
+                "timeframe": timeframe,
+                **recommendations,
+                "source": "backend_mock",
+                "generated_at": datetime.utcnow()
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error generating demo best time recommendations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo best time recommendations"
+        )
+
+
+@router.get("/demo/ai-recommendations")
+async def get_demo_ai_recommendations(
+    channel_id: int = Query(default=1)
+):
+    """Demo endpoint: Get mock AI recommendations from backend"""
+    try:
+        recommendations = generate_ai_recommendations()
+        return {
+            "success": True,
+            "data": {
+                "channel_id": channel_id,
+                "recommendations": recommendations,
+                "source": "backend_mock",
+                "generated_at": datetime.utcnow()
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error generating demo AI recommendations: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate demo AI recommendations"
+        )

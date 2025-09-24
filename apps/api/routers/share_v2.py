@@ -17,7 +17,7 @@ from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
 )
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsClient
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
 from infra.db.repositories.shared_reports_repository import (
@@ -53,9 +53,9 @@ class SharedReportResponse(BaseModel):
     data: dict[str, Any] | None = None
 
 
-def get_analytics_client() -> AnalyticsV2Client:
+def get_analytics_client() -> AnalyticsClient:
     """Get analytics client instance"""
-    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
+    return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_shared_reports_repository() -> SharedReportsRepository:
@@ -96,7 +96,7 @@ async def create_share_link(
     format: str = Query(default="csv", regex="^(csv|png)$"),
     ttl_hours: int = Query(default=24, ge=1, le=168),  # Max 1 week
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     _: None = Depends(check_share_enabled),
     __: None = Depends(check_creation_rate_limit),
 ) -> ShareLinkResponse:
@@ -113,7 +113,7 @@ async def create_share_link(
         # Verify data exists
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            # Note: AnalyticsV2Client manages session internally
+            # Note: AnalyticsClient manages session internally
             data = None  # Initialize data variable
 
             if report_type == "overview":
@@ -169,7 +169,7 @@ async def access_shared_report(
     share_token: str,
     request: Request,
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
-    analytics_client: AnalyticsV2Client = Depends(get_analytics_client),
+    analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
     chart_renderer: ChartRenderer | None = Depends(get_chart_renderer),
     _: None = Depends(check_share_enabled),
@@ -199,7 +199,7 @@ async def access_shared_report(
 
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            # Note: AnalyticsV2Client manages session internally
+            # Note: AnalyticsClient manages session internally
             data = None  # Initialize data variable
 
             if report_type == "overview":

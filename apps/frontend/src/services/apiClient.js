@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // Create base API client
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:11400',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://84dp9jc9-11400.euw.devtunnels.ms',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -44,12 +44,7 @@ apiClient.interceptors.response.use(
           // Unauthorized - clear tokens and redirect to login
           localStorage.removeItem('authToken');
           sessionStorage.removeItem('authToken');
-          // Don't auto-redirect in demo mode, let user choose
-          const isDemoEnvironment = window.location.hostname.includes('demo') || 
-                                   window.location.search.includes('demo=true');
-          if (!isDemoEnvironment) {
-            window.location.href = '/login';
-          }
+          window.location.href = '/login';
           break;
         case 403:
           // Forbidden
@@ -87,6 +82,31 @@ apiClient.interceptors.response.use(
     }
   }
 );
+
+// Add file upload method
+apiClient.uploadFileDirect = async (file, onProgress = null) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await apiClient.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: (progressEvent) => {
+        if (onProgress && progressEvent.total) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          onProgress(percentCompleted);
+        }
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('File upload failed:', error);
+    throw error;
+  }
+};
 
 export { apiClient };
 export default apiClient;

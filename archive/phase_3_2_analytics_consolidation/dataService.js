@@ -128,10 +128,10 @@ class DataAdapterFactory {
                 await this.apiAdapter.healthCheck();
                 return this.apiAdapter;
             } catch (error) {
-                this.logger.warn('API adapter failed health check, falling back to mock');
-                // Auto-switch to mock if API fails
-                dataSourceManager.setDataSource('mock', 'api_health_check_failed');
-                return this.mockAdapter;
+                this.logger.warn('API adapter failed health check - maintaining current data source');
+                // No auto-switch - let backend handle demo data through proper authentication
+                // Return API adapter to let it handle the error appropriately
+                return this.apiAdapter;
             }
         }
         

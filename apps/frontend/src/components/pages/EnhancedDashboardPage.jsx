@@ -15,6 +15,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Alert, Tooltip, useTheme, useMediaQuery, Fade } from '@mui/material';
 import { IconButton } from '../common/TouchTargetCompliance.jsx';
+import ErrorBoundary from '../common/ErrorBoundary.jsx';
 import { StatusChip } from '../common';
 import { 
   Refresh as RefreshIcon,
@@ -79,16 +80,16 @@ const EnhancedDashboardPage = () => {
   const [selectedChannel, setSelectedChannel] = useState(null);
   const isLoadingData = isGlobalLoading() || isLoading('fetchData');
   
-  // Use mobile-responsive dashboard for mobile and tablet
-  if (isMobile || isTablet) {
-    return <MobileResponsiveDashboard />;
-  }
-  
   useEffect(() => {
     fetchData();
     // Trigger page load animation
     setTimeout(() => setPageLoaded(true), 100);
   }, [fetchData]);
+
+  // Use mobile-responsive dashboard for mobile and tablet
+  if (isMobile || isTablet) {
+    return <MobileResponsiveDashboard />;
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -140,8 +141,19 @@ const EnhancedDashboardPage = () => {
 
   return (
     <TouchTargetProvider>
-      <Fade in={pageLoaded} timeout={800}>
-        <EnhancedDashboardLayout
+      <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <ErrorBoundary>
+          <Box 
+            sx={{ 
+              height: '100%', 
+              overflow: 'visible',
+              opacity: pageLoaded ? 1 : 0,
+              transition: 'opacity 0.8s ease-in-out',
+              transform: pageLoaded ? 'translateY(0)' : 'translateY(20px)',
+              transitionProperty: 'opacity, transform'
+            }}
+          >
+            <EnhancedDashboardLayout
           // Header Section with Micro-interactions
           header={
             <StaggeredAnimation delay={150}>
@@ -289,8 +301,10 @@ const EnhancedDashboardPage = () => {
             </Typography>
           </Alert>
         }
-        />
-      </Fade>
+            />
+          </Box>
+        </ErrorBoundary>
+      </Box>
     </TouchTargetProvider>
   );
 };

@@ -565,14 +565,20 @@ def get_security_manager() -> SecurityManager:
 
 
 # FastAPI dependency functions
+# DEPRECATED: This function is deprecated. 
+# Use apps.api.middleware.auth.get_current_user instead for full user object
+# or core.security_engine.auth_utils.AuthUtils for token operations
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
 ) -> dict[str, Any]:
     """
-    FastAPI dependency to get current authenticated user
+    DEPRECATED: FastAPI dependency to get current authenticated user
+    
+    This function only returns token payload, not full user from database.
+    Use apps.api.middleware.auth.get_current_user for complete user object.
 
     Returns:
-        User payload from JWT token
+        User payload from JWT token (deprecated - use middleware version)
     """
     token = credentials.credentials
     return get_security_manager().verify_token(token)
@@ -615,8 +621,14 @@ def require_role(required_role: UserRole):
 
 # Export convenience functions
 # Convenience functions - these will initialize SecurityManager when first called
+# DEPRECATED: These wrapper functions are deprecated.
+# Use core.security_engine.auth_utils.AuthUtils or get_security_manager() directly
+
 def create_access_token(*args, **kwargs):
+    """DEPRECATED: Use auth_utils.create_access_token() instead"""
     return get_security_manager().create_access_token(*args, **kwargs)
 
+
 def verify_token(*args, **kwargs):
+    """DEPRECATED: Use auth_utils.verify_jwt_token() instead"""
     return get_security_manager().verify_token(*args, **kwargs)

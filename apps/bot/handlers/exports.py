@@ -12,7 +12,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from apps.api.exports.csv_v2 import CSVExporter
-from apps.bot.clients.analytics_v2_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsClient
 from apps.bot.keyboards.analytics import (
     get_export_format_keyboard,
     get_export_type_keyboard,
@@ -29,9 +29,9 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-def get_analytics_client() -> AnalyticsV2Client:
-    """Get analytics client instance"""
-    return AnalyticsV2Client(settings.ANALYTICS_V2_BASE_URL)
+def get_analytics_client() -> AnalyticsClient:
+    """Get analytics client with bot integration"""
+    return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
 def get_csv_exporter() -> CSVExporter:
@@ -149,7 +149,7 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
 
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
-            # Note: AnalyticsV2Client manages session internally
+            # Note: AnalyticsClient manages session internally
 
             if export_type == "overview":
                 data = await analytics_client.overview(channel_id, period)
@@ -233,7 +233,7 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
-            # Note: AnalyticsV2Client manages session internally
+            # Note: AnalyticsClient manages session internally
 
             if export_type == "growth":
                 data = await analytics_client.growth(channel_id, period)

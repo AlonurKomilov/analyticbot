@@ -10,7 +10,7 @@ from typing import Any
 
 import aiohttp
 
-from apps.bot.clients.analytics_client import AnalyticsV2Client
+from apps.bot.clients.analytics_client import AnalyticsClient
 from config.settings import Settings
 from core.repositories.alert_repository import AlertRepository
 from infra.db.repositories.alert_repository import AsyncPgAlertRepository

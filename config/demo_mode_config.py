@@ -27,7 +27,10 @@ class DemoModeConfig(BaseSettings):
     # CORE DEMO MODE STRATEGY
     # ============================================================================
     DEMO_MODE_STRATEGY: DemoModeStrategy = DemoModeStrategy.EMAIL_BASED
-    DEMO_MODE_ENABLED: bool = True
+    DEMO_MODE_ENABLED: bool = Field(
+        default=False,  # ✅ FIXED: Safe production default - must be explicitly enabled
+        description="Master demo mode toggle - False by default for production safety"
+    )
     FORCE_DEMO_MODE: bool = False  # Override for testing
     
     # ============================================================================

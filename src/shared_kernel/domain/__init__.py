@@ -1,0 +1,3 @@
+"""
+Shared Kernel Domain Layer
+"""

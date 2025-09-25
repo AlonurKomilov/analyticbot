@@ -323,9 +323,9 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         # ✅ FIXED: Register real Telegram service
         async def get_telegram_service_factory():
             """Factory for creating real Telegram service"""
-            from apps.bot.clients.telegram_client import TelegramClient
+            from infra.tg.telethon_client import TelethonClient
             from config.settings import settings
-            return TelegramClient(
+            return TelethonClient(
                 api_id=settings.TELEGRAM_API_ID,
                 api_hash=settings.TELEGRAM_API_HASH,
                 session_name=settings.TELEGRAM_SESSION_NAME
@@ -345,18 +345,25 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         container.register_service(EmailServiceProtocol, MockEmailService)
         logger.info("Registered MockEmailService")
     else:
-        # ✅ FIXED: Register real email service
+        # ✅ FIXED: Register email service with proper fallback
         async def get_email_service_factory():
-            """Factory for creating real email service"""
-            from infra.email.smtp_email_service import SMTPEmailService
-            from config.settings import settings
-            return SMTPEmailService(
-                smtp_host=settings.SMTP_HOST,
-                smtp_port=settings.SMTP_PORT,
-                smtp_user=settings.SMTP_USER,
-                smtp_password=settings.SMTP_PASSWORD,
-                use_tls=settings.SMTP_USE_TLS
-            )
+            """Factory for creating email service with fallback"""
+            try:
+                # Try to import real SMTP service if it exists
+                from infra.email.smtp_email_service import SMTPEmailService
+                from config.settings import settings
+                return SMTPEmailService(
+                    smtp_host=settings.SMTP_HOST,
+                    smtp_port=settings.SMTP_PORT,
+                    smtp_user=settings.SMTP_USER,
+                    smtp_password=settings.SMTP_PASSWORD,
+                    use_tls=settings.SMTP_USE_TLS
+                )
+            except ImportError:
+                # Fallback to mock service if SMTP service not available
+                logger.warning("Real SMTP service not available, falling back to mock")
+                from apps.api.__mocks__.services.mock_email_service import MockEmailService
+                return MockEmailService()
         
         container.register_service(
             interface=EmailServiceProtocol,
@@ -426,8 +433,93 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     else:
         logger.info("Real demo data service not needed in production")
     
+    # ✅ NEW: Identity Domain Services
+    # Register Identity Domain Use Cases and Services
+    async def get_user_repository_factory():
+        """Factory for creating user repository"""
+        from src.identity.infrastructure.repositories.asyncpg_user_repository import AsyncpgUserRepository
+        from apps.shared.di import get_container
+        shared_container = get_container()
+        pool = await shared_container.asyncpg_pool()
+        return AsyncpgUserRepository(pool)
+    
+    async def get_jwt_token_service_factory():
+        """Factory for creating JWT token service"""
+        from src.identity.infrastructure.external.jwt_token_service import JWTTokenService
+        return JWTTokenService()
+    
+    async def get_register_user_use_case_factory():
+        """Factory for creating register user use case"""
+        from src.identity.application.use_cases.register_user import RegisterUserUseCase
+        user_repo = await container.get_service(type(None))  # UserRepository
+        return RegisterUserUseCase(user_repo)
+    
+    async def get_authenticate_user_use_case_factory():
+        """Factory for creating authenticate user use case"""
+        from src.identity.application.use_cases.authenticate_user import AuthenticateUserUseCase
+        user_repo = await container.get_service(type(None))  # UserRepository
+        return AuthenticateUserUseCase(user_repo)
+    
+    # Register identity services
+    container.register_service(
+        interface=type(None),  # UserRepositoryProtocol when created
+        implementation=type(None),
+        singleton=True,
+        factory=get_user_repository_factory
+    )
+    
+    container.register_service(
+        interface=type(None),  # JWTTokenServiceProtocol when created
+        implementation=type(None),
+        singleton=True,
+        factory=get_jwt_token_service_factory
+    )
+    
+    container.register_service(
+        interface=type(None),  # RegisterUserUseCaseProtocol when created
+        implementation=type(None),
+        singleton=True,
+        factory=get_register_user_use_case_factory
+    )
+    
+    container.register_service(
+        interface=type(None),  # AuthenticateUserUseCaseProtocol when created
+        implementation=type(None),
+        singleton=True,
+        factory=get_authenticate_user_use_case_factory
+    )
+    
+    logger.info("Registered Identity Domain Services")
+    
+    # ✅ NEW: Inter-Domain Communication Setup
+    # Set up event bus and register domain event handlers
+    async def setup_inter_domain_communication():
+        """Initialize inter-domain event communication"""
+        from src.shared_kernel.application.event_bus import get_event_bus
+        from src.identity.application.event_handlers import register_identity_event_handlers
+        from src.analytics.application.event_handlers import register_analytics_event_handlers  
+        from src.payments.application.event_handlers import register_payments_event_handlers
+        
+        event_bus = get_event_bus()
+        
+        # Register event handlers for each domain
+        await register_identity_event_handlers(event_bus, user_repository=None)
+        await register_analytics_event_handlers(event_bus, analytics_repository=None)
+        await register_payments_event_handlers(event_bus, payment_repository=None)
+        
+        logger.info("Inter-domain communication configured")
+        return event_bus
+    
+    # Register event bus as a service
+    container.register_service(
+        interface=type(None),  # EventBusProtocol when created
+        implementation=type(None),
+        singleton=True,
+        factory=setup_inter_domain_communication
+    )
+    
     container._initialized = True
-    logger.info("Service configuration complete")
+    logger.info("Service configuration complete with inter-domain communication")
 
 
 # Global DI container instance

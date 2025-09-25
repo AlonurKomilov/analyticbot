@@ -1,0 +1,3 @@
+"""
+Shared Kernel Infrastructure Layer
+"""

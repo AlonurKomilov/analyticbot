@@ -67,7 +67,7 @@ class AsyncpgAdminRepository(IAdminRepository):
 
         query = f"""
             UPDATE admins 
-            SET {', '.join(set_clauses)}, updated_at = NOW()
+            SET {", ".join(set_clauses)}, updated_at = NOW()
             WHERE id = ${param_count}
         """
         values.append(admin_id)

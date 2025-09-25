@@ -209,7 +209,11 @@ def test_theft_detection_algorithm():
                     risk_score += 0.2
 
             # Medium-risk patterns
-            medium_risk_patterns = [r"follow.*for.*more", r"like.*and.*share", r"subscribe.*now"]
+            medium_risk_patterns = [
+                r"follow.*for.*more",
+                r"like.*and.*share",
+                r"subscribe.*now",
+            ]
 
             for pattern in medium_risk_patterns:
                 if re.search(pattern, content.lower()):

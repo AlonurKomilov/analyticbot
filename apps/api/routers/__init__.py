@@ -12,29 +12,31 @@ Phase 3B Complete (Sept 24, 2025) - Clean 5-Router Analytics Architecture:
 - analytics_predictive_router: AI/ML predictions, forecasting, and advanced analysis
 """
 
+from .admin_microrouter import router as admin_microrouter
+from .analytics_alerts_router import router as analytics_alerts_router
+
 # ✅ PHASE 3B: CLEAN ANALYTICS ARCHITECTURE
 from .analytics_core_router import router as analytics_core_router
-from .analytics_realtime_router import router as analytics_realtime_router
-from .analytics_alerts_router import router as analytics_alerts_router
 from .analytics_insights_router import router as analytics_insights_router
 from .analytics_predictive_router import router as analytics_predictive_router
+from .analytics_realtime_router import router as analytics_realtime_router
+from .auth_router import router as auth_router
 
 # Other domain routers
 from .channels_microrouter import router as channels_microrouter
-from .admin_microrouter import router as admin_microrouter
 from .core_microrouter import router as core_microrouter
-from .auth_router import router as auth_router
+
 # ❌ REMOVED: clean_analytics_router - migrated to proper domain routers (Sept 24, 2025)
 
 __all__ = [
     # Phase 3B: Clean Analytics Architecture
     "analytics_core_router",
     "analytics_realtime_router",
-    "analytics_alerts_router", 
+    "analytics_alerts_router",
     "analytics_insights_router",
     "analytics_predictive_router",
     # Other domain routers
-    "channels_microrouter", 
+    "channels_microrouter",
     "admin_microrouter",
     "core_microrouter",
     "auth_router",

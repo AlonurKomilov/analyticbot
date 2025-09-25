@@ -14,18 +14,15 @@ from starlette.middleware.cors import CORSMiddleware
 from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
-# from apps.api.routers.analytics_microrouter import router as analytics_router  # REMOVED - merged into analytics_core_router
-from apps.api.routers.channels_microrouter import router as channels_router
-from apps.api.routers.admin_microrouter import router as admin_router
-from apps.api.routers.core_microrouter import router as core_router
+from apps.api.routers.channels_router import router as channels_router
+from apps.api.routers.admin_router import router as admin_router
+from apps.api.routers.system_router import router as system_router
 from apps.api.routers.health_system_router import router as health_system_router
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
-# from apps.api.routers.analytics_v2 import router as analytics_v2_router  # REMOVED - superseded by analytics_core_router  
-# from apps.api.routers.analytics_advanced import router as analytics_advanced_router  # REMOVED - superseded by realtime + alerts routers
-from apps.api.routers.exports_v2 import router as exports_v2_router
-from apps.api.routers.share_v2 import router as share_v2_router
-from apps.api.routers.mobile_api import router as mobile_api_router
+from apps.api.routers.exports_router import router as exports_router
+from apps.api.routers.sharing_router import router as sharing_router
+from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.auth_router import router as auth_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.bot.api.content_protection_router import router as content_protection_router
@@ -192,7 +189,7 @@ from core.di_container import container, configure_services
 app.add_middleware(DemoModeMiddleware)
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
-app.include_router(core_router)          # Core system operations (performance, scheduling) 
+app.include_router(system_router)        # Core system operations (performance, scheduling) 
 app.include_router(health_system_router) # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
 app.include_router(channels_router)      # Channel management (CRUD)
@@ -230,9 +227,9 @@ app.include_router(demo_router)               # Consolidated demo/mock data endp
 # app.include_router(analytics_advanced_router) # ❌ REMOVED: Use /analytics/realtime/* + /analytics/alerts/* instead
 # ✅ KEEP THESE ROUTERS (No duplicates, still needed)
 # ❌ REMOVED: clean_analytics_router - endpoints migrated to proper domain routers (Sept 24, 2025)
-app.include_router(exports_v2_router)         # Export functionality (unique)
-app.include_router(share_v2_router)           # Share functionality (unique)  
-app.include_router(mobile_api_router)         # Mobile-optimized endpoints (unique)
+app.include_router(exports_router)            # Export functionality (unique)
+app.include_router(sharing_router)            # Share functionality (unique)  
+app.include_router(mobile_router)             # Mobile-optimized endpoints (unique)
 app.include_router(content_protection_router) # Content protection (unique)
 app.include_router(auth_router)               # Authentication (unique)
 app.include_router(superadmin_router)         # Super admin operations (unique)

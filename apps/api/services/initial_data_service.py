@@ -66,7 +66,11 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
         )
         
     except Exception as e:
+        # ✅ FIXED: Proper error handling without inappropriate demo fallback
         logger.error(f"Failed to get real initial data for user {user_id}: {e}")
+        
+        # For real data service, we should never fallback to demo
+        # Always propagate the error to be handled by the caller
         raise
 
 

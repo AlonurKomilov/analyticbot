@@ -85,12 +85,42 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
         return await get_real_initial_data(user_id)
         
     except Exception as e:
-        logger.error(f"Failed to get initial data: {e}")
-        # In production, we should not fall back to demo data
-        # but return proper HTTP error
-        if not settings.demo_mode.is_demo_enabled():
+        # ✅ FIXED: Comprehensive error handling with auditing
+        from apps.api.services.database_error_handler import db_error_handler
+        from apps.api.services.demo_mode_service import demo_service
+        
+        # Extract user_id if possible
+        try:
+            from apps.api.middleware.auth import get_current_user_id_from_request
+            user_id = await get_current_user_id_from_request(request)
+        except:
+            user_id = None
+        
+        # Check if this is a demo user who can have fallback
+        is_demo_user = demo_service.is_demo_request(request)
+        
+        # Handle the error with proper auditing
+        try:
+            db_error_handler.handle_database_error(
+                request=request,
+                error=e,
+                operation="get_initial_data",
+                user_id=user_id,
+                allow_demo_fallback=is_demo_user  # Only allow fallback for demo users
+            )
+        except HTTPException:
+            # Error handler raised HTTP exception for real users
             raise
         
-        # Only fallback to demo if explicitly in demo mode
-        demo_data_service = await get_demo_data_service()
-        return await demo_data_service.get_initial_data(1, "limited")
+        # If we reach here, it means demo fallback is allowed
+        if is_demo_user:
+            logger.info(f"✅ Demo fallback activated for demo user {user_id}")
+            demo_data_service = await get_demo_data_service()
+            return await demo_data_service.get_initial_data(user_id or 1, "limited")
+        
+        # Should never reach here, but safety fallback
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=503,
+            detail="Service temporarily unavailable"
+        )

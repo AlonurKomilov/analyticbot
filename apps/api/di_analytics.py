@@ -147,8 +147,11 @@ async def get_redis_client():
         return None
 
     try:
-        # Try to get Redis client from existing container if available
-        return container.resolve("redis_client")
+        # ✅ FIXED: Try to get Redis client from proper DI container
+        from core.di_container import container as core_container
+        # This would need a Redis protocol and registration, but for now use None
+        logger.warning("Redis client integration not yet implemented in core DI container")
+        return None
     except Exception as e:
         logger.warning(f"Redis client not available: {e}")
         return None

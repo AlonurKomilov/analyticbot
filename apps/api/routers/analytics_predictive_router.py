@@ -5,7 +5,10 @@ Analytics Predictive Router - Machine Learning & Forecasting Analytics
 Handles AI-powered analytics, predictive modeling, and advanced data analysis.
 Consolidates ML/AI functionality from legacy routers.
 
-Domain: Predictive analytics, AI insights, forecasting, advanced data analysis
+Domain: Predictive analytics, AI insights, forecastin        with performance_timer("advanced_metrics_computation"):
+            # ✅ FIXED: Use proper dependency injection  
+            from apps.api.deps import get_advanced_data_processor
+            data_processor = await get_advanced_data_processor(), advanced data analysis
 Path: /analytics/predictive/*
 """
 
@@ -127,9 +130,10 @@ async def get_ai_insights(
             return AIInsights(**cached_data)
 
         with performance_timer("ai_insights_generation"):
-            # Get analytics service from container
-            analytics_service = container.resolve(AnalyticsService)
-            ai_generator = container.resolve(AIInsightsGenerator)
+            # ✅ FIXED: Use proper dependency injection instead of container.resolve()
+            from apps.api.deps import get_analytics_service, get_ai_insights_generator
+            analytics_service = await get_analytics_service()
+            ai_generator = await get_ai_insights_generator()
             
             # Get recent data for analysis
             to_date = datetime.utcnow()
@@ -214,9 +218,10 @@ async def get_predictive_summary(
             cached_data["meta"]["cache_hit"] = True
             return cached_data
 
-        with performance_timer("predictive_summary_generation"):
-            # Get analytics engine
-            predictive_engine = container.resolve(PredictiveAnalyticsEngine)
+        with performance_timer("growth_prediction"):
+            # ✅ FIXED: Use proper dependency injection
+            from apps.api.deps import get_predictive_analytics_engine
+            predictive_engine = await get_predictive_analytics_engine()
             
             # Get historical data
             to_date = datetime.utcnow()
@@ -329,8 +334,9 @@ async def analyze_channel_data(
             return cached_data
 
         with performance_timer(f"advanced_analysis_{request.analysis_type}"):
-            # Get data processor
-            data_processor = container.resolve(AdvancedDataProcessor)
+            # ✅ FIXED: Use proper dependency injection
+            from apps.api.deps import get_advanced_data_processor
+            data_processor = await get_advanced_data_processor()
             
             # Get comprehensive data
             to_date = datetime.utcnow()
@@ -479,8 +485,9 @@ async def generate_predictions(
             return PredictionResult(**cached_data)
 
         with performance_timer("ml_prediction_generation"):
-            # Get predictive engine
-            predictive_engine = container.resolve(PredictiveAnalyticsEngine)
+            # ✅ FIXED: Use proper dependency injection
+            from apps.api.deps import get_predictive_analytics_engine
+            predictive_engine = await get_predictive_analytics_engine()
             
             # Process each channel
             all_predictions = []

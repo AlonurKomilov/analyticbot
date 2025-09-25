@@ -10,6 +10,7 @@ from config.demo_mode_config import DemoModeConfig
 from core.protocols import (
     ServiceProtocol, 
     AnalyticsServiceProtocol,
+    AnalyticsFusionServiceProtocol,
     PaymentServiceProtocol, 
     DatabaseServiceProtocol,
     AIServiceProtocol,
@@ -176,6 +177,21 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         singleton=True,
         factory=get_asyncpg_pool_factory
     )
+    
+    # ✅ NEW: Register Analytics Fusion Service
+    # Always use real analytics fusion service - demo vs real is handled within the service
+    async def get_analytics_fusion_service_factory():
+        """Factory for creating analytics fusion service"""
+        from apps.api.di_analytics import get_analytics_fusion_service
+        return await get_analytics_fusion_service()
+    
+    container.register_service(
+        interface=AnalyticsFusionServiceProtocol,
+        implementation=type(None),  # Factory-based creation
+        singleton=True,
+        factory=get_analytics_fusion_service_factory
+    )
+    logger.info("Registered AnalyticsFusionService via DI factory")
     
     # Analytics Service
     if demo_config.should_use_mock_service("analytics"):

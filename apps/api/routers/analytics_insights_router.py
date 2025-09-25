@@ -25,7 +25,8 @@ from core.services.analytics_fusion_service import AnalyticsFusionService
 from core.di_container import container
 
 # Auth
-from apps.api.middleware.auth import get_current_user
+from apps.api.middleware.auth import get_current_user, require_channel_access
+from apps.bot.database.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 
@@ -487,6 +488,99 @@ async def get_data_source_comparison(
             "Implement smart routing"
         ]
     }
+
+
+
+# === CHANNEL-SPECIFIC ANALYTICS ENDPOINTS ===
+# Migrated from channels_router.py for proper domain separation
+
+@router.get("/channels/{channel_id}/engagement")
+async def get_channel_engagement_data(
+    channel_id: int,
+    period: str = Query("24h", description="Time period for engagement data"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    ## 📈 Get Channel Engagement Data
+    
+    Retrieve engagement analytics for a specific channel.
+    Migrated from channels_router.py - channel-specific analytics belong in analytics domain.
+    
+    **Parameters:**
+    - channel_id: Target channel ID
+    - period: Time period for data (24h, 7d, 30d)
+    
+    **Returns:**
+    - Channel engagement metrics and analytics
+    """
+    try:
+        await require_channel_access(channel_id, current_user["id"])
+        
+        with performance_timer("channel_engagement_fetch"):
+            # Import analytics service using clean architecture pattern
+            from core.protocols import AnalyticsServiceProtocol
+            from core.di_container import container
+            
+            analytics_service = container.get_service(AnalyticsServiceProtocol)
+            engagement = await analytics_service.get_engagement_data(str(channel_id), period)
+            
+            return {
+                "success": True,
+                "channel_id": channel_id,
+                "period": period,
+                "data": engagement,
+                "clean_architecture": True,
+                "fetched_at": datetime.now().isoformat()
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Channel engagement fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch channel engagement data")
+
+
+@router.get("/channels/{channel_id}/audience")
+async def get_channel_audience_insights(
+    channel_id: int,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    ## 👥 Get Channel Audience Insights
+    
+    Retrieve audience demographics and insights for a specific channel.
+    Migrated from channels_router.py - audience insights belong in analytics domain.
+    
+    **Parameters:**
+    - channel_id: Target channel ID
+    
+    **Returns:**
+    - Audience demographics and behavioral insights
+    """
+    try:
+        await require_channel_access(channel_id, current_user["id"])
+        
+        with performance_timer("channel_audience_fetch"):
+            # Import analytics service using clean architecture pattern
+            from core.protocols import AnalyticsServiceProtocol
+            from core.di_container import container
+            
+            analytics_service = container.get_service(AnalyticsServiceProtocol)
+            insights = await analytics_service.get_audience_insights(str(channel_id))
+            
+            return {
+                "success": True,
+                "channel_id": channel_id,
+                "data": insights,
+                "clean_architecture": True,
+                "fetched_at": datetime.now().isoformat()
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Channel audience insights fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch channel audience insights")
 
 
 # === CHANNEL TRENDING ANALYTICS ===

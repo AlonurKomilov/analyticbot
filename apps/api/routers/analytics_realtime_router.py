@@ -26,7 +26,8 @@ from pydantic import BaseModel
 # Services
 from apps.bot.clients.analytics_client import AnalyticsClient
 from core.services.analytics_fusion_service import AnalyticsFusionService
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.api.deps import get_analytics_fusion_service
+from apps.api.di_analytics import get_cache
 from apps.api.schemas.analytics import SeriesResponse
 from apps.api.middleware.auth import get_current_user
 
@@ -63,10 +64,7 @@ def get_analytics_client() -> AnalyticsClient:
     from config import settings
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
-def get_analytics_fusion_service() -> AnalyticsFusionService:
-    """Get analytics fusion service"""
-    from core.di_container import container
-    return container.analytics_fusion_service()
+# ✅ FIXED: Removed local get_analytics_fusion_service - now using proper DI from deps.py
 
 # === REAL-TIME METRICS ===
 

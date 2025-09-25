@@ -43,6 +43,26 @@ class AnalyticsServiceProtocol(ServiceProtocol):
         ...
 
 
+class AnalyticsFusionServiceProtocol(ServiceProtocol):
+    """Analytics fusion service interface for real-time analytics"""
+    
+    async def get_realtime_metrics(self, channel_id: int) -> Dict[str, Any]:
+        """Get real-time metrics for a channel"""
+        ...
+    
+    async def calculate_performance_score(self, channel_id: int, period: int) -> Dict[str, Any]:
+        """Calculate performance score for a channel"""
+        ...
+    
+    async def get_live_monitoring_data(self, channel_id: int) -> Dict[str, Any]:
+        """Get live monitoring data"""
+        ...
+    
+    async def generate_recommendations(self, channel_id: int) -> Dict[str, Any]:
+        """Generate AI-powered recommendations"""
+        ...
+
+
 class PaymentServiceProtocol(ServiceProtocol):
     """Payment service interface"""
     

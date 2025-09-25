@@ -18,9 +18,6 @@ from apps.api.middleware.auth import (
     get_current_user, 
     require_channel_access, 
     get_current_user_id,
-    require_analytics_create,
-    require_analytics_update,
-    require_analytics_delete,
 )
 from apps.bot.database.performance import performance_timer
 
@@ -100,23 +97,24 @@ async def create_channel(
     - Created channel information
     """
     try:
-        with performance_timer("channel_creation"):
-            # Verify user has permission to create channels
-            await require_analytics_create(current_user["id"])
-            
+        with performance_timer("channel_create"):
+            # Channel creation requires authenticated user
             channel = await channel_service.create_channel(
+                channel_data.name,
+                channel_data.username,
                 user_id=current_user["id"],
-                channel_data=channel_data
+                additional_data=channel_data.additional_data or {}
             )
             
             logger.info(f"Channel created successfully: {channel['id']} by user {current_user['id']}")
-            return ChannelResponse(**channel)
+            return channel
             
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Channel creation failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to create channel")
+
 
 @router.get("/{channel_id}", response_model=ChannelResponse)
 async def get_channel(
@@ -176,9 +174,8 @@ async def update_channel(
     - Updated channel information
     """
     try:
-        # Verify channel access and update permissions
+        # Verify user has access to this channel
         await require_channel_access(channel_id, current_user["id"])
-        await require_analytics_update(current_user["id"])
         
         with performance_timer("channel_update"):
             # Filter out None values
@@ -222,7 +219,8 @@ async def delete_channel(
     try:
         # Verify channel access and delete permissions
         await require_channel_access(channel_id, current_user["id"])
-        await require_analytics_delete(current_user["id"])
+        # Verify user has access to this channel
+        await require_channel_access(channel_id, current_user["id"])
         
         with performance_timer("channel_deletion"):
             result = await channel_service.delete_channel(
@@ -265,7 +263,6 @@ async def activate_channel(
     """
     try:
         await require_channel_access(channel_id, current_user["id"])
-        await require_analytics_update(current_user["id"])
         
         with performance_timer("channel_activation"):
             result = await channel_service.update_channel(
@@ -307,7 +304,6 @@ async def deactivate_channel(
     """
     try:
         await require_channel_access(channel_id, current_user["id"])
-        await require_analytics_update(current_user["id"])
         
         with performance_timer("channel_deactivation"):
             result = await channel_service.update_channel(
@@ -375,90 +371,4 @@ async def get_channel_status(
         raise HTTPException(status_code=500, detail="Failed to fetch channel status")
 
 
-@router.get("/{channel_id}/engagement")
-async def get_channel_engagement_data(
-    channel_id: int,
-    period: str = Query("24h", description="Time period for engagement data"),
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    ## 📈 Get Channel Engagement Data
-    
-    Retrieve engagement analytics for a specific channel.
-    Migrated from clean analytics router - channel-specific engagement belongs with channel management.
-    
-    **Parameters:**
-    - channel_id: Target channel ID
-    - period: Time period for data (24h, 7d, 30d)
-    
-    **Returns:**
-    - Channel engagement metrics and analytics
-    """
-    try:
-        await require_channel_access(channel_id, current_user["id"])
-        
-        with performance_timer("channel_engagement_fetch"):
-            # Import analytics service using clean architecture pattern
-            from core.protocols import AnalyticsServiceProtocol
-            from core.di_container import container
-            
-            analytics_service = container.get_service(AnalyticsServiceProtocol)
-            engagement = await analytics_service.get_engagement_data(str(channel_id), period)
-            
-            return {
-                "success": True,
-                "channel_id": channel_id,
-                "period": period,
-                "data": engagement,
-                "clean_architecture": True,
-                "fetched_at": datetime.now().isoformat()
-            }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Channel engagement fetch failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch channel engagement data")
-
-
-@router.get("/{channel_id}/audience")
-async def get_channel_audience_insights(
-    channel_id: int,
-    current_user: dict = Depends(get_current_user)
-):
-    """
-    ## 👥 Get Channel Audience Insights
-    
-    Retrieve audience demographics and insights for a specific channel.
-    Migrated from clean analytics router - audience data belongs with channel management.
-    
-    **Parameters:**
-    - channel_id: Target channel ID
-    
-    **Returns:**
-    - Audience demographics and behavioral insights
-    """
-    try:
-        await require_channel_access(channel_id, current_user["id"])
-        
-        with performance_timer("channel_audience_fetch"):
-            # Import analytics service using clean architecture pattern
-            from core.protocols import AnalyticsServiceProtocol
-            from core.di_container import container
-            
-            analytics_service = container.get_service(AnalyticsServiceProtocol)
-            insights = await analytics_service.get_audience_insights(str(channel_id))
-            
-            return {
-                "success": True,
-                "channel_id": channel_id,
-                "data": insights,
-                "clean_architecture": True,
-                "fetched_at": datetime.now().isoformat()
-            }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Channel audience insights fetch failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch channel audience insights")
+# End of channels router - analytics endpoints moved to analytics_insights_router.py

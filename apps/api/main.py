@@ -118,16 +118,28 @@ Comprehensive data export capabilities with secure sharing mechanisms.
             "description": "Essential system endpoints: health checks, initial data, and application lifecycle"
         },
         {
-            "name": "Analytics",
-            "description": "📊 Core analytics endpoints: channels, metrics, and basic reporting"
+            "name": "analytics-live",
+            "description": "⚡ Real-time Analytics: live metrics, performance scoring, and monitoring"
         },
         {
-            "name": "Analytics V2", 
-            "description": "📈 Enhanced analytics: advanced metrics, caching, and performance optimization"
+            "name": "analytics-alerts", 
+            "description": "� Alert Management: thresholds, notifications, and alert system"
         },
         {
-            "name": "Advanced Analytics",
-            "description": "🔮 AI-powered analytics: real-time dashboards, alerts, and predictive insights"
+            "name": "statistics-core",
+            "description": "📊 Core Statistics: historical metrics, growth trends, and data analysis"
+        },
+        {
+            "name": "statistics-reports",
+            "description": "📋 Statistical Reports: comprehensive analysis, comparisons, and trending"
+        },
+        {
+            "name": "insights-engagement",
+            "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content"
+        },
+        {
+            "name": "insights-predictive",
+            "description": "🔮 Predictive Analytics: AI/ML forecasting, recommendations, and predictions"
         },
         {
             "name": "AI Services",
@@ -199,34 +211,43 @@ app.include_router(admin_channels_router)   # Admin - Channel Management
 app.include_router(admin_users_router)      # Admin - User Management
 app.include_router(admin_system_router)     # Admin - System Management
 
-# ✅ PHASE 3: NEW ANALYTICS DOMAIN ARCHITECTURE
-from apps.api.routers.analytics_core_router import router as analytics_core_router
-from apps.api.routers.analytics_realtime_router import router as analytics_realtime_router  
+# ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
+from apps.api.routers.analytics_live_router import router as analytics_live_router
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
-from apps.api.routers.analytics_insights_router import router as analytics_insights_router
-from apps.api.routers.analytics_predictive_router import router as analytics_predictive_router
+from apps.api.routers.statistics_core_router import router as statistics_core_router
+from apps.api.routers.statistics_reports_router import router as statistics_reports_router
+from apps.api.routers.insights_engagement_router import router as insights_engagement_router
+from apps.api.routers.insights_predictive_router import router as insights_predictive_router
 from apps.api.routers.demo_router import router as demo_router
 
-app.include_router(analytics_core_router)     # Core analytics functionality (dashboard, metrics, overview, trends, refresh)
-app.include_router(analytics_realtime_router) # Real-time analytics and live monitoring
-app.include_router(analytics_alerts_router)   # Alert management and notifications
-app.include_router(analytics_insights_router) # Advanced insights, reports, and system analysis
-app.include_router(analytics_predictive_router) # AI/ML predictions, forecasting, and advanced data analysis
-app.include_router(demo_router)               # Consolidated demo/mock data endpoints
+app.include_router(analytics_live_router)        # Real-time live analytics (4 endpoints) - /analytics/live/*
+app.include_router(analytics_alerts_router)      # Alert management (8 endpoints) - /analytics/alerts/*
+app.include_router(statistics_core_router)       # Historical statistics (5 endpoints) - /statistics/core/*
+app.include_router(statistics_reports_router)    # Statistical reports (4 endpoints) - /statistics/reports/*
+app.include_router(insights_engagement_router)   # Engagement intelligence (4 endpoints) - /insights/engagement/*
+app.include_router(insights_predictive_router)   # AI/ML predictions (4 endpoints) - /insights/predictive/*
+app.include_router(demo_router)                  # Consolidated demo/mock data endpoints
 
-# 🚨 PHASE 3B: ANALYTICS CONSOLIDATION COMPLETE ✅
-# ALL legacy analytics routers successfully consolidated into clean 5-router architecture:
-# - analytics_v2_router         → MIGRATED to analytics_core_router + analytics_insights_router (ARCHIVED)
-# - analytics_advanced_router   → SUPERSEDED by analytics_realtime_router + analytics_alerts_router (ARCHIVED)
-# - analytics_microrouter        → SPLIT into analytics_core_router + analytics_predictive_router (ARCHIVED)
-# - analytics_unified_router    → MIGRATED to analytics_insights_router (ARCHIVED)
+# 🎯 PHASE 4: GRANULAR ANALYTICS ARCHITECTURE COMPLETE ✅
+# SUCCESSFULLY ELIMINATED GOD OBJECTS with 6 focused domain-separated routers:
 # 
-# Current Clean Architecture: 5 Domain-Separated Analytics Routers
-# 1. Core: Dashboard, metrics, overview, trends, top-posts, sources, refresh
-# 2. Realtime: Live metrics, performance scoring, monitoring, recommendations
-# 3. Alerts: Thresholds, notifications, alert management, monitoring
-# 4. Insights: Advanced reports, capabilities, comparisons, channel-data, performance-metrics, trends
-# 5. Predictive: AI/ML insights, forecasting, advanced analysis, predictions
+# OLD (Phase 3): 4 routers with potential god objects
+# - analytics_core_router        → SPLIT into statistics_core_router (5 endpoints)
+# - analytics_realtime_router    → SPLIT into analytics_live_router (4 endpoints)  
+# - analytics_insights_router    → SPLIT into statistics_reports_router (4) + insights_engagement_router (4)
+# - analytics_predictive_router  → SPLIT into insights_predictive_router (4 endpoints)
+# - analytics_alerts_router      → KEPT as-is (8 endpoints, already focused)
+#
+# NEW (Phase 4): 6 focused routers with NO god objects (4-8 endpoints each):
+# 1. Live Analytics:     /analytics/live/*        → analytics_live_router (4 endpoints)
+# 2. Alert Management:   /analytics/alerts/*      → analytics_alerts_router (8 endpoints) 
+# 3. Core Statistics:    /statistics/core/*       → statistics_core_router (5 endpoints)
+# 4. Statistical Reports:/statistics/reports/*    → statistics_reports_router (4 endpoints)
+# 5. Engagement Insights:/insights/engagement/*   → insights_engagement_router (4 endpoints)
+# 6. Predictive AI/ML:   /insights/predictive/*   → insights_predictive_router (4 endpoints)
+#
+# ✅ PERFECT CLEAN ARCHITECTURE: Single Responsibility, Clear Domain Boundaries, No God Objects
+# Original files archived with _ORIGINAL_BEFORE_GRANULAR_SPLIT suffix for reference
 # app.include_router(analytics_v2_router)      # ❌ REMOVED: Use /analytics/core/* + /analytics/insights/* instead
 # app.include_router(analytics_advanced_router) # ❌ REMOVED: Use /analytics/realtime/* + /analytics/alerts/* instead
 # ✅ KEEP THESE ROUTERS (No duplicates, still needed)

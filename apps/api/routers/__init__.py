@@ -1,23 +1,27 @@
 """
-FastAPI Routers Package - Clean Analytics Architecture
+FastAPI Routers Package - Granular Analytics Architecture
 
 This package contains all the modular routers for the analyticbot API.
 Each router handles a single domain responsibility following Clean Architecture principles.
 
-Phase 3B Complete (Sept 24, 2025) - Clean 5-Router Analytics Architecture:
-- analytics_core_router: Core analytics (dashboard, metrics, overview, trends)
-- analytics_realtime_router: Real-time analytics and live monitoring
-- analytics_alerts_router: Alert management and notifications
-- analytics_insights_router: Advanced insights, reports, and system analysis
-- analytics_predictive_router: AI/ML predictions, forecasting, and advanced analysis
+Phase 4 Complete (Sept 25, 2025) - Granular 6-Router Analytics Architecture (No God Objects):
+- analytics_live_router: Real-time live analytics (4 endpoints)
+- analytics_alerts_router: Alert management and notifications (8 endpoints)
+- statistics_core_router: Historical statistics and core metrics (5 endpoints) 
+- statistics_reports_router: Statistical reports and comparisons (4 endpoints)
+- insights_engagement_router: Engagement intelligence and audience insights (4 endpoints)
+- insights_predictive_router: AI/ML predictions and forecasting (4 endpoints)
+
+PERFECT CLEAN ARCHITECTURE: No god objects, clear domain boundaries, focused responsibilities.
 """
 
-# ✅ PHASE 3B: CLEAN ANALYTICS ARCHITECTURE
-from .analytics_core_router import router as analytics_core_router
-from .analytics_realtime_router import router as analytics_realtime_router
+# ✅ PHASE 4: GRANULAR ANALYTICS ARCHITECTURE (NO GOD OBJECTS)
+from .analytics_live_router import router as analytics_live_router
 from .analytics_alerts_router import router as analytics_alerts_router
-from .analytics_insights_router import router as analytics_insights_router
-from .analytics_predictive_router import router as analytics_predictive_router
+from .statistics_core_router import router as statistics_core_router
+from .statistics_reports_router import router as statistics_reports_router
+from .insights_engagement_router import router as insights_engagement_router
+from .insights_predictive_router import router as insights_predictive_router
 
 # Other domain routers - FIXED: Updated to match renamed files
 from .channels_router import router as channels_router
@@ -35,13 +39,14 @@ from .superadmin_router import router as superadmin_router
 from .ai_services_router import router as ai_services_router
 
 __all__ = [
-    # Phase 3B: Clean Analytics Architecture
-    "analytics_core_router",
-    "analytics_realtime_router",
-    "analytics_alerts_router", 
-    "analytics_insights_router",
-    "analytics_predictive_router",
-    # Other domain routers - FIXED: Updated names
+    # Phase 4: Granular Analytics Architecture (No God Objects)
+    "analytics_live_router",          # Real-time live analytics (4 endpoints)
+    "analytics_alerts_router",        # Alert management (8 endpoints)
+    "statistics_core_router",         # Historical statistics (5 endpoints)
+    "statistics_reports_router",      # Statistical reports (4 endpoints)
+    "insights_engagement_router",     # Engagement intelligence (4 endpoints)
+    "insights_predictive_router",     # AI/ML predictions (4 endpoints)
+    # Other domain routers
     "channels_router", 
     "admin_channels_router",
     "admin_users_router", 

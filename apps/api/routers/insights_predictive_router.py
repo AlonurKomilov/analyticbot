@@ -11,15 +11,16 @@ from pydantic import BaseModel, Field
 
 # Services
 from apps.bot.clients.analytics_client import AnalyticsClient
-from core.services.analytics.predictive_service import PredictiveAnalyticsService
-from apps.shared.dependencies import get_analytics_service
 from apps.api.deps import get_predictive_analytics_engine
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 
 # Auth
-from core.security_engine.auth_handler import get_current_user
-from core.models.user import User
-from core.models.analytics import PredictionResult, RecommendationResponse, ForecastData
+# Auth
+from apps.api.middleware.auth import get_current_user
+from core.security_engine.models import User
+
+# Schemas
+from apps.api.schemas.analytics import PostListResponse
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ async def get_ai_recommendations(
         logger.error(f"AI recommendations generation failed for channel {channel_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate AI recommendations")
 
-@router.post("/forecast", response_model=PredictionResult)
+@router.post("/forecast")
 async def generate_predictions(
     request: PredictionRequest,
     current_user: dict = Depends(get_current_user),
@@ -138,7 +139,7 @@ async def generate_predictions(
 async def get_optimal_posting_times(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    analytics_service = Depends(get_analytics_service),
+    analytics_service = Depends(get_analytics_fusion_service),
 ):
     """
     ## ⏰ Get Optimal Posting Times

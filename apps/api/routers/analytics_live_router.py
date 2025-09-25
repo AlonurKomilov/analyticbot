@@ -17,9 +17,7 @@ from apps.api.di_analytics import get_cache
 from apps.api.schemas.analytics import SeriesResponse
 
 # Auth
-from core.security_engine.auth_handler import get_current_user
-from core.models.user import User
-from core.models.analytics import RealTimeMetrics, PerformanceScore
+from apps.api.middleware.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ def get_analytics_client() -> AnalyticsClient:
 
 # === LIVE METRICS ENDPOINTS ===
 
-@router.get("/metrics/{channel_id}", response_model=RealTimeMetrics)
+@router.get("/metrics/{channel_id}")
 async def get_realtime_metrics(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
@@ -55,21 +53,22 @@ async def get_realtime_metrics(
         growth_data = await analytics_client.growth(channel_id, 0.04)
         reach_data = await analytics_client.reach(channel_id, 0.04)
         
-        return RealTimeMetrics(
-            timestamp=datetime.utcnow(),
-            total_views=getattr(overview_data, 'total_views', 0),
-            growth_rate=getattr(growth_data, 'growth_rate', 0.0),
-            engagement_rate=getattr(overview_data, 'engagement_rate', 0.0),
-            reach_score=getattr(reach_data, 'reach_score', 0),
-            active_users=getattr(reach_data, 'active_users', 0),
-            trending_score=calculate_trending_score(overview_data, growth_data, reach_data)
-        )
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "total_views": getattr(overview_data, 'total_views', 0),
+            "growth_rate": getattr(growth_data, 'growth_rate', 0.0),
+            "engagement_rate": getattr(overview_data, 'engagement_rate', 0.0),
+            "reach_score": getattr(reach_data, 'reach_score', 0),
+            "active_users": getattr(reach_data, 'active_users', 0),
+            "trending_score": calculate_trending_score(overview_data, growth_data, reach_data),
+            "metrics_type": "real_time"
+        }
         
     except Exception as e:
         logger.error(f"Real-time metrics fetch failed for channel {channel_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch real-time metrics")
 
-@router.get("/performance/{channel_id}", response_model=PerformanceScore)  
+@router.get("/performance/{channel_id}")  
 async def get_performance_score(
     channel_id: int,
     period: int = Query(default=1, ge=1, le=7, description="Period in days for performance calculation"),
@@ -108,15 +107,17 @@ async def get_performance_score(
             overall_score, growth_score, engagement_score, reach_score
         )
         
-        return PerformanceScore(
-            overall_score=overall_score,
-            growth_score=growth_score,
-            engagement_score=engagement_score,
-            reach_score=reach_score,
-            performance_level=performance_level,
-            recommendations=recommendations,
-            period_days=period
-        )
+        return {
+            "overall_score": overall_score,
+            "growth_score": growth_score,
+            "engagement_score": engagement_score,
+            "reach_score": reach_score,
+            "performance_level": performance_level,
+            "recommendations": recommendations,
+            "period_days": period,
+            "analysis_type": "performance_scoring",
+            "generated_at": datetime.utcnow().isoformat()
+        }
         
     except Exception as e:
         logger.error(f"Performance score calculation failed for channel {channel_id}: {e}")

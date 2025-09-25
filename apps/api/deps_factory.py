@@ -33,7 +33,7 @@ async def get_demo_data_service() -> DemoDataServiceProtocol:
             raise ValueError("No demo data service available and not in demo mode")
 
 
-def is_request_for_demo_user_proper(request: Request) -> bool:
+def is_request_for_demo_user(request: Request) -> bool:
     """
     Proper demo user detection that receives a Request object
     This fixes the architectural flaw of passing user_id instead of Request
@@ -41,12 +41,19 @@ def is_request_for_demo_user_proper(request: Request) -> bool:
     return getattr(request.state, "is_demo", False)
 
 
-def get_demo_type_from_request_proper(request: Request) -> Optional[str]:
+def get_demo_type_from_request(request: Request) -> Optional[str]:
     """
     Proper demo type extraction that receives a Request object  
     This fixes the architectural flaw of passing user_id instead of Request
     """
     return getattr(request.state, "demo_type", None)
+
+
+def get_demo_user_id_from_request(request: Request) -> Optional[str]:
+    """
+    Get demo user ID from current request
+    """
+    return getattr(request.state, "demo_user_id", None)
 
 
 async def get_initial_data_service(request: Request) -> InitialDataResponse:
@@ -55,19 +62,19 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
     Routes to demo or real services based on demo mode detection
     """
     try:
+        # Use clean demo mode service abstraction
+        from apps.api.services.demo_mode_service import demo_service
+        
+        # Log demo usage for monitoring
+        demo_service.log_demo_usage(request, "/initial-data", "fetch")
+        
         # Check if this is a demo user request using proper Request object
-        if is_request_for_demo_user_proper(request):
-            demo_type = get_demo_type_from_request_proper(request)
-            demo_service = await get_demo_data_service()
+        if demo_service.is_demo_request(request):
+            demo_context = demo_service.get_demo_context(request)
+            demo_data_service = await get_demo_data_service()
             
-            # Get user_id from request state or extract from auth
-            user_id = getattr(request.state, "demo_user_id", None)
-            if not user_id:
-                # Extract from auth if available
-                from apps.api.middleware.auth import get_current_user_id_from_request
-                user_id = await get_current_user_id_from_request(request)
-            
-            return await demo_service.get_initial_data(user_id, demo_type)
+            user_id = demo_service.get_effective_user_id(request)
+            return await demo_data_service.get_initial_data(user_id, demo_context["demo_type"])
         
         # For production users, use real services
         # This will be implemented with proper repository injection
@@ -85,5 +92,5 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
             raise
         
         # Only fallback to demo if explicitly in demo mode
-        demo_service = await get_demo_data_service()
-        return await demo_service.get_initial_data(1, "limited")
+        demo_data_service = await get_demo_data_service()
+        return await demo_data_service.get_initial_data(1, "limited")

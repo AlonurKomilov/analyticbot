@@ -141,16 +141,6 @@ class DemoModeMiddleware(BaseHTTPMiddleware):
             return None
 
 
-def is_request_for_demo_user(request: Request) -> bool:
-    """Check if current request is for a demo user"""
-    return getattr(request.state, "is_demo", False)
-
-
-def get_demo_type_from_request(request: Request) -> str | None:
-    """Get demo type from current request"""
-    return getattr(request.state, "demo_type", None)
-
-
-def get_demo_user_id_from_request(request: Request) -> str | None:
-    """Get demo user ID from current request"""
-    return getattr(request.state, "demo_user_id", None)
+# Convenience functions moved to deps_factory.py to avoid circular imports
+# and provide proper Request-based demo detection
+# Import from apps.api.deps_factory if needed in other modules

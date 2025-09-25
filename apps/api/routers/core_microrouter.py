@@ -17,7 +17,7 @@ from apps.api.deps import get_delivery_service, get_schedule_service
 from apps.bot.models.twa import InitialDataResponse
 from apps.api.middleware.auth import get_current_user_id
 # ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
-from apps.api.deps_factory import get_initial_data_service, is_request_for_demo_user_proper, get_demo_type_from_request_proper
+from apps.api.deps_factory import get_initial_data_service, is_request_for_demo_user, get_demo_type_from_request
 from core import DeliveryService, ScheduleService
 
 logger = logging.getLogger(__name__)

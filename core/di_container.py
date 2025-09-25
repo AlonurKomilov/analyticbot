@@ -162,6 +162,21 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     """
     logger.info("Configuring services with demo mode settings")
     
+    # ✅ NEW: Register asyncpg Pool in DI container for proper lifecycle management
+    async def get_asyncpg_pool_factory():
+        """Factory for creating asyncpg pool"""
+        from apps.shared.di import get_container
+        shared_container = get_container()
+        return await shared_container.asyncpg_pool()
+    
+    # Register asyncpg Pool as a singleton service
+    container.register_service(
+        interface=type(None),  # Will be replaced with proper Pool protocol
+        implementation=type(None),
+        singleton=True,
+        factory=get_asyncpg_pool_factory
+    )
+    
     # Analytics Service
     if demo_config.should_use_mock_service("analytics"):
         try:
@@ -202,9 +217,33 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         container.register_service(DatabaseServiceProtocol, MockDatabase)
         logger.info("Registered MockDatabase")
     else:
-        # Real database service would be registered here
-        # For now, we'll use a placeholder
-        logger.info("Real database service not yet implemented")
+        # ✅ NEW: Register real database repositories with proper pool injection
+        async def get_user_repo_factory():
+            from apps.shared.di import get_container
+            shared_container = get_container()
+            return await shared_container.user_repo()
+        
+        async def get_channel_repo_factory():
+            from apps.shared.di import get_container
+            shared_container = get_container()
+            return await shared_container.channel_repo()
+        
+        # Register repository factories
+        container.register_service(
+            interface=type(None),  # UserRepositoryProtocol when created
+            implementation=type(None),
+            singleton=True,
+            factory=get_user_repo_factory
+        )
+        
+        container.register_service(
+            interface=type(None),  # ChannelRepositoryProtocol when created
+            implementation=type(None),
+            singleton=True,
+            factory=get_channel_repo_factory
+        )
+        
+        logger.info("Registered real database repositories with pool injection")
     
     # AI Services
     if demo_config.should_use_mock_service("ai_services"):

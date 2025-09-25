@@ -19,10 +19,13 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
     This replaces demo/mock data with actual database queries
     """
     try:
-        # Initialize repositories with proper pool injection
-        # These will be fixed in Step 3 when we address repository instantiation
-        user_repo = AsyncpgUserRepository()
-        channel_repo = AsyncpgChannelRepository()
+        # ✅ FIXED: Use proper DI container for repository instantiation
+        from apps.shared.di import get_container
+        container = get_container()
+        
+        # Get repositories with proper pool injection
+        user_repo = await container.user_repo()
+        channel_repo = await container.channel_repo()
         
         # Get user data
         user = await user_repo.get_user_by_id(user_id)
@@ -30,7 +33,7 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
             from fastapi import HTTPException
             raise HTTPException(status_code=404, detail="User not found")
         
-        # Get user channels
+        # Get user channels  
         channels = await channel_repo.get_user_channels(user_id)
         
         # Get user plan info - this would come from a proper plan service

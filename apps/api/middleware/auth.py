@@ -16,9 +16,7 @@ from core.security_engine.auth_utils import auth_utils, AuthError, security_sche
 from core.security_engine.rbac import RBACManager, Permission
 from core.security_engine.models import User, UserRole
 from core.repositories.interfaces import UserRepository, ChannelRepository
-from infra.db.repositories.user_repository import AsyncpgUserRepository  
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from apps.shared.di import container
+# ✅ FIXED: Removed direct repository imports - now using DI container
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +28,14 @@ logger = logging.getLogger(__name__)
 
 
 async def get_user_repository() -> UserRepository:
-    """Get user repository dependency"""
+    """Get user repository dependency with proper pool injection"""
     try:
-        pool = await container().asyncpg_pool()
-        return AsyncpgUserRepository(pool)
+        # ✅ FIXED: Use proper DI container instead of manual pool creation
+        from apps.shared.di import get_container
+        container = get_container()
+        return await container.user_repo()
     except Exception as e:
-        logger.error(f"Failed to get database pool: {e}")
+        logger.error(f"Failed to get user repository from DI container: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database connection not available"
@@ -43,12 +43,14 @@ async def get_user_repository() -> UserRepository:
 
 
 async def get_channel_repository() -> ChannelRepository:
-    """Get channel repository dependency"""
+    """Get channel repository dependency with proper pool injection"""
     try:
-        pool = await container().asyncpg_pool()
-        return AsyncpgChannelRepository(pool)
+        # ✅ FIXED: Use proper DI container instead of manual pool creation
+        from apps.shared.di import get_container
+        container = get_container()
+        return await container.channel_repo()
     except Exception as e:
-        logger.error(f"Failed to get database pool: {e}")
+        logger.error(f"Failed to get channel repository from DI container: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Database connection not available"

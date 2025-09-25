@@ -42,21 +42,36 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events"""
-    # Startup - Initialize optimized database
+    """Application lifespan events - now with proper DI container management"""
+    # Startup - Initialize database and DI container
     try:
         await init_database()
         logger.info("Database initialized successfully")
+        
+        # ✅ NEW: Initialize DI container with proper asyncpg pool
+        from apps.shared.di import init_container, Settings as DISettings
+        di_settings = DISettings(
+            database_url=settings.DATABASE_URL,
+            database_pool_size=settings.DB_POOL_SIZE,
+            database_max_overflow=settings.DB_MAX_OVERFLOW
+        )
+        di_container = init_container(di_settings)
+        
+        # Pre-initialize asyncpg pool to ensure it's ready
+        pool = await di_container.asyncpg_pool()
+        logger.info(f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections")
+        
     except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
+        logger.error(f"Startup initialization failed: {e}")
         # Continue without database for now to allow health checks
     yield
-    # Shutdown - Cleanup database and legacy pool
+    # Shutdown - Cleanup database and DI container
     try:
         await close_database()
         await cleanup_db_pool()
+        logger.info("✅ Application shutdown completed")
     except Exception as e:
-        logger.error(f"Database cleanup failed: {e}")
+        logger.error(f"Application shutdown failed: {e}")
 
 
 app = FastAPI(

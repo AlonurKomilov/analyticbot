@@ -423,3 +423,197 @@ class AnalyticsFusionService:
             recommendations.append("Limited reach. Optimize posting times and use relevant hashtags.")
 
         return recommendations
+
+    async def get_live_metrics(self, channel_id: int, hours: int = 6) -> dict:
+        """
+        Get real-time live metrics for a channel
+        Replaces mock data with actual analytics data
+        """
+        try:
+            from datetime import datetime, timedelta
+            
+            # Get time range
+            now = datetime.now()
+            from_time = now - timedelta(hours=hours)
+            
+            # Get recent posts and views
+            posts_count = await self._posts.count(channel_id, from_time, now)
+            total_views = await self._posts.sum_views(channel_id, from_time, now)
+            
+            # Get current subscriber count
+            current_subs = await self._daily.series_value(channel_id, "followers", now)
+            if current_subs is None:
+                current_subs = await self._daily.series_value(channel_id, "subscribers", now)
+            
+            # Calculate engagement metrics
+            avg_views_per_post = (total_views / posts_count) if posts_count > 0 else 0
+            engagement_rate = (avg_views_per_post / current_subs * 100) if current_subs and current_subs > 0 else 0
+            
+            # Get recent posts for trend analysis
+            recent_posts = await self._posts.get_channel_posts(
+                channel_id=channel_id,
+                limit=20,
+                start_date=from_time,
+                end_date=now
+            )
+            
+            # Calculate view trend (comparing last hour with previous)
+            one_hour_ago = now - timedelta(hours=1)
+            recent_hour_posts = [p for p in recent_posts if p.get('date', now) > one_hour_ago]
+            posts_last_hour = len(recent_hour_posts)
+            
+            # Calculate trend by comparing recent views to baseline
+            view_trend = 0
+            if len(recent_posts) >= 2:
+                latest_views = recent_posts[0].get('views', 0) if recent_posts else 0
+                previous_views = recent_posts[1].get('views', 0) if len(recent_posts) > 1 else 0
+                view_trend = latest_views - previous_views
+            
+            return {
+                "channel_id": channel_id,
+                "current_views": total_views,
+                "view_trend": view_trend,
+                "engagement_rate": round(engagement_rate, 2),
+                "posts_last_hour": posts_last_hour,
+                "total_posts": posts_count,
+                "avg_views_per_post": round(avg_views_per_post, 2),
+                "current_subscribers": current_subs,
+                "data_freshness": "real-time",
+                "source": "analytics_fusion_service",
+                "last_updated": now.isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting live metrics for channel {channel_id}: {e}")
+            # Return minimal fallback data instead of failing
+            return {
+                "channel_id": channel_id,
+                "current_views": 0,
+                "view_trend": 0,
+                "engagement_rate": 0.0,
+                "posts_last_hour": 0,
+                "total_posts": 0,
+                "avg_views_per_post": 0.0,
+                "current_subscribers": None,
+                "data_freshness": "error",
+                "source": "analytics_fusion_service_fallback",
+                "last_updated": datetime.now().isoformat(),
+                "error": str(e)
+            }
+
+    async def generate_analytical_report(self, channel_id: int, report_type: str, days: int) -> dict:
+        """
+        Generate comprehensive analytical reports using real data
+        Replaces mock data with actual analytics
+        """
+        try:
+            from datetime import datetime, timedelta
+            
+            # Calculate time range
+            now = datetime.now()
+            from_date = now - timedelta(days=days)
+            
+            if report_type == "growth":
+                # Get growth data using existing methods
+                growth_data = await self.get_growth(channel_id, from_date, now, interval="day")
+                
+                return {
+                    "report_type": "growth",
+                    "channel_id": channel_id,
+                    "period_days": days,
+                    "data": growth_data,
+                    "summary": {
+                        "total_growth": growth_data.get("current_growth", 0),
+                        "growth_rate": growth_data.get("growth_rate", 0),
+                        "trend": "improving" if growth_data.get("growth_rate", 0) > 0 else "declining"
+                    },
+                    "generated_at": now.isoformat(),
+                    "source": "analytics_fusion_service"
+                }
+                
+            elif report_type == "reach":
+                # Get reach data
+                reach_data = await self.get_reach(channel_id, from_date, now)
+                
+                return {
+                    "report_type": "reach",
+                    "channel_id": channel_id,
+                    "period_days": days,
+                    "data": reach_data,
+                    "summary": {
+                        "avg_reach": reach_data.get("avg_reach", 0),
+                        "total_views": reach_data.get("total_views", 0),
+                        "reach_trend": "stable"  # Could be enhanced with trend analysis
+                    },
+                    "generated_at": now.isoformat(),
+                    "source": "analytics_fusion_service"
+                }
+                
+            elif report_type == "trending":
+                # Get trending posts
+                trending_data = await self.get_trending(channel_id, from_date, now)
+                
+                return {
+                    "report_type": "trending",
+                    "channel_id": channel_id,
+                    "period_days": days,
+                    "data": {
+                        "trending_posts": trending_data,
+                        "total_trending": len(trending_data)
+                    },
+                    "summary": {
+                        "trending_posts_count": len(trending_data),
+                        "avg_trend_score": sum(p.get("trend_score", 0) for p in trending_data) / len(trending_data) if trending_data else 0
+                    },
+                    "generated_at": now.isoformat(),
+                    "source": "analytics_fusion_service"
+                }
+                
+            elif report_type == "comprehensive":
+                # Get comprehensive overview
+                overview_data = await self.get_overview(channel_id, from_date, now)
+                growth_data = await self.get_growth(channel_id, from_date, now)
+                reach_data = await self.get_reach(channel_id, from_date, now)
+                top_posts = await self.get_top_posts(channel_id, from_date, now, 10)
+                
+                return {
+                    "report_type": "comprehensive",
+                    "channel_id": channel_id,
+                    "period_days": days,
+                    "data": {
+                        "overview": overview_data,
+                        "growth": growth_data,
+                        "reach": reach_data,
+                        "top_posts": top_posts
+                    },
+                    "summary": {
+                        "total_posts": overview_data.get("posts", 0),
+                        "total_views": overview_data.get("views", 0),
+                        "avg_engagement": overview_data.get("err", 0),
+                        "growth_rate": growth_data.get("growth_rate", 0),
+                        "performance_score": self.calculate_performance_score({
+                            "growth_rate": growth_data.get("growth_rate", 0),
+                            "engagement_rate": overview_data.get("err", 0),
+                            "reach_score": 75  # Default good reach score
+                        })
+                    },
+                    "generated_at": now.isoformat(),
+                    "source": "analytics_fusion_service"
+                }
+            
+            else:
+                return {
+                    "error": f"Unknown report type: {report_type}",
+                    "available_types": ["growth", "reach", "trending", "comprehensive"]
+                }
+                
+        except Exception as e:
+            logger.error(f"Error generating {report_type} report for channel {channel_id}: {e}")
+            return {
+                "error": f"Failed to generate {report_type} report",
+                "channel_id": channel_id,
+                "report_type": report_type,
+                "generated_at": datetime.now().isoformat(),
+                "source": "analytics_fusion_service_error",
+                "details": str(e)
+            }

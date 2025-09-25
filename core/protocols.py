@@ -58,6 +58,14 @@ class AnalyticsFusionServiceProtocol(ServiceProtocol):
         """Get live monitoring data"""
         ...
     
+    async def get_live_metrics(self, channel_id: int, hours: int = 6) -> Dict[str, Any]:
+        """Get real-time live metrics for monitoring dashboard"""
+        ...
+    
+    async def generate_analytical_report(self, channel_id: int, report_type: str, days: int) -> Dict[str, Any]:
+        """Generate comprehensive analytical reports"""
+        ...
+    
     async def generate_recommendations(self, channel_id: int) -> Dict[str, Any]:
         """Generate AI-powered recommendations"""
         ...

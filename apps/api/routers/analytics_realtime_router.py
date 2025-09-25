@@ -244,39 +244,18 @@ async def get_live_metrics_optimized(
     channel_id: int,
     hours: int = Query(6, ge=1, le=24, description="Hours of recent data"),
     current_user: dict = Depends(get_current_user),
+    analytics_service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
 ):
     """Get real-time metrics optimized for live monitoring"""
     
     try:
-        # Import demo data generator 
-        from apps.api.__mocks__.analytics_mock import generate_post_dynamics
+        # Use real analytics service instead of mock data
+        live_metrics = await analytics_service.get_live_metrics(channel_id, hours)
         
-        # Use V1 for real-time data
-        recent_dynamics = generate_post_dynamics(hours)
-        
-        # Calculate live metrics
-        if recent_dynamics:
-            current_views = recent_dynamics[-1].views
-            view_trend = recent_dynamics[-1].views - recent_dynamics[-2].views if len(recent_dynamics) > 1 else 0
-            engagement_rate = (recent_dynamics[-1].likes + recent_dynamics[-1].shares + recent_dynamics[-1].comments) / max(recent_dynamics[-1].views, 1) * 100
-        else:
-            current_views = 0
-            view_trend = 0
-            engagement_rate = 0
-        
-        return {
-            "channel_id": channel_id,
-            "current_views": current_views,
-            "view_trend": view_trend,
-            "engagement_rate": round(engagement_rate, 2),
-            "posts_last_hour": len([p for p in recent_dynamics if p.timestamp > datetime.now() - timedelta(hours=1)]),
-            "data_freshness": "real-time",
-            "source": "v1_optimized",
-            "last_updated": datetime.now().isoformat()
-        }
+        return live_metrics
         
     except Exception as e:
-        logger.error(f"Failed to get live metrics: {e}")
+        logger.error(f"Failed to get live metrics for channel {channel_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get live metrics")
 
 # === UTILITY FUNCTIONS ===

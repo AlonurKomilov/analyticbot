@@ -375,58 +375,15 @@ async def get_analytical_report(
     report_type: str = Query("growth", regex="^(growth|reach|trending|comprehensive)$"),
     days: int = Query(30, ge=7, le=365, description="Days of historical data"),
     current_user: dict = Depends(get_current_user),
+    analytics_service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
 ):
     """Generate comprehensive analytical reports"""
     
     try:
-        # Import demo data generators 
-        from apps.api.__mocks__.analytics_mock import generate_post_dynamics, generate_top_posts
+        # Use real analytics service instead of mock data
+        report_data = await analytics_service.generate_analytical_report(channel_id, report_type, days)
         
-        # For now, provide V1-based reporting with enhanced analytics
-        base_data = generate_post_dynamics(days * 24)  # Convert days to hours
-        top_posts = generate_top_posts(20)
-        
-        if report_type == "growth":
-            # Simulate growth analysis
-            daily_views = []
-            for day in range(days):
-                day_start = len(base_data) - (day + 1) * 24
-                day_end = len(base_data) - day * 24
-                if day_start >= 0:
-                    day_views = sum(p.views for p in base_data[day_start:day_end])
-                    daily_views.append({
-                        "date": (datetime.now() - timedelta(days=day)).date().isoformat(),
-                        "views": day_views
-                    })
-            
-            # Calculate growth rate
-            if len(daily_views) >= 2:
-                recent_avg = sum(d["views"] for d in daily_views[:7]) / 7
-                previous_avg = sum(d["views"] for d in daily_views[7:14]) / 7 if len(daily_views) >= 14 else recent_avg
-                growth_rate = ((recent_avg - previous_avg) / max(previous_avg, 1)) * 100
-            else:
-                growth_rate = 0
-            
-            return {
-                "report_type": "growth",
-                "channel_id": channel_id,
-                "period_days": days,
-                "growth_rate_percent": round(growth_rate, 2),
-                "daily_views": daily_views,
-                "trend_analysis": "improving" if growth_rate > 5 else "stable" if growth_rate > -5 else "declining",
-                "data_source": "v1_enhanced",
-                "note": "Enhanced V1 analysis. V2 MTProto analysis coming soon.",
-                "generated_at": datetime.now().isoformat()
-            }
-        
-        # Add other report types...
-        return {
-            "report_type": report_type,
-            "channel_id": channel_id,
-            "message": f"{report_type.title()} report will be available when V2 MTProto integration is complete",
-            "fallback_available": True,
-            "data_source": "v1_fallback"
-        }
+        return report_data
         
     except Exception as e:
         logger.error(f"Failed to generate report: {e}")

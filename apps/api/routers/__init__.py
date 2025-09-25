@@ -21,7 +21,9 @@ from .analytics_predictive_router import router as analytics_predictive_router
 
 # Other domain routers - FIXED: Updated to match renamed files
 from .channels_router import router as channels_router
-from .admin_router import router as admin_router
+from .admin_channels_router import router as admin_channels_router
+from .admin_users_router import router as admin_users_router
+from .admin_system_router import router as admin_system_router
 from .system_router import router as system_router
 from .auth_router import router as auth_router
 from .health_system_router import router as health_system_router
@@ -41,7 +43,9 @@ __all__ = [
     "analytics_predictive_router",
     # Other domain routers - FIXED: Updated names
     "channels_router", 
-    "admin_router",
+    "admin_channels_router",
+    "admin_users_router", 
+    "admin_system_router",
     "system_router",
     "auth_router",
     "health_system_router",

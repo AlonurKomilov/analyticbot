@@ -99,7 +99,7 @@ async def get_ai_insights(
     channel_id: int,
     days: int = Query(default=30, ge=7, le=90, description="Analysis period in days"),
     include_predictions: bool = Query(default=True, description="Include predictive insights"),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -188,7 +188,7 @@ async def get_predictive_summary(
     channel_id: int,
     period: int = Query(default=30, ge=7, le=180, description="Summary period in days"),
     include_forecasts: bool = Query(default=True, description="Include future predictions"),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -294,7 +294,7 @@ async def get_predictive_summary(
 @router.post("/data/analyze")
 async def analyze_channel_data(
     request: AnalysisRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -445,7 +445,7 @@ async def analyze_channel_data(
 @router.post("/predictions/forecast", response_model=PredictionResult)
 async def generate_predictions(
     request: PredictionRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -596,7 +596,8 @@ async def generate_predictions(
 
 @router.get("/best-times/{channel_id}")
 async def get_optimal_posting_times(
-    channel_id: str
+    channel_id: str,
+    current_user: dict = Depends(require_analytics_read),
 ):
     """
     ## ⏰ Get Optimal Posting Times

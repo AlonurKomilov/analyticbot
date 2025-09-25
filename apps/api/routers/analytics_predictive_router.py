@@ -5,10 +5,7 @@ Analytics Predictive Router - Machine Learning & Forecasting Analytics
 Handles AI-powered analytics, predictive modeling, and advanced data analysis.
 Consolidates ML/AI functionality from legacy routers.
 
-Domain: Predictive analytics, AI insights, forecastin        with performance_timer("advanced_metrics_computation"):
-            # ✅ FIXED: Use proper dependency injection  
-            from apps.api.deps import get_advanced_data_processor
-            data_processor = await get_advanced_data_processor(), advanced data analysis
+Domain: Predictive analytics, AI insights, forecasting, advanced data analysis
 Path: /analytics/predictive/*
 """
 
@@ -21,6 +18,12 @@ from pydantic import BaseModel, Field
 
 # Core services
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.api.deps import (
+    get_analytics_service,
+    get_ai_insights_generator,
+    get_predictive_analytics_engine,
+    get_advanced_data_processor,
+)
 from core.services.analytics_fusion_service import AnalyticsFusionService
 from core.di_container import container
 
@@ -101,6 +104,8 @@ async def get_ai_insights(
     include_predictions: bool = Query(default=True, description="Include predictive insights"),
     current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
+    analytics_service = Depends(get_analytics_service),
+    ai_generator = Depends(get_ai_insights_generator),
     cache=Depends(get_cache),
 ):
     """
@@ -130,10 +135,7 @@ async def get_ai_insights(
             return AIInsights(**cached_data)
 
         with performance_timer("ai_insights_generation"):
-            # ✅ FIXED: Use proper dependency injection instead of container.resolve()
-            from apps.api.deps import get_analytics_service, get_ai_insights_generator
-            analytics_service = await get_analytics_service()
-            ai_generator = await get_ai_insights_generator()
+            # ✅ FIXED: Use proper dependency injection instead of inline imports
             
             # Get recent data for analysis
             to_date = datetime.utcnow()
@@ -190,6 +192,7 @@ async def get_predictive_summary(
     include_forecasts: bool = Query(default=True, description="Include future predictions"),
     current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
+    predictive_engine = Depends(get_predictive_analytics_engine),
     cache=Depends(get_cache),
 ):
     """
@@ -219,9 +222,7 @@ async def get_predictive_summary(
             return cached_data
 
         with performance_timer("growth_prediction"):
-            # ✅ FIXED: Use proper dependency injection
-            from apps.api.deps import get_predictive_analytics_engine
-            predictive_engine = await get_predictive_analytics_engine()
+            # ✅ FIXED: Use proper dependency injection instead of inline imports
             
             # Get historical data
             to_date = datetime.utcnow()
@@ -296,6 +297,7 @@ async def analyze_channel_data(
     request: AnalysisRequest,
     current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
+    data_processor = Depends(get_advanced_data_processor),
     cache=Depends(get_cache),
 ):
     """
@@ -334,9 +336,7 @@ async def analyze_channel_data(
             return cached_data
 
         with performance_timer(f"advanced_analysis_{request.analysis_type}"):
-            # ✅ FIXED: Use proper dependency injection
-            from apps.api.deps import get_advanced_data_processor
-            data_processor = await get_advanced_data_processor()
+            # ✅ FIXED: Use proper dependency injection instead of inline imports
             
             # Get comprehensive data
             to_date = datetime.utcnow()
@@ -447,6 +447,7 @@ async def generate_predictions(
     request: PredictionRequest,
     current_user: dict = Depends(require_analytics_read),
     service: AnalyticsFusionService = Depends(get_analytics_fusion_service),
+    predictive_engine = Depends(get_predictive_analytics_engine),
     cache=Depends(get_cache),
 ):
     """
@@ -485,9 +486,7 @@ async def generate_predictions(
             return PredictionResult(**cached_data)
 
         with performance_timer("ml_prediction_generation"):
-            # ✅ FIXED: Use proper dependency injection
-            from apps.api.deps import get_predictive_analytics_engine
-            predictive_engine = await get_predictive_analytics_engine()
+            # ✅ FIXED: Use proper dependency injection instead of inline imports
             
             # Process each channel
             all_predictions = []
@@ -598,6 +597,7 @@ async def generate_predictions(
 async def get_optimal_posting_times(
     channel_id: str,
     current_user: dict = Depends(require_analytics_read),
+    analytics_service = Depends(get_analytics_service),
 ):
     """
     ## ⏰ Get Optimal Posting Times
@@ -614,11 +614,7 @@ async def get_optimal_posting_times(
     - Time-based performance insights
     """
     try:
-        # Import analytics service using clean architecture pattern
-        from core.protocols import AnalyticsServiceProtocol  
-        from core.di_container import container
-        
-        analytics_service = container.get_service(AnalyticsServiceProtocol)
+        # Use proper dependency injection instead of direct container access
         best_times = await analytics_service.get_best_posting_times(channel_id)
         
         return {

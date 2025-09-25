@@ -19,7 +19,7 @@ from apps.api.routers.admin_channels_router import router as admin_channels_rout
 from apps.api.routers.admin_users_router import router as admin_users_router  
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.system_router import router as system_router
-from apps.api.routers.health_system_router import router as health_system_router
+from apps.api.routers.health_router import router as health_router
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
@@ -192,7 +192,7 @@ app.add_middleware(DemoModeMiddleware)
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)        # Core system operations (performance, scheduling) 
-app.include_router(health_system_router) # Comprehensive health monitoring (consolidated)
+app.include_router(health_router)        # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
 app.include_router(channels_router)      # Channel management (CRUD)
 app.include_router(admin_channels_router)   # Admin - Channel Management
@@ -240,7 +240,7 @@ app.include_router(superadmin_router)         # Super admin operations (unique)
 app.include_router(payment_router)            # Payment system (unique)
 
 # Include AI services router
-from apps.api.routers.ai_services import router as ai_services_router
+from apps.api.routers.ai_services_router import router as ai_services_router
 app.include_router(ai_services_router)
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅

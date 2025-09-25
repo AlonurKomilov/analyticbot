@@ -26,13 +26,13 @@ from .admin_users_router import router as admin_users_router
 from .admin_system_router import router as admin_system_router
 from .system_router import router as system_router
 from .auth_router import router as auth_router
-from .health_system_router import router as health_system_router
+from .health_router import router as health_router
 from .demo_router import router as demo_router
 from .exports_router import router as exports_router
 from .sharing_router import router as sharing_router
 from .mobile_router import router as mobile_router
 from .superadmin_router import router as superadmin_router
-from .ai_services import router as ai_services_router
+from .ai_services_router import router as ai_services_router
 
 __all__ = [
     # Phase 3B: Clean Analytics Architecture
@@ -48,7 +48,7 @@ __all__ = [
     "admin_system_router",
     "system_router",
     "auth_router",
-    "health_system_router",
+    "health_router",
     "demo_router",
     "exports_router", 
     "sharing_router",

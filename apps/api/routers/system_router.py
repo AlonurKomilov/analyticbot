@@ -22,7 +22,9 @@ from core import DeliveryService, ScheduleService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    tags=["Core"], responses={404: {"description": "Not found"}}
+    prefix="/system",
+    tags=["Core"], 
+    responses={404: {"description": "Not found"}}
 )
 
 # === CORE MODELS ===

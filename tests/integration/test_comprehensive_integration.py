@@ -271,8 +271,9 @@ def test_ml_services_execution():
 
 def test_api_routers_execution():
     """Test API routers by executing their setup"""
-    from apps.api.main import app
     from apps.api.routers.analytics_router import router
+
+    from apps.api.main import app
 
     # Execute router inspection
     routes = router.routes

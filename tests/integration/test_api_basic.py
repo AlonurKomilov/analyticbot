@@ -159,7 +159,9 @@ class TestAPIErrorScenarios:
         """Test handling of malformed requests"""
         # Test with malformed JSON
         response = test_client.post(
-            "/api/test", data="malformed json", headers={"Content-Type": "application/json"}
+            "/api/test",
+            data="malformed json",
+            headers={"Content-Type": "application/json"},
         )
 
         # Should handle malformed data gracefully

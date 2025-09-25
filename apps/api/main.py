@@ -34,10 +34,8 @@ from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, Schedu
 from config import settings
 from core import DeliveryService, ScheduleService
 from infra.db.connection_manager import close_database, init_database
-from apps.api.middleware.auth import get_current_user_id
-from apps.api.middleware.demo_mode import is_request_for_demo_user, get_demo_type_from_request
-from apps.api.__mocks__.demo_service import demo_data_service
-from apps.api.__mocks__.initial_data.mock_data import get_mock_initial_data
+# ✅ PRODUCTION READY: No more direct mock imports
+# Demo services now injected via DI container based on configuration
 
 logger = logging.getLogger(__name__)
 

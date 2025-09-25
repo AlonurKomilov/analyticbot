@@ -10,15 +10,14 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from pydantic import BaseModel, Field
 
 from apps.api.deps import get_delivery_service, get_schedule_service
 from apps.bot.models.twa import InitialDataResponse
 from apps.api.middleware.auth import get_current_user_id
-from apps.api.middleware.demo_mode import is_request_for_demo_user, get_demo_type_from_request
-from apps.api.__mocks__.demo_service import demo_data_service
-from apps.api.__mocks__.initial_data.mock_data import get_mock_initial_data
+# ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
+from apps.api.deps_factory import get_initial_data_service, is_request_for_demo_user_proper, get_demo_type_from_request_proper
 from core import DeliveryService, ScheduleService
 
 logger = logging.getLogger(__name__)
@@ -99,7 +98,10 @@ async def performance():
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 @router.get("/initial-data", response_model=InitialDataResponse, summary="Application Startup Data")
-async def initial_data(user_id: int = Depends(get_current_user_id)):
+async def initial_data(
+    request: Request,
+    user_id: int = Depends(get_current_user_id)
+):
     """
     ## 🚀 Application Startup Data
     
@@ -112,64 +114,9 @@ async def initial_data(user_id: int = Depends(get_current_user_id)):
     - Feature flags
     """
     try:
-        # Check if this is a demo user request
-        if is_request_for_demo_user(user_id):
-            demo_type = get_demo_type_from_request(user_id)
-            return await demo_data_service.get_initial_data(user_id, demo_type)
+        # ✅ FIXED: Use proper configuration-driven service injection
+        return await get_initial_data_service(request)
         
-        # For production users, get actual data
-        try:
-            from infra.db.repositories.user_repository import AsyncpgUserRepository
-            from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-            
-            user_repo = AsyncpgUserRepository()
-            channel_repo = AsyncpgChannelRepository()
-            
-            # Get user data
-            user = await user_repo.get_user_by_id(user_id)
-            if not user:
-                raise HTTPException(status_code=404, detail="User not found")
-            
-            # Get user channels
-            channels = await channel_repo.get_user_channels(user_id)
-            
-            # Get user plan info (simplified)
-            plan = {
-                "name": "Free",
-                "channels_limit": 5,
-                "posts_limit": 100,
-                "analytics_enabled": True
-            }
-            
-            return InitialDataResponse(
-                user={
-                    "id": user["id"],
-                    "telegram_id": user["telegram_id"],
-                    "username": user.get("username"),
-                    "full_name": user.get("full_name"),
-                    "email": user.get("email")
-                },
-                plan=plan,
-                channels=[{
-                    "id": ch["id"],
-                    "name": ch["name"],
-                    "username": ch.get("username"),
-                    "subscriber_count": ch.get("subscriber_count", 0),
-                    "is_active": ch.get("is_active", True)
-                } for ch in channels],
-                scheduled_posts=[],  # Would fetch actual scheduled posts
-                features={
-                    "analytics_enabled": True,
-                    "export_enabled": True,
-                    "ai_insights_enabled": True,
-                    "advanced_features_enabled": True
-                }
-            )
-            
-        except Exception as db_error:
-            logger.warning(f"Database error, falling back to mock data: {db_error}")
-            return get_mock_initial_data(user_id)
-            
     except Exception as e:
         logger.error(f"Initial data fetch failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to get initial data")

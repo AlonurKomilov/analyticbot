@@ -182,8 +182,8 @@ class AdminServiceProtocol(ServiceProtocol):
 class DemoDataServiceProtocol(ServiceProtocol):
     """Demo data service interface"""
     
-    async def get_initial_data(self) -> Dict[str, Any]:
-        """Get initial demo data"""
+    async def get_initial_data(self, user_id: int = None, demo_type: str = None) -> Dict[str, Any]:
+        """Get initial demo data for TWA initialization"""
         ...
     
     async def reset_demo_data(self) -> Dict[str, Any]:

@@ -26,70 +26,67 @@ class MockDemoDataService(DemoDataServiceProtocol):
             "datasets_available": ["channels", "users", "analytics", "posts"]
         }
     
-    async def get_initial_data(self) -> Dict[str, Any]:
-        """Get initial demo data"""
+    async def get_initial_data(self, user_id: int = None, demo_type: str = None):
+        """Get initial demo data for TWA initialization"""
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
         
-        return {
-            "users": [
-                {
-                    "id": 123,
-                    "username": "demo_user",
-                    "email": "demo@example.com",
-                    "type": "premium",
-                    "created_at": (datetime.now() - timedelta(days=30)).isoformat()
-                },
-                {
-                    "id": 456,
-                    "username": "free_user",
-                    "email": "free@example.com", 
-                    "type": "free",
-                    "created_at": (datetime.now() - timedelta(days=15)).isoformat()
-                }
-            ],
-            "channels": [
-                {
-                    "id": "demo_channel_1",
-                    "name": "Tech Insights",
-                    "username": "tech_insights_demo",
-                    "members": 15420,
-                    "category": "Technology",
-                    "created_at": (datetime.now() - timedelta(days=90)).isoformat()
-                },
-                {
-                    "id": "demo_channel_2", 
-                    "name": "Business Today",
-                    "username": "business_today_demo",
-                    "members": 8340,
-                    "category": "Business",
-                    "created_at": (datetime.now() - timedelta(days=60)).isoformat()
-                }
-            ],
-            "sample_posts": [
-                {
-                    "id": "post_1",
-                    "channel_id": "demo_channel_1",
-                    "content": "🚀 The future of AI is here! Exciting developments in machine learning.",
-                    "views": 2450,
-                    "likes": 180,
-                    "comments": 25,
-                    "shares": 12,
-                    "created_at": (datetime.now() - timedelta(hours=6)).isoformat()
-                },
-                {
-                    "id": "post_2",
-                    "channel_id": "demo_channel_2",
-                    "content": "📈 Market trends show significant growth in tech sector.",
-                    "views": 1820,
-                    "likes": 95,
-                    "comments": 18,
-                    "shares": 7,
-                    "created_at": (datetime.now() - timedelta(hours=12)).isoformat()
-                }
-            ],
-            "demo_mode": True,
-            "generated_at": datetime.now().isoformat()
+        # Import here to avoid circular import
+        from apps.bot.models.twa import InitialDataResponse
+        
+        # Generate demo user data
+        demo_user = {
+            "id": user_id or 1,
+            "telegram_id": user_id or 12345,
+            "username": f"demo_user_{demo_type or 'limited'}",
+            "full_name": "Demo User",
+            "email": f"demo_{demo_type or 'limited'}@example.com"
         }
+        
+        # Generate demo plan based on demo_type
+        if demo_type == "premium":
+            plan = {
+                "name": "Premium",
+                "channels_limit": 50,
+                "posts_limit": 10000,
+                "analytics_enabled": True
+            }
+        else:
+            plan = {
+                "name": "Free",
+                "channels_limit": 5,
+                "posts_limit": 100,
+                "analytics_enabled": True
+            }
+        
+        # Generate demo channels
+        channels = await self.seed_demo_channels(user_id or 1)
+        channels = [
+            {
+                "id": ch["id"],
+                "name": ch["name"],
+                "username": ch.get("username"),
+                "subscriber_count": ch.get("members", 0),
+                "is_active": ch.get("is_active", True)
+            } for ch in channels
+        ]
+        
+        # Generate demo features
+        features = {
+            "analytics_enabled": True,
+            "export_enabled": True,
+            "ai_insights_enabled": demo_type == "premium",
+            "advanced_features_enabled": demo_type == "premium",
+            "alerts_enabled": True,
+            "share_links_enabled": True
+        }
+        
+        return InitialDataResponse(
+            user=demo_user,
+            plan=plan,
+            channels=channels,
+            scheduled_posts=[],  # Empty for demo
+            features=features
+        )
     
     async def reset_demo_data(self) -> Dict[str, Any]:
         """Reset demo data to initial state"""

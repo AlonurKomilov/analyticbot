@@ -240,7 +240,22 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         except ImportError as e:
             logger.error(f"Failed to import MockPaymentService: {e}")
     else:
-        logger.info("Real payment service not yet implemented")
+        # ✅ NEW: Register real payment service
+        async def get_payment_service_factory():
+            """Factory for creating real payment service"""
+            from apps.bot.services.payment_service import PaymentService
+            from apps.shared.di import get_container
+            shared_container = get_container()
+            payment_repo = await shared_container.payment_repo()
+            return PaymentService(payment_repo)
+        
+        container.register_service(
+            interface=PaymentServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_payment_service_factory
+        )
+        logger.info("Registered real PaymentService")
     
     # Database Service
     if demo_config.should_use_mock_service("database"):
@@ -285,8 +300,19 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         except ImportError as e:
             logger.error(f"Failed to import MockAIService: {e}")
     else:
-        # Real AI service would be registered here
-        logger.info("Real AI service not yet implemented")
+        # ✅ NEW: Register real AI service (AIInsightsGenerator)
+        async def get_ai_service_factory():
+            """Factory for creating real AI service"""
+            from apps.bot.services.ml.ai_insights import AIInsightsGenerator
+            return AIInsightsGenerator()
+        
+        container.register_service(
+            interface=AIServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_ai_service_factory
+        )
+        logger.info("Registered real AIService (AIInsightsGenerator)")
     
     # Telegram API Service
     if demo_config.should_use_mock_service("telegram_api"):
@@ -315,7 +341,19 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         except ImportError as e:
             logger.error(f"Failed to import MockAuthService: {e}")
     else:
-        logger.info("Real auth service not yet implemented")
+        # ✅ NEW: Register real auth service (SecurityManager)
+        async def get_auth_service_factory():
+            """Factory for creating real auth service"""
+            from core.security_engine.auth import SecurityManager
+            return SecurityManager()
+        
+        container.register_service(
+            interface=AuthServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_auth_service_factory
+        )
+        logger.info("Registered real AuthService (SecurityManager)")
     
     # Admin Service
     if demo_config.should_use_mock_service("admin"):
@@ -326,7 +364,22 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         except ImportError as e:
             logger.error(f"Failed to import MockAdminService: {e}")
     else:
-        logger.info("Real admin service not yet implemented")
+        # ✅ NEW: Register real admin service (SuperAdminService)
+        async def get_admin_service_factory():
+            """Factory for creating real admin service"""
+            from core.services.superadmin_service import SuperAdminService
+            from apps.shared.di import get_container
+            shared_container = get_container()
+            db_session = await shared_container.db_session()  # Get SQLAlchemy session for admin service
+            return SuperAdminService(db_session)
+        
+        container.register_service(
+            interface=AdminServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_admin_service_factory
+        )
+        logger.info("Registered real AdminService (SuperAdminService)")
     
     # Demo Data Service
     if demo_config.should_use_mock_service("demo_data"):

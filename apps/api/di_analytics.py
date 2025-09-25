@@ -140,21 +140,33 @@ async def get_database_pool() -> Union["Pool", object, None]:
 
 
 async def get_redis_client():
-    """Get Redis client - to be implemented with existing container"""
+    """Get Redis client from DI container - FIXED: Now properly obtains Redis client"""
 
     if os.getenv("ENVIRONMENT") == "test" or "pytest" in os.getenv("_", ""):
         # For tests, return None (cache adapter will handle this)
         return None
 
     try:
-        # ✅ FIXED: Try to get Redis client from proper DI container
+        # ✅ FIXED: Get Redis client from proper DI container
         from core.di_container import container as core_container
-        # This would need a Redis protocol and registration, but for now use None
-        logger.warning("Redis client integration not yet implemented in core DI container")
-        return None
+        from core.protocols import RedisClientProtocol
+        
+        redis_client = core_container.get_service(RedisClientProtocol)
+        logger.info("Successfully obtained Redis client from DI container")
+        return redis_client._client  # Return the underlying redis client for cache adapter
+        
     except Exception as e:
-        logger.warning(f"Redis client not available: {e}")
-        return None
+        logger.warning(f"Redis client not available from DI container: {e}")
+        # Fallback: create Redis client directly
+        try:
+            import redis.asyncio as redis
+            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+            fallback_client = redis.from_url(redis_url, decode_responses=True)
+            logger.info("Created fallback Redis client directly")
+            return fallback_client
+        except Exception as fallback_e:
+            logger.error(f"Fallback Redis client creation failed: {fallback_e}")
+            return None
 
 
 async def init_analytics_fusion_service() -> AnalyticsFusionService:

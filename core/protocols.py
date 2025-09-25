@@ -71,6 +71,30 @@ class AnalyticsFusionServiceProtocol(ServiceProtocol):
         ...
 
 
+class RedisClientProtocol(ServiceProtocol):
+    """Redis client interface for caching and session management"""
+    
+    async def get(self, key: str) -> Any:
+        """Get value from Redis"""
+        ...
+    
+    async def set(self, key: str, value: Any, ex: Optional[int] = None) -> bool:
+        """Set value in Redis with optional expiry"""
+        ...
+    
+    async def delete(self, key: str) -> bool:
+        """Delete key from Redis"""
+        ...
+    
+    async def ping(self) -> bool:
+        """Check Redis connection"""
+        ...
+    
+    async def close(self) -> None:
+        """Close Redis connection"""
+        ...
+
+
 class PaymentServiceProtocol(ServiceProtocol):
     """Payment service interface"""
     

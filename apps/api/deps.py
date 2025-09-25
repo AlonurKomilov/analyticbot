@@ -128,6 +128,21 @@ async def get_advanced_data_processor():
     return MockDataProcessor()
 
 
+async def get_redis_client():
+    """Get Redis client via DI container - FIXED: replaces broken Redis integration"""
+    try:
+        from core.di_container import container
+        from core.protocols import RedisClientProtocol
+        return container.get_service(RedisClientProtocol)
+    except ValueError as e:
+        logger.warning(f"Redis client not available from DI container: {e}")
+        # Return None for graceful degradation
+        return None
+
+
+# Repository dependency providers with proper pool injection
+
+
 # Legacy database connection dependency - now uses DI container
 _db_pool: asyncpg.Pool | None = None
 

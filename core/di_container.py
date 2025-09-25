@@ -11,6 +11,7 @@ from core.protocols import (
     ServiceProtocol, 
     AnalyticsServiceProtocol,
     AnalyticsFusionServiceProtocol,
+    RedisClientProtocol,
     PaymentServiceProtocol, 
     DatabaseServiceProtocol,
     AIServiceProtocol,
@@ -192,6 +193,20 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         factory=get_analytics_fusion_service_factory
     )
     logger.info("Registered AnalyticsFusionService via DI factory")
+    
+    # ✅ NEW: Register Redis Client
+    async def get_redis_client_factory():
+        """Factory for creating Redis client"""
+        from infra.cache.async_redis_client import create_redis_client
+        return create_redis_client()
+    
+    container.register_service(
+        interface=RedisClientProtocol,
+        implementation=type(None),  # Factory-based creation
+        singleton=True,
+        factory=get_redis_client_factory
+    )
+    logger.info("Registered RedisClient via DI factory")
     
     # Analytics Service
     if demo_config.should_use_mock_service("analytics"):

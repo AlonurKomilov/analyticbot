@@ -197,10 +197,17 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-# Add demo mode detection middleware
-from apps.api.middleware.demo_mode import DemoModeMiddleware
+# Add demo mode detection middleware - FIXED: Only in demo environments
+from config.demo_mode_config import DemoModeConfig
+demo_config = DemoModeConfig()
+if demo_config.DEMO_MODE_ENABLED:
+    from apps.api.middleware.demo_mode import DemoModeMiddleware
+    app.add_middleware(DemoModeMiddleware)
+    logger.info("Demo mode middleware enabled")
+else:
+    logger.info("Demo mode middleware disabled for production")
+
 from core.di_container import container, configure_services
-app.add_middleware(DemoModeMiddleware)
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)        # Core system operations (performance, scheduling) 

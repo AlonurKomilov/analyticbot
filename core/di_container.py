@@ -76,9 +76,9 @@ class DIContainer:
         
         logger.debug(f"Registered service: {key} -> {implementation.__name__}")
     
-    def get_service(self, interface: Type[T]) -> T:
+    async def get_service(self, interface: Type[T]) -> T:
         """
-        Get service instance
+        Get service instance - FIXED: Now properly handles async factories
         
         Args:
             interface: Service interface to retrieve
@@ -100,9 +100,9 @@ class DIContainer:
         if registration.singleton and key in self._singletons:
             return self._singletons[key]
         
-        # Create new instance
+        # Create new instance - FIXED: Await async factories
         if registration.factory:
-            instance = registration.factory()
+            instance = await registration.factory()
         else:
             instance = registration.implementation()
         
@@ -320,8 +320,24 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         container.register_service(TelegramAPIServiceProtocol, MockTelegramService)
         logger.info("Registered MockTelegramService")
     else:
-        # Real Telegram service would be registered here
-        logger.info("Real Telegram service not yet implemented")
+        # ✅ FIXED: Register real Telegram service
+        async def get_telegram_service_factory():
+            """Factory for creating real Telegram service"""
+            from apps.bot.clients.telegram_client import TelegramClient
+            from config.settings import settings
+            return TelegramClient(
+                api_id=settings.TELEGRAM_API_ID,
+                api_hash=settings.TELEGRAM_API_HASH,
+                session_name=settings.TELEGRAM_SESSION_NAME
+            )
+        
+        container.register_service(
+            interface=TelegramAPIServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_telegram_service_factory
+        )
+        logger.info("Registered real TelegramService (TelegramClient)")
     
     # Email Service
     if demo_config.should_use_mock_service("email_delivery"):
@@ -329,8 +345,26 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         container.register_service(EmailServiceProtocol, MockEmailService)
         logger.info("Registered MockEmailService")
     else:
-        # Real email service would be registered here
-        logger.info("Real email service not yet implemented")
+        # ✅ FIXED: Register real email service
+        async def get_email_service_factory():
+            """Factory for creating real email service"""
+            from infra.email.smtp_email_service import SMTPEmailService
+            from config.settings import settings
+            return SMTPEmailService(
+                smtp_host=settings.SMTP_HOST,
+                smtp_port=settings.SMTP_PORT,
+                smtp_user=settings.SMTP_USER,
+                smtp_password=settings.SMTP_PASSWORD,
+                use_tls=settings.SMTP_USE_TLS
+            )
+        
+        container.register_service(
+            interface=EmailServiceProtocol,
+            implementation=type(None),  # Factory-based creation
+            singleton=True,
+            factory=get_email_service_factory
+        )
+        logger.info("Registered real EmailService (SMTPEmailService)")
     
     # Auth Service
     if demo_config.should_use_mock_service("auth"):

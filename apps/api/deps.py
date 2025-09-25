@@ -60,13 +60,13 @@ async def get_channel_repository(pool: asyncpg.Pool = Depends(get_asyncpg_pool))
 
 async def get_analytics_fusion_service():
     """
-    Get analytics fusion service via DI container
+    Get analytics fusion service via DI container - FIXED: Now properly awaits
     This replaces the broken container.analytics_fusion_service() calls
     """
     try:
         from core.di_container import container
         from core.protocols import AnalyticsFusionServiceProtocol
-        service = container.get_service(AnalyticsFusionServiceProtocol)
+        service = await container.get_service(AnalyticsFusionServiceProtocol)
         return service
     except ValueError:
         # Fallback to direct factory if DI container not properly configured
@@ -104,17 +104,36 @@ async def get_ai_insights_generator():
 
 
 async def get_predictive_analytics_engine():
-    """Get predictive analytics engine - FIXED: replaces container.resolve()"""
-    # This would be registered in the DI container in a real implementation  
-    # For now, create a mock implementation
-    class MockPredictiveEngine:
-        async def predict_growth(self, **kwargs):
-            return {"predictions": [], "confidence": 0.85}
+    """Get predictive analytics engine - FIXED: Now uses proper DI container"""
+    try:
+        from core.di_container import container
+        from core.protocols import AIServiceProtocol
+        ai_service = await container.get_service(AIServiceProtocol)
         
-        async def forecast_metrics(self, **kwargs):
-            return {"forecasts": [], "accuracy": 0.80}
-    
-    return MockPredictiveEngine()
+        # Return AI service's predictive capabilities
+        class PredictiveEngineAdapter:
+            def __init__(self, ai_service):
+                self.ai_service = ai_service
+                
+            async def predict_growth(self, **kwargs):
+                return await self.ai_service.generate_predictive_insights(**kwargs)
+                
+            async def forecast_metrics(self, **kwargs):
+                return await self.ai_service.generate_forecasting_insights(**kwargs)
+        
+        return PredictiveEngineAdapter(ai_service)
+        
+    except ValueError:
+        # Fallback to basic implementation if DI not configured
+        logger.warning("Using fallback predictive engine - DI container not available")
+        class BasicPredictiveEngine:
+            async def predict_growth(self, **kwargs):
+                return {"predictions": [], "confidence": 0.85, "note": "Basic implementation"}
+                
+            async def forecast_metrics(self, **kwargs):
+                return {"forecasts": [], "accuracy": 0.80, "note": "Basic implementation"}
+        
+        return BasicPredictiveEngine()
 
 
 async def get_advanced_data_processor():
@@ -129,11 +148,11 @@ async def get_advanced_data_processor():
 
 
 async def get_redis_client():
-    """Get Redis client via DI container - FIXED: replaces broken Redis integration"""
+    """Get Redis client via DI container - FIXED: Now properly awaits async factory"""
     try:
         from core.di_container import container
         from core.protocols import RedisClientProtocol
-        return container.get_service(RedisClientProtocol)
+        return await container.get_service(RedisClientProtocol)
     except ValueError as e:
         logger.warning(f"Redis client not available from DI container: {e}")
         # Return None for graceful degradation

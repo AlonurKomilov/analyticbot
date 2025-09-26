@@ -27,7 +27,7 @@ async def get_demo_data_service() -> DemoDataServiceProtocol:
         logger.error(f"Failed to get demo data service from DI container: {e}")
         # Fallback only if container is not properly configured
         if settings.demo_mode.should_use_mock_service("demo_data"):
-            from src.mock_services.services.mock_demo_data_service import MockDemoDataService
+#             from src.mock_services.services.mock_demo_data_service import MockDemoDataService  # TODO: Use shared_kernel mock interfaces
             return MockDemoDataService()
         else:
             raise ValueError("No demo data service available and not in demo mode")

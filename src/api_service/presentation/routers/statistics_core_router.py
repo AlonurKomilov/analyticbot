@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from src.api_service.di_analytics import get_analytics_fusion_service, get_cache
 from src.shared_kernel.domain.services.analytics_fusion_service import AnalyticsFusionService
 from src.shared_kernel.domain.di_container import container
-from src.bot_service.database.performance import performance_timer
+# from src.bot_service.database.performance import performance_timer  # TODO: Use shared_kernel performance utilities
 
 # Auth
 from src.api_service.middleware.auth import get_current_user

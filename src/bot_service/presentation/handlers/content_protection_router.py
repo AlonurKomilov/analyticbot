@@ -11,7 +11,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
-from src.api_service.deps import get_current_user  # Updated import path for API-specific auth
+# from src.api_service.deps import get_current_user  # TODO: Use shared_kernel auth interface  # Updated import path for API-specific auth
 from src.bot_service.models.content_protection import (
     ContentProtectionResponse,
     CustomEmojiRequest,

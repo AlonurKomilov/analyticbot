@@ -27,7 +27,7 @@ from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepositor
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
+# from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository  # TODO: Use shared_kernel UserRepository interface
 
 
 def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:

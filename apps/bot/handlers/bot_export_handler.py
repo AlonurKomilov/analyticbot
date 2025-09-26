@@ -16,7 +16,8 @@ Architecture: Clean separation of export concerns following Phase 1 microrouter 
 """
 
 import logging
-from aiogram import Router, F
+
+from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 logger = logging.getLogger(__name__)
@@ -29,20 +30,25 @@ router = Router()
 # EXPORT DOMAIN HELPER FUNCTIONS
 # ==============================
 
+
 def _get_settings():
     """Get settings instance with proper error handling"""
     try:
         from config.settings import Settings
+
         return Settings
     except Exception:
         # Fallback mock settings
         class MockSettings:
             EXPORT_ENABLED = True
             SHARE_LINKS_ENABLED = True
+
         return MockSettings()
 
 
-def _safe_callback_data_split(callback_data: str | None, separator: str = ":", index: int = 1) -> str | None:
+def _safe_callback_data_split(
+    callback_data: str | None, separator: str = ":", index: int = 1
+) -> str | None:
     """Safely split callback data and return the requested part"""
     if not callback_data:
         return None
@@ -59,9 +65,12 @@ async def _safe_edit_message(callback: CallbackQuery, text: str, reply_markup=No
     """Safely edit callback message with type checking"""
     try:
         from aiogram.types import Message
-        if (callback.message and 
-            isinstance(callback.message, Message) and 
-            hasattr(callback.message, 'edit_text')):
+
+        if (
+            callback.message
+            and isinstance(callback.message, Message)
+            and hasattr(callback.message, "edit_text")
+        ):
             await callback.message.edit_text(text, reply_markup=reply_markup)  # type: ignore
             return True
         return False
@@ -73,16 +82,16 @@ async def _safe_edit_message(callback: CallbackQuery, text: str, reply_markup=No
 # EXPORT DOMAIN COMMAND HANDLERS
 # =====================================
 
+
 @router.callback_query(F.data.startswith("analytics:export:"))
 async def show_export_options(callback: CallbackQuery) -> None:
     """Show export options for analytics data"""
     try:
         settings = _get_settings()
 
-        if not getattr(settings, 'EXPORT_ENABLED', True):
+        if not getattr(settings, "EXPORT_ENABLED", True):
             await callback.answer(
-                "🚧 Export feature is currently disabled. Coming soon!", 
-                show_alert=True
+                "🚧 Export feature is currently disabled. Coming soon!", show_alert=True
             )
             return
 
@@ -91,7 +100,7 @@ async def show_export_options(callback: CallbackQuery) -> None:
         if len(parts) < 4:
             await callback.answer("❌ Invalid export request", show_alert=True)
             return
-        
+
         channel_id, period = parts[2], int(parts[3])
 
         # Create simple export keyboard
@@ -127,10 +136,10 @@ async def show_share_options(callback: CallbackQuery) -> None:
     try:
         settings = _get_settings()
 
-        if not getattr(settings, 'SHARE_LINKS_ENABLED', True):
+        if not getattr(settings, "SHARE_LINKS_ENABLED", True):
             await callback.answer(
-                "🚧 Share links feature is currently disabled. Coming soon!", 
-                show_alert=True
+                "🚧 Share links feature is currently disabled. Coming soon!",
+                show_alert=True,
             )
             return
 
@@ -139,7 +148,7 @@ async def show_share_options(callback: CallbackQuery) -> None:
         if len(parts) < 4:
             await callback.answer("❌ Invalid share request", show_alert=True)
             return
-        
+
         channel_id, period = parts[2], int(parts[3])
 
         # For now, show coming soon message
@@ -153,6 +162,7 @@ async def show_share_options(callback: CallbackQuery) -> None:
 # =====================================
 # EXPORT DOMAIN FORMAT HANDLERS
 # =====================================
+
 
 @router.callback_query(F.data.startswith("export_format:"))
 async def handle_export_format(callback: CallbackQuery) -> None:
@@ -200,6 +210,7 @@ async def _handle_pdf_export(callback: CallbackQuery) -> None:
 # =====================================
 # SHARE DOMAIN HANDLERS
 # =====================================
+
 
 @router.callback_query(F.data.startswith("share_type:"))
 async def handle_share_type(callback: CallbackQuery) -> None:

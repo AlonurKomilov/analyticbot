@@ -39,7 +39,11 @@ class AsyncpgEdgesRepository:
         return mock_edges
 
     async def store_edge(
-        self, src_channel_id: int, dst_channel_id: int, kind: str, timestamp: datetime | None = None
+        self,
+        src_channel_id: int,
+        dst_channel_id: int,
+        kind: str,
+        timestamp: datetime | None = None,
     ) -> None:
         """Store an edge relationship (mention/forward)"""
         # Placeholder for future implementation

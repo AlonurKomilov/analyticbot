@@ -1,8 +1,10 @@
+import logging
 import os
-from apps.bot.container import container
-from unittest.mock import AsyncMock
-from core.services.analytics_fusion_service import AnalyticsFusionService
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Union
+from unittest.mock import AsyncMock
+
+from core.services.analytics_fusion_service import AnalyticsFusionService
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
@@ -10,8 +12,6 @@ from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
-from typing import TYPE_CHECKING, Union
-import logging
 
 if TYPE_CHECKING:
     from asyncpg.pool import Pool
@@ -90,12 +90,12 @@ async def get_database_pool() -> Union["Pool", object, None]:
     try:
         # Import the optimized database manager
         from infra.db.connection_manager import db_manager
-        
+
         # Check if db_manager is initialized
         if not db_manager._pool:
             logger.info("Initializing V2 database manager for PostgreSQL")
             await db_manager.initialize()
-        
+
         # Get the underlying asyncpg pool
         if db_manager._pool and db_manager._pool._pool:
             pool = db_manager._pool._pool
@@ -103,21 +103,22 @@ async def get_database_pool() -> Union["Pool", object, None]:
             return pool
         else:
             logger.warning("V2 database manager pool not available")
-            
+
     except Exception as e:
         logger.warning(f"V2 database manager failed: {e}")
-    
+
     # Fallback: Create direct AsyncPG connection to PostgreSQL
     try:
         import asyncpg
+
         from config.settings import settings
-        
+
         # Build the connection URL for asyncpg (remove +asyncpg suffix)
         database_url = settings.DATABASE_URL
         if database_url and "+asyncpg" in database_url:
             database_url = database_url.replace("+asyncpg", "")
-        
-        logger.info(f"Creating direct AsyncPG pool for V2 analytics")
+
+        logger.info("Creating direct AsyncPG pool for V2 analytics")
         pool = await asyncpg.create_pool(
             database_url,
             min_size=2,
@@ -125,16 +126,16 @@ async def get_database_pool() -> Union["Pool", object, None]:
             command_timeout=60,
             server_settings={
                 "application_name": "analyticbot_v2_analytics",
-            }
+            },
         )
-        
+
         if pool:
             logger.info(f"✅ Direct AsyncPG pool created successfully: {type(pool)}")
             return pool
-        
+
     except Exception as e:
         logger.error(f"Failed to create direct AsyncPG pool: {e}", exc_info=True)
-        
+
     logger.error("All V2 database connection methods failed")
     return None
 
@@ -150,16 +151,17 @@ async def get_redis_client():
         # ✅ FIXED: Get Redis client from proper DI container
         from core.di_container import container as core_container
         from core.protocols import RedisClientProtocol
-        
+
         redis_client = core_container.get_service(RedisClientProtocol)
         logger.info("Successfully obtained Redis client from DI container")
         return redis_client._client  # Return the underlying redis client for cache adapter
-        
+
     except Exception as e:
         logger.warning(f"Redis client not available from DI container: {e}")
         # Fallback: create Redis client directly
         try:
             import redis.asyncio as redis
+
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
             fallback_client = redis.from_url(redis_url, decode_responses=True)
             logger.info("Created fallback Redis client directly")
@@ -179,15 +181,17 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
     try:
         # Get database pool with the new V2 strategy
         pool = await get_database_pool()
-        
+
         # More detailed debugging
         logger.info(f"V2 Database pool retrieved: {pool}")
         logger.info(f"V2 Database pool type: {type(pool)}")
-        
+
         if pool is None:
             # Create a comprehensive mock pool for graceful degradation
-            logger.warning("V2 Database pool is None, creating enhanced mock for limited functionality")
-            
+            logger.warning(
+                "V2 Database pool is None, creating enhanced mock for limited functionality"
+            )
+
             # Create an enhanced mock pool that mimics asyncpg behavior
             class EnhancedMockPool:
                 async def fetchval(self, query, *args):
@@ -195,11 +199,11 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
                     if "COUNT" in query.upper():
                         return 42  # Mock count
                     elif "subscriber" in query.lower():
-                        return 1250  # Mock subscriber count  
+                        return 1250  # Mock subscriber count
                     elif "SUM" in query.upper():
                         return 15000  # Mock sum
                     return 100  # Default mock value
-                
+
                 async def fetch(self, query, *args):
                     # Return mock analytics data
                     return [
@@ -209,29 +213,29 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
                             "joins": 25,
                             "leaves": 5,
                             "posts": 8,
-                            "engagement": 0.045
+                            "engagement": 0.045,
                         }
                     ]
-                    
+
                 async def fetchrow(self, query, *args):
                     return {
                         "snapshot_time": datetime(2025, 9, 7, 12, 0, 0, tzinfo=UTC),
                         "total_subscribers": 1250,
-                        "views_today": 3500
+                        "views_today": 3500,
                     }
-                    
+
                 def acquire(self):
                     return self
-                    
+
                 async def __aenter__(self):
                     return self
-                    
+
                 async def __aexit__(self, *args):
                     pass
-                    
+
                 async def execute(self, query, *args):
                     return "INSERT 0 1"  # Mock successful insert
-            
+
             pool = EnhancedMockPool()
             logger.info("✅ Enhanced mock pool created for V2 analytics")
 
@@ -243,20 +247,19 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
             metrics_repo = AsyncpgPostMetricsRepository(pool)  # type: ignore
             edges_repo = AsyncpgEdgesRepository(pool)  # type: ignore
             stats_raw_repo = AsyncpgStatsRawRepository(pool)  # type: ignore
-            
+
             logger.info("✅ V2 repositories created successfully")
-            
+
         except Exception as repo_error:
             logger.error(f"Failed to create V2 repositories: {repo_error}")
             raise
 
         # Initialize cache with error handling
         try:
-            cache_adapter = await init_cache_adapter()
+            await init_cache_adapter()
             logger.info("✅ V2 cache adapter initialized")
         except Exception as cache_error:
             logger.warning(f"V2 cache initialization failed: {cache_error}")
-            cache_adapter = None
 
         # Create analytics fusion service
         _analytics_fusion_service = AnalyticsFusionService(
@@ -264,12 +267,12 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
             post_repo=post_repo,
             metrics_repo=metrics_repo,
             edges_repo=edges_repo,
-            stats_raw_repo=stats_raw_repo
+            stats_raw_repo=stats_raw_repo,
         )
 
         logger.info("🎯 Analytics Fusion Service V2 initialized successfully")
         return _analytics_fusion_service
-        
+
     except Exception as e:
         logger.error(f"Failed to initialize V2 analytics fusion service: {e}", exc_info=True)
         raise RuntimeError(f"V2 Analytics initialization failed: {e}")

@@ -12,26 +12,26 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from apps.bot.container import container
-from apps.bot.services.analytics_service import AnalyticsService
 from apps.api.middleware.auth import (
-    get_current_user, 
+    get_current_user,
     require_admin_role,
-    get_current_user_id,
 )
+from apps.bot.container import container
 from apps.bot.database.performance import performance_timer
+from apps.bot.services.analytics_service import AnalyticsService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    prefix="/admin/system", 
-    tags=["Admin - System Management"], 
-    responses={404: {"description": "Not found"}}
+    prefix="/admin/system",
+    tags=["Admin - System Management"],
+    responses={404: {"description": "Not found"}},
 )
 
 # === ADMIN SYSTEM MODELS ===
+
 
 class SystemStats(BaseModel):
     total_users: int
@@ -40,6 +40,7 @@ class SystemStats(BaseModel):
     total_views: int
     active_channels: int
     system_health: str
+
 
 class AuditLogEntry(BaseModel):
     id: int
@@ -50,38 +51,40 @@ class AuditLogEntry(BaseModel):
     timestamp: datetime
     details: dict[str, Any] = Field(default_factory=dict)
 
+
 # === ADMIN SYSTEM ENDPOINTS ===
+
 
 @router.get("/stats", response_model=SystemStats)
 async def get_system_statistics(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service()),
 ):
     """
     ## 📊 Get System Statistics (Admin)
-    
+
     Retrieve comprehensive system statistics and health metrics.
-    
+
     **Admin Only**: Requires admin role
-    
+
     **Returns:**
     - System-wide statistics and health status
     """
     try:
         await require_admin_role(current_user["id"])
-        
+
         with performance_timer("admin_system_stats_fetch"):
             stats = await analytics_service.get_system_statistics_admin()
-            
+
             return SystemStats(
                 total_users=stats.get("total_users", 0),
                 total_channels=stats.get("total_channels", 0),
                 total_posts=stats.get("total_posts", 0),
                 total_views=stats.get("total_views", 0),
                 active_channels=stats.get("active_channels", 0),
-                system_health=stats.get("system_health", "unknown")
+                system_health=stats.get("system_health", "unknown"),
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -93,27 +96,27 @@ async def get_system_statistics(
 async def get_recent_admin_actions(
     limit: int = Query(50, ge=1, le=500),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service()),
 ):
     """
     ## 📋 Get Recent Admin Actions
-    
+
     Retrieve recent administrative actions and audit logs.
-    
+
     **Admin Only**: Requires admin role
-    
+
     **Parameters:**
     - limit: Maximum number of audit entries to return (1-500)
-    
+
     **Returns:**
     - List of recent administrative actions
     """
     try:
         await require_admin_role(current_user["id"])
-        
+
         with performance_timer("admin_audit_logs_fetch"):
             audit_logs = await analytics_service.get_admin_audit_logs(limit=limit)
-            
+
             return [
                 AuditLogEntry(
                     id=log["id"],
@@ -122,10 +125,11 @@ async def get_recent_admin_actions(
                     target_type=log["target_type"],
                     target_id=log.get("target_id"),
                     timestamp=log["timestamp"],
-                    details=log.get("details", {})
-                ) for log in audit_logs
+                    details=log.get("details", {}),
+                )
+                for log in audit_logs
             ]
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -136,33 +140,35 @@ async def get_recent_admin_actions(
 @router.get("/health")
 async def get_system_health(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service()),
 ):
     """
     ## 🏥 Get System Health (Admin)
-    
+
     Check overall system health and component status.
-    
+
     **Admin Only**: Requires admin role
-    
+
     **Returns:**
     - Detailed system health information
     """
     try:
         await require_admin_role(current_user["id"])
-        
+
         with performance_timer("admin_system_health_check"):
             health_data = await analytics_service.check_system_health()
-            
+
             return {
-                "status": "healthy" if health_data.get("all_systems_operational", False) else "degraded",
+                "status": (
+                    "healthy" if health_data.get("all_systems_operational", False) else "degraded"
+                ),
                 "timestamp": datetime.now().isoformat(),
                 "components": health_data.get("components", {}),
                 "overall_score": health_data.get("health_score", 0),
                 "issues": health_data.get("issues", []),
-                "checked_by": current_user["id"]
+                "checked_by": current_user["id"],
             }
-            
+
     except HTTPException:
         raise
     except Exception as e:

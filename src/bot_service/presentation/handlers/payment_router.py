@@ -25,7 +25,7 @@ from src.bot_service.models.payment import (
 from src.bot_service.services.payment_service import PaymentService
 from src.bot_service.services.stripe_adapter import StripeAdapter
 from config import settings
-from src.payments.infrastructure.persistence.payment_repository import AsyncpgPaymentRepository
+from src.shared_kernel.domain.interfaces import PaymentRepository
 
 
 class PaymentStats(BaseModel):

@@ -18,6 +18,9 @@ from .event_bus import (
     set_event_bus
 )
 
+# Import facades
+from .facades import *
+
 __all__ = [
     'DomainEvent',
     'EventBus', 

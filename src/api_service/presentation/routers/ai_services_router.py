@@ -242,8 +242,8 @@ async def analyze_security(
     """
     try:
         # Check if this is a demo user and get appropriate demo data
-        from src.api_service.__mocks__.auth.mock_users import is_demo_user_by_id, get_demo_user_type_by_id
-        from src.api_service.__mocks__.ai_services.mock_data import get_mock_security_analysis
+        from src.mock_services.auth.mock_users import is_demo_user_by_id, get_demo_user_type_by_id
+        from src.mock_services.ai_services.mock_data import get_mock_security_analysis
         
         # Check if current user is a demo user (authenticated via JWT)
         if current_user_id and is_demo_user_by_id(str(current_user_id)):

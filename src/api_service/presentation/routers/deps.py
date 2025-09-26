@@ -20,7 +20,7 @@ from infra.db.repositories.schedule_repository import (
     AsyncpgDeliveryRepository,
     AsyncpgScheduleRepository,
 )
-from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
+from src.shared_kernel.domain.interfaces import UserRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 
 # Security dependencies
@@ -83,7 +83,7 @@ async def get_analytics_service():
     except ValueError as e:
         logger.warning(f"Analytics service not available from DI container: {e}")
         # Create a placeholder service
-        from src.api_service.__mocks__.services.mock_analytics_service import MockAnalyticsService
+        from src.mock_services.services.mock_analytics_service import MockAnalyticsService
         return MockAnalyticsService()
 
 

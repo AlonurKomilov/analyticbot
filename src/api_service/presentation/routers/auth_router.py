@@ -15,7 +15,7 @@ from src.shared_kernel.domain.security_engine import SecurityManager, User, User
 from src.shared_kernel.domain.security_engine.auth_utils import auth_utils
 from src.shared_kernel.domain.security_engine.mfa import MFAManager
 from src.api_service.middleware.auth import get_user_repository, get_security_manager, get_current_user
-from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
+from src.shared_kernel.domain.interfaces import UserRepository
 
 logger = logging.getLogger(__name__)
 

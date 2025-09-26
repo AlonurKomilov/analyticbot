@@ -10,7 +10,7 @@ from typing import Callable, Any
 import json
 import logging
 
-from src.api_service.__mocks__.auth.mock_users import is_demo_user, is_demo_user_by_id, get_demo_user_type
+from src.mock_services.auth.mock_users import is_demo_user, is_demo_user_by_id, get_demo_user_type
 
 logger = logging.getLogger(__name__)
 

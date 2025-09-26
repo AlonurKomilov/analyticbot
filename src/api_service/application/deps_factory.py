@@ -10,7 +10,7 @@ from fastapi import Depends, Request
 from config import settings
 from src.shared_kernel.domain.di_container import container
 from src.shared_kernel.domain.protocols import DemoDataServiceProtocol
-from src.bot_service.models.twa import InitialDataResponse
+# TODO: Move to shared_kernel - from src.shared_kernel.domain.models.twa import InitialDataResponse
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ async def get_demo_data_service() -> DemoDataServiceProtocol:
         logger.error(f"Failed to get demo data service from DI container: {e}")
         # Fallback only if container is not properly configured
         if settings.demo_mode.should_use_mock_service("demo_data"):
-            from src.api_service.__mocks__.services.mock_demo_data_service import MockDemoDataService
+            from src.mock_services.services.mock_demo_data_service import MockDemoDataService
             return MockDemoDataService()
         else:
             raise ValueError("No demo data service available and not in demo mode")

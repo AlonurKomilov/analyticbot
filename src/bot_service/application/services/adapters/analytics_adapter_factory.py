@@ -7,7 +7,7 @@ import logging
 from typing import Dict, Any, Optional
 from enum import Enum
 
-from src.bot_service.services.adapters.mock_analytics_adapter import AnalyticsAdapter, MockAnalyticsAdapter
+from src.bot_service.services.adapters.mock_analytics_service import AnalyticsAdapter, MockAnalyticsService
 from src.bot_service.services.adapters.telegram_analytics_adapter import TelegramAnalyticsAdapter, RateLimitConfig
 from config.settings import settings
 
@@ -68,7 +68,7 @@ class AnalyticsAdapterFactory:
             )
             
         elif provider == AnalyticsProvider.MOCK:
-            adapter = MockAnalyticsAdapter()
+            adapter = MockAnalyticsService()
             
         else:
             raise ValueError(f"Unsupported analytics provider: {provider_name}")

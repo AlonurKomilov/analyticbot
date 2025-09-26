@@ -11,7 +11,7 @@ import aiohttp
 from dataclasses import dataclass
 import time
 
-from src.bot_service.services.adapters.mock_analytics_adapter import AnalyticsAdapter
+from src.bot_service.services.adapters.mock_analytics_service import AnalyticsAdapter
 from config.settings import settings
 
 logger = logging.getLogger(__name__)

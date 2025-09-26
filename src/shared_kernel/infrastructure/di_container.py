@@ -220,7 +220,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Analytics Service
     if demo_config.should_use_mock_service("analytics"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_analytics_service import MockAnalyticsService
+            from src.mock_services.services.mock_analytics_service import MockAnalyticsService
             container.register_service(AnalyticsServiceProtocol, MockAnalyticsService)
             logger.info("Registered MockAnalyticsService")
         except ImportError as e:
@@ -234,7 +234,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
             logger.error(f"Failed to import TelegramAnalyticsAdapter: {e}")
             # Fallback to mock service
             try:
-                from src.api_service.infrastructure.testing.services.mock_analytics_service import MockAnalyticsService
+                from src.mock_services.services.mock_analytics_service import MockAnalyticsService
                 container.register_service(AnalyticsServiceProtocol, MockAnalyticsService)
                 logger.info("Fallback: Registered MockAnalyticsService")
             except ImportError:
@@ -243,7 +243,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Payment Service
     if demo_config.should_use_mock_service("payment"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_payment_service import MockPaymentService
+            from src.mock_services.services.mock_payment_service import MockPaymentService
             container.register_service(PaymentServiceProtocol, MockPaymentService)
             logger.info("Registered MockPaymentService")
         except ImportError as e:
@@ -303,7 +303,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # AI Services
     if demo_config.should_use_mock_service("ai_services"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_ai_service import MockAIService
+            from src.mock_services.services import MockAIService
             container.register_service(AIServiceProtocol, MockAIService)
             logger.info("Registered MockAIService")
         except ImportError as e:
@@ -325,7 +325,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     
     # Telegram API Service
     if demo_config.should_use_mock_service("telegram_api"):
-        from src.api_service.infrastructure.testing.services.mock_telegram_service import MockTelegramService
+        from src.mock_services.services import MockTelegramService
         container.register_service(TelegramAPIServiceProtocol, MockTelegramService)
         logger.info("Registered MockTelegramService")
     else:
@@ -350,7 +350,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     
     # Email Service
     if demo_config.should_use_mock_service("email_delivery"):
-        from src.api_service.infrastructure.testing.services.mock_email_service import MockEmailService
+        from src.mock_services.services.mock_email_service import MockEmailService
         container.register_service(EmailServiceProtocol, MockEmailService)
         logger.info("Registered MockEmailService")
     else:
@@ -371,7 +371,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
             except ImportError:
                 # Fallback to mock service if SMTP service not available
                 logger.warning("Real SMTP service not available, falling back to mock")
-                from src.api_service.infrastructure.testing.services.mock_email_service import MockEmailService
+                from src.mock_services.services.mock_email_service import MockEmailService
                 return MockEmailService()
         
         container.register_service(
@@ -385,7 +385,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Auth Service
     if demo_config.should_use_mock_service("auth"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_auth_service import MockAuthService
+            from src.mock_services.services import MockAuthService
             container.register_service(AuthServiceProtocol, MockAuthService)
             logger.info("Registered MockAuthService")
         except ImportError as e:
@@ -408,7 +408,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Admin Service
     if demo_config.should_use_mock_service("admin"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_admin_service import MockAdminService
+            from src.mock_services.services import MockAdminService
             container.register_service(AdminServiceProtocol, MockAdminService)
             logger.info("Registered MockAdminService")
         except ImportError as e:
@@ -434,7 +434,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Demo Data Service
     if demo_config.should_use_mock_service("demo_data"):
         try:
-            from src.api_service.infrastructure.testing.services.mock_demo_data_service import MockDemoDataService
+            from src.mock_services.services import MockDemoDataService
             container.register_service(DemoDataServiceProtocol, MockDemoDataService)
             logger.info("Registered MockDemoDataService")
         except ImportError as e:

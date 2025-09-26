@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 from enum import Enum
 
 from src.bot_service.services.adapters.base_adapter import PaymentGatewayAdapter
-from src.bot_service.services.adapters.mock_payment_adapter import MockPaymentAdapter
+from src.bot_service.services.adapters.mock_payment_service import MockPaymentService
 from src.bot_service.services.adapters.stripe_payment_adapter import StripePaymentAdapter
 from config.settings import settings
 
@@ -51,7 +51,7 @@ class PaymentAdapterFactory:
         if gateway == PaymentGateway.STRIPE:
             adapter = StripePaymentAdapter()
         elif gateway == PaymentGateway.MOCK:
-            adapter = MockPaymentAdapter()
+            adapter = MockPaymentService()
         else:
             raise ValueError(f"Unsupported payment gateway: {gateway_name}")
         

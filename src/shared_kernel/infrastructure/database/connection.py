@@ -1,76 +1,75 @@
 """
-Shared Database Configuration and Utilities
+Database connection management for PostgreSQL
 """
 
-from typing import Optional, Dict, Any
-from contextlib import asynccontextmanager
-import asyncpg
+import logging
 import os
-from dataclasses import dataclass
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
+import asyncpg
+from asyncpg import Connection, Pool
+
+logger = logging.getLogger(__name__)
+
+# Global connection pool
+_connection_pool: Pool | None = None
 
 
-@dataclass
-class DatabaseConfig:
-    """Database configuration"""
-    host: str = "localhost"
-    port: int = 5432
-    database: str = "analyticbot"
-    username: str = "postgres"
-    password: str = ""
-    
-    @classmethod
-    def from_env(cls) -> "DatabaseConfig":
-        """Load config from environment variables"""
-        return cls(
-            host=os.getenv("DB_HOST", "localhost"),
-            port=int(os.getenv("DB_PORT", "5432")),
-            database=os.getenv("DB_NAME", "analyticbot"),
-            username=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("DB_PASSWORD", "")
+async def create_connection_pool() -> Pool:
+    """Create and return a connection pool"""
+    global _connection_pool
+
+    if _connection_pool is None:
+        database_url = os.getenv(
+            "DATABASE_URL", "postgresql://postgres:password@localhost:5432/analyticbot"
         )
 
+        logger.info("Creating database connection pool")
+        _connection_pool = await asyncpg.create_pool(
+            database_url,
+            min_size=1,
+            max_size=10,
+            command_timeout=60,
+        )
 
-class DatabaseConnection:
-    """Shared database connection utilities"""
-    
-    def __init__(self, config: Optional[DatabaseConfig] = None):
-        self.config = config or DatabaseConfig.from_env()
-        self._pool: Optional[asyncpg.Pool] = None
-    
-    async def get_pool(self) -> asyncpg.Pool:
-        """Get or create connection pool"""
-        if self._pool is None:
-            self._pool = await asyncpg.create_pool(
-                host=self.config.host,
-                port=self.config.port,
-                database=self.config.database,
-                user=self.config.username,
-                password=self.config.password,
-                min_size=5,
-                max_size=20
-            )
-        return self._pool
-    
-    @asynccontextmanager
-    async def get_connection(self):
-        """Get database connection from pool"""
-        pool = await self.get_pool()
-        async with pool.acquire() as conn:
-            yield conn
-    
-    async def close(self):
-        """Close connection pool"""
-        if self._pool:
-            await self._pool.close()
-            self._pool = None
+    return _connection_pool
 
 
-# Global database connection instance
-_db_connection: Optional[DatabaseConnection] = None
+async def get_connection_pool() -> Pool:
+    """Get the global connection pool, creating it if necessary"""
+    global _connection_pool
 
-def get_database_connection() -> DatabaseConnection:
-    """Get global database connection instance"""
-    global _db_connection
-    if _db_connection is None:
-        _db_connection = DatabaseConnection()
-    return _db_connection
+    if _connection_pool is None:
+        _connection_pool = await create_connection_pool()
+
+    if _connection_pool is None:
+        raise RuntimeError("Failed to create database connection pool")
+    
+    return _connection_pool
+
+
+@asynccontextmanager
+async def get_db_connection() -> AsyncGenerator[Connection, None]:
+    """Get a database connection from the pool"""
+    pool = await get_connection_pool()
+
+    async with pool.acquire() as connection:
+        yield connection
+
+
+async def close_connection_pool():
+    """Close the connection pool"""
+    global _connection_pool
+
+    if _connection_pool:
+        logger.info("Closing database connection pool")
+        await _connection_pool.close()
+        _connection_pool = None
+
+
+# For backwards compatibility
+async def get_db() -> AsyncGenerator[Connection, None]:
+    """Alias for get_db_connection"""
+    async with get_db_connection() as conn:
+        yield conn

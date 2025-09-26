@@ -9,7 +9,7 @@ from datetime import datetime
 
 from core.protocols import PaymentServiceProtocol
 # MockPaymentAdapter - using inline implementation
-from src.bot_service.domain.models.models import BillingCycle
+from src.payments.domain.value_objects import BillingCycle
 
 logger = logging.getLogger(__name__)
 

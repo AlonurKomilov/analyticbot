@@ -26,3 +26,4 @@ coverage>=7.3.0
 factory-boy>=3.3.0
 freezegun>=1.2.2
 responses>=0.24.0
+pytest-benchmark>=4.0.0

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from apps.bot.models.content_protection import (
+from src.models.content_protection import (
     ContentProtectionRequest,
     ContentProtectionResponse,
     ContentType,
@@ -17,7 +17,7 @@ from apps.bot.models.content_protection import (
     ProtectionLevel,
     UserTier,
 )
-from apps.bot.services.content_protection import (
+from src.services.content_protection import (
     ContentProtectionService,
     PremiumEmojiService,
     WatermarkConfig,

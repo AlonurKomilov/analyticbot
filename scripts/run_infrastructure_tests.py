@@ -136,7 +136,7 @@ async def test_performance_optimization_components():
     """Test our custom performance optimization components"""
     logger.info("🔍 Testing performance optimization components...")
     try:
-        from apps.bot.database.performance import PerformanceConfig
+        from src.database.performance import PerformanceConfig
 
         logger.info("✅ Performance manager imported successfully")
         logger.info("✅ Unified analytics service imported successfully")

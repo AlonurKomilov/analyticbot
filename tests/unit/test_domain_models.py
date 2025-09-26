@@ -6,7 +6,7 @@ Tests core domain models and business logic without external dependencies
 import pytest
 from pydantic import ValidationError
 
-from apps.bot.domain.constants import (
+from src.domain.constants import (
     DEFAULT_FREE_CHANNELS,
     DEFAULT_PREMIUM_CHANNELS,
     AnalyticsEventType,
@@ -15,7 +15,7 @@ from apps.bot.domain.constants import (
 )
 
 # Domain model imports
-from apps.bot.domain.models import (
+from src.domain.models import (
     AnalyticsMetrics,
     InlineButton,
     InlineButtonsPayload,

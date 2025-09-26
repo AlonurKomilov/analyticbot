@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiogram import Bot
 
-from apps.bot.services.analytics_service import AnalyticsService
+from src.services.analytics_service import AnalyticsService
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 
 

@@ -8,7 +8,7 @@ Goal: Achieve 50%+ coverage on this high-value analytics fusion module
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
-from core.services.analytics_fusion_service import AnalyticsFusionService
+from src.shared_kernel.application.services.analytics_fusion_service import AnalyticsFusionService
 
 
 class TestAnalyticsFusionService:

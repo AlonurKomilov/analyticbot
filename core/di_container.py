@@ -167,7 +167,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # ✅ NEW: Register asyncpg Pool in DI container for proper lifecycle management
     async def get_asyncpg_pool_factory():
         """Factory for creating asyncpg pool"""
-        from apps.shared.di import get_container
+        from src.shared_kernel.infrastructure.di import get_container
         shared_container = get_container()
         return await shared_container.asyncpg_pool()
     
@@ -183,8 +183,13 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Always use real analytics fusion service - demo vs real is handled within the service
     async def get_analytics_fusion_service_factory():
         """Factory for creating analytics fusion service"""
-        from apps.api.di_analytics import get_analytics_fusion_service
-        return await get_analytics_fusion_service()
+        try:
+            # Use migrated analytics fusion service
+            from src.analytics.application.services.analytics_fusion_service import AnalyticsFusionService
+            return AnalyticsFusionService()
+        except ImportError as e:
+            logger.error(f"Failed to import AnalyticsFusionService: {e}")
+            return None
     
     container.register_service(
         interface=AnalyticsFusionServiceProtocol,
@@ -197,8 +202,12 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # ✅ NEW: Register Redis Client
     async def get_redis_client_factory():
         """Factory for creating Redis client"""
-        from infra.cache.async_redis_client import create_redis_client
-        return create_redis_client()
+        try:
+            from src.shared_kernel.infrastructure.cache.async_redis_client import create_redis_client
+            return create_redis_client()
+        except ImportError as e:
+            logger.error(f"Failed to import Redis client: {e}")
+            return None
     
     container.register_service(
         interface=RedisClientProtocol,
@@ -211,21 +220,21 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Analytics Service
     if demo_config.should_use_mock_service("analytics"):
         try:
-            from apps.api.__mocks__.services.mock_analytics_service import MockAnalyticsService
+            from src.api_service.infrastructure.testing.services.mock_analytics_service import MockAnalyticsService
             container.register_service(AnalyticsServiceProtocol, MockAnalyticsService)
             logger.info("Registered MockAnalyticsService")
         except ImportError as e:
             logger.error(f"Failed to import MockAnalyticsService: {e}")
     else:
         try:
-            from apps.bot.services.adapters.telegram_analytics_adapter import TelegramAnalyticsAdapter
+            from src.bot_service.application.services.adapters.telegram_analytics_adapter import TelegramAnalyticsAdapter
             container.register_service(AnalyticsServiceProtocol, TelegramAnalyticsAdapter)
             logger.info("Registered TelegramAnalyticsAdapter")
         except ImportError as e:
             logger.error(f"Failed to import TelegramAnalyticsAdapter: {e}")
             # Fallback to mock service
             try:
-                from apps.api.__mocks__.services.mock_analytics_service import MockAnalyticsService
+                from src.api_service.infrastructure.testing.services.mock_analytics_service import MockAnalyticsService
                 container.register_service(AnalyticsServiceProtocol, MockAnalyticsService)
                 logger.info("Fallback: Registered MockAnalyticsService")
             except ImportError:
@@ -234,7 +243,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Payment Service
     if demo_config.should_use_mock_service("payment"):
         try:
-            from apps.api.__mocks__.services.mock_payment_service import MockPaymentService
+            from src.api_service.infrastructure.testing.services.mock_payment_service import MockPaymentService
             container.register_service(PaymentServiceProtocol, MockPaymentService)
             logger.info("Registered MockPaymentService")
         except ImportError as e:
@@ -243,8 +252,8 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         # ✅ NEW: Register real payment service
         async def get_payment_service_factory():
             """Factory for creating real payment service"""
-            from apps.bot.services.payment_service import PaymentService
-            from apps.shared.di import get_container
+            from src.bot_service.application.services.payment_service import PaymentService
+            from src.shared_kernel.infrastructure.di import get_container
             shared_container = get_container()
             payment_repo = await shared_container.payment_repo()
             return PaymentService(payment_repo)
@@ -259,18 +268,18 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     
     # Database Service
     if demo_config.should_use_mock_service("database"):
-        from apps.api.__mocks__.database.mock_database import MockDatabase
+        from src.api_service.infrastructure.testing.database.mock_database import MockDatabase
         container.register_service(DatabaseServiceProtocol, MockDatabase)
         logger.info("Registered MockDatabase")
     else:
         # ✅ NEW: Register real database repositories with proper pool injection
         async def get_user_repo_factory():
-            from apps.shared.di import get_container
+            from src.shared_kernel.infrastructure.di import get_container
             shared_container = get_container()
             return await shared_container.user_repo()
         
         async def get_channel_repo_factory():
-            from apps.shared.di import get_container
+            from src.shared_kernel.infrastructure.di import get_container
             shared_container = get_container()
             return await shared_container.channel_repo()
         
@@ -294,7 +303,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # AI Services
     if demo_config.should_use_mock_service("ai_services"):
         try:
-            from apps.api.__mocks__.services.mock_ai_service import MockAIService
+            from src.api_service.infrastructure.testing.services.mock_ai_service import MockAIService
             container.register_service(AIServiceProtocol, MockAIService)
             logger.info("Registered MockAIService")
         except ImportError as e:
@@ -303,7 +312,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         # ✅ NEW: Register real AI service (AIInsightsGenerator)
         async def get_ai_service_factory():
             """Factory for creating real AI service"""
-            from apps.bot.services.ml.ai_insights import AIInsightsGenerator
+            from src.bot_service.application.services.ml.ai_insights import AIInsightsGenerator
             return AIInsightsGenerator()
         
         container.register_service(
@@ -316,7 +325,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     
     # Telegram API Service
     if demo_config.should_use_mock_service("telegram_api"):
-        from apps.api.__mocks__.services.mock_telegram_service import MockTelegramService
+        from src.api_service.infrastructure.testing.services.mock_telegram_service import MockTelegramService
         container.register_service(TelegramAPIServiceProtocol, MockTelegramService)
         logger.info("Registered MockTelegramService")
     else:
@@ -341,7 +350,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     
     # Email Service
     if demo_config.should_use_mock_service("email_delivery"):
-        from apps.api.__mocks__.services.mock_email_service import MockEmailService
+        from src.api_service.infrastructure.testing.services.mock_email_service import MockEmailService
         container.register_service(EmailServiceProtocol, MockEmailService)
         logger.info("Registered MockEmailService")
     else:
@@ -350,7 +359,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
             """Factory for creating email service with fallback"""
             try:
                 # Try to import real SMTP service if it exists
-                from infra.email.smtp_email_service import SMTPEmailService
+                from src.shared_kernel.infrastructure.email.smtp_email_service import SMTPEmailService
                 from config.settings import settings
                 return SMTPEmailService(
                     smtp_host=settings.SMTP_HOST,
@@ -362,7 +371,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
             except ImportError:
                 # Fallback to mock service if SMTP service not available
                 logger.warning("Real SMTP service not available, falling back to mock")
-                from apps.api.__mocks__.services.mock_email_service import MockEmailService
+                from src.api_service.infrastructure.testing.services.mock_email_service import MockEmailService
                 return MockEmailService()
         
         container.register_service(
@@ -376,7 +385,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Auth Service
     if demo_config.should_use_mock_service("auth"):
         try:
-            from apps.api.__mocks__.services.mock_auth_service import MockAuthService
+            from src.api_service.infrastructure.testing.services.mock_auth_service import MockAuthService
             container.register_service(AuthServiceProtocol, MockAuthService)
             logger.info("Registered MockAuthService")
         except ImportError as e:
@@ -385,7 +394,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         # ✅ NEW: Register real auth service (SecurityManager)
         async def get_auth_service_factory():
             """Factory for creating real auth service"""
-            from core.security_engine.auth import SecurityManager
+            from src.security.auth import SecurityManager
             return SecurityManager()
         
         container.register_service(
@@ -399,7 +408,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Admin Service
     if demo_config.should_use_mock_service("admin"):
         try:
-            from apps.api.__mocks__.services.mock_admin_service import MockAdminService
+            from src.api_service.infrastructure.testing.services.mock_admin_service import MockAdminService
             container.register_service(AdminServiceProtocol, MockAdminService)
             logger.info("Registered MockAdminService")
         except ImportError as e:
@@ -408,8 +417,8 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
         # ✅ NEW: Register real admin service (SuperAdminService)
         async def get_admin_service_factory():
             """Factory for creating real admin service"""
-            from core.services.superadmin_service import SuperAdminService
-            from apps.shared.di import get_container
+            from src.identity.application.services.superadmin_service import SuperAdminService
+            from src.shared_kernel.infrastructure.di import get_container
             shared_container = get_container()
             db_session = await shared_container.db_session()  # Get SQLAlchemy session for admin service
             return SuperAdminService(db_session)
@@ -425,7 +434,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     # Demo Data Service
     if demo_config.should_use_mock_service("demo_data"):
         try:
-            from apps.api.__mocks__.services.mock_demo_data_service import MockDemoDataService
+            from src.api_service.infrastructure.testing.services.mock_demo_data_service import MockDemoDataService
             container.register_service(DemoDataServiceProtocol, MockDemoDataService)
             logger.info("Registered MockDemoDataService")
         except ImportError as e:
@@ -438,7 +447,7 @@ def configure_services(container: DIContainer, demo_config: DemoModeConfig) -> N
     async def get_user_repository_factory():
         """Factory for creating user repository"""
         from src.identity.infrastructure.repositories.asyncpg_user_repository import AsyncpgUserRepository
-        from apps.shared.di import get_container
+        from src.shared_kernel.infrastructure.di import get_container
         shared_container = get_container()
         pool = await shared_container.asyncpg_pool()
         return AsyncpgUserRepository(pool)
@@ -537,3 +546,47 @@ async def get_service_context(demo_config: DemoModeConfig):
     finally:
         # Cleanup if needed
         pass
+# ============================================================================
+# MIGRATION PHASE SUPPORT
+# ============================================================================
+# During migration, we need to support both legacy apps/ and new src/ services
+
+async def register_migration_services():
+    """Register services with migration adapter support"""
+    from src.migration_adapters import (
+        get_identity_service,
+        get_analytics_service,
+        get_payments_service,
+        get_channels_service,
+        get_scheduling_service
+    )
+    
+    # Register services that can fall back to legacy implementations
+    try:
+        container.register_singleton(
+            "identity_service",
+            factory=lambda: get_identity_service("user_management")
+        )
+        logger.info("✅ Identity service registered with migration adapter")
+    except Exception as e:
+        logger.warning(f"Identity service registration failed: {e}")
+    
+    try:
+        container.register_singleton(
+            "analytics_service", 
+            factory=lambda: get_analytics_service("analytics")
+        )
+        logger.info("✅ Analytics service registered with migration adapter")
+    except Exception as e:
+        logger.warning(f"Analytics service registration failed: {e}")
+    
+    # Add other services as needed during migration
+    logger.info("🔄 Migration-aware DI container ready")
+
+# Auto-register migration services
+import asyncio
+try:
+    asyncio.create_task(register_migration_services())
+except RuntimeError:
+    # Not in async context, will register when needed
+    pass

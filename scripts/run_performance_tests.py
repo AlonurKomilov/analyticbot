@@ -19,8 +19,8 @@ except ImportError:
     raise ImportError(
         "Performance optimization test module not found. Please ensure tests/test_performance_optimization.py exists."
     )
-from apps.bot.database.db import db_manager
-from apps.bot.database.performance import performance_manager
+from src.database.db import db_manager
+from src.database.performance import performance_manager
 
 logging.basicConfig(
     level=logging.INFO,

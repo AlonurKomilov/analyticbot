@@ -1,7 +1,7 @@
 import fakeredis.aioredis
 import pytest
 
-from apps.bot.services.guard_service import GuardService
+from src.services.guard_service import GuardService
 
 
 @pytest.fixture

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from infra.celery.celery_app import critical_message_task, enhanced_retry_task
-from apps.bot.container import container
+from src.container import container
 from config.settings import Settings
 from pydantic import SecretStr
 
@@ -45,8 +45,8 @@ def send_message_task(
     async def _send_message_with_reliability():
         try:
             # Import inside task to avoid circular imports
-            from apps.bot.container import container
-            from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+            from src.container import container
+            from src.utils.error_handler import ErrorContext, ErrorHandler
             from core.common_helpers.idempotency import IdempotencyGuard
             from core.common_helpers.ratelimit import TokenBucketRateLimiter
 
@@ -149,7 +149,7 @@ def send_message_task(
 
                 # Record success metric
                 try:
-                    from apps.bot.utils.monitoring import metrics
+                    from src.utils.monitoring import metrics
 
                     metrics.record_metric(
                         "message_sent_success",
@@ -178,7 +178,7 @@ def send_message_task(
 
             # Record failure metric
             try:
-                from apps.bot.utils.monitoring import metrics
+                from src.utils.monitoring import metrics
 
                 metrics.record_metric(
                     "message_sent_failure",
@@ -230,7 +230,7 @@ def process_analytics(self, channel_id: str, post_id: str | None = None) -> dict
 
     async def _process():
         # Initialize error handling context outside try block
-        from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+        from src.utils.error_handler import ErrorContext, ErrorHandler
         
         context = (
             ErrorContext()
@@ -240,8 +240,8 @@ def process_analytics(self, channel_id: str, post_id: str | None = None) -> dict
         )
         
         try:
-            from apps.bot.container import container
-            from apps.bot.services.analytics_service import AnalyticsService
+            from src.container import container
+            from src.services.analytics_service import AnalyticsService
 
             logger.info(f"Processing analytics for channel {channel_id}")
 
@@ -310,7 +310,7 @@ def cleanup_old_data(self, days_old: int = 30) -> dict[str, Any]:
 
     async def _cleanup():
         try:
-            from apps.bot.container import container
+            from src.container import container
 
             logger.info(f"Starting cleanup of data older than {days_old} days")
 
@@ -377,7 +377,7 @@ def health_check_task(self) -> dict[str, Any]:
 
     async def _health_check():
         try:
-            from apps.bot.container import container
+            from src.container import container
 
             logger.debug("Running system health check")
 

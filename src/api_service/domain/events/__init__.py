@@ -1,0 +1,5 @@
+"""
+Events Package
+==============
+Domain events
+"""

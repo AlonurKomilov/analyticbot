@@ -2,7 +2,7 @@
 Unit tests for punctuated utility - targeting 100% coverage
 """
 import pytest
-from apps.bot.utils.punctuated import Singleton
+from src.utils.punctuated import Singleton
 
 
 class TestSingleton:

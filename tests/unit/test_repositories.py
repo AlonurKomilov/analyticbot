@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
-from infra.db.repositories.user_repository import AsyncpgUserRepository
+from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
 
 
 @pytest.mark.asyncio

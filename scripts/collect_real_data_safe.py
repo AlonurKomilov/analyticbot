@@ -20,7 +20,7 @@ async def create_real_repositories():
     import asyncpg
     from infra.db.repositories.channel_repository import ChannelRepository
     from infra.db.repositories.post_repository import PostRepository
-    from infra.db.repositories.user_repository import AsyncpgUserRepository
+    from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
     from config.settings import settings
     
     # Create asyncpg pool directly

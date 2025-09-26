@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import Mock, AsyncMock
 from fastapi import HTTPException, Request
 
-from apps.api.services.database_error_handler import DatabaseErrorHandler, DatabaseErrorType
+from src.services.database_error_handler import DatabaseErrorHandler, DatabaseErrorType
 
 
 class TestDatabaseErrorHandling:

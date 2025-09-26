@@ -159,7 +159,7 @@ def enhanced_retry_task(**opts) -> Callable:
 
             # Add monitoring hook if available
             try:
-                from apps.bot.utils.monitoring import metrics
+                from src.utils.monitoring import metrics
                 # Ensure task_name is a string
                 task_name_str = str(task_name) if task_name else "unknown"
                 metrics.record_metric("celery_task_queued", 1.0, {"task": task_name_str})
@@ -252,7 +252,7 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
     # Record metrics if available
     try:
-        from apps.bot.utils.monitoring import metrics
+        from src.utils.monitoring import metrics
         metrics.record_metric("celery_task_started", 1.0, {"task": str(task_name)})
     except ImportError:
         pass
@@ -269,7 +269,7 @@ def task_postrun_handler(
 
     # Record detailed metrics
     try:
-        from apps.bot.utils.monitoring import metrics
+        from src.utils.monitoring import metrics
 
         success = state == "SUCCESS"
         metrics.record_metric(
@@ -296,7 +296,7 @@ def task_failure_handler(
     
     # Record failure metrics
     try:
-        from apps.bot.utils.monitoring import metrics
+        from src.utils.monitoring import metrics
         metrics.record_metric("celery_task_failed", 1.0, {"task": str(sender_name)})
     except ImportError:
         pass
@@ -310,7 +310,7 @@ def worker_ready_handler(sender=None, **kwargs):
 
     # Record worker metrics
     try:
-        from apps.bot.utils.monitoring import metrics
+        from src.utils.monitoring import metrics
 
         metrics.record_metric("celery_worker_ready", 1.0, {"hostname": str(hostname or "unknown")})
     except ImportError:
@@ -375,7 +375,7 @@ def check_celery_health() -> dict[str, Any]:
 
 # Register health check if monitoring is available
 try:
-    from apps.bot.utils.monitoring import health_monitor
+    from src.utils.monitoring import health_monitor
 
     health_monitor.register_check("celery", check_celery_health, timeout=10)
     logger.info("Registered Celery health check")

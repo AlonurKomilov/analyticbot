@@ -6,8 +6,9 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
-from src.mtproto_service.config import MTProtoSettings
 from core.ports.tg_client import TGClient
+from src.mtproto_service.config import MTProtoSettings
+
 from infra.tg.parsers import normalize_update
 
 

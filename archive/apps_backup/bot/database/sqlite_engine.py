@@ -4,6 +4,7 @@ SQLite database engine for development
 
 import logging
 
+from apps.bot.config import settings
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -11,8 +12,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import declarative_base
-
-from apps.bot.config import settings
 
 logger = logging.getLogger(__name__)
 Base = declarative_base()

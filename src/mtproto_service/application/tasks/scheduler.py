@@ -51,7 +51,12 @@ class TaskScheduler:
         self.logger.info("TaskScheduler initialized")
 
     def schedule_task(
-        self, name: str, func: Callable[..., Awaitable[Any]], interval_seconds: int, *args, **kwargs
+        self,
+        name: str,
+        func: Callable[..., Awaitable[Any]],
+        interval_seconds: int,
+        *args,
+        **kwargs,
     ) -> None:
         """Schedule a task to run at regular intervals.
 

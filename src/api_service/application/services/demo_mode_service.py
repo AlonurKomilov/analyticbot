@@ -4,15 +4,16 @@ Clean abstraction for demo mode detection and handling
 """
 
 import logging
-from typing import Optional, Dict, Any
+from typing import Any
+
 from fastapi import Request
+from src.api_service.deps_factory import (
+    get_demo_type_from_request,
+    get_demo_user_id_from_request,
+    is_request_for_demo_user,
+)
 
 from config import settings
-from src.api_service.deps_factory import (
-    is_request_for_demo_user, 
-    get_demo_type_from_request, 
-    get_demo_user_id_from_request
-)
 
 logger = logging.getLogger(__name__)
 
@@ -22,30 +23,26 @@ class DemoModeService:
     Service for handling demo mode detection and logic
     Provides clean abstractions for demo vs production handling
     """
-    
+
     @staticmethod
     def is_demo_request(request: Request) -> bool:
         """Check if request is from a demo user"""
         if not settings.demo_mode.is_demo_enabled():
             return False
         return is_request_for_demo_user(request)
-    
+
     @staticmethod
-    def get_demo_context(request: Request) -> Dict[str, Any]:
+    def get_demo_context(request: Request) -> dict[str, Any]:
         """Get complete demo context from request"""
         if not DemoModeService.is_demo_request(request):
-            return {
-                "is_demo": False,
-                "demo_type": None,
-                "demo_user_id": None
-            }
-        
+            return {"is_demo": False, "demo_type": None, "demo_user_id": None}
+
         return {
             "is_demo": True,
             "demo_type": get_demo_type_from_request(request),
-            "demo_user_id": get_demo_user_id_from_request(request)
+            "demo_user_id": get_demo_user_id_from_request(request),
         }
-    
+
     @staticmethod
     def should_use_demo_service(request: Request, service_name: str) -> bool:
         """
@@ -54,12 +51,12 @@ class DemoModeService:
         """
         if not settings.demo_mode.is_demo_enabled():
             return False
-        
+
         if not DemoModeService.is_demo_request(request):
             return False
-        
+
         return settings.demo_mode.should_use_mock_service(service_name)
-    
+
     @staticmethod
     def get_effective_user_id(request: Request) -> int:
         """
@@ -73,11 +70,11 @@ class DemoModeService:
                 if demo_user_id.startswith("demo_"):
                     return 1  # Standard demo user ID
             return 1
-        
+
         # For real users, would extract from JWT or other auth mechanism
         # This is a placeholder - real implementation would decode JWT
         return 1
-    
+
     @staticmethod
     def log_demo_usage(request: Request, endpoint: str, action: str):
         """Log demo mode usage for monitoring"""

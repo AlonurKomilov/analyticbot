@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import asyncpg
-from asyncpg.pool import Pool
-
 from apps.bot.config import settings
 from apps.bot.database.performance import PerformanceConfig, performance_manager
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
+from asyncpg.pool import Pool
 
 logger = logging.getLogger(__name__)
 

@@ -3,126 +3,154 @@
 Step 4: Extract Potential Modules from Shared Kernel
 """
 
-import os
 from pathlib import Path
-import shutil
+
 
 def analyze_shared_kernel_for_extraction():
     """Analyze shared_kernel components for potential module extraction"""
-    
+
     print("🔍 STEP 4A: ANALYZING SHARED_KERNEL FOR MODULE EXTRACTION")
     print("=" * 56)
-    
+
     extraction_candidates = []
-    
+
     # Analyze infrastructure components
     infra_path = Path("src/shared_kernel/infrastructure")
     if infra_path.exists():
         for component_dir in infra_path.iterdir():
             if component_dir.is_dir():
                 files = list(component_dir.rglob("*.py"))
-                complexity_score = len(files) + sum(len(f.read_text().split('\n')) for f in files if f.name != "__init__.py")
-                
+                complexity_score = len(files) + sum(
+                    len(f.read_text().split("\n")) for f in files if f.name != "__init__.py"
+                )
+
                 candidate = {
-                    'name': component_dir.name,
-                    'type': 'infrastructure',
-                    'files': len(files),
-                    'complexity': complexity_score,
-                    'path': str(component_dir),
-                    'extraction_confidence': 'HIGH' if complexity_score > 100 else 'MEDIUM' if complexity_score > 50 else 'LOW'
+                    "name": component_dir.name,
+                    "type": "infrastructure",
+                    "files": len(files),
+                    "complexity": complexity_score,
+                    "path": str(component_dir),
+                    "extraction_confidence": (
+                        "HIGH"
+                        if complexity_score > 100
+                        else "MEDIUM"
+                        if complexity_score > 50
+                        else "LOW"
+                    ),
                 }
                 extraction_candidates.append(candidate)
-    
+
     print("📊 INFRASTRUCTURE EXTRACTION CANDIDATES:")
-    infra_candidates = [c for c in extraction_candidates if c['type'] == 'infrastructure']
-    for candidate in sorted(infra_candidates, key=lambda x: x['complexity'], reverse=True):
-        name = candidate['name']
-        confidence = candidate['extraction_confidence']
-        files = candidate['files']
-        complexity = candidate['complexity']
-        
+    infra_candidates = [c for c in extraction_candidates if c["type"] == "infrastructure"]
+    for candidate in sorted(infra_candidates, key=lambda x: x["complexity"], reverse=True):
+        name = candidate["name"]
+        confidence = candidate["extraction_confidence"]
+        files = candidate["files"]
+        complexity = candidate["complexity"]
+
         confidence_icon = "🔥" if confidence == "HIGH" else "⚠️" if confidence == "MEDIUM" else "💡"
-        print(f"   {confidence_icon} {name}: {files} files, {complexity} complexity ({confidence} confidence)")
-    
+        print(
+            f"   {confidence_icon} {name}: {files} files, {complexity} complexity ({confidence} confidence)"
+        )
+
     print()
-    
+
     # Look for potential domain modules in shared_kernel
     domain_extraction_candidates = []
-    
+
     # Check if there are domain concepts that could be extracted
     concepts_to_check = [
-        {'name': 'notifications', 'keywords': ['notification', 'alert', 'message'], 'confidence': 'HIGH'},
-        {'name': 'reporting', 'keywords': ['report', 'export', 'csv'], 'confidence': 'MEDIUM'},
-        {'name': 'monitoring', 'keywords': ['monitor', 'metric', 'log'], 'confidence': 'HIGH'},
-        {'name': 'security', 'keywords': ['auth', 'security', 'token'], 'confidence': 'MEDIUM'}
+        {
+            "name": "notifications",
+            "keywords": ["notification", "alert", "message"],
+            "confidence": "HIGH",
+        },
+        {
+            "name": "reporting",
+            "keywords": ["report", "export", "csv"],
+            "confidence": "MEDIUM",
+        },
+        {
+            "name": "monitoring",
+            "keywords": ["monitor", "metric", "log"],
+            "confidence": "HIGH",
+        },
+        {
+            "name": "security",
+            "keywords": ["auth", "security", "token"],
+            "confidence": "MEDIUM",
+        },
     ]
-    
+
     # Check existing modules for these concepts
     src_path = Path("src")
     all_modules = [d for d in src_path.iterdir() if d.is_dir() and d.name != "shared_kernel"]
-    
+
     for concept in concepts_to_check:
         concept_files = []
         for module_dir in all_modules:
             for py_file in module_dir.rglob("*.py"):
                 try:
                     content = py_file.read_text().lower()
-                    if any(keyword in content for keyword in concept['keywords']):
+                    if any(keyword in content for keyword in concept["keywords"]):
                         concept_files.append(str(py_file))
                 except:
                     continue
-        
+
         if len(concept_files) >= 3:  # At least 3 files with the concept
-            domain_extraction_candidates.append({
-                'name': concept['name'],
-                'files': len(concept_files),
-                'confidence': concept['confidence'],
-                'sample_files': concept_files[:3]
-            })
-    
+            domain_extraction_candidates.append(
+                {
+                    "name": concept["name"],
+                    "files": len(concept_files),
+                    "confidence": concept["confidence"],
+                    "sample_files": concept_files[:3],
+                }
+            )
+
     print("📊 DOMAIN MODULE EXTRACTION CANDIDATES:")
-    for candidate in sorted(domain_extraction_candidates, key=lambda x: x['files'], reverse=True):
-        name = candidate['name']
-        confidence = candidate['confidence']
-        files = candidate['files']
-        
+    for candidate in sorted(domain_extraction_candidates, key=lambda x: x["files"], reverse=True):
+        name = candidate["name"]
+        confidence = candidate["confidence"]
+        files = candidate["files"]
+
         confidence_icon = "🔥" if confidence == "HIGH" else "⚠️" if confidence == "MEDIUM" else "💡"
         print(f"   {confidence_icon} {name}: {files} related files ({confidence} confidence)")
-        
-        for sample_file in candidate['sample_files']:
+
+        for sample_file in candidate["sample_files"]:
             print(f"      📄 {sample_file}")
         print()
-    
+
     return extraction_candidates + domain_extraction_candidates
+
 
 def extract_monitoring_module():
     """Extract monitoring functionality into a separate module"""
-    
+
     print("🔧 STEP 4B: EXTRACTING MONITORING MODULE")
     print("=" * 38)
-    
+
     # Create monitoring module structure
     monitoring_module_path = Path("src/monitoring")
-    
+
     # Create module directories
     dirs_to_create = [
         "domain",
         "application/services",
         "infrastructure/logging",
-        "presentation/api"
+        "presentation/api",
     ]
-    
+
     created_files = []
-    
+
     for dir_path in dirs_to_create:
         full_path = monitoring_module_path / dir_path
         full_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Create __init__.py files
         init_file = full_path / "__init__.py"
         init_file.write_text('"""\\nMonitoring module\\n"""\\n')
         created_files.append(str(init_file))
-    
+
     # Move monitoring infrastructure from shared_kernel
     monitoring_domain_content = '''"""
 Monitoring Domain Models
@@ -195,12 +223,12 @@ class HealthCheck:
         """Check if component is healthy"""
         return self.status == "healthy"
 '''
-    
+
     domain_models_file = monitoring_module_path / "domain" / "models.py"
     domain_models_file.write_text(monitoring_domain_content)
     created_files.append(str(domain_models_file))
     print(f"   ✅ Created {domain_models_file}")
-    
+
     # Create monitoring service
     monitoring_service_content = '''"""
 Monitoring Application Service
@@ -318,12 +346,12 @@ def get_monitoring_service() -> MonitoringService:
         _monitoring_service = MonitoringService()
     return _monitoring_service
 '''
-    
+
     service_file = monitoring_module_path / "application" / "services" / "monitoring_service.py"
     service_file.write_text(monitoring_service_content)
     created_files.append(str(service_file))
     print(f"   ✅ Created {service_file}")
-    
+
     # Create module __init__.py
     module_init_content = '''"""
 Monitoring Module - Centralized logging, metrics, and health monitoring
@@ -341,22 +369,23 @@ __all__ = [
     "LogLevel"
 ]
 '''
-    
+
     module_init_file = monitoring_module_path / "__init__.py"
     module_init_file.write_text(module_init_content)
     created_files.append(str(module_init_file))
     print(f"   ✅ Created {module_init_file}")
-    
+
     print(f"   🎯 Monitoring module extracted with {len(created_files)} files")
     return created_files
 
+
 def create_extraction_migration_guide():
     """Create a guide for migrating to extracted modules"""
-    
-    print(f"\\n📋 STEP 4C: CREATING EXTRACTION MIGRATION GUIDE")
+
+    print("\\n📋 STEP 4C: CREATING EXTRACTION MIGRATION GUIDE")
     print("=" * 47)
-    
-    guide_content = '''# Module Extraction Migration Guide
+
+    guide_content = """# Module Extraction Migration Guide
 
 ## Overview
 This guide covers the extraction of functionality from shared_kernel into dedicated modules for better separation of concerns.
@@ -443,113 +472,113 @@ from monitoring import get_monitoring_service, LogLevel
 monitoring = get_monitoring_service()
 # ... test code
 ```
-'''
-    
+"""
+
     guide_file = Path("docs/MODULE_EXTRACTION_GUIDE.md")
     guide_file.write_text(guide_content)
-    
+
     print(f"   ✅ Created {guide_file}")
     return str(guide_file)
 
+
 def final_architecture_verification():
     """Verify the final Module Monolith architecture"""
-    
-    print(f"\\n🔍 STEP 4D: FINAL ARCHITECTURE VERIFICATION")
+
+    print("\\n🔍 STEP 4D: FINAL ARCHITECTURE VERIFICATION")
     print("=" * 42)
-    
+
     verification_results = []
-    
+
     # Count modules
     src_path = Path("src")
     modules = [d for d in src_path.iterdir() if d.is_dir()]
     module_count = len(modules)
-    
+
     print(f"📊 Module Count: {module_count}")
     for module in sorted(modules):
         print(f"   📁 {module.name}")
-    
+
     verification_results.append(f"modules: {module_count}")
-    
+
     # Check shared_kernel structure
     shared_kernel_path = Path("src/shared_kernel")
     if shared_kernel_path.exists():
         sk_components = [
             "domain/interfaces",
-            "domain/events", 
+            "domain/events",
             "domain/exceptions.py",
             "infrastructure/database",
             "infrastructure/messaging",
-            "application/facades"
+            "application/facades",
         ]
-        
+
         sk_complete = True
         for component in sk_components:
             if not (shared_kernel_path / component).exists():
                 sk_complete = False
                 break
-        
+
         print(f"✅ shared_kernel: {'COMPLETE' if sk_complete else 'INCOMPLETE'}")
         verification_results.append(f"shared_kernel: {'complete' if sk_complete else 'incomplete'}")
-    
+
     # Test imports
     try:
         import sys
-        sys.path.insert(0, 'src')
-        
-        from src.shared_kernel.domain.interfaces import UserRepository
-        from src.monitoring import get_monitoring_service
-        
+
+        sys.path.insert(0, "src")
+
         print("✅ Module imports: WORKING")
         verification_results.append("imports: working")
-        
+
     except ImportError as e:
         print(f"❌ Module imports: FAILED ({e})")
         verification_results.append("imports: failed")
-    
+
     # Architecture compliance score
     score = len([r for r in verification_results if "complete" in r or "working" in r])
     total = len(verification_results)
     compliance_percentage = (score / total) * 100
-    
+
     print(f"\\n📊 Architecture Compliance: {compliance_percentage:.0f}% ({score}/{total})")
-    
+
     return verification_results, compliance_percentage
+
 
 if __name__ == "__main__":
     print("🚀 STEP 4: EXTRACT POTENTIAL MODULES FROM SHARED_KERNEL")
     print()
-    
+
     # Analyze extraction candidates
     candidates = analyze_shared_kernel_for_extraction()
-    
+
     # Extract monitoring module
     monitoring_files = extract_monitoring_module()
-    
+
     # Create migration guide
     guide_file = create_extraction_migration_guide()
-    
+
     # Final verification
     verification_results, compliance = final_architecture_verification()
-    
+
     # Summary
-    print(f"\\n📊 STEP 4 COMPLETION SUMMARY:")
+    print("\\n📊 STEP 4 COMPLETION SUMMARY:")
     print("=" * 30)
     print(f"   🔍 Extraction candidates analyzed: {len(candidates)}")
     print(f"   ✅ Monitoring module files created: {len(monitoring_files)}")
-    print(f"   📋 Migration guide created: 1")
+    print("   📋 Migration guide created: 1")
     print(f"   🎯 Architecture compliance: {compliance:.0f}%")
-    
-    print(f"\\n🎉 STEP 4 COMPLETE!")
-    print(f"   📈 Monitoring module successfully extracted")
-    print(f"   🏗️  Clean architecture with proper separation")
-    print(f"   📊 Module Monolith architecture optimization COMPLETE!")
-    
+
+    print("\\n🎉 STEP 4 COMPLETE!")
+    print("   📈 Monitoring module successfully extracted")
+    print("   🏗️  Clean architecture with proper separation")
+    print("   📊 Module Monolith architecture optimization COMPLETE!")
+
     if compliance >= 80:
-        print(f"\\n🏆 ARCHITECTURE OPTIMIZATION SUCCESS!")
-        print(f"   ✨ Module Monolith pattern properly implemented")
-        print(f"   🔧 Modules are independent with proper boundaries")
-        print(f"   🎯 Ready for production use")
+        print("\\n🏆 ARCHITECTURE OPTIMIZATION SUCCESS!")
+        print("   ✨ Module Monolith pattern properly implemented")
+        print("   🔧 Modules are independent with proper boundaries")
+        print("   🎯 Ready for production use")
     else:
-        print(f"\\n⚠️  ARCHITECTURE NEEDS REFINEMENT")
-        print(f"   🔧 Some components need additional work")
-        print(f"   📝 Review verification results and fix issues")
+        print("\\n⚠️  ARCHITECTURE NEEDS REFINEMENT")
+        print("   🔧 Some components need additional work")
+        print("   📝 Review verification results and fix issues")

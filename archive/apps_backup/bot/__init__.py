@@ -7,10 +7,10 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-
 from apps.bot.handlers import alerts, exports
 from apps.bot.handlers.bot_microhandlers import bot_microhandlers_router
 from apps.bot.middleware.throttle import ThrottleMiddleware
+
 from config.settings import Settings
 
 logger = logging.getLogger(__name__)

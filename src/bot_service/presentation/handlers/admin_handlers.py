@@ -7,12 +7,14 @@ from typing import cast
 from aiogram import Bot, Router, types
 from aiogram.filters import Command, CommandObject
 from aiogram_i18n import I18nContext
-
 from src.bot_service.services.analytics_service import AnalyticsService
 from src.bot_service.services.guard_service import GuardService
 from src.bot_service.services.prometheus_service import prometheus_service
 from src.bot_service.services.scheduler_service import SchedulerService
-from src.shared_kernel.infrastructure.persistence import AsyncpgChannelRepository as ChannelRepository
+
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgChannelRepository as ChannelRepository,
+)
 
 router = Router()
 
@@ -247,7 +249,10 @@ async def handle_schedule(
         if uid is not None:
             try:
                 await scheduler_service.schedule_post(
-                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt,
                 )
             except Exception:
                 pass

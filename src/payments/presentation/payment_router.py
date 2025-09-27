@@ -5,10 +5,9 @@ Payments Presentation Layer
 FastAPI router for payments domain endpoints.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
 import logging
 
+from fastapi import APIRouter, Depends, HTTPException
 from src.payments.application.services.payment_service import PaymentService
 from src.shared_kernel.presentation.api.dependencies import get_current_user
 
@@ -16,16 +15,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
+
 @router.get("/health")
 async def payments_health():
     """Health check for payments service"""
     return {"status": "healthy", "service": "payments"}
 
+
 @router.post("/process")
 async def process_payment(
     payment_data: dict,
-    current_user = Depends(get_current_user),
-    payment_service: PaymentService = Depends()
+    current_user=Depends(get_current_user),
+    payment_service: PaymentService = Depends(),
 ):
     """Process a payment"""
     try:
@@ -35,10 +36,10 @@ async def process_payment(
         logger.error(f"Payment processing failed: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+
 @router.get("/history")
 async def get_payment_history(
-    current_user = Depends(get_current_user),
-    payment_service: PaymentService = Depends()
+    current_user=Depends(get_current_user), payment_service: PaymentService = Depends()
 ):
     """Get payment history for user"""
     try:

@@ -2,14 +2,13 @@
 BotService Interface - Public API for bot_service module
 """
 
-from typing import Protocol, runtime_checkable, Optional, Dict, Any, List
-from datetime import datetime
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class BotService(Protocol):
     """BotService public interface"""
-    
+
     async def send_message(self, chat_id: int, message: str) -> dict:
         """send_message operation"""
         ...

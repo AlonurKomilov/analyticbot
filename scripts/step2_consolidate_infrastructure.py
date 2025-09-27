@@ -3,67 +3,65 @@
 Step 2: Complete Shared Infrastructure Consolidation
 """
 
-import os
-import shutil
 from pathlib import Path
-import re
+
 
 def analyze_remaining_core_files():
     """Find files still in core/apps/infra that need migration"""
-    
+
     print("🔍 STEP 2A: ANALYZING REMAINING CORE/APPS/INFRA FILES")
     print("=" * 54)
-    
+
     remaining_files = []
-    
+
     # Check core/ directory
     core_path = Path("core")
     if core_path.exists():
         for file_path in core_path.rglob("*.py"):
             if file_path.name != "__init__.py":
                 remaining_files.append(file_path)
-    
+
     # Check apps/ directory
     apps_path = Path("apps")
     if apps_path.exists():
         for file_path in apps_path.rglob("*.py"):
             if file_path.name != "__init__.py":
                 remaining_files.append(file_path)
-    
+
     # Check infra/ directory
     infra_path = Path("infra")
     if infra_path.exists():
         for file_path in infra_path.rglob("*.py"):
             if file_path.name != "__init__.py":
                 remaining_files.append(file_path)
-    
+
     print(f"📊 Found {len(remaining_files)} files in core/apps/infra:")
-    
+
     # Group by category
     categories = {
-        'database': [],
-        'messaging': [],
-        'monitoring': [],
-        'security': [],
-        'utilities': [],
-        'other': []
+        "database": [],
+        "messaging": [],
+        "monitoring": [],
+        "security": [],
+        "utilities": [],
+        "other": [],
     }
-    
+
     for file_path in remaining_files:
         file_str = str(file_path).lower()
-        if 'database' in file_str or 'db' in file_str or 'postgres' in file_str:
-            categories['database'].append(file_path)
-        elif 'telegram' in file_str or 'bot' in file_str or 'message' in file_str:
-            categories['messaging'].append(file_path)
-        elif 'monitor' in file_str or 'log' in file_str or 'metric' in file_str:
-            categories['monitoring'].append(file_path)
-        elif 'auth' in file_str or 'security' in file_str or 'token' in file_str:
-            categories['security'].append(file_path)
-        elif 'util' in file_str or 'helper' in file_str or 'common' in file_str:
-            categories['utilities'].append(file_path)
+        if "database" in file_str or "db" in file_str or "postgres" in file_str:
+            categories["database"].append(file_path)
+        elif "telegram" in file_str or "bot" in file_str or "message" in file_str:
+            categories["messaging"].append(file_path)
+        elif "monitor" in file_str or "log" in file_str or "metric" in file_str:
+            categories["monitoring"].append(file_path)
+        elif "auth" in file_str or "security" in file_str or "token" in file_str:
+            categories["security"].append(file_path)
+        elif "util" in file_str or "helper" in file_str or "common" in file_str:
+            categories["utilities"].append(file_path)
         else:
-            categories['other'].append(file_path)
-    
+            categories["other"].append(file_path)
+
     for category, files in categories.items():
         if files:
             print(f"\n📁 {category.upper()} ({len(files)} files):")
@@ -71,26 +69,26 @@ def analyze_remaining_core_files():
                 print(f"   📄 {f}")
             if len(files) > 3:
                 print(f"   ... and {len(files) - 3} more")
-    
+
     return remaining_files, categories
+
 
 def consolidate_database_infrastructure():
     """Move all database-related infrastructure to shared_kernel"""
-    
-    print(f"\n🔧 STEP 2B: CONSOLIDATING DATABASE INFRASTRUCTURE")
+
+    print("\n🔧 STEP 2B: CONSOLIDATING DATABASE INFRASTRUCTURE")
     print("=" * 48)
-    
+
     moved_files = []
-    
+
     # Ensure shared database directory exists
     shared_db_dir = Path("src/shared_kernel/infrastructure/database")
     shared_db_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Look for database files in core/
-    core_db_files = []
     if Path("core").exists():
-        core_db_files = list(Path("core").rglob("*database*")) + list(Path("core").rglob("*db*"))
-    
+        list(Path("core").rglob("*database*")) + list(Path("core").rglob("*db*"))
+
     # Create consolidated database migrations handler
     migrations_content = '''"""
 Shared Database Migration Utilities
@@ -213,28 +211,29 @@ class DatabaseHealthCheck:
                 "error": str(e)
             }
 '''
-    
+
     migrations_file = shared_db_dir / "migrations.py"
-    with open(migrations_file, 'w', encoding='utf-8') as f:
+    with open(migrations_file, "w", encoding="utf-8") as f:
         f.write(migrations_content)
-    
+
     print(f"   ✅ Created {migrations_file}")
     moved_files.append(str(migrations_file))
-    
+
     return moved_files
+
 
 def consolidate_messaging_infrastructure():
     """Move messaging/telegram infrastructure to shared_kernel"""
-    
-    print(f"\n🔧 STEP 2C: CONSOLIDATING MESSAGING INFRASTRUCTURE")
+
+    print("\n🔧 STEP 2C: CONSOLIDATING MESSAGING INFRASTRUCTURE")
     print("=" * 49)
-    
+
     moved_files = []
-    
+
     # Create shared messaging directory
     shared_messaging_dir = Path("src/shared_kernel/infrastructure/messaging")
     shared_messaging_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create telegram client infrastructure
     telegram_client_content = '''"""
 Shared Telegram Client Infrastructure
@@ -326,14 +325,14 @@ def get_telegram_client() -> SharedTelegramClient:
         _telegram_client = SharedTelegramClient()
     return _telegram_client
 '''
-    
+
     telegram_file = shared_messaging_dir / "telegram_client.py"
-    with open(telegram_file, 'w', encoding='utf-8') as f:
+    with open(telegram_file, "w", encoding="utf-8") as f:
         f.write(telegram_client_content)
-    
+
     print(f"   ✅ Created {telegram_file}")
     moved_files.append(str(telegram_file))
-    
+
     # Create messaging __init__.py
     messaging_init_content = '''"""
 Shared Messaging Infrastructure
@@ -343,28 +342,29 @@ from .telegram_client import TelegramConfig, SharedTelegramClient, get_telegram_
 
 __all__ = ["TelegramConfig", "SharedTelegramClient", "get_telegram_client"]
 '''
-    
+
     messaging_init_file = shared_messaging_dir / "__init__.py"
-    with open(messaging_init_file, 'w', encoding='utf-8') as f:
+    with open(messaging_init_file, "w", encoding="utf-8") as f:
         f.write(messaging_init_content)
-    
+
     print(f"   ✅ Created {messaging_init_file}")
     moved_files.append(str(messaging_init_file))
-    
+
     return moved_files
+
 
 def consolidate_monitoring_infrastructure():
     """Create shared monitoring and logging infrastructure"""
-    
-    print(f"\n🔧 STEP 2D: CONSOLIDATING MONITORING INFRASTRUCTURE")
+
+    print("\n🔧 STEP 2D: CONSOLIDATING MONITORING INFRASTRUCTURE")
     print("=" * 50)
-    
+
     moved_files = []
-    
+
     # Create shared monitoring directory
     shared_monitoring_dir = Path("src/shared_kernel/infrastructure/monitoring")
     shared_monitoring_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Create logging configuration
     logging_content = '''"""
 Shared Logging and Monitoring Infrastructure
@@ -492,14 +492,14 @@ def get_metrics_collector() -> MetricsCollector:
         _metrics = MetricsCollector()
     return _metrics
 '''
-    
+
     logging_file = shared_monitoring_dir / "logging.py"
-    with open(logging_file, 'w', encoding='utf-8') as f:
+    with open(logging_file, "w", encoding="utf-8") as f:
         f.write(logging_content)
-    
+
     print(f"   ✅ Created {logging_file}")
     moved_files.append(str(logging_file))
-    
+
     # Create monitoring __init__.py
     monitoring_init_content = '''"""
 Shared Monitoring Infrastructure
@@ -509,22 +509,23 @@ from .logging import AnalyticBotLogger, MetricsCollector, get_logger, get_metric
 
 __all__ = ["AnalyticBotLogger", "MetricsCollector", "get_logger", "get_metrics_collector"]
 '''
-    
+
     monitoring_init_file = shared_monitoring_dir / "__init__.py"
-    with open(monitoring_init_file, 'w', encoding='utf-8') as f:
+    with open(monitoring_init_file, "w", encoding="utf-8") as f:
         f.write(monitoring_init_content)
-    
+
     print(f"   ✅ Created {monitoring_init_file}")
     moved_files.append(str(monitoring_init_file))
-    
+
     return moved_files
+
 
 def update_shared_kernel_exports():
     """Update shared_kernel __init__.py to export all shared infrastructure"""
-    
-    print(f"\n🔧 STEP 2E: UPDATING SHARED_KERNEL EXPORTS")
+
+    print("\n🔧 STEP 2E: UPDATING SHARED_KERNEL EXPORTS")
     print("=" * 39)
-    
+
     # Update infrastructure __init__.py
     infra_init_path = Path("src/shared_kernel/infrastructure/__init__.py")
     infra_init_content = '''"""
@@ -559,12 +560,12 @@ __all__ = [
     "get_metrics_collector"
 ]
 '''
-    
-    with open(infra_init_path, 'w', encoding='utf-8') as f:
+
+    with open(infra_init_path, "w", encoding="utf-8") as f:
         f.write(infra_init_content)
-    
+
     print(f"   ✅ Updated {infra_init_path}")
-    
+
     # Update main shared_kernel __init__.py
     shared_kernel_init_path = Path("src/shared_kernel/__init__.py")
     shared_kernel_init_content = '''"""
@@ -581,33 +582,34 @@ from .infrastructure import *
 # Application exports (if any)
 # from .application import *
 '''
-    
-    with open(shared_kernel_init_path, 'w', encoding='utf-8') as f:
+
+    with open(shared_kernel_init_path, "w", encoding="utf-8") as f:
         f.write(shared_kernel_init_content)
-    
+
     print(f"   ✅ Updated {shared_kernel_init_path}")
-    
+
     return [str(infra_init_path), str(shared_kernel_init_path)]
+
 
 if __name__ == "__main__":
     print("🚀 STEP 2: COMPLETE SHARED INFRASTRUCTURE CONSOLIDATION")
     print()
-    
+
     # Analyze remaining files
     remaining_files, categories = analyze_remaining_core_files()
-    
+
     # Consolidate infrastructure
     db_files = consolidate_database_infrastructure()
     messaging_files = consolidate_messaging_infrastructure()
     monitoring_files = consolidate_monitoring_infrastructure()
-    
+
     # Update exports
     export_files = update_shared_kernel_exports()
-    
+
     # Summary
     total_created = len(db_files) + len(messaging_files) + len(monitoring_files) + len(export_files)
-    
-    print(f"\n📊 STEP 2 COMPLETION SUMMARY:")
+
+    print("\n📊 STEP 2 COMPLETION SUMMARY:")
     print("=" * 30)
     print(f"   📊 Remaining old files analyzed: {len(remaining_files)}")
     print(f"   ✅ Database infrastructure files: {len(db_files)}")
@@ -615,9 +617,9 @@ if __name__ == "__main__":
     print(f"   ✅ Monitoring infrastructure files: {len(monitoring_files)}")
     print(f"   🔧 Updated export files: {len(export_files)}")
     print(f"   🎯 Total shared infrastructure files: {total_created}")
-    
-    print(f"\n🎉 STEP 2 COMPLETE!")
-    print(f"   📈 Shared infrastructure fully consolidated")
-    print(f"   🏗️  Database, messaging, and monitoring centralized")
-    print(f"   🔧 All modules can now use shared infrastructure")
-    print(f"   ➡️  Ready for Step 3: Module boundary enforcement")
+
+    print("\n🎉 STEP 2 COMPLETE!")
+    print("   📈 Shared infrastructure fully consolidated")
+    print("   🏗️  Database, messaging, and monitoring centralized")
+    print("   🔧 All modules can now use shared infrastructure")
+    print("   ➡️  Ready for Step 3: Module boundary enforcement")

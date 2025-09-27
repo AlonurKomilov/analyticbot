@@ -1,15 +1,15 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
 from pydantic import ValidationError
-
-from src.bot_service.domain.models import InlineButtonsPayload
 from src.bot_service.utils.error_handler import ErrorContext, ErrorHandler
+
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+from src.bot_service.domain.models import InlineButtonsPayload
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +51,9 @@ class SchedulerService:
                     button = InlineKeyboardButton(
                         text=btn.text,
                         url=str(btn.url) if btn.url else None,
-                        callback_data=btn.callback_data
-                        if btn.callback_data and (not btn.url)
-                        else None,
+                        callback_data=(
+                            btn.callback_data if btn.callback_data and (not btn.url) else None
+                        ),
                     )
                     button_row.append(button)
                 rows.append(button_row)
@@ -72,7 +72,9 @@ class SchedulerService:
         """
         from uuid import uuid4
 
-        from src.shared_kernel.domain.services.enhanced_delivery_service import EnhancedDeliveryService
+        from src.shared_kernel.domain.services.enhanced_delivery_service import (
+            EnhancedDeliveryService,
+        )
 
         result = {
             "success": False,

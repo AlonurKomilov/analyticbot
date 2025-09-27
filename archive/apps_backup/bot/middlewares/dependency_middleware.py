@@ -6,10 +6,6 @@ from typing import Any
 import punq
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
-from asyncpg.pool import Pool as AsyncPGPool
-from punq import MissingDependencyError
-from sqlalchemy.ext.asyncio import async_sessionmaker
-
 from apps.bot.config import settings as app_settings
 from apps.bot.services import (
     AnalyticsService,
@@ -18,6 +14,10 @@ from apps.bot.services import (
     SubscriptionService,
 )
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
+from asyncpg.pool import Pool as AsyncPGPool
+from punq import MissingDependencyError
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
 from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
 from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
 from infra.db.repositories import AsyncpgPlanRepository as PlanRepository

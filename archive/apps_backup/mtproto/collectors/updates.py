@@ -8,6 +8,7 @@ from typing import Any
 
 from apps.mtproto.config import MTProtoSettings
 from core.ports.tg_client import TGClient
+
 from infra.tg.parsers import normalize_update
 
 

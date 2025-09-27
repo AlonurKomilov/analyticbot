@@ -7,13 +7,17 @@ Original implementation moved to: src.api_service.presentation.routers.analytics
 
 # Import from clean architecture location
 try:
-    from src.api_service.presentation.routers.analytics_alerts_router import *
-    print("✅ Using clean architecture implementation from src.api_service.presentation.routers.analytics_alerts_router")
+    print(
+        "✅ Using clean architecture implementation from src.api_service.presentation.routers.analytics_alerts_router"
+    )
 except ImportError as e:
-    print(f"⚠️  Could not import from src.api_service.presentation.routers.analytics_alerts_router: {e}")
+    print(
+        f"⚠️  Could not import from src.api_service.presentation.routers.analytics_alerts_router: {e}"
+    )
     print("🔄 This may indicate the clean architecture module needs attention")
-    raise ImportError(f"Clean architecture module not available: src.api_service.presentation.routers.analytics_alerts_router") from e
+    raise ImportError(
+        "Clean architecture module not available: src.api_service.presentation.routers.analytics_alerts_router"
+    ) from e
 
 # Re-export for compatibility
 # All exports available via import *
-

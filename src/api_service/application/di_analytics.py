@@ -7,13 +7,15 @@ Original implementation moved to: src.api_service.presentation.routers.di_analyt
 
 # Import from clean architecture location
 try:
-    from src.api_service.presentation.routers.di_analytics import *
-    print("✅ Using clean architecture implementation from src.api_service.presentation.routers.di_analytics")
+    print(
+        "✅ Using clean architecture implementation from src.api_service.presentation.routers.di_analytics"
+    )
 except ImportError as e:
     print(f"⚠️  Could not import from src.api_service.presentation.routers.di_analytics: {e}")
     print("🔄 This may indicate the clean architecture module needs attention")
-    raise ImportError(f"Clean architecture module not available: src.api_service.presentation.routers.di_analytics") from e
+    raise ImportError(
+        "Clean architecture module not available: src.api_service.presentation.routers.di_analytics"
+    ) from e
 
 # Re-export for compatibility
 # All exports available via import *
-

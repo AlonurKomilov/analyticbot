@@ -4,7 +4,7 @@ Contains core business logic without external dependencies
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from src.shared_kernel.domain.entities import (
@@ -46,13 +46,14 @@ class ScheduleService:
         """
         # Business rule: cannot schedule posts in the past
         from datetime import timezone
-        now = datetime.now(timezone.utc)
-        
+
+        now = datetime.now(UTC)
+
         # Ensure scheduled_at is timezone-aware
         if scheduled_at.tzinfo is None:
             # Assume UTC if no timezone is provided
-            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
-        
+            scheduled_at = scheduled_at.replace(tzinfo=UTC)
+
         if scheduled_at <= now:
             raise ValueError("Cannot schedule posts in the past")
 
@@ -91,7 +92,8 @@ class ScheduleService:
 
         # Business rule: validate rescheduling
         from datetime import timezone
-        now = datetime.now(timezone.utc)
+
+        now = datetime.now(UTC)
         if post.scheduled_at <= now and post.status == PostStatus.SCHEDULED:
             raise ValueError("Cannot reschedule to past time")
 
@@ -186,7 +188,9 @@ class DeliveryService:
 
         # Create delivery record
         delivery = Delivery(
-            post_id=post.id, delivery_channel_id=post.channel_id, status=DeliveryStatus.PENDING
+            post_id=post.id,
+            delivery_channel_id=post.channel_id,
+            status=DeliveryStatus.PENDING,
         )
 
         created_delivery = await self.delivery_repo.create(delivery)
@@ -289,7 +293,10 @@ class DeliveryService:
         stats = {}
         for status in DeliveryStatus:
             status_filter = DeliveryFilter(
-                channel_id=channel_id, from_date=from_date, to_date=to_date, status=status
+                channel_id=channel_id,
+                from_date=from_date,
+                to_date=to_date,
+                status=status,
             )
             stats[status.value] = await self.delivery_repo.count(status_filter)
 

@@ -9,7 +9,6 @@ from aiogram.types import TelegramObject
 from asyncpg.pool import Pool as AsyncPGPool
 from punq import MissingDependencyError
 from sqlalchemy.ext.asyncio import async_sessionmaker
-
 from src.bot_service.config import settings as app_settings
 from src.bot_service.services import (
     AnalyticsService,
@@ -18,11 +17,22 @@ from src.bot_service.services import (
     SubscriptionService,
 )
 from src.bot_service.utils.safe_i18n_core import SafeFluentRuntimeCore
-from src.shared_kernel.infrastructure.persistence import AsyncpgAnalyticsRepository as AnalyticsRepository
-from src.shared_kernel.infrastructure.persistence import AsyncpgChannelRepository as ChannelRepository
-from src.shared_kernel.infrastructure.persistence import AsyncpgPlanRepository as PlanRepository
-from src.shared_kernel.infrastructure.persistence import AsyncpgScheduleRepository as SchedulerRepository
-from src.shared_kernel.infrastructure.persistence import AsyncpgUserRepository as UserRepository
+
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgAnalyticsRepository as AnalyticsRepository,
+)
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgChannelRepository as ChannelRepository,
+)
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgPlanRepository as PlanRepository,
+)
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgScheduleRepository as SchedulerRepository,
+)
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgUserRepository as UserRepository,
+)
 
 
 async def _noop(*args: Any, **kwargs: Any) -> None:

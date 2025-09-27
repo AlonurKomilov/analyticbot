@@ -2,14 +2,13 @@
 PaymentService Interface - Public API for payments module
 """
 
-from typing import Protocol, runtime_checkable, Optional, Dict, Any, List
-from datetime import datetime
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class PaymentService(Protocol):
     """PaymentService public interface"""
-    
+
     async def process_payment(self, payment_data: dict) -> dict:
         """process_payment operation"""
         ...

@@ -1,6 +1,5 @@
 import fakeredis.aioredis
 import pytest
-
 from src.services.guard_service import GuardService
 
 

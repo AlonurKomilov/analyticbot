@@ -7,7 +7,6 @@ import logging
 from datetime import datetime, timedelta
 
 import asyncpg
-
 from core.repositories.alert_repository import (
     AlertSent,
     AlertSubscription,

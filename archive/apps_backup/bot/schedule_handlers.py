@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
-
 from apps.bot.deps import bot_container
 
 logger = logging.getLogger(__name__)

@@ -9,8 +9,8 @@ from typing import Any
 from uuid import uuid4
 
 import asyncpg
-
 from core.repositories.shared_reports_repository import SharedReportsRepository
+
 from infra.db.connection import get_db_connection
 
 logger = logging.getLogger(__name__)

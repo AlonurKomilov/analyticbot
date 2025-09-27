@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from asyncpg import Pool
-
 from src.bot_service.database import db
 
 logging.basicConfig(level=logging.INFO)

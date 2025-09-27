@@ -15,7 +15,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
 from src.bot_service.deps import bot_container
 from src.bot_service.handlers.admin_handlers import router as admin_router
 from src.bot_service.handlers.content_protection import router as content_router
@@ -23,6 +22,7 @@ from src.bot_service.handlers.user_handlers import router as user_router
 from src.bot_service.middlewares.dependency_middleware import DependencyMiddleware
 from src.bot_service.middlewares.i18n import i18n_middleware
 from src.bot_service.schedule_handlers import schedule_router
+
 from config import settings
 
 

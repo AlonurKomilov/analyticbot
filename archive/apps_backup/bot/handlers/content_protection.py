@@ -16,7 +16,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     Message,
 )
-
 from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
 from apps.bot.services.content_protection import (
     ContentProtectionService,
@@ -61,7 +60,8 @@ async def cmd_protect_content(message: Message, state: FSMContext):
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="🎥 Add Video Watermark", callback_data="protect_video_watermark"
+                    text="🎥 Add Video Watermark",
+                    callback_data="protect_video_watermark",
                 )
             ]
         )
@@ -71,7 +71,8 @@ async def cmd_protect_content(message: Message, state: FSMContext):
         keyboard.inline_keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="🎭 Format with Custom Emojis", callback_data="protect_custom_emoji"
+                    text="🎭 Format with Custom Emojis",
+                    callback_data="protect_custom_emoji",
                 )
             ]
         )
@@ -97,10 +98,10 @@ async def cmd_protect_content(message: Message, state: FSMContext):
 
 **Your Tier:** {user_tier.value.title()}
 **Monthly Limits:**
-• Image Watermarks: {limits.watermarks_per_month or '∞'}
-• Video Watermarks: {'✅' if user_tier != UserTier.FREE else '❌ Premium Only'}
-• Custom Emojis: {limits.custom_emojis_per_month or '∞'}
-• Theft Scans: {limits.theft_scans_per_month or '∞'}
+• Image Watermarks: {limits.watermarks_per_month or "∞"}
+• Video Watermarks: {"✅" if user_tier != UserTier.FREE else "❌ Premium Only"}
+• Custom Emojis: {limits.custom_emojis_per_month or "∞"}
+• Theft Scans: {limits.theft_scans_per_month or "∞"}
 • Max File Size: {limits.max_file_size_mb}MB
 
 Choose a protection feature below:
@@ -183,7 +184,7 @@ async def handle_watermark_image_upload(message: Message, state: FSMContext):
     )
 
     await message.answer(
-        "💧 **Watermark Configuration**\n\n" "Choose watermark option:",
+        "💧 **Watermark Configuration**\n\nChoose watermark option:",
         reply_markup=watermark_keyboard,
         parse_mode="Markdown",
     )
@@ -386,7 +387,8 @@ async def handle_custom_emoji_format(message: Message, state: FSMContext):
         )
 
         await message.answer(
-            f"✨ **Premium Formatted Message:**\n\n{formatted_text}", parse_mode="Markdown"
+            f"✨ **Premium Formatted Message:**\n\n{formatted_text}",
+            parse_mode="Markdown",
         )
 
         # Update usage tracking
@@ -446,8 +448,8 @@ async def handle_theft_check_analyze(message: Message, state: FSMContext):
         result_text = f"""
 🔍 **Theft Detection Results**
 
-{risk_emoji} **Risk Level:** {theft_analysis['risk_level']}
-📊 **Risk Score:** {theft_analysis['risk_score']:.2f}/1.00
+{risk_emoji} **Risk Level:** {theft_analysis["risk_level"]}
+📊 **Risk Score:** {theft_analysis["risk_score"]:.2f}/1.00
 
 **Analysis Details:**
 """
@@ -491,10 +493,10 @@ async def handle_usage_stats(callback: CallbackQuery):
 📊 **Usage Statistics - {user_tier.value.title()}**
 
 **This Month:**
-🖼️ **Image Watermarks:** {format_limit(current_usage['watermarks'], limits.watermarks_per_month)}
-🎥 **Video Watermarks:** {format_limit(current_usage.get('video_watermarks', 0), limits.watermarks_per_month)}
-🎭 **Custom Emojis:** {format_limit(current_usage['custom_emojis'], limits.custom_emojis_per_month)}
-🔍 **Theft Scans:** {format_limit(current_usage['theft_scans'], limits.theft_scans_per_month)}
+🖼️ **Image Watermarks:** {format_limit(current_usage["watermarks"], limits.watermarks_per_month)}
+🎥 **Video Watermarks:** {format_limit(current_usage.get("video_watermarks", 0), limits.watermarks_per_month)}
+🎭 **Custom Emojis:** {format_limit(current_usage["custom_emojis"], limits.custom_emojis_per_month)}
+🔍 **Theft Scans:** {format_limit(current_usage["theft_scans"], limits.theft_scans_per_month)}
 
 **File Size Limit:** {limits.max_file_size_mb}MB
 """

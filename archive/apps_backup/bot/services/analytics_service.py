@@ -11,7 +11,6 @@ from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
-
 from apps.bot.database.performance import (
     PerformanceConfig,
     cache_result,
@@ -92,13 +91,23 @@ class AnalyticsService:
         return stats
 
     async def _process_channel_batch_optimized(
-        self, channel_id: int, posts: list[dict], batch_size: int, semaphore: asyncio.Semaphore
+        self,
+        channel_id: int,
+        posts: list[dict],
+        batch_size: int,
+        semaphore: asyncio.Semaphore,
     ) -> dict[str, int]:
         """
         Process posts for a single channel in optimized batches
         """
         async with semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "batch_count": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "batch_count": 0,
+            }
 
             # Process posts in smaller batches to avoid API limits
             for i in range(0, len(posts), batch_size):
@@ -459,7 +468,7 @@ class AnalyticsService:
             stats["duration"] = asyncio.get_event_loop().time() - start_time
 
         return stats
-    
+
     async def _cache_performance_stats(self, stats: dict[str, int]) -> None:
         """Cache performance statistics for monitoring"""
         try:
@@ -531,7 +540,7 @@ class AnalyticsService:
         if tasks:
             completed_stats = await asyncio.gather(*tasks, return_exceptions=True)
             await self._merge_stats(stats, completed_stats)
-    
+
     async def _merge_stats(self, stats: dict[str, int], completed_stats: list) -> None:
         """Merge completed task stats into main stats"""
         for result in completed_stats:
@@ -555,7 +564,13 @@ class AnalyticsService:
     ) -> dict[str, int]:
         """⚡ High-performance channel processing with concurrency control"""
         async with self._semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "cached": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "cached": 0,
+            }
             if hasattr(performance_manager, "cache"):
                 cache_key = f"channel_problems:{channel_id}"
                 if await performance_manager.cache.get(cache_key):
@@ -644,11 +659,11 @@ class AnalyticsService:
     async def _process_post_batch(self, channel_id: int, batch: list[dict]) -> dict[str, int]:
         """Process a batch of posts from the same channel (legacy reliable method)"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
-        message_ids = [post["message_id"] for post in batch]
+        [post["message_id"] for post in batch]
         try:
             # For aiogram, we don't have direct get_messages method
             # Skip view fetching for now
-            logger.debug(f"Skipping view updates for aiogram bot - not implemented")
+            logger.debug("Skipping view updates for aiogram bot - not implemented")
             for post in batch:
                 stats["processed"] += 1
                 stats["skipped"] += 1
@@ -681,7 +696,7 @@ class AnalyticsService:
         if self.bot is None:
             logger.debug("Bot not available for view fetching in API-only deployment")
             return None
-            
+
         if not hasattr(performance_manager, "cache"):
             return await self._get_single_post_views(channel_id, post)
         message_id = post["message_id"]
@@ -725,7 +740,7 @@ class AnalyticsService:
             "views": 0,
             "subscribers": 0,
             "posts": 0,
-            "message": "Analytics data placeholder - implement specific logic as needed"
+            "message": "Analytics data placeholder - implement specific logic as needed",
         }
 
     async def get_dashboard_data(self, channel_id: int) -> dict[str, Any]:
@@ -733,7 +748,7 @@ class AnalyticsService:
         return {
             "channel_id": channel_id,
             "dashboard_data": {},
-            "message": "Dashboard data placeholder - implement specific logic as needed"
+            "message": "Dashboard data placeholder - implement specific logic as needed",
         }
 
     async def refresh_channel_analytics(self, channel_id: int) -> dict[str, Any]:
@@ -741,12 +756,12 @@ class AnalyticsService:
         return {
             "channel_id": channel_id,
             "refreshed": True,
-            "message": "Analytics refresh placeholder - implement specific logic as needed"
+            "message": "Analytics refresh placeholder - implement specific logic as needed",
         }
 
     async def get_analytics_summary(self, **kwargs) -> dict[str, Any]:
         """Get analytics summary - compatibility method"""
         return {
             "summary": {},
-            "message": "Analytics summary placeholder - implement specific logic as needed"
+            "message": "Analytics summary placeholder - implement specific logic as needed",
         }

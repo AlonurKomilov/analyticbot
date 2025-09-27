@@ -4,9 +4,8 @@ Concrete implementation of AdminRepository interface
 """
 
 import asyncpg
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.repositories.interfaces import AdminRepository as IAdminRepository
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AsyncpgAdminRepository(IAdminRepository):
@@ -67,7 +66,7 @@ class AsyncpgAdminRepository(IAdminRepository):
 
         query = f"""
             UPDATE admins 
-            SET {', '.join(set_clauses)}, updated_at = NOW()
+            SET {", ".join(set_clauses)}, updated_at = NOW()
             WHERE id = ${param_count}
         """
         values.append(admin_id)

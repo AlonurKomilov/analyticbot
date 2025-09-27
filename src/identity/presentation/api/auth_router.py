@@ -8,24 +8,41 @@ This router demonstrates the new clean architecture approach:
 """
 
 import logging
-from datetime import datetime, timedelta
-from typing import Any
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from src.identity.application.use_cases.authenticate_user import (
+    AuthenticateUserCommand,
+    AuthenticateUserUseCase,
+)
+from src.identity.application.use_cases.register_user import (
+    RegisterUserCommand,
+    RegisterUserUseCase,
+)
+from src.identity.application.use_cases.verify_email import (
+    VerifyEmailCommand,
+    VerifyEmailUseCase,
+)
+from src.identity.infrastructure.external.jwt_token_service import JWTTokenService
+from src.identity.infrastructure.repositories.asyncpg_user_repository import (
+    AsyncpgUserRepository,
+)
+from src.shared_kernel.domain.exceptions import (
+    BusinessRuleViolationError,
+    EntityAlreadyExistsError,
+    EntityNotFoundError,
+    ValidationError,
+)
 
 from .schemas import (
-    LoginRequest, RegisterRequest, AuthResponse, UserResponse, 
-    RegisterResponse, VerifyEmailRequest, VerifyEmailResponse, ErrorResponse
-)
-from src.identity.application.use_cases.register_user import RegisterUserUseCase, RegisterUserCommand
-from src.identity.application.use_cases.authenticate_user import AuthenticateUserUseCase, AuthenticateUserCommand
-from src.identity.application.use_cases.verify_email import VerifyEmailUseCase, VerifyEmailCommand
-from src.identity.infrastructure.repositories.asyncpg_user_repository import AsyncpgUserRepository
-from src.identity.infrastructure.external.jwt_token_service import JWTTokenService
-from src.shared_kernel.domain.exceptions import (
-    DomainException, EntityAlreadyExistsError, EntityNotFoundError, 
-    ValidationError, BusinessRuleViolationError
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    RegisterResponse,
+    UserResponse,
+    VerifyEmailRequest,
+    VerifyEmailResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -33,7 +50,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
-    responses={404: {"description": "Not found"}}
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -42,6 +59,7 @@ async def get_user_repository() -> AsyncpgUserRepository:
     """Get user repository dependency"""
     # This would be injected by the DI container
     from infra.db.connection import get_pool
+
     pool = await get_pool()
     return AsyncpgUserRepository(pool)
 
@@ -52,21 +70,21 @@ async def get_jwt_service() -> JWTTokenService:
 
 
 async def get_register_use_case(
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
 ) -> RegisterUserUseCase:
     """Get register user use case"""
     return RegisterUserUseCase(user_repo)
 
 
 async def get_authenticate_use_case(
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
 ) -> AuthenticateUserUseCase:
     """Get authenticate user use case"""
     return AuthenticateUserUseCase(user_repo)
 
 
 async def get_verify_email_use_case(
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
 ) -> VerifyEmailUseCase:
     """Get verify email use case"""
     return VerifyEmailUseCase(user_repo)
@@ -75,11 +93,11 @@ async def get_verify_email_use_case(
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     request: RegisterRequest,
-    use_case: RegisterUserUseCase = Depends(get_register_use_case)
+    use_case: RegisterUserUseCase = Depends(get_register_use_case),
 ):
     """
     Register a new user account.
-    
+
     This endpoint demonstrates clean architecture principles:
     - Router only handles HTTP concerns (request/response)
     - Business logic is in the use case
@@ -90,37 +108,35 @@ async def register(
             email=request.email,
             username=request.username,
             password=request.password,
-            full_name=request.full_name
+            full_name=request.full_name,
         )
-        
+
         result = await use_case.execute(command)
-        
+
         logger.info(f"User registered successfully: {result.username}")
-        
+
         return RegisterResponse(
-            message="Registration successful. Please check your email for verification." if result.requires_verification else "Registration successful.",
+            message=(
+                "Registration successful. Please check your email for verification."
+                if result.requires_verification
+                else "Registration successful."
+            ),
             user_id=result.user_id,
             email=result.email,
-            requires_verification=result.requires_verification
+            requires_verification=result.requires_verification,
         )
-        
+
     except EntityAlreadyExistsError as e:
         logger.warning(f"Registration failed - entity exists: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except ValidationError as e:
         logger.warning(f"Registration failed - validation error: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except Exception as e:
         logger.error(f"Registration failed - unexpected error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail="Registration failed",
         )
 
 
@@ -129,11 +145,11 @@ async def login(
     request: LoginRequest,
     http_request: Request,
     use_case: AuthenticateUserUseCase = Depends(get_authenticate_use_case),
-    jwt_service: JWTTokenService = Depends(get_jwt_service)
+    jwt_service: JWTTokenService = Depends(get_jwt_service),
 ):
     """
     Authenticate user and return JWT tokens.
-    
+
     Clean architecture benefits demonstrated:
     - Clear separation between HTTP handling and business logic
     - Domain events can be easily added to track login attempts
@@ -143,27 +159,25 @@ async def login(
         # Get client IP for security tracking
         client_ip = http_request.client.host if http_request.client else None
         user_agent = http_request.headers.get("User-Agent")
-        
+
         command = AuthenticateUserCommand(
             email=request.email,
             password=request.password,
             ip_address=client_ip,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
-        
+
         result = await use_case.execute(command)
-        
+
         # Generate JWT tokens
         access_token = jwt_service.create_access_token(
-            user_id=result.user_id,
-            email=result.email,
-            role=result.role
+            user_id=result.user_id, email=result.email, role=result.role
         )
-        
+
         refresh_token = jwt_service.create_refresh_token(user_id=result.user_id)
-        
+
         logger.info(f"User authenticated successfully: {result.username}")
-        
+
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -176,38 +190,33 @@ async def login(
                 role=result.role,
                 status=result.status,
                 created_at=datetime.utcnow(),  # This should come from the result
-                last_login=datetime.utcnow()
-            )
+                last_login=datetime.utcnow(),
+            ),
         )
-        
+
     except EntityNotFoundError as e:
         logger.warning(f"Login failed - user not found: {e.message}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
         )
     except BusinessRuleViolationError as e:
         logger.warning(f"Login failed - business rule violation: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=e.message)
     except Exception as e:
         logger.error(f"Login failed - unexpected error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Login failed"
         )
 
 
 @router.post("/verify-email", response_model=VerifyEmailResponse)
 async def verify_email(
     request: VerifyEmailRequest,
-    use_case: VerifyEmailUseCase = Depends(get_verify_email_use_case)
+    use_case: VerifyEmailUseCase = Depends(get_verify_email_use_case),
 ):
     """
     Verify user email address using verification token.
-    
+
     This endpoint shows how domain events could be used:
     - Email verification could trigger welcome email
     - Analytics could track verification rates
@@ -216,32 +225,29 @@ async def verify_email(
     try:
         command = VerifyEmailCommand(token=request.token)
         result = await use_case.execute(command)
-        
+
         logger.info(f"Email verified successfully for user: {result.user_id}")
-        
+
         return VerifyEmailResponse(
             message="Email verified successfully. Your account is now active.",
             user_id=result.user_id,
-            verified=result.verified
+            verified=result.verified,
         )
-        
+
     except EntityNotFoundError as e:
         logger.warning(f"Email verification failed - token not found: {e.message}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired verification token"
+            detail="Invalid or expired verification token",
         )
     except BusinessRuleViolationError as e:
         logger.warning(f"Email verification failed - business rule: {e.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=e.message
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
     except Exception as e:
         logger.error(f"Email verification failed - unexpected error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Email verification failed"
+            detail="Email verification failed",
         )
 
 

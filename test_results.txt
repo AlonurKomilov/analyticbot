@@ -1,0 +1,65 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/contracts/test_user_repository.py ___________
+ImportError while importing test module '/home/runner/work/analyticbot/analyticbot/tests/contracts/test_user_repository.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/contracts/test_user_repository.py:9: in <module>
+    from core.repositories.interfaces import UserRepository
+core/repositories/__init__.py:13: in <module>
+    from src.identity.domain.repositories.user_repository import UserRepository
+src/identity/domain/repositories/user_repository.py:7: in <module>
+    from src.identity.domain.entities.user import User
+src/identity/domain/entities/user.py:12: in <module>
+    from src.shared_kernel.domain.exceptions import (
+E   ImportError: cannot import name 'BusinessRuleViolationError' from 'src.shared_kernel.domain.exceptions' (/home/runner/work/analyticbot/analyticbot/src/shared_kernel/domain/exceptions.py)
+____________ ERROR collecting tests/test_database_error_handling.py ____________
+ImportError while importing test module '/home/runner/work/analyticbot/analyticbot/tests/test_database_error_handling.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_database_error_handling.py:10: in <module>
+    from src.services.database_error_handler import DatabaseErrorHandler, DatabaseErrorType
+E   ModuleNotFoundError: No module named 'src.services'
+________________ ERROR collecting tests/test_payment_system.py _________________
+ImportError while importing test module '/home/runner/work/analyticbot/analyticbot/tests/test_payment_system.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_payment_system.py:15: in <module>
+    from src.models.payment import BillingCycle, PaymentProvider, SubscriptionCreate
+E   ModuleNotFoundError: No module named 'src.models'
+__________________ ERROR collecting tests/test_performance.py __________________
+ImportError while importing test module '/home/runner/work/analyticbot/analyticbot/tests/test_performance.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_performance.py:10: in <module>
+    from src.services.analytics_service import AnalyticsService
+E   ModuleNotFoundError: No module named 'src.services'
+_________ ERROR collecting tests/unit/test_analytics_fusion_service.py _________
+ImportError while importing test module '/home/runner/work/analyticbot/analyticbot/tests/unit/test_analytics_fusion_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/unit/test_analytics_fusion_service.py:12: in <module>
+    from src.shared_kernel.application.services.analytics_fusion_service import (
+E   ModuleNotFoundError: No module named 'src.shared_kernel.application.services.analytics_fusion_service'
+=========================== short test summary info ============================
+ERROR tests/contracts/test_user_repository.py
+ERROR tests/test_database_error_handling.py
+ERROR tests/test_payment_system.py
+ERROR tests/test_performance.py
+ERROR tests/unit/test_analytics_fusion_service.py
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 5 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!

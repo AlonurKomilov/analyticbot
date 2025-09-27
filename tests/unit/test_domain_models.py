@@ -5,7 +5,6 @@ Tests core domain models and business logic without external dependencies
 
 import pytest
 from pydantic import ValidationError
-
 from src.domain.constants import (
     DEFAULT_FREE_CHANNELS,
     DEFAULT_PREMIUM_CHANNELS,
@@ -135,7 +134,10 @@ class TestAnalyticsMetrics:
     def test_analytics_metrics_zero_values(self):
         """Test analytics metrics with zero values"""
         metrics = AnalyticsMetrics(
-            total_posts=0, total_views=0, engagement_rate=0.0, timestamp="2024-01-15T10:30:00Z"
+            total_posts=0,
+            total_views=0,
+            engagement_rate=0.0,
+            timestamp="2024-01-15T10:30:00Z",
         )
 
         assert metrics.total_posts == 0
@@ -149,7 +151,9 @@ class TestServiceHealth:
     def test_service_health_healthy(self):
         """Test creating a healthy ServiceHealth instance"""
         health = ServiceHealth(
-            service_name="telegram_bot", is_healthy=True, last_check="2024-01-15T10:30:00Z"
+            service_name="telegram_bot",
+            is_healthy=True,
+            last_check="2024-01-15T10:30:00Z",
         )
 
         assert health.service_name == "telegram_bot"

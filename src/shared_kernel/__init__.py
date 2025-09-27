@@ -4,7 +4,6 @@ Contains domain interfaces, infrastructure, and application services shared acro
 """
 
 # Domain exports
-from .domain import *
 
 # Infrastructure exports available when dependencies installed
 # from .infrastructure import *

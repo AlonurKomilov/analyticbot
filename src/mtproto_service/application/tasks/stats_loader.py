@@ -2,8 +2,8 @@
 
 import logging
 
-from src.mtproto_service.di import get_settings, get_tg_client
 from core.ports.tg_client import BroadcastStats, TGClient
+from src.mtproto_service.di import get_settings, get_tg_client
 
 
 class StatsLoaderTask:
@@ -93,7 +93,7 @@ class StatsLoaderTask:
 
         successful_loads = sum(1 for stats in results.values() if stats is not None)
         self.logger.info(
-            f"Batch stats loading complete: " f"{successful_loads}/{len(channels)} successful"
+            f"Batch stats loading complete: {successful_loads}/{len(channels)} successful"
         )
 
         return results

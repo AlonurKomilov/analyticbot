@@ -4,7 +4,6 @@ from time import time
 from urllib.parse import unquote
 
 from fastapi import HTTPException
-
 from src.bot_service.config import settings
 
 

@@ -6,6 +6,7 @@ Minimal, practical skeleton for Clean Architecture
 from dataclasses import dataclass
 
 import asyncpg
+from core.repositories.interfaces import AdminRepository, UserRepository
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -13,7 +14,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from core.repositories.interfaces import AdminRepository, UserRepository
 from infra.db.connection_manager import DatabaseManager, db_manager
 from src.shared_kernel.infrastructure.persistence import (
     AsyncpgAdminRepository,
@@ -167,10 +167,14 @@ def get_container() -> Container:
     if _container is None:
         # Auto-initialize with default settings from environment
         import os
+
         default_settings = Settings(
-            database_url=os.getenv("DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"),
+            database_url=os.getenv(
+                "DATABASE_URL",
+                "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
+            ),
             database_pool_size=int(os.getenv("DATABASE_POOL_SIZE", "10")),
-            database_max_overflow=int(os.getenv("DATABASE_MAX_OVERFLOW", "20"))
+            database_max_overflow=int(os.getenv("DATABASE_MAX_OVERFLOW", "20")),
         )
         _container = Container(default_settings)
     return _container

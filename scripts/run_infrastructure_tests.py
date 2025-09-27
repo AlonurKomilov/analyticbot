@@ -192,7 +192,11 @@ async def test_docker_services():
                 }
             else:
                 logger.warning("⚠️ Could not check Docker services status")
-                return {"docker_available": True, "services_running": False, "error": result.stderr}
+                return {
+                    "docker_available": True,
+                    "services_running": False,
+                    "error": result.stderr,
+                }
         else:
             logger.warning("⚠️ Docker Compose not available")
             return {"docker_available": False}

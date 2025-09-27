@@ -3,7 +3,6 @@ import logging
 import os
 
 from aiogram import Bot
-
 from apps.bot.config import settings
 
 logging.basicConfig(level=logging.INFO)

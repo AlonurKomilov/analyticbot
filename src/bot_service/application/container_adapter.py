@@ -6,7 +6,6 @@ Redirects to unified container while preserving the existing interface.
 """
 
 from ..migration_bridge.unified_container import get_container
-from ..migration_bridge.extended_interfaces import service_registry
 
 # Import original container functionality if it exists
 try:
@@ -26,15 +25,10 @@ def init_bot_services(unified_container):
     """Initialize bot-specific services in unified container"""
     # This would register bot-specific service implementations
     # For now, it's a placeholder
-    pass
 
 
 # Maintain backward compatibility
 container = get_bot_container()
 
 # Export commonly used functions
-__all__ = [
-    'container',
-    'get_bot_container',
-    'init_bot_services'
-]
+__all__ = ["container", "get_bot_container", "init_bot_services"]

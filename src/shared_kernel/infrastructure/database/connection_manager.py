@@ -201,7 +201,7 @@ class OptimizedAsyncPgPool:
         """Acquire connection with monitoring"""
         if self._pool is None:
             raise RuntimeError("Database pool not initialized")
-            
+
         start_time = time.time()
         try:
             async with self._pool.acquire() as conn:
@@ -278,7 +278,10 @@ class QueryOptimizer:
 
     @staticmethod
     async def execute_batch(
-        pool: OptimizedAsyncPgPool, query: str, params_list: list[tuple], batch_size: int = 100
+        pool: OptimizedAsyncPgPool,
+        query: str,
+        params_list: list[tuple],
+        batch_size: int = 100,
     ) -> list[Any]:
         """Execute batch operations efficiently"""
         results = []

@@ -9,13 +9,16 @@ This service extends the core DeliveryService with:
 
 import hashlib
 import logging
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from core.common_helpers.idempotency import IdempotencyGuard
-from src.shared_kernel.application.services import DeliveryService as BaseDeliveryService
 from core.common_helpers.ratelimit import TokenBucketRateLimiter
+from src.shared_kernel.application.services import (
+    DeliveryService as BaseDeliveryService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +93,9 @@ class EnhancedDeliveryService(BaseDeliveryService):
                 )
                 return {
                     "success": True,
-                    "message_id": existing_status.result.get("message_id")
-                    if existing_status.result
-                    else None,
+                    "message_id": (
+                        existing_status.result.get("message_id") if existing_status.result else None
+                    ),
                     "duplicate": True,
                     "cached_result": existing_status.result,
                     "delivery_id": delivery_id,
@@ -135,7 +138,10 @@ class EnhancedDeliveryService(BaseDeliveryService):
 
             # Check per-chat rate limit
             chat_allowed = await self.rate_limiter.acquire_with_delay(
-                bucket_id=channel_id, tokens=1, limit_type="chat", max_wait=max_rate_limit_wait
+                bucket_id=channel_id,
+                tokens=1,
+                limit_type="chat",
+                max_wait=max_rate_limit_wait,
             )
 
             if not chat_allowed:
@@ -145,7 +151,10 @@ class EnhancedDeliveryService(BaseDeliveryService):
 
             # Check global bot rate limit
             global_allowed = await self.rate_limiter.acquire_with_delay(
-                bucket_id="global_bot", tokens=1, limit_type="global", max_wait=max_rate_limit_wait
+                bucket_id="global_bot",
+                tokens=1,
+                limit_type="global",
+                max_wait=max_rate_limit_wait,
             )
 
             if not global_allowed:

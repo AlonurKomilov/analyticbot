@@ -10,23 +10,25 @@ from typing import Any
 
 import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from infra.db.repositories.shared_reports_repository import (
+    AsyncPgSharedReportsRepository,
+)
 from pydantic import BaseModel
-
 from src.api_service.exports.csv_v2 import CSVExporter
 from src.api_service.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
 )
 from src.bot_service.clients.analytics_client import AnalyticsClient
+
 from config import settings
-from src.shared_kernel.domain.repositories.shared_reports_repository import SharedReportsRepository
-from infra.db.repositories.shared_reports_repository import (
-    AsyncPgSharedReportsRepository,
-)
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
     ChartRenderer,
     ChartRenderingError,
+)
+from src.shared_kernel.domain.repositories.shared_reports_repository import (
+    SharedReportsRepository,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,7 +108,8 @@ async def create_share_link(
     valid_types = ["overview", "growth", "reach", "top_posts", "sources", "trending"]
     if report_type not in valid_types:
         raise HTTPException(
-            status_code=400, detail=f"Invalid report type. Must be one of: {valid_types}"
+            status_code=400,
+            detail=f"Invalid report type. Must be one of: {valid_types}",
         )
 
     try:
@@ -153,7 +156,10 @@ async def create_share_link(
         logger.info(f"Created share link {share_token} for {report_type}/{channel_id}")
 
         return ShareLinkResponse(
-            share_token=share_token, share_url=share_url, expires_at=expires_at, access_count=0
+            share_token=share_token,
+            share_url=share_url,
+            expires_at=expires_at,
+            access_count=0,
         )
 
     except aiohttp.ClientError as e:
@@ -234,7 +240,10 @@ async def access_shared_report(
             elif report_type == "trending":
                 csv_content = csv_exporter.trending_to_csv(data)  # type: ignore[arg-type]
             else:
-                raise HTTPException(status_code=400, detail=f"Unsupported report type for CSV: {report_type}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported report type for CSV: {report_type}",
+                )
 
             filename = csv_exporter.generate_filename(report_type, channel_id, period)
 
@@ -246,7 +255,7 @@ async def access_shared_report(
                 raise HTTPException(status_code=500, detail="Failed to generate CSV content")
 
             return StreamingResponse(
-                io.BytesIO(csv_content.getvalue().encode('utf-8')),
+                io.BytesIO(csv_content.getvalue().encode("utf-8")),
                 media_type="text/csv",
                 headers={"Content-Disposition": f'attachment; filename="{filename}"'},
             )
@@ -264,7 +273,8 @@ async def access_shared_report(
                     png_bytes = chart_renderer.render_sources_chart(data)  # type: ignore[arg-type]
                 else:
                     raise HTTPException(
-                        status_code=400, detail=f"PNG format not supported for {report_type}"
+                        status_code=400,
+                        detail=f"PNG format not supported for {report_type}",
                     )
 
                 filename = f"{report_type}_{channel_id}_{period}d_shared.png"

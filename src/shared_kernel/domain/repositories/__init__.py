@@ -1,12 +1,11 @@
 """Domain repositories module"""
 
-from .interfaces import (
+from .interfaces import (  # Add other repository interfaces as needed
     DeliveryRepository,
     ScheduleRepository,
-    # Add other repository interfaces as needed
 )
 
 __all__ = [
-    "DeliveryRepository", 
+    "DeliveryRepository",
     "ScheduleRepository",
 ]

@@ -7,7 +7,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
-
 from src.bot_service.config import settings
 from src.bot_service.config import settings as app_settings
 from src.bot_service.container import container
@@ -19,7 +18,11 @@ if app_settings.LOG_FORMAT == "json":
 
     class _JsonFormatter(logging.Formatter):
         def format(self, record: logging.LogRecord) -> str:
-            base = {"level": record.levelname, "name": record.name, "message": record.getMessage()}
+            base = {
+                "level": record.levelname,
+                "name": record.name,
+                "message": record.getMessage(),
+            }
             if record.exc_info:
                 base["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(base, ensure_ascii=False)

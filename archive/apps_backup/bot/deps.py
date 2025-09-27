@@ -7,9 +7,9 @@ import os
 
 import aiosqlite
 import asyncpg
+from core.services import DeliveryService, ScheduleService
 
 from config import settings
-from core.services import DeliveryService, ScheduleService
 from infra.db.repositories import AsyncpgDeliveryRepository, AsyncpgScheduleRepository
 
 

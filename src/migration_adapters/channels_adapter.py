@@ -6,22 +6,25 @@ Provides compatibility layer during migration from apps/ to src/.
 Allows gradual migration without breaking existing functionality.
 """
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
 
 class ChannelsMigrationAdapter:
     """
     Adapter to bridge legacy apps/ and new src/channels/ implementations
     during the migration phase.
     """
-    
+
     def __init__(self):
         self._legacy_available = self._check_legacy_availability()
         self._clean_available = self._check_clean_availability()
-        logger.info(f"Channels Migration Adapter initialized - Legacy: {self._legacy_available}, Clean: {self._clean_available}")
-    
+        logger.info(
+            f"Channels Migration Adapter initialized - Legacy: {self._legacy_available}, Clean: {self._clean_available}"
+        )
+
     def _check_legacy_availability(self) -> bool:
         """Check if legacy implementation is available"""
         try:
@@ -30,16 +33,15 @@ class ChannelsMigrationAdapter:
             return True
         except ImportError:
             return False
-    
+
     def _check_clean_availability(self) -> bool:
         """Check if clean architecture implementation is available"""
         try:
             # Try importing clean implementation
-            import src.channels
             return True
         except ImportError:
             return False
-    
+
     def get_service(self, service_name: str) -> Any:
         """
         Get service instance, preferring clean architecture when available,
@@ -53,16 +55,15 @@ class ChannelsMigrationAdapter:
             return self._get_legacy_service(service_name)
         else:
             raise RuntimeError(f"No implementation available for {service_name}")
-    
+
     def _get_clean_service(self, service_name: str) -> Any:
         """Get service from clean architecture"""
         # Implementation will be domain-specific
-        pass
-    
+
     def _get_legacy_service(self, service_name: str) -> Any:
         """Get service from legacy apps/ structure"""
         # Implementation will be domain-specific
-        pass
+
 
 # Convenience factory function
 def get_channels_service(service_name: str = "default") -> Any:

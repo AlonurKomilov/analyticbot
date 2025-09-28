@@ -8,7 +8,12 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
-from src.shared_kernel.domain.entities import Delivery, DeliveryFilter, ScheduledPost, ScheduleFilter
+from src.shared_kernel.domain.entities import (
+    Delivery,
+    DeliveryFilter,
+    ScheduledPost,
+    ScheduleFilter,
+)
 
 
 class UserRepository(Protocol):

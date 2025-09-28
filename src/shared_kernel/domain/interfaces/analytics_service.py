@@ -2,14 +2,13 @@
 AnalyticsService Interface - Public API for analytics module
 """
 
-from typing import Protocol, runtime_checkable, Optional, Dict, Any, List
-from datetime import datetime
+from typing import Protocol, runtime_checkable
 
 
 @runtime_checkable
 class AnalyticsService(Protocol):
     """AnalyticsService public interface"""
-    
+
     async def get_channel_analytics(self, channel_id: int, date_range: tuple) -> dict:
         """get_channel_analytics operation"""
         ...
@@ -25,4 +24,3 @@ class AnalyticsService(Protocol):
     async def get_growth_insights(self, channel_id: int) -> dict:
         """get_growth_insights operation"""
         ...
-

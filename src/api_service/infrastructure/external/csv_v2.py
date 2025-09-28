@@ -1,6 +1,8 @@
 import csv
 import io
 import logging
+from datetime import datetime
+
 from src.bot_service.clients.analytics_client import (
     GrowthResponse,
     OverviewResponse,
@@ -9,7 +11,6 @@ from src.bot_service.clients.analytics_client import (
     TopPostsResponse,
     TrendingResponse,
 )
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,14 @@ class CSVExporter:
 
         # Header
         writer.writerow(
-            ["metric", "value", "period_days", "channel_id", "data_sources", "last_updated"]
+            [
+                "metric",
+                "value",
+                "period_days",
+                "channel_id",
+                "data_sources",
+                "last_updated",
+            ]
         )
 
         # Data rows
@@ -227,7 +235,11 @@ class CSVExporter:
 
         for source_type, source_data in source_types:
             writer.writerow(
-                [source_type, source_data.get("views", 0), source_data.get("percentage", 0.0)]
+                [
+                    source_type,
+                    source_data.get("views", 0),
+                    source_data.get("percentage", 0.0),
+                ]
                 + base_data
             )
 

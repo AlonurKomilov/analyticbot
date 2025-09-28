@@ -6,8 +6,6 @@ Telegram bot service with clean architecture.
 
 # Safe imports with error handling
 try:
-    from .presentation.handlers import *
-    from .application.services import *
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️  Some bot service imports not available: {e}")

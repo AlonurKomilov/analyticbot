@@ -16,7 +16,7 @@ import pyotp
 import qrcode
 import redis
 
-from .config import SecurityConfig, get_security_config
+from .config import get_security_config
 from .models import MFASetupResponse, User
 
 logger = logging.getLogger(__name__)
@@ -178,8 +178,10 @@ class MFAManager:
             if not isinstance(setup_data_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(setup_data_str)}")
                 return False
-            
-            setup_data_str = setup_data_str.decode() if isinstance(setup_data_str, bytes) else setup_data_str
+
+            setup_data_str = (
+                setup_data_str.decode() if isinstance(setup_data_str, bytes) else setup_data_str
+            )
             setup_data = json.loads(setup_data_str)
             secret = setup_data["secret"]
 
@@ -280,8 +282,12 @@ class MFAManager:
             if not isinstance(backup_codes_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(backup_codes_str)}")
                 return False
-            
-            backup_codes_str = backup_codes_str.decode() if isinstance(backup_codes_str, bytes) else backup_codes_str
+
+            backup_codes_str = (
+                backup_codes_str.decode()
+                if isinstance(backup_codes_str, bytes)
+                else backup_codes_str
+            )
             backup_codes = json.loads(backup_codes_str)
 
             # Check if backup code exists and is unused
@@ -373,8 +379,12 @@ class MFAManager:
             if not isinstance(backup_codes_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(backup_codes_str)}")
                 return 0
-            
-            backup_codes_str = backup_codes_str.decode() if isinstance(backup_codes_str, bytes) else backup_codes_str
+
+            backup_codes_str = (
+                backup_codes_str.decode()
+                if isinstance(backup_codes_str, bytes)
+                else backup_codes_str
+            )
             backup_codes = json.loads(backup_codes_str)
             return len(backup_codes)
         except json.JSONDecodeError:
@@ -398,7 +408,7 @@ class MFAManager:
             if not isinstance(attempts, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(attempts)}")
                 return True  # Allow attempt if we can't check properly
-            
+
             attempts_str = attempts.decode() if isinstance(attempts, bytes) else attempts
             try:
                 if int(attempts_str) >= 5:  # Max 5 attempts per window
@@ -424,6 +434,7 @@ class MFAManager:
 # Global MFA manager instance
 # Global MFA manager instance - lazy initialization
 _mfa_manager = None
+
 
 def get_mfa_manager() -> MFAManager:
     """Get the global MFA manager instance"""

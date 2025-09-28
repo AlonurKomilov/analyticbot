@@ -3,9 +3,8 @@ import hmac
 from time import time
 from urllib.parse import unquote
 
-from fastapi import HTTPException
-
 from apps.bot.config import settings
+from fastapi import HTTPException
 
 
 def validate_init_data(init_data: str, bot_token: str) -> dict:

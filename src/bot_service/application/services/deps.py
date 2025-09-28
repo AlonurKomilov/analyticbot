@@ -7,10 +7,13 @@ import os
 
 import aiosqlite
 import asyncpg
+from src.shared_kernel.domain.services import DeliveryService, ScheduleService
 
 from config import settings
-from src.shared_kernel.domain.services import DeliveryService, ScheduleService
-from src.shared_kernel.infrastructure.persistence import AsyncpgDeliveryRepository, AsyncpgScheduleRepository
+from src.shared_kernel.infrastructure.persistence import (
+    AsyncpgDeliveryRepository,
+    AsyncpgScheduleRepository,
+)
 
 
 class BotContainer:

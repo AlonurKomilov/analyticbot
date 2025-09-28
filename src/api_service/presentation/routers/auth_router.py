@@ -5,35 +5,45 @@ Provides JWT-based authentication endpoints using the existing SecurityManager.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
-
-from src.shared_kernel.domain.security_engine import SecurityManager, User, UserRole, UserStatus, AuthProvider
+from src.api_service.middleware.auth import (
+    get_current_user,
+    get_security_manager,
+    get_user_repository,
+)
+from src.shared_kernel.domain.security_engine import (
+    AuthProvider,
+    SecurityManager,
+    User,
+    UserRole,
+    UserStatus,
+)
 from src.shared_kernel.domain.security_engine.auth_utils import auth_utils
 from src.shared_kernel.domain.security_engine.mfa import MFAManager
-from src.api_service.middleware.auth import get_user_repository, get_security_manager, get_current_user
-from src.shared_kernel.domain.interfaces import UserRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
-    responses={404: {"description": "Not found"}}
+    responses={404: {"description": "Not found"}},
 )
 
 
 class LoginRequest(BaseModel):
     """Login request model"""
+
     email: EmailStr
     password: str = Field(..., min_length=8)
 
 
 class RegisterRequest(BaseModel):
     """User registration request model"""
+
     email: EmailStr
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8)
@@ -42,6 +52,7 @@ class RegisterRequest(BaseModel):
 
 class AuthResponse(BaseModel):
     """Authentication response model"""
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -51,6 +62,7 @@ class AuthResponse(BaseModel):
 
 class UserResponse(BaseModel):
     """User response model"""
+
     id: str
     email: str
     username: str
@@ -66,11 +78,11 @@ async def login(
     login_data: LoginRequest,
     request: Request,
     user_repo: AsyncpgUserRepository = Depends(get_user_repository),
-    security_manager: SecurityManager = Depends(get_security_manager)
+    security_manager: SecurityManager = Depends(get_security_manager),
 ):
     """
     Authenticate user with email and password
-    
+
     Returns JWT access token and refresh token for successful authentication.
     """
     try:
@@ -79,9 +91,9 @@ async def login(
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password"
+                detail="Invalid email or password",
             )
-        
+
         # Create User object for SecurityManager
         user = User(
             id=str(user_data["id"]),
@@ -93,33 +105,33 @@ async def login(
             status=UserStatus(user_data.get("status", "active")),
             auth_provider=AuthProvider.LOCAL,
             created_at=user_data.get("created_at", datetime.utcnow()),
-            last_login=user_data.get("last_login")
+            last_login=user_data.get("last_login"),
         )
-        
+
         # Verify password
         if not user.verify_password(login_data.password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password"
+                detail="Invalid email or password",
             )
-        
+
         # Check if user account is active
         if user.status != UserStatus.ACTIVE:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Account is {user.status.value}. Please contact support."
+                detail=f"Account is {user.status.value}. Please contact support.",
             )
-        
+
         # Create session
         session = get_security_manager().create_user_session(user, request)
 
         # Generate tokens using centralized auth utilities
         access_token = auth_utils.create_access_token(user)
-        refresh_token = auth_utils.create_refresh_token(user.id, session.token)        # Update last login
+        refresh_token = auth_utils.create_refresh_token(user.id, session.token)  # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
-        
+
         logger.info(f"Successful login for user: {user.username}")
-        
+
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -130,28 +142,27 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role.value,
-                "status": user.status.value
-            }
+                "status": user.status.value,
+            },
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Login failed"
         )
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
     register_data: RegisterRequest,
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
-    
+
     Creates a new user with email verification required.
     """
     print(f"🎯 Registration endpoint received: {register_data}")
@@ -164,35 +175,34 @@ async def register(
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
+                detail="Email already registered",
             )
-        
+
         # Check if username already exists
         existing_username = await user_repo.get_user_by_username(register_data.username)
         if existing_username:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already taken"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken"
             )
-        
+
         # Create User object
-        print(f"🏗️ Creating User object with:")
+        print("🏗️ Creating User object with:")
         print(f"   email: {register_data.email}")
         print(f"   username: {register_data.username}")
         print(f"   full_name: {register_data.full_name}")
-        
+
         user = User(
             email=register_data.email,
             username=register_data.username,
             full_name=register_data.full_name,
             role=UserRole.USER,
             status=UserStatus.PENDING_VERIFICATION,
-            auth_provider=AuthProvider.LOCAL
+            auth_provider=AuthProvider.LOCAL,
         )
-        
+
         # Set password
         user.set_password(register_data.password)
-        
+
         # Save to database
         user_data = {
             "id": int(user.id) if user.id.isdigit() else hash(user.id) % (10**9),
@@ -202,26 +212,26 @@ async def register(
             "hashed_password": user.hashed_password,
             "role": user.role.value,
             "status": user.status.value,
-            "plan_id": 1  # Default plan
+            "plan_id": 1,  # Default plan
         }
-        
+
         created_user = await user_repo.create_user(user_data)
-        
+
         logger.info(f"New user registered: {user.username}")
-        
+
         return {
             "message": "Registration successful. Please check your email for verification.",
             "user_id": created_user["id"],
-            "email": user.email
+            "email": user.email,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail="Registration failed",
         )
 
 
@@ -229,7 +239,7 @@ async def register(
 async def refresh_token(
     refresh_token: str,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
 ):
     """
     Refresh access token using refresh token
@@ -237,25 +247,24 @@ async def refresh_token(
     try:
         # Validate refresh token and get new access token
         new_access_token = auth_utils.refresh_access_token(refresh_token)
-        
+
         return {
             "access_token": new_access_token,
             "token_type": "bearer",
-            "expires_in": 30 * 60
+            "expires_in": 30 * 60,
         }
-        
+
     except Exception as e:
         logger.warning(f"Token refresh failed: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
 
 @router.post("/logout")
 async def logout(
     current_user: dict[str, Any] = Depends(get_current_user),
-    security_manager: SecurityManager = Depends(get_security_manager)
+    security_manager: SecurityManager = Depends(get_security_manager),
 ):
     """
     Logout user and invalidate tokens
@@ -264,22 +273,21 @@ async def logout(
         user_id = current_user["id"]
         # Revoke all user sessions
         auth_utils.revoke_user_sessions(str(user_id))
-        
+
         logger.info(f"User logged out: {current_user.get('username', user_id)}")
-        
+
         return {"message": "Successfully logged out"}
-        
+
     except Exception as e:
         logger.error(f"Logout error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Logout failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Logout failed"
         )
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(
-    current_user: dict[str, Any] = Depends(get_current_user)
+    current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """
     Get current user's profile information
@@ -292,7 +300,7 @@ async def get_current_user_profile(
         role=current_user.get("role", "user"),
         status=current_user.get("status", "active"),
         created_at=current_user.get("created_at", datetime.utcnow()),
-        last_login=current_user.get("last_login")
+        last_login=current_user.get("last_login"),
     )
 
 
@@ -311,8 +319,10 @@ async def get_user_by_email(email: str, user_repository: AsyncpgUserRepository) 
         return None
 
 
-async def update_user_password(user_id: str, hashed_password: str, user_repository: AsyncpgUserRepository) -> bool:
-    """Update user password in the repository"""  
+async def update_user_password(
+    user_id: str, hashed_password: str, user_repository: AsyncpgUserRepository
+) -> bool:
+    """Update user password in the repository"""
     # This is a placeholder - we need to implement password update
     # For now, we'll just log the operation
     logger.info(f"Password updated for user {user_id}")
@@ -322,11 +332,13 @@ async def update_user_password(user_id: str, hashed_password: str, user_reposito
 # Password Reset Models
 class ForgotPasswordRequest(BaseModel):
     """Forgot password request model"""
+
     email: EmailStr
 
 
-class ResetPasswordRequest(BaseModel):  
+class ResetPasswordRequest(BaseModel):
     """Reset password request model"""
+
     token: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8)
 
@@ -335,40 +347,40 @@ class ResetPasswordRequest(BaseModel):
 async def forgot_password(
     request: ForgotPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repository: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repository: AsyncpgUserRepository = Depends(get_user_repository),
 ):
     """
     Send password reset email
-    
+
     This endpoint always returns success to prevent email enumeration attacks,
     but only sends reset emails to valid registered users.
     """
     try:
         # Check if user exists (but don't reveal this information)
         user = await get_user_by_email(request.email, user_repository)
-        
+
         if user:
             # Generate reset token
             reset_token = get_security_manager().generate_password_reset_token(request.email)
-            
+
             # In a production system, you would send an email here
             # For now, we'll just log the token (remove this in production!)
             logger.info(f"Password reset token for {request.email}: {reset_token}")
-            
+
             # TODO: Send email with reset link
             # await send_password_reset_email(user.email, reset_token)
-            
+
         return {
             "message": "If a user with that email exists, a password reset link has been sent.",
-            "success": True
+            "success": True,
         }
-        
+
     except Exception as e:
         logger.error(f"Forgot password error: {str(e)}")
         # Always return success message to prevent information disclosure
         return {
             "message": "If a user with that email exists, a password reset link has been sent.",
-            "success": True
+            "success": True,
         }
 
 
@@ -376,7 +388,7 @@ async def forgot_password(
 async def reset_password(
     request: ResetPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repository: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repository: AsyncpgUserRepository = Depends(get_user_repository),
 ):
     """
     Reset user password using reset token
@@ -387,66 +399,68 @@ async def reset_password(
         if not reset_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired reset token"
+                detail="Invalid or expired reset token",
             )
-            
+
         user_email = reset_data["email"]
-        
+
         # Get user by email
         user = await get_user_by_email(user_email, user_repository)
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid reset token"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid reset token"
             )
-            
+
         # Hash new password
         from src.shared_kernel.domain.security_engine.models import pwd_context
+
         hashed_password = pwd_context.hash(request.new_password)
-        
+
         # Update user password
         await update_user_password(user["id"], hashed_password, user_repository)
-        
+
         # Consume the reset token (mark as used)
         get_security_manager().consume_password_reset_token(request.token)
 
         # Terminate all user sessions for security
         get_security_manager().terminate_all_user_sessions(str(user["id"]))
         logger.info(f"Password reset successful for user: {user_email}")
-        
+
         return {
             "message": "Password reset successful. Please log in with your new password.",
-            "success": True
+            "success": True,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Reset password error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Password reset failed"
+            detail="Password reset failed",
         )
 
 
 # MFA Management Models
 class MFASetupRequest(BaseModel):
     """MFA setup initiation request"""
-    pass
 
 
 class MFAVerifySetupRequest(BaseModel):
     """MFA setup verification request"""
+
     token: str = Field(..., min_length=6, max_length=6)
 
 
 class MFAVerifyRequest(BaseModel):
     """MFA token verification request"""
+
     token: str = Field(..., min_length=6, max_length=6)
 
 
 class MFABackupCodeRequest(BaseModel):
     """MFA backup code usage request"""
+
     backup_code: str = Field(..., min_length=8)
 
 
@@ -455,14 +469,14 @@ mfa_manager = MFAManager()
 
 
 def get_mfa_manager() -> MFAManager:
-    """Get MFA manager instance"""  
+    """Get MFA manager instance"""
     return mfa_manager
 
 
 @router.get("/mfa/status")
 async def get_mfa_status(
     current_user: dict[str, Any] = Depends(get_current_user),
-    mfa_manager: MFAManager = Depends(get_mfa_manager)
+    mfa_manager: MFAManager = Depends(get_mfa_manager),
 ):
     """
     Get MFA status for current user
@@ -470,25 +484,22 @@ async def get_mfa_status(
     try:
         # Check if MFA is enabled
         import json
+
         mfa_data_str = mfa_manager.redis_client.get(f"mfa_data:{current_user['id']}")
-        
+
         if mfa_data_str and isinstance(mfa_data_str, str):
             mfa_data = json.loads(mfa_data_str)
             return {
                 "enabled": True,
                 "enabled_at": mfa_data.get("enabled_at"),
-                "backup_codes_remaining": len(mfa_data.get("backup_codes", []))
+                "backup_codes_remaining": len(mfa_data.get("backup_codes", [])),
             }
         else:
-            return {
-                "enabled": False,
-                "enabled_at": None,
-                "backup_codes_remaining": 0
-            }
-            
+            return {"enabled": False, "enabled_at": None, "backup_codes_remaining": 0}
+
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get MFA status"
+            detail="Failed to get MFA status",
         )

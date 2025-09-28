@@ -1,19 +1,24 @@
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Any
 
 from ..value_objects.payments_value_objects import (
-    SubscriptionId, CustomerId, PaymentMethodId, SubscriptionStatus, BillingCycle, Money
+    BillingCycle,
+    CustomerId,
+    Money,
+    PaymentMethodId,
+    SubscriptionId,
+    SubscriptionStatus,
 )
 
 
 class Subscription:
     """
     Subscription Aggregate Root
-    
+
     Manages recurring payment subscriptions for customers.
     Enforces business rules around billing cycles, trials, and lifecycle management.
     """
-    
+
     def __init__(
         self,
         subscription_id: SubscriptionId,
@@ -23,7 +28,7 @@ class Subscription:
         billing_cycle: BillingCycle,
         amount: Money,
         trial_days: int = 0,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None,
     ):
         self.id = subscription_id.value
         self._subscription_id = subscription_id
@@ -34,44 +39,44 @@ class Subscription:
         self._amount = amount
         self._trial_days = trial_days
         self._metadata = metadata or {}
-        
+
         # Status
         self._status = SubscriptionStatus.ACTIVE
-        
+
         # Billing
-        self._next_billing_date: Optional[datetime] = None
-        self._trial_ends_at: Optional[datetime] = None
-        
+        self._next_billing_date: datetime | None = None
+        self._trial_ends_at: datetime | None = None
+
         # Timestamps
         self._created_at = datetime.utcnow()
         self._updated_at = datetime.utcnow()
-        
+
         # Domain events
-        self._domain_events: List[Any] = []
-    
+        self._domain_events: list[Any] = []
+
     @property
     def subscription_id(self) -> SubscriptionId:
         return self._subscription_id
-    
+
     @property
     def customer_id(self) -> CustomerId:
         return self._customer_id
-    
+
     @property
     def status(self) -> SubscriptionStatus:
         return self._status
-    
+
     @property
     def created_at(self) -> datetime:
         return self._created_at
-    
+
     @property
     def updated_at(self) -> datetime:
         return self._updated_at
-    
+
     def mark_as_updated(self) -> None:
         """Update the timestamp"""
         self._updated_at = datetime.utcnow()
-    
+
     def __str__(self) -> str:
         return f"Subscription(id={self._subscription_id.value}, status={self._status})"

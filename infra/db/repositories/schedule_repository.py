@@ -7,6 +7,8 @@ import json
 from datetime import datetime
 from uuid import UUID
 
+from core.repositories.interfaces import DeliveryRepository, ScheduleRepository
+
 from src.shared_kernel.domain.entities import (
     Delivery,
     DeliveryFilter,
@@ -15,7 +17,6 @@ from src.shared_kernel.domain.entities import (
     ScheduledPost,
     ScheduleFilter,
 )
-from core.repositories.interfaces import DeliveryRepository, ScheduleRepository
 
 
 class AsyncpgScheduleRepository(ScheduleRepository):
@@ -230,9 +231,9 @@ class AsyncpgScheduleRepository(ScheduleRepository):
             $1, $2, $3, $4, $5, $6, $7, 'pending', NOW()
         ) RETURNING id
         """
-        
+
         inline_buttons_json = json.dumps(inline_buttons) if inline_buttons else None
-        
+
         result = await self.db.fetchval(
             query,
             user_id,
@@ -255,19 +256,19 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         ORDER BY schedule_time ASC
         LIMIT $1
         """
-        
+
         rows = await self.db.fetch(query, limit)
         posts = []
         for row in rows:
             post_dict = dict(row)
             # Parse inline_buttons JSON if present
-            if post_dict.get('inline_buttons'):
+            if post_dict.get("inline_buttons"):
                 try:
-                    post_dict['inline_buttons'] = json.loads(post_dict['inline_buttons'])
+                    post_dict["inline_buttons"] = json.loads(post_dict["inline_buttons"])
                 except (json.JSONDecodeError, TypeError):
-                    post_dict['inline_buttons'] = None
+                    post_dict["inline_buttons"] = None
             posts.append(post_dict)
-        
+
         return posts
 
     async def count_user_posts_this_month(self, user_id: int) -> int:
@@ -303,7 +304,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Map domain status to database status"""
         mapping = {
             PostStatus.SCHEDULED: "scheduled",
-            PostStatus.PUBLISHED: "published", 
+            PostStatus.PUBLISHED: "published",
             PostStatus.FAILED: "failed",
             PostStatus.DRAFT: "draft",
             PostStatus.CANCELLED: "cancelled",

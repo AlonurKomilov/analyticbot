@@ -12,26 +12,25 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
-
-from apps.bot.container import container
-from apps.bot.services.channel_management_service import ChannelManagementService
 from apps.api.middleware.auth import (
-    get_current_user, 
+    get_current_user,
     require_admin_role,
-    get_current_user_id,
 )
+from apps.bot.container import container
 from apps.bot.database.performance import performance_timer
+from apps.bot.services.channel_management_service import ChannelManagementService
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    prefix="/admin/users", 
-    tags=["Admin - User Management"], 
-    responses={404: {"description": "Not found"}}
+    prefix="/admin/users",
+    tags=["Admin - User Management"],
+    responses={404: {"description": "Not found"}},
 )
 
 # === ADMIN USER MODELS ===
+
 
 class UserChannelInfo(BaseModel):
     user_id: int
@@ -41,42 +40,42 @@ class UserChannelInfo(BaseModel):
     channels: list[dict[str, Any]] = Field(default_factory=list)
     last_activity: datetime | None = None
 
+
 # === ADMIN USER ENDPOINTS ===
+
 
 @router.get("/{user_id}/channels", response_model=UserChannelInfo)
 async def get_user_channels_admin(
     user_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(lambda: container.channel_service()),
 ):
     """
     ## 👤 Get User Channels (Admin)
-    
+
     Retrieve all channels owned by a specific user with administrative details.
-    
+
     **Admin Only**: Requires admin role
-    
+
     **Parameters:**
     - user_id: ID of the user to inspect
-    
+
     **Returns:**
     - User channel information and statistics
     """
     try:
         await require_admin_role(current_user["id"])
-        
+
         with performance_timer("admin_user_channels_fetch"):
-            user_channels = await channel_service.get_user_channels_admin(
-                user_id=user_id
-            )
-            
+            user_channels = await channel_service.get_user_channels_admin(user_id=user_id)
+
             if not user_channels:
                 raise HTTPException(status_code=404, detail="User not found or has no channels")
-            
+
             # Process the channels data
             channels_list = []
             active_count = 0
-            
+
             for channel in user_channels.get("channels", []):
                 channel_info = {
                     "id": channel["id"],
@@ -86,24 +85,26 @@ async def get_user_channels_admin(
                     "subscriber_count": channel.get("subscriber_count", 0),
                     "created_at": channel.get("created_at", datetime.now()).isoformat(),
                     "total_posts": channel.get("total_posts", 0),
-                    "total_views": channel.get("total_views", 0)
+                    "total_views": channel.get("total_views", 0),
                 }
                 channels_list.append(channel_info)
-                
+
                 if channel.get("is_active", True):
                     active_count += 1
-            
-            logger.info(f"Admin fetched user channels: user_id={user_id}, total={len(channels_list)}")
-            
+
+            logger.info(
+                f"Admin fetched user channels: user_id={user_id}, total={len(channels_list)}"
+            )
+
             return UserChannelInfo(
                 user_id=user_id,
                 username=user_channels.get("username"),
                 total_channels=len(channels_list),
                 active_channels=active_count,
                 channels=channels_list,
-                last_activity=user_channels.get("last_activity")
+                last_activity=user_channels.get("last_activity"),
             )
-            
+
     except HTTPException:
         raise
     except Exception as e:

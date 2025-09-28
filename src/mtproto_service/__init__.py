@@ -5,7 +5,7 @@ Clean architecture implementation of MTProto/Telegram integration.
 
 This service handles:
 - Telegram client connection and management
-- Message history synchronization  
+- Message history synchronization
 - Statistics collection and metrics
 - Health checks and monitoring
 
@@ -16,12 +16,7 @@ Architecture:
 - Presentation: HTTP APIs and interfaces (if any)
 """
 
-from .infrastructure.config import *
-from .infrastructure.health import *
-from .infrastructure.metrics import *
-
 # Re-export main components for backward compatibility
-from .infrastructure.di import *
 
 __version__ = "1.0.0"
 __all__ = [

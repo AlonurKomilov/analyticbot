@@ -16,7 +16,7 @@ DEMO_METRICS_DAYS = 30
 EMAIL_DELAY_MS = 50
 EMAIL_SUCCESS_RATE = 0.98
 
-# Payment constants  
+# Payment constants
 PAYMENT_DELAY_MS = 150
 PAYMENT_SUCCESS_RATE = 0.92
 SUPPORTED_CURRENCIES = ["usd", "eur", "gbp"]

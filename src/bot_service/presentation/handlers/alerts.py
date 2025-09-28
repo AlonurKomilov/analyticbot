@@ -9,12 +9,16 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from aiogram_i18n import I18nContext
-
-from src.bot_service.keyboards.analytics import kb_alert_types, kb_alerts_main, kb_confirmation
+from infra.db.repositories.alert_repository import AsyncpgAlertSubscriptionRepository
+from src.bot_service.keyboards.analytics import (
+    kb_alert_types,
+    kb_alerts_main,
+    kb_confirmation,
+)
 from src.bot_service.middleware.throttle import throttle
+
 from config.settings import Settings
 from src.shared_kernel.domain.repositories.alert_repository import AlertSubscription
-from infra.db.repositories.alert_repository import AsyncpgAlertSubscriptionRepository
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +139,9 @@ async def cmd_alerts(
 @router.callback_query(F.data.startswith("alerts:list:"))
 @throttle(rate=2.0)
 async def show_channel_alerts(
-    callback: CallbackQuery, i18n: I18nContext, alert_repo: AsyncpgAlertSubscriptionRepository
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    alert_repo: AsyncpgAlertSubscriptionRepository,
 ):
     """Show alerts for specific channel"""
     try:
@@ -213,7 +219,9 @@ async def show_alert_types(callback: CallbackQuery, i18n: I18nContext):
 @router.callback_query(F.data.startswith("alert:type:"))
 @throttle(rate=2.0)
 async def configure_alert_type(
-    callback: CallbackQuery, i18n: I18nContext, alert_repo: AsyncpgAlertSubscriptionRepository
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    alert_repo: AsyncpgAlertSubscriptionRepository,
 ):
     """Configure specific alert type"""
     try:
@@ -279,7 +287,9 @@ async def configure_alert_type(
 @router.callback_query(F.data.startswith("alert:toggle:"))
 @throttle(rate=2.0)
 async def toggle_alert(
-    callback: CallbackQuery, i18n: I18nContext, alert_repo: AsyncpgAlertSubscriptionRepository
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    alert_repo: AsyncpgAlertSubscriptionRepository,
 ):
     """Toggle alert enabled/disabled"""
     try:
@@ -327,7 +337,9 @@ async def delete_alert_confirmation(callback: CallbackQuery, i18n: I18nContext):
 @router.callback_query(F.data.startswith("alert:delete:confirm:"))
 @throttle(rate=2.0)
 async def delete_alert_confirmed(
-    callback: CallbackQuery, i18n: I18nContext, alert_repo: AsyncpgAlertSubscriptionRepository
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    alert_repo: AsyncpgAlertSubscriptionRepository,
 ):
     """Delete alert after confirmation"""
     try:
@@ -354,7 +366,7 @@ async def delete_alert_confirmed(
 async def delete_alert_cancelled(callback: CallbackQuery, i18n: I18nContext):
     """Cancel alert deletion"""
     await callback.message.edit_text(
-        "❌ **Alert Deletion Cancelled**\n\n" "The alert subscription was not deleted."
+        "❌ **Alert Deletion Cancelled**\n\nThe alert subscription was not deleted."
     )
     await callback.answer("Deletion cancelled")
 
@@ -363,7 +375,9 @@ async def delete_alert_cancelled(callback: CallbackQuery, i18n: I18nContext):
 @router.callback_query(F.data.startswith("alerts:preset:"))
 @throttle(rate=2.0)
 async def setup_alert_preset(
-    callback: CallbackQuery, i18n: I18nContext, alert_repo: AsyncpgAlertSubscriptionRepository
+    callback: CallbackQuery,
+    i18n: I18nContext,
+    alert_repo: AsyncpgAlertSubscriptionRepository,
 ):
     """Set up predefined alert configurations"""
     try:

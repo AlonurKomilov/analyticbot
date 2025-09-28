@@ -4,9 +4,8 @@ Concrete implementation of UserRepository interface using SQLAlchemy
 """
 
 import asyncpg
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.repositories.interfaces import UserRepository as IUserRepository
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AsyncpgUserRepository(IUserRepository):
@@ -64,7 +63,7 @@ class AsyncpgUserRepository(IUserRepository):
 
         query = f"""
             UPDATE users 
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE id = ${param_count}
         """
         values.append(user_id)

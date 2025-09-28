@@ -11,7 +11,9 @@ from src.mtproto_service.di import create_tg_client, get_repositories
 
 
 async def sync_channel_history(
-    channel_ids: list[int] | None = None, limit: int | None = None, max_concurrent: int = 3
+    channel_ids: list[int] | None = None,
+    limit: int | None = None,
+    max_concurrent: int = 3,
 ) -> dict:
     """Sync history for specified channels or all tracked channels.
 
@@ -126,7 +128,10 @@ async def sync_channel_history(
 
 
 async def _sync_single_channel(
-    semaphore: asyncio.Semaphore, collector: HistoryCollector, channel: dict, limit: int | None
+    semaphore: asyncio.Semaphore,
+    collector: HistoryCollector,
+    channel: dict,
+    limit: int | None,
 ) -> dict:
     """Sync a single channel with concurrency control.
 
@@ -163,7 +168,8 @@ async def _sync_single_channel(
 async def main():
     """Main entry point for the sync history task."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Parse command line arguments

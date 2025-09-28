@@ -8,6 +8,7 @@ from typing import Any
 
 from apps.mtproto.config import MTProtoSettings
 from core.ports.tg_client import TGClient
+
 from infra.tg.parsers import normalize_message
 
 
@@ -44,7 +45,13 @@ class HistoryCollector:
         """
         if not self.settings.MTPROTO_ENABLED or not self.settings.MTPROTO_HISTORY_ENABLED:
             self.logger.info("History collection disabled by feature flags")
-            return {"status": "disabled", "ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
+            return {
+                "status": "disabled",
+                "ingested": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+            }
 
         limit_per_peer = limit_per_peer or self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
         stats = {"ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -200,7 +207,10 @@ class HistoryCollector:
         return peer_stats
 
     async def collect_channel_history(
-        self, channel_username: str, limit: int = 100, offset_date: datetime | None = None
+        self,
+        channel_username: str,
+        limit: int = 100,
+        offset_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """Legacy method for backward compatibility.
 

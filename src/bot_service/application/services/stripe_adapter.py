@@ -6,11 +6,14 @@ Complete implementation of PaymentGatewayAdapter for Stripe integration
 import json
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import HTTPException
-
-from src.bot_service.models.payment import PaymentStatus, SubscriptionStatus, BillingCycle
+from src.bot_service.models.payment import (
+    BillingCycle,
+    PaymentStatus,
+    SubscriptionStatus,
+)
 from src.bot_service.services.payment_service import PaymentGatewayAdapter
 
 logger = logging.getLogger(__name__)
@@ -18,39 +21,63 @@ logger = logging.getLogger(__name__)
 # Try to import stripe, fall back to mock if not available
 try:
     import stripe
+
     STRIPE_AVAILABLE = True
 except ImportError:
     STRIPE_AVAILABLE = False
+
     # Create mock stripe module for type checking
     class MockStripe:
         api_key = ""
+
         class PaymentMethod:
             @staticmethod
-            def attach(*args, **kwargs): pass
+            def attach(*args, **kwargs):
+                pass
+
         class PaymentIntent:
             @staticmethod
-            def create(*args, **kwargs): pass
+            def create(*args, **kwargs):
+                pass
+
         class Subscription:
             @staticmethod
-            def create(*args, **kwargs): pass
+            def create(*args, **kwargs):
+                pass
+
             @staticmethod
-            def modify(*args, **kwargs): pass
+            def modify(*args, **kwargs):
+                pass
+
             @staticmethod
-            def delete(*args, **kwargs): pass
+            def delete(*args, **kwargs):
+                pass
+
         class Customer:
             @staticmethod
-            def list(*args, **kwargs): pass
+            def list(*args, **kwargs):
+                pass
+
             @staticmethod
-            def create(*args, **kwargs): pass
+            def create(*args, **kwargs):
+                pass
+
             @staticmethod
-            def modify(*args, **kwargs): pass
+            def modify(*args, **kwargs):
+                pass
+
         class Webhook:
             @staticmethod
-            def construct_event(*args, **kwargs): pass
+            def construct_event(*args, **kwargs):
+                pass
+
         class error:
-            class StripeError(Exception): pass
-            class SignatureVerificationError(Exception): pass
-    
+            class StripeError(Exception):
+                pass
+
+            class SignatureVerificationError(Exception):
+                pass
+
     stripe = MockStripe()  # type: ignore
 
 
@@ -80,11 +107,10 @@ class StripeAdapter(PaymentGatewayAdapter):
 
             # Get or create Stripe customer
             customer = await self._get_or_create_customer(user_id)
-            
+
             # Attach payment method to customer
             payment_method = stripe.PaymentMethod.attach(
-                payment_method_id,
-                customer=getattr(customer, 'id', 'cus_mock')
+                payment_method_id, customer=getattr(customer, "id", "cus_mock")
             )
 
             # Handle mock response
@@ -95,16 +121,20 @@ class StripeAdapter(PaymentGatewayAdapter):
                     "last_four": "4242",
                     "brand": "visa",
                     "expires_at": "2025-12-01",
-                    "customer_id": "cus_mock"
+                    "customer_id": "cus_mock",
                 }
 
             return {
-                "provider_method_id": getattr(payment_method, 'id', payment_method_id),
-                "method_type": getattr(payment_method, 'type', 'card'),
-                "last_four": getattr(getattr(payment_method, 'card', None), 'last4', None),
-                "brand": getattr(getattr(payment_method, 'card', None), 'brand', None),
-                "expires_at": f"{getattr(getattr(payment_method, 'card', None), 'exp_year', 2025)}-{getattr(getattr(payment_method, 'card', None), 'exp_month', 12):02d}-01" if hasattr(payment_method, 'card') else None,
-                "customer_id": getattr(customer, 'id', 'cus_mock')
+                "provider_method_id": getattr(payment_method, "id", payment_method_id),
+                "method_type": getattr(payment_method, "type", "card"),
+                "last_four": getattr(getattr(payment_method, "card", None), "last4", None),
+                "brand": getattr(getattr(payment_method, "card", None), "brand", None),
+                "expires_at": (
+                    f"{getattr(getattr(payment_method, 'card', None), 'exp_year', 2025)}-{getattr(getattr(payment_method, 'card', None), 'exp_month', 12):02d}-01"
+                    if hasattr(payment_method, "card")
+                    else None
+                ),
+                "customer_id": getattr(customer, "id", "cus_mock"),
             }
 
         except Exception as e:
@@ -132,7 +162,7 @@ class StripeAdapter(PaymentGatewayAdapter):
                 confirm=True,
                 description=description or "",
                 metadata=metadata or {},
-                return_url="https://your-domain.com/return"  # Required for some payment methods
+                return_url="https://your-domain.com/return",  # Required for some payment methods
             )
 
             # Handle mock response
@@ -143,16 +173,16 @@ class StripeAdapter(PaymentGatewayAdapter):
                     "amount": amount,
                     "currency": currency,
                     "client_secret": "pi_mock_secret",
-                    "payment_intent": {}
+                    "payment_intent": {},
                 }
 
             return {
-                "provider_payment_id": getattr(payment_intent, 'id', f"pi_mock_{method_id}"),
-                "status": self._map_payment_status(getattr(payment_intent, 'status', 'succeeded')),
+                "provider_payment_id": getattr(payment_intent, "id", f"pi_mock_{method_id}"),
+                "status": self._map_payment_status(getattr(payment_intent, "status", "succeeded")),
                 "amount": amount,
                 "currency": currency,
-                "client_secret": getattr(payment_intent, 'client_secret', 'pi_mock_secret'),
-                "payment_intent": payment_intent
+                "client_secret": getattr(payment_intent, "client_secret", "pi_mock_secret"),
+                "payment_intent": payment_intent,
             }
 
         except Exception as e:
@@ -175,7 +205,7 @@ class StripeAdapter(PaymentGatewayAdapter):
             # Set default payment method
             stripe.Customer.modify(
                 customer.id,
-                invoice_settings={"default_payment_method": payment_method_id}
+                invoice_settings={"default_payment_method": payment_method_id},
             )
 
             # Create subscription
@@ -185,7 +215,7 @@ class StripeAdapter(PaymentGatewayAdapter):
                 "payment_behavior": "default_incomplete",
                 "payment_settings": {"save_default_payment_method": "on_subscription"},
                 "expand": ["latest_invoice.payment_intent"],
-                "metadata": {"user_id": customer_id}
+                "metadata": {"user_id": customer_id},
             }
 
             if trial_days:
@@ -200,23 +230,23 @@ class StripeAdapter(PaymentGatewayAdapter):
                     "status": "active",
                     "customer_id": customer_id,
                     "current_period_start": 1640995200,  # Mock timestamp
-                    "current_period_end": 1672531200,    # Mock timestamp
+                    "current_period_end": 1672531200,  # Mock timestamp
                     "trial_end": None,
                     "cancel_at_period_end": False,
                     "client_secret": None,
-                    "subscription": {}
+                    "subscription": {},
                 }
 
             return {
-                "provider_subscription_id": getattr(subscription, 'id', f"sub_mock_{customer_id}"),
-                "status": self._map_subscription_status(getattr(subscription, 'status', 'active')),
-                "customer_id": getattr(customer, 'id', customer_id),
-                "current_period_start": getattr(subscription, 'current_period_start', None),
-                "current_period_end": getattr(subscription, 'current_period_end', None),
-                "trial_end": getattr(subscription, 'trial_end', None),
-                "cancel_at_period_end": getattr(subscription, 'cancel_at_period_end', False),
+                "provider_subscription_id": getattr(subscription, "id", f"sub_mock_{customer_id}"),
+                "status": self._map_subscription_status(getattr(subscription, "status", "active")),
+                "customer_id": getattr(customer, "id", customer_id),
+                "current_period_start": getattr(subscription, "current_period_start", None),
+                "current_period_end": getattr(subscription, "current_period_end", None),
+                "trial_end": getattr(subscription, "trial_end", None),
+                "cancel_at_period_end": getattr(subscription, "cancel_at_period_end", False),
                 "client_secret": None,  # Will be set properly if needed
-                "subscription": subscription
+                "subscription": subscription,
             }
 
         except Exception as e:
@@ -230,16 +260,21 @@ class StripeAdapter(PaymentGatewayAdapter):
         try:
             if immediate:
                 # Cancel immediately - use modify then delete pattern
-                subscription = stripe.Subscription.modify(subscription_id, cancel_at_period_end=False)
+                subscription = stripe.Subscription.modify(
+                    subscription_id, cancel_at_period_end=False
+                )
                 # Note: Simplified for mock handling
                 subscription_data = {"id": subscription_id, "status": "canceled"}
             else:
                 # Cancel at period end
                 subscription = stripe.Subscription.modify(
-                    subscription_id,
-                    cancel_at_period_end=True
+                    subscription_id, cancel_at_period_end=True
                 )
-                subscription_data = getattr(subscription, '__dict__', {"id": subscription_id, "status": "active"})
+                subscription_data = getattr(
+                    subscription,
+                    "__dict__",
+                    {"id": subscription_id, "status": "active"},
+                )
 
             # Handle mock response
             if not STRIPE_AVAILABLE:
@@ -248,20 +283,26 @@ class StripeAdapter(PaymentGatewayAdapter):
                     "status": "canceled" if immediate else "active",
                     "canceled_at": None,
                     "cancel_at_period_end": not immediate,
-                    "current_period_end": None
+                    "current_period_end": None,
                 }
 
             return {
                 "provider_subscription_id": subscription_data.get("id", subscription_id),
-                "status": self._map_subscription_status(subscription_data.get("status", "canceled")),
+                "status": self._map_subscription_status(
+                    subscription_data.get("status", "canceled")
+                ),
                 "canceled_at": subscription_data.get("canceled_at"),
-                "cancel_at_period_end": subscription_data.get("cancel_at_period_end", not immediate),
-                "current_period_end": subscription_data.get("current_period_end")
+                "cancel_at_period_end": subscription_data.get(
+                    "cancel_at_period_end", not immediate
+                ),
+                "current_period_end": subscription_data.get("current_period_end"),
             }
 
         except Exception as e:
             logger.error(f"Stripe subscription cancellation failed: {e}")
-            raise HTTPException(status_code=400, detail=f"Subscription cancellation failed: {str(e)}")
+            raise HTTPException(
+                status_code=400, detail=f"Subscription cancellation failed: {str(e)}"
+            )
 
     def verify_webhook_signature(self, payload: bytes, signature: str, secret: str) -> bool:
         """Verify Stripe webhook signature"""
@@ -285,19 +326,33 @@ class StripeAdapter(PaymentGatewayAdapter):
             # Process different event types
             event_type = event_data.get("type", "")
             if event_type == "customer.subscription.created":
-                return await self._handle_subscription_created(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_created(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "customer.subscription.updated":
-                return await self._handle_subscription_updated(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_updated(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "customer.subscription.deleted":
-                return await self._handle_subscription_deleted(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_deleted(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "invoice.payment_succeeded":
-                return await self._handle_payment_succeeded(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_succeeded(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "invoice.payment_failed":
-                return await self._handle_payment_failed(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_failed(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "payment_intent.succeeded":
-                return await self._handle_payment_intent_succeeded(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_intent_succeeded(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "payment_intent.payment_failed":
-                return await self._handle_payment_intent_failed(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_intent_failed(
+                    event_data.get("data", {}).get("object", {})
+                )
             else:
                 logger.info(f"Unhandled Stripe webhook event: {event_type}")
                 return {"status": "ignored", "event_type": event_type}
@@ -311,7 +366,9 @@ class StripeAdapter(PaymentGatewayAdapter):
         try:
             # Verify webhook signature and get event
             if STRIPE_AVAILABLE:
-                stripe_event = stripe.Webhook.construct_event(payload, signature, self.webhook_secret)
+                stripe_event = stripe.Webhook.construct_event(
+                    payload, signature, self.webhook_secret
+                )
                 # Convert to dict for consistent access
                 event_data = json.loads(json.dumps(stripe_event, default=str))
             else:
@@ -326,19 +383,33 @@ class StripeAdapter(PaymentGatewayAdapter):
             # Process different event types
             event_type = event_data.get("type", "")
             if event_type == "customer.subscription.created":
-                return await self._handle_subscription_created(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_created(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "customer.subscription.updated":
-                return await self._handle_subscription_updated(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_updated(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "customer.subscription.deleted":
-                return await self._handle_subscription_deleted(event_data.get("data", {}).get("object", {}))
+                return await self._handle_subscription_deleted(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "invoice.payment_succeeded":
-                return await self._handle_payment_succeeded(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_succeeded(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "invoice.payment_failed":
-                return await self._handle_payment_failed(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_failed(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "payment_intent.succeeded":
-                return await self._handle_payment_intent_succeeded(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_intent_succeeded(
+                    event_data.get("data", {}).get("object", {})
+                )
             elif event_type == "payment_intent.payment_failed":
-                return await self._handle_payment_intent_failed(event_data.get("data", {}).get("object", {}))
+                return await self._handle_payment_intent_failed(
+                    event_data.get("data", {}).get("object", {})
+                )
             else:
                 logger.info(f"Unhandled Stripe webhook event: {event_type}")
                 return {"status": "ignored", "event_type": event_type}
@@ -361,14 +432,12 @@ class StripeAdapter(PaymentGatewayAdapter):
             # In real implementation, you might use metadata or other identifiers
             customers = stripe.Customer.list(limit=1)
 
-            customers_data = getattr(customers, 'data', None)
+            customers_data = getattr(customers, "data", None)
             if customers_data and len(customers_data) > 0:
                 return customers_data[0]
 
             # Create new customer
-            customer = stripe.Customer.create(
-                description=f"User {user_id}"
-            )
+            customer = stripe.Customer.create(description=f"User {user_id}")
 
             logger.info(f"Created new Stripe customer for user {user_id}")
             return customer
@@ -409,84 +478,84 @@ class StripeAdapter(PaymentGatewayAdapter):
         user_id = subscription["metadata"].get("user_id")
         if user_id:
             logger.info(f"Subscription created for user {user_id}: {subscription['id']}")
-        
+
         return {
             "status": "processed",
             "action": "subscription_created",
             "subscription_id": subscription["id"],
-            "user_id": user_id
+            "user_id": user_id,
         }
 
     async def _handle_subscription_updated(self, subscription: dict) -> dict[str, Any]:
         """Handle subscription.updated webhook"""
         user_id = subscription["metadata"].get("user_id")
         logger.info(f"Subscription updated for user {user_id}: {subscription['id']}")
-        
+
         return {
             "status": "processed",
             "action": "subscription_updated",
             "subscription_id": subscription["id"],
             "user_id": user_id,
-            "new_status": subscription["status"]
+            "new_status": subscription["status"],
         }
 
     async def _handle_subscription_deleted(self, subscription: dict) -> dict[str, Any]:
         """Handle subscription.deleted webhook"""
         user_id = subscription["metadata"].get("user_id")
         logger.info(f"Subscription deleted for user {user_id}: {subscription['id']}")
-        
+
         return {
             "status": "processed",
             "action": "subscription_deleted",
             "subscription_id": subscription["id"],
-            "user_id": user_id
+            "user_id": user_id,
         }
 
     async def _handle_payment_succeeded(self, invoice: dict) -> dict[str, Any]:
         """Handle invoice.payment_succeeded webhook"""
         subscription_id = invoice.get("subscription")
         logger.info(f"Payment succeeded for subscription {subscription_id}")
-        
+
         return {
             "status": "processed",
             "action": "payment_succeeded",
             "invoice_id": invoice["id"],
             "subscription_id": subscription_id,
-            "amount": invoice["amount_paid"] / 100  # Convert from cents
+            "amount": invoice["amount_paid"] / 100,  # Convert from cents
         }
 
     async def _handle_payment_failed(self, invoice: dict) -> dict[str, Any]:
         """Handle invoice.payment_failed webhook"""
         subscription_id = invoice.get("subscription")
         logger.warning(f"Payment failed for subscription {subscription_id}")
-        
+
         return {
             "status": "processed",
             "action": "payment_failed",
             "invoice_id": invoice["id"],
             "subscription_id": subscription_id,
-            "amount": invoice["amount_due"] / 100  # Convert from cents
+            "amount": invoice["amount_due"] / 100,  # Convert from cents
         }
 
     async def _handle_payment_intent_succeeded(self, payment_intent: dict) -> dict[str, Any]:
         """Handle payment_intent.succeeded webhook"""
         logger.info(f"Payment intent succeeded: {payment_intent['id']}")
-        
+
         return {
             "status": "processed",
             "action": "payment_intent_succeeded",
             "payment_intent_id": payment_intent["id"],
-            "amount": payment_intent["amount"] / 100  # Convert from cents
+            "amount": payment_intent["amount"] / 100,  # Convert from cents
         }
 
     async def _handle_payment_intent_failed(self, payment_intent: dict) -> dict[str, Any]:
         """Handle payment_intent.payment_failed webhook"""
         logger.warning(f"Payment intent failed: {payment_intent['id']}")
-        
+
         return {
             "status": "processed",
             "action": "payment_intent_failed",
             "payment_intent_id": payment_intent["id"],
             "failure_code": payment_intent.get("last_payment_error", {}).get("code"),
-            "failure_message": payment_intent.get("last_payment_error", {}).get("message")
+            "failure_message": payment_intent.get("last_payment_error", {}).get("message"),
         }

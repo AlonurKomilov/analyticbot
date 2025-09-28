@@ -169,7 +169,8 @@ async def poll_updates(restart_on_error: bool = True) -> dict:
 async def main():
     """Main entry point for the poll updates task."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Parse command line arguments

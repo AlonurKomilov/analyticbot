@@ -5,6 +5,7 @@ from datetime import datetime
 from src.bot_service.container import container
 from src.bot_service.services.prometheus_service import prometheus_timer
 from src.bot_service.utils.error_handler import ErrorContext, ErrorHandler
+
 from infra.celery import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
@@ -229,7 +230,9 @@ def update_prometheus_metrics(self):
     async def _run() -> str:
         context = ErrorContext().add("task", "update_prometheus_metrics")
         try:
-            from src.bot_service.services.prometheus_service import collect_system_metrics
+            from src.bot_service.services.prometheus_service import (
+                collect_system_metrics,
+            )
 
             logger.info("Collecting Prometheus metrics")
             await collect_system_metrics()

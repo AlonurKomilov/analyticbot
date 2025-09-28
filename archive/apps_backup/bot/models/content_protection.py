@@ -8,11 +8,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from core.models.base import BaseORMModel
 from pydantic import BaseModel
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-
-from core.models.base import BaseORMModel
 
 
 class ContentType(str, Enum):

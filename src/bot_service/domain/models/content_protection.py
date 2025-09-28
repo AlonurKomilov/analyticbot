@@ -11,7 +11,6 @@ from typing import Any
 from pydantic import BaseModel
 from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-
 from src.shared_kernel.domain.models.base import BaseORMModel
 
 

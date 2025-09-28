@@ -3,7 +3,6 @@ import logging
 
 import asyncpg
 from asyncpg.pool import Pool
-
 from src.bot_service.config import settings
 from src.bot_service.database.performance import PerformanceConfig, performance_manager
 from src.bot_service.utils.error_handler import ErrorContext, ErrorHandler

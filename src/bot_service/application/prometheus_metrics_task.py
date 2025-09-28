@@ -22,7 +22,9 @@ def update_prometheus_metrics(self):
     async def _run() -> str:
         context = ErrorContext().add("task", "update_prometheus_metrics")
         try:
-            from src.bot_service.services.prometheus_service import collect_system_metrics
+            from src.bot_service.services.prometheus_service import (
+                collect_system_metrics,
+            )
 
             logger.info("Collecting Prometheus metrics")
             await collect_system_metrics()

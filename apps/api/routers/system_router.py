@@ -7,13 +7,15 @@ Original implementation moved to: src.api_service.presentation.routers.system_ro
 
 # Import from clean architecture location
 try:
-    from src.api_service.presentation.routers.system_router import *
-    print("✅ Using clean architecture implementation from src.api_service.presentation.routers.system_router")
+    print(
+        "✅ Using clean architecture implementation from src.api_service.presentation.routers.system_router"
+    )
 except ImportError as e:
     print(f"⚠️  Could not import from src.api_service.presentation.routers.system_router: {e}")
     print("🔄 This may indicate the clean architecture module needs attention")
-    raise ImportError(f"Clean architecture module not available: src.api_service.presentation.routers.system_router") from e
+    raise ImportError(
+        "Clean architecture module not available: src.api_service.presentation.routers.system_router"
+    ) from e
 
 # Re-export for compatibility
 # All exports available via import *
-

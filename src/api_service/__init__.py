@@ -5,15 +5,13 @@ Core API service functionality with clean architecture.
 
 Layers:
 - Domain: Core business logic and entities
-- Application: Use cases and application services  
+- Application: Use cases and application services
 - Infrastructure: External integrations and persistence
 - Presentation: HTTP endpoints and request handling
 """
 
 # Safe imports with error handling
 try:
-    from .presentation.routers import *
-    from .application.services import *
     IMPORTS_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️  Some API service imports not available: {e}")

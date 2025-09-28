@@ -15,9 +15,9 @@ from aiogram.types import (
     WebAppInfo,
 )
 from aiogram_i18n import I18nContext
-
 from apps.bot.config import settings
 from apps.bot.services.subscription_service import SubscriptionService
+
 from infra.db.repositories import AsyncpgUserRepository as UserRepository
 
 router = Router()
@@ -147,7 +147,7 @@ async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18
             user_data = {
                 "id": uid,
                 "username": uname,
-                "plan_id": 1  # Default to free plan
+                "plan_id": 1,  # Default to free plan
             }
             await user_repo.create_user(user_data)
         except Exception as e:

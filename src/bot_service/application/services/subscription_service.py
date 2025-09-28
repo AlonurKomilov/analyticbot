@@ -1,10 +1,12 @@
 from fastapi import HTTPException
-
-from src.bot_service.domain.models import SubscriptionStatus
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-from src.identity.infrastructure.persistence.user_repository import AsyncpgUserRepository
+from src.bot_service.domain.models import SubscriptionStatus
+from src.identity.infrastructure.persistence.user_repository import (
+    AsyncpgUserRepository,
+)
 
 
 class SubscriptionService:

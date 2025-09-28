@@ -10,8 +10,8 @@ import pytest
 
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-from src.services.analytics_service import AnalyticsService
-from src.services.scheduler_service import SchedulerService
+from apps.bot.services.analytics_service import AnalyticsService
+from apps.bot.services.scheduler_service import SchedulerService
 
 
 class TestPerformanceBenchmarks:

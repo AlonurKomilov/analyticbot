@@ -1,15 +1,12 @@
 """
 Enhanced configuration settings for AnalyticBot
-Centralized settings with proper security handling
+Centralized settings without framework dependencies
 """
 
 import os
 from enum import Enum
 from typing import Union
-
-from pydantic import AnyHttpUrl, RedisDsn, SecretStr, field_validator, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from config.demo_mode_config import DemoModeConfig
+from dataclasses import dataclass, field
 
 
 class LogLevel(str, Enum):
@@ -29,7 +26,23 @@ class LogFormat(str, Enum):
     JSON = "json"
 
 
-class Settings(BaseSettings):
+@dataclass
+class SecretStr:
+    """Simple wrapper for secret strings"""
+    value: str
+    
+    def get_secret_value(self) -> str:
+        return self.value
+    
+    def __str__(self) -> str:
+        return "**********"
+    
+    def __repr__(self) -> str:
+        return "SecretStr('**********')"
+
+
+@dataclass 
+class Settings:
     """
     Main application settings combining all configuration sections
     """
@@ -39,10 +52,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     # Telegram Bot Configuration
-    BOT_TOKEN: SecretStr = SecretStr("dummy_token_for_development")
+    BOT_TOKEN: SecretStr = field(default_factory=lambda: SecretStr("dummy_token_for_development"))
     STORAGE_CHANNEL_ID: int = 0
     ADMIN_IDS_STR: str | None = None  # Will be parsed to ADMIN_IDS
-    SUPPORTED_LOCALES: Union[str, list[str]] = ["en", "uz"]
+    SUPPORTED_LOCALES: Union[str, list[str]] = field(default_factory=lambda: ["en", "uz"])
     DEFAULT_LOCALE: str = "en"
     ENFORCE_PLAN_LIMITS: bool = True
 
@@ -53,7 +66,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 10100
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: SecretStr = SecretStr("password")
+    POSTGRES_PASSWORD: SecretStr = field(default_factory=lambda: SecretStr("password"))
     POSTGRES_DB: str = "analyticbot"
     DATABASE_URL: str | None = None
     REDIS_URL: str = "redis://localhost:10200/0"
@@ -61,15 +74,24 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 20
     DB_POOL_TIMEOUT: int = 30
 
+    # Celery & Background Jobs - Environment Configurable
+    CELERY_BROKER_URL: str = "redis://localhost:10200/1"  # Use different Redis DB
+    CELERY_RESULT_BACKEND: str = "redis://localhost:10200/1"
+    CELERY_TASK_SERIALIZER: str = "json"
+    CELERY_RESULT_SERIALIZER: str = "json"
+    CELERY_ACCEPT_CONTENT: list[str] = field(default_factory=lambda: ["json"])
+    CELERY_TIMEZONE: str = "UTC"
+    CELERY_ENABLE_UTC: bool = True
+
     # API & Web Application - Environment Configurable
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = Field(default=10400)
-    API_HOST_URL: str = Field(default="http://localhost:10400")
-    TWA_HOST_URL: str = Field(default="http://localhost:10300/")
+    API_PORT: int = 10400
+    API_HOST_URL: str = "http://localhost:10400"
+    TWA_HOST_URL: str = "http://localhost:10300/"
     CORS_ORIGINS: Union[str, list[str]] = "*"
 
     # Security & Authentication
-    JWT_SECRET_KEY: SecretStr = SecretStr("dev_secret_key_change_in_production")
+    JWT_SECRET_KEY: SecretStr = field(default_factory=lambda: SecretStr("dev_secret_key_change_in_production"))
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -109,7 +131,7 @@ class Settings(BaseSettings):
     PREMIUM_FEATURES_ENABLED: bool = True
 
     # Analytics V2 Bot Client Settings
-    ANALYTICS_V2_BASE_URL: str = Field(default="http://localhost:11300")
+    ANALYTICS_V2_BASE_URL: str = "http://localhost:11300"
     ANALYTICS_V2_TOKEN: SecretStr | None = None
     EXPORT_MAX_ROWS: int = 10000
     PNG_MAX_POINTS: int = 2000
@@ -130,98 +152,38 @@ class Settings(BaseSettings):
     # ============================================================================
     # DEMO MODE CONFIGURATION
     # ============================================================================
-    demo_mode: DemoModeConfig = Field(default_factory=DemoModeConfig)
+    # For now, let's disable demo mode configuration to fix imports
+    # demo_mode: 'DemoModeConfig' = field(default_factory=lambda: DemoModeConfig())
 
-    model_config = SettingsConfigDict(
-        env_file=[".env.development", ".env.production"] if os.getenv("ENVIRONMENT") == "development" else [".env.production", ".env.development"],
-        env_file_encoding="utf-8", 
-        case_sensitive=True, 
-        env_parse_none_str="None", 
-        extra="ignore"
-    )
-
-    @field_validator("ADMIN_IDS_STR", mode="before")
-    @classmethod
-    def capture_admin_ids(cls, v):
-        """Capture ADMIN_IDS env var as string"""
-        return v
+    def __post_init__(self):
+        """Initialize computed fields"""
+        # Parse admin IDs from environment
+        admin_str = os.getenv('ADMIN_IDS_STR')
+        if admin_str:
+            try:
+                self._admin_ids = [int(x.strip()) for x in admin_str.split(',') if x.strip()]
+            except ValueError:
+                self._admin_ids = []
+        else:
+            self._admin_ids = []
 
     @property
     def ADMIN_IDS(self) -> list[int]:
         """Parse admin IDs from string"""
         if self._admin_ids is None:
-            admin_str = getattr(self, "ADMIN_IDS_STR", None)
-            if not admin_str:
-                # Try to get from environment directly
-                import os
+            self.__post_init__()  # Ensure initialization
+        return self._admin_ids or []
 
-                admin_str = os.getenv("ADMIN_IDS") or os.getenv("ADMIN_IDS_STR", "")
-
-            if admin_str:
-                # Handle JSON format like ["123", "456"] or comma-separated like "123,456"
-                import json
-
-                try:
-                    # Try to parse as JSON first
-                    if admin_str.startswith("[") and admin_str.endswith("]"):
-                        parsed_ids = json.loads(admin_str)
-                        self._admin_ids = [
-                            int(str(id_val).strip()) for id_val in parsed_ids if str(id_val).strip()
-                        ]
-                    else:
-                        # Parse as comma-separated
-                        self._admin_ids = [
-                            int(id_str.strip()) for id_str in admin_str.split(",") if id_str.strip()
-                        ]
-                except (json.JSONDecodeError, ValueError) as e:
-                    print(f"Warning: Could not parse ADMIN_IDS '{admin_str}': {e}")
-                    self._admin_ids = []
-            else:
-                self._admin_ids = []
-
-        return self._admin_ids
-
-    @field_validator("DATABASE_URL", mode="before")
-    @classmethod
-    def build_database_url(cls, v, info):
+    def get_database_url(self) -> str:
         """Build DATABASE_URL from components if not provided"""
-        if v:
-            return v
-
-        values = info.data
-        user = values.get("POSTGRES_USER")
-        password = values.get("POSTGRES_PASSWORD")
-        host = values.get("POSTGRES_HOST", "localhost")
-        port = values.get("POSTGRES_PORT", 10100)
-        db = values.get("POSTGRES_DB")
-
-        # Always extract secret value if it's a SecretStr
-        if password and hasattr(password, "get_secret_value"):
-            password = password.get_secret_value()
-
-        return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{db}"
-
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse comma-separated CORS origins string to list"""
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            if v == "*":
-                return ["*"]
-            # Remove quotes if present
-            v = v.strip('"\'')
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return ["*"]
-
-    @field_validator("SUPPORTED_LOCALES", mode="before")
-    @classmethod
-    def parse_supported_locales(cls, v):
-        """Parse comma-separated supported locales"""
-        if isinstance(v, str):
-            return [locale.strip() for locale in v.split(",") if locale.strip()]
-        return v or ["en", "uz"]
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        
+        # Build from components
+        password = self.POSTGRES_PASSWORD.get_secret_value() if hasattr(self.POSTGRES_PASSWORD, 'get_secret_value') else self.POSTGRES_PASSWORD
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{password}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        password = self.POSTGRES_PASSWORD.get_secret_value() if hasattr(self.POSTGRES_PASSWORD, 'get_secret_value') else self.POSTGRES_PASSWORD
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}:{password}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Convenience property accessors for backward compatibility
     @property

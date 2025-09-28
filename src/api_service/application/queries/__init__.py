@@ -1,5 +1,0 @@
-"""
-Queries Package
-===============
-Query handlers
-"""

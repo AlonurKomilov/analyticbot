@@ -29,7 +29,6 @@ MAPPING = {
     "apis.handlers": "apps.api.routers",  # handlers -> routers pattern
     # Moved files from duplication cleanup
     "scripts.translate_comments": "apps.bot.utils.translate_comments",
-    "prometheus_metrics_task": "apps.bot.utils.prometheus_metrics_task",
     "health_app": "apps.bot.utils.health_app",
     # Legacy main -> canonical
     "main": "apps.api.main",  # root main.py -> API main

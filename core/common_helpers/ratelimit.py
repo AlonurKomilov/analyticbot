@@ -23,14 +23,15 @@ import logging
 import time
 
 import redis.asyncio as redis
-from pydantic import BaseModel
+from dataclasses import dataclass, field
 
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
-class TokenBucketConfig(BaseModel):
+@dataclass
+class TokenBucketConfig:
     """Token bucket configuration."""
 
     capacity: int  # Maximum tokens in bucket
@@ -42,7 +43,8 @@ class TokenBucketConfig(BaseModel):
             self.initial_tokens = self.capacity
 
 
-class RateLimitResult(BaseModel):
+@dataclass
+class RateLimitResult:
     """Rate limit check result."""
 
     allowed: bool
@@ -263,7 +265,11 @@ class TokenBucketRateLimiter:
             stats = {
                 "total_buckets": len(keys),
                 "limit_type": limit_type,
-                "config": TELEGRAM_LIMITS[limit_type].model_dump(),
+                "config": {
+                    "capacity": TELEGRAM_LIMITS[limit_type].capacity,
+                    "refill_rate": TELEGRAM_LIMITS[limit_type].refill_rate,
+                    "initial_tokens": TELEGRAM_LIMITS[limit_type].initial_tokens,
+                },
             }
 
             if keys:

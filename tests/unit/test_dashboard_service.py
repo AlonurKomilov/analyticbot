@@ -23,7 +23,7 @@ class TestVisualizationEngine:
     def viz_engine(self):
         """Create VisualizationEngine instance for testing"""
         # Import inside fixture to handle import issues
-        from src.services.dashboard_service import VisualizationEngine
+        from apps.bot.services.dashboard_service import VisualizationEngine
         return VisualizationEngine()
 
     @pytest.fixture
@@ -210,7 +210,7 @@ class TestRealTimeDashboard:
 
     def test_dashboard_initialization(self, mock_dash_dependencies):
         """Test dashboard initialization with default parameters"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         
@@ -220,7 +220,7 @@ class TestRealTimeDashboard:
 
     def test_dashboard_custom_port(self, mock_dash_dependencies):
         """Test dashboard initialization with custom port"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard(port=9000)
         
@@ -228,7 +228,7 @@ class TestRealTimeDashboard:
 
     def test_setup_layout_called(self, mock_dash_dependencies):
         """Test that layout setup is called during initialization"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         with patch.object(RealTimeDashboard, '_setup_layout') as mock_setup:
             dashboard = RealTimeDashboard()
@@ -236,7 +236,7 @@ class TestRealTimeDashboard:
 
     def test_app_callback_registration(self, mock_dash_dependencies):
         """Test that app callbacks are registered"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         
@@ -246,7 +246,7 @@ class TestRealTimeDashboard:
 
     def test_data_queue_thread_safety(self, mock_dash_dependencies):
         """Test that data queue is thread-safe"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         
@@ -257,7 +257,7 @@ class TestRealTimeDashboard:
     @patch('apps.bot.services.dashboard_service.threading.Thread')
     def test_start_method_creates_thread(self, mock_thread, mock_dash_dependencies):
         """Test that start method creates and starts a thread"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         mock_thread_instance = MagicMock()
@@ -270,7 +270,7 @@ class TestRealTimeDashboard:
 
     def test_stop_method_sets_running_flag(self, mock_dash_dependencies):
         """Test that stop method sets running flag to False"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         dashboard.running = True
@@ -281,7 +281,7 @@ class TestRealTimeDashboard:
 
     def test_add_data_to_queue(self, mock_dash_dependencies):
         """Test adding data to the dashboard queue"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         test_data = {'views': 100, 'subscribers': 50}
@@ -293,7 +293,7 @@ class TestRealTimeDashboard:
 
     def test_get_latest_data_from_queue(self, mock_dash_dependencies):
         """Test retrieving latest data from queue"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         test_data = {'views': 150, 'subscribers': 75}
@@ -305,7 +305,7 @@ class TestRealTimeDashboard:
 
     def test_get_latest_data_empty_queue(self, mock_dash_dependencies):
         """Test retrieving data from empty queue returns None"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         
@@ -315,7 +315,7 @@ class TestRealTimeDashboard:
 
     def test_multiple_data_entries_fifo(self, mock_dash_dependencies):
         """Test that multiple data entries follow FIFO order"""
-        from src.services.dashboard_service import RealTimeDashboard
+        from apps.bot.services.dashboard_service import RealTimeDashboard
         
         dashboard = RealTimeDashboard()
         
@@ -338,7 +338,7 @@ class TestDashboardServiceIntegration:
     @pytest.mark.asyncio
     async def test_visualization_engine_with_real_data(self):
         """Test VisualizationEngine with realistic analytics data"""
-        from src.services.dashboard_service import VisualizationEngine
+        from apps.bot.services.dashboard_service import VisualizationEngine
         
         viz_engine = VisualizationEngine()
         
@@ -374,7 +374,7 @@ class TestDashboardServiceIntegration:
 
     def test_dashboard_with_visualization_engine(self, mock_dash_dependencies):
         """Test integration between RealTimeDashboard and VisualizationEngine"""
-        from src.services.dashboard_service import RealTimeDashboard, VisualizationEngine
+        from apps.bot.services.dashboard_service import RealTimeDashboard, VisualizationEngine
         
         dashboard = RealTimeDashboard()
         viz_engine = VisualizationEngine()
@@ -388,7 +388,7 @@ class TestDashboardServiceIntegration:
     @pytest.mark.asyncio
     async def test_empty_dataframe_handling(self):
         """Test that visualization engine handles empty DataFrames gracefully"""
-        from src.services.dashboard_service import VisualizationEngine
+        from apps.bot.services.dashboard_service import VisualizationEngine
         
         viz_engine = VisualizationEngine()
         empty_df = pd.DataFrame()

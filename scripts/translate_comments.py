@@ -1,2 +1,2 @@
 # AUTO-GENERATED COMPAT SHIM — redirects to canonical module
-from src.utils.translate_comments import *  # noqa: F401,F403
+from apps.bot.utils.translate_comments import *  # noqa: F401,F403

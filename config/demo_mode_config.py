@@ -27,24 +27,21 @@ class DemoModeConfig(BaseSettings):
     # CORE DEMO MODE STRATEGY
     # ============================================================================
     DEMO_MODE_STRATEGY: DemoModeStrategy = DemoModeStrategy.EMAIL_BASED
-    DEMO_MODE_ENABLED: bool = Field(
-        default=False,  # ✅ FIXED: Safe production default - must be explicitly enabled
-        description="Master demo mode toggle - False by default for production safety"
-    )
+    DEMO_MODE_ENABLED: bool = True
     FORCE_DEMO_MODE: bool = False  # Override for testing
     
     # ============================================================================
-    # SERVICE SWITCHING CONFIGURATION - FIXED: Production defaults
+    # SERVICE SWITCHING CONFIGURATION
     # ============================================================================
     USE_MOCK_ANALYTICS: bool = False
     USE_MOCK_PAYMENT: bool = False
     USE_MOCK_DATABASE: bool = False
     USE_MOCK_AI_SERVICES: bool = False
     USE_MOCK_TELEGRAM_API: bool = False
-    USE_MOCK_EMAIL_DELIVERY: bool = False  # FIXED: Now False by default
-    USE_MOCK_AUTH: bool = False             # FIXED: Now False by default
-    USE_MOCK_ADMIN: bool = False            # FIXED: Now False by default
-    USE_MOCK_DEMO_DATA: bool = False        # FIXED: Now False by default
+    USE_MOCK_EMAIL_DELIVERY: bool = True
+    USE_MOCK_AUTH: bool = True
+    USE_MOCK_ADMIN: bool = True
+    USE_MOCK_DEMO_DATA: bool = True
     
     # ============================================================================
     # DEMO USER DETECTION RULES

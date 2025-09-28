@@ -1,0 +1,245 @@
+"""
+Admin Channels Router - Channel Administration
+
+Handles administrative channel operations including listing, management, suspension, and deletion.
+Clean architecture: Single responsibility for channel administration.
+
+Domain: Admin channel management operations
+Path: /admin/channels/*
+"""
+
+import logging
+from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, Field
+
+from apps.bot.di import configure_bot_container
+
+# Initialize clean DI container
+container = configure_bot_container()
+from apps.bot.services.channel_management_service import ChannelManagementService
+from apps.api.middleware.auth import (
+    get_current_user, 
+    require_admin_role,
+    get_current_user_id,
+)
+from infra.db.performance import performance_timer
+
+logger = logging.getLogger(__name__)
+router = APIRouter(
+    prefix="/admin/channels", 
+    tags=["Admin - Channel Management"], 
+    responses={404: {"description": "Not found"}}
+)
+
+# === ADMIN CHANNEL MODELS ===
+
+class AdminChannelInfo(BaseModel):
+    id: int
+    name: str
+    username: str | None = None
+    owner_id: int
+    owner_username: str | None = None
+    subscriber_count: int = 0
+    is_active: bool = True
+    created_at: datetime
+    last_activity: datetime | None = None
+    total_posts: int = 0
+    total_views: int = 0
+
+# === ADMIN CHANNEL ENDPOINTS ===
+
+@router.get("", response_model=list[AdminChannelInfo])
+async def get_all_channels(
+    request: Request,
+    limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of channels to return"),
+    offset: int = Query(default=0, ge=0, description="Number of channels to skip for pagination"),
+    current_user: dict = Depends(get_current_user),
+    channel_service: ChannelManagementService = Depends(lambda: container.channel_management_service())
+):
+    """
+    ## 👑 Get All Channels (Admin)
+    
+    Retrieve all channels in the system with administrative details.
+    
+    **Admin Only**: Requires admin role
+    
+    **Parameters:**
+    - limit: Maximum number of channels to return (1-1000)
+    - offset: Number of channels to skip
+    
+    **Returns:**
+    - List of all channels with administrative information
+    """
+    try:
+        await require_admin_role(current_user["id"])
+        
+        with performance_timer("admin_all_channels_fetch"):
+            channels = await channel_service.get_all_channels_admin(
+                limit=limit, 
+                offset=offset
+            )
+            
+            return [
+                AdminChannelInfo(
+                    id=channel["id"],
+                    name=channel["name"],
+                    username=channel.get("username"),
+                    owner_id=channel["owner_id"],
+                    owner_username=channel.get("owner_username", "Unknown"),
+                    subscriber_count=channel.get("subscriber_count", 0),
+                    is_active=channel.get("is_active", True),
+                    created_at=channel.get("created_at", datetime.now()),
+                    last_activity=channel.get("last_activity"),
+                    total_posts=channel.get("total_posts", 0),
+                    total_views=channel.get("total_views", 0)
+                ) for channel in channels
+            ]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin channels fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch channels for admin")
+
+
+@router.delete("/{channel_id}")
+async def delete_channel_admin(
+    channel_id: int,
+    current_user: dict = Depends(get_current_user),
+    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+):
+    """
+    ## 🗑️ Delete Channel (Admin)
+    
+    Permanently delete a channel and all associated data.
+    
+    **Admin Only**: Requires admin role
+    **⚠️ WARNING**: This action is permanent and cannot be undone.
+    
+    **Parameters:**
+    - channel_id: ID of the channel to delete
+    
+    **Returns:**
+    - Deletion confirmation
+    """
+    try:
+        await require_admin_role(current_user["id"])
+        
+        with performance_timer("admin_channel_deletion"):
+            result = await channel_service.admin_delete_channel(
+                channel_id=channel_id,
+                admin_user_id=current_user["id"]
+            )
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="Channel not found")
+            
+            logger.warning(f"ADMIN DELETION: Channel {channel_id} deleted by admin {current_user['id']}")
+            return {
+                "message": "Channel permanently deleted by admin",
+                "channel_id": channel_id,
+                "deleted_by": current_user["id"],
+                "deleted_at": datetime.now().isoformat()
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin channel deletion failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete channel")
+
+
+@router.post("/{channel_id}/suspend")
+async def suspend_channel(
+    channel_id: int,
+    current_user: dict = Depends(get_current_user),
+    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+):
+    """
+    ## ⏸️ Suspend Channel (Admin)
+    
+    Temporarily suspend a channel to prevent further analytics tracking.
+    
+    **Admin Only**: Requires admin role
+    
+    **Parameters:**
+    - channel_id: ID of the channel to suspend
+    
+    **Returns:**
+    - Suspension confirmation
+    """
+    try:
+        await require_admin_role(current_user["id"])
+        
+        with performance_timer("admin_channel_suspension"):
+            result = await channel_service.suspend_channel(
+                channel_id=channel_id,
+                admin_user_id=current_user["id"]
+            )
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="Channel not found")
+            
+            logger.info(f"Channel suspended by admin: {channel_id} by {current_user['id']}")
+            return {
+                "message": "Channel suspended successfully",
+                "channel_id": channel_id,
+                "suspended_by": current_user["id"],
+                "suspended_at": datetime.now().isoformat(),
+                "status": "suspended"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Channel suspension failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to suspend channel")
+
+
+@router.post("/{channel_id}/unsuspend")
+async def unsuspend_channel(
+    channel_id: int,
+    current_user: dict = Depends(get_current_user),
+    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+):
+    """
+    ## ▶️ Unsuspend Channel (Admin)
+    
+    Reactivate a suspended channel to resume analytics tracking.
+    
+    **Admin Only**: Requires admin role
+    
+    **Parameters:**
+    - channel_id: ID of the channel to unsuspend
+    
+    **Returns:**
+    - Reactivation confirmation
+    """
+    try:
+        await require_admin_role(current_user["id"])
+        
+        with performance_timer("admin_channel_unsuspension"):
+            result = await channel_service.unsuspend_channel(
+                channel_id=channel_id,
+                admin_user_id=current_user["id"]
+            )
+            
+            if not result:
+                raise HTTPException(status_code=404, detail="Channel not found")
+            
+            logger.info(f"Channel unsuspended by admin: {channel_id} by {current_user['id']}")
+            return {
+                "message": "Channel unsuspended successfully",
+                "channel_id": channel_id,
+                "unsuspended_by": current_user["id"],
+                "unsuspended_at": datetime.now().isoformat(),
+                "status": "active"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Channel unsuspension failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to unsuspend channel")

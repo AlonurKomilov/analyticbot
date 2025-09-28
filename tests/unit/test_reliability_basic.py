@@ -91,7 +91,7 @@ def test_enhanced_delivery_service_basic():
         sys.modules["redis"] = mock_redis
         sys.modules["redis.asyncio"] = mock_redis
 
-        from src.shared_kernel.application.services.enhanced_delivery_service import EnhancedDeliveryService
+        from core.services.enhanced_delivery_service import EnhancedDeliveryService
 
         # Create service
         service = EnhancedDeliveryService(delivery_repo=None, schedule_repo=None)

@@ -13,15 +13,15 @@ from decimal import Decimal
 # Add apps to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from src.models.payment import (
+from apps.bot.models.payment import (
     BillingCycle,
     PaymentProvider,
     SubscriptionCreate
 )
-from src.services.stripe_adapter import StripeAdapter
-from src.services.payment_service import PaymentService
+from apps.bot.services.stripe_adapter import StripeAdapter
+from apps.bot.services.payment_service import PaymentService
 from config.settings import Settings
-from src.payments.infrastructure.persistence.payment_repository import AsyncpgPaymentRepository
+from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 
 
 class PaymentSystemTester:

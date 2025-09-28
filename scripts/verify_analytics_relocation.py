@@ -15,7 +15,7 @@ def test_new_imports():
     success_count = 0
     total_tests = 0
     try:
-        import src.analytics as analytics
+        import apps.bot.analytics as analytics
 
         print(f"✅ bot.analytics - {len(analytics.__all__)} components")
         success_count += 1
@@ -38,16 +38,16 @@ def test_new_imports():
             print(f"❌ {component} from {module} - {e}")
         total_tests += 1
     try:
-        print("✅ All components from src.analytics")
+        print("✅ All components from apps.bot.analytics")
         success_count += 1
     except Exception as e:
-        print(f"❌ All components from src.analytics - {e}")
+        print(f"❌ All components from apps.bot.analytics - {e}")
     total_tests += 1
     try:
-        print("✅ Factory functions from src.analytics")
+        print("✅ Factory functions from apps.bot.analytics")
         success_count += 1
     except Exception as e:
-        print(f"❌ Factory functions from src.analytics - {e}")
+        print(f"❌ Factory functions from apps.bot.analytics - {e}")
     total_tests += 1
     print("=" * 50)
     print(

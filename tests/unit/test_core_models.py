@@ -3,7 +3,7 @@ Unit tests for core models - targeting 100% coverage for easy wins
 """
 import pytest
 from datetime import datetime
-from src.shared_kernel.domain.entities.common import BaseEntity, TimestampedEntity
+from core.models.common import BaseEntity, TimestampedEntity
 
 
 class TestBaseEntity:

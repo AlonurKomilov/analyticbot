@@ -1,7 +1,7 @@
 """Test config loading"""
 
 try:
-    from src.config import settings
+    from apps.bot.config import settings
 
     print("✅ Config loaded successfully!")
     print(f"BOT_TOKEN exists: {bool(settings.BOT_TOKEN)}")

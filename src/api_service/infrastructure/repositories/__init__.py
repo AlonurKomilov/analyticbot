@@ -1,5 +1,0 @@
-"""
-Repositories Package
-====================
-Repository implementations
-"""

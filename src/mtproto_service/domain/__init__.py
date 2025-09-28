@@ -1,1 +1,0 @@
-"""MTProto service - domain layer"""

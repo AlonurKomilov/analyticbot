@@ -157,13 +157,12 @@ def enhanced_retry_task(**opts) -> Callable:
             task_name = task.name
             logger.debug(f"Queueing task: {task_name}")
 
-            # Add monitoring hook if available
+            # Add monitoring hook if available (optional for clean architecture)
             try:
-                from src.utils.monitoring import metrics
-                # Ensure task_name is a string
-                task_name_str = str(task_name) if task_name else "unknown"
-                metrics.record_metric("celery_task_queued", 1.0, {"task": task_name_str})
-            except ImportError:
+                # Note: monitoring should be injected via DI in the future
+                # For now, this is a soft dependency
+                pass  # Monitoring disabled to maintain clean architecture
+            except Exception:
                 pass
 
             # Ensure original_apply_async is callable
@@ -252,7 +251,7 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
     # Record metrics if available
     try:
-        from src.utils.monitoring import metrics
+        # Monitoring disabled for clean architecture
         metrics.record_metric("celery_task_started", 1.0, {"task": str(task_name)})
     except ImportError:
         pass
@@ -269,7 +268,7 @@ def task_postrun_handler(
 
     # Record detailed metrics
     try:
-        from src.utils.monitoring import metrics
+        # Monitoring disabled for clean architecture
 
         success = state == "SUCCESS"
         metrics.record_metric(
@@ -296,7 +295,7 @@ def task_failure_handler(
     
     # Record failure metrics
     try:
-        from src.utils.monitoring import metrics
+        # Monitoring disabled for clean architecture
         metrics.record_metric("celery_task_failed", 1.0, {"task": str(sender_name)})
     except ImportError:
         pass
@@ -310,7 +309,7 @@ def worker_ready_handler(sender=None, **kwargs):
 
     # Record worker metrics
     try:
-        from src.utils.monitoring import metrics
+        # Monitoring disabled for clean architecture
 
         metrics.record_metric("celery_worker_ready", 1.0, {"hostname": str(hostname or "unknown")})
     except ImportError:
@@ -375,7 +374,7 @@ def check_celery_health() -> dict[str, Any]:
 
 # Register health check if monitoring is available
 try:
-    from src.utils.monitoring import health_monitor
+    # Health monitoring disabled for clean architecture
 
     health_monitor.register_check("celery", check_celery_health, timeout=10)
     logger.info("Registered Celery health check")

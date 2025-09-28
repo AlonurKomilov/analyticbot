@@ -1,3 +1,0 @@
-"""
-Identity Domain - Core Module
-"""

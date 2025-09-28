@@ -1,5 +1,0 @@
-"""
-Config Package
-==============
-Infrastructure configuration
-"""

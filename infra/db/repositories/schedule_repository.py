@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from uuid import UUID
 
-from src.shared_kernel.domain.entities import (
+from core.models import (
     Delivery,
     DeliveryFilter,
     DeliveryStatus,

@@ -12,8 +12,6 @@ from typing import Any, Dict, List, Optional
 from enum import Enum
 from dataclasses import dataclass
 
-from pydantic import BaseModel
-
 logger = logging.getLogger(__name__)
 
 
@@ -56,7 +54,8 @@ class DependencyCheck:
     last_checked: Optional[datetime] = None
 
 
-class ComponentHealth(BaseModel):
+@dataclass
+class ComponentHealth:
     """
     Health information for a single component
     
@@ -66,18 +65,25 @@ class ComponentHealth(BaseModel):
     """
     name: str
     status: HealthStatus
+    last_check: datetime
     response_time_ms: Optional[float] = None
     error: Optional[str] = None
-    details: Dict[str, Any] = {}
-    last_check: datetime
-    dependencies: List[str] = []
+    details: Optional[Dict[str, Any]] = None
+    dependencies: Optional[List[str]] = None
     
     # Additional fields from core/common_helpers version
     dependency_type: Optional[DependencyType] = None
     critical: bool = True
+    
+    def __post_init__(self):
+        if self.details is None:
+            self.details = {}
+        if self.dependencies is None:
+            self.dependencies = []
 
 
-class SystemHealth(BaseModel):
+@dataclass
+class SystemHealth:
     """
     Overall system health information
     
@@ -89,8 +95,14 @@ class SystemHealth(BaseModel):
     version: str
     environment: str
     components: Dict[str, ComponentHealth]
-    performance_metrics: Dict[str, Any] = {}
-    alerts: List[str] = []
+    performance_metrics: Optional[Dict[str, Any]] = None
+    alerts: Optional[List[str]] = None
+    
+    def __post_init__(self):
+        if self.performance_metrics is None:
+            self.performance_metrics = {}
+        if self.alerts is None:
+            self.alerts = []
     
     # Additional metadata
     service_name: str = "analyticbot"
@@ -98,11 +110,12 @@ class SystemHealth(BaseModel):
     health_check_id: Optional[str] = None
 
 
-class HealthCheckResult(BaseModel):
+@dataclass
+class HealthCheckResult:
     """Complete health check result - for backward compatibility"""
     service_name: str
     overall_status: HealthStatus
-    dependencies: List[DependencyCheck]
+    dependencies: List['DependencyCheck']
     response_time_ms: float
     timestamp: datetime
     version: str

@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch
 
-from src.config import Settings
+from apps.bot.config import Settings
 
 
 def test_settings_load_from_env():

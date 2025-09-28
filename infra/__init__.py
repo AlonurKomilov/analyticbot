@@ -1,6 +1,6 @@
-# Compatibility layer - deprecated
-import warnings
-warnings.warn('infra/ imports are deprecated, use src/ instead', DeprecationWarning)
+"""
+Infrastructure Layer
+Contains concrete implementations of core interfaces
+"""
 
-# Re-export from new locations
-from src.shared_kernel.infrastructure import *
+__version__ = "1.0.0"

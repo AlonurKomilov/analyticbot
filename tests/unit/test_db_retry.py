@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from src.database.db import create_pool
+from infra.db.connection_manager import init_database
 
 
 @pytest.mark.asyncio

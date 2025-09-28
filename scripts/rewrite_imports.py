@@ -3,8 +3,8 @@
 AST-based codemod to update imports for canonical architecture.
 
 Updates imports:
-- from bot.* -> from src.*
-- from apis.* -> from src.*
+- from bot.* -> from apps.bot.*
+- from apis.* -> from apps.api.*
 - from security.* -> from core.security_engine.*
 - alembic path updates
 """

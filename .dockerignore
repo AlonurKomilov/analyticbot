@@ -96,6 +96,8 @@ CHANGELOG.md
 
 # Archive and deprecated
 archive/
+**/_archive/
+**/archive/
 old/
 deprecated/
 

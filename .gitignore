@@ -382,6 +382,8 @@ requirements_backup.txt
 # Archive directories (legacy code)
 docs/_archive/
 docs/archive/
-
+archive/
+**/_archive/
+**/archive/
 
 venv/

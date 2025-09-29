@@ -53,6 +53,34 @@ The analysis correctly identifies significant framework coupling issues that nee
   - No actual `import punq` or `from punq` statements found
 - **Status:** ❌ **FALSE** - No active punq usage, only migration comments
 
+### 🔧 **ARCHITECTURE FIXES COMPLETED**
+
+Since our audit, we have systematically addressed the critical issues:
+
+#### ✅ **Step 1 - Security Framework Decoupling: COMPLETE**
+- Created `core/ports/security_ports.py` for framework-independent security
+- Implemented `core/security_engine/core_security_service.py` with no framework deps
+- Moved framework concerns to `infra/security/` adapters
+- **Result:** Core security no longer depends on FastAPI/Redis
+
+#### ✅ **Step 2 - Health Monitoring Relocation: COMPLETE** 
+- Moved health checking from `core/common/health/` to `apps/api/services/health/`
+- Created `core/ports/health_ports.py` for clean contracts
+- Built infrastructure adapters in `infra/health/` for PostgreSQL, Redis, HTTP, system resources
+- **Result:** Health monitoring now proper application service with infra adapters
+
+#### ✅ **Step 3 - Domain Model Purification: COMPLETE**
+- Created pure domain entities in `core/models/admin_domain.py` (dataclasses, no ORM)
+- Moved SQLAlchemy models to `infra/database/models/admin_orm.py`
+- Built domain-ORM mapping layer for persistence
+- **Result:** Domain models are framework-independent with rich business logic
+
+#### 🚧 **Step 4 - Apps Infrastructure Coupling: IN PROGRESS**
+- **Current Issue:** 80+ infra imports scattered across apps layer
+- **Target:** Restrict infra imports to composition roots only (`apps/*/di.py`)
+- **Impact:** Routers, handlers, services importing infra directly violates clean architecture
+- **Solution:** Application services should use ports, DI containers wire implementations
+
 ### ✅ Issue #5: Security engine is not layered - **TRUE**
 - **Claim:** Security engine couples to FastAPI/Redis  
 - **Evidence Found:** 6 out of 8 security files contain framework imports:

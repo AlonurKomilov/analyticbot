@@ -6,18 +6,17 @@ Provides seamless demo user experience for showcasing the platform
 
 import bcrypt
 
-
 # Demo user credentials (publicly known for demonstration)
 DEMO_CREDENTIALS = {
     "demo@analyticbot.com": "demo123456",
-    "viewer@analyticbot.com": "viewer123", 
-    "guest@analyticbot.com": "guest123"
+    "viewer@analyticbot.com": "viewer123",
+    "guest@analyticbot.com": "guest123",
 }
 
 
 def _hash_password(password: str) -> str:
     """Hash password for demo users"""
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def create_mock_users_database() -> dict[str, dict]:
@@ -26,13 +25,12 @@ def create_mock_users_database() -> dict[str, dict]:
         # Development/Testing Users
         "test@example.com": {
             "id": "test_12345",
-            "email": "test@example.com", 
+            "email": "test@example.com",
             "username": "testuser",
             "hashed_password": "$2b$12$example_hash",
             "is_demo": False,
-            "plan": "free"
+            "plan": "free",
         },
-        
         # Demo Users (for public demonstrations)
         "demo@analyticbot.com": {
             "id": "demo_user_001",
@@ -42,31 +40,28 @@ def create_mock_users_database() -> dict[str, dict]:
             "is_demo": True,
             "plan": "pro",
             "demo_type": "full_featured",
-            "description": "Full-featured demo account with all capabilities"
+            "description": "Full-featured demo account with all capabilities",
         },
-        
         "viewer@analyticbot.com": {
-            "id": "demo_viewer_002", 
+            "id": "demo_viewer_002",
             "email": "viewer@analyticbot.com",
             "username": "Demo Viewer",
             "hashed_password": _hash_password("viewer123"),
             "is_demo": True,
             "plan": "basic",
             "demo_type": "read_only",
-            "description": "Read-only demo account for viewing analytics"
+            "description": "Read-only demo account for viewing analytics",
         },
-        
         "guest@analyticbot.com": {
             "id": "demo_guest_003",
-            "email": "guest@analyticbot.com", 
+            "email": "guest@analyticbot.com",
             "username": "Demo Guest",
             "hashed_password": _hash_password("guest123"),
             "is_demo": True,
             "plan": "free",
             "demo_type": "limited",
-            "description": "Limited demo account with basic features"
+            "description": "Limited demo account with basic features",
         },
-        
         # Admin Demo User
         "admin@analyticbot.com": {
             "id": "demo_admin_999",
@@ -77,8 +72,8 @@ def create_mock_users_database() -> dict[str, dict]:
             "is_admin": True,
             "plan": "enterprise",
             "demo_type": "admin",
-            "description": "Admin demo account with full system access"
-        }
+            "description": "Admin demo account with full system access",
+        },
     }
 
 
@@ -122,7 +117,7 @@ def get_demo_user_by_email(email: str) -> dict | None:
             "id": user["id"],
             "email": user["email"],
             "username": user["username"],
-            "hashed_password": user["hashed_password"]
+            "hashed_password": user["hashed_password"],
         }
     return None
 
@@ -144,22 +139,22 @@ def get_demo_credentials_info() -> dict:
                 "email": "demo@analyticbot.com",
                 "password": "demo123456",
                 "type": "full_featured",
-                "description": "Full-featured demo with all Pro features"
+                "description": "Full-featured demo with all Pro features",
             },
             {
-                "email": "viewer@analyticbot.com", 
+                "email": "viewer@analyticbot.com",
                 "password": "viewer123",
                 "type": "read_only",
-                "description": "Read-only analytics viewer"
+                "description": "Read-only analytics viewer",
             },
             {
                 "email": "guest@analyticbot.com",
-                "password": "guest123", 
+                "password": "guest123",
                 "type": "limited",
-                "description": "Basic features demo"
-            }
+                "description": "Basic features demo",
+            },
         ],
-        "note": "These are public demo accounts for trying the platform"
+        "note": "These are public demo accounts for trying the platform",
     }
 
 
@@ -167,13 +162,13 @@ def verify_demo_password(email: str, password: str) -> bool:
     """Verify demo user password"""
     if email not in DEMO_CREDENTIALS:
         return False
-    
+
     expected_password = DEMO_CREDENTIALS[email]
     return password == expected_password
 
 
 def simulate_password_update(user_id: str, hashed_password: str) -> bool:
-    """Simulate password update operation for development/testing""" 
+    """Simulate password update operation for development/testing"""
     # In production, this would update the actual database
     # For demo users, password updates are ignored
     if is_demo_user_by_id(user_id):

@@ -84,7 +84,7 @@ async def export_overview_csv(
         filename = csv_exporter.generate_filename("overview", channel_id, period)
 
         # Create bytes stream for StreamingResponse
-        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode("utf-8"))
 
         return StreamingResponse(
             csv_bytes,
@@ -119,7 +119,7 @@ async def export_growth_csv(
         filename = csv_exporter.generate_filename("growth", channel_id, period)
 
         # Create bytes stream for StreamingResponse
-        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode("utf-8"))
 
         return StreamingResponse(
             csv_bytes,
@@ -154,7 +154,7 @@ async def export_reach_csv(
         filename = csv_exporter.generate_filename("reach", channel_id, period)
 
         # Create bytes stream for StreamingResponse
-        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode("utf-8"))
 
         return StreamingResponse(
             csv_bytes,
@@ -189,7 +189,7 @@ async def export_sources_csv(
         filename = csv_exporter.generate_filename("sources", channel_id, period)
 
         # Create bytes stream for StreamingResponse
-        csv_bytes = io.BytesIO(csv_content.getvalue().encode('utf-8'))
+        csv_bytes = io.BytesIO(csv_content.getvalue().encode("utf-8"))
 
         return StreamingResponse(
             csv_bytes,

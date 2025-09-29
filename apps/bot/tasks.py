@@ -28,10 +28,11 @@ def send_post_task(self, scheduler_id: int):
     async def _run():
         context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            bot = container.bot_client()
+            container.bot_client()
             scheduler_repository = container.schedule_repo()
             # Convert int to UUID if needed
             from uuid import UUID
+
             try:
                 post_uuid = UUID(str(scheduler_id))
                 scheduler = await scheduler_repository.get_by_id(post_uuid)
@@ -60,13 +61,15 @@ def remove_expired_schedulers(self):
     async def _run():
         context = ErrorContext().add("task", "remove_expired_schedulers")
         try:
-            bot = container.bot_client()
+            container.bot_client()
             repo = container.schedule_repo()
             # TODO: Implement remove_expired using clean architecture patterns
             # For now, using get_ready_for_delivery as a placeholder
             ready_posts = await repo.get_ready_for_delivery()
             removed_count = len(ready_posts)  # Placeholder logic
-            logger.info(f"Found {removed_count} posts ready for processing (remove_expired not implemented)")
+            logger.info(
+                f"Found {removed_count} posts ready for processing (remove_expired not implemented)"
+            )
             logger.info(f"Removed {removed_count} expired schedulers")
             return f"removed-{removed_count}"
         except Exception as e:
@@ -84,7 +87,7 @@ def send_scheduled_message(self):
         context = ErrorContext().add("task", "send_scheduled_message")
         stats = {"processed": 0, "sent": 0, "errors": 0}
         try:
-            bot = container.bot_client()
+            container.bot_client()
             scheduler_service = container.scheduler_service()
             scheduler_repo = container.schedule_repo()
             # TODO: Implement claim_due_posts using clean architecture
@@ -103,9 +106,7 @@ def send_scheduled_message(self):
                         logger.debug(f"Successfully sent post {post.id}")
                     else:
                         stats["errors"] += 1
-                        logger.warning(
-                            f"Failed to send post {post.id}: {result.get('error')}"
-                        )
+                        logger.warning(f"Failed to send post {post.id}: {result.get('error')}")
                 except Exception as e:
                     stats["errors"] += 1
                     post_context = context.add("post_id", str(post.id))
@@ -129,7 +130,7 @@ def update_post_views_task(self):
     async def _run() -> str:
         context = ErrorContext().add("task", "update_post_views_task")
         try:
-            bot = container.bot_client()
+            container.bot_client()
             analytics_service = container.analytics_service()
             logger.info("Starting post views update task")
             stats = await analytics_service.update_all_post_views()
@@ -211,15 +212,19 @@ def maintenance_cleanup(self):
     """Periodic maintenance: requeue stuck 'sending' posts and cleanup old posts."""
 
     async def _run():
-        bot = container.bot_client()
+        container.bot_client()
         try:
-            scheduler_repo = container.schedule_repo()
+            container.schedule_repo()
             # TODO: Implement requeue_stuck_sending_posts and cleanup_old_posts using clean architecture
             # For now, just log the maintenance attempt
-            logger.info("Maintenance cleanup - requeue_stuck_sending_posts not implemented in clean architecture")
+            logger.info(
+                "Maintenance cleanup - requeue_stuck_sending_posts not implemented in clean architecture"
+            )
             requeued = 0  # Placeholder
-            
-            logger.info("Maintenance cleanup - cleanup_old_posts not implemented in clean architecture")  
+
+            logger.info(
+                "Maintenance cleanup - cleanup_old_posts not implemented in clean architecture"
+            )
             cleaned = 0  # Placeholder
             if requeued > 0:
                 logger.info("Would have requeued %d stuck sending posts", requeued)

@@ -190,7 +190,13 @@ def main():
                 path_parts = file_path.parts
                 if any(
                     exclude in path_parts
-                    for exclude in ["archive", ".venv", "node_modules", "__pycache__", ".git"]
+                    for exclude in [
+                        "archive",
+                        ".venv",
+                        "node_modules",
+                        "__pycache__",
+                        ".git",
+                    ]
                 ):
                     continue
                 files_to_process.append(file_path)

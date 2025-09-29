@@ -3,14 +3,12 @@ Database Performance Monitoring and Optimization
 Infrastructure layer database utilities
 """
 
-import asyncio
 import hashlib
 import json
 import logging
 import time
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Any
 
 import redis.asyncio as redis
 
@@ -43,7 +41,7 @@ class DatabasePerformanceManager:
         self._redis_url = redis_url or "redis://localhost:6379/0"
         self._query_stats = {}
         self._cache_stats = {"hits": 0, "misses": 0, "sets": 0}
-        
+
     async def initialize(self):
         """Initialize Redis connection pool for caching"""
         try:
@@ -71,7 +69,7 @@ class DatabasePerformanceManager:
         if not self._redis_pool:
             yield None
             return
-            
+
         conn = redis.Redis(connection_pool=self._redis_pool)
         try:
             yield conn
@@ -89,11 +87,11 @@ class DatabasePerformanceManager:
         query: str,
         params: tuple = (),
         ttl: int = PerformanceConfig.CACHE_DEFAULT_TTL,
-        cache_enabled: bool = True
+        cache_enabled: bool = True,
     ):
         """Execute query with caching support"""
         cache_key = self._generate_cache_key(query, params)
-        
+
         # Try cache first
         if cache_enabled and PerformanceConfig.ENABLE_CACHING:
             async with self.get_redis_connection() as redis_conn:
@@ -113,15 +111,18 @@ class DatabasePerformanceManager:
         try:
             result = await db_manager.fetch_query(query, *params)
             execution_time = time.time() - start_time
-            
+
             # Log slow queries
-            if PerformanceConfig.ENABLE_QUERY_LOGGING and execution_time > PerformanceConfig.QUERY_SLOW_THRESHOLD:
+            if (
+                PerformanceConfig.ENABLE_QUERY_LOGGING
+                and execution_time > PerformanceConfig.QUERY_SLOW_THRESHOLD
+            ):
                 logger.warning(f"Slow query detected: {execution_time:.2f}s - {query[:100]}...")
-            
+
             # Update query stats
             if query not in self._query_stats:
                 self._query_stats[query] = {"count": 0, "total_time": 0, "avg_time": 0}
-            
+
             self._query_stats[query]["count"] += 1
             self._query_stats[query]["total_time"] += execution_time
             self._query_stats[query]["avg_time"] = (
@@ -133,11 +134,7 @@ class DatabasePerformanceManager:
                 async with self.get_redis_connection() as redis_conn:
                     if redis_conn:
                         try:
-                            await redis_conn.setex(
-                                cache_key,
-                                ttl,
-                                json.dumps(result, default=str)
-                            )
+                            await redis_conn.setex(cache_key, ttl, json.dumps(result, default=str))
                             self._cache_stats["sets"] += 1
                         except Exception as e:
                             logger.warning(f"Cache write error: {e}")
@@ -168,11 +165,11 @@ class DatabasePerformanceManager:
             "query_stats": dict(list(self._query_stats.items())[:10]),  # Top 10 queries
             "total_queries": sum(stats["count"] for stats in self._query_stats.values()),
             "cache_hit_ratio": (
-                self._cache_stats["hits"] / 
-                (self._cache_stats["hits"] + self._cache_stats["misses"])
+                self._cache_stats["hits"]
+                / (self._cache_stats["hits"] + self._cache_stats["misses"])
                 if (self._cache_stats["hits"] + self._cache_stats["misses"]) > 0
                 else 0
-            )
+            ),
         }
 
 
@@ -182,21 +179,23 @@ performance_manager = DatabasePerformanceManager()
 
 def performance_timer(func):
     """Decorator to measure function execution time"""
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         start_time = time.time()
         try:
             result = await func(*args, **kwargs)
             execution_time = time.time() - start_time
-            
+
             if execution_time > 1.0:  # Log slow operations
                 logger.warning(f"Slow operation: {func.__name__} took {execution_time:.2f}s")
-            
+
             return result
         except Exception as e:
             execution_time = time.time() - start_time
             logger.error(f"Operation {func.__name__} failed after {execution_time:.2f}s: {e}")
             raise
+
     return wrapper
 
 

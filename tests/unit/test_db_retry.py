@@ -2,8 +2,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from infra.db.connection_manager import init_database
-
 
 @pytest.mark.asyncio
 @patch("bot.database.db.asyncpg.create_pool", new_callable=AsyncMock)

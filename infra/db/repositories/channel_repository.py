@@ -115,8 +115,7 @@ class AsyncpgChannelRepository:
         """Get all channels with pagination - API compatibility method"""
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
-                "SELECT * FROM channels ORDER BY id LIMIT $1 OFFSET $2",
-                limit, skip
+                "SELECT * FROM channels ORDER BY id LIMIT $1 OFFSET $2", limit, skip
             )
             return [dict(record) for record in records]
 
@@ -133,9 +132,7 @@ class AsyncpgChannelRepository:
     async def get_tracked_channels(self) -> list[dict[str, Any]]:
         """Get all tracked channels - channels that have data collection enabled"""
         async with self.pool.acquire() as conn:
-            records = await conn.fetch(
-                "SELECT * FROM channels ORDER BY id"
-            )
+            records = await conn.fetch("SELECT * FROM channels ORDER BY id")
             return [dict(record) for record in records]
 
 

@@ -7,33 +7,33 @@
 🚀 MIGRATION STATUS: COMPLETED ✅
    - All endpoints migrated to proper domain routers (Sept 24, 2025)
    - File archived as educational example
-   
+
 🔄 ENDPOINT MIGRATION MAPPING:
    Original → New Location
    ========================================
    ❌ /channels/{channel_id}/metrics      → SKIPPED (duplicate in analytics_core_router.py)
    ✅ /channels/{channel_id}/engagement   → channels_microrouter.py
-   ✅ /channels/{channel_id}/audience     → channels_microrouter.py  
+   ✅ /channels/{channel_id}/audience     → channels_microrouter.py
    ✅ /channels/{channel_id}/best-times   → analytics_predictive_router.py
    ✅ /service-info                       → core_microrouter.py
 
 🎯 CLEAN ARCHITECTURE PATTERNS DEMONSTRATED:
-   
+
    1. ✅ DEPENDENCY INJECTION
       - Service abstraction via protocols
       - Container-based service resolution
       - Mock vs. real service switching
-      
-   2. ✅ SEPARATION OF CONCERNS  
+
+   2. ✅ SEPARATION OF CONCERNS
       - Router handles HTTP concerns only
       - Business logic delegated to services
       - Clean error handling patterns
-      
+
    3. ✅ DEPENDENCY INVERSION PRINCIPLE
       - Depends on abstractions (AnalyticsServiceProtocol)
       - Not concretions (specific service implementations)
       - Easy to extend without modification
-      
+
    4. ✅ SINGLE RESPONSIBILITY PRINCIPLE
       - Each endpoint has single purpose
       - Clean, focused business logic
@@ -56,17 +56,13 @@ Path: /clean/analytics/* (LEGACY - endpoints migrated)
 Status: 🏛️ ARCHIVED FOR EDUCATIONAL REFERENCE
 """
 
-from fastapi import APIRouter, HTTPException
-import asyncio
-from datetime import datetime
-
 import logging
-from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any
 
 from core.di_container import container
-from core.protocols import AnalyticsServiceProtocol
+from fastapi import APIRouter, Depends, HTTPException
+
 from config.settings import settings
+from core.protocols import AnalyticsServiceProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -82,17 +78,14 @@ def get_analytics_service() -> AnalyticsServiceProtocol:
         return container.get_service(AnalyticsServiceProtocol)
     except ValueError as e:
         logger.error(f"Failed to get analytics service: {e}")
-        raise HTTPException(
-            status_code=500, 
-            detail="Analytics service not available"
-        )
+        raise HTTPException(status_code=500, detail="Analytics service not available")
 
 
 @router.get("/channels/{channel_id}/metrics")
 async def get_channel_metrics(
     channel_id: str,
     period: str = "7d",
-    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service)
+    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service),
 ):
     """
     Get channel analytics metrics
@@ -101,10 +94,7 @@ async def get_channel_metrics(
     """
     try:
         metrics = await analytics_service.get_channel_metrics(channel_id, period)
-        return {
-            "success": True,
-            "data": metrics
-        }
+        return {"success": True, "data": metrics}
     except Exception as e:
         logger.error(f"Failed to get channel metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -114,7 +104,7 @@ async def get_channel_metrics(
 async def get_engagement_data(
     channel_id: str,
     period: str = "24h",
-    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service)
+    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service),
 ):
     """
     Get channel engagement data
@@ -122,10 +112,7 @@ async def get_engagement_data(
     """
     try:
         engagement = await analytics_service.get_engagement_data(channel_id, period)
-        return {
-            "success": True,
-            "data": engagement
-        }
+        return {"success": True, "data": engagement}
     except Exception as e:
         logger.error(f"Failed to get engagement data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -134,7 +121,7 @@ async def get_engagement_data(
 @router.get("/channels/{channel_id}/best-times")
 async def get_best_posting_times(
     channel_id: str,
-    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service)
+    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service),
 ):
     """
     Get optimal posting times
@@ -142,10 +129,7 @@ async def get_best_posting_times(
     """
     try:
         best_times = await analytics_service.get_best_posting_times(channel_id)
-        return {
-            "success": True,
-            "data": best_times
-        }
+        return {"success": True, "data": best_times}
     except Exception as e:
         logger.error(f"Failed to get best posting times: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -154,7 +138,7 @@ async def get_best_posting_times(
 @router.get("/channels/{channel_id}/audience")
 async def get_audience_insights(
     channel_id: str,
-    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service)
+    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service),
 ):
     """
     Get audience demographics and insights
@@ -162,10 +146,7 @@ async def get_audience_insights(
     """
     try:
         insights = await analytics_service.get_audience_insights(channel_id)
-        return {
-            "success": True,
-            "data": insights
-        }
+        return {"success": True, "data": insights}
     except Exception as e:
         logger.error(f"Failed to get audience insights: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -173,7 +154,7 @@ async def get_audience_insights(
 
 @router.get("/service-info")
 async def get_service_info(
-    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service)
+    analytics_service: AnalyticsServiceProtocol = Depends(get_analytics_service),
 ):
     """
     Get information about the current analytics service
@@ -186,8 +167,8 @@ async def get_service_info(
             "using_mock_analytics": settings.demo_mode.should_use_mock_service("analytics"),
             "configuration": {
                 "strategy": settings.demo_mode.DEMO_MODE_STRATEGY,
-                "mock_delay_ms": settings.demo_mode.MOCK_API_DELAY_MS
-            }
+                "mock_delay_ms": settings.demo_mode.MOCK_API_DELAY_MS,
+            },
         }
     except Exception as e:
         logger.error(f"Failed to get service info: {e}")

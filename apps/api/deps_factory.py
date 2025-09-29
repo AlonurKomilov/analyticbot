@@ -1,15 +1,14 @@
 """
-Dependency Factory - Configuration-driven service creation  
+Dependency Factory - Configuration-driven service creation
 Replaces direct mock imports with proper DI container usage
 """
 
 import logging
-from typing import Optional
-from fastapi import Depends, Request
 
-from config import settings
-from apps.api.di import configure_api_container
+from fastapi import Request
+
 from apps.bot.models.twa import InitialDataResponse
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +22,16 @@ async def get_demo_data_service():
         # For now, return a simple fallback service
         # TODO: Implement proper DI container service resolution
         logger.info("Demo data service requested - using fallback implementation")
-        
+
         if settings.demo_mode.should_use_mock_service("demo_data"):
-            from apps.api.__mocks__.services.mock_demo_data_service import MockDemoDataService
+            from apps.api.__mocks__.services.mock_demo_data_service import (
+                MockDemoDataService,
+            )
+
             return MockDemoDataService()
         else:
             raise ValueError("No demo data service available and not in demo mode")
-            
+
     except Exception as e:
         logger.error(f"Failed to get demo data service: {e}")
         raise ValueError("Demo data service unavailable")
@@ -43,15 +45,15 @@ def is_request_for_demo_user(request: Request) -> bool:
     return getattr(request.state, "is_demo", False)
 
 
-def get_demo_type_from_request(request: Request) -> Optional[str]:
+def get_demo_type_from_request(request: Request) -> str | None:
     """
-    Proper demo type extraction that receives a Request object  
+    Proper demo type extraction that receives a Request object
     This fixes the architectural flaw of passing user_id instead of Request
     """
     return getattr(request.state, "demo_type", None)
 
 
-def get_demo_user_id_from_request(request: Request) -> Optional[str]:
+def get_demo_user_id_from_request(request: Request) -> str | None:
     """
     Get demo user ID from current request
     """
@@ -66,41 +68,42 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
     try:
         # Use clean demo mode service abstraction
         from apps.api.services.demo_mode_service import demo_service
-        
+
         # Log demo usage for monitoring
         demo_service.log_demo_usage(request, "/initial-data", "fetch")
-        
+
         # Check if this is a demo user request using proper Request object
         if demo_service.is_demo_request(request):
             demo_context = demo_service.get_demo_context(request)
             demo_data_service = await get_demo_data_service()
-            
+
             user_id = demo_service.get_effective_user_id(request)
             return await demo_data_service.get_initial_data(user_id, demo_context["demo_type"])
-        
+
         # For production users, use real services
         # This will be implemented with proper repository injection
-        from apps.api.services.initial_data_service import get_real_initial_data
         from apps.api.middleware.auth import get_current_user_id_from_request
-        
+        from apps.api.services.initial_data_service import get_real_initial_data
+
         user_id = await get_current_user_id_from_request(request)
         return await get_real_initial_data(user_id)
-        
+
     except Exception as e:
         # ✅ FIXED: Comprehensive error handling with auditing
         from apps.api.services.database_error_handler import db_error_handler
         from apps.api.services.demo_mode_service import demo_service
-        
+
         # Extract user_id if possible
         try:
             from apps.api.middleware.auth import get_current_user_id_from_request
+
             user_id = await get_current_user_id_from_request(request)
         except:
             user_id = None
-        
+
         # Check if this is a demo user who can have fallback
         is_demo_user = demo_service.is_demo_request(request)
-        
+
         # Handle the error with proper auditing
         try:
             db_error_handler.handle_database_error(
@@ -108,17 +111,17 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
                 error=e,
                 operation="get_initial_data",
                 user_id=user_id,
-                allow_demo_fallback=is_demo_user  # Only allow fallback for demo users
+                allow_demo_fallback=is_demo_user,  # Only allow fallback for demo users
             )
         except Exception:
             # Error handler raised exception for real users
             raise
-        
+
         # If we reach here, it means demo fallback is allowed
         if is_demo_user:
             logger.info(f"✅ Demo fallback activated for demo user {user_id}")
             demo_data_service = await get_demo_data_service()
             return await demo_data_service.get_initial_data(user_id or 1, "limited")
-        
+
         # Should never reach here, but safety fallback
         raise Exception("Service temporarily unavailable")

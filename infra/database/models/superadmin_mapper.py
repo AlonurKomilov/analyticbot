@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from core.models.admin_domain import (
+from core.models.superadmin_domain import (
     AdminUser,
     AdminSession,
     SystemComponent,
@@ -22,7 +22,7 @@ from core.models.admin_domain import (
     SystemStatus,
     AuditAction,
 )
-from .admin_orm import (
+from .superadmin_orm import (
     AdminUser,
     AdminSession,
     SystemUser,

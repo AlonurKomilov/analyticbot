@@ -27,6 +27,19 @@ from .service_ports import (
 # TG Client port (existing)
 from .tg_client import TGClient
 
+# Security ports (new)
+from .security_ports import (
+    AuthRequest,
+    TokenClaims,
+    SessionInfo,
+    CachePort,
+    TokenGeneratorPort,
+    SecurityConfigPort,
+    UserRepositoryPort,
+    SecurityEventsPort,
+    SecurityService,
+)
+
 __all__ = [
     # Repository ports
     "UserRepository",
@@ -48,4 +61,14 @@ __all__ = [
     "SchedulingService",
     # TG Client
     "TGClient",
+    # Security ports
+    "AuthRequest",
+    "TokenClaims",
+    "SessionInfo",
+    "CachePort",
+    "TokenGeneratorPort",
+    "SecurityConfigPort",
+    "UserRepositoryPort",
+    "SecurityEventsPort",
+    "SecurityService",
 ]

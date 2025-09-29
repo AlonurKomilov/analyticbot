@@ -40,46 +40,51 @@ class SuperAdminService:
             if not admin:
                 await self._log_security_event(
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "user_not_found"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "user_not_found",
+                    },
                 )
                 return None
 
             # Verify password
-            if not self.pwd_context.verify(password, admin.get('password_hash', '')):
+            if not self.pwd_context.verify(password, admin.get("password_hash", "")):
                 await self._log_security_event(
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "invalid_password"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "invalid_password",
+                    },
                 )
                 return None
 
-            # Successful login - reset failed attempts  
+            # Successful login - reset failed attempts
             await self.admin_repo.update_admin(
-                admin['id'], 
-                failed_login_attempts=0,
-                last_login=datetime.utcnow()
+                admin["id"], failed_login_attempts=0, last_login=datetime.utcnow()
             )
 
             # Create session data
             session_data = {
-                'admin_id': admin['id'],
-                'session_token': secrets.token_urlsafe(32),
-                'ip_address': ip_address,
-                'user_agent': 'SuperAdmin Client',
-                'created_at': datetime.utcnow(),
-                'expires_at': datetime.utcnow() + timedelta(hours=8)
+                "admin_id": admin["id"],
+                "session_token": secrets.token_urlsafe(32),
+                "ip_address": ip_address,
+                "user_agent": "SuperAdmin Client",
+                "created_at": datetime.utcnow(),
+                "expires_at": datetime.utcnow() + timedelta(hours=8),
             }
 
             await self._log_security_event(
-                "successful_login", 
-                {"username": username, "ip": ip_address}, 
-                admin['id']
+                "successful_login",
+                {"username": username, "ip": ip_address},
+                admin["id"],
             )
             return session_data
 
         except Exception as e:
             await self._log_security_event(
-                "login_error", 
-                {"username": username, "ip": ip_address, "error": str(e)}
+                "login_error", {"username": username, "ip": ip_address, "error": str(e)}
             )
             return None
 
@@ -128,7 +133,8 @@ class SuperAdminService:
             await db.scalar(
                 select(func.count(AdminSession.id)).where(
                     and_(
-                        AdminSession.is_active == True, AdminSession.expires_at > datetime.utcnow()
+                        AdminSession.is_active == True,
+                        AdminSession.expires_at > datetime.utcnow(),
                     )
                 )
             )
@@ -142,7 +148,11 @@ class SuperAdminService:
                 "premium": premium_users,
                 "suspended": total_users - active_users,
             },
-            "admins": {"total": total_admins, "active": active_admins, "sessions": active_sessions},
+            "admins": {
+                "total": total_admins,
+                "active": active_admins,
+                "sessions": active_sessions,
+            },
             "system": {
                 "uptime": "N/A",  # Will be calculated in production
                 "version": "1.0.0",
@@ -151,7 +161,12 @@ class SuperAdminService:
         }
 
     async def suspend_user(
-        self, db: AsyncSession, admin_id: int, user_id: int, suspended_by: str, reason: str
+        self,
+        db: AsyncSession,
+        admin_id: int,
+        user_id: int,
+        suspended_by: str,
+        reason: str,
     ) -> bool:
         """Suspend a system user"""
         try:
@@ -188,7 +203,11 @@ class SuperAdminService:
             return False
 
     async def get_audit_logs(
-        self, db: AsyncSession, page: int = 1, limit: int = 50, admin_id: UUID | None = None
+        self,
+        db: AsyncSession,
+        page: int = 1,
+        limit: int = 50,
+        admin_id: UUID | None = None,
     ) -> dict[str, Any]:
         """Get paginated audit logs"""
         offset = (page - 1) * limit
@@ -249,51 +268,50 @@ class SuperAdminService:
         """Validate admin session token"""
         try:
             token_hash = hashlib.sha256(token.encode()).hexdigest()
-            
-            stmt = select(AdminSession).join(AdminUser).where(
-                and_(
-                    AdminSession.session_token == token_hash,
-                    AdminSession.is_active == True,
-                    AdminSession.expires_at > datetime.utcnow(),
-                    AdminUser.is_active == True
+
+            stmt = (
+                select(AdminSession)
+                .join(AdminUser)
+                .where(
+                    and_(
+                        AdminSession.session_token == token_hash,
+                        AdminSession.is_active == True,
+                        AdminSession.expires_at > datetime.utcnow(),
+                        AdminUser.is_active == True,
+                    )
                 )
             )
             result = await self.db.execute(stmt)
             session = result.scalar_one_or_none()
-            
+
             if not session:
                 return None
-                
+
             # Update session activity
             session.last_activity = datetime.utcnow()
             await self.db.commit()
-            
+
             # Return admin user
             stmt = select(AdminUser).where(AdminUser.id == session.admin_user_id)
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
-            
+
         except Exception:
             return None
 
     async def get_system_users(self, page: int = 1, limit: int = 50) -> dict[str, Any]:
         """Get paginated system users"""
         offset = (page - 1) * limit
-        
-        stmt = (
-            select(SystemUser)
-            .order_by(desc(SystemUser.created_at))
-            .offset(offset)
-            .limit(limit)
-        )
-        
+
+        stmt = select(SystemUser).order_by(desc(SystemUser.created_at)).offset(offset).limit(limit)
+
         result = await self.db.execute(stmt)
         users = result.scalars().all()
-        
+
         # Get total count
         count_stmt = select(func.count(SystemUser.id))
         total_count = await self.db.scalar(count_stmt) or 0
-        
+
         return {
             "users": users,
             "total": total_count,
@@ -307,16 +325,16 @@ class SuperAdminService:
             stmt = select(SystemUser).where(SystemUser.telegram_id == user_id)
             result = await self.db.execute(stmt)
             user = result.scalar_one_or_none()
-            
+
             if not user:
                 return False
-                
+
             # Store original status for audit log
             original_status = user.status
-            
+
             user.status = UserStatus.ACTIVE
             user.updated_at = datetime.utcnow()
-            
+
             # Create audit log entry
             await self._create_audit_log(
                 self.db,
@@ -326,12 +344,12 @@ class SuperAdminService:
                 user.id,
                 {"status": original_status.value},
                 {"status": UserStatus.ACTIVE.value},
-                "User reactivated by admin"
+                "User reactivated by admin",
             )
-            
+
             await self.db.commit()
             return True
-            
+
         except Exception:
             await self.db.rollback()
             return False
@@ -346,7 +364,7 @@ class SuperAdminService:
             "premium_features_enabled": True,
             "backup_frequency_hours": 24,
             "session_timeout_hours": 8,
-            "max_failed_login_attempts": 5
+            "max_failed_login_attempts": 5,
         }
 
     async def update_system_config(self, config: dict[str, Any], admin_id: int) -> bool:
@@ -362,18 +380,22 @@ class SuperAdminService:
                 UUID("00000000-0000-0000-0000-000000000001"),  # Dummy UUID for config
                 {},  # old values would be fetched
                 config,
-                "System configuration updated"
+                "System configuration updated",
             )
-            
+
             await self.db.commit()
             return True
-            
+
         except Exception:
             await self.db.rollback()
             return False
 
     async def _log_security_event(
-        self, db: AsyncSession, event_type: str, details: dict, admin_id: UUID | None = None
+        self,
+        db: AsyncSession,
+        event_type: str,
+        details: dict,
+        admin_id: UUID | None = None,
     ) -> None:
         """Log security events"""
         log = AdminAuditLog(

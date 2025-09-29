@@ -7,10 +7,10 @@ with comprehensive security features and validation.
 
 import secrets
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
-from dataclasses import dataclass, field
 
 from passlib.context import CryptContext
 
@@ -215,7 +215,7 @@ class TokenResponse:
 
     access_token: str
     expires_in: int
-    user: 'User'
+    user: "User"
     refresh_token: str | None = None
     token_type: str = "bearer"
 
@@ -229,15 +229,17 @@ class MFASetupResponse:
     backup_codes: list[str]
 
 
-@dataclass  
+@dataclass
 class PermissionMatrix:
     """Role-based permission matrix"""
 
     role: UserRole
-    permissions: dict[str, list[str]] = field(default_factory=lambda: {
-        "analytics": [],
-        "users": [],
-        "settings": [],
-        "reports": [],
-        "api": [],
-    })
+    permissions: dict[str, list[str]] = field(
+        default_factory=lambda: {
+            "analytics": [],
+            "users": [],
+            "settings": [],
+            "reports": [],
+            "api": [],
+        }
+    )

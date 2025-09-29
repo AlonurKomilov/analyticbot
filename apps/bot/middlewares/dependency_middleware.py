@@ -67,11 +67,11 @@ class DependencyMiddleware(BaseMiddleware):
     ) -> Any:
         session_pool: Any | None = None
         try:
-            if hasattr(self.container, 'resolve'):
+            if hasattr(self.container, "resolve"):
                 session_pool = self.container.resolve(AsyncPGPool)
         except Exception:
             try:
-                if hasattr(self.container, 'resolve'):
+                if hasattr(self.container, "resolve"):
                     session_pool = self.container.resolve(async_sessionmaker)
             except Exception:
                 session_pool = None
@@ -95,7 +95,8 @@ class DependencyMiddleware(BaseMiddleware):
                 ("analytics_repo", AnalyticsRepository),
             ]:
                 try:
-                    if hasattr(self.container, "resolve"): data[key] = self.container.resolve(dep)
+                    if hasattr(self.container, "resolve"):
+                        data[key] = self.container.resolve(dep)
                 except Exception:
                     continue
                 except Exception:
@@ -114,7 +115,8 @@ class DependencyMiddleware(BaseMiddleware):
                 ("analytics_service", AnalyticsService),
             ]:
                 try:
-                    if hasattr(self.container, "resolve"): data[key] = self.container.resolve(dep)
+                    if hasattr(self.container, "resolve"):
+                        data[key] = self.container.resolve(dep)
                 except Exception:
                     continue
                 except Exception:

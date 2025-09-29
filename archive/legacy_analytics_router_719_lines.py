@@ -9,9 +9,22 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
+from apps.bot.database.performance import performance_timer
+from apps.bot.services.channel_management_service import (
+    ChannelCreate,
+    ChannelManagementService,
+    ChannelResponse,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from apps.api.middleware.auth import (
+    get_current_user_id,
+    require_admin_role,
+    require_analytics_create,
+    require_analytics_read,
+    require_channel_access,
+)
 from apps.bot.analytics import (
     AdvancedDataProcessor,
     AIInsightsGenerator,
@@ -20,30 +33,15 @@ from apps.bot.analytics import (
 )
 from apps.bot.container import container
 from apps.bot.services.analytics_service import AnalyticsService
-from apps.bot.services.channel_management_service import ChannelManagementService, ChannelCreate, ChannelResponse
+from infra.cache.advanced_decorators import cache_analytics_summary
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from apps.api.middleware.auth import (
-    get_current_user, 
-    require_channel_access, 
-    get_current_user_id,
-    require_analytics_read,
-    require_analytics_create,
-    require_analytics_update,
-    require_analytics_delete,
-    require_analytics_export,
-    require_admin_role
-)
-from infra.cache.advanced_decorators import cache_result, cache_analytics_summary
-from apps.bot.database.performance import performance_timer
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
-    prefix="/analytics", tags=["Analytics"], responses={404: {"description": "Not found"}}
+    prefix="/analytics",
+    tags=["Analytics"],
+    responses={404: {"description": "Not found"}},
 )
-
-
-
 
 
 class PostDynamic(BaseModel):
@@ -114,22 +112,21 @@ async def get_analytics_service() -> AnalyticsService:
     """Get analytics service with proper API dependencies (no bot required)"""
     # Import here to avoid circular imports
     from apps.shared.di import container as shared_container
-    
+
     try:
         # Get the container instance and asyncpg pool for the analytics repository
         container_instance = shared_container()
         pool = await container_instance.asyncpg_pool()
         analytics_repo = AsyncpgAnalyticsRepository(pool)
-        
+
         # Create AnalyticsService with None bot (API-only deployment)
         return AnalyticsService(bot=None, analytics_repository=analytics_repo)
     except Exception as e:
         logger.error(f"Failed to create analytics service: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Analytics service unavailable - database connection failed"
+            detail="Analytics service unavailable - database connection failed",
         )
-
 
 
 async def get_channel_management_service() -> ChannelManagementService:
@@ -140,7 +137,7 @@ async def get_channel_management_service() -> ChannelManagementService:
 async def get_analytics_repository() -> AsyncpgAnalyticsRepository:
     """Get analytics repository with proper API dependencies"""
     from apps.shared.di import container as shared_container
-    
+
     try:
         container_instance = shared_container()
         pool = await container_instance.asyncpg_pool()
@@ -149,7 +146,7 @@ async def get_analytics_repository() -> AsyncpgAnalyticsRepository:
         logger.error(f"Failed to create analytics repository: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database connection not available"
+            detail="Database connection not available",
         )
 
 
@@ -197,7 +194,13 @@ async def analytics_health_check():
         "service": "analytics",
         "timestamp": datetime.utcnow(),
         "version": "2.0.0",
-        "modules": ["data_processor", "predictive_engine", "ai_insights", "dashboard", "reporting"],
+        "modules": [
+            "data_processor",
+            "predictive_engine",
+            "ai_insights",
+            "dashboard",
+            "reporting",
+        ],
     }
 
 
@@ -231,35 +234,35 @@ async def get_channels(
 ):
     """Get list of channels owned by the current user"""
     from apps.api.middleware.auth import get_channel_repository
-    
+
     channel_repo = await get_channel_repository()
     user_channels = await channel_repo.get_user_channels(user_id=current_user_id)
-    
+
     # Apply pagination manually since we're filtering by user
-    paginated_channels = user_channels[skip:skip + limit]
+    paginated_channels = user_channels[skip : skip + limit]
     return paginated_channels
 
 
 @router.post("/channels", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)
 async def create_channel(
-    channel_data: ChannelCreate,  
+    channel_data: ChannelCreate,
     current_user_id: int = Depends(get_current_user_id),
     current_user: dict[str, Any] = Depends(require_analytics_create),
-    channel_service: ChannelManagementService = Depends(get_channel_management_service)
+    channel_service: ChannelManagementService = Depends(get_channel_management_service),
 ):
     """Create a new channel for the current user"""
     # Set the user_id on the channel data to ensure ownership
     channel_data_dict = channel_data.dict()
-    channel_data_dict['user_id'] = current_user_id
+    channel_data_dict["user_id"] = current_user_id
     updated_channel_data = ChannelCreate(**channel_data_dict)
-    
+
     return await channel_service.create_channel(updated_channel_data)
 
 
 @router.get("/channels/{channel_id}", response_model=ChannelResponse)
 async def get_channel(
     channel_id: int = Depends(require_channel_access),
-    channel_service: ChannelManagementService = Depends(get_channel_management_service)
+    channel_service: ChannelManagementService = Depends(get_channel_management_service),
 ):
     """Get a specific channel by ID (only if user owns it)"""
     return await channel_service.get_channel_by_id(channel_id)
@@ -279,9 +282,9 @@ async def get_analytics_metrics(
 ):
     """
     ## 📊 High-Performance Analytics Metrics
-    
+
     Retrieve comprehensive analytics metrics with intelligent caching and performance optimization.
-    
+
     **Performance Features:**
     - ⚡ 3-minute intelligent caching
     - 📈 Real-time performance monitoring
@@ -292,9 +295,12 @@ async def get_analytics_metrics(
         end_date = end_date or datetime.utcnow()
         start_date = start_date or end_date - timedelta(days=30)
         metrics = await analytics_service.get_analytics_data(
-            channel_id=validated_channel_id, start_date=start_date, end_date=end_date, limit=limit
+            channel_id=validated_channel_id,
+            start_date=start_date,
+            end_date=end_date,
+            limit=limit,
         )
-        
+
         # Handle the case where service returns a dict instead of a list of metrics
         if isinstance(metrics, dict):
             # Return a single metric based on the service response
@@ -309,7 +315,7 @@ async def get_analytics_metrics(
                     timestamp=datetime.utcnow(),
                 )
             ]
-        
+
         # If metrics is a list (when properly implemented), handle each item
         return [
             AnalyticsMetrics(
@@ -353,7 +359,7 @@ async def get_channel_metrics(
         metrics = await analytics_service.get_analytics_data(
             channel_id=channel_id, start_date=start_date, end_date=end_date, limit=limit
         )
-        
+
         # Handle the case where service returns a dict instead of a list of metrics
         if isinstance(metrics, dict):
             # Return a single metric based on the service response
@@ -368,7 +374,7 @@ async def get_channel_metrics(
                     timestamp=datetime.utcnow(),
                 )
             ]
-        
+
         # If metrics is a list (when properly implemented), handle each item
         return [
             AnalyticsMetrics(
@@ -400,7 +406,8 @@ async def get_channel_metrics(
 
 @router.post("/data/analyze")
 async def analyze_data(
-    request: DataProcessingRequest, processor: AdvancedDataProcessor = Depends(get_data_processor)
+    request: DataProcessingRequest,
+    processor: AdvancedDataProcessor = Depends(get_data_processor),
 ):
     """Process and analyze data using advanced analytics engine"""
     try:
@@ -408,19 +415,21 @@ async def analyze_data(
         result = generate_data_analysis_result(
             data_source=request.data_source,
             processing_type=request.processing_type,
-            parameters=request.parameters
+            parameters=request.parameters,
         )
         return result
     except Exception as e:
         logger.error(f"Error processing data: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to process data"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process data",
         )
 
 
 @router.post("/predictions/forecast")
 async def make_prediction(
-    request: PredictionRequest, engine: PredictiveAnalyticsEngine = Depends(get_predictive_engine)
+    request: PredictionRequest,
+    engine: PredictiveAnalyticsEngine = Depends(get_predictive_engine),
 ):
     """Make predictions using ML models"""
     try:
@@ -428,19 +437,21 @@ async def make_prediction(
         result = generate_prediction_result(
             model_type=request.model_type,
             features=request.features,
-            parameters=request.parameters
+            parameters=request.parameters,
         )
         return result
     except Exception as e:
         logger.error(f"Error making prediction: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to make prediction"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to make prediction",
         )
 
 
 @router.get("/insights/{channel_id}")
 async def get_ai_insights(
-    channel_id: int, insights_generator: AIInsightsGenerator = Depends(get_ai_insights_generator)
+    channel_id: int,
+    insights_generator: AIInsightsGenerator = Depends(get_ai_insights_generator),
 ):
     """Generate AI-powered insights for a channel"""
     try:
@@ -450,13 +461,15 @@ async def get_ai_insights(
     except Exception as e:
         logger.error(f"Error generating AI insights: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to generate insights"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate insights",
         )
 
 
 @router.get("/dashboard/{channel_id}")
 async def get_dashboard_data(
-    channel_id: int, analytics_service: AnalyticsService = Depends(get_analytics_service)
+    channel_id: int,
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Get comprehensive dashboard data for a channel"""
     try:
@@ -476,7 +489,8 @@ async def get_dashboard_data(
 
 @router.post("/refresh/{channel_id}")
 async def refresh_channel_analytics(
-    channel_id: int, analytics_service: AnalyticsService = Depends(get_analytics_service)
+    channel_id: int,
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Manually trigger analytics refresh for a channel"""
     try:
@@ -488,7 +502,8 @@ async def refresh_channel_analytics(
     except Exception as e:
         logger.error(f"Error refreshing analytics for channel {channel_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to refresh analytics"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to refresh analytics",
         )
 
 
@@ -601,23 +616,23 @@ async def get_analytics_summary(
 async def get_all_channels_admin(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: dict[str, Any] = Depends(require_admin_role)
+    current_user: dict[str, Any] = Depends(require_admin_role),
 ):
     """Admin endpoint: Get all channels across all users"""
     try:
         from apps.api.middleware.auth import get_channel_repository
-        
+
         channel_repo = await get_channel_repository()
         all_channels = await channel_repo.get_all_channels(skip=skip, limit=limit)
-        
+
         logger.info(f"Admin {current_user['username']} accessed all channels")
         return [
             {
                 "id": channel.id,
                 "name": channel.name,
                 "user_id": channel.user_id,
-                "created_at": channel.created_at.isoformat() if channel.created_at else None,
-                "total_subscribers": channel.subscriber_count or 0
+                "created_at": (channel.created_at.isoformat() if channel.created_at else None),
+                "total_subscribers": channel.subscriber_count or 0,
             }
             for channel in all_channels
         ]
@@ -625,19 +640,19 @@ async def get_all_channels_admin(
         logger.error(f"Error fetching all channels for admin: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch all channels"
+            detail="Failed to fetch all channels",
         )
 
 
 @router.get("/admin/user/{user_id}/channels", response_model=list[dict])
 async def get_user_channels_admin(
-    user_id: int,
-    current_user: dict[str, Any] = Depends(require_admin_role)
+    user_id: int, current_user: dict[str, Any] = Depends(require_admin_role)
 ):
     """Admin endpoint: Get all channels for a specific user"""
     try:
         # Use centralized admin mock data
         from apps.api.__mocks__.admin.mock_data import get_mock_user_channels
+
         user_channels = get_mock_user_channels(user_id)
         logger.info(f"Admin {current_user['username']} accessed channels for user {user_id}")
         return user_channels
@@ -645,75 +660,68 @@ async def get_user_channels_admin(
         logger.error(f"Error fetching channels for user {user_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch channels for user {user_id}"
+            detail=f"Failed to fetch channels for user {user_id}",
         )
 
 
 @router.delete("/admin/channels/{channel_id}")
 async def delete_channel_admin(
-    channel_id: int,
-    current_user: dict[str, Any] = Depends(require_admin_role)
+    channel_id: int, current_user: dict[str, Any] = Depends(require_admin_role)
 ):
     """Admin endpoint: Delete any channel"""
     try:
         # Use centralized admin mock operations
-        from apps.api.__mocks__.admin.mock_data import get_mock_admin_operations_log
-        
+        pass
+
         # Log admin operation
         logger.warning(f"Admin {current_user['username']} deleted channel {channel_id}")
-        
+
         # In production, this would actually delete the channel from database
         # For now, return success response
         return {
-            "message": f"Channel {channel_id} deleted successfully", 
+            "message": f"Channel {channel_id} deleted successfully",
             "success": True,
-            "operation_id": f"delete_{channel_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+            "operation_id": f"delete_{channel_id}_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         }
     except Exception as e:
         logger.error(f"Error deleting channel {channel_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete channel {channel_id}"
+            detail=f"Failed to delete channel {channel_id}",
         )
 
 
-@router.get("/admin/stats/system") 
+@router.get("/admin/stats/system")
 async def get_system_analytics_stats(
     current_user: dict[str, Any] = Depends(require_admin_role),
-    analytics_service: AnalyticsService = Depends(get_analytics_service)
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """Admin endpoint: Get system-wide analytics statistics"""
     try:
         # This would typically query aggregated data across all users
         stats = {
             "total_channels": 0,  # Would be calculated from database
-            "total_users": 0,     # Would be calculated from database  
+            "total_users": 0,  # Would be calculated from database
             "total_metrics_collected": 0,  # From analytics tables
             "system_health": "healthy",
             "last_updated": datetime.utcnow(),
-            "admin_user": current_user["username"]
+            "admin_user": current_user["username"],
         }
-        
+
         logger.info(f"Admin {current_user['username']} accessed system analytics stats")
         return stats
     except Exception as e:
         logger.error(f"Error fetching system analytics stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch system analytics statistics"
+            detail="Failed to fetch system analytics statistics",
         )
 
 
 # Mock/demo functions moved to apps.api.__mocks__.analytics_mock
 # Import them when needed for demo endpoints
 from apps.api.__mocks__.analytics_mock import (
-    generate_ai_recommendations,
-    generate_best_time_recommendations,
-    generate_post_dynamics,
-    generate_top_posts,
-    generate_channel_analytics_summary,
-    generate_engagement_metrics,
     generate_ai_insights,
+    generate_data_analysis_result,
     generate_prediction_result,
-    generate_data_analysis_result
 )

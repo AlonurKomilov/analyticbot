@@ -40,6 +40,18 @@ from .security_ports import (
     SecurityService,
 )
 
+# Health ports (new)
+from .health_ports import (
+    HealthStatus,
+    ComponentHealth,
+    SystemHealth,
+    DatabaseHealthPort,
+    CacheHealthPort,
+    ExternalServiceHealthPort,
+    SystemResourcesPort,
+    HealthMonitoringService,
+)
+
 __all__ = [
     # Repository ports
     "UserRepository",
@@ -71,4 +83,13 @@ __all__ = [
     "UserRepositoryPort",
     "SecurityEventsPort",
     "SecurityService",
+    # Health ports
+    "HealthStatus",
+    "ComponentHealth",
+    "SystemHealth",
+    "DatabaseHealthPort",
+    "CacheHealthPort",
+    "ExternalServiceHealthPort",
+    "SystemResourcesPort",
+    "HealthMonitoringService",
 ]

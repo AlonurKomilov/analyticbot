@@ -3,26 +3,27 @@ Celery Application Configuration - Master Scheduler
 Production-ready Celery setup with retry/backoff strategies
 """
 
-from typing import Callable
+import logging
+
+# Always use environment variables with fallbacks for consistent behavior
+import os
+from collections.abc import Callable
 from typing import Any
 
-import logging
 from celery import Celery
 from celery.signals import task_failure, task_postrun, task_prerun, worker_ready
+from pydantic import SecretStr
 
 # Import from centralized configuration
 from config.settings import Settings
 
-# Always use environment variables with fallbacks for consistent behavior
-import os
-from pydantic import SecretStr
 settings = Settings(
     BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
     STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
     POSTGRES_USER=os.getenv("POSTGRES_USER", "test_user"),
     POSTGRES_PASSWORD=SecretStr(os.getenv("POSTGRES_PASSWORD", "test_pass")),
     POSTGRES_DB=os.getenv("POSTGRES_DB", "test_db"),
-    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key"))
+    JWT_SECRET_KEY=SecretStr(os.getenv("JWT_SECRET_KEY", "test_jwt_key")),
 )
 
 logger = logging.getLogger(__name__)
@@ -117,9 +118,11 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     # Beat schedule database
-    beat_scheduler="django_celery_beat.schedulers:DatabaseScheduler"
-    if hasattr(settings, "DATABASE_URL")
-    else "celery.beat:PersistentScheduler",
+    beat_scheduler=(
+        "django_celery_beat.schedulers:DatabaseScheduler"
+        if hasattr(settings, "DATABASE_URL")
+        else "celery.beat:PersistentScheduler"
+    ),
 )
 
 
@@ -245,8 +248,8 @@ celery_app.conf.beat_schedule = {
 @task_prerun.connect
 def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):
     """Enhanced pre-run handler with detailed logging"""
-    task_name = getattr(task, 'name', 'unknown') if task else 'unknown'
-    task_id_short = task_id[:8] if task_id else 'unknown'
+    task_name = getattr(task, "name", "unknown") if task else "unknown"
+    task_id_short = task_id[:8] if task_id else "unknown"
     logger.info(f"Starting task {task_name} (ID: {task_id_short}...)")
 
     # Record metrics if available
@@ -259,11 +262,18 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
 @task_postrun.connect
 def task_postrun_handler(
-    sender=None, task_id=None, task=None, args=None, kwargs=None, retval=None, state=None, **kwds
+    sender=None,
+    task_id=None,
+    task=None,
+    args=None,
+    kwargs=None,
+    retval=None,
+    state=None,
+    **kwds,
 ):
     """Enhanced post-run handler with comprehensive metrics"""
-    task_name = getattr(task, 'name', 'unknown') if task else 'unknown'
-    task_id_short = task_id[:8] if task_id else 'unknown'
+    task_name = getattr(task, "name", "unknown") if task else "unknown"
+    task_id_short = task_id[:8] if task_id else "unknown"
     logger.info(f"Completed task {task_name} (ID: {task_id_short}...) with state: {state}")
 
     # Record detailed metrics
@@ -274,7 +284,11 @@ def task_postrun_handler(
         metrics.record_metric(
             "celery_task_completed",
             1.0,
-            {"task": str(getattr(task, 'name', 'unknown')), "state": str(state), "success": str(success).lower()},
+            {
+                "task": str(getattr(task, "name", "unknown")),
+                "state": str(state),
+                "success": str(success).lower(),
+            },
         )
     except ImportError:
         pass
@@ -285,14 +299,14 @@ def task_failure_handler(
     sender=None, task_id=None, exception=None, traceback=None, einfo=None, **kwds
 ):
     """Enhanced failure handler with error context"""
-    sender_name = getattr(sender, 'name', 'unknown') if sender else 'unknown'
-    task_id_short = task_id[:8] if task_id else 'unknown'
+    sender_name = getattr(sender, "name", "unknown") if sender else "unknown"
+    task_id_short = task_id[:8] if task_id else "unknown"
     logger.error(f"Task {sender_name} (ID: {task_id_short}...) failed: {exception}")
 
     # Simple error logging without complex error context
     if exception and isinstance(exception, Exception):
         logger.error(f"Task failure details: {str(exception)}")
-    
+
     # Record failure metrics
     try:
         # Monitoring disabled for clean architecture
@@ -361,9 +375,9 @@ def check_celery_health() -> dict[str, Any]:
             "responsive_workers": responsive_workers,
             "health_ratio": health_ratio,
             "queues": len(active_queues) if active_queues else 0,
-            "reserved_tasks": sum(len(tasks) for tasks in reserved_tasks.values())
-            if reserved_tasks
-            else 0,
+            "reserved_tasks": (
+                sum(len(tasks) for tasks in reserved_tasks.values()) if reserved_tasks else 0
+            ),
             "timestamp": str(__import__("datetime").datetime.utcnow()),
         }
 

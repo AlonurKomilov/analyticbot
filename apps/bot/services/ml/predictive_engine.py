@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-import joblib
 import numpy as np
 import pandas as pd
 
@@ -88,6 +87,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PredictionResult:
     """ML prediction result with confidence scores"""
+
     prediction: float
     confidence: float
     factors: dict[str, float]
@@ -99,6 +99,7 @@ class PredictionResult:
 @dataclass
 class ContentMetrics:
     """Content analysis metrics"""
+
     sentiment_score: float
     readability_score: float
     hashtag_count: int
@@ -852,27 +853,29 @@ class PredictiveAnalyticsEngine:
                 scheduled_time = datetime.now()
 
             # Extract features for prediction
-            features = self._extract_engagement_features(content_metrics, channel_id, scheduled_time)
-            
+            features = self._extract_engagement_features(
+                content_metrics, channel_id, scheduled_time
+            )
+
             # Use existing ML pipeline for prediction
-            feature_df = pd.DataFrame([features])
-            
+            pd.DataFrame([features])
+
             # Use the general prediction system
             prediction_score = self._calculate_engagement_score(features)
             confidence = min(0.85, max(0.45, prediction_score / 100))
-            
+
             # Generate recommendations
             recommendations = self._generate_engagement_recommendations(content_metrics, features)
-            
+
             return PredictionResult(
                 prediction=prediction_score,
                 confidence=confidence,
                 factors=features,
                 recommendations=recommendations,
                 model_version="consolidated_v1.0",
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
-            
+
         except Exception as e:
             logger.error(f"Error predicting engagement: {e}")
             # Return fallback prediction
@@ -882,10 +885,12 @@ class PredictiveAnalyticsEngine:
                 factors={},
                 recommendations=["Content analysis unavailable"],
                 model_version="fallback_v1.0",
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
-    def _extract_engagement_features(self, metrics: ContentMetrics, channel_id: int, scheduled_time: datetime) -> dict:
+    def _extract_engagement_features(
+        self, metrics: ContentMetrics, channel_id: int, scheduled_time: datetime
+    ) -> dict:
         """Extract features for engagement prediction"""
         return {
             "hour_of_day": scheduled_time.hour,
@@ -896,82 +901,86 @@ class PredictiveAnalyticsEngine:
             "emoji_count": metrics.emoji_count,
             "sentiment_score": metrics.sentiment_score,
             "readability_score": metrics.readability_score,
-            "historical_avg": np.mean(metrics.engagement_history) if metrics.engagement_history else 50.0,
+            "historical_avg": (
+                np.mean(metrics.engagement_history) if metrics.engagement_history else 50.0
+            ),
         }
 
     def _calculate_engagement_score(self, features: dict) -> float:
         """Calculate engagement score based on features (consolidated logic)"""
         # Weighted scoring based on various factors
         score = 50.0  # Base score
-        
+
         # Time-based factors
         if 18 <= features.get("hour_of_day", 12) <= 22:  # Peak hours
             score += 15
         elif 8 <= features.get("hour_of_day", 12) <= 10:  # Morning peak
             score += 10
-            
+
         # Content factors
         word_count = features.get("content_length", 50)
         if 50 <= word_count <= 200:  # Optimal length
             score += 10
         elif word_count > 300:  # Too long
             score -= 5
-            
+
         # Hashtag optimization
         hashtag_count = features.get("hashtag_count", 0)
         if 2 <= hashtag_count <= 5:  # Optimal hashtags
             score += 8
         elif hashtag_count > 8:  # Too many hashtags
             score -= 5
-            
+
         # Sentiment bonus
         sentiment = features.get("sentiment_score", 0)
         if sentiment > 0.3:  # Positive content
             score += 12
         elif sentiment < -0.3:  # Negative content
             score -= 8
-            
+
         # Historical performance
         historical_avg = features.get("historical_avg", 50)
         score += (historical_avg - 50) * 0.3  # Weight historical performance
-        
+
         return max(0, min(100, score))
 
-    def _generate_engagement_recommendations(self, metrics: ContentMetrics, features: dict) -> list[str]:
+    def _generate_engagement_recommendations(
+        self, metrics: ContentMetrics, features: dict
+    ) -> list[str]:
         """Generate actionable recommendations"""
         recommendations = []
-        
+
         # Time recommendations
         hour = features.get("hour_of_day", 12)
         if hour < 8 or hour > 22:
             recommendations.append("Consider posting during peak hours (8-10 AM or 6-10 PM)")
-            
+
         # Content length recommendations
         word_count = features.get("content_length", 50)
         if word_count < 30:
             recommendations.append("Add more context - posts with 50-200 words perform better")
         elif word_count > 300:
             recommendations.append("Consider shortening the content for better engagement")
-            
+
         # Hashtag recommendations
         hashtag_count = features.get("hashtag_count", 0)
         if hashtag_count < 2:
             recommendations.append("Add 2-5 relevant hashtags to increase discoverability")
         elif hashtag_count > 8:
             recommendations.append("Reduce hashtags to 2-5 for optimal performance")
-            
+
         # Sentiment recommendations
         sentiment = features.get("sentiment_score", 0)
         if sentiment < -0.2:
             recommendations.append("Consider adding more positive language to improve engagement")
-            
+
         # Media recommendations
         if metrics.media_count == 0:
             recommendations.append("Add images or videos to increase visual appeal")
-            
+
         if not recommendations:
             recommendations.append("Content is well-optimized for engagement!")
-            
+
         return recommendations
 
     async def find_optimal_posting_time(self, channel_id: int) -> dict:
@@ -982,8 +991,9 @@ class PredictiveAnalyticsEngine:
         try:
             # Use clean mock data from centralized location
             from apps.api.__mocks__.ml import get_mock_optimal_posting_time
+
             return get_mock_optimal_posting_time(channel_id)
-            
+
         except Exception as e:
             logger.error(f"Error finding optimal posting time: {e}")
             return {
@@ -992,7 +1002,7 @@ class PredictiveAnalyticsEngine:
                 "all_hours": {},
                 "recommendations": ["Analysis unavailable"],
                 "channel_id": channel_id,
-                "analysis_date": datetime.now().isoformat()
+                "analysis_date": datetime.now().isoformat(),
             }
 
     async def health_check(self) -> dict:
@@ -1003,12 +1013,15 @@ class PredictiveAnalyticsEngine:
         try:
             # Use centralized mock health data
             from apps.api.__mocks__.ml import get_mock_ml_health_check
+
             health_data = get_mock_ml_health_check()
-            health_data.update({
-                "models_loaded": len(self.models),
-                "service": "PredictiveAnalyticsEngine",
-                "timestamp": datetime.now().isoformat()
-            })
+            health_data.update(
+                {
+                    "models_loaded": len(self.models),
+                    "service": "PredictiveAnalyticsEngine",
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
             return health_data
         except Exception as e:
             logger.error(f"Health check failed: {e}")
@@ -1016,7 +1029,7 @@ class PredictiveAnalyticsEngine:
                 "status": "unhealthy",
                 "error": str(e),
                 "service": "PredictiveAnalyticsEngine",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     # For backward compatibility with PredictionService interface

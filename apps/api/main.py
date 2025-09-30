@@ -5,34 +5,33 @@ Unified FastAPI application with layered architecture and secure configuration
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime
-from uuid import UUID
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from apps.api.deps import cleanup_db_pool, get_delivery_service, get_schedule_service
+from apps.api.deps import cleanup_db_pool
+from apps.api.routers.admin_channels_router import router as admin_channels_router
+from apps.api.routers.admin_system_router import router as admin_system_router
+from apps.api.routers.admin_users_router import router as admin_users_router
+from apps.api.routers.auth_router import router as auth_router
+
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
-from apps.api.routers.admin_channels_router import router as admin_channels_router
-from apps.api.routers.admin_users_router import router as admin_users_router  
-from apps.api.routers.admin_system_router import router as admin_system_router
-from apps.api.routers.system_router import router as system_router
-from apps.api.routers.health_router import router as health_router
+
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
-from apps.api.routers.sharing_router import router as sharing_router
+from apps.api.routers.health_router import router as health_router
 from apps.api.routers.mobile_router import router as mobile_router
-from apps.api.routers.auth_router import router as auth_router
+from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
+from apps.api.routers.system_router import router as system_router
 from apps.bot.api.content_protection_router import router as content_protection_router
 from apps.bot.api.payment_router import router as payment_router
-from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, ScheduledPost
 from config import settings
-from core import DeliveryService, ScheduleService
 from infra.db.connection_manager import close_database, init_database
+
 # ✅ PRODUCTION READY: No more direct mock imports
 # Demo services now injected via DI container based on configuration
 
@@ -46,20 +45,24 @@ async def lifespan(app: FastAPI):
     try:
         await init_database()
         logger.info("Database initialized successfully")
-        
+
         # ✅ NEW: Initialize DI container with proper asyncpg pool
-        from apps.shared.di import init_container, Settings as DISettings
+        from apps.shared.di import Settings as DISettings
+        from apps.shared.di import init_container
+
         di_settings = DISettings(
             database_url=settings.DATABASE_URL,
             database_pool_size=settings.DB_POOL_SIZE,
-            database_max_overflow=settings.DB_MAX_OVERFLOW
+            database_max_overflow=settings.DB_MAX_OVERFLOW,
         )
         di_container = init_container(di_settings)
-        
+
         # Pre-initialize asyncpg pool to ensure it's ready
         pool = await di_container.asyncpg_pool()
-        logger.info(f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections")
-        
+        logger.info(
+            f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections"
+        )
+
     except Exception as e:
         logger.error(f"Startup initialization failed: {e}")
         # Continue without database for now to allow health checks
@@ -106,74 +109,74 @@ Comprehensive data export capabilities with secure sharing mechanisms.
     contact={
         "name": "AnalyticBot Support",
         "url": "https://t.me/abccontrol_bot",
-        "email": "support@analyticbot.com"
+        "email": "support@analyticbot.com",
     },
     license_info={
         "name": "Enterprise License",
-        "url": "https://analyticbot.com/license"
+        "url": "https://analyticbot.com/license",
     },
     openapi_tags=[
         {
             "name": "Core",
-            "description": "Essential system endpoints: health checks, initial data, and application lifecycle"
+            "description": "Essential system endpoints: health checks, initial data, and application lifecycle",
         },
         {
             "name": "analytics-live",
-            "description": "⚡ Real-time Analytics: live metrics, performance scoring, and monitoring"
+            "description": "⚡ Real-time Analytics: live metrics, performance scoring, and monitoring",
         },
         {
-            "name": "analytics-alerts", 
-            "description": "� Alert Management: thresholds, notifications, and alert system"
+            "name": "analytics-alerts",
+            "description": "� Alert Management: thresholds, notifications, and alert system",
         },
         {
             "name": "statistics-core",
-            "description": "📊 Core Statistics: historical metrics, growth trends, and data analysis"
+            "description": "📊 Core Statistics: historical metrics, growth trends, and data analysis",
         },
         {
             "name": "statistics-reports",
-            "description": "📋 Statistical Reports: comprehensive analysis, comparisons, and trending"
+            "description": "📋 Statistical Reports: comprehensive analysis, comparisons, and trending",
         },
         {
             "name": "insights-engagement",
-            "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content"
+            "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content",
         },
         {
             "name": "insights-predictive",
-            "description": "🔮 Predictive Analytics: AI/ML forecasting, recommendations, and predictions"
+            "description": "🔮 Predictive Analytics: AI/ML forecasting, recommendations, and predictions",
         },
         {
             "name": "AI Services",
-            "description": "🤖 Artificial Intelligence: content optimization, churn prediction, security analysis"
+            "description": "🤖 Artificial Intelligence: content optimization, churn prediction, security analysis",
         },
         {
             "name": "Exports",
-            "description": "📋 Data Export: CSV, PNG generation with customizable formatting"
+            "description": "📋 Data Export: CSV, PNG generation with customizable formatting",
         },
         {
             "name": "Sharing",
-            "description": "🔗 Secure Sharing: token-based access, revocation, and audit trails"
+            "description": "🔗 Secure Sharing: token-based access, revocation, and audit trails",
         },
         {
             "name": "Mobile",
-            "description": "📱 Mobile API: TWA-optimized endpoints for Telegram Web Apps"
+            "description": "📱 Mobile API: TWA-optimized endpoints for Telegram Web Apps",
         },
         {
             "name": "Content Protection",
-            "description": "🛡️ Security: content verification, threat detection, and access control"
+            "description": "🛡️ Security: content verification, threat detection, and access control",
         },
         {
             "name": "Payments",
-            "description": "💰 Billing: Stripe integration, subscriptions, and payment processing"
+            "description": "💰 Billing: Stripe integration, subscriptions, and payment processing",
         },
         {
             "name": "Authentication",
-            "description": "🔐 Auth: JWT tokens, user management, and session handling"
+            "description": "🔐 Auth: JWT tokens, user management, and session handling",
         },
         {
             "name": "SuperAdmin Management",
-            "description": "👑 Admin: user management, system stats, and administrative controls"
-        }
-    ]
+            "description": "👑 Admin: user management, system stats, and administrative controls",
+        },
+    ],
 )
 
 # Add performance and security middleware
@@ -183,8 +186,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 # Production performance middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
-    TrustedHostMiddleware, 
-    allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"]
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"],
 )
 
 # Add CORS middleware with explicit configuration
@@ -197,53 +200,72 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+from apps.api.di import configure_api_container
+
 # Add demo mode detection middleware
 from apps.api.middleware.demo_mode import DemoModeMiddleware
-from apps.api.di import configure_api_container
+
 app.add_middleware(DemoModeMiddleware)
 
 # Initialize API DI container
 api_container = configure_api_container()
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
-app.include_router(system_router)        # Core system operations (performance, scheduling) 
-app.include_router(health_router)        # Comprehensive health monitoring (consolidated)
+app.include_router(system_router)  # Core system operations (performance, scheduling)
+app.include_router(health_router)  # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
-app.include_router(channels_router)      # Channel management (CRUD)
-app.include_router(admin_channels_router)   # Admin - Channel Management
-app.include_router(admin_users_router)      # Admin - User Management
-app.include_router(admin_system_router)     # Admin - System Management
+app.include_router(channels_router)  # Channel management (CRUD)
+app.include_router(admin_channels_router)  # Admin - Channel Management
+app.include_router(admin_users_router)  # Admin - User Management
+app.include_router(admin_system_router)  # Admin - System Management
+
+from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
 
 # ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
 from apps.api.routers.analytics_live_router import router as analytics_live_router
-from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
-from apps.api.routers.statistics_core_router import router as statistics_core_router
-from apps.api.routers.statistics_reports_router import router as statistics_reports_router
-from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_predictive_router import router as insights_predictive_router
 from apps.api.routers.demo_router import router as demo_router
+from apps.api.routers.insights_engagement_router import (
+    router as insights_engagement_router,
+)
+from apps.api.routers.insights_predictive_router import (
+    router as insights_predictive_router,
+)
+from apps.api.routers.statistics_core_router import router as statistics_core_router
+from apps.api.routers.statistics_reports_router import (
+    router as statistics_reports_router,
+)
 
-app.include_router(analytics_live_router)        # Real-time live analytics (4 endpoints) - /analytics/live/*
-app.include_router(analytics_alerts_router)      # Alert management (8 endpoints) - /analytics/alerts/*
-app.include_router(statistics_core_router)       # Historical statistics (5 endpoints) - /statistics/core/*
-app.include_router(statistics_reports_router)    # Statistical reports (4 endpoints) - /statistics/reports/*
-app.include_router(insights_engagement_router)   # Engagement intelligence (4 endpoints) - /insights/engagement/*
-app.include_router(insights_predictive_router)   # AI/ML predictions (4 endpoints) - /insights/predictive/*
-app.include_router(demo_router)                  # Consolidated demo/mock data endpoints
+app.include_router(
+    analytics_live_router
+)  # Real-time live analytics (4 endpoints) - /analytics/live/*
+app.include_router(analytics_alerts_router)  # Alert management (8 endpoints) - /analytics/alerts/*
+app.include_router(
+    statistics_core_router
+)  # Historical statistics (5 endpoints) - /statistics/core/*
+app.include_router(
+    statistics_reports_router
+)  # Statistical reports (4 endpoints) - /statistics/reports/*
+app.include_router(
+    insights_engagement_router
+)  # Engagement intelligence (4 endpoints) - /insights/engagement/*
+app.include_router(
+    insights_predictive_router
+)  # AI/ML predictions (4 endpoints) - /insights/predictive/*
+app.include_router(demo_router)  # Consolidated demo/mock data endpoints
 
 # 🎯 PHASE 4: GRANULAR ANALYTICS ARCHITECTURE COMPLETE ✅
 # SUCCESSFULLY ELIMINATED GOD OBJECTS with 6 focused domain-separated routers:
-# 
+#
 # OLD (Phase 3): 4 routers with potential god objects
 # - analytics_core_router        → SPLIT into statistics_core_router (5 endpoints)
-# - analytics_realtime_router    → SPLIT into analytics_live_router (4 endpoints)  
+# - analytics_realtime_router    → SPLIT into analytics_live_router (4 endpoints)
 # - analytics_insights_router    → SPLIT into statistics_reports_router (4) + insights_engagement_router (4)
 # - analytics_predictive_router  → SPLIT into insights_predictive_router (4 endpoints)
 # - analytics_alerts_router      → KEPT as-is (8 endpoints, already focused)
 #
 # NEW (Phase 4): 6 focused routers with NO god objects (4-8 endpoints each):
 # 1. Live Analytics:     /analytics/live/*        → analytics_live_router (4 endpoints)
-# 2. Alert Management:   /analytics/alerts/*      → analytics_alerts_router (8 endpoints) 
+# 2. Alert Management:   /analytics/alerts/*      → analytics_alerts_router (8 endpoints)
 # 3. Core Statistics:    /statistics/core/*       → statistics_core_router (5 endpoints)
 # 4. Statistical Reports:/statistics/reports/*    → statistics_reports_router (4 endpoints)
 # 5. Engagement Insights:/insights/engagement/*   → insights_engagement_router (4 endpoints)
@@ -255,38 +277,39 @@ app.include_router(demo_router)                  # Consolidated demo/mock data e
 # app.include_router(analytics_advanced_router) # ❌ REMOVED: Use /analytics/realtime/* + /analytics/alerts/* instead
 # ✅ KEEP THESE ROUTERS (No duplicates, still needed)
 # ❌ REMOVED: clean_analytics_router - endpoints migrated to proper domain routers (Sept 24, 2025)
-app.include_router(exports_router)            # Export functionality (unique)
-app.include_router(sharing_router)            # Share functionality (unique)  
-app.include_router(mobile_router)             # Mobile-optimized endpoints (unique)
-app.include_router(content_protection_router) # Content protection (unique)
-app.include_router(auth_router)               # Authentication (unique)
-app.include_router(superadmin_router)         # Super admin operations (unique)
-app.include_router(payment_router)            # Payment system (unique)
+app.include_router(exports_router)  # Export functionality (unique)
+app.include_router(sharing_router)  # Share functionality (unique)
+app.include_router(mobile_router)  # Mobile-optimized endpoints (unique)
+app.include_router(content_protection_router)  # Content protection (unique)
+app.include_router(auth_router)  # Authentication (unique)
+app.include_router(superadmin_router)  # Super admin operations (unique)
+app.include_router(payment_router)  # Payment system (unique)
 
 # Include AI services router
 from apps.api.routers.ai_services_router import router as ai_services_router
+
 app.include_router(ai_services_router)
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅
 # ===============================================
 # Phase 1: Router file renames and import updates
-# Phase 2: Domain boundary corrections (analytics separated)  
+# Phase 2: Domain boundary corrections (analytics separated)
 # Phase 3: Admin god router split into focused routers
-# 
+#
 # CURRENT ROUTER ARCHITECTURE:
 # - /channels → channels_router.py (Pure channel CRUD)
 # - /admin/channels → admin_channels_router.py (Channel administration)
-# - /admin/users → admin_users_router.py (User administration) 
+# - /admin/users → admin_users_router.py (User administration)
 # - /admin/system → admin_system_router.py (System administration)
 # - /analytics/insights → analytics_insights_router.py (Analytics domain)
 # - /system → system_router.py (System health, performance)
 # - /health, /performance, /initial-data → system_router.py
-# - /schedule → system_router.py  
+# - /schedule → system_router.py
 # - /delivery/stats → system_router.py
-# 
+#
 # ✅ CLEAN ARCHITECTURE BENEFITS ACHIEVED:
 # - Single Responsibility Principle: Each router has one focused domain
-# - Domain Separation: Clear boundaries between business domains  
+# - Domain Separation: Clear boundaries between business domains
 # - Maintainability: Easy to understand, modify, and test each domain
 # - Scalability: New features can be added to appropriate domains
 

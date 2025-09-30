@@ -21,9 +21,9 @@ Usage:
 import asyncio
 import logging
 import time
+from dataclasses import dataclass
 
 import redis.asyncio as redis
-from dataclasses import dataclass, field
 
 from config.settings import settings
 
@@ -190,7 +190,11 @@ class TokenBucketRateLimiter:
             return True, 0.0
 
     async def acquire_with_delay(
-        self, bucket_id: str, tokens: int = 1, limit_type: str = "chat", max_wait: float = 60.0
+        self,
+        bucket_id: str,
+        tokens: int = 1,
+        limit_type: str = "chat",
+        max_wait: float = 60.0,
     ) -> bool:
         """
         Acquire tokens with automatic delay if needed.
@@ -285,7 +289,7 @@ class TokenBucketRateLimiter:
                         {
                             "bucket_id": bucket_id,
                             "tokens": float(bucket_data[0]) if bucket_data[0] else 0,
-                            "last_refill": float(bucket_data[1]) if bucket_data[1] else 0,
+                            "last_refill": (float(bucket_data[1]) if bucket_data[1] else 0),
                         }
                     )
 

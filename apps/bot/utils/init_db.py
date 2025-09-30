@@ -25,10 +25,10 @@ ADD_CONSTRAINTS_COMMANDS = [
 async def main():
     """Manually creates all tables first, then adds all foreign key constraints."""
     logger.info("Connecting to the database...")
-    
+
     # Initialize database manager
     await db_manager.initialize()
-    
+
     try:
         async with db_manager.connection() as connection:
             logger.info("--- Step 1: Creating tables without constraints ---")

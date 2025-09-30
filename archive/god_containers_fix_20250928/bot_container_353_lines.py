@@ -5,11 +5,11 @@ import logging
 from collections.abc import Callable
 from typing import Any, TypeVar, cast
 
-# ✅ UNIFIED DI: Use dependency-injector instead of punq
-from apps.bot.di import configure_bot_container
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+# ✅ UNIFIED DI: Use dependency-injector instead of punq
+from apps.bot.di import configure_bot_container
 from apps.bot.utils.punctuated import Singleton
 
 logger = logging.getLogger(__name__)
@@ -17,18 +17,19 @@ try:
     from aiogram.client.bot import Bot as _AioBot
 except Exception:
     from aiogram import Bot as _AioBot
+
 from aiogram import Bot as _ClientBot
 from aiogram import Dispatcher as _AioDispatcher
 from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import Settings
-from infra.db.sqlite_engine import init_db
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository
+from infra.db.sqlite_engine import init_db
 
 
 def as_singleton(factory: Callable[[], object]) -> Callable[[], object]:
@@ -71,7 +72,9 @@ class Container:
     
     def channel_management_service(self):
         """Get channel management service instance"""
-        from apps.bot.services.channel_management_service import ChannelManagementService
+        from apps.bot.services.channel_management_service import (
+            ChannelManagementService,
+        )
         return _resolve(ChannelManagementService)
     except Exception as e:
         logger.warning(f"Failed to get asyncpg pool: {e}")
@@ -90,7 +93,9 @@ class Container(punq.Container):
     
     def channel_management_service(self):
         """Get channel management service instance"""
-        from apps.bot.services.channel_management_service import ChannelManagementService
+        from apps.bot.services.channel_management_service import (
+            ChannelManagementService,
+        )
         return _resolve(ChannelManagementService)
 
 
@@ -139,8 +144,9 @@ def _pool_or_none() -> Any | None:
     try:
         # Import here to avoid circular imports
         import asyncio
+
         from apps.shared.di import container as shared_container
-        
+
         # Try to get the pool synchronously if we're in an async context
         try:
             loop = asyncio.get_running_loop()
@@ -272,7 +278,9 @@ def _register_services():
             AlertingService, factory=as_singleton(lambda: _make_service(AlertingService))
         )
 
-        from apps.bot.services.channel_management_service import ChannelManagementService
+        from apps.bot.services.channel_management_service import (
+            ChannelManagementService,
+        )
 
         container.register(
             ChannelManagementService, factory=as_singleton(lambda: _make_service(ChannelManagementService))

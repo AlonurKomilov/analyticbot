@@ -19,11 +19,11 @@ Usage:
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
 import redis.asyncio as redis
-from dataclasses import dataclass
 
 from config.settings import settings
 
@@ -43,6 +43,7 @@ class IdempotencyStatus:
 
 class IdempotencyGuard:
     """Redis-based idempotency guard using SETNX + TTL."""
+
     def __init__(self, redis_url: str | None = None, key_prefix: str = "idempotency"):
         self.redis_url = redis_url or settings.REDIS_URL
         self.key_prefix = key_prefix

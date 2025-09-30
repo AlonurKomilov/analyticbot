@@ -113,9 +113,9 @@ class MetricsCollector:
                 "uptime_seconds": uptime.total_seconds(),
                 "total_requests": total_requests,
                 "total_errors": total_errors,
-                "overall_error_rate": total_errors / total_requests * 100
-                if total_requests > 0
-                else 0,
+                "overall_error_rate": (
+                    total_errors / total_requests * 100 if total_requests > 0 else 0
+                ),
                 "endpoints": len(self._performance_stats),
                 "metrics_count": sum(len(metrics) for metrics in self._metrics.values()),
                 "timestamp": now.isoformat(),

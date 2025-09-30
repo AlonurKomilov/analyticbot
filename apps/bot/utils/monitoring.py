@@ -217,9 +217,11 @@ class HealthMonitor:
                 check_config["last_check"] = datetime.now()
             except TimeoutError:
                 unhealthy_count += 1
+                # Use timeout from check_config to avoid unbound variable error
+                timeout_value = check_config.get("timeout", 30)  # Default to 30s
                 results["checks"][name] = {
                     "status": "timeout",
-                    "error": f"Health check timed out after {timeout}s",
+                    "error": f"Health check timed out after {timeout_value}s",
                 }
             except Exception as e:
                 unhealthy_count += 1
@@ -243,9 +245,10 @@ def setup_default_health_checks():
     async def check_database():
         """Check database connectivity"""
         try:
-            from infra.db.health_utils import is_db_healthy
-
-            return await is_db_healthy()
+            # Use apps layer health service instead of direct infra import
+            from apps.api.services.health_service import health_service
+            system_health = await health_service.get_system_health()
+            return system_health.status == 'healthy'
         except Exception as e:
             raise Exception(f"Database check failed: {e}")
 

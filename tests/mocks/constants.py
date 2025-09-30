@@ -1,0 +1,63 @@
+"""
+Mock Constants
+==============
+
+Centralized constants for testing mocks to avoid hardcoding.
+Used by mock services and test fixtures for consistent behavior.
+"""
+
+# Mock API behavior
+DEMO_API_DELAY_MS = 300  # Faster for testing
+MOCK_SUCCESS_RATE = 0.95  # 95% success rate
+MOCK_ERROR_SIMULATION = False  # Disable for stable testing
+
+# Mock data sizes
+MOCK_POSTS_COUNT = 25
+MOCK_METRICS_DAYS = 30
+MOCK_TOP_POSTS_LIMIT = 10
+MOCK_CHANNELS_COUNT = 5
+MOCK_USERS_COUNT = 100
+
+# Mock user constants
+DEFAULT_MOCK_USER_ID = 1
+DEFAULT_MOCK_USERNAME = "test_user"
+DEFAULT_MOCK_EMAIL = "test@example.com"
+
+# Mock channel constants  
+DEFAULT_MOCK_CHANNEL_ID = "test_channel"
+DEFAULT_MOCK_CHANNEL_NUMERIC_ID = 1
+DEFAULT_MOCK_CHANNEL_NAME = "Test Channel"
+
+# Mock content constants
+DEFAULT_MOCK_CONTENT_LENGTH = 150
+DEFAULT_MOCK_ENGAGEMENT_RATE = 0.75
+DEFAULT_MOCK_VIEW_COUNT = 1000
+
+# Mock analytics constants
+DEFAULT_MOCK_OPTIMAL_HOUR = 20
+DEFAULT_MOCK_POSTING_CONFIDENCE = 0.85
+DEFAULT_MOCK_GROWTH_RATE = 5.5
+
+# Export all constants
+__all__ = [
+    "DEMO_API_DELAY_MS",
+    "MOCK_SUCCESS_RATE", 
+    "MOCK_ERROR_SIMULATION",
+    "MOCK_POSTS_COUNT",
+    "MOCK_METRICS_DAYS",
+    "MOCK_TOP_POSTS_LIMIT",
+    "MOCK_CHANNELS_COUNT",
+    "MOCK_USERS_COUNT",
+    "DEFAULT_MOCK_USER_ID",
+    "DEFAULT_MOCK_USERNAME",
+    "DEFAULT_MOCK_EMAIL",
+    "DEFAULT_MOCK_CHANNEL_ID",
+    "DEFAULT_MOCK_CHANNEL_NUMERIC_ID",
+    "DEFAULT_MOCK_CHANNEL_NAME",
+    "DEFAULT_MOCK_CONTENT_LENGTH",
+    "DEFAULT_MOCK_ENGAGEMENT_RATE",
+    "DEFAULT_MOCK_VIEW_COUNT",
+    "DEFAULT_MOCK_OPTIMAL_HOUR",
+    "DEFAULT_MOCK_POSTING_CONFIDENCE",
+    "DEFAULT_MOCK_GROWTH_RATE"
+]

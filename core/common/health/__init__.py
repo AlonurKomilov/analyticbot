@@ -15,12 +15,13 @@ Usage:
 """
 
 from .models import HealthStatus, ComponentHealth, SystemHealth, DependencyType
-from .checker import HealthChecker
+
+# NOTE: HealthChecker has been moved to apps.api.services.health_service
+# Import it from there for new code, or use the backward compatibility bridge in checker.py
 
 __all__ = [
     "HealthStatus",
     "ComponentHealth", 
     "SystemHealth",
     "DependencyType",
-    "HealthChecker",
 ]

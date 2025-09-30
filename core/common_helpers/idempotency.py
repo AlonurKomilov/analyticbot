@@ -18,14 +18,24 @@ Usage:
     await idempotency.mark_operation_complete(key, result, ttl_seconds=300)
 """
 
+import json
 import logging
 from datetime import datetime
 from typing import Any
 
-import redis.asyncio as redis
 from dataclasses import dataclass
+from typing import Protocol, Any as TypeAny
 
-from config.settings import settings
+from core.ports.security_ports import CachePort
+
+# Redis types for backwards compatibility  
+class RedisProtocol(Protocol):
+    async def get(self, key: str) -> str | None: ...
+    async def set(self, key: str, value: str, ex: int | None = None, nx: bool = False) -> bool | None: ...
+    async def delete(self, key: str) -> int: ...
+    async def keys(self, pattern: str) -> list[str]: ...
+    async def ttl(self, key: str) -> int: ...
+    async def close(self) -> None: ...
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +49,63 @@ class IdempotencyStatus:
     completed_at: datetime | None = None
     result: Any | None = None
     error: str | None = None
+    
+    def to_dict(self) -> dict:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "status": self.status,
+            "created_at": self.created_at.isoformat(),
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "result": self.result,
+            "error": self.error,
+        }
+    
+    @classmethod
+    def from_dict(cls, data: dict) -> "IdempotencyStatus":
+        """Create from dictionary."""
+        return cls(
+            status=data["status"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            result=data.get("result"),
+            error=data.get("error"),
+        )
 
 
 class IdempotencyGuard:
-    """Redis-based idempotency guard using SETNX + TTL."""
-    def __init__(self, redis_url: str | None = None, key_prefix: str = "idempotency"):
-        self.redis_url = redis_url or settings.REDIS_URL
+    """Framework-independent idempotency guard using SETNX + TTL."""
+    
+    def __init__(
+        self, 
+        cache: CachePort | None = None, 
+        redis_client: RedisProtocol | None = None,
+        redis_url: str | None = None, 
+        key_prefix: str = "idempotency"
+    ):
+        """
+        Initialize idempotency guard with flexible backend options.
+        
+        Args:
+            cache: Cache port for simple operations (preferred for new code)
+            redis_client: Direct Redis client for advanced operations (backwards compatibility)
+            redis_url: Redis URL for creating client (fallback) 
+            key_prefix: Prefix for cache keys
+        """
+        self.cache = cache
+        self.redis_client = redis_client
+        self.redis_url = redis_url
         self.key_prefix = key_prefix
-        self._redis: redis.Redis | None = None
+        self._redis: RedisProtocol | None = None
 
-    async def get_redis(self) -> redis.Redis:
-        """Get Redis connection."""
+    async def get_redis(self) -> RedisProtocol:
+        """Get Redis connection - requires injection."""
         if self._redis is None:
-            self._redis = redis.from_url(self.redis_url, decode_responses=True)
+            if self.redis_client:
+                self._redis = self.redis_client
+            else:
+                raise RuntimeError(
+                    "No Redis client provided. Please inject redis_client parameter."
+                )
         return self._redis
 
     def _make_key(self, idempotency_key: str) -> str:
@@ -73,7 +127,7 @@ class IdempotencyGuard:
             if data is None:
                 return False, None
 
-            status = IdempotencyStatus.model_validate_json(data)
+            status = IdempotencyStatus.from_dict(json.loads(data))
             logger.info(f"Idempotency check: key='{idempotency_key}', status='{status.status}'")
             return True, status
 
@@ -98,7 +152,7 @@ class IdempotencyGuard:
             # Use SETNX (SET if Not eXists) for atomic check-and-set
             result = await redis_client.set(
                 key,
-                status.model_dump_json(),
+                json.dumps(status.to_dict()),
                 ex=ttl_seconds,
                 nx=True,  # Only set if key doesn't exist
             )
@@ -132,7 +186,7 @@ class IdempotencyGuard:
         )
 
         try:
-            await redis_client.set(key, status.model_dump_json(), ex=ttl_seconds)
+            await redis_client.set(key, json.dumps(status.to_dict()), ex=ttl_seconds)
             logger.info(f"Idempotency operation completed: key='{idempotency_key}'")
 
         except Exception as e:
@@ -153,7 +207,7 @@ class IdempotencyGuard:
         )
 
         try:
-            await redis_client.set(key, status.model_dump_json(), ex=ttl_seconds)
+            await redis_client.set(key, json.dumps(status.to_dict()), ex=ttl_seconds)
             logger.warning(
                 f"Idempotency operation failed: key='{idempotency_key}', error='{error}'"
             )
@@ -185,6 +239,9 @@ class IdempotencyGuard:
             return 0
 
     async def close(self) -> None:
-        """Close Redis connection."""
-        if self._redis:
-            await self._redis.close()
+        """Close Redis connection if it supports closing."""
+        if self._redis and hasattr(self._redis, 'close'):
+            try:
+                await self._redis.close()
+            except Exception as e:
+                logger.warning(f"Error closing Redis connection: {e}")

@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable
 from types import SimpleNamespace
 from typing import Any
 
-# ✅ UNIFIED DI: Remove punq dependency
+# ✅ UNIFIED DI: Using dependency-injector for clean architecture
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from asyncpg.pool import Pool as AsyncPGPool
@@ -17,11 +17,14 @@ from apps.bot.services import (
     SubscriptionService,
 )
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
-from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
-from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
-from infra.db.repositories import AsyncpgPlanRepository as PlanRepository
-from infra.db.repositories import AsyncpgScheduleRepository as SchedulerRepository
-from infra.db.repositories import AsyncpgUserRepository as UserRepository
+from apps.shared.factory import get_repository_factory
+
+# Use repository factory instead of direct infra imports
+# from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
+# from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
+# from infra.db.repositories import AsyncpgPlanRepository as PlanRepository
+# from infra.db.repositories import AsyncpgScheduleRepository as SchedulerRepository
+# from infra.db.repositories import AsyncpgUserRepository as UserRepository
 
 
 async def _noop(*args: Any, **kwargs: Any) -> None:
@@ -88,11 +91,13 @@ class DependencyMiddleware(BaseMiddleware):
             data["session_pool"] = session_pool
         if session_pool is not None:
             for key, dep in [
-                ("user_repo", UserRepository),
-                ("plan_repo", PlanRepository),
-                ("channel_repo", ChannelRepository),
-                ("scheduler_repo", SchedulerRepository),
-                ("analytics_repo", AnalyticsRepository),
+                # Repositories - temporarily simplified for clean architecture
+                # TODO: Implement proper repository injection via factory
+                # ("user_repo", UserRepository),
+                # ("plan_repo", PlanRepository),
+                # ("channel_repo", ChannelRepository),
+                # ("scheduler_repo", SchedulerRepository), 
+                # ("analytics_repo", AnalyticsRepository),
             ]:
                 try:
                     if hasattr(self.container, "resolve"): data[key] = self.container.resolve(dep)

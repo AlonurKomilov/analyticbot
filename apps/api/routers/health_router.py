@@ -15,10 +15,11 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from core.common.health.checker import health_checker
+# Import from our new apps layer service
+from apps.api.services.health_service import health_service
 from core.common.health.models import HealthStatus, SystemHealth
 
-# Global health checker instance now imported from unified system
+# Use health service from apps layer (moved from core)
 
 class HealthResponse(BaseModel):
     """Standard health response format"""
@@ -56,6 +57,56 @@ class LivenessResponse(BaseModel):
 router = APIRouter(prefix="/health", tags=["Health Monitoring"])
 
 
+# Import health check functions from our service
+from apps.api.services.health_service import (
+    check_database_health,
+    check_redis_health, 
+    check_disk_space,
+    check_memory_usage
+)
+from core.common.health.models import DependencyType
+
+# Register health checks on router startup
+@router.on_event("startup")
+async def register_health_checks():
+    """Register standard health checks on startup"""
+    
+    # Register database health check
+    health_service.register_dependency(
+        name="database",
+        check_func=check_database_health,
+        dependency_type=DependencyType.DATABASE,
+        critical=True,
+        timeout=10.0
+    )
+    
+    # Register Redis health check
+    health_service.register_dependency(
+        name="redis_cache",
+        check_func=check_redis_health,
+        dependency_type=DependencyType.CACHE,
+        critical=False,  # Cache failures shouldn't kill the system
+        timeout=5.0
+    )
+    
+    # Register system resource checks
+    health_service.register_dependency(
+        name="disk_space",
+        check_func=check_disk_space,
+        dependency_type=DependencyType.SERVICE,
+        critical=False,
+        timeout=3.0
+    )
+    
+    health_service.register_dependency(
+        name="memory_usage", 
+        check_func=check_memory_usage,
+        dependency_type=DependencyType.SERVICE,
+        critical=False,
+        timeout=3.0
+    )
+
+
 @router.get("/", response_model=HealthResponse, summary="Basic Health Check")
 async def basic_health_check():
     """
@@ -75,7 +126,7 @@ async def basic_health_check():
     - `service`: Service identifier
     - `version`: Application version
     """
-    system_health = await health_checker.get_system_health()
+    system_health = await health_service.get_system_health()
     
     return HealthResponse(
         status=system_health.status.value,
@@ -114,7 +165,7 @@ async def detailed_health_check():
     - Performance analysis
     - Capacity planning
     """
-    system_health = await health_checker.get_system_health()
+    system_health = await health_service.get_system_health()
     
     # Convert components to serializable format
     components_dict = {}
@@ -135,8 +186,8 @@ async def detailed_health_check():
         version=system_health.version,
         environment=system_health.environment,
         components=components_dict,
-        performance_metrics=system_health.performance_metrics,
-        alerts=system_health.alerts
+        performance_metrics=system_health.performance_metrics or {},
+        alerts=system_health.alerts or []
     )
 
 
@@ -165,7 +216,7 @@ async def readiness_check():
     - `components`: Status of critical components
     - `dependencies_met`: Whether all dependencies are satisfied
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_service.get_system_health()
     
     # Define critical components for readiness
     critical_components = ["database", "api_internal"]
@@ -227,7 +278,7 @@ async def liveness_check():
     - `alive`: true if process is healthy
     - `uptime_seconds`: Process uptime
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_service.get_system_health()
     
     return LivenessResponse(
         alive=True,  # If we can respond, we're alive
@@ -262,7 +313,7 @@ async def health_trends(
     - Root cause analysis
     """
     try:
-        trends = await health_checker.get_health_trends(hours=hours)
+        trends = health_service.get_health_trends(hours=hours)  # Not async
         return {
             "status": "success",
             "timestamp": datetime.now().isoformat(),
@@ -296,7 +347,7 @@ async def performance_metrics():
     - Alerting rule configuration
     - SLA monitoring
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_service.get_system_health()
     
     # Extract performance metrics
     metrics = {
@@ -306,7 +357,7 @@ async def performance_metrics():
         "performance": system_health.performance_metrics,
         "component_response_times": {},
         "system_health_score": 0,
-        "alerts_count": len(system_health.alerts),
+        "alerts_count": len(system_health.alerts or []),
     }
     
     # Component response times
@@ -344,7 +395,7 @@ async def debug_info():
     - Performance analysis
     - System diagnostics
     """
-    system_health = await health_checker.get_comprehensive_health()
+    system_health = await health_service.get_system_health()
     
     debug_data = {
         "timestamp": datetime.now().isoformat(),
@@ -357,8 +408,8 @@ async def debug_info():
         "components": {},
         "alerts": system_health.alerts,
         "performance_metrics": system_health.performance_metrics,
-        "thresholds": health_checker.thresholds,
-        "history_size": len(health_checker.health_history),
+        "thresholds": health_service.thresholds,
+        "history_size": len(health_service.health_history),
     }
     
     # Detailed component information

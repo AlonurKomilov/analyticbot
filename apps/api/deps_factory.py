@@ -21,12 +21,15 @@ async def get_demo_data_service():
     """
     try:
         # For now, return a simple fallback service
-        # TODO: Implement proper DI container service resolution
+        # TODO: Implement proper DI container service resolution - PLACEHOLDER
+        # For production: integrate with core DI container for proper service resolution
+        # Current implementation uses demo config fallback pattern
         logger.info("Demo data service requested - using fallback implementation")
         
-        if settings.demo_mode.should_use_mock_service("demo_data"):
-            from apps.api.__mocks__.services.mock_demo_data_service import MockDemoDataService
-            return MockDemoDataService()
+        from apps.demo.config import demo_config
+        if demo_config.should_use_sample_service("demo_data"):
+            from apps.demo.services.sample_data_service import SampleDataService
+            return SampleDataService()
         else:
             raise ValueError("No demo data service available and not in demo mode")
             
@@ -65,7 +68,7 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
     """
     try:
         # Use clean demo mode service abstraction
-        from apps.api.services.demo_mode_service import demo_service
+        from apps.demo.services.demo_service import demo_service
         
         # Log demo usage for monitoring
         demo_service.log_demo_usage(request, "/initial-data", "fetch")
@@ -76,7 +79,31 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
             demo_data_service = await get_demo_data_service()
             
             user_id = demo_service.get_effective_user_id(request)
-            return await demo_data_service.get_initial_data(user_id, demo_context["demo_type"])
+            demo_data = await demo_data_service.get_initial_data(user_id, demo_context["demo_type"])
+            
+            # Convert demo data dict to proper InitialDataResponse model
+            from apps.bot.models.twa import User, Channel, Plan
+            
+            # Create demo user
+            demo_user = User(
+                id=1,
+                username=demo_data.get("user", {}).get("username", "demo_user")
+            )
+            
+            # Create demo channels  
+            demo_channels = []
+            for channel_data in demo_data.get("channels", []):
+                demo_channels.append(Channel(
+                    id=channel_data["id"],
+                    title=channel_data["name"],
+                    username=f"@{channel_data['name'].lower().replace(' ', '_')}"
+                ))
+            
+            return InitialDataResponse(
+                user=demo_user,
+                channels=demo_channels,
+                scheduled_posts=[]  # Empty for demo
+            )
         
         # For production users, use real services
         # This will be implemented with proper repository injection
@@ -89,7 +116,7 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
     except Exception as e:
         # ✅ FIXED: Comprehensive error handling with auditing
         from apps.api.services.database_error_handler import db_error_handler
-        from apps.api.services.demo_mode_service import demo_service
+        from apps.demo.services.demo_service import demo_service
         
         # Extract user_id if possible
         try:
@@ -118,7 +145,18 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
         if is_demo_user:
             logger.info(f"✅ Demo fallback activated for demo user {user_id}")
             demo_data_service = await get_demo_data_service()
-            return await demo_data_service.get_initial_data(user_id or 1, "limited")
+            demo_data = await demo_data_service.get_initial_data(user_id or 1, "limited")
+            
+            # Convert to proper model for fallback case
+            from apps.bot.models.twa import User, Channel
+            demo_user = User(id=user_id or 1, username="demo_user_fallback")
+            demo_channels = [Channel(id=1, title="Demo Channel", username="@demo")]
+            
+            return InitialDataResponse(
+                user=demo_user,
+                channels=demo_channels,
+                scheduled_posts=[]
+            )
         
         # Should never reach here, but safety fallback
         raise Exception("Service temporarily unavailable")

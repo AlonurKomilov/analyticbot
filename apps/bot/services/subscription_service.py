@@ -1,10 +1,10 @@
 from fastapi import HTTPException
 
 from apps.bot.domain.models import SubscriptionStatus
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from infra.db.repositories.plan_repository import AsyncpgPlanRepository
-from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-from infra.db.repositories.user_repository import AsyncpgUserRepository
+from typing import Any
+
+# TODO: Define proper repository protocols for all methods used
+# For now using Any to maintain compatibility while removing direct infra imports
 
 
 class SubscriptionService:
@@ -20,10 +20,10 @@ class SubscriptionService:
 
     def __init__(
         self,
-        channel_repository: AsyncpgChannelRepository,
-        user_repository: AsyncpgUserRepository,
-        plan_repository: AsyncpgPlanRepository,
-        scheduler_repository: AsyncpgScheduleRepository,
+        channel_repository: Any,
+        user_repository: Any,
+        plan_repository: Any,
+        scheduler_repository: Any,
     ):
         self.channel_repo = channel_repository
         self.user_repo = user_repository

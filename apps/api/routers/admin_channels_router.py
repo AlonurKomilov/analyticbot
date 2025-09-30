@@ -12,20 +12,18 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
-from apps.bot.di import configure_bot_container
-
-# Initialize clean DI container
-container = configure_bot_container()
-from apps.bot.services.channel_management_service import ChannelManagementService
+from apps.api.services.channel_management_service import ChannelManagementService
+from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_admin_role,
     get_current_user_id,
 )
-from infra.db.performance import performance_timer
+# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
@@ -57,7 +55,7 @@ async def get_all_channels(
     limit: int = Query(default=100, ge=1, le=1000, description="Maximum number of channels to return"),
     offset: int = Query(default=0, ge=0, description="Number of channels to skip for pagination"),
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_management_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 👑 Get All Channels (Admin)
@@ -108,7 +106,7 @@ async def get_all_channels(
 async def delete_channel_admin(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 🗑️ Delete Channel (Admin)
@@ -155,7 +153,7 @@ async def delete_channel_admin(
 async def suspend_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ⏸️ Suspend Channel (Admin)
@@ -202,7 +200,7 @@ async def suspend_channel(
 async def unsuspend_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ▶️ Unsuspend Channel (Admin)

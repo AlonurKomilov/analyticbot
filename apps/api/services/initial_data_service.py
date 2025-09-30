@@ -7,8 +7,11 @@ import logging
 from typing import Optional, Dict, Any, List
 
 from apps.bot.models.twa import InitialDataResponse
-from infra.db.repositories.user_repository import AsyncpgUserRepository
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from apps.shared.factory import get_repository_factory
+
+# TODO: Use proper repository protocols
+# from infra.db.repositories.user_repository import AsyncpgUserRepository
+# from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 
 logger = logging.getLogger(__name__)
 

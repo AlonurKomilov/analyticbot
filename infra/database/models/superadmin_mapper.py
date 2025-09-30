@@ -19,9 +19,25 @@ from core.models.superadmin_domain import (
     Permission,
     AdminRole,
     UserStatus,
-    SystemStatus,
-    AuditAction,
 )
+
+# Import ORM models  
+from infra.database.models.superadmin_orm import (
+    AdminUser as AdminUserORM,
+    AdminSession as AdminSessionORM,
+    SystemUser as SystemComponentORM,
+    AdminAuditLog as AuditEntryORM,
+    SystemConfiguration as SystemConfigORM,
+    SystemMetrics as AdminNotificationORM,
+)
+
+# For Permission, we'll create a simple class until proper ORM is available
+class PermissionORM:
+    def __init__(self, name: str, description: str = "", resource: str = "", actions: List[str] = None):
+        self.name = name
+        self.description = description
+        self.resource = resource
+        self.actions = actions or []
 from .superadmin_orm import (
     AdminUser,
     AdminSession,

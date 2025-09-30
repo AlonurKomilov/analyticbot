@@ -15,14 +15,15 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from apps.bot.container import container
-from apps.bot.services.analytics_service import AnalyticsService
+from core.services.analytics_fusion_service import AnalyticsFusionService
+from apps.api.di_analytics import get_analytics_fusion_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_admin_role,
     get_current_user_id,
 )
-from infra.db.performance import performance_timer
+# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
@@ -55,7 +56,7 @@ class AuditLogEntry(BaseModel):
 @router.get("/stats", response_model=SystemStats)
 async def get_system_statistics(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsFusionService = Depends(get_analytics_fusion_service)
 ):
     """
     ## 📊 Get System Statistics (Admin)
@@ -93,7 +94,7 @@ async def get_system_statistics(
 async def get_recent_admin_actions(
     limit: int = Query(50, ge=1, le=500),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsFusionService = Depends(get_analytics_fusion_service)
 ):
     """
     ## 📋 Get Recent Admin Actions
@@ -136,7 +137,7 @@ async def get_recent_admin_actions(
 @router.get("/health")
 async def get_system_health(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsService = Depends(lambda: container.analytics_service())
+    analytics_service: AnalyticsFusionService = Depends(get_analytics_fusion_service)
 ):
     """
     ## 🏥 Get System Health (Admin)

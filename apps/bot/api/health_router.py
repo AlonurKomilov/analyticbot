@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from infra.db.connection_manager import db_manager
 from infra.db.health_utils import is_db_healthy
 from core.common.health.models import HealthStatus, DependencyType
-from core.common.health.checker import HealthChecker, health_checker
+from apps.api.services.health_service import HealthMonitoringService
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 health_router = APIRouter(prefix="/health", tags=["Health"])
 
 # Initialize health checker for bot service
-bot_health_checker = HealthChecker(
+bot_health_checker = HealthMonitoringService(
     service_name="AnalyticBot-BotService",
     version="2.1.0"
 )
@@ -27,13 +27,15 @@ bot_health_checker = HealthChecker(
 
 async def check_database_health():
     """Database health check for bot service"""
-    return await health_checker.check_database(db_manager)
+    from apps.api.services.health_service import check_database_health as db_check
+    return await db_check()
 
 
 async def check_telegram_api_health():
     """Telegram API health check"""
     bot_token = settings.BOT_TOKEN.get_secret_value()
-    return await health_checker.check_http(f"https://api.telegram.org/bot{bot_token}/getMe")
+    from apps.api.services.health_service import check_http_endpoint
+    return await check_http_endpoint(f"https://api.telegram.org/bot{bot_token}/getMe")
 
 
 async def check_storage_channel_health():
@@ -90,12 +92,16 @@ async def bot_health_check():
     - Response times
     """
     try:
-        health_result = await bot_health_checker.perform_health_check(
-            environment=settings.ENVIRONMENT
+        health_result = await bot_health_checker.get_system_health(
+            include_non_critical=True
         )
         
         return {
-            **bot_health_checker.to_dict(health_result),
+            "status": health_result.status.value,
+            "timestamp": health_result.timestamp.isoformat(),
+            "service_name": health_result.service_name,
+            "version": health_result.version,
+            "components": {name: comp.status.value for name, comp in health_result.components.items()},
             "metadata": {
                 "bot_token_configured": bool(settings.BOT_TOKEN.get_secret_value() != "dummy_token_for_development"),
                 "admin_ids_count": len(settings.ADMIN_IDS),

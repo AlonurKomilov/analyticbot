@@ -3,6 +3,8 @@
 
 Framework-independent domain entities for admin management.
 No ORM dependencies - pure Python dataclasses for clean domain logic.
+
+Updated for 4-Role Hierarchical System with backwards compatibility.
 """
 
 from dataclasses import dataclass, field
@@ -10,10 +12,19 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
+import warnings
 
 
 class AdminRole(str, Enum):
-    """Admin role hierarchy"""
+    """
+    DEPRECATED: Legacy admin role hierarchy - use AdministrativeRole instead.
+    
+    Migration mapping:
+    - SUPPORT → AdministrativeRole.MODERATOR + customer_support permission
+    - MODERATOR → AdministrativeRole.MODERATOR
+    - ADMIN → AdministrativeRole.SUPER_ADMIN
+    - SUPER_ADMIN → AdministrativeRole.SUPER_ADMIN
+    """
     SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     MODERATOR = "moderator"
@@ -51,12 +62,18 @@ class AuditAction(str, Enum):
 
 @dataclass
 class AdminUser:
-    """Admin user domain entity"""
+    """Admin user domain entity - Updated for 4-Role System"""
     id: UUID = field(default_factory=uuid4)
     username: str = ""
     email: str = ""
     password_hash: str = ""
-    role: AdminRole = AdminRole.SUPPORT
+    
+    # Role System - New hierarchical approach
+    role: str = "moderator"  # Default to AdministrativeRole.MODERATOR.value
+    legacy_role: AdminRole | None = None  # For backwards compatibility
+    additional_permissions: List[str] = field(default_factory=list)  # Extra permissions
+    migration_profile: str | None = None  # Migration profile for special cases
+    
     status: UserStatus = UserStatus.ACTIVE
     first_name: str = ""
     last_name: str = ""
@@ -78,14 +95,77 @@ class AdminUser:
     
     # Preferences
     preferences: Dict[str, Any] = field(default_factory=dict)
-    permissions: List[str] = field(default_factory=list)
+    permissions: List[str] = field(default_factory=list)  # Legacy permissions field
     
     def __post_init__(self):
-        """Post-initialization validation"""
+        """Post-initialization validation and migration"""
         if not self.email:
             raise ValueError("Email is required")
         if not self.username:
             raise ValueError("Username is required")
+        self._migrate_legacy_role()
+    
+    def _migrate_legacy_role(self) -> None:
+        """Migrate legacy AdminRole to new system if needed"""
+        if self.legacy_role and not self._is_new_role_system():
+            # Import here to avoid circular imports
+            from core.security_engine.roles import migrate_admin_role
+            
+            new_role, additional_perms = migrate_admin_role(self.legacy_role.value)
+            self.role = new_role
+            self.additional_permissions.extend(additional_perms)
+            
+            # Set migration profile for special cases
+            if self.legacy_role == AdminRole.SUPPORT:
+                self.migration_profile = "support_moderator"
+
+    def _is_new_role_system(self) -> bool:
+        """Check if using new role system values"""
+        # Import here to avoid circular imports
+        try:
+            from core.security_engine.roles import AdministrativeRole
+            new_role_values = [
+                AdministrativeRole.MODERATOR.value,
+                AdministrativeRole.SUPER_ADMIN.value,
+            ]
+            return self.role in new_role_values
+        except ImportError:
+            return False
+
+    def get_permissions(self):
+        """Get all permissions for this admin user"""
+        try:
+            from core.security_engine.role_hierarchy import role_hierarchy_service
+            
+            user_info = role_hierarchy_service.get_user_role_info(
+                role=self.role,
+                additional_permissions=self.additional_permissions,
+                migration_profile=self.migration_profile
+            )
+            return user_info.permissions
+        except ImportError:
+            # Fallback to legacy permissions if new system not available
+            return set(self.permissions)
+
+    def has_permission(self, permission: str) -> bool:
+        """Check if admin user has specific permission"""
+        try:
+            from core.security_engine.permissions import Permission
+            
+            # Check new permission system
+            user_permissions = self.get_permissions()
+            if isinstance(permission, str):
+                try:
+                    permission_enum = Permission(permission)
+                    return permission_enum in user_permissions
+                except ValueError:
+                    pass
+            
+            # Fallback to legacy permission check
+            return permission in self.permissions
+        except ImportError:
+            # Legacy permission check only
+            return permission in self.permissions
     
     @property
     def full_name(self) -> str:
@@ -106,19 +186,33 @@ class AdminUser:
             return datetime.utcnow() < self.account_locked_until
         return False
     
-    def has_permission(self, permission: str) -> bool:
-        """Check if user has specific permission"""
-        return permission in self.permissions
-    
-    def has_role(self, required_role: AdminRole) -> bool:
+    def has_role(self, required_role) -> bool:
         """Check if user has required role or higher"""
-        role_hierarchy = {
-            AdminRole.SUPPORT: 1,
-            AdminRole.MODERATOR: 2,
-            AdminRole.ADMIN: 3,
-            AdminRole.SUPER_ADMIN: 4,
+        try:
+            from core.security_engine.roles import has_role_or_higher
+            # Use new role hierarchy system
+            if isinstance(required_role, str):
+                return has_role_or_higher(self.role, required_role)
+            elif hasattr(required_role, 'value'):
+                return has_role_or_higher(self.role, required_role.value)
+        except ImportError:
+            pass
+        
+        # Fallback to legacy role hierarchy
+        legacy_role_hierarchy = {
+            "support": 1,
+            "moderator": 2, 
+            "admin": 3,
+            "super_admin": 4,
         }
-        return role_hierarchy.get(self.role, 0) >= role_hierarchy.get(required_role, 0)
+        
+        current_role_str = self.role if isinstance(self.role, str) else self.role.value
+        required_role_str = required_role if isinstance(required_role, str) else required_role.value
+        
+        current_level = legacy_role_hierarchy.get(current_role_str, 0)
+        required_level = legacy_role_hierarchy.get(required_role_str, 0)
+        
+        return current_level >= required_level
 
 
 @dataclass

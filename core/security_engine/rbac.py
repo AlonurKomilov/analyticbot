@@ -11,11 +11,21 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 
-import redis
-
-from .models import PermissionMatrix, User, UserRole
+from core.ports.security_ports import CachePort, SecurityEventsPort
+from .models import PermissionMatrix, User
+# Import new role system with backwards compatibility  
+from .roles import ApplicationRole, AdministrativeRole, UserRole as LegacyUserRole
 
 logger = logging.getLogger(__name__)
+
+
+class RBACError(Exception):
+    """Custom exception for RBAC-related errors"""
+    
+    def __init__(self, message: str, error_code: str | None = None):
+        self.message = message
+        self.error_code = error_code
+        super().__init__(message)
 
 
 @dataclass
@@ -84,114 +94,96 @@ class RBACManager:
     - Audit logging for access control
     """
 
-    def __init__(self, config: RBACConfig | None = None):
+    def __init__(
+        self, 
+        cache: CachePort | None = None, 
+        security_events: SecurityEventsPort | None = None, 
+        config: RBACConfig | None = None
+    ):
+        """
+        Initialize RBAC Manager with dependency injection support
+        
+        Args:
+            cache: Cache port for permission caching (optional, falls back to Redis/memory)
+            security_events: Security events port for audit logging (optional)
+            config: RBAC configuration (optional)
+        """
+        self.cache = cache
+        self.security_events = security_events
         self.config = config or RBACConfig()
-        try:
-            redis_kwargs = {
-                "host": self.config.redis_host,
-                "port": self.config.redis_port,
-                "db": self.config.redis_db,
-                "decode_responses": True,
-            }
-            if self.config.redis_password:
-                redis_kwargs["password"] = self.config.redis_password
-
-            self.redis_client = redis.Redis(**redis_kwargs)
-            self.redis_client.ping()
-            self._redis_available = True
-        except Exception as e:
-            logger.warning(f"Redis connection failed, using memory cache: {e}")
-            self._redis_available = False
-            self.redis_client = None
-            self._memory_cache = {}
+        
+        # Legacy Redis fallback if no cache port provided
+        if not self.cache:
+            self._setup_legacy_cache()
+        
         self._setup_default_permissions()
+
+    def _setup_legacy_cache(self) -> None:
+        """Setup memory cache fallback when no cache port is provided"""
+        logger.info("No cache port provided, using memory cache fallback")
+        self._redis_available = False
+        self.redis_client = None
+        self._memory_cache = {}
+
+    def _cache_get(self, key: str) -> str | None:
+        """Get value from cache (abstracted)"""
+        if self.cache:
+            return self.cache.get(key)
+        elif self._redis_available and self.redis_client:
+            result = self.redis_client.get(key)
+            return result if isinstance(result, str) else None
+        else:
+            return self._memory_cache.get(key)
+
+    def _cache_set(self, key: str, value: str, expire: int | None = None) -> None:
+        """Set value in cache (abstracted)"""
+        if self.cache:
+            self.cache.set(key, value, expire)
+        elif self._redis_available and self.redis_client:
+            if expire:
+                self.redis_client.setex(key, expire, value)
+            else:
+                self.redis_client.set(key, value)
+        else:
+            self._memory_cache[key] = value
+
+    def _cache_delete(self, key: str) -> None:
+        """Delete value from cache (abstracted)"""
+        if self.cache:
+            self.cache.delete(key)
+        elif self._redis_available and self.redis_client:
+            self.redis_client.delete(key)
+        else:
+            self._memory_cache.pop(key, None)
+
+    def _log_security_event(self, event: str, user_id: str | None = None, details: dict | None = None) -> None:
+        """Log security event (abstracted)"""
+        if self.security_events:
+            self.security_events.log_security_event(user_id, event, details or {})
+        else:
+            logger.info(f"Security event: {event} - User: {user_id} - Details: {details}")
 
     def _setup_default_permissions(self) -> None:
         """Setup default role permissions"""
-        self.role_hierarchy = {
-            UserRole.GUEST: 0,
-            UserRole.READONLY: 1,
-            UserRole.USER: 2,
-            UserRole.ANALYST: 3,
-            UserRole.MODERATOR: 4,
-            UserRole.ADMIN: 5,
-        }
-        self.default_permissions = {
-            UserRole.GUEST: [Permission.ANALYTICS_READ, Permission.REPORT_READ],
-            UserRole.READONLY: [
-                Permission.ANALYTICS_READ,
-                Permission.REPORT_READ,
-                Permission.USER_READ,
-                Permission.SETTINGS_READ,
-                Permission.API_READ,
-            ],
-            UserRole.USER: [
-                Permission.ANALYTICS_READ,
-                Permission.ANALYTICS_CREATE,
-                Permission.REPORT_READ,
-                Permission.REPORT_CREATE,
-                Permission.USER_READ,
-                Permission.SETTINGS_READ,
-                Permission.API_READ,
-            ],
-            UserRole.ANALYST: [
-                Permission.ANALYTICS_READ,
-                Permission.ANALYTICS_CREATE,
-                Permission.ANALYTICS_UPDATE,
-                Permission.ANALYTICS_EXPORT,
-                Permission.REPORT_READ,
-                Permission.REPORT_CREATE,
-                Permission.REPORT_UPDATE,
-                Permission.REPORT_SHARE,
-                Permission.USER_READ,
-                Permission.SETTINGS_READ,
-                Permission.API_READ,
-                Permission.API_WRITE,
-            ],
-            UserRole.MODERATOR: [
-                Permission.ANALYTICS_READ,
-                Permission.ANALYTICS_CREATE,
-                Permission.ANALYTICS_UPDATE,
-                Permission.ANALYTICS_DELETE,
-                Permission.ANALYTICS_EXPORT,
-                Permission.REPORT_READ,
-                Permission.REPORT_CREATE,
-                Permission.REPORT_UPDATE,
-                Permission.REPORT_DELETE,
-                Permission.REPORT_SHARE,
-                Permission.USER_READ,
-                Permission.USER_UPDATE,
-                Permission.SETTINGS_READ,
-                Permission.API_READ,
-                Permission.API_WRITE,
-                Permission.BOT_MANAGE,
-                Permission.BOT_LOGS,
-            ],
-            UserRole.ADMIN: [*list(Permission)],
-        }
+        # Legacy role hierarchy (DEPRECATED - use new role system instead)
+        # self.role_hierarchy = {
+        #     UserRole.GUEST: 0,
+        #     UserRole.READONLY: 1,
+        #     UserRole.USER: 2,
+        #     UserRole.ANALYST: 3,
+        #     UserRole.MODERATOR: 4,
+        #     UserRole.ADMIN: 5,
+        # }
+        # Legacy default permissions (DEPRECATED - use new permission system instead)
+        # Use role_hierarchy_service.get_permissions_for_role() instead
+        self.default_permissions = {}
         self._cache_default_permissions()
 
     def _cache_default_permissions(self) -> None:
-        """Cache default role permissions in Redis or memory"""
-        for role, permissions in self.default_permissions.items():
-            permission_list = [perm.value for perm in permissions]
-            cache_key = f"role_permissions:{role.value}"
-            cache_value = json.dumps(permission_list)
-            if self._redis_available:
-                try:
-                    self.redis_client.setex(
-                        cache_key, int(timedelta(hours=24).total_seconds()), cache_value
-                    )
-                except Exception as e:
-                    logger.warning(f"Redis cache failed, using memory: {e}")
-                    self._redis_available = False
-                    if not hasattr(self, "_memory_cache"):
-                        self._memory_cache = {}
-                    self._memory_cache[cache_key] = cache_value
-            else:
-                if not hasattr(self, "_memory_cache"):
-                    self._memory_cache = {}
-                self._memory_cache[cache_key] = cache_value
+        """Cache default role permissions - Updated for new role system"""
+        # New role system uses role_hierarchy_service for permission management
+        # Legacy caching no longer needed
+        logger.info("Role permissions now managed by role_hierarchy_service")
 
     def has_permission(
         self, user: User, permission: Permission, resource_id: str | None = None
@@ -216,30 +208,21 @@ class RBACManager:
         logger.debug(f"Permission {permission.value} granted to user {user.username}")
         return True
 
-    def has_role(self, user: User, required_role: UserRole) -> bool:
+    def has_role(self, user: User, required_role: str) -> bool:
         """
         Check if user has required role (or higher in hierarchy)
 
         Args:
             user: User object
-            required_role: Required role
-
+            required_role: Required role (string value)
+            
         Returns:
             True if user has required role or higher
         """
-        user_role_level = self.role_hierarchy.get(user.role, 0)
-        required_role_level = self.role_hierarchy.get(required_role, 0)
-        has_role = user_role_level >= required_role_level
-        if has_role:
-            logger.debug(
-                f"Role check passed: {user.username} has {user.role.value} (>= {required_role.value})"
-            )
-        else:
-            logger.debug(
-                f"Role check failed: {user.username} has {user.role.value} (< {required_role.value})"
-            )
-        return has_role
-
+        # Use new role hierarchy system
+        from .roles import has_role_or_higher
+        return has_role_or_higher(user.role, required_role)
+    
     def get_user_permissions(self, user: User) -> set[Permission]:
         """
         Get all effective permissions for user
@@ -251,7 +234,7 @@ class RBACManager:
             Set of permissions
         """
         cache_key = f"user_permissions:{user.id}"
-        cached_permissions = self.redis_client.get(cache_key)
+        cached_permissions = self._cache_get(cache_key)
         if cached_permissions:
             try:
                 permission_list = json.loads(cached_permissions)
@@ -262,8 +245,8 @@ class RBACManager:
         custom_permissions = self._get_custom_user_permissions(user.id)
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
-        self.redis_client.setex(
-            cache_key, int(timedelta(hours=1).total_seconds()), json.dumps(permission_list)
+        self._cache_set(
+            cache_key, json.dumps(permission_list), int(timedelta(hours=1).total_seconds())
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions
@@ -282,12 +265,12 @@ class RBACManager:
         custom_permissions = self._get_custom_user_permissions(user_id)
         custom_permissions.add(permission)
         permission_list = [perm.value for perm in custom_permissions]
-        self.redis_client.setex(
+        self._cache_set(
             f"custom_permissions:{user_id}",
-            int(timedelta(days=30).total_seconds()),
             json.dumps(permission_list),
+            int(timedelta(days=30).total_seconds())
         )
-        self.redis_client.delete(f"user_permissions:{user_id}")
+        self._cache_delete(f"user_permissions:{user_id}")
         logger.info(f"Granted permission {permission.value} to user {user_id}")
         return True
 
@@ -306,14 +289,14 @@ class RBACManager:
         custom_permissions.discard(permission)
         if custom_permissions:
             permission_list = [perm.value for perm in custom_permissions]
-            self.redis_client.setex(
+            self._cache_set(
                 f"custom_permissions:{user_id}",
-                int(timedelta(days=30).total_seconds()),
                 json.dumps(permission_list),
+                int(timedelta(days=30).total_seconds())
             )
         else:
-            self.redis_client.delete(f"custom_permissions:{user_id}")
-        self.redis_client.delete(f"user_permissions:{user_id}")
+            self._cache_delete(f"custom_permissions:{user_id}")
+        self._cache_delete(f"user_permissions:{user_id}")
         logger.info(f"Revoked permission {permission.value} from user {user_id}")
         return True
 
@@ -364,7 +347,7 @@ class RBACManager:
 
     def _get_custom_user_permissions(self, user_id: str) -> set[Permission]:
         """Get custom permissions for user"""
-        custom_permissions_str = self.redis_client.get(f"custom_permissions:{user_id}")
+        custom_permissions_str = self._cache_get(f"custom_permissions:{user_id}")
         if not custom_permissions_str:
             return set()
         try:
@@ -379,12 +362,12 @@ class RBACManager:
         """Check resource-level permission"""
         resource_type = permission.value.split(":")[0]
         owner_key = f"resource_owner:{resource_type}:{resource_id}"
-        resource_owner = self.redis_client.get(owner_key)
+        resource_owner = self._cache_get(owner_key)
         if not resource_owner:
             return True
         if resource_owner == user.id:
             return True
-        if user.role in [UserRole.ADMIN, UserRole.MODERATOR]:
+        if user.role in ["admin", "moderator", "super_admin"]:  # Use string values for new system
             return True
         logger.debug(
             f"Resource permission denied: User {user.username} not owner of {resource_type}:{resource_id}"
@@ -404,13 +387,13 @@ class RBACManager:
             Success status
         """
         owner_key = f"resource_owner:{resource_type}:{resource_id}"
-        self.redis_client.setex(owner_key, int(timedelta(days=365).total_seconds()), owner_id)
+        self._cache_set(owner_key, owner_id, int(timedelta(days=365).total_seconds()))
         logger.info(f"Set resource owner: {resource_type}:{resource_id} -> {owner_id}")
         return True
 
     def clear_user_permissions_cache(self, user_id: str) -> None:
         """Clear cached permissions for user"""
-        self.redis_client.delete(f"user_permissions:{user_id}")
+        self._cache_delete(f"user_permissions:{user_id}")
         logger.debug(f"Cleared permission cache for user {user_id}")
 
 

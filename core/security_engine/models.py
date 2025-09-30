@@ -3,14 +3,17 @@
 
 Production-ready models for user authentication, roles, and sessions
 with comprehensive security features and validation.
+
+Updated for 4-Role Hierarchical System with backwards compatibility.
 """
 
 import secrets
 import uuid
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, List, Set
 from dataclasses import dataclass, field
+import warnings
 
 from passlib.context import CryptContext
 
@@ -19,7 +22,17 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserRole(str, Enum):
-    """User role hierarchy with permissions"""
+    """
+    DEPRECATED: Legacy user role hierarchy - use ApplicationRole/AdministrativeRole instead.
+    
+    Migration mapping:
+    - GUEST → ApplicationRole.GUEST
+    - USER → ApplicationRole.USER
+    - READONLY → ApplicationRole.USER + readonly_access permission
+    - ANALYST → ApplicationRole.USER + view_analytics permission
+    - MODERATOR → AdministrativeRole.MODERATOR
+    - ADMIN → AdministrativeRole.SUPER_ADMIN
+    """
 
     ADMIN = "admin"
     MODERATOR = "moderator"
@@ -50,7 +63,7 @@ class AuthProvider(str, Enum):
 
 @dataclass
 class User:
-    """Complete user model with security features"""
+    """Complete user model with security features - Updated for 4-Role System"""
 
     username: str
     email: str
@@ -62,8 +75,13 @@ class User:
     auth_provider: AuthProvider = AuthProvider.LOCAL
     provider_id: str | None = None
 
+    # Role System - New hierarchical approach
+    role: str = "user"  # Default to ApplicationRole.USER.value
+    legacy_role: UserRole | None = None     # For backwards compatibility
+    additional_permissions: List[str] = field(default_factory=list)  # Extra permissions
+    migration_profile: str | None = None    # Migration profile for special cases
+
     # Security
-    role: UserRole = UserRole.USER
     status: UserStatus = UserStatus.PENDING_VERIFICATION
     is_mfa_enabled: bool = False
     mfa_secret: str | None = None
@@ -88,6 +106,72 @@ class User:
     def __post_init__(self):
         """Initialize and validate user data"""
         self.validate_username()
+        self._migrate_legacy_role()
+
+    def _migrate_legacy_role(self) -> None:
+        """Migrate legacy role to new system if needed"""
+        if self.legacy_role and not self._is_new_role_system():
+            # Import here to avoid circular imports
+            from .roles import migrate_user_role
+            
+            new_role, additional_perms = migrate_user_role(self.legacy_role.value)
+            self.role = new_role
+            self.additional_permissions.extend(additional_perms)
+            
+            # Set migration profile for special cases
+            if self.legacy_role == UserRole.READONLY:
+                self.migration_profile = "readonly_user"
+            elif self.legacy_role == UserRole.ANALYST:
+                self.migration_profile = "analyst_user"
+
+    def _is_new_role_system(self) -> bool:
+        """Check if using new role system values"""
+        # Import here to avoid circular imports
+        from .roles import ApplicationRole, AdministrativeRole
+        
+        new_role_values = [
+            ApplicationRole.GUEST.value,
+            ApplicationRole.USER.value,
+            AdministrativeRole.MODERATOR.value,
+            AdministrativeRole.SUPER_ADMIN.value,
+        ]
+        return self.role in new_role_values
+
+    def get_permissions(self):
+        """Get all permissions for this user"""
+        # Import here to avoid circular imports
+        from .permissions import Permission
+        from .role_hierarchy import role_hierarchy_service
+        
+        user_info = role_hierarchy_service.get_user_role_info(
+            role=self.role,
+            additional_permissions=self.additional_permissions,
+            migration_profile=self.migration_profile
+        )
+        return user_info.permissions
+
+    def has_permission(self, permission) -> bool:
+        """Check if user has a specific permission"""
+        # Import here to avoid circular imports
+        from .permissions import Permission
+        
+        if isinstance(permission, str):
+            try:
+                permission = Permission(permission)
+            except ValueError:
+                return False
+        
+        return permission in self.get_permissions()
+
+    def is_administrative(self) -> bool:
+        """Check if user has administrative role"""
+        from .roles import is_administrative_role
+        return is_administrative_role(self.role)
+
+    def can_access_admin_panel(self) -> bool:
+        """Check if user can access admin panel"""
+        from .permissions import can_access_admin_features
+        return can_access_admin_features(self.get_permissions())
 
     def validate_username(self) -> None:
         """Validate username format in __post_init__"""
@@ -200,13 +284,12 @@ class RegisterRequest:
         """Validate password strength"""
         if len(self.password) < 8:
             raise ValueError("Password must be at least 8 characters long")
-        if not any(c.isupper() for c in v):
+        if not any(c.isupper() for c in self.password):
             raise ValueError("Password must contain at least one uppercase letter")
-        if not any(c.islower() for c in v):
+        if not any(c.islower() for c in self.password):
             raise ValueError("Password must contain at least one lowercase letter")
-        if not any(c.isdigit() for c in v):
+        if not any(c.isdigit() for c in self.password):
             raise ValueError("Password must contain at least one digit")
-        return v
 
 
 @dataclass
@@ -231,9 +314,13 @@ class MFASetupResponse:
 
 @dataclass  
 class PermissionMatrix:
-    """Role-based permission matrix"""
+    """
+    DEPRECATED: Role-based permission matrix - use Permission system instead.
+    
+    Use the new Permission enum and role_hierarchy_service for permission checking.
+    """
 
-    role: UserRole
+    role: str  # Changed from UserRole to string for new system compatibility
     permissions: dict[str, list[str]] = field(default_factory=lambda: {
         "analytics": [],
         "users": [],
@@ -241,3 +328,10 @@ class PermissionMatrix:
         "reports": [],
         "api": [],
     })
+    
+    def __post_init__(self):
+        warnings.warn(
+            "PermissionMatrix is deprecated. Use Permission enum and role_hierarchy_service instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )

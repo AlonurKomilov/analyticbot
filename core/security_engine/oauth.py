@@ -7,16 +7,23 @@ Handles the complete OAuth flow with security best practices.
 
 import logging
 import secrets
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urlencode
 
-import httpx
-from fastapi import HTTPException, status
-
+from core.ports.security_ports import HttpClientPort, SecurityEventsPort
 from .config import SecurityConfig, get_security_config
 from .models import AuthProvider, User, UserStatus
 
 logger = logging.getLogger(__name__)
+
+
+class OAuthError(Exception):
+    """OAuth-specific error without FastAPI coupling"""
+    def __init__(self, message: str, status_code: int = 400, error_code: str | None = None):
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code
+        super().__init__(message)
 
 
 class OAuthManager:
@@ -30,9 +37,52 @@ class OAuthManager:
     - User creation from OAuth profiles
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        http_client: Optional[HttpClientPort] = None,
+        security_events: Optional[SecurityEventsPort] = None
+    ):
         self.config = get_security_config()
-        self.client = httpx.AsyncClient()
+        self.http_client = http_client
+        self.security_events = security_events
+        
+        # No fallback HTTP client - apps layer must provide one
+        # This enforces proper dependency injection
+
+        # OAuth provider configurations
+        self.providers = {
+            "google": {
+                "authorize_url": "https://accounts.google.com/o/oauth2/v2/auth",
+                "token_url": "https://oauth2.googleapis.com/token",
+                "user_info_url": "https://www.googleapis.com/oauth2/v2/userinfo",
+                "client_id": self.config.GOOGLE_CLIENT_ID,
+                "client_secret": self.config.GOOGLE_CLIENT_SECRET,
+                "scope": "openid email profile",
+            },
+            "github": {
+                "authorize_url": "https://github.com/login/oauth/authorize",
+                "token_url": "https://github.com/login/oauth/access_token",
+                "user_info_url": "https://api.github.com/user",
+                "client_id": self.config.GITHUB_CLIENT_ID,
+                "client_secret": self.config.GITHUB_CLIENT_SECRET,
+                "scope": "user:email",
+            },
+        }
+    
+    async def _make_http_request(self, method: str, url: str, **kwargs) -> dict:
+        """Make HTTP request using injected HTTP client port"""
+        if not self.http_client:
+            raise OAuthError("HTTP client not configured - must be provided via dependency injection")
+        
+        try:
+            # Use the injected HTTP client port
+            if method.upper() == 'POST':
+                return await self.http_client.post(url, **kwargs)
+            else:
+                return await self.http_client.get(url, **kwargs)
+        except Exception as e:
+            # Generic HTTP error handling - let apps layer map specific exceptions
+            raise OAuthError(f"HTTP request failed: {str(e)}")
 
         # OAuth provider configurations
         self.providers = {
@@ -66,13 +116,10 @@ class OAuthManager:
             Tuple of (authorization_url, state)
 
         Raises:
-            HTTPException: If provider not supported
+            OAuthError: If provider not supported
         """
         if provider not in self.providers:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported OAuth provider: {provider}",
-            )
+            raise OAuthError(f"Unsupported OAuth provider: {provider}", 400)
 
         provider_config = self.providers[provider]
 
@@ -95,6 +142,17 @@ class OAuthManager:
         # Build authorization URL
         auth_url = f"{provider_config['authorize_url']}?{urlencode(params)}"
 
+        # Log authorization request
+        if self.security_events:
+            self.security_events.log_security_event(
+                user_id=None,
+                event_type="oauth_authorization_requested",
+                details={
+                    "provider": provider,
+                    "state": state[:8] + "...",  # Log partial state for security
+                }
+            )
+
         logger.info(f"Generated OAuth authorization URL for {provider}")
         return auth_url, state
 
@@ -113,13 +171,10 @@ class OAuthManager:
             Token response dictionary
 
         Raises:
-            HTTPException: If token exchange fails
+            OAuthError: If token exchange fails
         """
         if provider not in self.providers:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported OAuth provider: {provider}",
-            )
+            raise OAuthError(f"Unsupported OAuth provider: {provider}")
 
         provider_config = self.providers[provider]
 
@@ -138,28 +193,38 @@ class OAuthManager:
         }
 
         try:
-            response = await self.client.post(
-                provider_config["token_url"], data=data, headers=headers
+            token_data = await self._make_http_request(
+                "post",
+                provider_config["token_url"], 
+                data=data, 
+                headers=headers
             )
-            response.raise_for_status()
-
-            token_data = response.json()
 
             if "error" in token_data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"OAuth token exchange failed: {token_data.get('error_description', 'Unknown error')}",
+                raise OAuthError(
+                    f"OAuth token exchange failed: {token_data.get('error_description', 'Unknown error')}",
+                    400
+                )
+
+            # Log successful token exchange
+            if self.security_events:
+                self.security_events.log_security_event(
+                    user_id=None,
+                    event_type="oauth_token_exchanged",
+                    details={
+                        "provider": provider,
+                        "token_type": token_data.get("token_type", "bearer")
+                    }
                 )
 
             logger.info(f"Successfully exchanged code for token with {provider}")
             return token_data
 
-        except httpx.HTTPStatusError as e:
+        except Exception as e:
             logger.error(f"OAuth token exchange failed: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to exchange authorization code for token",
-            )
+            if isinstance(e, OAuthError):
+                raise
+            raise OAuthError("Token exchange failed", 400)
 
     async def get_user_info(self, provider: str, access_token: str) -> dict[str, Any]:
         """
@@ -173,47 +238,56 @@ class OAuthManager:
             User information dictionary
 
         Raises:
-            HTTPException: If user info request fails
+            OAuthError: If user info request fails
         """
         if provider not in self.providers:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unsupported OAuth provider: {provider}",
-            )
+            raise OAuthError(f"Unsupported OAuth provider: {provider}", 400)
 
         provider_config = self.providers[provider]
 
         headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
 
         try:
-            response = await self.client.get(provider_config["user_info_url"], headers=headers)
-            response.raise_for_status()
-
-            user_info = response.json()
+            user_info = await self._make_http_request(
+                "get",
+                provider_config["user_info_url"], 
+                headers=headers
+            )
 
             # Handle GitHub email separately (might be private)
             if provider == "github" and not user_info.get("email"):
                 user_info["email"] = await self._get_github_email(access_token)
 
+            # Log user info request
+            if self.security_events:
+                self.security_events.log_security_event(
+                    user_id=None,
+                    event_type="oauth_user_info_requested",
+                    details={
+                        "provider": provider,
+                        "has_email": 'email' in user_info
+                    }
+                )
+
             logger.info(f"Retrieved user info from {provider}")
             return user_info
 
-        except httpx.HTTPStatusError as e:
+        except Exception as e:
             logger.error(f"Failed to get user info from {provider}: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to retrieve user information",
-            )
+            if isinstance(e, OAuthError):
+                raise
+            raise OAuthError("Failed to retrieve user information", 400)
 
     async def _get_github_email(self, access_token: str) -> str | None:
         """Get primary email from GitHub API"""
         headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
 
         try:
-            response = await self.client.get("https://api.github.com/user/emails", headers=headers)
-            response.raise_for_status()
-
-            emails = response.json()
+            emails = await self._make_http_request(
+                "get",
+                "https://api.github.com/user/emails", 
+                headers=headers
+            )
 
             # Find primary email
             for email_info in emails:
@@ -227,7 +301,8 @@ class OAuthManager:
 
             return None
 
-        except httpx.HTTPStatusError:
+        except Exception:
+            # Generic HTTP error - let apps layer handle specific exceptions
             return None
 
     def create_user_from_oauth(self, provider: str, user_info: dict[str, Any]) -> User:
@@ -242,15 +317,12 @@ class OAuthManager:
             User object
 
         Raises:
-            HTTPException: If required user info is missing
+            OAuthError: If required user info is missing
         """
         # Extract email (required)
         email = user_info.get("email")
         if not email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email is required but not provided by OAuth provider",
-            )
+            raise OAuthError("Email is required but not provided by OAuth provider")
 
         # Extract user information based on provider
         if provider == "google":
@@ -309,23 +381,19 @@ class OAuthManager:
             User object
 
         Raises:
-            HTTPException: If OAuth flow fails or state mismatch
+            OAuthError: If OAuth flow fails or state mismatch
         """
         # Validate state parameter (CSRF protection)
         if state != expected_state:
             logger.warning(f"OAuth state mismatch for {provider}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid state parameter"
-            )
+            raise OAuthError("Invalid state parameter")
 
         # Exchange code for token
         token_data = await self.exchange_code_for_token(provider, code, redirect_uri)
         access_token = token_data.get("access_token")
 
         if not access_token:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="No access token received"
-            )
+            raise OAuthError("No access token received")
 
         # Get user information
         user_info = await self.get_user_info(provider, access_token)
@@ -340,7 +408,8 @@ class OAuthManager:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.client.aclose()
+        # No cleanup needed - HTTP client is managed by apps layer
+        pass
 
 
 # Global OAuth manager instance

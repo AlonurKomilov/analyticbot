@@ -1,0 +1,1 @@
+# tests/mocks/adapters module

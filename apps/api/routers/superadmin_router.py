@@ -13,7 +13,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.deps import get_db_connection
-from core.models.admin import AdminRole, AdminUser, UserStatus
+# Import new role system with backwards compatibility
+from core.security_engine import User as AdminUser, UserStatus, LegacyUserRole as UserRole
+from core.security_engine import ApplicationRole, AdministrativeRole
+from core.models.superadmin_domain import AdminRole as LegacyAdminRole
 from core.services.superadmin_service import SuperAdminService
 
 # ===== PYDANTIC MODELS =====
@@ -99,7 +102,8 @@ async def get_superadmin_service(
     db: AsyncSession = Depends(get_db_connection),
 ) -> SuperAdminService:
     """Get SuperAdmin service with database dependency"""
-    return SuperAdminService(db)
+    from infra.adapters.superadmin_adapter import create_superadmin_service_with_adapter
+    return create_superadmin_service_with_adapter(db)
 
 
 async def get_current_admin_user(
@@ -130,26 +134,19 @@ async def get_current_admin_user(
 
 
 async def require_admin_role(
-    min_role: AdminRole = AdminRole.ADMIN,
+    min_role: str = AdministrativeRole.SUPER_ADMIN.value,  # Use new role system
     current_admin: AdminUser = Depends(get_current_admin_user),
 ) -> AdminUser:
     """Require minimum admin role"""
-    role_hierarchy = {
-        AdminRole.SUPPORT: 1,
-        AdminRole.MODERATOR: 2,
-        AdminRole.ADMIN: 3,
-        AdminRole.SUPER_ADMIN: 4,
-    }
-
-    user_role_level = role_hierarchy.get(AdminRole(current_admin.role), 0)
-    required_role_level = role_hierarchy.get(min_role, 999)
-
-    if user_role_level < required_role_level:
+    # Use new role hierarchy
+    from core.security_engine.roles import has_role_or_higher
+    
+    if not has_role_or_higher(current_admin.role, min_role):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Insufficient permissions. Required: {min_role.value}",
+            detail=f"Insufficient permissions. Required: {min_role}",
         )
-
+    
     return current_admin
 
 
@@ -169,7 +166,7 @@ async def admin_login(
 
     # Authenticate user
     admin_session = await admin_service.authenticate_admin(
-        db, login_request.username, login_request.password, ip_address
+        login_request.username, login_request.password, ip_address
     )
 
     if not admin_session:
@@ -179,13 +176,13 @@ async def admin_login(
 
     # Get admin user from session
     from sqlalchemy.future import select
-    from core.models.admin import AdminUser
-    stmt = select(AdminUser).where(AdminUser.id == admin_session.admin_user_id)
+    from core.models.superadmin_domain import AdminUser
+    stmt = select(AdminUser).where(AdminUser.id == admin_session["admin_id"])
     result = await db.execute(stmt)
     admin_user = result.scalar_one()
 
     return AdminLoginResponse(
-        access_token=admin_session.session_token,
+        access_token=admin_session["session_token"],
         admin_user={
             "id": str(admin_user.id),
             "username": admin_user.username,
@@ -251,7 +248,7 @@ async def suspend_user(
     ip_address = request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
-        db, int(current_admin.id), user_id, current_admin.username, suspension_request.reason
+        UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
     )
 
     return {"message": "User suspended successfully", "success": success}
@@ -282,7 +279,7 @@ async def get_system_stats(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get comprehensive system statistics"""
-    stats = await admin_service.get_system_stats(db)
+    stats = await admin_service.get_system_stats()
 
     return SystemStatsResponse(
         users=stats["users"], activity=stats["activity"], system=stats["system"]
@@ -303,7 +300,7 @@ async def get_audit_logs(
 ):
     """Get audit logs with filtering"""
     logs_data = await admin_service.get_audit_logs(
-        db, page=skip//limit + 1, limit=limit, admin_id=admin_user_id
+        page=skip//limit + 1, limit=limit, admin_id=admin_user_id
     )
 
     return [
@@ -330,7 +327,7 @@ async def get_audit_logs(
 @router.get("/config", response_model=list[SystemConfigResponse])
 async def get_system_config(
     category: str | None = None,
-    current_admin: AdminUser = Depends(lambda: require_admin_role(AdminRole.SUPER_ADMIN)),
+    current_admin: AdminUser = Depends(lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system configuration (Super Admin only)"""
@@ -356,7 +353,7 @@ async def update_system_config(
     key: str,
     config_update: ConfigUpdateRequest,
     request: Request,
-    current_admin: AdminUser = Depends(lambda: require_admin_role(AdminRole.SUPER_ADMIN)),
+    current_admin: AdminUser = Depends(lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Update system configuration (Super Admin only)"""

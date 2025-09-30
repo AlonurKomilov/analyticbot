@@ -5,10 +5,54 @@ Concrete implementations are in infra/db/repositories/
 """
 
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, Optional, Dict, Any, List
 from uuid import UUID
 
 from core.models import Delivery, DeliveryFilter, ScheduledPost, ScheduleFilter
+
+
+class AdminRepositoryPort(Protocol):
+    """Repository interface for admin operations"""
+
+    async def get_admin_by_username(self, username: str) -> Optional[Dict[str, Any]]:
+        """Get admin user by username"""
+        ...
+
+    async def update_admin_login(self, admin_id: UUID, last_login: datetime, failed_attempts: int = 0) -> None:
+        """Update admin login timestamp and reset failed attempts"""
+        ...
+
+    async def get_system_stats(self) -> Dict[str, Any]:
+        """Get comprehensive system statistics"""
+        ...
+
+    async def suspend_user(self, user_id: UUID, reason: str, admin_id: UUID) -> bool:
+        """Suspend a user with audit trail"""
+        ...
+
+    async def get_audit_logs(self, admin_id: Optional[UUID] = None, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+        """Get audit logs with pagination"""
+        ...
+
+    async def create_audit_log(self, admin_id: UUID, action: str, resource_type: str, resource_id: str, details: Dict[str, Any]) -> None:
+        """Create audit log entry"""
+        ...
+
+    async def validate_admin_session(self, token_hash: str, ip_address: str) -> Optional[Dict[str, Any]]:
+        """Validate admin session token"""
+        ...
+
+    async def create_session(self, admin_user: Dict[str, Any], ip_address: str, user_agent: str) -> Dict[str, Any]:
+        """Create admin session"""
+        ...
+
+
+class SecurityLoggerPort(Protocol):
+    """Interface for security event logging"""
+
+    async def log_security_event(self, event_type: str, details: Dict[str, Any], admin_id: Optional[UUID] = None) -> None:
+        """Log security events for audit trail"""
+        ...
 
 
 class UserRepository(Protocol):

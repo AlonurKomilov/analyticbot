@@ -22,10 +22,19 @@ import asyncio
 import logging
 import time
 
-import redis.asyncio as redis
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any, Protocol
 
-from config.settings import settings
+from core.ports.security_ports import CachePort
+
+# Redis types for backwards compatibility
+class RedisProtocol(Protocol):
+    async def eval(self, script: str, numkeys: int, *args: Any) -> list[Any]: ...
+    async def hmget(self, key: str, *fields: str) -> list[str | None]: ...
+    async def delete(self, key: str) -> int: ...
+    async def keys(self, pattern: str) -> list[str]: ...
+    async def ttl(self, key: str) -> int: ...
+    async def close(self) -> None: ...
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +85,27 @@ TELEGRAM_LIMITS = {
 class TokenBucketRateLimiter:
     """Redis-based distributed token bucket rate limiter."""
 
-    def __init__(self, redis_url: str | None = None, key_prefix: str = "ratelimit:bucket"):
-        self.redis_url = redis_url or settings.REDIS_URL
+    def __init__(
+        self, 
+        cache: CachePort | None = None, 
+        redis_client: RedisProtocol | None = None,
+        redis_url: str | None = None, 
+        key_prefix: str = "ratelimit:bucket"
+    ):
+        """
+        Initialize rate limiter with flexible backend options.
+        
+        Args:
+            cache: Cache port for simple operations (preferred for new code)
+            redis_client: Direct Redis client for advanced operations (backwards compatibility)
+            redis_url: Redis URL for creating client (fallback)
+            key_prefix: Prefix for cache keys
+        """
+        self.cache = cache
+        self.redis_client = redis_client
+        self.redis_url = redis_url
         self.key_prefix = key_prefix
-        self._redis: redis.Redis | None = None
+        self._redis: RedisProtocol | None = None
 
         # Lua script for atomic token bucket operation
         self._lua_script = """
@@ -125,10 +151,22 @@ class TokenBucketRateLimiter:
         return {success, math.floor(tokens), retry_after}
         """
 
-    async def get_redis(self) -> redis.Redis:
-        """Get Redis connection."""
+    async def get_redis(self) -> RedisProtocol:
+        """Get Redis connection - requires injection or URL."""
         if self._redis is None:
-            self._redis = redis.from_url(self.redis_url, decode_responses=True)
+            if self.redis_client:
+                self._redis = self.redis_client
+            elif self.redis_url:
+                # This requires the Redis client to be injected from outside
+                # since we can't import redis directly in core
+                raise RuntimeError(
+                    "Redis URL provided but no Redis client injected. "
+                    "Please inject a Redis client instance or use CachePort for simpler operations."
+                )
+            else:
+                raise RuntimeError(
+                    "No Redis client provided. Please inject redis_client or use cache parameter."
+                )
         return self._redis
 
     def _make_key(self, bucket_id: str, limit_type: str = "chat") -> str:
@@ -321,6 +359,9 @@ class TokenBucketRateLimiter:
             return 0
 
     async def close(self) -> None:
-        """Close Redis connection."""
-        if self._redis:
-            await self._redis.close()
+        """Close Redis connection if it supports closing."""
+        if self._redis and hasattr(self._redis, 'close'):
+            try:
+                await self._redis.close()
+            except Exception as e:
+                logger.warning(f"Error closing Redis connection: {e}")

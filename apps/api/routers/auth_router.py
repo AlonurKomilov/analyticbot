@@ -11,11 +11,18 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel, EmailStr, Field
 
-from core.security_engine import SecurityManager, User, UserRole, UserStatus, AuthProvider
-from core.security_engine.auth_utils import auth_utils
+from core.security_engine import SecurityManager, User, UserStatus, AuthProvider
+# Import new role system with backwards compatibility
+from core.security_engine import ApplicationRole, AdministrativeRole, LegacyUserRole as UserRole
+# Import permission decorators
+from core.security_engine import require_permission, require_analytics_access, Permission
+from apps.api.auth_utils import auth_utils
 from core.security_engine.mfa import MFAManager
 from apps.api.middleware.auth import get_user_repository, get_security_manager, get_current_user
-from infra.db.repositories.user_repository import AsyncpgUserRepository
+# ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
+from apps.shared.factory import get_repository_factory
+# ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
+from core.repositories.interfaces import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +72,7 @@ class UserResponse(BaseModel):
 async def login(
     login_data: LoginRequest,
     request: Request,
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
     security_manager: SecurityManager = Depends(get_security_manager)
 ):
     """
@@ -82,18 +89,22 @@ async def login(
                 detail="Invalid email or password"
             )
         
-        # Create User object for SecurityManager
+        # Create User object for SecurityManager - Updated for new role system
+        user_role = user_data.get("role", "user")
+        
         user = User(
             id=str(user_data["id"]),
             email=user_data["email"],
             username=user_data["username"],
             full_name=user_data.get("full_name"),
             hashed_password=user_data.get("hashed_password"),
-            role=UserRole(user_data.get("role", "user")),
+            role=user_role,  # Use string directly for new role system
             status=UserStatus(user_data.get("status", "active")),
             auth_provider=AuthProvider.LOCAL,
             created_at=user_data.get("created_at", datetime.utcnow()),
-            last_login=user_data.get("last_login")
+            last_login=user_data.get("last_login"),
+            additional_permissions=user_data.get("additional_permissions", []),
+            migration_profile=user_data.get("migration_profile")
         )
         
         # Verify password
@@ -129,7 +140,7 @@ async def login(
                 "email": user.email,
                 "username": user.username,
                 "full_name": user.full_name,
-                "role": user.role.value,
+                "role": user.role,  # role is now a string, no .value needed
                 "status": user.status.value
             }
         )
@@ -147,7 +158,7 @@ async def login(
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
     register_data: RegisterRequest,
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository)
 ):
     """
     Register new user account
@@ -185,7 +196,7 @@ async def register(
             email=register_data.email,
             username=register_data.username,
             full_name=register_data.full_name,
-            role=UserRole.USER,
+            role=ApplicationRole.USER.value,  # Use new role system
             status=UserStatus.PENDING_VERIFICATION,
             auth_provider=AuthProvider.LOCAL
         )
@@ -200,7 +211,7 @@ async def register(
             "username": user.username,
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
-            "role": user.role.value,
+            "role": user.role,  # role is now a string, no .value needed
             "status": user.status.value,
             "plan_id": 1  # Default plan
         }
@@ -229,7 +240,7 @@ async def register(
 async def refresh_token(
     refresh_token: str,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repo: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository)
 ):
     """
     Refresh access token using refresh token
@@ -297,7 +308,7 @@ async def get_current_user_profile(
 
 
 # Helper functions for user operations
-async def get_user_by_email(email: str, user_repository: AsyncpgUserRepository) -> dict | None:
+async def get_user_by_email(email: str, user_repository: UserRepository) -> dict | None:
     """Get user by email from the repository"""
     # For production users, query the database
     # Demo user logic is handled by middleware, not here
@@ -311,7 +322,7 @@ async def get_user_by_email(email: str, user_repository: AsyncpgUserRepository) 
         return None
 
 
-async def update_user_password(user_id: str, hashed_password: str, user_repository: AsyncpgUserRepository) -> bool:
+async def update_user_password(user_id: str, hashed_password: str, user_repository: UserRepository) -> bool:
     """Update user password in the repository"""  
     # This is a placeholder - we need to implement password update
     # For now, we'll just log the operation
@@ -335,7 +346,7 @@ class ResetPasswordRequest(BaseModel):
 async def forgot_password(
     request: ForgotPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repository: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repository: UserRepository = Depends(get_user_repository)
 ):
     """
     Send password reset email
@@ -376,7 +387,7 @@ async def forgot_password(
 async def reset_password(
     request: ResetPasswordRequest,
     security_manager: SecurityManager = Depends(get_security_manager),
-    user_repository: AsyncpgUserRepository = Depends(get_user_repository)
+    user_repository: UserRepository = Depends(get_user_repository)
 ):
     """
     Reset user password using reset token
@@ -491,4 +502,75 @@ async def get_mfa_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get MFA status"
+        )
+
+
+@router.get("/profile/permissions", response_model=dict)
+@require_permission(Permission.VIEW_CONTENT)
+async def get_user_permissions(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get current user's permissions - demonstrates new permission system.
+    
+    Requires: Permission.VIEW_CONTENT
+    """
+    try:
+        from core.security_engine.role_hierarchy import role_hierarchy_service
+        
+        user_info = role_hierarchy_service.get_user_role_info(
+            role=current_user.get('role', 'user'),
+            additional_permissions=current_user.get('additional_permissions', []),
+            migration_profile=current_user.get('migration_profile')
+        )
+        
+        return {
+            "user_id": current_user.get('id'),
+            "username": current_user.get('username'),
+            "role": user_info.role,
+            "role_level": user_info.role_level,
+            "is_administrative": user_info.is_administrative,
+            "permissions": [perm.value for perm in user_info.permissions],
+            "migration_profile": user_info.migration_profile,
+            "total_permissions": len(user_info.permissions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Permission check error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get user permissions"
+        )
+
+
+@router.get("/admin/user-roles", response_model=dict)
+@require_analytics_access()
+async def get_role_hierarchy(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get role hierarchy information - demonstrates analytics permission.
+    
+    Requires: Permission.VIEW_ANALYTICS (via @require_analytics_access)
+    """
+    try:
+        from core.security_engine.role_hierarchy import role_hierarchy_service
+        
+        hierarchy = role_hierarchy_service.get_role_hierarchy_display()
+        available_roles = role_hierarchy_service.get_available_roles(include_deprecated=True)
+        
+        return {
+            "current_user": current_user.get('username'),
+            "role_hierarchy": hierarchy,
+            "available_roles": available_roles,
+            "new_role_system": True,
+            "permission_count": len(Permission),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Role hierarchy error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy"
         )

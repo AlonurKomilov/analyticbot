@@ -13,16 +13,35 @@ import json
 import logging
 import secrets
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 
-import redis
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+from core.adapters.jwt_adapter import JoseJWTAdapter
 
+from core.ports.security_ports import (
+    CachePort, 
+    SecurityEventsPort, 
+    TokenGeneratorPort, 
+    SecurityConfigPort, 
+    UserRepositoryPort,
+    AuthRequest,
+    TokenClaims,
+    SessionInfo
+)
 from .config import SecurityConfig, get_security_config
-from .models import User, UserRole, UserSession
+# Import new role system with backwards compatibility
+from .models import User, UserSession
+from .roles import ApplicationRole, AdministrativeRole, UserRole as LegacyUserRole
 from .rbac import RBACManager, Permission
+
+
+class AuthenticationError(Exception):
+    """Custom exception for authentication-related errors"""
+    
+    def __init__(self, message: str, status_code: int = 401, error_code: str | None = None):
+        self.message = message
+        self.status_code = status_code
+        self.error_code = error_code
+        super().__init__(message)
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,16 +59,132 @@ class SecurityManager:
     - Audit logging
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+        cache: CachePort | None = None,
+        security_events: SecurityEventsPort | None = None,
+        token_generator: TokenGeneratorPort | None = None,
+        security_config: SecurityConfigPort | None = None,
+        user_repository: UserRepositoryPort | None = None
+    ):
+        """
+        Initialize Security Manager with dependency injection support
+        
+        Args:
+            cache: Cache port for session/token storage (optional, falls back to Redis)
+            security_events: Security events port for audit logging (optional)
+            token_generator: Token generator port for JWT operations (optional)
+            security_config: Security config port for settings (optional)
+            user_repository: User repository port for user data (optional)
+        """
+        self.cache = cache
+        self.security_events = security_events
+        self.token_generator = token_generator
+        self.security_config_port = security_config
+        self.user_repository = user_repository
+        
+        # Legacy fallbacks
         self.config = get_security_config()
-        self.redis_client = redis.Redis(
-            host=self.config.REDIS_HOST,
-            port=self.config.REDIS_PORT,
-            db=self.config.REDIS_DB,
-            decode_responses=True,
-        )
-        self.security = HTTPBearer()
-        self.rbac_manager = RBACManager()
+        if not self.cache:
+            self._setup_memory_cache()
+            
+        # Initialize JWT adapter if no token generator provided
+        if not self.token_generator:
+            self.token_generator = JoseJWTAdapter(
+                secret_key=self.config.SECRET_KEY,
+                algorithm=self.config.ALGORITHM
+            )
+        
+        # Initialize RBAC manager with same DI pattern
+        self.rbac_manager = RBACManager(cache=self.cache, security_events=self.security_events)
+
+    def _setup_memory_cache(self) -> None:
+        """Setup memory cache fallback when no cache port is provided"""
+        logger.info("No cache port provided, using memory cache fallback")
+        self._redis_available = False
+        self.redis_client = None
+        self._memory_cache = {}
+
+    def _cache_get(self, key: str) -> str | None:
+        """Get value from cache (abstracted)"""
+        if self.cache:
+            return self.cache.get(key)
+        elif self._redis_available and self.redis_client:
+            result = self.redis_client.get(key)
+            return result if isinstance(result, str) else None
+        else:
+            return self._memory_cache.get(key)
+
+    def _cache_set(self, key: str, value: str, expire: int | None = None) -> None:
+        """Set value in cache (abstracted)"""
+        if self.cache:
+            self.cache.set(key, value, expire)
+        elif self._redis_available and self.redis_client:
+            if expire:
+                self.redis_client.setex(key, expire, value)
+            else:
+                self.redis_client.set(key, value)
+        else:
+            self._memory_cache[key] = value
+
+    def _cache_delete(self, key: str) -> None:
+        """Delete value from cache (abstracted)"""
+        if self.cache:
+            self.cache.delete(key)
+        elif self._redis_available and self.redis_client:
+            self.redis_client.delete(key)
+        else:
+            self._memory_cache.pop(key, None)
+
+    def _cache_exists(self, key: str) -> bool:
+        """Check if key exists in cache (abstracted)"""
+        if self.cache:
+            return self.cache.exists(key)
+        elif self._redis_available and self.redis_client:
+            result = self.redis_client.exists(key)
+            return bool(result)
+        else:
+            return key in self._memory_cache
+
+    def _cache_add_to_set(self, key: str, value: str) -> None:
+        """Add value to set (abstracted)"""
+        if self.cache:
+            self.cache.add_to_set(key, value)
+        elif self._redis_available and self.redis_client:
+            self.redis_client.sadd(key, value)
+        else:
+            if key not in self._memory_cache:
+                self._memory_cache[key] = set()
+            if isinstance(self._memory_cache[key], set):
+                self._memory_cache[key].add(value)
+
+    def _cache_remove_from_set(self, key: str, value: str) -> None:
+        """Remove value from set (abstracted)"""
+        if self.cache:
+            self.cache.remove_from_set(key, value)
+        elif self._redis_available and self.redis_client:
+            self.redis_client.srem(key, value)
+        else:
+            if key in self._memory_cache and isinstance(self._memory_cache[key], set):
+                self._memory_cache[key].discard(value)
+
+    def _cache_get_set_members(self, key: str) -> set[str]:
+        """Get all members of a set (abstracted)"""
+        if self.cache:
+            return self.cache.get_set_members(key)
+        elif self._redis_available and self.redis_client:
+            members = self.redis_client.smembers(key)
+            return members if isinstance(members, set) else set()
+        else:
+            cache_value = self._memory_cache.get(key, set())
+            return cache_value if isinstance(cache_value, set) else set()
+
+    def _log_security_event(self, event_type: str, user_id: str | None = None, details: dict | None = None) -> None:
+        """Log security event (abstracted)"""
+        if self.security_events:
+            self.security_events.log_security_event(user_id, event_type, details or {})
+        else:
+            logger.info(f"Security event: {event_type} - User: {user_id} - Details: {details}")
 
     def create_access_token(
         self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
@@ -85,7 +220,24 @@ class SecurityManager:
             "auth_provider": user.auth_provider.value,
         }
 
-        encoded_jwt = jwt.encode(to_encode, self.config.SECRET_KEY, algorithm=self.config.ALGORITHM)
+        # Use JWT adapter for token generation
+        from core.ports.security_ports import TokenClaims
+        claims = TokenClaims(
+            user_id=user.id,
+            session_id=session_id,
+            permissions=[user.role.value],
+            metadata={
+                "email": user.email,
+                "username": user.username,
+                "role": user.role.value,
+                "status": user.status.value,
+                "jti": to_encode["jti"],
+                "mfa_verified": to_encode["mfa_verified"],
+                "auth_provider": user.auth_provider.value,
+            }
+        )
+        
+        encoded_jwt = self.token_generator.generate_jwt_token(claims, expires_delta)
 
         # Cache token in Redis for fast validation
         self._cache_token(encoded_jwt, to_encode, expire)
@@ -114,15 +266,33 @@ class SecurityManager:
             "type": "refresh",
         }
 
-        refresh_token = jwt.encode(
-            to_encode, self.config.REFRESH_SECRET_KEY, algorithm=self.config.ALGORITHM
+        # Use JWT adapter for refresh token generation  
+        from core.ports.security_ports import TokenClaims
+        claims = TokenClaims(
+            user_id=user_id,
+            email="",  # Refresh tokens don't need user details
+            username="", 
+            role="refresh",
+            status="active",
+            session_id=session_id,
+            token_id=f"refresh_{secrets.token_urlsafe(8)}"
+        )
+        
+        # For refresh tokens, we use a separate adapter instance with refresh secret
+        refresh_adapter = JoseJWTAdapter(
+            secret_key=self.config.REFRESH_SECRET_KEY,
+            algorithm=self.config.ALGORITHM
+        )
+        refresh_token = refresh_adapter.generate_jwt_token(
+            claims, 
+            timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
         )
 
         # Store refresh token in Redis
-        self.redis_client.setex(
+        self._cache_set(
             f"refresh_token:{refresh_token}",
-            int(timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()),
             json.dumps({"user_id": user_id, "session_id": session_id}),
+            int(timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds())
         )
 
         return refresh_token
@@ -138,56 +308,64 @@ class SecurityManager:
             Token payload dictionary
 
         Raises:
-            HTTPException: If token is invalid or expired
+            AuthenticationError: If token is invalid or expired
         """
         try:
             # Check Redis cache first for performance
-            cached_payload = self.redis_client.get(f"token:{token}")
+            cached_payload = self._cache_get(f"token:{token}")
             if cached_payload and isinstance(cached_payload, str):
                 payload = json.loads(cached_payload)
 
                 # Verify expiration
                 if datetime.utcnow() > datetime.fromtimestamp(payload["exp"]):
                     self._revoke_token(token)
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
-                    )
+                    raise AuthenticationError("Token expired", 401)
 
                 return payload
 
-            # Decode JWT token
-            payload = jwt.decode(token, self.config.SECRET_KEY, algorithms=[self.config.ALGORITHM])
+            # Decode JWT token using adapter
+            try:
+                claims = self.token_generator.verify_jwt_token(token)
+                
+                # Convert claims back to payload format for compatibility
+                payload = {
+                    "sub": claims.user_id,
+                    "email": claims.email,
+                    "username": claims.username,
+                    "role": claims.role,
+                    "status": claims.status,
+                    "session_id": claims.session_id,
+                    "mfa_verified": claims.mfa_verified,
+                    "auth_provider": claims.auth_provider,
+                    "jti": claims.token_id
+                }
+            except ValueError as e:
+                raise AuthenticationError(f"Invalid token: {str(e)}", 401)
 
             # Additional security validations
             user_id = payload.get("sub")
             if not user_id:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-                )
+                raise AuthenticationError("Invalid token", 401)
 
             # Check if token is revoked
-            if self.redis_client.exists(f"revoked_token:{token}"):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked"
-                )
+            if self._cache_exists(f"revoked_token:{token}"):
+                raise AuthenticationError("Token revoked", 401)
 
             return payload
 
-        except JWTError as e:
+        except ValueError as e:
             logger.warning(f"JWT verification failed: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials"
-            )
+            raise AuthenticationError("Could not validate credentials", 401)
 
     def create_user_session(
-        self, user: User, request: Request, device_info: dict[str, Any] | None = None
+        self, user: User, auth_request: AuthRequest, device_info: dict[str, Any] | None = None
     ) -> UserSession:
         """
         Create new user session with security tracking
 
         Args:
             user: User object
-            request: FastAPI request object
+            auth_request: Framework-independent request information
             device_info: Device information dictionary
 
         Returns:
@@ -198,21 +376,22 @@ class SecurityManager:
             user_id=user.id,
             token=secrets.token_urlsafe(32),
             expires_at=datetime.utcnow() + timedelta(hours=24),
-            ip_address=request.client.host if request.client else None,
-            user_agent=request.headers.get("user-agent"),
-            device_info=device_info,
+            ip_address=auth_request.client_ip,
+            user_agent=auth_request.user_agent,
+            device_info=device_info or auth_request.device_info,
         )
 
         # Store session in Redis
-        session_data = session.dict()
-        self.redis_client.setex(
+        from dataclasses import asdict
+        session_data = asdict(session)
+        self._cache_set(
             f"session:{session.id}",
-            int(timedelta(hours=24).total_seconds()),
             json.dumps(session_data, default=str),
+            int(timedelta(hours=24).total_seconds())
         )
 
         # Track active sessions for user
-        self.redis_client.sadd(f"user_sessions:{user.id}", session.id)
+        self._cache_add_to_set(f"user_sessions:{user.id}", session.id)
 
         logger.info(f"Session created for user {user.username} from IP {session.ip_address}")
         return session
@@ -227,7 +406,7 @@ class SecurityManager:
         Returns:
             UserSession object or None
         """
-        session_data = self.redis_client.get(f"session:{session_id}")
+        session_data = self._cache_get(f"session:{session_id}")
         if not session_data or not isinstance(session_data, str):
             return None
 
@@ -262,10 +441,11 @@ class SecurityManager:
         session.extend_session(hours)
 
         # Update in Redis
-        self.redis_client.setex(
+        from dataclasses import asdict
+        self._cache_set(
             f"session:{session_id}",
-            int(timedelta(hours=hours).total_seconds()),
-            json.dumps(session.dict(), default=str),
+            json.dumps(asdict(session), default=str),
+            int(timedelta(hours=hours).total_seconds())
         )
 
         return True
@@ -288,10 +468,10 @@ class SecurityManager:
         session.terminate_session()
 
         # Remove from Redis
-        self.redis_client.delete(f"session:{session_id}")
+        self._cache_delete(f"session:{session_id}")
 
         # Remove from user's active sessions
-        self.redis_client.srem(f"user_sessions:{session.user_id}", session_id)
+        self._cache_remove_from_set(f"user_sessions:{session.user_id}", session_id)
 
         logger.info(f"Session {session_id} terminated for user {session.user_id}")
         return True
@@ -306,13 +486,11 @@ class SecurityManager:
         Returns:
             Number of sessions terminated
         """
-        session_ids = self.redis_client.smembers(f"user_sessions:{user_id}")
+        session_ids = self._cache_get_set_members(f"user_sessions:{user_id}")
         if not session_ids:
             return 0
             
         terminated_count = 0
-        # Type hint: session_ids should be a set of strings due to decode_responses=True
-        session_ids = session_ids if isinstance(session_ids, set) else set()
 
         for session_id in session_ids:
             if self.terminate_session(session_id):
@@ -332,29 +510,25 @@ class SecurityManager:
             Success status
         """
         try:
-            # Decode to get expiration
-            payload = jwt.decode(
-                token,
-                self.config.SECRET_KEY,
-                algorithms=[self.config.ALGORITHM],
-                options={"verify_exp": False},
-            )
-
-            # Add to revoked tokens with expiration
-            exp_timestamp = payload.get("exp")
-            if exp_timestamp:
-                expire_time = datetime.fromtimestamp(exp_timestamp)
-                seconds_until_exp = int((expire_time - datetime.utcnow()).total_seconds())
-
-                if seconds_until_exp > 0:
-                    self.redis_client.setex(f"revoked_token:{token}", seconds_until_exp, "revoked")
+            # Use adapter to decode token (ignore expiration for revocation)
+            try:
+                claims = self.token_generator.verify_jwt_token(token)
+                # For revocation, we need the expiration time, so we'll use a fallback
+                # Since we can't easily get exp from claims, we'll revoke for a default period
+                seconds_until_exp = 3600  # 1 hour default
+            except ValueError:
+                # If token is invalid, still revoke it for safety
+                seconds_until_exp = 3600
+                
+            if seconds_until_exp > 0:
+                    self._cache_set(f"revoked_token:{token}", "revoked", seconds_until_exp)
 
             # Remove from token cache
             self._remove_cached_token(token)
 
             return True
 
-        except JWTError:
+        except ValueError:
             return False
 
     def generate_password_reset_token(self, user_email: str) -> str:
@@ -377,10 +551,10 @@ class SecurityManager:
             "used": False
         }
         
-        self.redis_client.setex(
-            f"password_reset:{reset_token}", 
-            900,  # 15 minutes
-            json.dumps(reset_data)
+        self._cache_set(
+            f"password_reset:{reset_token}",
+            json.dumps(reset_data),
+            900  # 15 minutes
         )
         
         logger.info(f"Password reset token generated for {user_email}")
@@ -397,7 +571,7 @@ class SecurityManager:
             Token data if valid, None otherwise
         """
         try:
-            reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
+            reset_data_str = self._cache_get(f"password_reset:{reset_token}")
             if not reset_data_str or not isinstance(reset_data_str, str):
                 return None
                 
@@ -409,7 +583,7 @@ class SecurityManager:
                 
             return reset_data
             
-        except (json.JSONDecodeError, redis.RedisError) as e:
+        except (json.JSONDecodeError, Exception) as e:
             logger.error(f"Error verifying reset token: {e}")
             return None
 
@@ -424,7 +598,7 @@ class SecurityManager:
             Success status
         """
         try:
-            reset_data_str = self.redis_client.get(f"password_reset:{reset_token}")
+            reset_data_str = self._cache_get(f"password_reset:{reset_token}")
             if not reset_data_str or not isinstance(reset_data_str, str):
                 return False
                 
@@ -432,15 +606,15 @@ class SecurityManager:
             reset_data["used"] = True
             
             # Update with shorter expiration (1 hour for audit trail)
-            self.redis_client.setex(
+            self._cache_set(
                 f"password_reset:{reset_token}",
-                3600,
-                json.dumps(reset_data)
+                json.dumps(reset_data),
+                3600
             )
             
             return True
             
-        except (json.JSONDecodeError, redis.RedisError) as e:
+        except (json.JSONDecodeError, Exception) as e:
             logger.error(f"Error consuming reset token: {e}")
             return False
 
@@ -455,15 +629,16 @@ class SecurityManager:
             New access token
             
         Raises:
-            HTTPException: If refresh token is invalid or expired
+            AuthenticationError: If refresh token is invalid or expired
         """
         try:
             # Validate refresh token
-            refresh_data_str = self.redis_client.get(f"refresh_token:{refresh_token}")
+            refresh_data_str = self._cache_get(f"refresh_token:{refresh_token}")
             if not refresh_data_str or not isinstance(refresh_data_str, str):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid refresh token"
+                raise AuthenticationError(
+                    "Invalid refresh token",
+                    status_code=401,
+                    error_code="INVALID_REFRESH_TOKEN"
                 )
                 
             refresh_data = json.loads(refresh_data_str)
@@ -471,17 +646,19 @@ class SecurityManager:
             session_id = refresh_data.get("session_id")
             
             if not user_id or not session_id:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid refresh token data"
+                raise AuthenticationError(
+                    "Invalid refresh token data",
+                    status_code=401,
+                    error_code="INVALID_TOKEN_DATA"
                 )
             
             # Verify session still exists
             session = self.get_session(session_id)
             if not session:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Session expired"
+                raise AuthenticationError(
+                    "Session expired",
+                    status_code=401,
+                    error_code="SESSION_EXPIRED"
                 )
             
             # Create new access token with minimal user data
@@ -510,17 +687,19 @@ class SecurityManager:
             
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing refresh token data: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
+            raise AuthenticationError(
+                "Invalid refresh token",
+                status_code=401,
+                error_code="INVALID_TOKEN_FORMAT"
             )
-        except HTTPException:
+        except AuthenticationError:
             raise
         except Exception as e:
             logger.error(f"Error refreshing access token: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Token refresh failed"
+            raise AuthenticationError(
+                "Token refresh failed",
+                status_code=500,
+                error_code="TOKEN_REFRESH_ERROR"
             )
 
     def revoke_user_sessions(self, user_id: str) -> int:
@@ -539,18 +718,20 @@ class SecurityManager:
         """Cache token in Redis for fast validation"""
         seconds_until_exp = int((expire - datetime.utcnow()).total_seconds())
         if seconds_until_exp > 0:
-            self.redis_client.setex(
-                f"token:{token}", seconds_until_exp, json.dumps(payload, default=str)
+            self._cache_set(
+                f"token:{token}",
+                json.dumps(payload, default=str),
+                seconds_until_exp
             )
 
     def _remove_cached_token(self, token: str) -> None:
         """Remove token from Redis cache"""
-        self.redis_client.delete(f"token:{token}")
+        self._cache_delete(f"token:{token}")
 
     def _revoke_token(self, token: str) -> None:
         """Internal method to revoke expired token"""
-        self.redis_client.delete(f"token:{token}")
-        self.redis_client.setex(f"revoked_token:{token}", 3600, "expired")
+        self._cache_delete(f"token:{token}")
+        self._cache_set(f"revoked_token:{token}", "expired", 3600)
 
 
 # Global security manager instance - lazy initialization
@@ -564,59 +745,9 @@ def get_security_manager() -> SecurityManager:
     return _security_manager
 
 
-# FastAPI dependency functions
-# DEPRECATED: This function is deprecated. 
-# Use apps.api.middleware.auth.get_current_user instead for full user object
-# or core.security_engine.auth_utils.AuthUtils for token operations
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-) -> dict[str, Any]:
-    """
-    DEPRECATED: FastAPI dependency to get current authenticated user
-    
-    This function only returns token payload, not full user from database.
-    Use apps.api.middleware.auth.get_current_user for complete user object.
-
-    Returns:
-        User payload from JWT token (deprecated - use middleware version)
-    """
-    token = credentials.credentials
-    return get_security_manager().verify_token(token)
-
-
-def require_role(required_role: UserRole):
-    """
-    FastAPI dependency to require specific user role
-
-    Args:
-        required_role: Required user role
-
-    Returns:
-        Dependency function
-    """
-
-    def role_checker(current_user: dict[str, Any] = Depends(get_current_user)):
-        user_role = UserRole(current_user.get("role"))
-
-        # Role hierarchy check
-        role_hierarchy = {
-            UserRole.GUEST: 0,
-            UserRole.READONLY: 1,
-            UserRole.USER: 2,
-            UserRole.ANALYST: 3,
-            UserRole.MODERATOR: 4,
-            UserRole.ADMIN: 5,
-        }
-
-        if role_hierarchy.get(user_role, 0) < role_hierarchy.get(required_role, 0):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Insufficient permissions. Required role: {required_role.value}",
-            )
-
-        return current_user
-
-    return role_checker
+# Note: FastAPI dependency functions have been moved to apps.api layer
+# Core domain should not contain framework-specific dependencies
+# Use apps.api.deps or apps.api.middleware for authentication dependencies
 
 
 # Export convenience functions

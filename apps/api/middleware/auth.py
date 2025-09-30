@@ -12,9 +12,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from core.security_engine import SecurityManager, get_security_manager, get_rbac_manager
-from core.security_engine.auth_utils import auth_utils, AuthError, security_scheme
+from apps.api.auth_utils import auth_utils, AuthError, security_scheme
 from core.security_engine.rbac import RBACManager, Permission
-from core.security_engine.models import User, UserRole
+# Import new role system with backwards compatibility
+from core.security_engine.models import User
+from core.security_engine import ApplicationRole, AdministrativeRole, LegacyUserRole as UserRole
+# Import new permission system
+from core.security_engine.permissions import Permission as NewPermission
+from core.security_engine.role_hierarchy import role_hierarchy_service
 from core.repositories.interfaces import UserRepository, ChannelRepository
 # ✅ FIXED: Removed direct repository imports - now using DI container
 
@@ -329,7 +334,72 @@ async def get_current_user_id_from_request(request) -> int:
         return 1
 
 
-# Role-based dependencies
-require_analyst_role = require_role(UserRole.ANALYST)
-require_moderator_role = require_role(UserRole.MODERATOR)
-require_admin_role = require_role(UserRole.ADMIN)
+# Role-based dependencies - Updated for new role system
+async def require_analytics_permission(
+    current_user: dict[str, Any] = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Require analytics viewing permission."""
+    user_info = role_hierarchy_service.get_user_role_info(
+        role=current_user.get('role', 'user'),
+        additional_permissions=current_user.get('additional_permissions', []),
+        migration_profile=current_user.get('migration_profile')
+    )
+    
+    if NewPermission.VIEW_ANALYTICS not in user_info.permissions:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Analytics access permission required"
+        )
+    return current_user
+
+
+async def require_user_management_permission(
+    current_user: dict[str, Any] = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Require user management permission."""
+    user_info = role_hierarchy_service.get_user_role_info(
+        role=current_user.get('role', 'user'),
+        additional_permissions=current_user.get('additional_permissions', []),
+        migration_profile=current_user.get('migration_profile')
+    )
+    
+    if NewPermission.MANAGE_USERS not in user_info.permissions:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User management permission required"
+        )
+    return current_user
+
+
+async def require_admin_role_new(
+    current_user: dict[str, Any] = Depends(get_current_user)
+) -> dict[str, Any]:
+    """Require administrative role (MODERATOR or SUPER_ADMIN)."""
+    from core.security_engine.roles import is_administrative_role
+    
+    user_role = current_user.get('role', 'user')
+    if not is_administrative_role(user_role):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrative access required"
+        )
+    return current_user
+
+
+async def check_permission(
+    user_dict: dict[str, Any],
+    permission: NewPermission
+) -> bool:
+    """Helper function to check if user has specific permission."""
+    user_info = role_hierarchy_service.get_user_role_info(
+        role=user_dict.get('role', 'user'),
+        additional_permissions=user_dict.get('additional_permissions', []),
+        migration_profile=user_dict.get('migration_profile')
+    )
+    return permission in user_info.permissions
+
+
+# Legacy role dependencies (DEPRECATED - use permission-based instead)
+require_analyst_role = require_analytics_permission  # Migrate to permission-based
+require_moderator_role = require_admin_role_new     # Migrate to permission-based
+require_admin_role = require_admin_role_new         # Migrate to permission-based

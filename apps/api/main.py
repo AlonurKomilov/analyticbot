@@ -32,7 +32,8 @@ from apps.bot.api.payment_router import router as payment_router
 from apps.bot.models.twa import InitialDataResponse, User, Plan, Channel, ScheduledPost
 from config import settings
 from core import DeliveryService, ScheduleService
-from infra.db.connection_manager import close_database, init_database
+# ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
+from apps.shared.di import get_container, close_container
 # ✅ PRODUCTION READY: No more direct mock imports
 # Demo services now injected via DI container based on configuration
 
@@ -44,20 +45,14 @@ async def lifespan(app: FastAPI):
     """Application lifespan events - now with proper DI container management"""
     # Startup - Initialize database and DI container
     try:
-        await init_database()
-        logger.info("Database initialized successfully")
-        
-        # ✅ NEW: Initialize DI container with proper asyncpg pool
-        from apps.shared.di import init_container, Settings as DISettings
-        di_settings = DISettings(
-            database_url=settings.DATABASE_URL,
-            database_pool_size=settings.DB_POOL_SIZE,
-            database_max_overflow=settings.DB_MAX_OVERFLOW
-        )
-        di_container = init_container(di_settings)
+        # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
+        container = get_container()
+        db_manager = await container.database_manager()
+        await db_manager.initialize()
+        logger.info("Database initialized successfully via shared DI container")
         
         # Pre-initialize asyncpg pool to ensure it's ready
-        pool = await di_container.asyncpg_pool()
+        pool = await container.asyncpg_pool()
         logger.info(f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections")
         
     except Exception as e:
@@ -66,7 +61,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
-        await close_database()
+        await close_container()
         await cleanup_db_pool()
         logger.info("✅ Application shutdown completed")
     except Exception as e:
@@ -198,9 +193,9 @@ app.add_middleware(
 )
 
 # Add demo mode detection middleware
-from apps.api.middleware.demo_mode import DemoModeMiddleware
+from apps.demo.middleware import DemoMiddleware
 from apps.api.di import configure_api_container
-app.add_middleware(DemoModeMiddleware)
+app.add_middleware(DemoMiddleware)
 
 # Initialize API DI container
 api_container = configure_api_container()
@@ -221,7 +216,7 @@ from apps.api.routers.statistics_core_router import router as statistics_core_ro
 from apps.api.routers.statistics_reports_router import router as statistics_reports_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
 from apps.api.routers.insights_predictive_router import router as insights_predictive_router
-from apps.api.routers.demo_router import router as demo_router
+from apps.demo.routers.main import router as demo_router
 
 app.include_router(analytics_live_router)        # Real-time live analytics (4 endpoints) - /analytics/live/*
 app.include_router(analytics_alerts_router)      # Alert management (8 endpoints) - /analytics/alerts/*

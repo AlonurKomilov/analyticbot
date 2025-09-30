@@ -15,7 +15,7 @@ from config.settings import Settings
 
 # Always use environment variables with fallbacks for consistent behavior
 import os
-from pydantic import SecretStr
+from config.settings import Settings, SecretStr
 settings = Settings(
     BOT_TOKEN=SecretStr(os.getenv("BOT_TOKEN", "test_token")),
     STORAGE_CHANNEL_ID=int(os.getenv("STORAGE_CHANNEL_ID", "0")),
@@ -251,9 +251,9 @@ def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=
 
     # Record metrics if available
     try:
-        # Monitoring disabled for clean architecture
+        from apps.bot.utils.monitoring import metrics
         metrics.record_metric("celery_task_started", 1.0, {"task": str(task_name)})
-    except ImportError:
+    except (ImportError, AttributeError):
         pass
 
 
@@ -268,15 +268,14 @@ def task_postrun_handler(
 
     # Record detailed metrics
     try:
-        # Monitoring disabled for clean architecture
-
+        from apps.bot.utils.monitoring import metrics
         success = state == "SUCCESS"
         metrics.record_metric(
             "celery_task_completed",
             1.0,
             {"task": str(getattr(task, 'name', 'unknown')), "state": str(state), "success": str(success).lower()},
         )
-    except ImportError:
+    except (ImportError, AttributeError):
         pass
 
 
@@ -295,9 +294,9 @@ def task_failure_handler(
     
     # Record failure metrics
     try:
-        # Monitoring disabled for clean architecture
+        from apps.bot.utils.monitoring import metrics
         metrics.record_metric("celery_task_failed", 1.0, {"task": str(sender_name)})
-    except ImportError:
+    except (ImportError, AttributeError):
         pass
 
 
@@ -309,10 +308,9 @@ def worker_ready_handler(sender=None, **kwargs):
 
     # Record worker metrics
     try:
-        # Monitoring disabled for clean architecture
-
+        from apps.bot.utils.monitoring import metrics
         metrics.record_metric("celery_worker_ready", 1.0, {"hostname": str(hostname or "unknown")})
-    except ImportError:
+    except (ImportError, AttributeError):
         pass
 
 
@@ -374,11 +372,10 @@ def check_celery_health() -> dict[str, Any]:
 
 # Register health check if monitoring is available
 try:
-    # Health monitoring disabled for clean architecture
-
+    from apps.bot.utils.monitoring import health_monitor
     health_monitor.register_check("celery", check_celery_health, timeout=10)
     logger.info("Registered Celery health check")
-except ImportError:
+except (ImportError, AttributeError):
     logger.warning("Could not register Celery health check (monitoring module not available)")
 
 

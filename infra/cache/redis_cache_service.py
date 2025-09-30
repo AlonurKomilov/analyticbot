@@ -46,11 +46,14 @@ class RedisCacheService(CacheService):
         """Get value from cache."""
         await self._ensure_connected()
         try:
-            if hasattr(self._client, 'get'):
+            if self._client and hasattr(self._client, 'get'):
                 result = await self._client.get(key)
                 return result.decode('utf-8') if result else None
-            else:
+            elif self._client:
                 return self._client.get(key)
+            else:
+                logger.warning("Redis client not available")
+                return None
         except Exception as e:
             logger.error(f"Cache get error for key {key}: {e}")
             return None
@@ -59,42 +62,69 @@ class RedisCacheService(CacheService):
         """Set value in cache with optional TTL."""
         await self._ensure_connected()
         try:
-            if hasattr(self._client, 'set'):
-                await self._client.set(key, value, ex=ttl)
+            if not self._client:
+                logger.warning("Redis client not available")
+                return False
+                
+            if hasattr(self._client, 'set') and asyncio.iscoroutinefunction(self._client.set):
+                if ttl:
+                    await self._client.set(key, value, ex=ttl)
+                else:
+                    await self._client.set(key, value)
+            elif hasattr(self._client, 'set'):
+                if ttl:
+                    self._client.set(key, value, ttl)
+                else:
+                    self._client.set(key, value)
             else:
-                self._client.set(key, value, ttl)
+                logger.warning("Redis client set method not available")
+                return False
             return True
         except Exception as e:
             logger.error(f"Cache set error for key {key}: {e}")
             return False
-    
+
     async def delete(self, key: str) -> bool:
-        """Delete key from cache."""
+        """Delete key from cache.""" 
         await self._ensure_connected()
         try:
+            if not self._client:
+                logger.warning("Redis client not available")
+                return False
+                
             if hasattr(self._client, 'delete'):
-                result = await self._client.delete(key)
+                if asyncio.iscoroutinefunction(self._client.delete):
+                    result = await self._client.delete(key)
+                else:
+                    result = self._client.delete(key)
                 return bool(result)
             else:
-                return self._client.delete(key)
+                logger.warning("Redis client delete method not available")
+                return False
         except Exception as e:
             logger.error(f"Cache delete error for key {key}: {e}")
             return False
-    
+
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache."""
         await self._ensure_connected()
         try:
+            if not self._client:
+                logger.warning("Redis client not available")
+                return False
+                
             if hasattr(self._client, 'exists'):
-                result = await self._client.exists(key)
+                if asyncio.iscoroutinefunction(self._client.exists):
+                    result = await self._client.exists(key)
+                else:
+                    result = self._client.exists(key)
                 return bool(result)
             else:
-                return self._client.exists(key)
+                logger.warning("Redis client exists method not available")
+                return False
         except Exception as e:
             logger.error(f"Cache exists error for key {key}: {e}")
             return False
-
-
 class InMemoryCache:
     """Fallback in-memory cache implementation."""
     

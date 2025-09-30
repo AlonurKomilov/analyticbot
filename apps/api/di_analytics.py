@@ -1,5 +1,4 @@
 import os
-from apps.bot.container import container
 from unittest.mock import AsyncMock
 from core.services.analytics_fusion_service import AnalyticsFusionService
 from datetime import UTC, datetime
@@ -147,13 +146,19 @@ async def get_redis_client():
         return None
 
     try:
-        # ✅ FIXED: Get Redis client from proper DI container
-        from apps.api.di import container
-        from core.protocols import RedisClientProtocol
+        # ✅ FIXED: Create Redis client directly instead of using DI container
+        import redis.asyncio as redis
+        from config.settings import settings
         
-        redis_client = core_container.get_service(RedisClientProtocol)
-        logger.info("Successfully obtained Redis client from DI container")
-        return redis_client._client  # Return the underlying redis client for cache adapter
+        # Create Redis client using settings
+        redis_client = redis.Redis(
+            host=getattr(settings, 'REDIS_HOST', 'localhost'),
+            port=getattr(settings, 'REDIS_PORT', 6379),
+            db=getattr(settings, 'REDIS_DB', 0),
+            decode_responses=True
+        )
+        logger.info("Successfully created Redis client directly")
+        return redis_client
         
     except Exception as e:
         logger.warning(f"Redis client not available from DI container: {e}")
@@ -347,6 +352,27 @@ async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
     if pool is None:
         raise RuntimeError("Failed to get database pool")
     return AsyncpgStatsRawRepository(pool)  # type: ignore
+
+
+async def get_channel_management_service():
+    """Get channel management service with proper dependencies"""
+    from apps.api.services.channel_management_service import ChannelManagementService
+    from core.services.channel_service import ChannelService
+    
+    # Get database pool
+    pool = await get_database_pool()
+    if pool is None:
+        raise RuntimeError("Failed to get database pool")
+    
+    # Create channel repository
+    from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+    channel_repo = AsyncpgChannelRepository(pool)  # type: ignore
+    
+    # Create core service
+    core_service = ChannelService(channel_repo)
+    
+    # Create and return application service
+    return ChannelManagementService(core_service)
 
 
 # Cleanup function

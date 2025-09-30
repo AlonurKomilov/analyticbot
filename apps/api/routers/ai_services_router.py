@@ -14,8 +14,10 @@ from apps.api.middleware.auth import get_current_user_id
 
 from apps.bot.services.ml.content_optimizer import ContentOptimizer, ContentAnalysis
 from apps.bot.services.ml.churn_predictor import ChurnPredictor, ChurnRiskAssessment, UserBehaviorData
-from infra.cache.advanced_decorators import cache_result
-from infra.db.performance import performance_timer
+# ✅ CLEAN ARCHITECTURE: Use apps cache abstraction instead of direct infra import
+from apps.shared.cache import cache_result
+# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 
@@ -101,8 +103,7 @@ async def get_churn_predictor() -> ChurnPredictor:
 # =====================================
 
 @router.post("/content/analyze", response_model=ContentOptimizationResponse)
-@cache_result("ai_content_analysis", ttl=900)  # Cache for 15 minutes
-@performance_timer("ai_content_optimization")
+@cache_result(ttl=900)  # Cache for 15 minutes
 async def optimize_content(
     request: ContentOptimizationRequest,
     optimizer: ContentOptimizer = Depends(get_content_optimizer)
@@ -242,28 +243,31 @@ async def analyze_security(
     """
     try:
         # Check if this is a demo user and get appropriate demo data
-        from apps.api.__mocks__.auth.mock_users import is_demo_user_by_id, get_demo_user_type_by_id
-        from apps.api.__mocks__.ai_services.mock_data import get_mock_security_analysis
+        from tests.mocks.data.auth_fixtures import is_demo_user_by_id, get_demo_user_type_by_id
+        from tests.mocks.data.ai_services.mock_data import get_mock_security_analysis
         
         # Check if current user is a demo user (authenticated via JWT)
         if current_user_id and is_demo_user_by_id(str(current_user_id)):
             demo_type = get_demo_user_type_by_id(str(current_user_id))
-            security_data = get_mock_security_analysis(demo_type, request.content)
+            # Ensure non-None values for mock function
+            demo_type_safe = demo_type if demo_type is not None else "default"
+            content_safe = request.content if request.content is not None else "No content provided"
+            security_data = get_mock_security_analysis(demo_type_safe, content_safe)
             
             return SecurityAnalysisResponse(
                 threat_level=security_data["threat_level"],  
                 security_score=security_data["security_score"],
                 detected_risks=security_data["detected_risks"],
-                recommendations=security_data["recommendations"],
-                analysis_metadata=security_data["analysis_metadata"]
+                recommendations=security_data["recommendations"]
             )
         
         # For non-demo users, implement actual AI security analysis
-        # TODO: Implement real AI security analysis service
-        # Real implementation would:
-        # 1. Analyze content using AI models
-        # 2. Check against security databases
-        # 3. Generate real threat assessment
+        # TODO: Implement real AI security analysis service - PLACEHOLDER
+        # For production: integrate with actual AI security services like:
+        # 1. Analyze content using AI models (GPT-4, Claude, etc.)
+        # 2. Check against security databases (VirusTotal, URLVoid, etc.)
+        # 3. Generate real threat assessment scores
+        # Current implementation returns demo data for non-demo users
         
         # For now, return error indicating feature not available for non-demo users
         raise HTTPException(

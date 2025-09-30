@@ -981,7 +981,7 @@ class PredictiveAnalyticsEngine:
         """
         try:
             # Use clean mock data from centralized location
-            from apps.api.__mocks__.ml import get_mock_optimal_posting_time
+            from tests.mocks.data.ml import get_mock_optimal_posting_time
             return get_mock_optimal_posting_time(channel_id)
             
         except Exception as e:
@@ -1002,7 +1002,7 @@ class PredictiveAnalyticsEngine:
         """
         try:
             # Use centralized mock health data
-            from apps.api.__mocks__.ml import get_mock_ml_health_check
+            from tests.mocks.data.ml import get_mock_ml_health_check
             health_data = get_mock_ml_health_check()
             health_data.update({
                 "models_loaded": len(self.models),

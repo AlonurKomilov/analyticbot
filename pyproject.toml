@@ -119,3 +119,64 @@ dev = [
     "ruff==0.4.*",
     "aiosqlite==0.20.*",
 ]
+
+[tool.importlinter]
+root_packages = ["apps", "core", "infra"]
+
+[[tool.importlinter.contracts]]
+name = "Clean Architecture Layers Contract"
+type = "layers"
+layers = [
+    "core.domain",
+    "core.ports",
+    "core.services",
+    "core.adapters",
+    "apps",
+    "infra"
+]
+
+[[tool.importlinter.contracts]]
+name = "Core Framework Independence"
+type = "forbidden"
+source_modules = ["core"]
+forbidden_modules = [
+    "fastapi",
+    "sqlalchemy",
+    "redis",
+    "httpx",
+    "aiohttp",
+    "asyncpg",
+    "aiogram",
+    "telegram"
+]
+
+[[tool.importlinter.contracts]]
+name = "Apps Layer Boundaries"
+type = "forbidden"
+source_modules = ["apps.jobs"]
+forbidden_modules = [
+    "apps.bot",
+    "apps.frontend"
+]
+
+[[tool.importlinter.contracts]]
+name = "No Direct Infra Imports in Apps"
+type = "forbidden" 
+source_modules = ["apps"]
+forbidden_modules = [
+    "infra.databases",
+    "infra.redis",
+    "infra.monitoring",
+    "infra.security"
+]
+
+[[tool.importlinter.contracts]]
+name = "Repository Factory Pattern"
+type = "forbidden"
+source_modules = ["apps"]
+forbidden_modules = [
+    "infra.repositories"
+]
+ignore_imports = [
+    "apps.shared.factory -> infra.repositories"
+]

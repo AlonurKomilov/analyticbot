@@ -2,12 +2,12 @@
 
 # Ensure environment files exist - Two-File Clean Architecture
 ifeq (,$(wildcard ./.env.development))
-    $(shell echo "⚠️  Creating .env.development from template...")
-    $(shell cp .env.development.example .env.development)
+	$(shell echo "Creating .env.development from template...")
+	$(shell cp .env.development.example .env.development)
 endif
 ifeq (,$(wildcard ./.env.production))
-    $(shell echo "⚠️  Creating .env.production from template...")
-    $(shell cp .env.production.example .env.production)
+	$(shell echo "Creating .env.production from template...")
+	$(shell cp .env.production.example .env.production)
 endif
 
 # Include development commands

@@ -8,8 +8,9 @@ from pydantic import ValidationError
 
 from apps.bot.domain.models import InlineButtonsPayload
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
-from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+
+# TODO: Define proper repository protocols 
+# For now using Any to maintain compatibility while removing direct infra imports
 
 logger = logging.getLogger(__name__)
 
@@ -20,8 +21,8 @@ class SchedulerService:
     def __init__(
         self,
         bot: Bot,
-        scheduler_repo: AsyncpgScheduleRepository,
-        analytics_repository: AsyncpgAnalyticsRepository,
+        scheduler_repo: Any,
+        analytics_repository: Any,
     ):
         self.bot = bot
         self.scheduler_repo = scheduler_repo

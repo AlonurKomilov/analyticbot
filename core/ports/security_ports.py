@@ -8,7 +8,7 @@ to specific frameworks like FastAPI, Redis, or HTTP libraries.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional, Dict, Set
+from typing import Any, Optional, Dict, Set, Union
 
 
 @dataclass
@@ -166,6 +166,33 @@ class UserRepositoryPort(ABC):
         pass
 
 
+class HttpClientPort(ABC):
+    """Port for HTTP client operations"""
+    
+    @abstractmethod
+    async def get(
+        self, 
+        url: str, 
+        headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
+        timeout: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Make HTTP GET request"""
+        pass
+    
+    @abstractmethod
+    async def post(
+        self, 
+        url: str,
+        data: Optional[Dict[str, Any]] = None,
+        json: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+        timeout: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Make HTTP POST request"""
+        pass
+
+
 class SecurityEventsPort(ABC):
     """Port for security event logging"""
     
@@ -192,6 +219,16 @@ class SecurityEventsPort(ABC):
     @abstractmethod
     def log_password_reset_requested(self, email: str, request: AuthRequest) -> None:
         """Log password reset request"""
+        pass
+    
+    @abstractmethod
+    def log_security_event(
+        self, 
+        user_id: Optional[str], 
+        event_type: str, 
+        details: Dict[str, Any]
+    ) -> None:
+        """Log generic security event"""
         pass
 
 
@@ -271,6 +308,7 @@ __all__ = [
     "TokenGeneratorPort",
     "SecurityConfigPort",
     "UserRepositoryPort",
+    "HttpClientPort",
     "SecurityEventsPort",
     "SecurityService",
 ]

@@ -38,7 +38,7 @@ class PerformanceConfig:
 class DatabasePerformanceManager:
     """Enhanced database performance manager with caching and monitoring"""
 
-    def __init__(self, redis_url: str = None):
+    def __init__(self, redis_url: str | None = None):
         self._redis_pool = None
         self._redis_url = redis_url or "redis://localhost:6379/0"
         self._query_stats = {}
@@ -180,30 +180,128 @@ class DatabasePerformanceManager:
 performance_manager = DatabasePerformanceManager()
 
 
-def performance_timer(func):
-    """Decorator to measure function execution time"""
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        start_time = time.time()
-        try:
-            result = await func(*args, **kwargs)
-            execution_time = time.time() - start_time
+class PerformanceTimer:
+    """Context manager for measuring execution time"""
+    
+    def __init__(self, operation_name: str):
+        self.operation_name = operation_name
+        self.start_time = None
+    
+    def __enter__(self):
+        self.start_time = time.time()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.start_time:
+            execution_time = time.time() - self.start_time
             
             if execution_time > 1.0:  # Log slow operations
-                logger.warning(f"Slow operation: {func.__name__} took {execution_time:.2f}s")
+                logger.warning(f"Slow operation: {self.operation_name} took {execution_time:.2f}s")
+            else:
+                logger.debug(f"Operation: {self.operation_name} took {execution_time:.2f}s")
             
+            if exc_type:
+                logger.error(f"Operation {self.operation_name} failed after {execution_time:.2f}s: {exc_val}")
+
+
+def performance_timer(operation_name_or_func=None):
+    """
+    Flexible performance timer supporting multiple usage patterns:
+    
+    1. As context manager: with performance_timer("operation_name"):
+    2. As decorator factory: @performance_timer("operation_name") 
+    3. As direct decorator: @performance_timer
+    """
+    def _create_decorator(operation_name: str):
+        """Create decorator with specified operation name"""
+        def decorator(func):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                start_time = time.time()
+                try:
+                    result = await func(*args, **kwargs)
+                    execution_time = time.time() - start_time
+                    
+                    if execution_time > 1.0:  # Log slow operations
+                        logger.warning(f"Slow operation: {operation_name} took {execution_time:.2f}s")
+                    
+                    return result
+                except Exception as e:
+                    execution_time = time.time() - start_time
+                    logger.error(f"Operation {operation_name} failed after {execution_time:.2f}s: {e}")
+                    raise
+            return wrapper
+        return decorator
+    
+    if operation_name_or_func is None:
+        # Called as @performance_timer() - return decorator factory
+        def decorator_factory(operation_name: str):
+            if isinstance(operation_name, str):
+                return _create_decorator(operation_name)
+            # If function passed, use function name
+            func = operation_name
+            return _create_decorator(func.__name__)(func)
+        return decorator_factory
+    
+    elif isinstance(operation_name_or_func, str):
+        # Called as performance_timer("name") - could be context manager or decorator factory
+        operation_name = operation_name_or_func
+        
+        # Return object that works as both context manager and decorator
+        class ContextManagerAndDecorator:
+            def __init__(self):
+                self._timer = None
+                
+            def __enter__(self):
+                self._timer = PerformanceTimer(operation_name)
+                return self._timer.__enter__()
+            
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                if self._timer:
+                    return self._timer.__exit__(exc_type, exc_val, exc_tb)
+                return False
+            
+            def __call__(self, func):
+                return _create_decorator(operation_name)(func)
+        
+        return ContextManagerAndDecorator()
+    
+    else:
+        # Called as @performance_timer (direct decorator, no parentheses)
+        func = operation_name_or_func
+        return _create_decorator(func.__name__)(func)
+
+
+# Simple in-memory cache for function results
+_FUNCTION_CACHE = {}
+
+def cache_result(cache_key: str, ttl: int = 300):
+    """Decorator to cache function results"""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            # Simple in-memory cache implementation
+            # In production, this would use Redis
+            global _FUNCTION_CACHE
+            
+            # Check cache
+            if cache_key in _FUNCTION_CACHE:
+                cached_data, timestamp = _FUNCTION_CACHE[cache_key]
+                if time.time() - timestamp < ttl:
+                    return cached_data
+            
+            # Execute function and cache result
+            result = await func(*args, **kwargs)
+            _FUNCTION_CACHE[cache_key] = (result, time.time())
             return result
-        except Exception as e:
-            execution_time = time.time() - start_time
-            logger.error(f"Operation {func.__name__} failed after {execution_time:.2f}s: {e}")
-            raise
-    return wrapper
+        return wrapper
+    return decorator
 
 
 async def init_performance_monitoring():
     """Initialize performance monitoring"""
     await performance_manager.initialize()
-    logger.info("Database performance monitoring initialized")
+    logger.info("Performance monitoring initialized")
 
 
 async def close_performance_monitoring():

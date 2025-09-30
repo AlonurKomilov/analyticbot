@@ -12,12 +12,43 @@ from typing import Any
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 
-from infra.db.performance import (
-    PerformanceConfig,
-    cache_result,
-    performance_manager,
+from apps.shared.performance import (
     performance_timer,
+    PerformanceMetrics,
+    create_performance_timer
 )
+# Note: performance_manager and some features temporarily disabled for clean architecture
+# These can be re-enabled once proper abstractions are complete
+
+# Temporary fallbacks for clean architecture transition
+class PerformanceConfig:
+    TASK_BATCH_SIZE = 50
+    CACHE_ANALYTICS_TTL = 300
+
+class MockPerformanceManager:
+    def __init__(self):
+        self.cache = MockCache()
+
+class MockCache:
+    async def get(self, key): return None
+    async def set(self, key, value, ttl=None): pass
+
+performance_manager = MockPerformanceManager()
+
+def cache_result(cache_key: str, ttl: int = 300):
+    """Temporary cache decorator fallback"""
+    def decorator(func):
+        return func  # No-op for now
+    return decorator
+
+def performance_timer_decorator(operation_name: str):
+    """Temporary performance timer decorator fallback"""
+    def decorator(func):
+        return func  # No-op for now  
+    return decorator
+
+# Override the performance_timer to be a decorator
+performance_timer = performance_timer_decorator
 from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 

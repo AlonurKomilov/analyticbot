@@ -17,6 +17,7 @@ PERFECT CLEAN ARCHITECTURE: No god objects, clear domain boundaries, focused res
 
 # ✅ PHASE 4: GRANULAR ANALYTICS ARCHITECTURE (NO GOD OBJECTS)
 from .analytics_live_router import router as analytics_live_router
+from .ai_services_router import router as ai_services_router
 from .analytics_alerts_router import router as analytics_alerts_router
 from .statistics_core_router import router as statistics_core_router
 from .statistics_reports_router import router as statistics_reports_router
@@ -31,12 +32,12 @@ from .admin_system_router import router as admin_system_router
 from .system_router import router as system_router
 from .auth_router import router as auth_router
 from .health_router import router as health_router
-from .demo_router import router as demo_router
+from apps.demo.routers.main import router as demo_router
 from .exports_router import router as exports_router
 from .sharing_router import router as sharing_router
 from .mobile_router import router as mobile_router
+# Re-enabled after fixing dependencies and imports
 from .superadmin_router import router as superadmin_router
-from .ai_services_router import router as ai_services_router
 
 __all__ = [
     # Phase 4: Granular Analytics Architecture (No God Objects)
@@ -58,6 +59,6 @@ __all__ = [
     "exports_router", 
     "sharing_router",
     "mobile_router",
-    "superadmin_router",
-    "ai_services_router"
+    "superadmin_router",  # Re-enabled after dependency fixes
+    "ai_services_router",  # Re-enabled after textstat dependency resolved
 ]

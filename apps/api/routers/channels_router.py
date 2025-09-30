@@ -12,16 +12,46 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from apps.bot.container import container
-from apps.bot.services.channel_management_service import ChannelManagementService, ChannelCreate, ChannelResponse
+from apps.api.services.channel_management_service import ChannelManagementService, ChannelCreate, ChannelResponse
+from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_channel_access, 
     get_current_user_id,
 )
-from infra.db.performance import performance_timer
+# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
+
+# Dependency function for channel service
+def get_channel_service():
+    """Get channel management service instance - using mock for now"""
+    # Create a simple mock implementation to avoid complex dependencies
+    class MockChannelService:
+        async def get_channels(self, user_id: int):
+            return [
+                {"id": 1, "name": "Sample Channel", "telegram_id": 12345, "description": "Demo channel"},
+                {"id": 2, "name": "Test Channel", "telegram_id": 67890, "description": "Test channel"}
+            ]
+        
+        async def create_channel(self, channel_data):
+            return {"id": 99, "name": channel_data.name, "telegram_id": channel_data.telegram_id, "description": channel_data.description}
+        
+        async def get_channel(self, channel_id: int):
+            return {"id": channel_id, "name": f"Channel {channel_id}", "telegram_id": 12345 + channel_id, "description": "Sample channel"}
+        
+        async def update_channel(self, channel_id: int, channel_data):
+            return {"id": channel_id, "name": channel_data.name, "telegram_id": channel_data.telegram_id, "description": channel_data.description}
+        
+        async def delete_channel(self, channel_id: int):
+            return {"success": True, "message": f"Channel {channel_id} deleted"}
+        
+        async def transfer_ownership(self, channel_id: int, new_owner_id: int):
+            return {"success": True, "message": f"Channel {channel_id} transferred to user {new_owner_id}"}
+    
+    return MockChannelService()
+
 router = APIRouter(
     prefix="/channels", tags=["Channel Management"], responses={404: {"description": "Not found"}}
 )
@@ -48,7 +78,7 @@ class ChannelUpdateRequest(BaseModel):
 @router.get("", response_model=list[ChannelListResponse])
 async def get_user_channels(
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 📺 Get User Channels
@@ -83,7 +113,7 @@ async def get_user_channels(
 async def create_channel(
     channel_data: ChannelCreate,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ➕ Create New Channel
@@ -120,7 +150,7 @@ async def create_channel(
 async def get_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 📺 Get Channel Details
@@ -159,7 +189,7 @@ async def update_channel(
     channel_id: int,
     update_data: ChannelUpdateRequest,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ✏️ Update Channel
@@ -203,7 +233,7 @@ async def update_channel(
 async def delete_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 🗑️ Delete Channel
@@ -248,7 +278,7 @@ async def delete_channel(
 async def activate_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ✅ Activate Channel
@@ -289,7 +319,7 @@ async def activate_channel(
 async def deactivate_channel(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## ❌ Deactivate Channel
@@ -330,7 +360,7 @@ async def deactivate_channel(
 async def get_channel_status(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(lambda: container.channel_service())
+    channel_service: ChannelManagementService = Depends(get_channel_management_service)
 ):
     """
     ## 📊 Get Channel Status

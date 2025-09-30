@@ -14,8 +14,8 @@ from pydantic import BaseModel
 # Services
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 from core.services.analytics_fusion_service import AnalyticsFusionService
-from apps.api.di import container
-from infra.db.performance import performance_timer
+# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 
 # Auth
 from apps.api.middleware.auth import get_current_user

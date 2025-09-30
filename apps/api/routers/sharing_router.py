@@ -22,10 +22,6 @@ from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
-# TODO: Move to apps/shared/factory.py - temporary direct import
-from infra.db.repositories.shared_reports_repository import (
-    AsyncPgSharedReportsRepository,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +54,8 @@ def get_analytics_client() -> AnalyticsClient:
 
 def get_shared_reports_repository() -> SharedReportsRepository:
     """Get shared reports repository"""
-    # TODO: Inject via DI container
-    return AsyncPgSharedReportsRepository()
+    factory = get_repository_factory()
+    return factory.get_shared_reports_repository()
 
 
 def get_csv_exporter() -> CSVExporter:

@@ -165,6 +165,17 @@ class RepositoryFactory:
             logger.warning("Failed to import AsyncpgAlertSentRepository, using fallback")
             return self._create_memory_alert_sent_repository()
     
+    async def create_shared_reports_repository(self):
+        """Create shared reports repository without direct infra import"""
+        try:
+            from infra.db.repositories.shared_reports_repository import AsyncPgSharedReportsRepository
+            
+            connection = await self._get_connection()
+            return AsyncPgSharedReportsRepository(connection)
+        except ImportError:
+            logger.warning("Failed to import AsyncPgSharedReportsRepository, using fallback")
+            return self._create_memory_shared_reports_repository()
+    
     def _create_memory_user_repository(self) -> UserRepository:
         """Fallback memory-based user repository"""
         # Create a simple fallback implementation
@@ -223,6 +234,17 @@ class RepositoryFactory:
             async def cleanup_old_alerts(self, hours_old=24): return 0
         
         return FallbackAlertSentRepository()
+    
+    def _create_memory_shared_reports_repository(self):
+        """Fallback memory-based shared reports repository"""
+        class FallbackSharedReportsRepository:
+            async def create_shared_report(self, **kwargs): return "fallback_token"
+            async def get_shared_report(self, token): return None
+            async def increment_access_count(self, token): return True
+            async def delete_shared_report(self, token): return True
+            async def cleanup_expired(self): return 0
+        
+        return FallbackSharedReportsRepository()
 
 
 async def create_repository_factory() -> RepositoryFactory:
@@ -290,6 +312,11 @@ class LazyRepositoryFactory:
         """Get alert sent repository"""
         factory = await self._ensure_factory()
         return await factory.create_alert_sent_repository()
+    
+    async def get_shared_reports_repository(self):
+        """Get shared reports repository"""
+        factory = await self._ensure_factory()
+        return await factory.create_shared_reports_repository()
     
     def get_chart_service(self) -> ChartServiceProtocol:
         """Get chart service instance"""

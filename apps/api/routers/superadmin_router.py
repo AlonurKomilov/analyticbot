@@ -102,8 +102,13 @@ async def get_superadmin_service(
     db: AsyncSession = Depends(get_db_connection),
 ) -> SuperAdminService:
     """Get SuperAdmin service with database dependency"""
-    from infra.adapters.superadmin_adapter import create_superadmin_service_with_adapter
-    return create_superadmin_service_with_adapter(db)
+    # Use repository factory pattern instead of direct adapter import
+    from apps.shared.factory import get_repository_factory
+    from core.services.superadmin_service_clean import SuperAdminService as CleanSuperAdminService
+    
+    factory = get_repository_factory()
+    admin_repo = await factory.get_admin_repository()
+    return CleanSuperAdminService(admin_repo)
 
 
 async def get_current_admin_user(

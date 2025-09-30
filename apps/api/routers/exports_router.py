@@ -14,13 +14,9 @@ from pydantic import BaseModel
 
 from apps.api.exports.csv_v2 import CSVExporter
 from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.factory import get_repository_factory
+from apps.shared.protocols import ChartServiceProtocol
 from config import settings
-# TODO: Move to apps/shared/services/chart_service.py - temporary direct import
-from infra.rendering.charts import (
-    MATPLOTLIB_AVAILABLE,
-    ChartRenderer,
-    ChartRenderingError,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +41,10 @@ def get_csv_exporter() -> CSVExporter:
     return CSVExporter()
 
 
-def get_chart_renderer() -> ChartRenderer:
-    """Get chart renderer instance"""
-    if not MATPLOTLIB_AVAILABLE:
-        raise HTTPException(
-            status_code=503,
-            detail="PNG chart rendering not available. Install matplotlib to enable.",
-        )
-    return ChartRenderer()
+def get_chart_service() -> ChartServiceProtocol:
+    """Get chart service instance"""
+    factory = get_repository_factory()
+    return factory.get_chart_service()
 
 
 def check_export_enabled():
@@ -214,7 +206,7 @@ async def export_growth_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
-    chart_renderer: ChartRenderer = Depends(get_chart_renderer),
+    chart_service: ChartServiceProtocol = Depends(get_chart_service),
     _: None = Depends(check_export_enabled),
 ):
     """Export growth chart as PNG"""
@@ -225,7 +217,7 @@ async def export_growth_chart(
             raise HTTPException(status_code=404, detail="Growth data not found")
 
         # Render chart
-        chart_bytes = chart_renderer.render_growth_chart(growth_data)
+        chart_bytes = chart_service.render_growth_chart(growth_data)
 
         filename = f"growth_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -235,7 +227,7 @@ async def export_growth_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except ChartRenderingError as e:
+    except Exception as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
     except aiohttp.ClientError as e:
@@ -251,7 +243,7 @@ async def export_reach_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
-    chart_renderer: ChartRenderer = Depends(get_chart_renderer),
+    chart_service: ChartServiceProtocol = Depends(get_chart_service),
     _: None = Depends(check_export_enabled),
 ):
     """Export reach chart as PNG"""
@@ -262,7 +254,7 @@ async def export_reach_chart(
             raise HTTPException(status_code=404, detail="Reach data not found")
 
         # Render chart
-        chart_bytes = chart_renderer.render_reach_chart(reach_data)
+        chart_bytes = chart_service.render_reach_chart(reach_data)
 
         filename = f"reach_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -272,7 +264,7 @@ async def export_reach_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except ChartRenderingError as e:
+    except Exception as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
     except aiohttp.ClientError as e:
@@ -288,7 +280,7 @@ async def export_sources_chart(
     channel_id: str,
     period: int = Query(default=30, ge=1, le=365),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
-    chart_renderer: ChartRenderer = Depends(get_chart_renderer),
+    chart_service: ChartServiceProtocol = Depends(get_chart_service),
     _: None = Depends(check_export_enabled),
 ):
     """Export sources chart as PNG"""
@@ -299,7 +291,7 @@ async def export_sources_chart(
             raise HTTPException(status_code=404, detail="Sources data not found")
 
         # Render chart
-        chart_bytes = chart_renderer.render_sources_chart(sources_data)
+        chart_bytes = chart_service.render_sources_chart(sources_data)
 
         filename = f"sources_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -309,7 +301,7 @@ async def export_sources_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except ChartRenderingError as e:
+    except Exception as e:
         logger.error(f"Chart rendering failed: {e}")
         raise HTTPException(status_code=500, detail="Chart rendering failed")
     except aiohttp.ClientError as e:
@@ -326,11 +318,15 @@ async def export_sources_chart(
 @router.get("/status")
 async def export_status():
     """Get export system status"""
-
+    
+    # Check chart service availability
+    factory = get_repository_factory()
+    chart_service = factory.get_chart_service()
+    
     return {
         "exports_enabled": settings.EXPORT_ENABLED,
         "csv_available": True,
-        "png_available": MATPLOTLIB_AVAILABLE,
+        "png_available": chart_service.is_available(),
         "max_export_size_mb": settings.MAX_EXPORT_SIZE_MB,
         "rate_limits": {
             "per_minute": settings.RATE_LIMIT_PER_MINUTE,

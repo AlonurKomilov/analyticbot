@@ -18,17 +18,13 @@ from apps.api.middleware.rate_limit import (
     check_creation_rate_limit,
 )
 from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.factory import get_repository_factory
+from apps.shared.protocols import ChartServiceProtocol
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
 # TODO: Move to apps/shared/factory.py - temporary direct import
 from infra.db.repositories.shared_reports_repository import (
     AsyncPgSharedReportsRepository,
-)
-# TODO: Move to apps/shared/services/chart_service.py - temporary direct import
-from infra.rendering.charts import (
-    MATPLOTLIB_AVAILABLE,
-    ChartRenderer,
-    ChartRenderingError,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,11 +67,10 @@ def get_csv_exporter() -> CSVExporter:
     return CSVExporter()
 
 
-def get_chart_renderer() -> ChartRenderer:
-    """Get chart renderer instance"""
-    if not MATPLOTLIB_AVAILABLE:
-        raise HTTPException(status_code=503, detail="PNG chart rendering not available")
-    return ChartRenderer()
+def get_chart_service() -> ChartServiceProtocol:
+    """Get chart service instance"""
+    factory = get_repository_factory()
+    return factory.get_chart_service()
 
 
 def check_share_enabled():
@@ -173,7 +168,7 @@ async def access_shared_report(
     repository: SharedReportsRepository = Depends(get_shared_reports_repository),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
     csv_exporter: CSVExporter = Depends(get_csv_exporter),
-    chart_renderer: ChartRenderer | None = Depends(get_chart_renderer),
+    chart_service: ChartServiceProtocol = Depends(get_chart_service),
     _: None = Depends(check_share_enabled),
     __: None = Depends(check_access_rate_limit),
 ):
@@ -254,16 +249,16 @@ async def access_shared_report(
             )
 
         elif format == "png":
-            if not chart_renderer:
+            if not chart_service.is_available():
                 raise HTTPException(status_code=503, detail="PNG rendering not available")
 
             try:
                 if report_type == "growth":
-                    png_bytes = chart_renderer.render_growth_chart(data)  # type: ignore[arg-type]
+                    png_bytes = chart_service.render_growth_chart(data)  # type: ignore[arg-type]
                 elif report_type == "reach":
-                    png_bytes = chart_renderer.render_reach_chart(data)  # type: ignore[arg-type]
+                    png_bytes = chart_service.render_reach_chart(data)  # type: ignore[arg-type]
                 elif report_type == "sources":
-                    png_bytes = chart_renderer.render_sources_chart(data)  # type: ignore[arg-type]
+                    png_bytes = chart_service.render_sources_chart(data)  # type: ignore[arg-type]
                 else:
                     raise HTTPException(
                         status_code=400, detail=f"PNG format not supported for {report_type}"
@@ -279,7 +274,7 @@ async def access_shared_report(
                     headers={"Content-Disposition": f'attachment; filename="{filename}"'},
                 )
 
-            except ChartRenderingError as e:
+            except Exception as e:
                 logger.error(f"Chart rendering failed: {e}")
                 raise HTTPException(status_code=500, detail="Chart rendering failed")
 

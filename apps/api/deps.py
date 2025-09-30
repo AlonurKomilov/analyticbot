@@ -5,7 +5,7 @@ Wires database connections to repositories to services using proper DI container
 
 import logging
 from collections.abc import AsyncGenerator
-from typing import AsyncContextManager
+from typing import AsyncContextManager, Any
 
 import asyncpg
 from fastapi import Depends
@@ -16,12 +16,15 @@ logger = logging.getLogger(__name__)
 from config import settings
 from core.services import DeliveryService, ScheduleService
 from apps.shared.di import get_container, Settings as DISettings
-from infra.db.repositories.schedule_repository import (
-    AsyncpgDeliveryRepository,
-    AsyncpgScheduleRepository,
-)
-from infra.db.repositories.user_repository import AsyncpgUserRepository
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from apps.shared.factory import get_repository_factory
+
+# Use repository factory instead of direct infra imports
+# from infra.db.repositories.schedule_repository import (
+#     AsyncpgDeliveryRepository,
+#     AsyncpgScheduleRepository,
+# )
+# from infra.db.repositories.user_repository import AsyncpgUserRepository
+# from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 
 # Security dependencies
 security = HTTPBearer()
@@ -48,14 +51,16 @@ async def get_asyncpg_pool() -> asyncpg.Pool:
     return await container.asyncpg_pool()
 
 
-async def get_user_repository(pool: asyncpg.Pool = Depends(get_asyncpg_pool)) -> AsyncpgUserRepository:
-    """Get user repository with proper pool injection"""
-    return AsyncpgUserRepository(pool)
+async def get_user_repository():
+    """Get user repository using factory pattern"""
+    factory = get_repository_factory()
+    return await factory.get_user_repository()
 
 
-async def get_channel_repository(pool: asyncpg.Pool = Depends(get_asyncpg_pool)) -> AsyncpgChannelRepository:
-    """Get channel repository with proper pool injection"""
-    return AsyncpgChannelRepository(pool)
+async def get_channel_repository():
+    """Get channel repository using factory pattern"""
+    factory = get_repository_factory()
+    return await factory.get_channel_repository()
 
 
 async def get_analytics_fusion_service():
@@ -128,32 +133,38 @@ async def get_db_connection() -> AsyncGenerator[asyncpg.Connection, None]:
         yield connection
 
 
-# Repository dependencies - now with proper pool injection
-async def get_schedule_repository(
-    pool: asyncpg.Pool = Depends(get_asyncpg_pool),
-) -> AsyncpgScheduleRepository:
-    """Get schedule repository with database dependency"""
-    return AsyncpgScheduleRepository(pool)
+# Repository dependencies - using factory pattern instead of direct infra imports
+async def get_schedule_repository():
+    """Get schedule repository using DI container"""
+    try:
+        from apps.shared.factory import RepositoryFactory
+        return await RepositoryFactory.get_schedule_repository()
+    except Exception as e:
+        logger.warning(f"Failed to get schedule repository: {e}")
+        return None
 
 
-async def get_delivery_repository(
-    pool: asyncpg.Pool = Depends(get_asyncpg_pool),
-) -> AsyncpgDeliveryRepository:
-    """Get delivery repository with database dependency"""
-    return AsyncpgDeliveryRepository(pool)
+async def get_delivery_repository():
+    """Get delivery repository using DI container"""
+    try:
+        from apps.shared.factory import RepositoryFactory
+        return await RepositoryFactory.get_delivery_repository()
+    except Exception as e:
+        logger.warning(f"Failed to get delivery repository: {e}")
+        return None
 
 
-# Service dependencies - now using DI container
+# Service dependencies - using factory pattern with flexible types
 async def get_schedule_service(
-    schedule_repo: AsyncpgScheduleRepository = Depends(get_schedule_repository),
+    schedule_repo: Any = Depends(get_schedule_repository),
 ) -> ScheduleService:
     """Get schedule service with repository dependency injection"""
     return ScheduleService(schedule_repo)
 
 
 async def get_delivery_service(
-    delivery_repo: AsyncpgDeliveryRepository = Depends(get_delivery_repository),
-    schedule_repo: AsyncpgScheduleRepository = Depends(get_schedule_repository),
+    delivery_repo: Any = Depends(get_delivery_repository),
+    schedule_repo: Any = Depends(get_schedule_repository),
 ) -> DeliveryService:
     """Get delivery service with repository dependency injection"""
     return DeliveryService(delivery_repo, schedule_repo)

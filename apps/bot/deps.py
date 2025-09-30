@@ -10,7 +10,7 @@ import asyncpg
 
 from config import settings
 from core.services import DeliveryService, ScheduleService
-from infra.db.repositories import AsyncpgDeliveryRepository, AsyncpgScheduleRepository
+from apps.shared.factory import RepositoryFactory
 
 
 class BotContainer:

@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from apps.api.exports.csv_v2 import CSVExporter
 from apps.bot.clients.analytics_client import AnalyticsClient
 from config import settings
+# TODO: Move to apps/shared/services/chart_service.py - temporary direct import
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
     ChartRenderer,

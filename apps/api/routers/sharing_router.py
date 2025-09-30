@@ -20,9 +20,11 @@ from apps.api.middleware.rate_limit import (
 from apps.bot.clients.analytics_client import AnalyticsClient
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
+# TODO: Move to apps/shared/factory.py - temporary direct import
 from infra.db.repositories.shared_reports_repository import (
     AsyncPgSharedReportsRepository,
 )
+# TODO: Move to apps/shared/services/chart_service.py - temporary direct import
 from infra.rendering.charts import (
     MATPLOTLIB_AVAILABLE,
     ChartRenderer,

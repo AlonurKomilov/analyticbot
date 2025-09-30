@@ -57,24 +57,20 @@ _container = SecurityContainer()
 # FastAPI dependency functions - these replace the scattered get_security_manager functions
 def get_security_manager() -> SecurityManager:
     """
-    FastAPI dependency to get SecurityManager
+    Get SecurityManager instance (for use in apps layer dependency injection)
     
-    Usage:
-        @app.get("/protected")
-        async def endpoint(security: SecurityManager = Depends(get_security_manager)):
-            ...
+    Note: This is a factory function for apps layer DI integration.
+    No framework dependencies in core layer.
     """
     return _container.security_manager
 
 
 def get_rbac_manager() -> RBACManager:
     """
-    FastAPI dependency to get RBACManager
+    Get RBACManager instance (for use in apps layer dependency injection)
     
-    Usage:
-        @app.get("/admin")
-        async def endpoint(rbac: RBACManager = Depends(get_rbac_manager)):
-            ...
+    Note: This is a factory function for apps layer DI integration.
+    No framework dependencies in core layer.
     """
     return _container.rbac_manager
 

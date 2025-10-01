@@ -20,22 +20,24 @@ Usage:
 
 import json
 import logging
-from datetime import datetime
-from typing import Any
-
 from dataclasses import dataclass
-from typing import Protocol, Any as TypeAny
+from datetime import datetime
+from typing import Any, Protocol
 
 from core.ports.security_ports import CachePort
 
-# Redis types for backwards compatibility  
+
+# Redis types for backwards compatibility
 class RedisProtocol(Protocol):
     async def get(self, key: str) -> str | None: ...
-    async def set(self, key: str, value: str, ex: int | None = None, nx: bool = False) -> bool | None: ...
+    async def set(
+        self, key: str, value: str, ex: int | None = None, nx: bool = False
+    ) -> bool | None: ...
     async def delete(self, key: str) -> int: ...
     async def keys(self, pattern: str) -> list[str]: ...
     async def ttl(self, key: str) -> int: ...
     async def close(self) -> None: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,24 +51,26 @@ class IdempotencyStatus:
     completed_at: datetime | None = None
     result: Any | None = None
     error: str | None = None
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
             "status": self.status,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "result": self.result,
             "error": self.error,
         }
-    
+
     @classmethod
     def from_dict(cls, data: dict) -> "IdempotencyStatus":
         """Create from dictionary."""
         return cls(
             status=data["status"],
             created_at=datetime.fromisoformat(data["created_at"]),
-            completed_at=datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None,
+            completed_at=(
+                datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
+            ),
             result=data.get("result"),
             error=data.get("error"),
         )
@@ -74,21 +78,21 @@ class IdempotencyStatus:
 
 class IdempotencyGuard:
     """Framework-independent idempotency guard using SETNX + TTL."""
-    
+
     def __init__(
-        self, 
-        cache: CachePort | None = None, 
+        self,
+        cache: CachePort | None = None,
         redis_client: RedisProtocol | None = None,
-        redis_url: str | None = None, 
-        key_prefix: str = "idempotency"
+        redis_url: str | None = None,
+        key_prefix: str = "idempotency",
     ):
         """
         Initialize idempotency guard with flexible backend options.
-        
+
         Args:
             cache: Cache port for simple operations (preferred for new code)
             redis_client: Direct Redis client for advanced operations (backwards compatibility)
-            redis_url: Redis URL for creating client (fallback) 
+            redis_url: Redis URL for creating client (fallback)
             key_prefix: Prefix for cache keys
         """
         self.cache = cache
@@ -240,7 +244,7 @@ class IdempotencyGuard:
 
     async def close(self) -> None:
         """Close Redis connection if it supports closing."""
-        if self._redis and hasattr(self._redis, 'close'):
+        if self._redis and hasattr(self._redis, "close"):
             try:
                 await self._redis.close()
             except Exception as e:

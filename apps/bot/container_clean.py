@@ -4,14 +4,16 @@ Legacy god container replaced with clean architecture pattern
 
 This file provides backward compatibility while delegating to clean DI containers.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
+
+from apps.bot.config import Settings
 
 # ✅ UNIFIED DI: Using dependency-injector for consistent architecture
-from apps.bot.di import container as clean_container, configure_bot_container
-from apps.bot.config import Settings
+from apps.bot.di import container as clean_container
 from apps.bot.utils.punctuated import Singleton
 
 logger = logging.getLogger(__name__)
@@ -24,32 +26,31 @@ class Container:
     """
     Legacy container compatibility wrapper
     Delegates to clean architecture DI container (apps.bot.di)
-    
+
     This replaces the 354-line god container with clean separation of concerns
     """
-    
+
     def __init__(self):
         self._clean_container = clean_container
         self.config = Singleton(Settings)
-    
+
     def resolve(self, cls: type[_T]) -> _T:
         """Legacy resolve method - delegates to clean DI"""
         return _resolve_from_clean_container(cls)
-    
+
     def register(self, cls: type, factory=None, instance=None):
         """Legacy register method - no-op for compatibility"""
-        pass
-    
+
     async def asyncpg_pool(self):
         """Get asyncpg pool from clean DI container"""
         try:
             pool_provider = self._clean_container.asyncpg_pool
             pool = pool_provider()
-            return await pool if hasattr(pool, '__await__') else pool
+            return await pool if hasattr(pool, "__await__") else pool
         except Exception as e:
             logger.warning(f"Failed to get asyncpg pool: {e}")
             return None
-    
+
     def alerting_service(self):
         """Get alerting service instance from clean DI"""
         try:
@@ -57,7 +58,7 @@ class Container:
         except Exception as e:
             logger.warning(f"Failed to get alerting service: {e}")
             return None
-    
+
     def channel_management_service(self):
         """Get channel management service from clean DI"""
         try:
@@ -79,45 +80,46 @@ def _resolve_from_clean_container(cls: type[_T]) -> _T:
         from aiogram import Dispatcher as _AioDispatcher
         from asyncpg.pool import Pool as AsyncPGPool
         from sqlalchemy.ext.asyncio import async_sessionmaker
-        
+
+        from apps.bot.services.alerting_service import AlertingService
+        from apps.bot.services.analytics_service import AnalyticsService
+
+        # Services
+        from apps.bot.services.guard_service import GuardService
+        from apps.bot.services.scheduler_service import SchedulerService
+        from apps.bot.services.subscription_service import SubscriptionService
+
         # Repositories
-        from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+        from infra.db.repositories.analytics_repository import (
+            AsyncpgAnalyticsRepository,
+        )
         from infra.db.repositories.channel_repository import AsyncpgChannelRepository
         from infra.db.repositories.plan_repository import AsyncpgPlanRepository
         from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
         from infra.db.repositories.user_repository import AsyncpgUserRepository
-        
-        # Services
-        from apps.bot.services.guard_service import GuardService
-        from apps.bot.services.subscription_service import SubscriptionService
-        from apps.bot.services.scheduler_service import SchedulerService
-        from apps.bot.services.analytics_service import AnalyticsService
-        from apps.bot.services.alerting_service import AlertingService
+
         # Note: Using available services for backwards compatibility
-        
+
     except ImportError as e:
         logger.warning(f"Import error in resolve: {e}")
         # Return a default value instead of None for type safety
         return object()  # Generic fallback object
-    
+
     # Mapping legacy class requests to clean DI providers
     resolver_map = {
         # Bot Framework
         _AioBot: lambda: clean_container.bot_client(),
         _ClientBot: lambda: clean_container.bot_client(),
         _AioDispatcher: lambda: clean_container.dispatcher(),
-        
         # Database
         AsyncPGPool: lambda: clean_container.asyncpg_pool(),
         async_sessionmaker: lambda: clean_container.asyncpg_pool(),
-        
         # Repositories
         AsyncpgUserRepository: lambda: clean_container.user_repo(),
         AsyncpgChannelRepository: lambda: clean_container.channel_repo(),
         AsyncpgAnalyticsRepository: lambda: clean_container.analytics_repo(),
         AsyncpgScheduleRepository: lambda: clean_container.schedule_repo(),
         AsyncpgPlanRepository: lambda: clean_container.plan_repo(),
-        
         # Services
         GuardService: lambda: clean_container.guard_service(),
         SubscriptionService: lambda: clean_container.subscription_service(),
@@ -126,7 +128,7 @@ def _resolve_from_clean_container(cls: type[_T]) -> _T:
         AlertingService: lambda: clean_container.alerting_service(),
         # Note: ChannelManagementService not available, mapping to analytics service as fallback
     }
-    
+
     resolver = resolver_map.get(cls)
     if resolver:
         try:
@@ -134,7 +136,7 @@ def _resolve_from_clean_container(cls: type[_T]) -> _T:
             return cast(_T, result)
         except Exception as e:
             logger.warning(f"Failed to resolve {cls.__name__}: {e}")
-    
+
     # Fallback: try to create instance directly
     try:
         return cls()
@@ -165,7 +167,7 @@ OptimizedContainer = Container
 
 class MLCompatibilityLayer:
     """Compatibility layer for ML service tests"""
-    
+
     @property
     def prediction_service(self):
         """ML service compatibility - returns None if not available"""
@@ -173,7 +175,7 @@ class MLCompatibilityLayer:
             return clean_container.prediction_service()
         except Exception:
             return None
-    
+
     @property
     def content_optimizer(self):
         """ML service compatibility - returns None if not available"""
@@ -181,7 +183,7 @@ class MLCompatibilityLayer:
             return clean_container.content_optimizer()
         except Exception:
             return None
-    
+
     @property
     def churn_predictor(self):
         """ML service compatibility - returns None if not available"""
@@ -189,7 +191,7 @@ class MLCompatibilityLayer:
             return clean_container.churn_predictor()
         except Exception:
             return None
-    
+
     @property
     def engagement_analyzer(self):
         """ML service compatibility - returns None if not available"""
@@ -201,11 +203,11 @@ class MLCompatibilityLayer:
 
 class OptimizedContainerCompat(Container):
     """Optimized container compatibility layer"""
-    
+
     def __init__(self):
         super().__init__()
         self._ml_compat = MLCompatibilityLayer()
-    
+
     def __getattr__(self, name):
         if hasattr(self._ml_compat, name):
             return getattr(self._ml_compat, name)

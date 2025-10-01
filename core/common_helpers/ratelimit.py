@@ -21,11 +21,11 @@ Usage:
 import asyncio
 import logging
 import time
-
 from dataclasses import dataclass
 from typing import Any, Protocol
 
 from core.ports.security_ports import CachePort
+
 
 # Redis types for backwards compatibility
 class RedisProtocol(Protocol):
@@ -35,6 +35,7 @@ class RedisProtocol(Protocol):
     async def keys(self, pattern: str) -> list[str]: ...
     async def ttl(self, key: str) -> int: ...
     async def close(self) -> None: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -86,15 +87,15 @@ class TokenBucketRateLimiter:
     """Redis-based distributed token bucket rate limiter."""
 
     def __init__(
-        self, 
-        cache: CachePort | None = None, 
+        self,
+        cache: CachePort | None = None,
         redis_client: RedisProtocol | None = None,
-        redis_url: str | None = None, 
-        key_prefix: str = "ratelimit:bucket"
+        redis_url: str | None = None,
+        key_prefix: str = "ratelimit:bucket",
     ):
         """
         Initialize rate limiter with flexible backend options.
-        
+
         Args:
             cache: Cache port for simple operations (preferred for new code)
             redis_client: Direct Redis client for advanced operations (backwards compatibility)
@@ -228,7 +229,11 @@ class TokenBucketRateLimiter:
             return True, 0.0
 
     async def acquire_with_delay(
-        self, bucket_id: str, tokens: int = 1, limit_type: str = "chat", max_wait: float = 60.0
+        self,
+        bucket_id: str,
+        tokens: int = 1,
+        limit_type: str = "chat",
+        max_wait: float = 60.0,
     ) -> bool:
         """
         Acquire tokens with automatic delay if needed.
@@ -323,7 +328,7 @@ class TokenBucketRateLimiter:
                         {
                             "bucket_id": bucket_id,
                             "tokens": float(bucket_data[0]) if bucket_data[0] else 0,
-                            "last_refill": float(bucket_data[1]) if bucket_data[1] else 0,
+                            "last_refill": (float(bucket_data[1]) if bucket_data[1] else 0),
                         }
                     )
 
@@ -360,7 +365,7 @@ class TokenBucketRateLimiter:
 
     async def close(self) -> None:
         """Close Redis connection if it supports closing."""
-        if self._redis and hasattr(self._redis, 'close'):
+        if self._redis and hasattr(self._redis, "close"):
             try:
                 await self._redis.close()
             except Exception as e:

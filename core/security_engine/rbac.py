@@ -12,16 +12,17 @@ from datetime import timedelta
 from enum import Enum
 
 from core.ports.security_ports import CachePort, SecurityEventsPort
+
 from .models import PermissionMatrix, User
-# Import new role system with backwards compatibility  
-from .roles import ApplicationRole, AdministrativeRole, UserRole as LegacyUserRole
+
+# Import new role system with backwards compatibility
 
 logger = logging.getLogger(__name__)
 
 
 class RBACError(Exception):
     """Custom exception for RBAC-related errors"""
-    
+
     def __init__(self, message: str, error_code: str | None = None):
         self.message = message
         self.error_code = error_code
@@ -95,14 +96,14 @@ class RBACManager:
     """
 
     def __init__(
-        self, 
-        cache: CachePort | None = None, 
-        security_events: SecurityEventsPort | None = None, 
-        config: RBACConfig | None = None
+        self,
+        cache: CachePort | None = None,
+        security_events: SecurityEventsPort | None = None,
+        config: RBACConfig | None = None,
     ):
         """
         Initialize RBAC Manager with dependency injection support
-        
+
         Args:
             cache: Cache port for permission caching (optional, falls back to Redis/memory)
             security_events: Security events port for audit logging (optional)
@@ -111,11 +112,11 @@ class RBACManager:
         self.cache = cache
         self.security_events = security_events
         self.config = config or RBACConfig()
-        
+
         # Legacy Redis fallback if no cache port provided
         if not self.cache:
             self._setup_legacy_cache()
-        
+
         self._setup_default_permissions()
 
     def _setup_legacy_cache(self) -> None:
@@ -156,7 +157,9 @@ class RBACManager:
         else:
             self._memory_cache.pop(key, None)
 
-    def _log_security_event(self, event: str, user_id: str | None = None, details: dict | None = None) -> None:
+    def _log_security_event(
+        self, event: str, user_id: str | None = None, details: dict | None = None
+    ) -> None:
         """Log security event (abstracted)"""
         if self.security_events:
             self.security_events.log_security_event(user_id, event, details or {})
@@ -215,14 +218,15 @@ class RBACManager:
         Args:
             user: User object
             required_role: Required role (string value)
-            
+
         Returns:
             True if user has required role or higher
         """
         # Use new role hierarchy system
         from .roles import has_role_or_higher
+
         return has_role_or_higher(user.role, required_role)
-    
+
     def get_user_permissions(self, user: User) -> set[Permission]:
         """
         Get all effective permissions for user
@@ -246,7 +250,9 @@ class RBACManager:
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
         self._cache_set(
-            cache_key, json.dumps(permission_list), int(timedelta(hours=1).total_seconds())
+            cache_key,
+            json.dumps(permission_list),
+            int(timedelta(hours=1).total_seconds()),
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions
@@ -268,7 +274,7 @@ class RBACManager:
         self._cache_set(
             f"custom_permissions:{user_id}",
             json.dumps(permission_list),
-            int(timedelta(days=30).total_seconds())
+            int(timedelta(days=30).total_seconds()),
         )
         self._cache_delete(f"user_permissions:{user_id}")
         logger.info(f"Granted permission {permission.value} to user {user_id}")
@@ -292,7 +298,7 @@ class RBACManager:
             self._cache_set(
                 f"custom_permissions:{user_id}",
                 json.dumps(permission_list),
-                int(timedelta(days=30).total_seconds())
+                int(timedelta(days=30).total_seconds()),
             )
         else:
             self._cache_delete(f"custom_permissions:{user_id}")
@@ -367,7 +373,11 @@ class RBACManager:
             return True
         if resource_owner == user.id:
             return True
-        if user.role in ["admin", "moderator", "super_admin"]:  # Use string values for new system
+        if user.role in [
+            "admin",
+            "moderator",
+            "super_admin",
+        ]:  # Use string values for new system
             return True
         logger.debug(
             f"Resource permission denied: User {user.username} not owner of {resource_type}:{resource_id}"

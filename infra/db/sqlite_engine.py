@@ -6,7 +6,6 @@ SQLite engine for development environment
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -17,16 +16,12 @@ class SQLiteEngine:
     def __init__(self, db_path: str = "data/analyticbot.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._connection: Optional[sqlite3.Connection] = None
+        self._connection: sqlite3.Connection | None = None
 
     def get_connection(self) -> sqlite3.Connection:
         """Get SQLite connection with optimizations"""
         if self._connection is None:
-            self._connection = sqlite3.connect(
-                self.db_path,
-                check_same_thread=False,
-                timeout=30.0
-            )
+            self._connection = sqlite3.connect(self.db_path, check_same_thread=False, timeout=30.0)
             # Enable WAL mode for better concurrency
             self._connection.execute("PRAGMA journal_mode=WAL")
             # Optimize for performance
@@ -34,7 +29,7 @@ class SQLiteEngine:
             self._connection.execute("PRAGMA cache_size=10000")
             self._connection.execute("PRAGMA temp_store=MEMORY")
             logger.info(f"SQLite connection established: {self.db_path}")
-        
+
         return self._connection
 
     def close(self):
@@ -73,7 +68,7 @@ def init_db() -> None:
     """Initialize SQLite database with required tables"""
     try:
         conn = sqlite_engine.get_connection()
-        
+
         # Create tables if they don't exist
         tables = [
             """
@@ -143,12 +138,12 @@ def init_db() -> None:
                 FOREIGN KEY (user_id) REFERENCES users (id),
                 FOREIGN KEY (channel_id) REFERENCES channels (id)
             )
-            """
+            """,
         ]
-        
+
         for table_sql in tables:
             conn.execute(table_sql)
-        
+
         # Create indexes for better performance
         indexes = [
             "CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id)",
@@ -159,36 +154,36 @@ def init_db() -> None:
             "CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id ON scheduled_posts(user_id)",
             "CREATE INDEX IF NOT EXISTS idx_scheduled_posts_channel_id ON scheduled_posts(channel_id)",
             "CREATE INDEX IF NOT EXISTS idx_scheduled_posts_status ON scheduled_posts(status)",
-            "CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_time ON scheduled_posts(scheduled_time)"
+            "CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_time ON scheduled_posts(scheduled_time)",
         ]
-        
+
         for index_sql in indexes:
             try:
                 conn.execute(index_sql)
             except sqlite3.OperationalError as e:
                 # Index might already exist
                 logger.debug(f"Index creation skipped: {e}")
-        
+
         # Insert default plans if not exist
         default_plans = [
             ("Free", 1, 30, 0.00),
             ("Basic", 5, 100, 9.99),
             ("Pro", 20, 500, 29.99),
-            ("Premium", 100, 2000, 99.99)
+            ("Premium", 100, 2000, 99.99),
         ]
-        
+
         for plan_name, max_channels, max_posts, price in default_plans:
             try:
                 conn.execute(
                     "INSERT OR IGNORE INTO plans (name, max_channels, max_posts_per_month, price) VALUES (?, ?, ?, ?)",
-                    (plan_name, max_channels, max_posts, price)
+                    (plan_name, max_channels, max_posts, price),
                 )
             except sqlite3.Error as e:
                 logger.debug(f"Plan insertion skipped: {e}")
-        
+
         conn.commit()
         logger.info("SQLite database initialized successfully")
-        
+
     except Exception as e:
         logger.error(f"Failed to initialize SQLite database: {e}")
         raise

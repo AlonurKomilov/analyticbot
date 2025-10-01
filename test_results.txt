@@ -1,0 +1,36 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/perf/mtproto_performance_test.py ____________
+tests/perf/mtproto_performance_test.py:17: in <module>
+    from apps.mtproto.config import MTProtoSettings
+apps/mtproto/__init__.py:3: in <module>
+    from .config import MTProtoSettings
+apps/mtproto/config.py:5: in <module>
+    class MTProtoSettings(BaseSettings):
+apps/mtproto/config.py:160: in MTProtoSettings
+    if os.getenv("ENVIRONMENT") != "development"
+       ^^
+E   NameError: name 'os' is not defined
+________________ ERROR collecting tests/test_payment_system.py _________________
+tests/test_payment_system.py:15: in <module>
+    from apps.bot.models.payment import BillingCycle, PaymentProvider, SubscriptionCreate
+apps/bot/__init__.py:11: in <module>
+    from apps.bot.handlers import alerts, exports
+apps/bot/handlers/exports.py:22: in <module>
+    from infra.rendering.charts import (
+infra/rendering/__init__.py:6: in <module>
+    from .charts import MATPLOTLIB_AVAILABLE, ChartRenderer, ChartRenderingError
+infra/rendering/charts.py:10: in <module>
+    from core.ports.analytics_client import (
+core/ports/__init__.py:28: in <module>
+    from .security_ports import (
+core/ports/security_ports.py:57: in <module>
+    class CachePort(ABC):
+core/ports/security_ports.py:85: in CachePort
+    def get_set_members(self, key: str) -> set[str]:
+                                           ^^^^^^^^
+E   TypeError: 'function' object is not subscriptable
+=========================== short test summary info ============================
+ERROR tests/perf/mtproto_performance_test.py - NameError: name 'os' is not defined
+ERROR tests/test_payment_system.py - TypeError: 'function' object is not subscriptable
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!

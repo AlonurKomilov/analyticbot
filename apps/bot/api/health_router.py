@@ -7,8 +7,6 @@ import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends
 
-from infra.db.connection_manager import db_manager
-from infra.db.health_utils import is_db_healthy
 from core.common.health.models import HealthStatus, DependencyType
 from apps.api.services.health_service import HealthMonitoringService
 from config.settings import settings
@@ -25,7 +23,7 @@ bot_health_checker = HealthMonitoringService(
 )
 
 
-async def check_database_health():
+async def check_db_health():
     """Database health check for bot service"""
     from apps.api.services.health_service import check_database_health as db_check
     return await db_check()
@@ -51,10 +49,10 @@ async def check_storage_channel_health():
         return {"healthy": False, "error": str(e)}
 
 
-# Register dependencies with the health checker
+# Register dependencies with the health checker  
 bot_health_checker.register_dependency(
     "database", 
-    check_database_health, 
+    check_db_health, 
     DependencyType.DATABASE, 
     critical=True
 )
@@ -155,8 +153,12 @@ async def bot_readiness_check():
     - Service capabilities
     """
     try:
-        # Check only critical dependencies for readiness
-        db_healthy = await is_db_healthy()
+        # Check only critical dependencies for readiness  
+        # Use health service instead of direct infra imports
+        from apps.api.services.health_service import check_database_health
+        db_status = await check_database_health()
+        db_healthy = db_status.get("healthy", False)
+        
         telegram_health = await check_telegram_api_health()
         telegram_healthy = telegram_health.get("healthy", False)
         
@@ -184,8 +186,13 @@ async def bot_readiness_check():
         }
 
 
-@health_router.get("/database")
-async def bot_database_health():
+async def get_health_service() -> HealthMonitoringService:
+    """Get health monitoring service"""
+    return HealthMonitoringService()
+
+
+@health_router.get("/db", response_model=dict)
+async def check_database_health(health_service: HealthMonitoringService = Depends(get_health_service)):
     """
     ## 🗃️ Database Health Detailed Check
     

@@ -12,9 +12,23 @@ from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.guard_service import GuardService
 from apps.bot.services.prometheus_service import prometheus_service
 from apps.bot.services.scheduler_service import SchedulerService
-from infra.db.repositories import AsyncpgChannelRepository as ChannelRepository
+from apps.shared.factory import get_repository_factory
+from apps.shared.protocols import ChartServiceProtocol
+from core.repositories.interfaces import ChannelRepository
 
 router = Router()
+
+
+async def get_channel_repository() -> ChannelRepository:
+    """Get channel repository from factory"""
+    factory = get_repository_factory()
+    return await factory.get_channel_repository()
+
+
+def get_chart_service() -> ChartServiceProtocol:
+    """Get chart service from factory"""
+    factory = get_repository_factory()
+    return factory.get_chart_service()
 
 
 def _bot_of(msg: types.Message) -> Bot | None:
@@ -203,7 +217,10 @@ async def get_stats_handler(
         if not channel_id:
             return
     try:
-        chart_image = await analytics_service.create_views_chart(channel_id or 0)
+        chart_service = get_chart_service()
+        # Get analytics data for the chart
+        analytics_data = await analytics_service.get_analytics_data(channel_id or 0)
+        chart_image = chart_service.render_growth_chart(analytics_data)
     except Exception:
         chart_image = None
     if chart_image:

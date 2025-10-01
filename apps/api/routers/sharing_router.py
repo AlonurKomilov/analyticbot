@@ -52,10 +52,10 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_shared_reports_repository() -> SharedReportsRepository:
+async def get_shared_reports_repository() -> SharedReportsRepository:
     """Get shared reports repository"""
     factory = get_repository_factory()
-    return factory.get_shared_reports_repository()
+    return await factory.get_shared_reports_repository()
 
 
 def get_csv_exporter() -> CSVExporter:

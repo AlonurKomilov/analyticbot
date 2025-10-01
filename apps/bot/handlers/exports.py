@@ -9,6 +9,7 @@ import aiohttp
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton, BufferedInputFile
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from apps.api.exports.csv_v2 import CSVExporter
@@ -18,12 +19,8 @@ from apps.bot.keyboards.analytics import (
     get_export_type_keyboard,
 )
 from apps.bot.middlewares.throttle import rate_limit
+from apps.shared.factory import get_repository_factory
 from config import settings
-from infra.rendering.charts import (
-    MATPLOTLIB_AVAILABLE,
-    ChartRenderer,
-    ChartRenderingError,
-)
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -39,11 +36,14 @@ def get_csv_exporter() -> CSVExporter:
     return CSVExporter()
 
 
-def get_chart_renderer() -> ChartRenderer | None:
-    """Get chart renderer instance if available"""
-    if not MATPLOTLIB_AVAILABLE:
-        return None
-    return ChartRenderer()
+logger = logging.getLogger(__name__)
+router = Router()
+
+
+def get_chart_service():
+    """Get chart service instance"""
+    factory = get_repository_factory()
+    return factory.get_chart_service()
 
 
 @router.callback_query(F.data == "analytics_export")
@@ -53,6 +53,10 @@ async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
 
     if not settings.EXPORT_ENABLED:
         await callback.answer("📋 Export functionality is currently disabled", show_alert=True)
+        return
+
+    if not callback.message or not isinstance(callback.message, Message):
+        await callback.answer("Message not available")
         return
 
     keyboard = get_export_type_keyboard()
@@ -68,10 +72,18 @@ async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
 @rate_limit("export", per_minute=10)
 async def handle_export_type_selection(callback: CallbackQuery, state: FSMContext):
     """Handle export type selection"""
+    if not callback.data:
+        await callback.answer("Invalid selection")
+        return
+    
     export_type = callback.data.split(":")[-1]
 
     # Store export type in state
     await state.update_data(export_type=export_type)
+
+    if not callback.message or not isinstance(callback.message, Message):
+        await callback.answer("Message not available")
+        return
 
     # Show format selection
     keyboard = get_export_format_keyboard(export_type)
@@ -99,7 +111,15 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
 @rate_limit("export", per_minute=10)
 async def handle_export_format_selection(callback: CallbackQuery, state: FSMContext):
     """Handle export format selection and start export"""
+    if not callback.data:
+        await callback.answer("Invalid selection")
+        return
+    
     format_type = callback.data.split(":")[-1]
+
+    if not callback.message or not isinstance(callback.message, Message):
+        await callback.answer("Message not available")
+        return
 
     # Get export type from state
     state_data = await state.get_data()
@@ -218,9 +238,9 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
 async def export_png_chart(message: Message, export_type: str, channel_id: str, period: int):
     """Export data as PNG chart"""
     try:
-        chart_renderer = get_chart_renderer()
+        chart_service = get_chart_service()
 
-        if not chart_renderer:
+        if not chart_service.is_available():
             await message.edit_text(
                 "❌ <b>PNG Export Unavailable</b>\n\n"
                 "Chart rendering is not available on this server.",
@@ -237,13 +257,13 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
             if export_type == "growth":
                 data = await analytics_client.growth(channel_id, period)
-                png_bytes = chart_renderer.render_growth_chart(data)
+                png_bytes = chart_service.render_growth_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
             elif export_type == "reach":
                 data = await analytics_client.reach(channel_id, period)
-                png_bytes = chart_renderer.render_reach_chart(data)
+                png_bytes = chart_service.render_reach_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
             elif export_type == "sources":
                 data = await analytics_client.sources(channel_id, period)
-                png_bytes = chart_renderer.render_sources_chart(data)
+                png_bytes = chart_service.render_sources_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
             else:
                 await message.edit_text(
                     f"❌ <b>PNG Export Not Supported</b>\n\n"
@@ -281,13 +301,6 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
         logger.info(f"PNG export completed for user {message.chat.id}, type {export_type}")
 
-    except ChartRenderingError as e:
-        logger.error(f"Chart rendering error: {e}")
-        await message.edit_text(
-            "❌ <b>Chart Generation Failed</b>\n\n"
-            "Unable to generate chart from the data. Please try again.",
-            parse_mode="HTML",
-        )
     except aiohttp.ClientError as e:
         logger.error(f"Analytics API error during PNG export: {e}")
         await message.edit_text(
@@ -296,10 +309,10 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
             parse_mode="HTML",
         )
     except Exception as e:
-        logger.error(f"PNG export error: {e}")
+        logger.error(f"Chart rendering error: {e}")
         await message.edit_text(
-            "❌ <b>Export Failed</b>\n\n"
-            "An error occurred during chart generation. Please try again.",
+            "❌ <b>Chart Generation Failed</b>\n\n"
+            "Unable to generate chart from the data. Please try again.",
             parse_mode="HTML",
         )
 
@@ -315,6 +328,10 @@ async def cmd_export_csv(message: Message):
         return
 
     # Parse command arguments
+    if not message.text:
+        await message.answer("Invalid command: no text found")
+        return
+        
     args = message.text.split()[1:]  # Skip /export_csv
 
     if len(args) < 2:

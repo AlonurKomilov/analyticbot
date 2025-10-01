@@ -227,3 +227,80 @@ class ChannelManagementService:
             user_id=channel.user_id,
             subscriber_count=channel.subscriber_count
         )
+
+    async def get_all_channels_admin(self, skip: int = 0, limit: int = 100) -> List[ChannelResponse]:
+        """Admin method to get all channels (HTTP interface)"""
+        try:
+            channels = await self.core_service.get_all_channels(skip=skip, limit=limit)
+            return [self._map_domain_to_response(channel) for channel in channels]
+        except Exception as e:
+            self.logger.error(f"Error getting all channels for admin: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get channels"
+            )
+
+    async def admin_delete_channel(self, channel_id: int) -> dict:
+        """Admin method to delete a channel"""
+        try:
+            await self.core_service.delete_channel(channel_id)
+            return {"message": "Channel deleted successfully", "channel_id": channel_id}
+        except Exception as e:
+            self.logger.error(f"Error deleting channel {channel_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete channel"
+            )
+
+    async def suspend_channel(self, channel_id: int) -> dict:
+        """Suspend a channel"""
+        try:
+            await self.core_service.update_channel_status(channel_id, is_active=False)
+            return {"message": "Channel suspended successfully", "channel_id": channel_id}
+        except Exception as e:
+            self.logger.error(f"Error suspending channel {channel_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to suspend channel"
+            )
+
+    async def unsuspend_channel(self, channel_id: int) -> dict:
+        """Unsuspend a channel"""
+        try:
+            await self.core_service.update_channel_status(channel_id, is_active=True)
+            return {"message": "Channel unsuspended successfully", "channel_id": channel_id}
+        except Exception as e:
+            self.logger.error(f"Error unsuspending channel {channel_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to unsuspend channel"
+            )
+
+    async def update_channel(self, channel_id: int, **kwargs) -> ChannelResponse:
+        """Update a channel"""
+        try:
+            updated_channel = await self.core_service.update_channel(channel_id, **kwargs)
+            return self._map_domain_to_response(updated_channel)
+        except Exception as e:
+            self.logger.error(f"Error updating channel {channel_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update channel"
+            )
+
+    async def get_channel_status(self, channel_id: int) -> dict:
+        """Get channel status information"""
+        try:
+            channel = await self.core_service.get_channel_by_id(channel_id)
+            return {
+                "channel_id": channel_id,
+                "is_active": channel.is_active,
+                "status": "active" if channel.is_active else "suspended",
+                "last_updated": channel.updated_at if hasattr(channel, 'updated_at') else None
+            }
+        except Exception as e:
+            self.logger.error(f"Error getting channel status {channel_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get channel status"
+            )

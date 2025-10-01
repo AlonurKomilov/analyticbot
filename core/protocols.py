@@ -247,6 +247,26 @@ class DemoDataServiceProtocol(ServiceProtocol):
         ...
 
 
+class PostsRepositoryProtocol(Protocol):
+    """Posts repository interface"""
+    
+    async def get_posts_by_channel(self, channel_id: int, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get posts for a channel"""
+        ...
+    
+    async def get_post_by_id(self, post_id: int) -> Optional[Dict[str, Any]]:
+        """Get a specific post"""
+        ...
+    
+    async def create_post(self, post_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new post"""
+        ...
+    
+    async def update_post(self, post_id: int, post_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a post"""
+        ...
+
+
 # Service registry type hints
 ServiceType = type[ServiceProtocol]
 ServiceInstance = ServiceProtocol

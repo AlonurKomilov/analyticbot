@@ -138,6 +138,58 @@ class AsyncpgChannelRepository:
             )
             return [dict(record) for record in records]
 
+    async def get_all_channels(self, skip: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+        """Get all channels (admin method)"""
+        async with self.pool.acquire() as conn:
+            records = await conn.fetch(
+                "SELECT * FROM channels ORDER BY id OFFSET $1 LIMIT $2",
+                skip, limit
+            )
+            return [dict(record) for record in records]
+
+    async def update_channel_status(self, channel_id: int, is_active: bool) -> None:
+        """Update channel active status"""
+        async with self.pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE channels SET is_active = $1, updated_at = NOW() WHERE id = $2",
+                is_active, channel_id
+            )
+
+    async def update_channel(self, channel_id: int, **kwargs) -> dict[str, Any]:
+        """Update channel with provided fields"""
+        if not kwargs:
+            # If no updates, just return the current channel
+            return await self.get_channel_by_id(channel_id)
+        
+        # Build dynamic UPDATE query
+        set_clauses = []
+        values = []
+        param_num = 1
+        
+        for key, value in kwargs.items():
+            if key in ['name', 'description', 'username', 'is_active']:
+                set_clauses.append(f"{key} = ${param_num}")
+                values.append(value)
+                param_num += 1
+        
+        if not set_clauses:
+            # No valid fields to update
+            return await self.get_channel_by_id(channel_id)
+        
+        # Add updated_at
+        set_clauses.append(f"updated_at = ${param_num}")
+        values.append("NOW()")
+        param_num += 1
+        
+        # Add channel_id for WHERE clause
+        values.append(channel_id)
+        
+        query = f"UPDATE channels SET {', '.join(set_clauses)} WHERE id = ${param_num} RETURNING *"
+        
+        async with self.pool.acquire() as conn:
+            record = await conn.fetchrow(query, *values[:-1], values[-1])
+            return dict(record) if record else None
+
 
 # Alias for backwards compatibility and cleaner imports
 ChannelRepository = AsyncpgChannelRepository

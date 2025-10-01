@@ -27,6 +27,7 @@ from core.repositories.alert_repository import (
     AlertSubscriptionRepository,
     AlertSentRepository
 )
+from core.repositories.shared_reports_repository import SharedReportsRepository
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +314,7 @@ class LazyRepositoryFactory:
         factory = await self._ensure_factory()
         return await factory.create_alert_sent_repository()
     
-    async def get_shared_reports_repository(self):
+    async def get_shared_reports_repository(self) -> 'SharedReportsRepository':
         """Get shared reports repository"""
         factory = await self._ensure_factory()
         return await factory.create_shared_reports_repository()

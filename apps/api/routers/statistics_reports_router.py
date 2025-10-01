@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Services
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.api.di.analytics_container import get_analytics_fusion_service, get_cache
 from core.services.analytics_fusion_service import AnalyticsFusionService
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer

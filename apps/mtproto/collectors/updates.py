@@ -8,7 +8,6 @@ from typing import Any
 
 from apps.mtproto.config import MTProtoSettings
 from core.ports.tg_client import TGClient
-from infra.tg.parsers import normalize_update
 
 
 class UpdatesCollector:
@@ -30,6 +29,9 @@ class UpdatesCollector:
         self.tg_client = tg_client
         self.repos = repos
         self.settings = settings
+        
+        # Get parsers from repos container (provided via DI)
+        self.parsers = getattr(repos, 'parsers', None)
         self._running = False
         self._shutdown_event = asyncio.Event()
         self._stats = {
@@ -66,15 +68,22 @@ class UpdatesCollector:
     async def run_updates_stream(self) -> None:
         """Run the main updates processing loop."""
         try:
-            async for update in self.tg_client.iter_updates():
+            # Get async iterator from TG client
+            update_iterator = await self.tg_client.iter_updates()
+            async for update in update_iterator:
                 # Check for shutdown signal
                 if not self._running or self._shutdown_event.is_set():
                     self.logger.info("Shutdown signal received, stopping updates stream")
                     break
 
                 try:
-                    # Normalize the update
-                    normalized = normalize_update(update)
+                    # Normalize the update using parser from DI
+                    if self.parsers and hasattr(self.parsers, 'normalize_update'):
+                        normalized = self.parsers.normalize_update(update)
+                    else:
+                        # Fallback: lazy import if parsers not available via DI
+                        from infra.tg.parsers import normalize_update
+                        normalized = normalize_update(update)
 
                     if not normalized:
                         self._stats["updates_skipped"] += 1

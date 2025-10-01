@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
 
 # Services
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.api.di.analytics_container import get_analytics_fusion_service, get_cache
 from core.services.analytics_fusion_service import AnalyticsFusionService
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
@@ -60,7 +60,7 @@ async def get_channel_overview(
         # Check If-None-Match header
         if_none_match = request.headers.get("if-none-match")
         if if_none_match and if_none_match == etag:
-            return JSONResponse(status_code=304)
+            return JSONResponse(content={}, status_code=304)
             
         # Try cache first
         cached_data = await cache.get_json(cache_key)
@@ -135,7 +135,9 @@ async def get_channel_growth_statistics(
 
         # Fetch growth time series
         with performance_timer("growth_statistics_fetch"):
-            growth_data = await service.get_growth_time_series(channel_id, from_, to_, window)
+            # Convert window string to appropriate integer
+            window_days = {"D": 1, "W": 7, "H": 1}.get(window, 1)  
+            growth_data = await service.get_growth_time_series(channel_id, from_, to_, window_days)
 
         response_data = {
             "channel_id": channel_id,

@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 class PrometheusService:
     """Service for Prometheus metrics collection and exposition"""
 
-    def __init__(self, registry: CollectorRegistry | None = None):
+    def __init__(self, registry: CollectorRegistry | None = None, db_manager=None):
         self.registry = registry or CollectorRegistry()
+        self.db_manager = db_manager  # Inject database manager for metrics
         self._setup_metrics()
 
     def _setup_metrics(self):
@@ -178,6 +179,19 @@ class PrometheusService:
         self.system_memory_usage.set(memory_percent)
         self.system_cpu_usage.set(cpu_percent)
 
+    async def get_database_metrics(self) -> dict:
+        """Get database metrics via dependency injection"""
+        try:
+            # Get database manager through DI instead of direct import
+            if hasattr(self, 'db_manager') and self.db_manager:
+                pool = getattr(self.db_manager, 'pool', None)
+                if pool:
+                    pool_size = getattr(pool, "get_size", lambda: 0)()
+                return {"pool_size": pool_size}
+            return {"pool_size": 0}
+        except Exception:
+            return {"pool_size": 0}
+
     def update_health_check(self, check_name: str, is_healthy: bool):
         """Update health check status"""
         self.health_check_status.labels(check_name=check_name).set(1 if is_healthy else 0)
@@ -266,11 +280,10 @@ async def collect_system_metrics():
         except ImportError:
             logger.warning("psutil not available, system metrics disabled")
         try:
-            from infra.db.connection_manager import db_manager
-
-            if db_manager.pool:
-                pool_size = getattr(db_manager.pool, "get_size", lambda: 0)()
-                prometheus_service.update_database_connections(pool_size)
+            # Get database metrics through service instead of direct infra import
+            db_metrics = await prometheus_service.get_database_metrics()
+            if db_metrics:
+                prometheus_service.update_database_connections(db_metrics.get('pool_size', 0))
         except Exception as e:
             context = ErrorContext().add("operation", "collect_database_metrics")
             ErrorHandler.log_error(e, context)

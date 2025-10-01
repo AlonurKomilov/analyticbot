@@ -1,10 +1,48 @@
 import asyncio
 import logging
 
-from infra.db.connection_manager import db_manager
+import asyncio
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Create database initialization service
+class DatabaseInitializationService:
+    """Service for database initialization with dependency injection"""
+    
+    def __init__(self, db_manager=None):
+        self.db_manager = db_manager
+    
+    async def _get_db_manager(self):
+        """Get db_manager from DI or lazy load as fallback"""
+        if self.db_manager is None:
+            # Fallback for legacy usage - will be removed when DI is complete
+            logger.warning("DB manager not injected, using lazy import fallback")
+            from infra.db.connection_manager import db_manager
+            self.db_manager = db_manager
+        return self.db_manager
+    
+    async def initialize_database(self):
+        """Initialize database with tables and constraints"""
+        db_manager = await self._get_db_manager()
+        await db_manager.initialize()
+        
+        try:
+            async with db_manager.connection() as connection:
+                logger.info("--- Step 1: Creating tables without constraints ---")
+                for statement in CREATE_TABLES_COMMANDS:
+                    await connection.execute(statement)
+                logger.info("✅ All tables created successfully.")
+                logger.info("--- Step 2: Adding foreign key constraints ---")
+                for statement in ADD_CONSTRAINTS_COMMANDS:
+                    await connection.execute(statement)
+                logger.info("✅ All foreign key constraints added successfully!")
+        except Exception as e:
+            logger.error(f"❌ An error occurred during database initialization: {e}", exc_info=True)
+        finally:
+            await db_manager.close()
+            logger.info("Database connection closed.")
 CREATE_TABLES_COMMANDS = [
     "\n    CREATE TABLE IF NOT EXISTS plans (\n        id SERIAL PRIMARY KEY,\n        name VARCHAR(50) UNIQUE NOT NULL,\n        max_channels INTEGER DEFAULT 1,\n        max_posts_per_month INTEGER DEFAULT 30\n    );\n    ",
     "\n    CREATE TABLE IF NOT EXISTS users (\n        id BIGINT PRIMARY KEY,\n        username VARCHAR(255),\n        plan_id INTEGER,\n        created_at TIMESTAMP WITH TIME ZONE DEFAULT now()\n    );\n    ",
@@ -26,24 +64,9 @@ async def main():
     """Manually creates all tables first, then adds all foreign key constraints."""
     logger.info("Connecting to the database...")
     
-    # Initialize database manager
-    await db_manager.initialize()
-    
-    try:
-        async with db_manager.connection() as connection:
-            logger.info("--- Step 1: Creating tables without constraints ---")
-            for statement in CREATE_TABLES_COMMANDS:
-                await connection.execute(statement)
-            logger.info("✅ All tables created successfully.")
-            logger.info("--- Step 2: Adding foreign key constraints ---")
-            for statement in ADD_CONSTRAINTS_COMMANDS:
-                await connection.execute(statement)
-            logger.info("✅ All foreign key constraints added successfully!")
-    except Exception as e:
-        logger.error(f"❌ An error occurred during database initialization: {e}", exc_info=True)
-    finally:
-        await db_manager.close()
-        logger.info("Database connection closed.")
+    # Use database initialization service
+    db_init_service = DatabaseInitializationService()
+    await db_init_service.initialize_database()
 
 
 if __name__ == "__main__":

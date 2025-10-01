@@ -27,9 +27,32 @@ from apps.bot.models.payment import (
 )
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
 from apps.bot.services.adapters.base_adapter import PaymentGatewayAdapter as BasePaymentGatewayAdapter
-from infra.db.repositories.payment_repository import (
-    AsyncpgPaymentRepository as PaymentRepository,
-)
+# Import payment repository interface instead of direct infra import
+from typing import Any, Protocol, Optional, List, Dict
+
+# Define PaymentRepository protocol for typing
+class PaymentRepository(Protocol):
+    """Payment repository protocol"""
+    async def create_payment(self, **kwargs) -> str: ...
+    async def get_payment_by_id(self, payment_id: str) -> dict | None: ...
+    async def update_payment(self, payment_id: str, updates: dict) -> dict | None: ...
+    async def create_payment_method(self, **kwargs) -> str: ...
+    async def get_user_payment_methods(self, user_id: str) -> List[Dict[str, Any]]: ...
+    async def get_payment_by_idempotency_key(self, key: str) -> Optional[Dict[str, Any]]: ...
+    async def get_payment_method(self, method_id: str) -> Optional[Dict[str, Any]]: ...
+    async def update_payment_status(self, payment_id: str, status: str, **kwargs) -> None: ...
+    async def get_payment(self, payment_id: str) -> Optional[Dict[str, Any]]: ...
+    async def get_plan_with_pricing(self, plan_id: str) -> Optional[Dict[str, Any]]: ...
+    async def create_subscription(self, **kwargs) -> str: ...
+    async def update_subscription_status(self, subscription_id: str, status: str, **kwargs) -> None: ...
+    async def get_user_active_subscription(self, user_id: str) -> Optional[Dict[str, Any]]: ...
+    async def create_webhook_event(self, **kwargs) -> str: ...
+    async def mark_webhook_processed(self, event_id: str, success: bool, error: Optional[str] = None) -> None: ...
+    async def get_active_plans(self) -> List[Dict[str, Any]]: ...
+    async def get_user_payments(self, user_id: str, limit: int, offset: int) -> List[Dict[str, Any]]: ...
+    async def get_user_payments_count(self, user_id: str) -> int: ...
+    async def get_payment_statistics(self) -> Dict[str, Any]: ...
+    async def get_subscription_statistics(self) -> Dict[str, Any]: ...
 
 logger = logging.getLogger(__name__)
 
@@ -520,7 +543,7 @@ class PaymentService:
 
     async def get_user_payment_methods(self, user_id: int) -> list[PaymentMethodResponse]:
         """Get user's payment methods"""
-        methods = await self.repository.get_user_payment_methods(user_id)
+        methods = await self.repository.get_user_payment_methods(str(user_id))
         return [
             PaymentMethodResponse(
                 id=method["id"],
@@ -555,19 +578,20 @@ class PaymentService:
         adapter = self.get_adapter(provider)
         payment_id: str | None = None  # Initialize to avoid unbound variable
         try:
-            payment_id = await self.repository.create_payment(
-                user_id=user_id,
-                subscription_id=getattr(payment_data, 'subscription_id', None),
-                payment_method_id=payment_data.payment_method_id,
-                provider=provider,
-                provider_payment_id=None,
-                idempotency_key=idempotency_key,
-                amount=payment_data.amount,
-                currency=payment_data.currency,
-                status=PaymentStatus.PENDING,
-                description=payment_data.description,
-                metadata=payment_data.metadata,
-            )
+            payment_dict = {
+                "user_id": user_id,
+                "subscription_id": getattr(payment_data, 'subscription_id', None),
+                "payment_method_id": payment_data.payment_method_id,
+                "provider": provider,
+                "provider_payment_id": None,
+                "idempotency_key": idempotency_key,
+                "amount": payment_data.amount,
+                "currency": payment_data.currency,
+                "status": PaymentStatus.PENDING,
+                "description": payment_data.description,
+                "metadata": payment_data.metadata,
+            }
+            payment_id = await self.repository.create_payment(**payment_dict)
             if adapter is None:
                 # Use new adapter pattern
                 provider_response = await self.payment_adapter.create_payment_intent(
@@ -617,7 +641,7 @@ class PaymentService:
         self, user_id: int, subscription_data: SubscriptionCreate
     ) -> SubscriptionResponse:
         """Create a subscription"""
-        plan = await self.repository.get_plan_with_pricing(subscription_data.plan_id)
+        plan = await self.repository.get_plan_with_pricing(str(subscription_data.plan_id))
         if not plan:
             raise ValueError("Plan not found")
         if subscription_data.billing_cycle == BillingCycle.MONTHLY:
@@ -676,7 +700,7 @@ class PaymentService:
                     )
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")
-        subscription = await self.repository.get_user_active_subscription(user_id)
+        subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             raise ValueError("Subscription not found after creation")
             
@@ -736,7 +760,7 @@ class PaymentService:
 
     async def get_user_subscription(self, user_id: int) -> SubscriptionResponse | None:
         """Get user's current active subscription"""
-        subscription = await self.repository.get_user_active_subscription(user_id)
+        subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             return None
         
@@ -758,7 +782,7 @@ class PaymentService:
 
     async def cancel_user_subscription(self, user_id: int, immediate: bool = False) -> dict[str, Any]:
         """Cancel user's subscription"""
-        subscription = await self.repository.get_user_active_subscription(user_id)
+        subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             raise ValueError("No active subscription found")
         
@@ -817,9 +841,9 @@ class PaymentService:
 
     async def get_payment_history(self, user_id: int, limit: int = 50, offset: int = 0) -> dict[str, Any]:
         """Get user's payment history"""
-        payments = await self.repository.get_user_payments(user_id, limit, offset)
+        payments = await self.repository.get_user_payments(str(user_id), limit, offset)
         if hasattr(self.repository, 'get_user_payments_count'):
-            total_count = await self.repository.get_user_payments_count(user_id)
+            total_count = await self.repository.get_user_payments_count(str(user_id))
         else:
             total_count = len(payments)  # Fallback
         

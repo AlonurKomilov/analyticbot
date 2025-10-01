@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from apps.api.services.channel_management_service import ChannelManagementService, ChannelCreate, ChannelResponse
-from apps.api.di_analytics import get_channel_management_service
+from apps.api.di.analytics_container import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_channel_access, 
@@ -96,13 +96,13 @@ async def get_user_channels(
             
             return [
                 ChannelListResponse(
-                    id=channel["id"],
-                    name=channel["name"],
-                    username=channel.get("username"),
-                    subscriber_count=channel.get("subscriber_count", 0),
-                    is_active=channel.get("is_active", True),
-                    created_at=channel.get("created_at", datetime.now()),
-                    last_updated=channel.get("last_updated", datetime.now())
+                    id=channel.id,
+                    name=channel.name,
+                    username=getattr(channel, 'username', None),
+                    subscriber_count=channel.subscriber_count,
+                    is_active=channel.is_active,
+                    created_at=channel.created_at,
+                    last_updated=getattr(channel, 'updated_at', channel.created_at)
                 ) for channel in channels
             ]
     except Exception as e:
@@ -128,15 +128,11 @@ async def create_channel(
     """
     try:
         with performance_timer("channel_create"):
-            # Channel creation requires authenticated user
-            channel = await channel_service.create_channel(
-                channel_data.name,
-                channel_data.username,
-                user_id=current_user["id"],
-                additional_data=channel_data.additional_data or {}
-            )
+            # Channel creation requires authenticated user  
+            channel_data.user_id = current_user["id"]
+            channel = await channel_service.create_channel(channel_data)
             
-            logger.info(f"Channel created successfully: {channel['id']} by user {current_user['id']}")
+            logger.info(f"Channel created successfully: {channel.id} by user {current_user['id']}")
             return channel
             
     except HTTPException:
@@ -168,15 +164,12 @@ async def get_channel(
         await require_channel_access(channel_id, current_user["id"])
         
         with performance_timer("channel_details_fetch"):
-            channel = await channel_service.get_channel(
-                channel_id=channel_id,
-                user_id=current_user["id"]
-            )
+            channel = await channel_service.get_channel(channel_id)
             
             if not channel:
                 raise HTTPException(status_code=404, detail="Channel not found")
                 
-            return ChannelResponse(**channel)
+            return channel
             
     except HTTPException:
         raise
@@ -221,7 +214,7 @@ async def update_channel(
             )
             
             logger.info(f"Channel updated successfully: {channel_id} by user {current_user['id']}")
-            return ChannelResponse(**channel)
+            return channel
             
     except HTTPException:
         raise
@@ -253,10 +246,7 @@ async def delete_channel(
         await require_channel_access(channel_id, current_user["id"])
         
         with performance_timer("channel_deletion"):
-            result = await channel_service.delete_channel(
-                channel_id=channel_id,
-                user_id=current_user["id"]
-            )
+            result = await channel_service.delete_channel(channel_id)
             
             if not result:
                 raise HTTPException(status_code=404, detail="Channel not found or already deleted")
@@ -377,10 +367,7 @@ async def get_channel_status(
         await require_channel_access(channel_id, current_user["id"])
         
         with performance_timer("channel_status_fetch"):
-            status_info = await channel_service.get_channel_status(
-                channel_id=channel_id,
-                user_id=current_user["id"]
-            )
+            status_info = await channel_service.get_channel_status(channel_id)
             
             return {
                 "channel_id": channel_id,

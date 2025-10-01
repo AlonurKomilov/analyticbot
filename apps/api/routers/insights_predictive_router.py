@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 # Services
 from apps.bot.clients.analytics_client import AnalyticsClient
 from apps.api.deps import get_predictive_analytics_engine
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.api.di.analytics_container import get_analytics_fusion_service, get_cache
 
 # Auth
 # Auth
@@ -58,9 +58,9 @@ async def get_ai_recommendations(
     """
     try:
         # Get recent data for recommendations
-        overview_data = await analytics_client.overview(channel_id, 7)  # Last week
-        growth_data = await analytics_client.growth(channel_id, 7)
-        reach_data = await analytics_client.reach(channel_id, 7)
+        overview_data = await analytics_client.overview(str(channel_id), 7)  # Last week
+        growth_data = await analytics_client.growth(str(channel_id), 7)
+        reach_data = await analytics_client.reach(str(channel_id), 7)
         
         # Build metrics context
         metrics_context = {
@@ -187,7 +187,7 @@ async def get_growth_forecast(
     """
     try:
         # Get historical data for modeling
-        historical_data = await analytics_client.growth(channel_id, 90)  # 3 months history
+        historical_data = await analytics_client.growth(str(channel_id), 90)  # 3 months history
         
         # Generate growth forecast
         forecast = await generate_growth_forecast(historical_data, days)
@@ -238,6 +238,303 @@ def generate_contextual_recommendations(metrics: Dict[str, Any], context: str) -
         ])
     
     return recommendations
+
+# === PHASE 3 STEP 3: PREDICTIVE INTELLIGENCE ENDPOINTS ===
+
+class ContextualIntelligenceRequest(BaseModel):
+    """Request for contextual intelligence analysis"""
+    channel_id: int
+    intelligence_context: List[str] = Field(default=["temporal", "environmental"], description="Types of intelligence context to analyze")
+    analysis_period_days: int = Field(30, ge=7, le=365, description="Analysis period in days")
+    prediction_horizon_days: int = Field(7, ge=1, le=90, description="Prediction horizon in days")
+    include_explanations: bool = Field(True, description="Include natural language explanations")
+
+class CrossChannelIntelligenceRequest(BaseModel):
+    """Request for cross-channel intelligence analysis"""
+    channel_ids: List[int] = Field(..., description="Channel IDs to analyze (2-10 channels)")
+    correlation_depth_days: int = Field(60, ge=14, le=180, description="Analysis depth for correlations")
+    include_competitive_intelligence: bool = Field(True, description="Include competitive analysis")
+
+@router.post("/intelligence/contextual")
+async def analyze_contextual_intelligence(
+    request: ContextualIntelligenceRequest,
+    current_user: dict = Depends(get_current_user),
+    analytics_service = Depends(get_analytics_fusion_service),
+):
+    """
+    ## 🧠 Contextual Intelligence Analysis
+    
+    AI-powered contextual prediction analysis that adds environmental, temporal, 
+    and market intelligence to standard predictions.
+    
+    **Intelligence Context Types:**
+    - `temporal`: Time-based patterns and optimal timing
+    - `environmental`: Platform and market conditions
+    - `competitive`: Competitor activity and market position
+    - `behavioral`: Audience behavior patterns
+    - `seasonal`: Seasonal trends and cyclical patterns
+    
+    **Features:**
+    - Context-aware predictions with enhanced accuracy
+    - Environmental factor analysis
+    - Natural language explanations of predictions
+    - Enhanced confidence scoring based on context
+    
+    **Returns:**
+    - Base prediction from existing ML models
+    - Contextual intelligence enhancement layer
+    - Natural language explanations
+    - Enhanced confidence scores
+    """
+    try:
+        logger.info(f"🧠 Processing contextual intelligence request for channel {request.channel_id}")
+        
+        # Build intelligence request
+        intelligence_request = {
+            "channel_id": request.channel_id,
+            "intelligence_context": request.intelligence_context,
+            "analysis_period": request.analysis_period_days,
+            "prediction_horizon": request.prediction_horizon_days,
+            "include_explanations": request.include_explanations
+        }
+        
+        # Get contextual intelligence analysis
+        result = await analytics_service.analyze_prediction_context(intelligence_request)
+        
+        return {
+            "success": True,
+            "channel_id": request.channel_id,
+            "data": result,
+            "analysis_type": "contextual_intelligence",
+            "generated_at": datetime.utcnow().isoformat(),
+            "intelligence_contexts_analyzed": request.intelligence_context
+        }
+        
+    except Exception as e:
+        logger.error(f"Contextual intelligence analysis failed for channel {request.channel_id}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Contextual intelligence analysis failed: {str(e)}"
+        )
+
+@router.get("/intelligence/temporal/{channel_id}")
+async def discover_temporal_patterns(
+    channel_id: int,
+    analysis_depth_days: int = Query(90, ge=30, le=365, description="Days of historical data to analyze"),
+    current_user: dict = Depends(get_current_user),
+    analytics_service = Depends(get_analytics_fusion_service),
+):
+    """
+    ## ⏰ Temporal Pattern Intelligence Discovery
+    
+    Advanced temporal intelligence that discovers hidden patterns in engagement and performance:
+    
+    **Temporal Intelligence Features:**
+    - Daily engagement rhythm analysis
+    - Weekly performance cycle detection
+    - Seasonal trend intelligence
+    - Cyclical pattern recognition
+    - Optimal timing window identification
+    - Anomaly temporal pattern detection
+    
+    **Use Cases:**
+    - Optimize content posting schedules
+    - Predict engagement windows
+    - Identify seasonal opportunities
+    - Detect unusual temporal patterns
+    - Plan content calendar strategy
+    
+    **Returns:**
+    - Daily intelligence patterns
+    - Weekly performance cycles
+    - Seasonal insights and trends
+    - Optimal timing recommendations
+    - Temporal anomaly detection
+    """
+    try:
+        logger.info(f"⏰ Processing temporal intelligence discovery for channel {channel_id}")
+        
+        # Get temporal intelligence analysis
+        temporal_intelligence = await analytics_service.discover_temporal_intelligence(
+            channel_id=channel_id,
+            analysis_depth_days=analysis_depth_days
+        )
+        
+        return {
+            "success": True,
+            "channel_id": channel_id,
+            "data": temporal_intelligence,
+            "analysis_type": "temporal_intelligence",
+            "analysis_depth_days": analysis_depth_days,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Temporal intelligence discovery failed for channel {channel_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Temporal intelligence discovery failed: {str(e)}"
+        )
+
+@router.post("/intelligence/cross-channel")
+async def analyze_cross_channel_intelligence(
+    request: CrossChannelIntelligenceRequest,
+    current_user: dict = Depends(get_current_user),
+    analytics_service = Depends(get_analytics_fusion_service),
+):
+    """
+    ## 🌐 Cross-Channel Intelligence Analysis
+    
+    Multi-channel intelligence that analyzes correlations, influences, and opportunities:
+    
+    **Cross-Channel Intelligence Features:**
+    - Channel correlation analysis
+    - Influence pattern detection
+    - Cross-promotion opportunity identification
+    - Competitive intelligence analysis
+    - Network effect analysis
+    - Multi-channel strategy optimization
+    
+    **Use Cases:**
+    - Identify channel synergies
+    - Optimize cross-promotion strategies
+    - Understand channel influence patterns
+    - Detect competitive opportunities
+    - Plan multi-channel campaigns
+    
+    **Returns:**
+    - Channel correlation matrix
+    - Influence pattern analysis
+    - Cross-promotion opportunities
+    - Competitive intelligence insights
+    - Network effect recommendations
+    """
+    try:
+        logger.info(f"🌐 Processing cross-channel intelligence for {len(request.channel_ids)} channels")
+        
+        # Get cross-channel intelligence analysis
+        cross_intelligence = await analytics_service.analyze_cross_channel_intelligence(
+            channel_ids=request.channel_ids,
+            correlation_depth_days=request.correlation_depth_days
+        )
+        
+        return {
+            "success": True,
+            "channel_ids": request.channel_ids,
+            "data": cross_intelligence,
+            "analysis_type": "cross_channel_intelligence",
+            "correlation_depth_days": request.correlation_depth_days,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Cross-channel intelligence analysis failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Cross-channel intelligence analysis failed: {str(e)}"
+        )
+
+@router.get("/intelligence/narrative/{channel_id}")
+async def get_prediction_narrative(
+    channel_id: int,
+    narrative_style: str = Query("conversational", description="Narrative style: conversational, technical, executive"),
+    prediction_type: str = Query("comprehensive", description="Type of prediction to explain"),
+    current_user: dict = Depends(get_current_user),
+    analytics_service = Depends(get_analytics_fusion_service),
+    predictive_engine = Depends(get_predictive_analytics_engine),
+):
+    """
+    ## 📖 Prediction Reasoning Narrative
+    
+    Natural language explanation of prediction reasoning and insights:
+    
+    **Narrative Features:**
+    - Clear explanation of prediction logic
+    - Confidence factor analysis
+    - Risk assessment in plain language
+    - Actionable recommendations
+    - Temporal and market context
+    
+    **Narrative Styles:**
+    - `conversational`: Easy-to-understand explanations
+    - `technical`: Detailed technical analysis
+    - `executive`: High-level strategic insights
+    
+    **Use Cases:**
+    - Understand prediction reasoning
+    - Communicate insights to stakeholders
+    - Generate reports and presentations
+    - Educational and training purposes
+    
+    **Returns:**
+    - Natural language prediction reasoning
+    - Confidence explanations
+    - Key factor analysis
+    - Risk assessment narrative
+    - Strategic recommendations
+    """
+    try:
+        logger.info(f"📖 Generating prediction narrative for channel {channel_id}")
+        
+        # First get a prediction to explain
+        prediction = await predictive_engine.forecast_metrics(
+            channel_id=channel_id,
+            prediction_type=prediction_type
+        )
+        
+        # Generate narrative explanation
+        narrative = await analytics_service.generate_prediction_narratives(
+            prediction=prediction,
+            narrative_style=narrative_style
+        )
+        
+        return {
+            "success": True,
+            "channel_id": channel_id,
+            "prediction_summary": prediction,
+            "narrative": narrative,
+            "narrative_style": narrative_style,
+            "generated_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Prediction narrative generation failed for channel {channel_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Prediction narrative generation failed: {str(e)}"
+        )
+
+@router.get("/intelligence/health")
+async def get_intelligence_health_status(
+    current_user: dict = Depends(get_current_user),
+    analytics_service = Depends(get_analytics_fusion_service),
+):
+    """
+    ## 🏥 Predictive Intelligence Health Status
+    
+    Health check for the predictive intelligence service and its dependencies.
+    
+    **Returns:**
+    - Service operational status
+    - Dependency health checks
+    - Available capabilities
+    - Performance metrics
+    """
+    try:
+        health_status = await analytics_service.get_intelligence_health_status()
+        
+        return {
+            "success": True,
+            "health_status": health_status,
+            "checked_at": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Intelligence health check failed: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Intelligence health check failed: {str(e)}"
+        )
 
 async def generate_growth_forecast(historical_data, forecast_days: int) -> Dict[str, Any]:
     """Generate growth forecast using simple trend analysis"""

@@ -781,3 +781,23 @@ class AnalyticsService:
             "summary": {},
             "message": "Analytics summary placeholder - implement specific logic as needed"
         }
+
+    async def get_post_views(self, post_id: int, user_id: int) -> int | None:
+        """Get views for a specific post - compatibility method"""
+        try:
+            # This would need to be implemented with actual view fetching logic
+            # For now, return None to indicate view count not available
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get post views for post {post_id}: {e}")
+            return None
+
+    async def create_views_chart(self, channel_id: int) -> bytes | None:
+        """Create views chart for a channel - compatibility method"""
+        try:
+            # This would need to be implemented with actual chart creation logic
+            # For now, return None to indicate chart not available
+            return None
+        except Exception as e:
+            logger.error(f"Failed to create views chart for channel {channel_id}: {e}")
+            return None

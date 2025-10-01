@@ -1,37 +1,35 @@
+"""
+Analytics Dependency Injection Container
+Properly structured DI container using Repository Factory pattern for clean architecture
+"""
+
 import os
-from unittest.mock import AsyncMock
-from core.services.analytics_fusion_service import AnalyticsFusionService
-from datetime import UTC, datetime
-from infra.cache.redis_cache import create_cache_adapter
-from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
-from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
-from infra.db.repositories.post_repository import AsyncpgPostRepository
-from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
-from typing import TYPE_CHECKING, Union
 import logging
+from unittest.mock import AsyncMock
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Union
+
+# Core imports (allowed)
+from core.services.analytics_fusion_service import AnalyticsFusionService
+from core.ports.repository_factory import AbstractRepositoryFactory
+
+# Infrastructure imports (allowed in DI containers)
+from infra.factories.repository_factory import AsyncpgRepositoryFactory, CacheFactory
 
 if TYPE_CHECKING:
     from asyncpg.pool import Pool
-
-"""
-Dependency Injection for Analytics V2
-Provides dependencies for the Analytics Fusion API with improved database connectivity
-"""
 
 logger = logging.getLogger(__name__)
 
 # Global instances (will be initialized by container)
 _analytics_fusion_service: AnalyticsFusionService | None = None
+_repository_factory: AbstractRepositoryFactory | None = None
 _cache_adapter = None
 
 
 async def get_database_pool() -> Union["Pool", object, None]:
     """Get database pool using proper V2 PostgreSQL connection"""
     # Check if we're in test environment
-    import os
-
     if os.getenv("ENVIRONMENT") == "test" or "pytest" in os.getenv("_", ""):
         # For tests, create a proper mock pool that supports async context manager
         class MockConnection:
@@ -87,7 +85,7 @@ async def get_database_pool() -> Union["Pool", object, None]:
 
     # For production, use PostgreSQL directly with proper connection management
     try:
-        # Import the optimized database manager
+        # Import the optimized database manager (fallback pattern)
         from infra.db.connection_manager import db_manager
         
         # Check if db_manager is initialized
@@ -174,39 +172,37 @@ async def get_redis_client():
             return None
 
 
-async def init_analytics_fusion_service() -> AnalyticsFusionService:
-    """Initialize analytics fusion service with improved database connection"""
-    global _analytics_fusion_service
-
-    if _analytics_fusion_service is not None:
-        return _analytics_fusion_service
-
+async def get_repository_factory() -> AbstractRepositoryFactory:
+    """
+    Get repository factory instance using clean architecture pattern.
+    
+    This is the key improvement - instead of creating repositories directly,
+    we use the factory pattern to maintain clean architecture.
+    """
+    global _repository_factory
+    
+    if _repository_factory is not None:
+        return _repository_factory
+    
     try:
-        # Get database pool with the new V2 strategy
+        # Get database pool
         pool = await get_database_pool()
         
-        # More detailed debugging
-        logger.info(f"V2 Database pool retrieved: {pool}")
-        logger.info(f"V2 Database pool type: {type(pool)}")
-        
         if pool is None:
-            # Create a comprehensive mock pool for graceful degradation
-            logger.warning("V2 Database pool is None, creating enhanced mock for limited functionality")
+            # Create enhanced mock pool for graceful degradation
+            logger.warning("Database pool is None, creating enhanced mock for limited functionality")
             
-            # Create an enhanced mock pool that mimics asyncpg behavior
             class EnhancedMockPool:
                 async def fetchval(self, query, *args):
-                    # Return realistic mock data based on query type
                     if "COUNT" in query.upper():
-                        return 42  # Mock count
+                        return 42
                     elif "subscriber" in query.lower():
-                        return 1250  # Mock subscriber count  
+                        return 1250
                     elif "SUM" in query.upper():
-                        return 15000  # Mock sum
-                    return 100  # Default mock value
+                        return 15000
+                    return 100
                 
                 async def fetch(self, query, *args):
-                    # Return mock analytics data
                     return [
                         {
                             "date": "2025-09-07",
@@ -235,32 +231,49 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
                     pass
                     
                 async def execute(self, query, *args):
-                    return "INSERT 0 1"  # Mock successful insert
+                    return "INSERT 0 1"
             
             pool = EnhancedMockPool()
-            logger.info("✅ Enhanced mock pool created for V2 analytics")
+            logger.info("✅ Enhanced mock pool created for repository factory")
+        
+        # Create repository factory with pool
+        _repository_factory = AsyncpgRepositoryFactory(pool)
+        logger.info("✅ Repository factory created successfully")
+        return _repository_factory
+        
+    except Exception as e:
+        logger.error(f"Failed to create repository factory: {e}", exc_info=True)
+        raise RuntimeError(f"Repository factory initialization failed: {e}")
 
-        # Create repositories with proper error handling
-        try:
-            channel_repo = AsyncpgChannelRepository(pool)  # type: ignore
-            channel_daily_repo = AsyncpgChannelDailyRepository(pool)  # type: ignore
-            post_repo = AsyncpgPostRepository(pool)  # type: ignore
-            metrics_repo = AsyncpgPostMetricsRepository(pool)  # type: ignore
-            edges_repo = AsyncpgEdgesRepository(pool)  # type: ignore
-            stats_raw_repo = AsyncpgStatsRawRepository(pool)  # type: ignore
-            
-            logger.info("✅ V2 repositories created successfully")
-            
-        except Exception as repo_error:
-            logger.error(f"Failed to create V2 repositories: {repo_error}")
-            raise
+
+async def init_analytics_fusion_service() -> AnalyticsFusionService:
+    """Initialize analytics fusion service using repository factory pattern"""
+    global _analytics_fusion_service
+
+    if _analytics_fusion_service is not None:
+        return _analytics_fusion_service
+
+    try:
+        # Get repository factory (clean architecture pattern)
+        repository_factory = await get_repository_factory()
+        
+        logger.info(f"Repository factory retrieved: {type(repository_factory)}")
+
+        # Create repositories through factory (no direct infra imports!)
+        channel_daily_repo = repository_factory.create_channel_daily_repository()
+        post_repo = repository_factory.create_post_repository()
+        metrics_repo = repository_factory.create_post_metrics_repository()
+        edges_repo = repository_factory.create_edges_repository()
+        stats_raw_repo = repository_factory.create_stats_raw_repository()
+        
+        logger.info("✅ Repositories created through factory pattern")
 
         # Initialize cache with error handling
         try:
             cache_adapter = await init_cache_adapter()
-            logger.info("✅ V2 cache adapter initialized")
+            logger.info("✅ Cache adapter initialized")
         except Exception as cache_error:
-            logger.warning(f"V2 cache initialization failed: {cache_error}")
+            logger.warning(f"Cache initialization failed: {cache_error}")
             cache_adapter = None
 
         # Create analytics fusion service
@@ -272,16 +285,16 @@ async def init_analytics_fusion_service() -> AnalyticsFusionService:
             stats_raw_repo=stats_raw_repo
         )
 
-        logger.info("🎯 Analytics Fusion Service V2 initialized successfully")
+        logger.info("🎯 Analytics Fusion Service initialized with clean architecture")
         return _analytics_fusion_service
         
     except Exception as e:
-        logger.error(f"Failed to initialize V2 analytics fusion service: {e}", exc_info=True)
-        raise RuntimeError(f"V2 Analytics initialization failed: {e}")
+        logger.error(f"Failed to initialize analytics fusion service: {e}", exc_info=True)
+        raise RuntimeError(f"Analytics initialization failed: {e}")
 
 
 async def init_cache_adapter():
-    """Initialize cache adapter"""
+    """Initialize cache adapter using factory pattern"""
     global _cache_adapter
 
     if _cache_adapter is not None:
@@ -289,12 +302,13 @@ async def init_cache_adapter():
 
     try:
         redis_client = await get_redis_client()
-        _cache_adapter = create_cache_adapter(redis_client)
+        # Use cache factory instead of direct import
+        _cache_adapter = CacheFactory.create_cache_adapter(redis_client)
         logger.info(f"Cache adapter initialized: {type(_cache_adapter).__name__}")
         return _cache_adapter
     except Exception as e:
         logger.warning(f"Cache adapter initialization failed, using no-op cache: {e}")
-        _cache_adapter = create_cache_adapter(None)
+        _cache_adapter = CacheFactory.create_cache_adapter(None)
         return _cache_adapter
 
 
@@ -311,47 +325,37 @@ async def get_cache():
     return await init_cache_adapter()
 
 
-# Repository dependencies (for direct access if needed)
+# Repository dependencies (now using factory pattern)
 
 
 async def get_channel_daily_repository():
-    """Get channel daily repository"""
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    return AsyncpgChannelDailyRepository(pool)  # type: ignore
+    """Get channel daily repository through factory"""
+    factory = await get_repository_factory()
+    return factory.create_channel_daily_repository()
 
 
 async def get_post_repository():
-    """Get post repository"""
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    return AsyncpgPostRepository(pool)  # type: ignore
+    """Get post repository through factory"""
+    factory = await get_repository_factory()
+    return factory.create_post_repository()
 
 
 async def get_metrics_repository():
-    """Get post metrics repository"""
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    return AsyncpgPostMetricsRepository(pool)  # type: ignore
+    """Get post metrics repository through factory"""
+    factory = await get_repository_factory()
+    return factory.create_post_metrics_repository()
 
 
-async def get_edges_repository() -> AsyncpgEdgesRepository:
-    """Get edges repository"""
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    return AsyncpgEdgesRepository(pool)  # type: ignore
+async def get_edges_repository():
+    """Get edges repository through factory"""
+    factory = await get_repository_factory()
+    return factory.create_edges_repository()
 
 
-async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
-    """Get stats raw repository"""
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    return AsyncpgStatsRawRepository(pool)  # type: ignore
+async def get_stats_raw_repository():
+    """Get stats raw repository through factory"""
+    factory = await get_repository_factory()
+    return factory.create_stats_raw_repository()
 
 
 async def get_channel_management_service():
@@ -359,14 +363,9 @@ async def get_channel_management_service():
     from apps.api.services.channel_management_service import ChannelManagementService
     from core.services.channel_service import ChannelService
     
-    # Get database pool
-    pool = await get_database_pool()
-    if pool is None:
-        raise RuntimeError("Failed to get database pool")
-    
-    # Create channel repository
-    from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-    channel_repo = AsyncpgChannelRepository(pool)  # type: ignore
+    # Get repository through factory (clean architecture)
+    factory = await get_repository_factory()
+    channel_repo = factory.create_channel_repository()
     
     # Create core service
     core_service = ChannelService(channel_repo)
@@ -380,12 +379,13 @@ async def get_channel_management_service():
 
 async def cleanup_analytics():
     """Cleanup function for graceful shutdown"""
-    global _analytics_fusion_service, _cache_adapter
+    global _analytics_fusion_service, _repository_factory, _cache_adapter
 
-    logger.info("Cleaning up Analytics V2 dependencies")
+    logger.info("Cleaning up Analytics dependencies")
 
     # Reset global instances
     _analytics_fusion_service = None
+    _repository_factory = None
     _cache_adapter = None
 
-    logger.info("Analytics V2 dependencies cleaned up")
+    logger.info("Analytics dependencies cleaned up")

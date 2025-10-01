@@ -25,7 +25,6 @@ from apps.bot.models.payment import (
 from apps.bot.services.payment_service import PaymentService
 from apps.bot.services.stripe_adapter import StripeAdapter
 from config import settings
-from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 
 
 class PaymentStats(BaseModel):
@@ -100,24 +99,19 @@ security = HTTPBearer()
 
 # Dependency to get payment service
 async def get_payment_service() -> PaymentService:
-    """Get payment service with Stripe adapter"""
-    from infra.db.connection_manager import db_manager
+    """Get payment service with repository injected through factory"""
+    from apps.shared.factory import get_repository_factory
     
-    # Initialize database if not already done
-    if not db_manager._pool:
-        await db_manager.initialize()
+    factory = get_repository_factory()
+    payment_repo = await factory.create_payment_repository()
+    
+    if not payment_repo:
+        raise RuntimeError("Failed to create payment repository")
     
     stripe_adapter = StripeAdapter(
-        api_key=settings.STRIPE_SECRET_KEY.get_secret_value() if settings.STRIPE_SECRET_KEY else "",
-        webhook_secret=settings.STRIPE_WEBHOOK_SECRET.get_secret_value() if settings.STRIPE_WEBHOOK_SECRET else ""
+        api_key=str(settings.STRIPE_SECRET_KEY) if settings.STRIPE_SECRET_KEY else "",
+        webhook_secret=str(settings.STRIPE_WEBHOOK_SECRET) if settings.STRIPE_WEBHOOK_SECRET else ""
     )
-    
-    # Get the underlying asyncpg pool from the optimized manager
-    pool = await db_manager._pool.initialize() if db_manager._pool else None
-    if not pool:
-        raise RuntimeError("Failed to initialize database pool")
-        
-    payment_repo = AsyncpgPaymentRepository(pool)
     payment_service = PaymentService(payment_repo)
     payment_service.register_adapter(stripe_adapter)
     return payment_service

@@ -24,15 +24,17 @@ class ChartService(ChartServiceProtocol):
     the apps layer from infrastructure dependencies like matplotlib.
     """
     
-    def __init__(self):
-        self._renderer: Optional[Any] = None
-        self._initialized = False
+    def __init__(self, chart_renderer=None):
+        self._renderer: Optional[Any] = chart_renderer
+        self._initialized = chart_renderer is not None
     
     def _initialize_renderer(self) -> Any:
         """Lazy initialization of chart renderer"""
         if self._renderer is None:
             try:
-                # Import chart renderer from infrastructure layer
+                # Chart renderer should be injected via DI, but provide fallback
+                # This fallback will be removed once DI is properly configured
+                logger.warning("Chart renderer not injected, using fallback import")
                 from infra.rendering.charts import ChartRenderer, MATPLOTLIB_AVAILABLE
                 
                 if not MATPLOTLIB_AVAILABLE:
@@ -40,7 +42,7 @@ class ChartService(ChartServiceProtocol):
                 
                 self._renderer = ChartRenderer()
                 self._initialized = True
-                logger.info("Chart renderer initialized successfully")
+                logger.info("Chart renderer initialized via fallback")
                 
             except ImportError as e:
                 logger.error(f"Failed to import chart renderer: {e}")

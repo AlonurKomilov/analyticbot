@@ -18,10 +18,17 @@ from aiogram_i18n import I18nContext
 
 from apps.bot.config import settings
 from apps.bot.services.subscription_service import SubscriptionService
-from infra.db.repositories import AsyncpgUserRepository as UserRepository
+from apps.shared.factory import get_repository_factory
+from core.repositories.interfaces import UserRepository
 
 router = Router()
 log = logging.getLogger(__name__)
+
+
+async def get_user_repository() -> UserRepository:
+    """Get user repository from factory"""
+    factory = get_repository_factory()
+    return await factory.get_user_repository()
 
 
 def _chat_id_of(msg: types.Message) -> int | None:
@@ -139,11 +146,12 @@ async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None
 
 
 @router.message(CommandStart())
-async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18nContext):
+async def cmd_start(message: types.Message, i18n: I18nContext):
     uid = message.from_user.id if message.from_user else None
     uname = message.from_user.username if message.from_user else None
     if uid is not None:
         try:
+            user_repo = await get_user_repository()
             user_data = {
                 "id": uid,
                 "username": uname,
@@ -162,26 +170,30 @@ async def cmd_start(message: types.Message, user_repo: UserRepository, i18n: I18
 
 @router.callback_query(F.data == "quick_add_channel")
 async def callback_quick_add_channel(callback: CallbackQuery, i18n: I18nContext):
-    await callback.message.answer(i18n.get("add-channel-usage"))
+    if callback.message:
+        await callback.message.answer(i18n.get("add-channel-usage"))
     await callback.answer()
 
 
 @router.callback_query(F.data == "quick_stats")
 async def callback_quick_stats(callback: CallbackQuery, i18n: I18nContext):
-    await callback.message.answer(i18n.get("stats-generating"))
+    if callback.message:
+        await callback.message.answer(i18n.get("stats-generating"))
     # Here you would normally call the stats handler
     await callback.answer()
 
 
 @router.callback_query(F.data == "quick_help")
 async def callback_quick_help(callback: CallbackQuery, i18n: I18nContext):
-    await callback.message.answer(i18n.get("help-message"))
+    if callback.message:
+        await callback.message.answer(i18n.get("help-message"))
     await callback.answer()
 
 
 @router.callback_query(F.data == "quick_commands")
 async def callback_quick_commands(callback: CallbackQuery, i18n: I18nContext):
-    await callback.message.answer(i18n.get("commands-list"))
+    if callback.message:
+        await callback.message.answer(i18n.get("commands-list"))
     await callback.answer()
 
 

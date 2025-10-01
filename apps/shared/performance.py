@@ -35,9 +35,10 @@ class PerformanceTimer:
     Synchronous performance timer that matches infra.db.performance interface
     """
     
-    def __init__(self, operation_name: str):
+    def __init__(self, operation_name: str, infra_performance_recorder=None):
         self.operation_name = operation_name
         self.start_time = None
+        self.infra_recorder = infra_performance_recorder
         self.logger = logging.getLogger("apps.performance")
     
     def __enter__(self):
@@ -65,14 +66,18 @@ class PerformanceTimer:
                 self.logger.debug(f"Could not send metrics to infra: {e}")
     
     def _send_to_infra_performance(self, duration_ms: float, has_error: bool):
-        """Try to send metrics to infra performance system (sync)"""
+        """Try to send metrics to infra performance system via DI (sync)"""
         try:
-            # Dynamic import to avoid hard dependency
-            from infra.db.performance import performance_timer as infra_timer_func
-            
-            # The infra performance_timer might have a record method or similar
-            # For now, just log that we tried
-            pass
+            # Use injected recorder if available
+            if self.infra_recorder:
+                # Call the injected recorder
+                pass  # Implementation depends on recorder interface
+            else:
+                # Fallback: dynamic import (will be removed when DI is complete)
+                logger.warning("Performance recorder not injected, using fallback")
+                from infra.db.performance import performance_timer as infra_timer_func
+                # The infra performance_timer might have a record method or similar
+                pass
         except ImportError:
             # Infra performance system not available - that's fine
             pass

@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.api.di_analytics import get_channel_management_service
+from apps.api.di.analytics_container import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_admin_role,
@@ -77,22 +77,22 @@ async def get_all_channels(
         with performance_timer("admin_all_channels_fetch"):
             channels = await channel_service.get_all_channels_admin(
                 limit=limit, 
-                offset=offset
+                skip=offset
             )
             
             return [
                 AdminChannelInfo(
-                    id=channel["id"],
-                    name=channel["name"],
-                    username=channel.get("username"),
-                    owner_id=channel["owner_id"],
-                    owner_username=channel.get("owner_username", "Unknown"),
-                    subscriber_count=channel.get("subscriber_count", 0),
-                    is_active=channel.get("is_active", True),
-                    created_at=channel.get("created_at", datetime.now()),
-                    last_activity=channel.get("last_activity"),
-                    total_posts=channel.get("total_posts", 0),
-                    total_views=channel.get("total_views", 0)
+                    id=channel.id,
+                    name=channel.name,
+                    username=getattr(channel, 'username', None),
+                    owner_id=getattr(channel, 'user_id', 0),
+                    owner_username=getattr(channel, 'owner_username', "Unknown"),
+                    subscriber_count=channel.subscriber_count,
+                    is_active=channel.is_active,
+                    created_at=channel.created_at,
+                    last_activity=getattr(channel, 'last_activity', None),
+                    total_posts=getattr(channel, 'total_posts', 0),
+                    total_views=getattr(channel, 'total_views', 0)
                 ) for channel in channels
             ]
     except HTTPException:
@@ -126,10 +126,7 @@ async def delete_channel_admin(
         await require_admin_role(current_user["id"])
         
         with performance_timer("admin_channel_deletion"):
-            result = await channel_service.admin_delete_channel(
-                channel_id=channel_id,
-                admin_user_id=current_user["id"]
-            )
+            result = await channel_service.admin_delete_channel(channel_id)
             
             if not result:
                 raise HTTPException(status_code=404, detail="Channel not found")
@@ -172,10 +169,7 @@ async def suspend_channel(
         await require_admin_role(current_user["id"])
         
         with performance_timer("admin_channel_suspension"):
-            result = await channel_service.suspend_channel(
-                channel_id=channel_id,
-                admin_user_id=current_user["id"]
-            )
+            result = await channel_service.suspend_channel(channel_id)
             
             if not result:
                 raise HTTPException(status_code=404, detail="Channel not found")
@@ -219,10 +213,7 @@ async def unsuspend_channel(
         await require_admin_role(current_user["id"])
         
         with performance_timer("admin_channel_unsuspension"):
-            result = await channel_service.unsuspend_channel(
-                channel_id=channel_id,
-                admin_user_id=current_user["id"]
-            )
+            result = await channel_service.unsuspend_channel(channel_id)
             
             if not result:
                 raise HTTPException(status_code=404, detail="Channel not found")

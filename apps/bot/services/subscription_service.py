@@ -1,7 +1,8 @@
+from typing import Any
+
 from fastapi import HTTPException
 
 from apps.bot.domain.models import SubscriptionStatus
-from typing import Any
 
 # TODO: Define proper repository protocols for all methods used
 # For now using Any to maintain compatibility while removing direct infra imports

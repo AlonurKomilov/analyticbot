@@ -23,7 +23,7 @@ DEFAULT_MOCK_USER_ID = 1
 DEFAULT_MOCK_USERNAME = "test_user"
 DEFAULT_MOCK_EMAIL = "test@example.com"
 
-# Mock channel constants  
+# Mock channel constants
 DEFAULT_MOCK_CHANNEL_ID = "test_channel"
 DEFAULT_MOCK_CHANNEL_NUMERIC_ID = 1
 DEFAULT_MOCK_CHANNEL_NAME = "Test Channel"
@@ -41,7 +41,7 @@ DEFAULT_MOCK_GROWTH_RATE = 5.5
 # Export all constants
 __all__ = [
     "DEMO_API_DELAY_MS",
-    "MOCK_SUCCESS_RATE", 
+    "MOCK_SUCCESS_RATE",
     "MOCK_ERROR_SIMULATION",
     "MOCK_POSTS_COUNT",
     "MOCK_METRICS_DAYS",
@@ -59,5 +59,5 @@ __all__ = [
     "DEFAULT_MOCK_VIEW_COUNT",
     "DEFAULT_MOCK_OPTIMAL_HOUR",
     "DEFAULT_MOCK_POSTING_CONFIDENCE",
-    "DEFAULT_MOCK_GROWTH_RATE"
+    "DEFAULT_MOCK_GROWTH_RATE",
 ]

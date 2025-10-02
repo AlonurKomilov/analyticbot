@@ -5,10 +5,11 @@ Composition root for jobs application.
 """
 
 import logging
+
 from celery import Celery
 
-from config.settings import settings
 from apps.jobs.di import configure_jobs_container
+from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ celery_app = Celery(
     "analyticbot-jobs",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["apps.jobs.tasks"]
+    include=["apps.jobs.tasks"],
 )
 
 # Configure Celery

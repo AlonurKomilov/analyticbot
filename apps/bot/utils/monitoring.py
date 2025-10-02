@@ -113,9 +113,9 @@ class MetricsCollector:
                 "uptime_seconds": uptime.total_seconds(),
                 "total_requests": total_requests,
                 "total_errors": total_errors,
-                "overall_error_rate": total_errors / total_requests * 100
-                if total_requests > 0
-                else 0,
+                "overall_error_rate": (
+                    total_errors / total_requests * 100 if total_requests > 0 else 0
+                ),
                 "endpoints": len(self._performance_stats),
                 "metrics_count": sum(len(metrics) for metrics in self._metrics.values()),
                 "timestamp": now.isoformat(),
@@ -247,8 +247,9 @@ def setup_default_health_checks():
         try:
             # Use apps layer health service instead of direct infra import
             from apps.api.services.health_service import health_service
+
             system_health = await health_service.get_system_health()
-            return system_health.status == 'healthy'
+            return system_health.status == "healthy"
         except Exception as e:
             raise Exception(f"Database check failed: {e}")
 

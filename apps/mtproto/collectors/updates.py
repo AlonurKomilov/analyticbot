@@ -29,9 +29,9 @@ class UpdatesCollector:
         self.tg_client = tg_client
         self.repos = repos
         self.settings = settings
-        
+
         # Get parsers from repos container (provided via DI)
-        self.parsers = getattr(repos, 'parsers', None)
+        self.parsers = getattr(repos, "parsers", None)
         self._running = False
         self._shutdown_event = asyncio.Event()
         self._stats = {
@@ -78,11 +78,12 @@ class UpdatesCollector:
 
                 try:
                     # Normalize the update using parser from DI
-                    if self.parsers and hasattr(self.parsers, 'normalize_update'):
+                    if self.parsers and hasattr(self.parsers, "normalize_update"):
                         normalized = self.parsers.normalize_update(update)
                     else:
                         # Fallback: lazy import if parsers not available via DI
                         from infra.tg.parsers import normalize_update
+
                         normalized = normalize_update(update)
 
                     if not normalized:

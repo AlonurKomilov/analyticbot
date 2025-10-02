@@ -11,7 +11,6 @@ from typing import Any
 import aiohttp
 
 from apps.shared.analytics_service import SharedAnalyticsService
-from apps.shared.factory import RepositoryFactory
 from core.repositories.alert_repository import AlertSubscriptionRepository
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,11 @@ logger = logging.getLogger(__name__)
 class AlertDetector:
     """Service for detecting analytics alerts"""
 
-    def __init__(self, analytics_client: SharedAnalyticsService, alert_repository: AlertSubscriptionRepository):
+    def __init__(
+        self,
+        analytics_client: SharedAnalyticsService,
+        alert_repository: AlertSubscriptionRepository,
+    ):
         self.analytics_client = analytics_client
         self.alert_repository = alert_repository
 
@@ -35,8 +38,12 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    current_data = await self.analytics_client.overview(str(channel_id), 1)  # Last 24h
-                    baseline_data = await self.analytics_client.overview(str(channel_id), 7)  # Last week
+                    current_data = await self.analytics_client.overview(
+                        str(channel_id), 1
+                    )  # Last 24h
+                    baseline_data = await self.analytics_client.overview(
+                        str(channel_id), 7
+                    )  # Last week
 
             if not current_data or not baseline_data:
                 logger.warning(f"Insufficient data for spike detection on channel {channel_id}")
@@ -179,23 +186,24 @@ class AlertRunner:
         """Ensure dependencies are available using factory pattern"""
         if self.analytics_client is None or self.alert_repository is None:
             from apps.shared.factory import get_repository_factory
-            
+
             # Get settings
             try:
                 from config.settings import settings
+
                 analytics_api_url = settings.ANALYTICS_V2_BASE_URL
             except ImportError:
                 analytics_api_url = "http://localhost:8000"  # fallback
-            
+
             # Create analytics client
             if self.analytics_client is None:
                 self.analytics_client = SharedAnalyticsService(analytics_api_url)
-            
+
             # Get alert repository from factory
             if self.alert_repository is None:
                 factory = get_repository_factory()
                 self.alert_repository = await factory.get_alert_subscription_repository()
-        
+
         # Create detector if not exists
         if self.detector is None:
             self.detector = AlertDetector(self.analytics_client, self.alert_repository)
@@ -204,11 +212,11 @@ class AlertRunner:
         """Process a single alert configuration"""
         # Ensure dependencies are available
         await self._ensure_dependencies()
-        
+
         # Type guard - after _ensure_dependencies, these should not be None
         assert self.detector is not None
         assert self.alert_repository is not None
-        
+
         alert_type = alert_config["alert_type"]
         user_id = alert_config["user_id"]
         channel_id = alert_config["channel_id"]
@@ -232,7 +240,7 @@ class AlertRunner:
             if alert_result:
                 # For now, skip recent alert check since the interface doesn't match
                 # TODO: Implement proper alert sent tracking with AlertSentRepository
-                
+
                 # Send alert notification
                 await self.send_alert_notification(user_id, alert_result)
 
@@ -264,18 +272,19 @@ class AlertRunner:
         """Run one cycle of alert detection"""
         # Ensure dependencies are available
         await self._ensure_dependencies()
-        
+
         # Type guard - after _ensure_dependencies, these should not be None
         assert self.alert_repository is not None
-        
+
         # Check if alerts are enabled (use a simple fallback)
         alerts_enabled = True  # Default to enabled
         try:
             from config.settings import settings
-            alerts_enabled = getattr(settings, 'ALERTS_ENABLED', True)
+
+            alerts_enabled = getattr(settings, "ALERTS_ENABLED", True)
         except ImportError:
             pass
-        
+
         if not alerts_enabled:
             logger.debug("Alerts are disabled, skipping detection cycle")
             return
@@ -351,7 +360,10 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Analytics Alert Detection Runner")
     parser.add_argument(
-        "--interval", type=int, default=300, help="Detection interval in seconds (default: 300)"
+        "--interval",
+        type=int,
+        default=300,
+        help="Detection interval in seconds (default: 300)",
     )
     parser.add_argument("--once", action="store_true", help="Run detection once and exit")
 
@@ -359,7 +371,8 @@ async def main():
 
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     runner = AlertRunner()

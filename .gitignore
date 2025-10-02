@@ -386,4 +386,10 @@ archive/
 **/_archive/
 **/archive/
 
+# Backup files
+*.backup
+*.bak
+*_backup.*
+backup_*
+
 venv/

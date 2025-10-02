@@ -9,32 +9,33 @@ The hierarchy is: GUEST < USER < MODERATOR < SUPER_ADMIN
 """
 
 from enum import Enum
-from typing import Dict, List, Set
-import warnings
 
 
 class ApplicationRole(Enum):
     """
     End-user application roles for general users.
-    
+
     Hierarchy: GUEST < USER
     """
-    GUEST = "guest"      # Unauthenticated or limited access users
-    USER = "user"        # Authenticated application users
+
+    GUEST = "guest"  # Unauthenticated or limited access users
+    USER = "user"  # Authenticated application users
 
 
 class AdministrativeRole(Enum):
     """
     Administrative roles for staff and system management.
-    
+
     Hierarchy: MODERATOR < SUPER_ADMIN
     """
-    MODERATOR = "moderator"      # Content moderation and user management
+
+    MODERATOR = "moderator"  # Content moderation and user management
     SUPER_ADMIN = "super_admin"  # System administration and configuration
 
 
 class RoleLevel(Enum):
     """Role level hierarchy for comparison operations."""
+
     GUEST = 1
     USER = 2
     MODERATOR = 3
@@ -42,7 +43,7 @@ class RoleLevel(Enum):
 
 
 # Role hierarchy mapping
-ROLE_HIERARCHY: Dict[str, int] = {
+ROLE_HIERARCHY: dict[str, int] = {
     ApplicationRole.GUEST.value: RoleLevel.GUEST.value,
     ApplicationRole.USER.value: RoleLevel.USER.value,
     AdministrativeRole.MODERATOR.value: RoleLevel.MODERATOR.value,
@@ -58,11 +59,11 @@ def get_role_level(role: str) -> int:
 def has_role_or_higher(user_role: str, required_role: str) -> bool:
     """
     Check if user role meets or exceeds the required role level.
-    
+
     Args:
         user_role: The user's current role
         required_role: The minimum required role
-        
+
     Returns:
         True if user role is equal or higher than required role
     """
@@ -73,7 +74,10 @@ def has_role_or_higher(user_role: str, required_role: str) -> bool:
 
 def is_administrative_role(role: str) -> bool:
     """Check if a role is administrative (MODERATOR or SUPER_ADMIN)."""
-    return role in [AdministrativeRole.MODERATOR.value, AdministrativeRole.SUPER_ADMIN.value]
+    return role in [
+        AdministrativeRole.MODERATOR.value,
+        AdministrativeRole.SUPER_ADMIN.value,
+    ]
 
 
 def is_application_role(role: str) -> bool:
@@ -86,15 +90,16 @@ def is_application_role(role: str) -> bool:
 class UserRole(str, Enum):
     """
     DEPRECATED: Use ApplicationRole and AdministrativeRole instead.
-    
+
     Legacy UserRole mapping:
     - GUEST → ApplicationRole.GUEST
-    - USER → ApplicationRole.USER  
+    - USER → ApplicationRole.USER
     - READONLY → ApplicationRole.USER + readonly_access permission
     - ANALYST → ApplicationRole.USER + view_analytics permission
     - MODERATOR → AdministrativeRole.MODERATOR
     - ADMIN → AdministrativeRole.SUPER_ADMIN
     """
+
     GUEST = "guest"
     USER = "user"
     READONLY = "readonly"
@@ -106,13 +111,14 @@ class UserRole(str, Enum):
 class AdminRole(str, Enum):
     """
     DEPRECATED: Use AdministrativeRole instead.
-    
+
     Legacy AdminRole mapping:
     - SUPPORT → AdministrativeRole.MODERATOR + customer_support permission
     - MODERATOR → AdministrativeRole.MODERATOR
     - ADMIN → AdministrativeRole.SUPER_ADMIN
     - SUPER_ADMIN → AdministrativeRole.SUPER_ADMIN
     """
+
     SUPPORT = "support"
     MODERATOR = "moderator"
     ADMIN = "admin"
@@ -120,10 +126,10 @@ class AdminRole(str, Enum):
 
 
 # Migration helper functions
-def migrate_user_role(old_role: str) -> tuple[str, List[str]]:
+def migrate_user_role(old_role: str) -> tuple[str, list[str]]:
     """
     Migrate old UserRole to new system.
-    
+
     Returns:
         Tuple of (new_role, additional_permissions)
     """
@@ -138,10 +144,10 @@ def migrate_user_role(old_role: str) -> tuple[str, List[str]]:
     return migration_map.get(old_role, (ApplicationRole.USER.value, []))
 
 
-def migrate_admin_role(old_role: str) -> tuple[str, List[str]]:
+def migrate_admin_role(old_role: str) -> tuple[str, list[str]]:
     """
     Migrate old AdminRole to new system.
-    
+
     Returns:
         Tuple of (new_role, additional_permissions)
     """
@@ -157,7 +163,7 @@ def migrate_admin_role(old_role: str) -> tuple[str, List[str]]:
 # Export the new role system
 __all__ = [
     "ApplicationRole",
-    "AdministrativeRole", 
+    "AdministrativeRole",
     "RoleLevel",
     "get_role_level",
     "has_role_or_higher",

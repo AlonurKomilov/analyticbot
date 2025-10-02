@@ -5,52 +5,51 @@ Converts between pure domain entities and SQLAlchemy ORM models.
 Keeps domain models clean while enabling database persistence.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional
-from uuid import UUID
-
 from core.models.superadmin_domain import (
-    AdminUser,
-    AdminSession,
-    SystemComponent,
-    AuditEntry,
-    SystemConfig,
     AdminNotification,
-    Permission,
     AdminRole,
+    AdminSession,
+    AdminUser,
+    AuditEntry,
+    Permission,
+    SystemComponent,
+    SystemConfig,
     UserStatus,
 )
 
-# Import ORM models  
-from infra.database.models.superadmin_orm import (
-    AdminUser as AdminUserORM,
-    AdminSession as AdminSessionORM,
-    SystemUser as SystemComponentORM,
-    AdminAuditLog as AuditEntryORM,
-    SystemConfiguration as SystemConfigORM,
-    SystemMetrics as AdminNotificationORM,
-)
+# Import ORM models
+from infra.database.models.superadmin_orm import AdminAuditLog as AuditEntryORM
+from infra.database.models.superadmin_orm import AdminSession as AdminSessionORM
+from infra.database.models.superadmin_orm import AdminUser as AdminUserORM
+from infra.database.models.superadmin_orm import SystemConfiguration as SystemConfigORM
+from infra.database.models.superadmin_orm import SystemMetrics as AdminNotificationORM
+from infra.database.models.superadmin_orm import SystemUser as SystemComponentORM
+
 
 # For Permission, we'll create a simple class until proper ORM is available
 class PermissionORM:
-    def __init__(self, name: str, description: str = "", resource: str = "", actions: List[str] = None):
+    def __init__(
+        self,
+        name: str,
+        description: str = "",
+        resource: str = "",
+        actions: list[str] = None,
+    ):
         self.name = name
         self.description = description
         self.resource = resource
         self.actions = actions or []
+
+
 from .superadmin_orm import (
-    AdminUser,
     AdminSession,
-    SystemUser,
-    AdminAuditLog,
-    SystemConfiguration,
-    SystemMetrics,
+    AdminUser,
 )
 
 
 class AdminDomainMapper:
     """Maps between domain entities and ORM models"""
-    
+
     @staticmethod
     def admin_user_to_orm(domain: AdminUser) -> AdminUserORM:
         """Convert domain AdminUser to ORM model"""
@@ -79,7 +78,7 @@ class AdminDomainMapper:
             preferences=domain.preferences,
             permissions=domain.permissions,
         )
-    
+
     @staticmethod
     def orm_to_admin_user(orm: AdminUserORM) -> AdminUser:
         """Convert ORM model to domain AdminUser"""
@@ -108,7 +107,7 @@ class AdminDomainMapper:
             preferences=orm.preferences or {},
             permissions=orm.permissions or [],
         )
-    
+
     @staticmethod
     def admin_session_to_orm(domain: AdminSession) -> AdminSessionORM:
         """Convert domain AdminSession to ORM model"""
@@ -124,7 +123,7 @@ class AdminDomainMapper:
             last_activity=domain.last_activity,
             is_active=domain.is_active,
         )
-    
+
     @staticmethod
     def orm_to_admin_session(orm: AdminSessionORM) -> AdminSession:
         """Convert ORM model to domain AdminSession"""
@@ -140,7 +139,7 @@ class AdminDomainMapper:
             last_activity=orm.last_activity,
             is_active=orm.is_active,
         )
-    
+
     @staticmethod
     def system_component_to_orm(domain: SystemComponent) -> SystemComponentORM:
         """Convert domain SystemComponent to ORM model"""
@@ -158,7 +157,7 @@ class AdminDomainMapper:
             created_at=domain.created_at,
             updated_at=domain.updated_at,
         )
-    
+
     @staticmethod
     def orm_to_system_component(orm: SystemComponentORM) -> SystemComponent:
         """Convert ORM model to domain SystemComponent"""
@@ -176,7 +175,7 @@ class AdminDomainMapper:
             created_at=orm.created_at,
             updated_at=orm.updated_at,
         )
-    
+
     @staticmethod
     def audit_entry_to_orm(domain: AuditEntry) -> AuditEntryORM:
         """Convert domain AuditEntry to ORM model"""
@@ -194,7 +193,7 @@ class AdminDomainMapper:
             old_values=domain.old_values,
             new_values=domain.new_values,
         )
-    
+
     @staticmethod
     def orm_to_audit_entry(orm: AuditEntryORM) -> AuditEntry:
         """Convert ORM model to domain AuditEntry"""
@@ -212,7 +211,7 @@ class AdminDomainMapper:
             old_values=orm.old_values,
             new_values=orm.new_values,
         )
-    
+
     @staticmethod
     def system_config_to_orm(domain: SystemConfig) -> SystemConfigORM:
         """Convert domain SystemConfig to ORM model"""
@@ -228,7 +227,7 @@ class AdminDomainMapper:
             updated_at=domain.updated_at,
             updated_by=domain.updated_by,
         )
-    
+
     @staticmethod
     def orm_to_system_config(orm: SystemConfigORM) -> SystemConfig:
         """Convert ORM model to domain SystemConfig"""
@@ -244,7 +243,7 @@ class AdminDomainMapper:
             updated_at=orm.updated_at,
             updated_by=orm.updated_by,
         )
-    
+
     @staticmethod
     def admin_notification_to_orm(domain: AdminNotification) -> AdminNotificationORM:
         """Convert domain AdminNotification to ORM model"""
@@ -261,7 +260,7 @@ class AdminDomainMapper:
             created_at=domain.created_at,
             read_at=domain.read_at,
         )
-    
+
     @staticmethod
     def orm_to_admin_notification(orm: AdminNotificationORM) -> AdminNotification:
         """Convert ORM model to domain AdminNotification"""
@@ -278,7 +277,7 @@ class AdminDomainMapper:
             created_at=orm.created_at,
             read_at=orm.read_at,
         )
-    
+
     @staticmethod
     def permission_to_orm(domain: Permission) -> PermissionORM:
         """Convert domain Permission to ORM model"""
@@ -291,7 +290,7 @@ class AdminDomainMapper:
             is_system=domain.is_system,
             created_at=domain.created_at,
         )
-    
+
     @staticmethod
     def orm_to_permission(orm: PermissionORM) -> Permission:
         """Convert ORM model to domain Permission"""

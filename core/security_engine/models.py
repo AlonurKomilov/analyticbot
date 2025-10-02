@@ -9,11 +9,11 @@ Updated for 4-Role Hierarchical System with backwards compatibility.
 
 import secrets
 import uuid
+import warnings
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, List, Set
-from dataclasses import dataclass, field
-import warnings
+from typing import Any
 
 from passlib.context import CryptContext
 
@@ -24,7 +24,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class UserRole(str, Enum):
     """
     DEPRECATED: Legacy user role hierarchy - use ApplicationRole/AdministrativeRole instead.
-    
+
     Migration mapping:
     - GUEST → ApplicationRole.GUEST
     - USER → ApplicationRole.USER
@@ -77,9 +77,9 @@ class User:
 
     # Role System - New hierarchical approach
     role: str = "user"  # Default to ApplicationRole.USER.value
-    legacy_role: UserRole | None = None     # For backwards compatibility
-    additional_permissions: List[str] = field(default_factory=list)  # Extra permissions
-    migration_profile: str | None = None    # Migration profile for special cases
+    legacy_role: UserRole | None = None  # For backwards compatibility
+    additional_permissions: list[str] = field(default_factory=list)  # Extra permissions
+    migration_profile: str | None = None  # Migration profile for special cases
 
     # Security
     status: UserStatus = UserStatus.PENDING_VERIFICATION
@@ -113,11 +113,11 @@ class User:
         if self.legacy_role and not self._is_new_role_system():
             # Import here to avoid circular imports
             from .roles import migrate_user_role
-            
+
             new_role, additional_perms = migrate_user_role(self.legacy_role.value)
             self.role = new_role
             self.additional_permissions.extend(additional_perms)
-            
+
             # Set migration profile for special cases
             if self.legacy_role == UserRole.READONLY:
                 self.migration_profile = "readonly_user"
@@ -127,8 +127,8 @@ class User:
     def _is_new_role_system(self) -> bool:
         """Check if using new role system values"""
         # Import here to avoid circular imports
-        from .roles import ApplicationRole, AdministrativeRole
-        
+        from .roles import AdministrativeRole, ApplicationRole
+
         new_role_values = [
             ApplicationRole.GUEST.value,
             ApplicationRole.USER.value,
@@ -140,13 +140,12 @@ class User:
     def get_permissions(self):
         """Get all permissions for this user"""
         # Import here to avoid circular imports
-        from .permissions import Permission
         from .role_hierarchy import role_hierarchy_service
-        
+
         user_info = role_hierarchy_service.get_user_role_info(
             role=self.role,
             additional_permissions=self.additional_permissions,
-            migration_profile=self.migration_profile
+            migration_profile=self.migration_profile,
         )
         return user_info.permissions
 
@@ -154,23 +153,25 @@ class User:
         """Check if user has a specific permission"""
         # Import here to avoid circular imports
         from .permissions import Permission
-        
+
         if isinstance(permission, str):
             try:
                 permission = Permission(permission)
             except ValueError:
                 return False
-        
+
         return permission in self.get_permissions()
 
     def is_administrative(self) -> bool:
         """Check if user has administrative role"""
         from .roles import is_administrative_role
+
         return is_administrative_role(self.role)
 
     def can_access_admin_panel(self) -> bool:
         """Check if user can access admin panel"""
         from .permissions import can_access_admin_features
+
         return can_access_admin_features(self.get_permissions())
 
     def validate_username(self) -> None:
@@ -298,7 +299,7 @@ class TokenResponse:
 
     access_token: str
     expires_in: int
-    user: 'User'
+    user: "User"
     refresh_token: str | None = None
     token_type: str = "bearer"
 
@@ -312,26 +313,28 @@ class MFASetupResponse:
     backup_codes: list[str]
 
 
-@dataclass  
+@dataclass
 class PermissionMatrix:
     """
     DEPRECATED: Role-based permission matrix - use Permission system instead.
-    
+
     Use the new Permission enum and role_hierarchy_service for permission checking.
     """
 
     role: str  # Changed from UserRole to string for new system compatibility
-    permissions: dict[str, list[str]] = field(default_factory=lambda: {
-        "analytics": [],
-        "users": [],
-        "settings": [],
-        "reports": [],
-        "api": [],
-    })
-    
+    permissions: dict[str, list[str]] = field(
+        default_factory=lambda: {
+            "analytics": [],
+            "users": [],
+            "settings": [],
+            "reports": [],
+            "api": [],
+        }
+    )
+
     def __post_init__(self):
         warnings.warn(
             "PermissionMatrix is deprecated. Use Permission enum and role_hierarchy_service instead.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )

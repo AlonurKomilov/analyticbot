@@ -1,19 +1,19 @@
 """
-Base Domain Models  
+Base Domain Models
 Pure domain models without framework dependencies
 """
 
-from datetime import datetime
 from dataclasses import dataclass
-from typing import Optional
+from datetime import datetime
 
 
 @dataclass
 class BaseEntity:
     """Base class for all domain entities"""
-    id: Optional[int] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+
+    id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     def __post_init__(self):
         if self.created_at is None:
@@ -24,6 +24,6 @@ class BaseEntity:
 
 # For backward compatibility with existing code
 TimestampMixin = BaseEntity
-BaseTimestampedModel = BaseEntity 
+BaseTimestampedModel = BaseEntity
 Base = BaseEntity
 BaseORMModel = BaseEntity

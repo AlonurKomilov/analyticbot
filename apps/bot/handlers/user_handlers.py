@@ -155,7 +155,7 @@ async def cmd_start(message: types.Message, i18n: I18nContext):
             user_data = {
                 "id": uid,
                 "username": uname,
-                "plan_id": 1  # Default to free plan
+                "plan_id": 1,  # Default to free plan
             }
             await user_repo.create_user(user_data)
         except Exception as e:

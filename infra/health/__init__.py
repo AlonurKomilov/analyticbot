@@ -1,15 +1,15 @@
 # Infrastructure Health Module
 
 from .adapters import (
+    HTTPHealthAdapter,
     PostgreSQLHealthAdapter,
     RedisHealthAdapter,
-    HTTPHealthAdapter,
     SystemResourcesAdapter,
 )
 
 __all__ = [
     "PostgreSQLHealthAdapter",
-    "RedisHealthAdapter", 
+    "RedisHealthAdapter",
     "HTTPHealthAdapter",
     "SystemResourcesAdapter",
 ]

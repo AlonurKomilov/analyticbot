@@ -8,10 +8,9 @@ from unittest.mock import AsyncMock, MagicMock
 import psutil
 import pytest
 
-from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.scheduler_service import SchedulerService
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 
 
 class TestPerformanceBenchmarks:
@@ -30,9 +29,9 @@ class TestPerformanceBenchmarks:
         # Mock the methods that SchedulerService actually calls
         scheduler_repo.create_scheduled_post = AsyncMock(return_value=123)
         scheduler_repo.update_post_status = AsyncMock(return_value=None)
-        scheduler_repo.get_pending_posts = AsyncMock(return_value=[
-            {"id": i, "text": f"Post {i}", "channel_id": i % 10} for i in range(50)
-        ])
+        scheduler_repo.get_pending_posts = AsyncMock(
+            return_value=[{"id": i, "text": f"Post {i}", "channel_id": i % 10} for i in range(50)]
+        )
         bot = AsyncMock()
         analytics_service = AnalyticsService(bot, analytics_repo)
         scheduler_service = SchedulerService(bot, scheduler_repo, analytics_repo)
@@ -284,8 +283,16 @@ class TestConfigurationScenarios:
                 "database_url": "postgresql://user:pass@localhost/db",
                 "redis_url": "redis://localhost:6379/0",
                 "bot_token": "fake_token",
-                "features": {"analytics": True, "scheduling": True, "notifications": True},
-                "limits": {"max_posts_per_day": 100, "max_channels_per_user": 10, "rate_limit": 30},
+                "features": {
+                    "analytics": True,
+                    "scheduling": True,
+                    "notifications": True,
+                },
+                "limits": {
+                    "max_posts_per_day": 100,
+                    "max_channels_per_user": 10,
+                    "rate_limit": 30,
+                },
             }
             validated_config = {}
             for key, value in config.items():

@@ -1,9 +1,11 @@
-from .churn_predictor import ChurnPredictor
-from .content_optimizer import ContentAnalysis, ContentOptimizer
-from .predictive_engine import ContentMetrics, PredictionResult, PredictiveAnalyticsEngine as PredictionService
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
+
+from .churn_predictor import ChurnPredictor
+from .content_optimizer import ContentAnalysis, ContentOptimizer
+from .predictive_engine import ContentMetrics, PredictionResult
+from .predictive_engine import PredictiveAnalyticsEngine as PredictionService
 
 """
 📊 Engagement Analyzer - Advanced analytics and insights engine
@@ -17,6 +19,7 @@ Features:
 """
 
 import logging
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -95,7 +98,7 @@ class EngagementAnalyzer:
         churn_predictor: ChurnPredictor,
         db_service=None,
         cache_service=None,
-        ):
+    ):
         self.prediction_service = prediction_service
         self.content_optimizer = content_optimizer
         self.churn_predictor = churn_predictor
@@ -136,7 +139,7 @@ class EngagementAnalyzer:
         period_days: int = 30,
         include_predictions: bool = True,
         include_churn_analysis: bool = True,
-        ) -> PerformanceReport:
+    ) -> PerformanceReport:
         """
         📊 Generate comprehensive performance analysis report
 
@@ -248,7 +251,7 @@ class EngagementAnalyzer:
         media_urls: list[str] | None = None,
         channel_id: int | None = None,
         scheduled_time: datetime | None = None,
-        ) -> dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         🎯 Pre-publish content analysis with optimization recommendations
 
@@ -299,15 +302,17 @@ class EngagementAnalyzer:
                     "seo_score": content_analysis.seo_score,
                     "engagement_score": content_analysis.engagement_score,
                 },
-                "engagement_prediction": {
-                    "predicted_engagement": prediction_result.prediction
+                "engagement_prediction": (
+                    {
+                        "predicted_engagement": (
+                            prediction_result.prediction if prediction_result else 100
+                        ),
+                        "confidence": (prediction_result.confidence if prediction_result else 0.5),
+                        "key_factors": (prediction_result.factors if prediction_result else {}),
+                    }
                     if prediction_result
-                    else 100,
-                    "confidence": prediction_result.confidence if prediction_result else 0.5,
-                    "key_factors": prediction_result.factors if prediction_result else {},
-                }
-                if prediction_result
-                else None,
+                    else None
+                ),
                 "optimization_recommendations": content_analysis.optimization_tips,
                 "hashtag_suggestions": content_analysis.suggested_hashtags,
                 "optimal_timing": optimal_timing,
@@ -335,7 +340,7 @@ class EngagementAnalyzer:
 
     async def get_real_time_insights(
         self, channel_id: int, lookback_hours: int = 24
-        ) -> list[EngagementInsight]:
+    ) -> list[EngagementInsight]:
         """
         ⚡ Get real-time engagement insights and alerts
 
@@ -390,7 +395,7 @@ class EngagementAnalyzer:
 
     async def _collect_analytics_data(
         self, channel_id: int, start_date: datetime, end_date: datetime
-        ) -> dict[str, Any]:
+    ) -> dict[str, Any]:
         """Collect comprehensive analytics data for analysis"""
         # Simulate analytics data collection
         # In real implementation, this would query the database
@@ -468,9 +473,11 @@ class EngagementAnalyzer:
             "total_engagement": float(total_engagement),
             "engagement_growth": float(engagement_growth),
             "avg_engagement_per_post": float(total_engagement / len(posts) if posts else 0),
-            "engagement_rate": float((metrics.get("total_likes", 0) + metrics.get("total_comments", 0))
-            / max(metrics.get("total_views", 1), 1)
-            * 100),
+            "engagement_rate": float(
+                (metrics.get("total_likes", 0) + metrics.get("total_comments", 0))
+                / max(metrics.get("total_views", 1), 1)
+                * 100
+            ),
         }
 
     async def _generate_key_insights(
@@ -479,7 +486,7 @@ class EngagementAnalyzer:
         content_analysis: dict[str, Any],
         user_analysis: dict[str, Any],
         churn_summary: dict[str, Any],
-        ) -> list[EngagementInsight]:
+    ) -> list[EngagementInsight]:
         """Generate key actionable insights"""
         insights = []
 
@@ -570,20 +577,17 @@ class EngagementAnalyzer:
             )
 
             if recent_engagement > older_engagement * 1.2:  # 20% improvement
-                improvement_pct = ((recent_engagement / older_engagement - 1) * 100)
+                improvement_pct = (recent_engagement / older_engagement - 1) * 100
                 insights.append(
                     EngagementInsight(
                         insight_type="engagement_trend",
                         title="Positive Engagement Trend",
                         description=(
-                            f"Recent posts showing {improvement_pct:.1f}% "
-                            f"engagement increase."
+                            f"Recent posts showing {improvement_pct:.1f}% engagement increase."
                         ),
                         impact_level="high",
                         confidence=0.8,
-                        data_points={
-                            "engagement_improvement": improvement_pct
-                        },
+                        data_points={"engagement_improvement": improvement_pct},
                         recommendations=[
                             "Double down on successful content formats",
                             "Increase posting frequency",
@@ -595,12 +599,14 @@ class EngagementAnalyzer:
         return insights
 
     async def _calculate_publishing_score(
-        self, content_analysis: ContentAnalysis, prediction_result: PredictionResult | None
-        ) -> dict[str, Any]:
+        self,
+        content_analysis: ContentAnalysis,
+        prediction_result: PredictionResult | None,
+    ) -> dict[str, Any]:
         """Calculate overall publishing readiness score"""
         score_components = {
             "content_quality": content_analysis.overall_score,
-            "engagement_prediction": prediction_result.prediction if prediction_result else 50,
+            "engagement_prediction": (prediction_result.prediction if prediction_result else 50),
             "optimization_completeness": 100 - len(content_analysis.optimization_tips) * 10,
         }
 
@@ -643,7 +649,7 @@ class EngagementAnalyzer:
 
     async def _create_fallback_report(
         self, channel_id: int, period_start: datetime, period_end: datetime
-        ) -> PerformanceReport:
+    ) -> PerformanceReport:
         """Create fallback report when analysis fails"""
         return PerformanceReport(
             channel_id=channel_id,
@@ -719,66 +725,66 @@ class EngagementAnalyzer:
             "top_performing_content": [],
             "content_categories": {},
             "engagement_patterns": {},
-            "performance_trends": {}
+            "performance_trends": {},
         }
-    
-    async def _analyze_user_behavior(self, channel_id: int, period_start: datetime, period_end: datetime) -> dict:
+
+    async def _analyze_user_behavior(
+        self, channel_id: int, period_start: datetime, period_end: datetime
+    ) -> dict:
         """Analyze user behavior patterns"""
         return {
             "user_segments": {},
             "behavior_patterns": {},
             "engagement_trends": {},
-            "activity_patterns": {}
+            "activity_patterns": {},
         }
-    
+
     async def _analyze_channel_churn_risk(self, channel_id: int, period_days: int) -> dict:
         """Analyze channel churn risk"""
-        return {
-            "churn_risk_score": 0.0,
-            "risk_factors": [],
-            "recommendations": []
-        }
-    
-    async def _generate_performance_predictions(self, channel_id: int, analytics_data: dict, content_analysis: dict) -> dict:
+        return {"churn_risk_score": 0.0, "risk_factors": [], "recommendations": []}
+
+    async def _generate_performance_predictions(
+        self, channel_id: int, analytics_data: dict, content_analysis: dict
+    ) -> dict:
         """Generate performance predictions"""
         return {
             "predicted_engagement": {},
             "growth_forecasts": {},
-            "optimal_strategies": []
+            "optimal_strategies": [],
         }
-    
+
     async def _generate_priority_actions(self, *args) -> list:
         """Generate priority actions list"""
         return []
-    
+
     async def _calculate_analysis_completeness(self, analytics_data: dict) -> float:
         """Calculate analysis completeness score"""
         return 1.0
-    
+
     async def _calculate_data_quality_score(self, analytics_data: dict) -> float:
         """Calculate data quality score"""
         return 1.0
-    
+
     async def _assess_content_risks(self, *args) -> dict:
         """Assess content risks"""
         return {"risk_level": "low", "factors": []}
-    
+
     async def _get_recent_performance_data(self, channel_id: int, lookback_hours: int) -> dict:
         """Get recent performance data"""
         return {"recent_posts": [], "metrics": {}}
-    
+
     async def _analyze_engagement_trends(self, recent_data: dict) -> dict:
         """Analyze engagement trends"""
         return {"trends": [], "insights": []}
-    
+
     async def _detect_performance_anomalies(self, recent_data: dict) -> dict:
         """Detect performance anomalies"""
         return {"anomalies": [], "alerts": []}
-    
+
     async def _analyze_recent_user_behavior(self, channel_id: int, lookback_hours: int) -> dict:
         """Analyze recent user behavior"""
         return {"behavior_changes": [], "patterns": {}}
-    
+
     async def _analyze_posting_timing_effectiveness(self, recent_data: dict) -> dict:
         """Analyze posting timing effectiveness"""
         return {"optimal_times": [], "effectiveness_scores": {}}

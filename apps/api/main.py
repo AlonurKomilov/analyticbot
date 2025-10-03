@@ -194,11 +194,11 @@ app.add_middleware(
 
 # Add demo mode detection middleware
 from apps.demo.middleware import DemoMiddleware
-from apps.api.di import configure_api_container
+import apps.api.di as api_di
 app.add_middleware(DemoMiddleware)
 
 # Initialize API DI container
-api_container = configure_api_container()
+api_container = api_di.configure_api_container()
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)        # Core system operations (performance, scheduling) 

@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from apps.bot.clients.analytics_client import AnalyticsClient
 from core.services.analytics_fusion_service import AnalyticsFusionService
 from apps.api.deps import get_analytics_fusion_service
-from apps.api.di.analytics_container import get_cache
+from apps.api.di_container.analytics_container import get_cache
 from apps.api.schemas.analytics import SeriesResponse
 
 # Auth

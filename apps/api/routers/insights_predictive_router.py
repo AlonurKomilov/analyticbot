@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 # Services
 from apps.bot.clients.analytics_client import AnalyticsClient
 from apps.api.deps import get_predictive_analytics_engine
-from apps.api.di.analytics_container import get_analytics_fusion_service, get_cache
+from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
 
 # Auth
 # Auth

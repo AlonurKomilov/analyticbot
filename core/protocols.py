@@ -5,6 +5,7 @@ Clean Architecture interfaces for all services
 
 from typing import Protocol, Dict, Any, List, Optional
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 
 class ServiceProtocol(Protocol):
@@ -234,7 +235,7 @@ class AdminServiceProtocol(ServiceProtocol):
 class DemoDataServiceProtocol(ServiceProtocol):
     """Demo data service interface"""
     
-    async def get_initial_data(self, user_id: int = None, demo_type: str = None) -> Dict[str, Any]:
+    async def get_initial_data(self, user_id: Optional[int] = None, demo_type: Optional[str] = None) -> Dict[str, Any]:
         """Get initial demo data for TWA initialization"""
         ...
     
@@ -264,6 +265,46 @@ class PostsRepositoryProtocol(Protocol):
     
     async def update_post(self, post_id: int, post_data: Dict[str, Any]) -> Dict[str, Any]:
         """Update a post"""
+        ...
+
+
+class DailyRepositoryProtocol(Protocol):
+    """Daily analytics repository interface"""
+    
+    async def get_daily_metrics(self, channel_id: int, start_date: "datetime", end_date: "datetime") -> List[Dict[str, Any]]:
+        """Get daily metrics for a channel"""
+        ...
+    
+    async def get_daily_by_date(self, channel_id: int, date: "datetime") -> Optional[Dict[str, Any]]:
+        """Get daily metrics for a specific date"""
+        ...
+    
+    async def create_daily_record(self, daily_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new daily record"""
+        ...
+    
+    async def update_daily_record(self, record_id: int, daily_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a daily record"""
+        ...
+
+
+class ChannelRepositoryProtocol(Protocol):
+    """Channel repository interface"""
+    
+    async def get_channel_by_id(self, channel_id: int) -> Optional[Dict[str, Any]]:
+        """Get channel by ID"""
+        ...
+    
+    async def get_channels_by_user(self, user_id: int) -> List[Dict[str, Any]]:
+        """Get channels for a user"""
+        ...
+    
+    async def create_channel(self, channel_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new channel"""
+        ...
+    
+    async def update_channel(self, channel_id: int, channel_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update a channel"""
         ...
 
 

@@ -9,7 +9,7 @@ from typing import Optional, List, Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 # Services
-from apps.api.di.analytics_container import get_analytics_fusion_service, get_cache
+from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
 from core.services.analytics_fusion_service import AnalyticsFusionService
 from core.protocols import AnalyticsServiceProtocol
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import

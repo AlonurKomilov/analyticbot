@@ -8,7 +8,6 @@ from typing import Optional
 from fastapi import Depends, Request
 
 from config import settings
-from apps.api.di import configure_api_container
 from apps.bot.models.twa import InitialDataResponse
 
 logger = logging.getLogger(__name__)

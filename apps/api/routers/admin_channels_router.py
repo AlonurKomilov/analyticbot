@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.api.di.analytics_container import get_channel_management_service
+from apps.api.di_container.analytics_container import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user, 
     require_admin_role,

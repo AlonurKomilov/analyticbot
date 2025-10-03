@@ -11,23 +11,24 @@ import logging
 import secrets
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Optional
 
 import pyotp
 import qrcode
 
 from core.ports.security_ports import CachePort, SecurityEventsPort
-from .config import SecurityConfig, get_security_config
+
+from .config import get_security_config
 from .models import MFASetupResponse, User
 
 
 class MFAError(Exception):
     """Custom exception for MFA-related errors"""
-    
+
     def __init__(self, message: str, error_code: str | None = None):
         self.message = message
         self.error_code = error_code
         super().__init__(message)
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,20 +46,20 @@ class MFAManager:
     """
 
     def __init__(
-        self, 
-        cache: Optional[CachePort] = None,
-        security_events: Optional[SecurityEventsPort] = None
+        self,
+        cache: CachePort | None = None,
+        security_events: SecurityEventsPort | None = None,
     ):
         self.config = get_security_config()
         self.cache = cache
         self.security_events = security_events
-        
+
         # Fallback to memory cache if no cache provided
         if not self.cache:
             self._memory_cache = {}
             logger.info("No cache port provided, using memory cache fallback")
-    
-    def _get_from_cache(self, key: str) -> Optional[str]:
+
+    def _get_from_cache(self, key: str) -> str | None:
         """Get value from cache (port or memory fallback)"""
         try:
             if self.cache:
@@ -68,8 +69,8 @@ class MFAManager:
         except Exception as e:
             logger.error(f"Cache get error: {e}")
             return None
-    
-    def _set_in_cache(self, key: str, value: str, expire_seconds: Optional[int] = None) -> bool:
+
+    def _set_in_cache(self, key: str, value: str, expire_seconds: int | None = None) -> bool:
         """Set value in cache (port or memory fallback)"""
         try:
             if self.cache:
@@ -80,7 +81,7 @@ class MFAManager:
         except Exception as e:
             logger.error(f"Cache set error: {e}")
             return False
-    
+
     def _delete_from_cache(self, key: str) -> bool:
         """Delete key from cache (port or memory fallback)"""
         try:
@@ -93,7 +94,7 @@ class MFAManager:
         except Exception as e:
             logger.error(f"Cache delete error: {e}")
             return False
-    
+
     def _exists_in_cache(self, key: str) -> bool:
         """Check if key exists in cache (port or memory fallback)"""
         try:
@@ -104,8 +105,8 @@ class MFAManager:
         except Exception as e:
             logger.error(f"Cache exists error: {e}")
             return False
-    
-    def _increment_in_cache(self, key: str) -> Optional[int]:
+
+    def _increment_in_cache(self, key: str) -> int | None:
         """Increment counter in cache (memory fallback only - no atomic increment in port)"""
         try:
             # Simple increment for memory cache
@@ -256,8 +257,10 @@ class MFAManager:
             if not isinstance(setup_data_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(setup_data_str)}")
                 return False
-            
-            setup_data_str = setup_data_str.decode() if isinstance(setup_data_str, bytes) else setup_data_str
+
+            setup_data_str = (
+                setup_data_str.decode() if isinstance(setup_data_str, bytes) else setup_data_str
+            )
             setup_data = json.loads(setup_data_str)
             secret = setup_data["secret"]
 
@@ -358,8 +361,12 @@ class MFAManager:
             if not isinstance(backup_codes_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(backup_codes_str)}")
                 return False
-            
-            backup_codes_str = backup_codes_str.decode() if isinstance(backup_codes_str, bytes) else backup_codes_str
+
+            backup_codes_str = (
+                backup_codes_str.decode()
+                if isinstance(backup_codes_str, bytes)
+                else backup_codes_str
+            )
             backup_codes = json.loads(backup_codes_str)
 
             # Check if backup code exists and is unused
@@ -451,8 +458,12 @@ class MFAManager:
             if not isinstance(backup_codes_str, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(backup_codes_str)}")
                 return 0
-            
-            backup_codes_str = backup_codes_str.decode() if isinstance(backup_codes_str, bytes) else backup_codes_str
+
+            backup_codes_str = (
+                backup_codes_str.decode()
+                if isinstance(backup_codes_str, bytes)
+                else backup_codes_str
+            )
             backup_codes = json.loads(backup_codes_str)
             return len(backup_codes)
         except json.JSONDecodeError:
@@ -476,7 +487,7 @@ class MFAManager:
             if not isinstance(attempts, (str, bytes)):
                 logger.error(f"Invalid Redis response type: {type(attempts)}")
                 return True  # Allow attempt if we can't check properly
-            
+
             attempts_str = attempts.decode() if isinstance(attempts, bytes) else attempts
             try:
                 if int(attempts_str) >= 5:  # Max 5 attempts per window
@@ -491,9 +502,9 @@ class MFAManager:
         """Record MFA attempt for rate limiting"""
         attempts_key = f"mfa_attempts:{user_id}"
 
-        # Increment attempts counter  
-        current_attempts = self._increment_in_cache(attempts_key)
-        
+        # Increment attempts counter
+        self._increment_in_cache(attempts_key)
+
         # Note: For memory cache, we don't have TTL - attempts persist until restart
         # Apps layer should implement proper rate limiting with TTL via cache port
         # This is acceptable for MFA as it's typically used with external cache
@@ -502,6 +513,7 @@ class MFAManager:
 # Global MFA manager instance
 # Global MFA manager instance - lazy initialization
 _mfa_manager = None
+
 
 def get_mfa_manager() -> MFAManager:
     """Get the global MFA manager instance"""

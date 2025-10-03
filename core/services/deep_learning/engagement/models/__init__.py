@@ -9,7 +9,4 @@ Contains PyTorch models specifically for engagement prediction:
 
 from .lstm_engagement_model import LSTMEngagementModel, LSTMEngagementModelConfig
 
-__all__ = [
-    "LSTMEngagementModel",
-    "LSTMEngagementModelConfig"
-]
+__all__ = ["LSTMEngagementModel", "LSTMEngagementModelConfig"]

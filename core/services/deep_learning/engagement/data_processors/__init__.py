@@ -9,6 +9,4 @@ Contains data processing utilities for engagement prediction:
 
 from .engagement_data_processor import EngagementDataProcessor
 
-__all__ = [
-    "EngagementDataProcessor"
-]
+__all__ = ["EngagementDataProcessor"]

@@ -383,8 +383,9 @@ async def get_repositories() -> RepositoryContainer:
         RepositoryContainer with initialized repositories
     """
     # Use environment variables directly to avoid settings conflicts
-    import asyncpg
     import os
+
+    import asyncpg
 
     # Load from environment
     database_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5433/analytic_bot")

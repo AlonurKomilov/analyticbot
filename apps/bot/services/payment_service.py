@@ -10,7 +10,9 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+
+# Import payment repository interface instead of direct infra import
+from typing import Any, Protocol
 from uuid import uuid4
 
 from apps.bot.models.payment import (
@@ -25,34 +27,43 @@ from apps.bot.models.payment import (
     SubscriptionResponse,
     SubscriptionStatus,
 )
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
-from apps.bot.services.adapters.base_adapter import PaymentGatewayAdapter as BasePaymentGatewayAdapter
-# Import payment repository interface instead of direct infra import
-from typing import Any, Protocol, Optional, List, Dict
+from apps.bot.services.adapters.payment_adapter_factory import (
+    PaymentAdapterFactory,
+    PaymentGateway,
+)
+
 
 # Define PaymentRepository protocol for typing
 class PaymentRepository(Protocol):
     """Payment repository protocol"""
+
     async def create_payment(self, **kwargs) -> str: ...
     async def get_payment_by_id(self, payment_id: str) -> dict | None: ...
     async def update_payment(self, payment_id: str, updates: dict) -> dict | None: ...
     async def create_payment_method(self, **kwargs) -> str: ...
-    async def get_user_payment_methods(self, user_id: str) -> List[Dict[str, Any]]: ...
-    async def get_payment_by_idempotency_key(self, key: str) -> Optional[Dict[str, Any]]: ...
-    async def get_payment_method(self, method_id: str) -> Optional[Dict[str, Any]]: ...
+    async def get_user_payment_methods(self, user_id: str) -> list[dict[str, Any]]: ...
+    async def get_payment_by_idempotency_key(self, key: str) -> dict[str, Any] | None: ...
+    async def get_payment_method(self, method_id: str) -> dict[str, Any] | None: ...
     async def update_payment_status(self, payment_id: str, status: str, **kwargs) -> None: ...
-    async def get_payment(self, payment_id: str) -> Optional[Dict[str, Any]]: ...
-    async def get_plan_with_pricing(self, plan_id: str) -> Optional[Dict[str, Any]]: ...
+    async def get_payment(self, payment_id: str) -> dict[str, Any] | None: ...
+    async def get_plan_with_pricing(self, plan_id: str) -> dict[str, Any] | None: ...
     async def create_subscription(self, **kwargs) -> str: ...
-    async def update_subscription_status(self, subscription_id: str, status: str, **kwargs) -> None: ...
-    async def get_user_active_subscription(self, user_id: str) -> Optional[Dict[str, Any]]: ...
+    async def update_subscription_status(
+        self, subscription_id: str, status: str, **kwargs
+    ) -> None: ...
+    async def get_user_active_subscription(self, user_id: str) -> dict[str, Any] | None: ...
     async def create_webhook_event(self, **kwargs) -> str: ...
-    async def mark_webhook_processed(self, event_id: str, success: bool, error: Optional[str] = None) -> None: ...
-    async def get_active_plans(self) -> List[Dict[str, Any]]: ...
-    async def get_user_payments(self, user_id: str, limit: int, offset: int) -> List[Dict[str, Any]]: ...
+    async def mark_webhook_processed(
+        self, event_id: str, success: bool, error: str | None = None
+    ) -> None: ...
+    async def get_active_plans(self) -> list[dict[str, Any]]: ...
+    async def get_user_payments(
+        self, user_id: str, limit: int, offset: int
+    ) -> list[dict[str, Any]]: ...
     async def get_user_payments_count(self, user_id: str) -> int: ...
-    async def get_payment_statistics(self) -> Dict[str, Any]: ...
-    async def get_subscription_statistics(self) -> Dict[str, Any]: ...
+    async def get_payment_statistics(self) -> dict[str, Any]: ...
+    async def get_subscription_statistics(self) -> dict[str, Any]: ...
+
 
 logger = logging.getLogger(__name__)
 
@@ -175,9 +186,9 @@ class StripeAdapter(PaymentGatewayAdapter):
                     now + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365)
                 ).timestamp()
             ),
-            "trial_end": int((now + timedelta(days=trial_days)).timestamp())
-            if trial_days
-            else None,
+            "trial_end": (
+                int((now + timedelta(days=trial_days)).timestamp()) if trial_days else None
+            ),
             "customer": customer_id,
             "default_payment_method": payment_method_id,
         }
@@ -440,7 +451,11 @@ class PaymentService:
     Maintains backward compatibility while using modern adapter architecture
     """
 
-    def __init__(self, payment_repository: PaymentRepository, gateway: Optional[PaymentGateway] = None):
+    def __init__(
+        self,
+        payment_repository: PaymentRepository,
+        gateway: PaymentGateway | None = None,
+    ):
         self.repository = payment_repository
         # Use new adapter factory pattern
         if gateway is None:
@@ -448,19 +463,21 @@ class PaymentService:
         else:
             PaymentAdapterFactory.set_current_adapter(gateway)
             self.payment_adapter = PaymentAdapterFactory.get_current_adapter()
-        
+
         # Legacy adapter support for backward compatibility
         self.adapters: dict[str, PaymentGatewayAdapter] = {}
         self.default_provider = PaymentProvider.STRIPE
-        
-        logger.info(f"PaymentService initialized with {self.payment_adapter.get_adapter_name()} adapter")
+
+        logger.info(
+            f"PaymentService initialized with {self.payment_adapter.get_adapter_name()} adapter"
+        )
 
     def register_adapter(self, adapter: PaymentGatewayAdapter):
         """Register a legacy payment gateway adapter"""
         self.adapters[adapter.provider_name] = adapter
         logger.info(f"Registered legacy payment adapter: {adapter.provider_name}")
 
-    def get_adapter(self, provider: str) -> Optional[PaymentGatewayAdapter]:
+    def get_adapter(self, provider: str) -> PaymentGatewayAdapter | None:
         """Get legacy adapter for a specific provider"""
         adapter = self.adapters.get(provider)
         if not adapter:
@@ -472,7 +489,7 @@ class PaymentService:
                     gateway = PaymentGateway.MOCK
                 else:
                     raise ValueError(f"Payment provider '{provider}' not supported")
-                
+
                 # Switch to requested adapter
                 PaymentAdapterFactory.set_current_adapter(gateway)
                 self.payment_adapter = PaymentAdapterFactory.get_current_adapter()
@@ -483,14 +500,17 @@ class PaymentService:
             except:
                 raise ValueError(f"Payment provider '{provider}' not supported")
         return adapter
-        
+
     def switch_payment_gateway(self, gateway: PaymentGateway):
         """Switch to a different payment gateway"""
         self.payment_adapter = PaymentAdapterFactory.set_current_adapter(gateway)
         logger.info(f"Switched to {self.payment_adapter.get_adapter_name()} adapter")
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str | None = None
+        self,
+        user_id: int,
+        payment_method_data: PaymentMethodCreate,
+        provider: str | None = None,
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
@@ -499,17 +519,19 @@ class PaymentService:
             if adapter is None:
                 # Use new adapter pattern
                 provider_response = await self.payment_adapter.create_payment_method(
-                    str(user_id), getattr(payment_method_data, 'provider_data', {})
+                    str(user_id), getattr(payment_method_data, "provider_data", {})
                 )
             else:
                 provider_response = await adapter.create_payment_method(
-                    user_id, getattr(payment_method_data, 'provider_data', {})
+                    user_id, getattr(payment_method_data, "provider_data", {})
                 )
             expires_at = None
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
-                    year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
+                    year=card.get("exp_year", 2025),
+                    month=card.get("exp_month", 12),
+                    day=1,
                 )
             method_id = await self.repository.create_payment_method(
                 user_id=user_id,
@@ -521,14 +543,14 @@ class PaymentService:
                 expires_at=expires_at,
                 is_default=payment_method_data.is_default,
                 metadata={
-                    "provider_response": provider_response, 
-                    **(getattr(payment_method_data, 'metadata', {}) or {})
+                    "provider_response": provider_response,
+                    **(getattr(payment_method_data, "metadata", {}) or {}),
                 },
             )
             return PaymentMethodResponse(
                 id=method_id,
                 user_id=user_id,
-                provider=PaymentProvider(provider) if isinstance(provider, str) else provider,
+                provider=(PaymentProvider(provider) if isinstance(provider, str) else provider),
                 method_type=payment_method_data.method_type,
                 last_four=payment_method_data.last_four,
                 brand=payment_method_data.brand,
@@ -561,7 +583,10 @@ class PaymentService:
         ]
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self,
+        user_id: int,
+        payment_data: PaymentCreate,
+        idempotency_key: str | None = None,
     ) -> PaymentResponse:
         """Process a one-time payment"""
         idempotency_key = idempotency_key or str(uuid4())
@@ -570,7 +595,7 @@ class PaymentService:
             return PaymentResponse(**existing_payment)
         if payment_data.payment_method_id is None:
             raise ValueError("Payment method ID is required")
-            
+
         payment_method = await self.repository.get_payment_method(payment_data.payment_method_id)
         if not payment_method:
             raise ValueError("Payment method not found")
@@ -580,7 +605,7 @@ class PaymentService:
         try:
             payment_dict = {
                 "user_id": user_id,
-                "subscription_id": getattr(payment_data, 'subscription_id', None),
+                "subscription_id": getattr(payment_data, "subscription_id", None),
                 "payment_method_id": payment_data.payment_method_id,
                 "provider": provider,
                 "provider_payment_id": None,
@@ -628,9 +653,11 @@ class PaymentService:
             # Only update payment status if payment_id was created
             try:
                 # Check if payment_id exists in the current scope
-                if 'payment_id' in locals() and payment_id is not None:
+                if "payment_id" in locals() and payment_id is not None:
                     await self.repository.update_payment_status(
-                        payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
+                        payment_id=payment_id,
+                        status=PaymentStatus.FAILED,
+                        failure_message=str(e),
                     )
             except NameError:
                 # payment_id was not defined, skip status update
@@ -685,7 +712,7 @@ class PaymentService:
                             payment_method_id=payment_method["provider_method_id"],
                             price_id=str(subscription_data.plan_id),
                             billing_cycle=subscription_data.billing_cycle,
-                            metadata={}
+                            metadata={},
                         )
                     else:
                         await adapter.create_subscription(
@@ -696,14 +723,15 @@ class PaymentService:
                             trial_days=subscription_data.trial_days,
                         )
                     await self.repository.update_subscription_status(
-                        subscription_id=subscription_id, status=SubscriptionStatus.ACTIVE
+                        subscription_id=subscription_id,
+                        status=SubscriptionStatus.ACTIVE,
                     )
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")
         subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             raise ValueError("Subscription not found after creation")
-            
+
         return SubscriptionResponse(
             id=subscription["id"],
             user_id=subscription["user_id"],
@@ -732,7 +760,7 @@ class PaymentService:
             if not adapter.verify_webhook_signature(payload, signature, webhook_secret):
                 logger.warning(f"Invalid webhook signature from {provider}")
                 raise ValueError("Invalid webhook signature")
-            
+
         event_id: str | None = None  # Initialize to avoid unbound variable
         try:
             event_data = json.loads(payload.decode())
@@ -746,7 +774,9 @@ class PaymentService:
             )
             if adapter is None:
                 # Use new adapter pattern
-                result = await self.payment_adapter.handle_webhook(event_data, signature, webhook_secret)
+                result = await self.payment_adapter.handle_webhook(
+                    event_data, signature, webhook_secret
+                )
             else:
                 result = await adapter.handle_webhook_event(event_data)
             if result.get("action") != "ignored":
@@ -763,7 +793,7 @@ class PaymentService:
         subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             return None
-        
+
         return SubscriptionResponse(
             id=subscription["id"],
             user_id=subscription["user_id"],
@@ -780,43 +810,53 @@ class PaymentService:
             cancel_at_period_end=subscription.get("cancel_at_period_end", False),
         )
 
-    async def cancel_user_subscription(self, user_id: int, immediate: bool = False) -> dict[str, Any]:
+    async def cancel_user_subscription(
+        self, user_id: int, immediate: bool = False
+    ) -> dict[str, Any]:
         """Cancel user's subscription"""
         subscription = await self.repository.get_user_active_subscription(str(user_id))
         if not subscription:
             raise ValueError("No active subscription found")
-        
+
         # Cancel with provider first
         if subscription["provider_subscription_id"]:
-            payment_method = await self.repository.get_payment_method(subscription["payment_method_id"])
+            payment_method = await self.repository.get_payment_method(
+                subscription["payment_method_id"]
+            )
             if payment_method:
                 provider = payment_method["provider"]
                 adapter = self.get_adapter(provider)
                 try:
                     if adapter is None:
                         # Use new adapter pattern
-                        await self.payment_adapter.cancel_subscription(subscription["provider_subscription_id"])
+                        await self.payment_adapter.cancel_subscription(
+                            subscription["provider_subscription_id"]
+                        )
                     else:
                         await adapter.cancel_subscription(subscription["provider_subscription_id"])
                 except Exception as e:
                     logger.error(f"Provider subscription cancellation failed: {e}")
-        
+
         # Update local subscription status
         await self.repository.update_subscription_status(
             subscription_id=subscription["id"],
             status=SubscriptionStatus.CANCELED,
-            canceled_at=datetime.utcnow() if immediate else subscription["current_period_end"]
+            canceled_at=(datetime.utcnow() if immediate else subscription["current_period_end"]),
         )
-        
+
         return {
             "success": True,
             "subscription_id": subscription["id"],
-            "canceled_at": datetime.utcnow().isoformat() if immediate else subscription["current_period_end"].isoformat()
+            "canceled_at": (
+                datetime.utcnow().isoformat()
+                if immediate
+                else subscription["current_period_end"].isoformat()
+            ),
         }
 
     async def get_available_plans(self) -> list[dict[str, Any]]:
         """Get all available subscription plans"""
-        if hasattr(self.repository, 'get_active_plans'):
+        if hasattr(self.repository, "get_active_plans"):
             plans = await self.repository.get_active_plans()
         else:
             # Fallback for missing method
@@ -834,19 +874,21 @@ class PaymentService:
                 "is_active": plan["is_active"],
                 "stripe_price_id": plan.get("stripe_price_id"),
                 "stripe_yearly_price_id": plan.get("stripe_yearly_price_id"),
-                "trial_days": plan.get("trial_days")
+                "trial_days": plan.get("trial_days"),
             }
             for plan in plans
         ]
 
-    async def get_payment_history(self, user_id: int, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+    async def get_payment_history(
+        self, user_id: int, limit: int = 50, offset: int = 0
+    ) -> dict[str, Any]:
         """Get user's payment history"""
         payments = await self.repository.get_user_payments(str(user_id), limit, offset)
-        if hasattr(self.repository, 'get_user_payments_count'):
+        if hasattr(self.repository, "get_user_payments_count"):
             total_count = await self.repository.get_user_payments_count(str(user_id))
         else:
             total_count = len(payments)  # Fallback
-        
+
         return {
             "payments": [
                 {
@@ -856,18 +898,18 @@ class PaymentService:
                     "status": payment["status"],
                     "description": payment["description"],
                     "created_at": payment["created_at"].isoformat(),
-                    "provider": payment["provider"]
+                    "provider": payment["provider"],
                 }
                 for payment in payments
             ],
             "total": total_count,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
 
     async def get_payment_stats(self) -> dict[str, Any]:
         """Get payment statistics"""
-        if hasattr(self.repository, 'get_payment_statistics'):
+        if hasattr(self.repository, "get_payment_statistics"):
             stats = await self.repository.get_payment_statistics()
         else:
             stats = {}  # Fallback
@@ -876,12 +918,12 @@ class PaymentService:
             "total_revenue": stats.get("total_revenue", Decimal("0")),
             "failed_amount": stats.get("failed_amount", Decimal("0")),
             "successful_payments": stats.get("successful_payments", 0),
-            "failed_payments": stats.get("failed_payments", 0)
+            "failed_payments": stats.get("failed_payments", 0),
         }
 
     async def get_subscription_stats(self) -> dict[str, Any]:
         """Get subscription statistics"""
-        if hasattr(self.repository, 'get_subscription_statistics'):
+        if hasattr(self.repository, "get_subscription_statistics"):
             stats = await self.repository.get_subscription_statistics()
         else:
             stats = {}  # Fallback
@@ -890,16 +932,18 @@ class PaymentService:
             "active_subscriptions": stats.get("active_subscriptions", 0),
             "canceled_subscriptions": stats.get("canceled_subscriptions", 0),
             "past_due_subscriptions": stats.get("past_due_subscriptions", 0),
-            "avg_subscription_amount": stats.get("avg_subscription_amount")
+            "avg_subscription_amount": stats.get("avg_subscription_amount"),
         }
 
-    async def process_webhook(self, provider: str, payload: bytes, signature: str) -> dict[str, Any]:
+    async def process_webhook(
+        self, provider: str, payload: bytes, signature: str
+    ) -> dict[str, Any]:
         """Process webhook with the configured webhook secret"""
         # Get webhook secret from adapter
         adapter = self.get_adapter(provider)
-        if hasattr(adapter, 'webhook_secret'):
-            webhook_secret = getattr(adapter, 'webhook_secret')
+        if hasattr(adapter, "webhook_secret"):
+            webhook_secret = adapter.webhook_secret
         else:
             raise ValueError(f"Webhook secret not configured for provider {provider}")
-        
+
         return await self.handle_webhook(provider, payload, signature, webhook_secret)

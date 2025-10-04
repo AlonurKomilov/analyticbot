@@ -10,7 +10,7 @@ from .adapters import (
 
 __all__ = [
     "RedisCache",
-    "JWTTokenGenerator", 
+    "JWTTokenGenerator",
     "ConfigSecurityConfig",
     "NoOpSecurityEvents",
     "MockUserRepository",

@@ -74,7 +74,10 @@ class AIInsightsGenerator:
         }
 
     async def generate_comprehensive_insights(
-        self, df: pd.DataFrame, target_column: str | None = None, datetime_column: str | None = None
+        self,
+        df: pd.DataFrame,
+        target_column: str | None = None,
+        datetime_column: str | None = None,
     ) -> dict[str, Any]:
         """
         🧠 Generate comprehensive AI insights from data
@@ -276,9 +279,9 @@ class AIInsightsGenerator:
                             "count": int(value_counts.iloc[0]),
                             "percentage": float((value_counts.iloc[0] / len(df)) * 100),
                         },
-                        "distribution_type": "uniform"
-                        if len(set(value_counts.values)) == 1
-                        else "skewed",
+                        "distribution_type": (
+                            "uniform" if len(set(value_counts.values)) == 1 else "skewed"
+                        ),
                         "entropy": float(stats.entropy(value_counts.values)),
                     }
 
@@ -383,12 +386,16 @@ class AIInsightsGenerator:
                             "correlation": float(r_value),
                             "p_value": float(p_value),
                             "trend_strength": abs(r_value),
-                            "trend_direction": "increasing"
-                            if slope > 0
-                            else "decreasing"
-                            if slope < 0
-                            else "stable",
-                            "significance": "significant" if p_value < 0.05 else "not_significant",
+                            "trend_direction": (
+                                "increasing"
+                                if slope > 0
+                                else "decreasing"
+                                if slope < 0
+                                else "stable"
+                            ),
+                            "significance": (
+                                "significant" if p_value < 0.05 else "not_significant"
+                            ),
                         }
                     except Exception as e:
                         logger.warning(f"Linear trend analysis failed for {col}: {e}")
@@ -420,11 +427,9 @@ class AIInsightsGenerator:
                     "slope": float(slope),
                     "correlation": float(r_value),
                     "p_value": float(p_value),
-                    "trend_direction": "increasing"
-                    if slope > 0
-                    else "decreasing"
-                    if slope < 0
-                    else "stable",
+                    "trend_direction": (
+                        "increasing" if slope > 0 else "decreasing" if slope < 0 else "stable"
+                    ),
                 }
             )
 
@@ -476,7 +481,7 @@ class AIInsightsGenerator:
                                 "variable1": corr_matrix.columns[i],
                                 "variable2": corr_matrix.columns[j],
                                 "correlation": float(corr_val),
-                                "strength": "very_strong" if abs(corr_val) > 0.9 else "strong",
+                                "strength": ("very_strong" if abs(corr_val) > 0.9 else "strong"),
                             }
                         )
 
@@ -675,7 +680,10 @@ class AIInsightsGenerator:
         return {
             "status": "healthy",
             "insights_generated": len(self.insights_history),
-            "dependencies": {"statsmodels": STATSMODELS_AVAILABLE, "xgboost": XGBOOST_AVAILABLE},
+            "dependencies": {
+                "statsmodels": STATSMODELS_AVAILABLE,
+                "xgboost": XGBOOST_AVAILABLE,
+            },
         }
 
 

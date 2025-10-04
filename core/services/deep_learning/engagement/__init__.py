@@ -9,13 +9,13 @@ Contains all components for engagement prediction microservice:
 - data_processors: Feature processing and normalization
 """
 
+from .data_processors import EngagementDataProcessor
 from .engagement_predictor_service import EngagementPredictorService
 from .models import LSTMEngagementModel, LSTMEngagementModelConfig
-from .data_processors import EngagementDataProcessor
 
 __all__ = [
     "EngagementPredictorService",
-    "LSTMEngagementModel", 
+    "LSTMEngagementModel",
     "LSTMEngagementModelConfig",
-    "EngagementDataProcessor"
+    "EngagementDataProcessor",
 ]

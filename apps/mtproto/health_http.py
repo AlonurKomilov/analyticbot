@@ -85,13 +85,18 @@ class HealthCheckServer:
         except Exception as e:
             logger.error(f"Health check error: {e}")
             return web.json_response(
-                {"status": "error", "error": str(e), "timestamp": time.time()}, status=500
+                {"status": "error", "error": str(e), "timestamp": time.time()},
+                status=500,
             )
 
     async def readyz(self, request: web_request.Request) -> Response:
         """Readiness endpoint - service ready to accept requests."""
         try:
-            readiness_status = {"status": "ready", "timestamp": time.time(), "service": "mtproto"}
+            readiness_status = {
+                "status": "ready",
+                "timestamp": time.time(),
+                "service": "mtproto",
+            }
 
             components = {}
             overall_ready = True
@@ -158,7 +163,8 @@ class HealthCheckServer:
         except Exception as e:
             logger.error(f"Readiness check error: {e}")
             return web.json_response(
-                {"status": "error", "error": str(e), "timestamp": time.time()}, status=500
+                {"status": "error", "error": str(e), "timestamp": time.time()},
+                status=500,
             )
 
     async def metrics_endpoint(self, request: web_request.Request) -> Response:

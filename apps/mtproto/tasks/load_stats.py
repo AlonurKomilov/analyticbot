@@ -11,7 +11,8 @@ from apps.mtproto.di import create_stats_loader, create_tg_client, get_repositor
 async def main():
     """Main entry point for the load stats task."""
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     logger = logging.getLogger("mtproto.load_stats")
@@ -53,7 +54,8 @@ async def main():
 
             # Run stats collection
             results = await stats_loader.run(
-                peers=settings.MTPROTO_STATS_PEERS, concurrency=settings.MTPROTO_STATS_CONCURRENCY
+                peers=settings.MTPROTO_STATS_PEERS,
+                concurrency=settings.MTPROTO_STATS_CONCURRENCY,
             )
 
             # Log results summary
@@ -71,7 +73,9 @@ async def main():
             for result in results:
                 if result.get("skipped"):
                     logger.warning(
-                        "Skipped peer %s: %s", result["peer"], result.get("reason", "unknown")
+                        "Skipped peer %s: %s",
+                        result["peer"],
+                        result.get("reason", "unknown"),
                     )
                 else:
                     logger.info(

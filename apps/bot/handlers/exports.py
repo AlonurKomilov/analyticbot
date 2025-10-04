@@ -9,7 +9,6 @@ import aiohttp
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton, BufferedInputFile
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 
 from apps.api.exports.csv_v2 import CSVExporter
@@ -61,7 +60,7 @@ async def handle_export_menu(callback: CallbackQuery, state: FSMContext):
 
     keyboard = get_export_type_keyboard()
     await callback.message.edit_text(
-        "📋 <b>Export Analytics Data</b>\n\n" "Choose the type of data you want to export:",
+        "📋 <b>Export Analytics Data</b>\n\nChoose the type of data you want to export:",
         reply_markup=keyboard,
         parse_mode="HTML",
     )
@@ -75,7 +74,7 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
     if not callback.data:
         await callback.answer("Invalid selection")
         return
-    
+
     export_type = callback.data.split(":")[-1]
 
     # Store export type in state
@@ -100,7 +99,7 @@ async def handle_export_type_selection(callback: CallbackQuery, state: FSMContex
     type_label = type_labels.get(export_type, export_type.title())
 
     await callback.message.edit_text(
-        f"📋 <b>Export {type_label}</b>\n\n" "Choose export format:",
+        f"📋 <b>Export {type_label}</b>\n\nChoose export format:",
         reply_markup=keyboard,
         parse_mode="HTML",
     )
@@ -114,7 +113,7 @@ async def handle_export_format_selection(callback: CallbackQuery, state: FSMCont
     if not callback.data:
         await callback.answer("Invalid selection")
         return
-    
+
     format_type = callback.data.split(":")[-1]
 
     if not callback.message or not isinstance(callback.message, Message):
@@ -134,7 +133,7 @@ async def handle_export_format_selection(callback: CallbackQuery, state: FSMCont
 
     # Start export process
     await callback.message.edit_text(
-        f"⏳ Preparing {format_type.upper()} export...\n" "This may take a few moments."
+        f"⏳ Preparing {format_type.upper()} export...\nThis may take a few moments."
     )
     await callback.answer()
 
@@ -215,7 +214,7 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
 
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} data has been exported as CSV."
+            f"✅ <b>Export Complete</b>\n\nYour {export_type} data has been exported as CSV."
         )
 
         logger.info(f"CSV export completed for user {message.chat.id}, type {export_type}")
@@ -230,7 +229,7 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
     except Exception as e:
         logger.error(f"CSV export error: {e}")
         await message.edit_text(
-            "❌ <b>Export Failed</b>\n\n" "An error occurred during export. Please try again.",
+            "❌ <b>Export Failed</b>\n\nAn error occurred during export. Please try again.",
             parse_mode="HTML",
         )
 
@@ -257,13 +256,19 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
             if export_type == "growth":
                 data = await analytics_client.growth(channel_id, period)
-                png_bytes = chart_service.render_growth_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
+                png_bytes = chart_service.render_growth_chart(
+                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+                )
             elif export_type == "reach":
                 data = await analytics_client.reach(channel_id, period)
-                png_bytes = chart_service.render_reach_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
+                png_bytes = chart_service.render_reach_chart(
+                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+                )
             elif export_type == "sources":
                 data = await analytics_client.sources(channel_id, period)
-                png_bytes = chart_service.render_sources_chart(data.model_dump() if hasattr(data, 'model_dump') else data.__dict__)
+                png_bytes = chart_service.render_sources_chart(
+                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+                )
             else:
                 await message.edit_text(
                     f"❌ <b>PNG Export Not Supported</b>\n\n"
@@ -296,7 +301,7 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
 
         # Update status message
         await message.edit_text(
-            "✅ <b>Export Complete</b>\n\n" f"Your {export_type} chart has been generated."
+            f"✅ <b>Export Complete</b>\n\nYour {export_type} chart has been generated."
         )
 
         logger.info(f"PNG export completed for user {message.chat.id}, type {export_type}")
@@ -331,7 +336,7 @@ async def cmd_export_csv(message: Message):
     if not message.text:
         await message.answer("Invalid command: no text found")
         return
-        
+
     args = message.text.split()[1:]  # Skip /export_csv
 
     if len(args) < 2:

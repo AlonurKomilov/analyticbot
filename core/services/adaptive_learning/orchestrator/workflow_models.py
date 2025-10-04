@@ -6,15 +6,16 @@ Data models for adaptive learning workflows and orchestration.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from ..protocols.learning_protocols import UpdateStatus
 
 
 class OrchestrationStrategy(Enum):
     """Orchestration strategies for adaptive learning"""
+
     REACTIVE = "reactive"  # Respond to drift detection
     PROACTIVE = "proactive"  # Scheduled updates
     CONTINUOUS = "continuous"  # Continuous learning
@@ -23,9 +24,10 @@ class OrchestrationStrategy(Enum):
 
 class WorkflowStage(Enum):
     """Stages in adaptive learning workflow"""
+
     MONITORING = "monitoring"
     DRIFT_DETECTION = "drift_detection"
-    FEEDBACK_COLLECTION = "feedback_collection" 
+    FEEDBACK_COLLECTION = "feedback_collection"
     LEARNING_TASK_CREATION = "learning_task_creation"
     MODEL_TRAINING = "model_training"
     MODEL_VALIDATION = "model_validation"
@@ -38,6 +40,7 @@ class WorkflowStage(Enum):
 @dataclass
 class OrchestrationConfig:
     """Configuration for orchestration service"""
+
     strategy: OrchestrationStrategy = OrchestrationStrategy.HYBRID
     monitoring_interval_minutes: int = 30
     drift_check_frequency_hours: int = 6
@@ -53,6 +56,7 @@ class OrchestrationConfig:
 @dataclass
 class AdaptiveLearningWorkflow:
     """Represents an adaptive learning workflow"""
+
     workflow_id: str
     model_id: str
     strategy: OrchestrationStrategy
@@ -60,21 +64,21 @@ class AdaptiveLearningWorkflow:
     status: UpdateStatus
     triggered_by: str  # "drift_detection", "scheduled", "manual", "feedback"
     created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    metadata: Optional[Dict[str, Any]] = None
-    
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    metadata: dict[str, Any] | None = None
+
     # Workflow context
-    drift_analysis_id: Optional[str] = None
-    learning_task_id: Optional[str] = None
-    deployment_plan_id: Optional[str] = None
-    feedback_batch_id: Optional[str] = None
-    
+    drift_analysis_id: str | None = None
+    learning_task_id: str | None = None
+    deployment_plan_id: str | None = None
+    feedback_batch_id: str | None = None
+
     # Results
-    learning_results: Optional[Dict[str, Any]] = None
-    deployment_results: Optional[Dict[str, Any]] = None
-    performance_metrics: Optional[Dict[str, float]] = None
-    
+    learning_results: dict[str, Any] | None = None
+    deployment_results: dict[str, Any] | None = None
+    performance_metrics: dict[str, float] | None = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
@@ -83,6 +87,7 @@ class AdaptiveLearningWorkflow:
 @dataclass
 class OrchestrationMetrics:
     """Orchestration service metrics"""
+
     total_workflows: int = 0
     successful_workflows: int = 0
     failed_workflows: int = 0

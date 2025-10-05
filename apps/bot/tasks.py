@@ -11,11 +11,13 @@ logger = logging.getLogger(__name__)
 # Lazy container initialization to avoid circular imports
 _container = None
 
+
 def get_container():
     """Get bot container with lazy initialization"""
     global _container
     if _container is None:
         from apps.bot.di import configure_bot_container
+
         _container = configure_bot_container()
     return _container
 
@@ -33,22 +35,23 @@ async def cleanup_resources():
 @enhanced_retry_task
 def send_post_task(scheduler_id: int):
     async def _run():
-        context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
+        ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            bot = get_container().bot_client()
+            get_container().bot_client()
             scheduler_repo_result = get_container().schedule_repo()
-            
+
             # Handle potential coroutines
             if asyncio.iscoroutine(scheduler_repo_result):
                 scheduler_repository = await scheduler_repo_result
             else:
                 scheduler_repository = scheduler_repo_result
-                
+
             # Convert int to UUID if needed
             from uuid import UUID
+
             try:
                 post_uuid = UUID(str(scheduler_id))
-                if hasattr(scheduler_repository, 'get_by_id'):
+                if hasattr(scheduler_repository, "get_by_id"):
                     scheduler = await scheduler_repository.get_by_id(post_uuid)
                 else:
                     logger.warning("scheduler_repository.get_by_id method not available")
@@ -64,9 +67,10 @@ def send_post_task(scheduler_id: int):
         except Exception as e:
             logger.error(f"Error in send_post_task: {e}")
             raise
-    
+
     # Run the async function
     import asyncio
+
     try:
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(_run())
@@ -82,8 +86,8 @@ def remove_expired_schedulers():
     async def _run():
         context = ErrorContext().add("task", "remove_expired_schedulers")
         try:
-            bot = get_container().bot_client()
-            repo = get_container().schedule_repo()
+            get_container().bot_client()
+            get_container().schedule_repo()
             # TODO: Implement remove_expired using clean architecture patterns
             # For now, using safe placeholder that logs the request
             logger.info("remove_expired_schedulers called - placeholder implementation")
@@ -106,30 +110,30 @@ def send_scheduled_message():
         stats = {"processed": 0, "sent": 0, "errors": 0}
         try:
             # Get services from container with fallback handling
-            bot = get_container().bot_client()
+            get_container().bot_client()
             scheduler_service = get_container().scheduler_service()
             scheduler_repo_result = get_container().schedule_repo()
-            
+
             # Handle potential coroutines
             if asyncio.iscoroutine(scheduler_repo_result):
                 scheduler_repo = await scheduler_repo_result
             else:
                 scheduler_repo = scheduler_repo_result
-            
+
             # Safety checks for services
             if not scheduler_service:
                 logger.error("Scheduler service not available")
                 return "scheduler-service-unavailable"
-                
+
             if not scheduler_repo:
                 logger.error("Scheduler repository not available")
                 return "scheduler-repo-unavailable"
-                
+
             # TODO: Implement claim_due_posts using clean architecture - PLACEHOLDER
             # Using safe fallback implementation that logs the request
             logger.info("claim_due_posts called - using safe placeholder implementation")
             due_posts = []  # Safe placeholder - no actual posts claimed
-            
+
             if not due_posts:
                 logger.info("No due posts to send (placeholder implementation)")
                 return "no-due-posts"
@@ -137,7 +141,7 @@ def send_scheduled_message():
             stats["processed"] = len(due_posts)
             for post in due_posts:
                 try:
-                    if hasattr(scheduler_service, 'send_post_to_channel'):
+                    if hasattr(scheduler_service, "send_post_to_channel"):
                         result = await scheduler_service.send_post_to_channel(post)
                     else:
                         logger.warning("send_post_to_channel method not available")
@@ -148,9 +152,7 @@ def send_scheduled_message():
                         logger.debug(f"Successfully sent post {post.id}")
                     else:
                         stats["errors"] += 1
-                        logger.warning(
-                            f"Failed to send post {post.id}: {result.get('error')}"
-                        )
+                        logger.warning(f"Failed to send post {post.id}: {result.get('error')}")
                 except Exception as e:
                     stats["errors"] += 1
                     post_context = context.add("post_id", str(post.id))
@@ -174,22 +176,22 @@ def update_post_views_task():
     async def _run() -> str:
         context = ErrorContext().add("task", "update_post_views_task")
         try:
-            bot = get_container().bot_client()
+            get_container().bot_client()
             analytics_service = get_container().analytics_service()
-            
+
             # Safety check
             if not analytics_service:
                 logger.error("Analytics service not available")
                 return "analytics-service-unavailable"
-                
+
             logger.info("Starting post views update task")
-            
-            if hasattr(analytics_service, 'update_all_post_views'):
+
+            if hasattr(analytics_service, "update_all_post_views"):
                 stats = await analytics_service.update_all_post_views()
             else:
                 logger.warning("update_all_post_views method not available")
                 return "method-not-available"
-                
+
             result = f"processed-{stats.get('processed', 0)}-updated-{stats.get('updated', 0)}-errors-{stats.get('errors', 0)}-skipped-{stats.get('skipped', 0)}"
             logger.info(f"Post views update completed: {result}")
             return result
@@ -211,11 +213,12 @@ def health_check_task():
         try:
             # Use apps layer health service instead of direct infra import
             from apps.api.services.health_service import health_service
+
             system_health = await health_service.get_system_health()
-            db_healthy = system_health.status == 'healthy'
+            db_healthy = system_health.status == "healthy"
             try:
                 bot = get_container().bot_client()
-                if bot and hasattr(bot, 'get_me'):
+                if bot and hasattr(bot, "get_me"):
                     bot_info = await bot.get_me()
                     bot_healthy = bot_info is not None
                 else:
@@ -272,16 +275,18 @@ def maintenance_cleanup():
     """Periodic maintenance: requeue stuck 'sending' posts and cleanup old posts."""
 
     async def _run():
-        bot = get_container().bot_client()
+        get_container().bot_client()
         try:
-            scheduler_repo = get_container().schedule_repo()
+            get_container().schedule_repo()
             # TODO: Implement requeue_stuck_sending_posts and cleanup_old_posts using clean architecture - PLACEHOLDER
             # Using safe placeholder implementation that logs the maintenance request
             logger.info("maintenance_cleanup called - using safe placeholder implementation")
             requeued = 0  # Safe placeholder - no actual requeueing performed
-            cleaned = 0   # Safe placeholder - no actual cleanup performed
-            
-            logger.info(f"Maintenance cleanup completed (placeholder): {requeued} requeued, {cleaned} cleaned")
+            cleaned = 0  # Safe placeholder - no actual cleanup performed
+
+            logger.info(
+                f"Maintenance cleanup completed (placeholder): {requeued} requeued, {cleaned} cleaned"
+            )
         except Exception as e:
             logger.exception("maintenance_cleanup failed", exc_info=e)
         finally:

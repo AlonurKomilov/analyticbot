@@ -28,9 +28,9 @@ class HistoryCollector:
         self.tg_client = tg_client
         self.repos = repos
         self.settings = settings
-        
+
         # Get parsers from repos container (provided via DI)
-        self.parsers = getattr(repos, 'parsers', None)
+        self.parsers = getattr(repos, "parsers", None)
 
     async def backfill_history_for_peers(
         self, peers: Sequence[str], limit_per_peer: int | None = None
@@ -46,7 +46,13 @@ class HistoryCollector:
         """
         if not self.settings.MTPROTO_ENABLED or not self.settings.MTPROTO_HISTORY_ENABLED:
             self.logger.info("History collection disabled by feature flags")
-            return {"status": "disabled", "ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
+            return {
+                "status": "disabled",
+                "ingested": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+            }
 
         limit_per_peer = limit_per_peer or self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
         stats = {"ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -148,11 +154,12 @@ class HistoryCollector:
                     for message in messages:
                         try:
                             # Normalize message to dict format using parser from DI
-                            if self.parsers and hasattr(self.parsers, 'normalize_message'):
+                            if self.parsers and hasattr(self.parsers, "normalize_message"):
                                 normalized = self.parsers.normalize_message(message)
                             else:
                                 # Fallback: lazy import if parsers not available via DI
                                 from infra.tg.parsers import normalize_message
+
                                 normalized = normalize_message(message)
 
                             if not normalized or not normalized.get("channel"):
@@ -208,7 +215,10 @@ class HistoryCollector:
         return peer_stats
 
     async def collect_channel_history(
-        self, channel_username: str, limit: int = 100, offset_date: datetime | None = None
+        self,
+        channel_username: str,
+        limit: int = 100,
+        offset_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """Legacy method for backward compatibility.
 
@@ -230,12 +240,13 @@ class HistoryCollector:
             messages_iterator = await self.tg_client.iter_history(channel_username, limit=limit)
             async for message in messages_iterator:
                 # Use parser from DI or fallback to lazy import
-                if self.parsers and hasattr(self.parsers, 'normalize_message'):
+                if self.parsers and hasattr(self.parsers, "normalize_message"):
                     normalized = self.parsers.normalize_message(message)
                 else:
                     from infra.tg.parsers import normalize_message
+
                     normalized = normalize_message(message)
-                    
+
                 if normalized:
                     messages.append(normalized)
 

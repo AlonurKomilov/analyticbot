@@ -147,17 +147,17 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:10400/health | grep -o '"status":"[^"]*"' | grep -q '"status":"ok"' || exit 1
 CMD ["/entrypoint.sh", "uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "10400"]
 
-# ---------- Bot Service ----------  
+# ---------- Bot Service ----------
 FROM python-runtime AS bot
 CMD ["/entrypoint.sh", "python", "-m", "apps.bot.run_bot"]
 
 # ---------- Celery Worker ----------
 FROM python-runtime AS worker
-CMD ["/entrypoint.sh", "celery", "-A", "infra.celery.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+CMD ["/entrypoint.sh", "celery", "-A", "apps.celery.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
 
 # ---------- Celery Beat ----------
 FROM python-runtime AS beat
-CMD ["/entrypoint.sh", "celery", "-A", "infra.celery.celery_app", "beat", "--loglevel=info", "--scheduler=celery.beat:PersistentScheduler"]
+CMD ["/entrypoint.sh", "celery", "-A", "apps.celery.celery_app", "beat", "--loglevel=info", "--scheduler=celery.beat:PersistentScheduler"]
 
 # ---------- MTProto Service ----------
 FROM python-runtime AS mtproto

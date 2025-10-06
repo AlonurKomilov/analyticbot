@@ -1,7 +1,7 @@
 # 🚀 ANALYTICBOT DEPLOYMENT GUIDE - PRODUCTION READY
 
-**Date**: August 27, 2025  
-**Status**: ✅ ALL CORE PHASES COMPLETE - PRODUCTION DEPLOYMENT READY  
+**Date**: August 27, 2025
+**Status**: ✅ ALL CORE PHASES COMPLETE - PRODUCTION DEPLOYMENT READY
 **Version**: 7.5.0 Enterprise Edition
 
 ---
@@ -104,11 +104,14 @@ docker-compose up -d
 # Start API server
 uvicorn apps.api.main:app --host 0.0.0.0 --port 8000
 
-# Start Bot (in separate terminal)  
+# Start Bot (in separate terminal)
 python -m apps.bot.run_bot
 
-# Start Celery workers (optional, in separate terminal)
-celery -A infra.celery.celery_app worker -l info
+```bash
+# Terminal 2: Start Celery Worker
+```bash
+celery -A apps.celery.celery_app worker -l info
+```
 ```
 
 ---
@@ -175,7 +178,7 @@ GET    /api/v1/content-protection/usage/{user_id}    # Feature usage statistics
 # General API health
 GET /health
 
-# SuperAdmin system health  
+# SuperAdmin system health
 GET /api/v1/superadmin/health
 
 # Check service status

@@ -17,7 +17,6 @@ from apps.bot.services import (
     SubscriptionService,
 )
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
-from apps.shared.factory import get_repository_factory
 
 # Use repository factory instead of direct infra imports
 # from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
@@ -70,11 +69,11 @@ class DependencyMiddleware(BaseMiddleware):
     ) -> Any:
         session_pool: Any | None = None
         try:
-            if hasattr(self.container, 'resolve'):
+            if hasattr(self.container, "resolve"):
                 session_pool = self.container.resolve(AsyncPGPool)
         except Exception:
             try:
-                if hasattr(self.container, 'resolve'):
+                if hasattr(self.container, "resolve"):
                     session_pool = self.container.resolve(async_sessionmaker)
             except Exception:
                 session_pool = None
@@ -96,11 +95,12 @@ class DependencyMiddleware(BaseMiddleware):
                 # ("user_repo", UserRepository),
                 # ("plan_repo", PlanRepository),
                 # ("channel_repo", ChannelRepository),
-                # ("scheduler_repo", SchedulerRepository), 
+                # ("scheduler_repo", SchedulerRepository),
                 # ("analytics_repo", AnalyticsRepository),
             ]:
                 try:
-                    if hasattr(self.container, "resolve"): data[key] = self.container.resolve(dep)
+                    if hasattr(self.container, "resolve"):
+                        data[key] = self.container.resolve(dep)
                 except Exception:
                     continue
                 except Exception:
@@ -119,7 +119,8 @@ class DependencyMiddleware(BaseMiddleware):
                 ("analytics_service", AnalyticsService),
             ]:
                 try:
-                    if hasattr(self.container, "resolve"): data[key] = self.container.resolve(dep)
+                    if hasattr(self.container, "resolve"):
+                        data[key] = self.container.resolve(dep)
                 except Exception:
                     continue
                 except Exception:

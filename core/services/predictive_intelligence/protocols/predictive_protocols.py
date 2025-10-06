@@ -117,6 +117,11 @@ class ContextualAnalysisProtocol(Protocol):
     """Protocol for contextual analysis microservice"""
 
     @abstractmethod
+    async def health_check(self) -> dict[str, Any]:
+        """Check service health"""
+        pass
+
+    @abstractmethod
     async def analyze_context_factors(
         self, prediction_request: dict[str, Any], context_types: list[IntelligenceContext]
     ) -> ContextualIntelligence:
@@ -141,6 +146,11 @@ class ContextualAnalysisProtocol(Protocol):
 
 class TemporalIntelligenceProtocol(Protocol):
     """Protocol for temporal intelligence microservice"""
+
+    @abstractmethod
+    async def health_check(self) -> dict[str, Any]:
+        """Check service health"""
+        pass
 
     @abstractmethod
     async def analyze_temporal_patterns(
@@ -180,6 +190,11 @@ class PredictiveModelingProtocol(Protocol):
     """Protocol for predictive modeling microservice"""
 
     @abstractmethod
+    async def health_check(self) -> dict[str, Any]:
+        """Check service health"""
+        pass
+
+    @abstractmethod
     async def generate_enhanced_predictions(
         self,
         prediction_request: dict[str, Any],
@@ -213,6 +228,11 @@ class PredictiveModelingProtocol(Protocol):
 
 class CrossChannelAnalysisProtocol(Protocol):
     """Protocol for cross-channel analysis microservice"""
+
+    @abstractmethod
+    async def health_check(self) -> dict[str, Any]:
+        """Check service health"""
+        pass
 
     @abstractmethod
     async def analyze_cross_channel_intelligence(

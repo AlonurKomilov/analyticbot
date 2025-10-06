@@ -29,6 +29,15 @@ class TemporalIntelligenceService(TemporalIntelligenceProtocol):
     def __init__(self):
         self.analysis_cache: dict[str, TemporalIntelligence] = {}
 
+    async def health_check(self) -> dict[str, Any]:
+        """Check service health"""
+        return {
+            "service": "temporal_intelligence",
+            "status": "healthy",
+            "cache_size": len(self.analysis_cache),
+            "timestamp": datetime.now().isoformat(),
+        }
+
     async def analyze_temporal_patterns(
         self, channel_id: int, depth_days: int = 90
     ) -> TemporalIntelligence:
@@ -234,7 +243,10 @@ class TemporalIntelligenceService(TemporalIntelligenceProtocol):
                     for month in range(1, 13)
                 },
                 "seasonal_recommendations": [
-                    f"Current season ({season}) shows {'high' if season in ['spring', 'fall'] else 'moderate'} engagement",
+                    (
+                        f"Current season ({season}) shows "
+                        f"{'high' if season in ['spring', 'fall'] else 'moderate'} engagement"
+                    ),
                     "Fall months (Sep-Nov) historically show best performance",
                     "Summer engagement typically dips, increase content frequency",
                 ],

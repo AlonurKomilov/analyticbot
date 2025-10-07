@@ -5,53 +5,53 @@ This module defines granular permissions that work with the simplified role syst
 Instead of creating many roles, we use permissions to control feature access within roles.
 """
 
-from enum import Enum
-from typing import Dict, List, Set, Optional
 from dataclasses import dataclass
+from enum import Enum
 
 
 class Permission(Enum):
     """
     Granular permissions for feature control within simplified roles.
-    
+
     Analytics Permissions:
     """
+
     # Analytics & Reporting
     VIEW_ANALYTICS = "view_analytics"
     EXPORT_ANALYTICS = "export_analytics"
     MANAGE_ANALYTICS = "manage_analytics"
-    
-    # User Management  
+
+    # User Management
     VIEW_USERS = "view_users"
     MANAGE_USERS = "manage_users"
     DELETE_USERS = "delete_users"
-    
+
     # Content Management
     VIEW_CONTENT = "view_content"
     EDIT_CONTENT = "edit_content"
     DELETE_CONTENT = "delete_content"
     MODERATE_CONTENT = "moderate_content"
-    
+
     # System Administration
     SYSTEM_CONFIG = "system_config"
     VIEW_LOGS = "view_logs"
     MANAGE_SETTINGS = "manage_settings"
     DATABASE_ACCESS = "database_access"
-    
+
     # Bot Management
     BOT_CONFIG = "bot_config"
     BOT_COMMANDS = "bot_commands"
     BOT_ANALYTICS = "bot_analytics"
-    
+
     # API Access
     API_READ = "api_read"
     API_WRITE = "api_write"
     API_ADMIN = "api_admin"
-    
+
     # Special Access Modes
-    READONLY_ACCESS = "readonly_access"      # For former READONLY role
-    CUSTOMER_SUPPORT = "customer_support"   # For former SUPPORT role
-    
+    READONLY_ACCESS = "readonly_access"  # For former READONLY role
+    CUSTOMER_SUPPORT = "customer_support"  # For former SUPPORT role
+
     # Demo & Testing
     DEMO_ACCESS = "demo_access"
     TESTING_ACCESS = "testing_access"
@@ -60,31 +60,30 @@ class Permission(Enum):
 @dataclass
 class RolePermissions:
     """Permission set for a specific role."""
+
     role: str
-    permissions: Set[Permission]
+    permissions: set[Permission]
     description: str
 
 
 # Default permission sets for each role
-DEFAULT_ROLE_PERMISSIONS: Dict[str, RolePermissions] = {
+DEFAULT_ROLE_PERMISSIONS: dict[str, RolePermissions] = {
     "guest": RolePermissions(
         role="guest",
         permissions={
             Permission.DEMO_ACCESS,
         },
-        description="Limited access for unauthenticated users"
+        description="Limited access for unauthenticated users",
     ),
-    
     "user": RolePermissions(
-        role="user", 
+        role="user",
         permissions={
             Permission.VIEW_CONTENT,
             Permission.API_READ,
             Permission.BOT_COMMANDS,
         },
-        description="Standard authenticated user permissions"
+        description="Standard authenticated user permissions",
     ),
-    
     "moderator": RolePermissions(
         role="moderator",
         permissions={
@@ -101,29 +100,27 @@ DEFAULT_ROLE_PERMISSIONS: Dict[str, RolePermissions] = {
             Permission.BOT_ANALYTICS,
             Permission.API_WRITE,
         },
-        description="Content moderation and user management"
+        description="Content moderation and user management",
     ),
-    
     "super_admin": RolePermissions(
         role="super_admin",
         permissions={
             # All permissions - system administrator
             *Permission.__members__.values()
         },
-        description="Full system administration access"
+        description="Full system administration access",
     ),
 }
 
 
 # Special permission profiles for migrated roles
-MIGRATION_PERMISSION_PROFILES: Dict[str, Set[Permission]] = {
+MIGRATION_PERMISSION_PROFILES: dict[str, set[Permission]] = {
     # Former READONLY users get USER + readonly_access
     "readonly_user": {
         Permission.VIEW_CONTENT,
         Permission.API_READ,
         Permission.READONLY_ACCESS,
     },
-    
     # Former ANALYST users get USER + analytics access
     "analyst_user": {
         Permission.VIEW_CONTENT,
@@ -133,7 +130,6 @@ MIGRATION_PERMISSION_PROFILES: Dict[str, Set[Permission]] = {
         Permission.EXPORT_ANALYTICS,
         Permission.BOT_ANALYTICS,
     },
-    
     # Former SUPPORT admins get MODERATOR + customer support
     "support_moderator": {
         Permission.VIEW_CONTENT,
@@ -151,36 +147,44 @@ MIGRATION_PERMISSION_PROFILES: Dict[str, Set[Permission]] = {
 
 class PermissionChecker:
     """Utility class for checking permissions."""
-    
+
     @staticmethod
-    def has_permission(user_permissions: Set[Permission], required_permission: Permission) -> bool:
+    def has_permission(user_permissions: set[Permission], required_permission: Permission) -> bool:
         """Check if user has a specific permission."""
         return required_permission in user_permissions
-    
+
     @staticmethod
-    def has_any_permission(user_permissions: Set[Permission], required_permissions: List[Permission]) -> bool:
+    def has_any_permission(
+        user_permissions: set[Permission], required_permissions: list[Permission]
+    ) -> bool:
         """Check if user has any of the required permissions."""
         return bool(user_permissions.intersection(required_permissions))
-    
+
     @staticmethod
-    def has_all_permissions(user_permissions: Set[Permission], required_permissions: List[Permission]) -> bool:
+    def has_all_permissions(
+        user_permissions: set[Permission], required_permissions: list[Permission]
+    ) -> bool:
         """Check if user has all required permissions."""
         return set(required_permissions).issubset(user_permissions)
-    
+
     @staticmethod
-    def get_role_permissions(role: str, additional_permissions: Optional[List[str]] = None) -> Set[Permission]:
+    def get_role_permissions(
+        role: str, additional_permissions: list[str] | None = None
+    ) -> set[Permission]:
         """
         Get permissions for a role, optionally adding extra permissions.
-        
+
         Args:
             role: The user's role
             additional_permissions: Extra permissions to add (for migrated users)
-            
+
         Returns:
             Set of permissions for the role
         """
-        base_permissions = DEFAULT_ROLE_PERMISSIONS.get(role, DEFAULT_ROLE_PERMISSIONS["user"]).permissions
-        
+        base_permissions = DEFAULT_ROLE_PERMISSIONS.get(
+            role, DEFAULT_ROLE_PERMISSIONS["user"]
+        ).permissions
+
         if additional_permissions:
             # Convert string permissions to Permission enums
             extra_perms = set()
@@ -191,32 +195,32 @@ class PermissionChecker:
                     # Skip invalid permissions
                     pass
             return base_permissions.union(extra_perms)
-        
+
         return base_permissions.copy()
 
 
-def get_permissions_for_role(role: str) -> Set[Permission]:
+def get_permissions_for_role(role: str) -> set[Permission]:
     """Get default permissions for a role."""
     return DEFAULT_ROLE_PERMISSIONS.get(role, DEFAULT_ROLE_PERMISSIONS["user"]).permissions
 
 
-def get_migration_permissions(profile: str) -> Set[Permission]:
+def get_migration_permissions(profile: str) -> set[Permission]:
     """Get permissions for a migration profile."""
     return MIGRATION_PERMISSION_PROFILES.get(profile, set())
 
 
 # Convenience functions for common permission checks
-def can_view_analytics(permissions: Set[Permission]) -> bool:
+def can_view_analytics(permissions: set[Permission]) -> bool:
     """Check if user can view analytics."""
     return Permission.VIEW_ANALYTICS in permissions
 
 
-def can_manage_users(permissions: Set[Permission]) -> bool:
+def can_manage_users(permissions: set[Permission]) -> bool:
     """Check if user can manage other users."""
     return Permission.MANAGE_USERS in permissions
 
 
-def can_access_admin_features(permissions: Set[Permission]) -> bool:
+def can_access_admin_features(permissions: set[Permission]) -> bool:
     """Check if user can access administrative features."""
     admin_permissions = {
         Permission.SYSTEM_CONFIG,
@@ -227,7 +231,7 @@ def can_access_admin_features(permissions: Set[Permission]) -> bool:
     return bool(permissions.intersection(admin_permissions))
 
 
-def is_readonly_user(permissions: Set[Permission]) -> bool:
+def is_readonly_user(permissions: set[Permission]) -> bool:
     """Check if user is in readonly mode."""
     return Permission.READONLY_ACCESS in permissions
 
@@ -235,14 +239,14 @@ def is_readonly_user(permissions: Set[Permission]) -> bool:
 # Export the permission system
 __all__ = [
     "Permission",
-    "RolePermissions", 
+    "RolePermissions",
     "PermissionChecker",
     "DEFAULT_ROLE_PERMISSIONS",
     "MIGRATION_PERMISSION_PROFILES",
     "get_permissions_for_role",
     "get_migration_permissions",
     "can_view_analytics",
-    "can_manage_users", 
+    "can_manage_users",
     "can_access_admin_features",
     "is_readonly_user",
 ]

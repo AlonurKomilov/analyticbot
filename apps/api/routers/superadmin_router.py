@@ -13,10 +13,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.deps import get_db_connection
+
 # Import new role system with backwards compatibility
-from core.security_engine import User as AdminUser, UserStatus, LegacyUserRole as UserRole
-from core.security_engine import ApplicationRole, AdministrativeRole
-from core.models.superadmin_domain import AdminRole as LegacyAdminRole
+from core.security_engine import AdministrativeRole, UserStatus
+from core.security_engine import User as AdminUser
 from core.services.superadmin_service import SuperAdminService
 
 # ===== PYDANTIC MODELS =====
@@ -103,19 +103,19 @@ async def get_superadmin_service():
     # For now, return a basic service that meets our API needs
     # This is a temporary solution until the full port interfaces are implemented
     from apps.shared.factory import get_repository_factory
-    
+
     factory = get_repository_factory()
     admin_repo = await factory.get_admin_repository()
-    
+
     # Create a simple wrapper that provides the methods we need
     class SimpleAdminService:
         def __init__(self, repo):
             self.admin_repo = repo
-            
+
         async def authenticate_admin(self, username: str, password: str):
             # Implement basic authentication logic
             return {"id": 1, "username": username}  # Placeholder
-    
+
     return SimpleAdminService(admin_repo)
 
 
@@ -143,7 +143,7 @@ async def get_current_admin_user(
                 username=admin_user.get("username", ""),
                 email=admin_user.get("email", ""),
                 status=UserStatus.ACTIVE,  # Default status
-                created_at=datetime.now()  # Default timestamp
+                created_at=datetime.now(),  # Default timestamp
             )
         return admin_user
 
@@ -162,13 +162,13 @@ async def require_admin_role(
     """Require minimum admin role"""
     # Use new role hierarchy
     from core.security_engine.roles import has_role_or_higher
-    
+
     if not has_role_or_higher(current_admin.role, min_role):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Insufficient permissions. Required: {min_role}",
         )
-    
+
     return current_admin
 
 
@@ -184,7 +184,7 @@ async def admin_login(
 ):
     """Authenticate admin user and create session"""
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("User-Agent", "Unknown")
+    request.headers.get("User-Agent", "Unknown")
 
     # Authenticate user
     admin_session = await admin_service.authenticate_admin(
@@ -193,12 +193,15 @@ async def admin_login(
 
     if not admin_session:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # Get admin user from session
     from sqlalchemy.future import select
+
     from core.models.superadmin_domain import AdminUser
+
     stmt = select(AdminUser).where(AdminUser.id == admin_session["admin_id"])
     result = await db.execute(stmt)
     admin_user = result.scalar_one()
@@ -210,7 +213,7 @@ async def admin_login(
             "username": admin_user.username,
             "full_name": admin_user.full_name,
             "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "last_login": (admin_user.last_login.isoformat() if admin_user.last_login else None),
         },
     )
 
@@ -235,7 +238,7 @@ async def get_system_users(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system users with filtering and pagination"""
-    users_data = await admin_service.get_system_users(page=skip//limit + 1, limit=limit)
+    users_data = await admin_service.get_system_users(page=skip // limit + 1, limit=limit)
 
     return [
         SystemUserResponse(
@@ -246,12 +249,12 @@ async def get_system_users(
             email=user.email,
             status=user.status,
             subscription_tier=user.subscription_tier,
-            total_channels=getattr(user, 'total_channels', 0),
-            total_posts=getattr(user, 'total_posts', 0),
+            total_channels=getattr(user, "total_channels", 0),
+            total_posts=getattr(user, "total_posts", 0),
             last_activity=user.last_activity,
             created_at=user.created_at,
-            suspended_at=getattr(user, 'suspended_at', None),
-            suspension_reason=getattr(user, 'suspension_reason', None),
+            suspended_at=getattr(user, "suspended_at", None),
+            suspension_reason=getattr(user, "suspension_reason", None),
         )
         for user in users_data.get("users", [])
     ]
@@ -267,7 +270,7 @@ async def suspend_user(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
         UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
@@ -284,7 +287,7 @@ async def reactivate_user(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
@@ -322,7 +325,7 @@ async def get_audit_logs(
 ):
     """Get audit logs with filtering"""
     logs_data = await admin_service.get_audit_logs(
-        page=skip//limit + 1, limit=limit, admin_id=admin_user_id
+        page=skip // limit + 1, limit=limit, admin_id=admin_user_id
     )
 
     return [
@@ -334,7 +337,7 @@ async def get_audit_logs(
             resource_id=log.resource_id,
             ip_address=log.ip_address,
             success=log.success,
-            error_message=getattr(log, 'error_message', None),
+            error_message=getattr(log, "error_message", None),
             old_values=log.old_values,
             new_values=log.new_values,
             created_at=log.created_at,
@@ -349,7 +352,9 @@ async def get_audit_logs(
 @router.get("/config", response_model=list[SystemConfigResponse])
 async def get_system_config(
     category: str | None = None,
-    current_admin: AdminUser = Depends(lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)),
+    current_admin: AdminUser = Depends(
+        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+    ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system configuration (Super Admin only)"""
@@ -375,11 +380,13 @@ async def update_system_config(
     key: str,
     config_update: ConfigUpdateRequest,
     request: Request,
-    current_admin: AdminUser = Depends(lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)),
+    current_admin: AdminUser = Depends(
+        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+    ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Update system configuration (Super Admin only)"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
         {key: config_update.value}, int(current_admin.id)
@@ -390,5 +397,5 @@ async def update_system_config(
 
 # ===== HEALTH AND STATUS ENDPOINTS =====
 
-# NOTE: Health endpoint moved to health_system_router.py for consolidation  
+# NOTE: Health endpoint moved to health_system_router.py for consolidation
 # SuperAdmin health is now monitored at /health/services

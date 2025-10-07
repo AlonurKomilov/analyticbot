@@ -7,33 +7,26 @@ Handles user feedback validation, quality assessment, and storage.
 """
 
 from .feedback_collection import (
-    FeedbackCollectionService,
     FeedbackCollectionConfig,
-    FeedbackValidationConfig
+    FeedbackCollectionService,
+    FeedbackValidationConfig,
 )
-from .feedback_storage import (
-    FeedbackStorageService,
-    FeedbackStorageConfig
-)
+from .feedback_storage import FeedbackStorageConfig, FeedbackStorageService
 
 __all__ = [
     # Main service
-    'FeedbackCollectionService',
-    'FeedbackCollectionConfig',
-    'FeedbackValidationConfig',
-    
+    "FeedbackCollectionService",
+    "FeedbackCollectionConfig",
+    "FeedbackValidationConfig",
     # Storage
-    'FeedbackStorageService',
-    'FeedbackStorageConfig'
+    "FeedbackStorageService",
+    "FeedbackStorageConfig",
 ]
 
 # Microservice metadata
 __microservice__ = {
-    'name': 'feedback',
-    'version': '1.0.0',
-    'description': 'Complete feedback collection, validation, and storage system',
-    'components': [
-        'FeedbackCollectionService',
-        'FeedbackStorageService'
-    ]
+    "name": "feedback",
+    "version": "1.0.0",
+    "description": "Complete feedback collection, validation, and storage system",
+    "components": ["FeedbackCollectionService", "FeedbackStorageService"],
 }

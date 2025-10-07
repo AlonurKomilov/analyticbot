@@ -3,7 +3,7 @@ Apps Demo Module
 ================
 
 User-facing demonstration and showcase functionality for new users.
-This module contains all the showroom features that demonstrate 
+This module contains all the showroom features that demonstrate
 project capabilities to potential users and clients.
 
 Structure:

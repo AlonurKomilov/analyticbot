@@ -13,7 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from apps.celery.celery_app import celery_app
-from core.services.deep_learning.growth.growth_forecaster_service import GrowthForecasterService
+from core.services.deep_learning.growth.growth_forecaster_service import (
+    GrowthForecasterService,
+)
 from core.services.deep_learning.infrastructure.gpu_config import GPUConfigService
 from core.services.deep_learning.infrastructure.model_loader import ModelLoader
 
@@ -34,7 +36,11 @@ class GrowthPredictionRequest(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"channel_id": 123, "forecast_horizon": 7, "include_uncertainty": True}
+            "example": {
+                "channel_id": 123,
+                "forecast_horizon": 7,
+                "include_uncertainty": True,
+            }
         }
 
 
@@ -190,9 +196,13 @@ async def get_task_status(task_id: str):
 
 
 @router.get(
-    "/health", summary="ML Service Health", description="Check health and statistics of ML services"
+    "/health",
+    summary="ML Service Health",
+    description="Check health and statistics of ML services",
 )
-async def ml_service_health(service: GrowthForecasterService = Depends(get_growth_forecaster)):
+async def ml_service_health(
+    service: GrowthForecasterService = Depends(get_growth_forecaster),
+):
     """
     Get ML service health statistics.
 
@@ -210,9 +220,13 @@ async def ml_service_health(service: GrowthForecasterService = Depends(get_growt
 
 
 @router.post(
-    "/clear-cache", summary="Clear ML Cache", description="Clear prediction cache (admin only)"
+    "/clear-cache",
+    summary="Clear ML Cache",
+    description="Clear prediction cache (admin only)",
 )
-async def clear_ml_cache(service: GrowthForecasterService = Depends(get_growth_forecaster)):
+async def clear_ml_cache(
+    service: GrowthForecasterService = Depends(get_growth_forecaster),
+):
     """
     Clear ML prediction cache.
 

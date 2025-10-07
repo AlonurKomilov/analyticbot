@@ -3,9 +3,8 @@ Service Protocols for Dependency Injection
 Clean Architecture interfaces for all services
 """
 
-from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Protocol
 
 
 class ServiceProtocol(Protocol):

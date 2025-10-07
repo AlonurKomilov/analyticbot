@@ -36,7 +36,11 @@ class ReportingService:
                 "report_type": "performance",
                 "generated_at": datetime.utcnow(),
                 "summary": "Performance report placeholder",
-                "metrics": {"engagement_rate": 0.75, "growth_rate": 0.15, "content_score": 82},
+                "metrics": {
+                    "engagement_rate": 0.75,
+                    "growth_rate": 0.15,
+                    "content_score": 82,
+                },
             }
 
             self.report_count += 1

@@ -302,11 +302,13 @@ class GrowthForecasterService:
             growth_stats = {
                 "mean_growth": float(processed_df["growth_rate"].mean()),
                 "std_growth": float(processed_df["growth_rate"].std()),
-                "volatility": float(
-                    processed_df["growth_rate"].std() / abs(processed_df["growth_rate"].mean())
-                )
-                if processed_df["growth_rate"].mean() != 0
-                else float("inf"),
+                "volatility": (
+                    float(
+                        processed_df["growth_rate"].std() / abs(processed_df["growth_rate"].mean())
+                    )
+                    if processed_df["growth_rate"].mean() != 0
+                    else float("inf")
+                ),
                 "trend_strength": float(processed_df["trend_strength"].mean()),
                 "momentum": float(
                     processed_df["momentum"].iloc[-1] if len(processed_df) > 0 else 0
@@ -663,11 +665,13 @@ class GrowthForecasterService:
 
         return {
             "service_name": "GrowthForecasterService",
-            "status": "healthy"
-            if self.health_stats["model_loaded"] and self.model is not None
-            else "unhealthy",
+            "status": (
+                "healthy"
+                if self.health_stats["model_loaded"] and self.model is not None
+                else "unhealthy"
+            ),
             "device": str(self.device),
-            "model_info": self.model.get_model_info() if self.model is not None else None,
+            "model_info": (self.model.get_model_info() if self.model is not None else None),
             "health_stats": self.health_stats.copy(),
             "cache_stats": {
                 "enabled": self.cache_predictions,
@@ -677,9 +681,11 @@ class GrowthForecasterService:
                 "misses": self.cache_misses,
                 "efficiency": cache_efficiency,
             },
-            "processor_stats": self.data_processor.get_processor_stats()
-            if self.data_processor is not None
-            else None,
+            "processor_stats": (
+                self.data_processor.get_processor_stats()
+                if self.data_processor is not None
+                else None
+            ),
             "timestamp": datetime.now().isoformat(),
         }
 

@@ -22,7 +22,6 @@ Performance: Single responsibility principle with parallel execution support
 """
 
 import logging
-from typing import Any, Dict, Optional
 
 # Import base ML engine
 from .base.predictive_analytics_service import PredictiveAnalyticsService
@@ -45,14 +44,12 @@ from .orchestrator import (
 )
 
 # Import protocols for type hints
-from .protocols.predictive_protocols import (
+from .protocols.predictive_protocols import (  # Data classes; Enums
     ConfidenceLevel,
     ContextualAnalysisProtocol,
-    # Data classes
     ContextualIntelligence,
     CrossChannelAnalysisProtocol,
     CrossChannelIntelligence,
-    # Enums
     IntelligenceContext,
     PredictionHorizon,
     PredictionNarrative,

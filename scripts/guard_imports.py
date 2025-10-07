@@ -46,7 +46,11 @@ class ImportGuard:
 
         # Define forbidden imports
         self.forbidden_imports = {
-            "core": ["apps", "infra", "infrastructure"],  # Core can't depend on outer layers
+            "core": [
+                "apps",
+                "infra",
+                "infrastructure",
+            ],  # Core can't depend on outer layers
             # Note: infra CAN import from apps for adapters (Hexagonal Architecture)
             # "infra": ["apps"],  # Removed - adapters in infra can depend on apps
         }
@@ -214,7 +218,7 @@ class ImportGuard:
                 imported_module=module_name,
                 violation_type="mtproto_guard",
                 message=(
-                    f"MTProto import '{module_name}' should be guarded " "or in stub implementation"
+                    f"MTProto import '{module_name}' should be guarded or in stub implementation"
                 ),
             )
             self.violations.append(violation)

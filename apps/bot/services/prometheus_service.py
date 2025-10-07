@@ -68,7 +68,9 @@ class PrometheusService:
             registry=self.registry,
         )
         self.database_connections_active = Gauge(
-            "database_connections_active", "Active database connections", registry=self.registry
+            "database_connections_active",
+            "Active database connections",
+            registry=self.registry,
         )
         self.database_query_duration_seconds = Histogram(
             "database_query_duration_seconds",
@@ -105,16 +107,25 @@ class PrometheusService:
             "posts_scheduled", "Number of scheduled posts", registry=self.registry
         )
         self.posts_sent_total = Counter(
-            "posts_sent_total", "Total posts sent", ["channel_id"], registry=self.registry
+            "posts_sent_total",
+            "Total posts sent",
+            ["channel_id"],
+            registry=self.registry,
         )
         self.post_views_updated_total = Counter(
-            "post_views_updated_total", "Total post views updated", registry=self.registry
+            "post_views_updated_total",
+            "Total post views updated",
+            registry=self.registry,
         )
         self.system_memory_usage = Gauge(
-            "system_memory_usage_percent", "System memory usage percentage", registry=self.registry
+            "system_memory_usage_percent",
+            "System memory usage percentage",
+            registry=self.registry,
         )
         self.system_cpu_usage = Gauge(
-            "system_cpu_usage_percent", "System CPU usage percentage", registry=self.registry
+            "system_cpu_usage_percent",
+            "System CPU usage percentage",
+            registry=self.registry,
         )
         self.health_check_status = Gauge(
             "health_check_status",
@@ -183,8 +194,8 @@ class PrometheusService:
         """Get database metrics via dependency injection"""
         try:
             # Get database manager through DI instead of direct import
-            if hasattr(self, 'db_manager') and self.db_manager:
-                pool = getattr(self.db_manager, 'pool', None)
+            if hasattr(self, "db_manager") and self.db_manager:
+                pool = getattr(self.db_manager, "pool", None)
                 if pool:
                     pool_size = getattr(pool, "get_size", lambda: 0)()
                 return {"pool_size": pool_size}
@@ -283,7 +294,7 @@ async def collect_system_metrics():
             # Get database metrics through service instead of direct infra import
             db_metrics = await prometheus_service.get_database_metrics()
             if db_metrics:
-                prometheus_service.update_database_connections(db_metrics.get('pool_size', 0))
+                prometheus_service.update_database_connections(db_metrics.get("pool_size", 0))
         except Exception as e:
             context = ErrorContext().add("operation", "collect_database_metrics")
             ErrorHandler.log_error(e, context)
@@ -291,15 +302,17 @@ async def collect_system_metrics():
             from apps.bot.di import configure_bot_container
 
             container = configure_bot_container()
-            channel_repo = container.channel_repo()
-            user_repo = container.user_repo()
-            scheduler_repo = container.schedule_repo()
+            container.channel_repo()
+            container.user_repo()
+            container.schedule_repo()
             # TODO: Implement count methods using clean architecture
             # For now, use placeholder values
             channels_count = 0  # await channel_repo.count()
-            users_count = 0     # await user_repo.count() 
+            users_count = 0  # await user_repo.count()
             scheduled_posts_count = 0  # await scheduler_repo.count()
-            logger.info("Business metrics collection - count methods not implemented in clean architecture")
+            logger.info(
+                "Business metrics collection - count methods not implemented in clean architecture"
+            )
             prometheus_service.update_business_metrics(
                 channels_count, users_count, scheduled_posts_count
             )

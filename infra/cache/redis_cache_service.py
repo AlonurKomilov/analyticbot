@@ -4,9 +4,7 @@ Redis implementation of CacheService port.
 """
 
 import asyncio
-import json
 import logging
-from typing import Any
 
 from core.ports import CacheService
 
@@ -15,20 +13,21 @@ logger = logging.getLogger(__name__)
 
 class RedisCacheService(CacheService):
     """Redis implementation of cache service port."""
-    
+
     def __init__(self, redis_url: str = "redis://localhost:6379/0"):
         self.redis_url = redis_url
         self._client = None
         self._connected = False
-    
+
     async def _ensure_connected(self):
         """Ensure Redis connection is established."""
         if self._connected and self._client:
             return
-            
+
         try:
             # Import here to avoid dependency issues if redis not installed
             import redis.asyncio as redis
+
             self._client = redis.from_url(self.redis_url)
             await self._client.ping()
             self._connected = True
@@ -41,14 +40,14 @@ class RedisCacheService(CacheService):
             logger.error(f"Failed to connect to Redis: {e}")
             self._client = InMemoryCache()
             self._connected = True
-    
+
     async def get(self, key: str) -> str | None:
         """Get value from cache."""
         await self._ensure_connected()
         try:
-            if self._client and hasattr(self._client, 'get'):
+            if self._client and hasattr(self._client, "get"):
                 result = await self._client.get(key)
-                return result.decode('utf-8') if result else None
+                return result.decode("utf-8") if result else None
             elif self._client:
                 return self._client.get(key)
             else:
@@ -57,7 +56,7 @@ class RedisCacheService(CacheService):
         except Exception as e:
             logger.error(f"Cache get error for key {key}: {e}")
             return None
-    
+
     async def set(self, key: str, value: str, ttl: int | None = None) -> bool:
         """Set value in cache with optional TTL."""
         await self._ensure_connected()
@@ -65,13 +64,13 @@ class RedisCacheService(CacheService):
             if not self._client:
                 logger.warning("Redis client not available")
                 return False
-                
-            if hasattr(self._client, 'set') and asyncio.iscoroutinefunction(self._client.set):
+
+            if hasattr(self._client, "set") and asyncio.iscoroutinefunction(self._client.set):
                 if ttl:
                     await self._client.set(key, value, ex=ttl)
                 else:
                     await self._client.set(key, value)
-            elif hasattr(self._client, 'set'):
+            elif hasattr(self._client, "set"):
                 if ttl:
                     self._client.set(key, value, ttl)
                 else:
@@ -85,14 +84,14 @@ class RedisCacheService(CacheService):
             return False
 
     async def delete(self, key: str) -> bool:
-        """Delete key from cache.""" 
+        """Delete key from cache."""
         await self._ensure_connected()
         try:
             if not self._client:
                 logger.warning("Redis client not available")
                 return False
-                
-            if hasattr(self._client, 'delete'):
+
+            if hasattr(self._client, "delete"):
                 if asyncio.iscoroutinefunction(self._client.delete):
                     result = await self._client.delete(key)
                 else:
@@ -112,8 +111,8 @@ class RedisCacheService(CacheService):
             if not self._client:
                 logger.warning("Redis client not available")
                 return False
-                
-            if hasattr(self._client, 'exists'):
+
+            if hasattr(self._client, "exists"):
                 if asyncio.iscoroutinefunction(self._client.exists):
                     result = await self._client.exists(key)
                 else:
@@ -125,37 +124,42 @@ class RedisCacheService(CacheService):
         except Exception as e:
             logger.error(f"Cache exists error for key {key}: {e}")
             return False
+
+
 class InMemoryCache:
     """Fallback in-memory cache implementation."""
-    
+
     def __init__(self):
         self._cache = {}
         self._expiry = {}
-    
+
     def get(self, key: str) -> str | None:
         """Get value from in-memory cache."""
         import time
+
         if key in self._expiry and self._expiry[key] < time.time():
             self.delete(key)
         return self._cache.get(key)
-    
+
     def set(self, key: str, value: str, ttl: int | None = None) -> None:
         """Set value in in-memory cache."""
         self._cache[key] = value
         if ttl:
             import time
+
             self._expiry[key] = time.time() + ttl
-    
+
     def delete(self, key: str) -> bool:
         """Delete key from in-memory cache."""
         deleted = key in self._cache
         self._cache.pop(key, None)
         self._expiry.pop(key, None)
         return deleted
-    
+
     def exists(self, key: str) -> bool:
         """Check if key exists in in-memory cache."""
         import time
+
         if key in self._expiry and self._expiry[key] < time.time():
             self.delete(key)
         return key in self._cache

@@ -13,15 +13,15 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 
-const DataSourceStatus = React.memo(({ 
-  isLoading, 
-  hasError, 
-  errors, 
-  actions, 
+const DataSourceStatus = React.memo(({
+  isLoading,
+  hasError,
+  errors,
+  actions,
   isUsingRealAPI,
   dataSource,
   switchDataSource,
-  onRefresh 
+  onRefresh
 }) => {
   if (isLoading) {
     return (
@@ -71,8 +71,8 @@ const DataSourceStatus = React.memo(({
         Advanced Analytics Dashboard
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Chip 
-          label={isUsingRealAPI ? '🔴 Real API' : '🟡 Mock Data'} 
+        <Chip
+          label={isUsingRealAPI ? '🔴 Real API' : '🟡 Mock Data'}
           color={isUsingRealAPI ? 'success' : 'warning'}
           size="small"
           onClick={() => switchDataSource(isUsingRealAPI ? 'mock' : 'api')}

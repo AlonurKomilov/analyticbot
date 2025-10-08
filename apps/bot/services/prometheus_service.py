@@ -183,8 +183,8 @@ class PrometheusService:
         """Get database metrics via dependency injection"""
         try:
             # Get database manager through DI instead of direct import
-            if hasattr(self, 'db_manager') and self.db_manager:
-                pool = getattr(self.db_manager, 'pool', None)
+            if hasattr(self, "db_manager") and self.db_manager:
+                pool = getattr(self.db_manager, "pool", None)
                 if pool:
                     pool_size = getattr(pool, "get_size", lambda: 0)()
                 return {"pool_size": pool_size}
@@ -283,7 +283,7 @@ async def collect_system_metrics():
             # Get database metrics through service instead of direct infra import
             db_metrics = await prometheus_service.get_database_metrics()
             if db_metrics:
-                prometheus_service.update_database_connections(db_metrics.get('pool_size', 0))
+                prometheus_service.update_database_connections(db_metrics.get("pool_size", 0))
         except Exception as e:
             context = ErrorContext().add("operation", "collect_database_metrics")
             ErrorHandler.log_error(e, context)
@@ -297,9 +297,11 @@ async def collect_system_metrics():
             # TODO: Implement count methods using clean architecture
             # For now, use placeholder values
             channels_count = 0  # await channel_repo.count()
-            users_count = 0     # await user_repo.count() 
+            users_count = 0  # await user_repo.count()
             scheduled_posts_count = 0  # await scheduler_repo.count()
-            logger.info("Business metrics collection - count methods not implemented in clean architecture")
+            logger.info(
+                "Business metrics collection - count methods not implemented in clean architecture"
+            )
             prometheus_service.update_business_metrics(
                 channels_count, users_count, scheduled_posts_count
             )

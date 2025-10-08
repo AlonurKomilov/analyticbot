@@ -1,6 +1,6 @@
 /**
  * 🔐 Authentication Wrapper
- * 
+ *
  * Wraps the main application with authentication logic.
  * Shows login/register forms for unauthenticated users, main app for authenticated users.
  */

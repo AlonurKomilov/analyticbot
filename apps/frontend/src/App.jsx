@@ -15,7 +15,7 @@ const App = () => {
         // Initialize performance monitoring on app start
         const monitor = new PerformanceMonitor();
         // Note: monitor.init() is automatically called in constructor
-        
+
         // Cleanup on unmount
         return () => {
             monitor.reportMetrics(); // Report final metrics

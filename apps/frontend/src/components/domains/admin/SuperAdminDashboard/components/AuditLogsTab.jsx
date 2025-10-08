@@ -45,8 +45,8 @@ const AuditLogsTab = ({ auditLogs = [] }) => {
                                     {log.ip_address}
                                 </TableCell>
                                 <TableCell>
-                                    <Chip 
-                                        label={log.success ? 'Success' : 'Failed'} 
+                                    <Chip
+                                        label={log.success ? 'Success' : 'Failed'}
                                         color={log.success ? 'success' : 'error'}
                                         size="small"
                                     />

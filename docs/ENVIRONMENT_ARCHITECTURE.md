@@ -11,7 +11,7 @@ This project now uses a clean, structured approach to environment configuration 
 ```
 .env.example          # ✅ Template with all possible variables
 .env.development      # ✅ Development environment (11xxx ports)
-.env.production       # ✅ Production environment (10xxx ports)  
+.env.production       # ✅ Production environment (10xxx ports)
 .env.local            # 🔒 Local secrets (gitignored)
 .env.mtproto.example  # ✅ MTProto-specific template
 ```
@@ -30,7 +30,7 @@ This project now uses a clean, structured approach to environment configuration 
 
 ### **Development Environment (11xxx series)**
 - **API Server**: `11300` - Local development API
-- **Frontend**: `11400` - Local development frontend  
+- **Frontend**: `11400` - Local development frontend
 - **Database**: `10100` - External Docker service port
 - **Redis**: `10200` - External Docker service port
 
@@ -85,7 +85,7 @@ make dev-start api
 docker-compose up
 
 # The system will:
-# 1. Load .env.production  
+# 1. Load .env.production
 # 2. Load .env.local (secrets)
 # 3. Start services on 10xxx ports
 ```
@@ -188,7 +188,7 @@ grep -v '^#' .env.development | grep -E '^[A-Z_]+'
 export ENV=development
 make dev-start
 
-# Production  
+# Production
 export ENV=production
 docker-compose up
 ```

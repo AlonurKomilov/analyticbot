@@ -125,6 +125,51 @@ def _create_subscription_service(user_repository=None, plan_repository=None, **k
         return None
 
 
+def _create_payment_microservices(payment_repository=None, **kwargs):
+    """Create payment microservices architecture"""
+    try:
+        from core.services.payment import (
+            PaymentAnalyticsService,
+            PaymentGatewayManagerService,
+            PaymentMethodService,
+            PaymentOrchestratorService,
+            PaymentProcessingService,
+            WebhookService,
+        )
+        from core.services.payment import (
+            SubscriptionService as PaymentSubscriptionService,
+        )
+
+        if payment_repository is None:
+            logger.warning("Payment repository not available for microservices")
+            return None
+
+        # Create individual microservices
+        payment_method_service = PaymentMethodService(payment_repository)
+        payment_processing_service = PaymentProcessingService(payment_repository)
+        payment_subscription_service = PaymentSubscriptionService(payment_repository)
+        webhook_service = WebhookService(payment_repository)
+        analytics_service = PaymentAnalyticsService(payment_repository)
+        gateway_manager_service = PaymentGatewayManagerService()
+
+        # Create orchestrator with all services
+        orchestrator = PaymentOrchestratorService(
+            payment_method_service=payment_method_service,
+            payment_processing_service=payment_processing_service,
+            subscription_service=payment_subscription_service,
+            webhook_service=webhook_service,
+            analytics_service=analytics_service,
+            gateway_manager_service=gateway_manager_service,
+        )
+
+        logger.info("Payment microservices architecture initialized successfully")
+        return orchestrator
+
+    except ImportError as e:
+        logger.warning(f"Payment microservices not available: {e}")
+        return None
+
+
 def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
     """Create scheduler service with flexible dependency resolution"""
     try:
@@ -189,34 +234,37 @@ def _create_channel_management_service(channel_repository=None, bot=None, **kwar
 def _create_ml_service(service_name: str) -> Any | None:
     """Create ML service (optional - returns None if not available)"""
     try:
-        if service_name == "PredictiveAnalyticsEngine":
-            from apps.bot.services.ml.predictive_engine import PredictiveAnalyticsEngine
+        if service_name == "PredictiveEngine":
+            from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
 
-            return PredictiveAnalyticsEngine()
-        elif service_name == "ContentOptimizer":
-            from apps.bot.services.ml.content_optimizer import ContentOptimizer
-
-            return ContentOptimizer()
-        elif service_name == "ChurnPredictor":
-            from apps.bot.services.ml.churn_predictor import ChurnPredictor
-
-            return ChurnPredictor()
+            return create_ml_coordinator()
         elif service_name == "EngagementAnalyzer":
+            from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+
+            return create_bot_ml_facade()
+        elif service_name == "ChurnPredictor":
+            # Create ChurnPredictor using the new churn intelligence service
+            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+
+            try:
+                orchestrator = ChurnIntelligenceOrchestratorService()
+                logger.info("ChurnPredictor (Churn Intelligence Orchestrator) created successfully")
+                return orchestrator
+            except Exception as e:
+                logger.warning(f"Failed to create ChurnPredictor: {e}")
+                return None
+        elif service_name == "ContentOptimizer":
             try:
                 # Create dependent services first
-                prediction_service = _create_ml_service("PredictiveAnalyticsEngine")
-                content_optimizer = _create_ml_service("ContentOptimizer")
-                churn_predictor = _create_ml_service("ChurnPredictor")
+                prediction_service = _create_ml_service("PredictiveEngine")
+                content_optimizer = None  # ContentOptimizer is not yet implemented
+                churn_predictor = None  # ChurnPredictor is not yet implemented
 
                 # Only create if all dependencies are available
                 if prediction_service and content_optimizer and churn_predictor:
-                    from apps.bot.services.ml.engagement_analyzer import EngagementAnalyzer
+                    from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
 
-                    return EngagementAnalyzer(
-                        prediction_service=prediction_service,
-                        content_optimizer=content_optimizer,
-                        churn_predictor=churn_predictor,
-                    )
+                    return create_bot_ml_facade()
                 else:
                     return None
             except (TypeError, ImportError, Exception):
@@ -295,6 +343,11 @@ class BotContainer(containers.DeclarativeContainer):
         _create_subscription_service, user_repository=user_repo, plan_repository=plan_repo
     )
 
+    # ✅ NEW: Payment Microservices Architecture
+    payment_orchestrator = providers.Factory(
+        _create_payment_microservices, payment_repository=payment_repo
+    )
+
     scheduler_service = providers.Factory(
         _create_scheduler_service, schedule_repository=schedule_repo, bot=bot_client
     )
@@ -314,7 +367,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     # ML Services (optional)
-    prediction_service = providers.Factory(_create_ml_service, "PredictiveAnalyticsEngine")
+    prediction_service = providers.Factory(_create_ml_service, "PredictiveEngine")
     content_optimizer = providers.Factory(_create_ml_service, "ContentOptimizer")
     churn_predictor = providers.Factory(_create_ml_service, "ChurnPredictor")
     engagement_analyzer = providers.Factory(_create_ml_service, "EngagementAnalyzer")
@@ -339,7 +392,6 @@ def configure_bot_container() -> BotContainer:
                 "apps.api.routers.channels_router",
                 "apps.api.routers.admin_users_router",
                 "apps.api.di_analytics",
-                "tests.test_comprehensive_integration",
             ]
         )
     return _container

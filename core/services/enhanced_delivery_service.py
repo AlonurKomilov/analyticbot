@@ -9,13 +9,14 @@ This service extends the core DeliveryService with:
 
 import hashlib
 import logging
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from core.common_helpers.idempotency import IdempotencyGuard
-from core.services import DeliveryService as BaseDeliveryService
 from core.common_helpers.ratelimit import TokenBucketRateLimiter
+from core.services import DeliveryService as BaseDeliveryService
 
 logger = logging.getLogger(__name__)
 

@@ -28,26 +28,26 @@ const TableColumns = ({
     setColumnVisibility
 }) => {
     const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
-    
+
     const handleShowAll = () => {
         const allVisible = columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {});
         setColumnVisibility(allVisible);
     };
-    
+
     const handleHideAll = () => {
         const allHidden = columns.reduce((acc, col) => ({ ...acc, [col.id]: false }), {});
         setColumnVisibility(allHidden);
     };
-    
+
     const handleToggleColumn = (columnId, checked) => {
         setColumnVisibility({
             ...columnVisibility,
             [columnId]: checked
         });
     };
-    
+
     const visibleCount = Object.values(columnVisibility).filter(Boolean).length;
-    
+
     return (
         <>
             <Tooltip title="Manage Columns">
@@ -58,7 +58,7 @@ const TableColumns = ({
                     <ColumnsIcon />
                 </IconButton>
             </Tooltip>
-            
+
             <Menu
                 anchorEl={columnsMenuAnchor}
                 open={Boolean(columnsMenuAnchor)}
@@ -76,7 +76,7 @@ const TableColumns = ({
                     </Typography>
                 </MenuItem>
                 <Divider />
-                
+
                 {/* Column toggles */}
                 {columns.map(column => (
                     <MenuItem key={column.id} disableRipple>
@@ -93,9 +93,9 @@ const TableColumns = ({
                         />
                     </MenuItem>
                 ))}
-                
+
                 <Divider />
-                
+
                 {/* Bulk actions */}
                 <MenuItem onClick={handleShowAll}>
                     <ListItemIcon>
@@ -103,7 +103,7 @@ const TableColumns = ({
                     </ListItemIcon>
                     <ListItemText>Show All</ListItemText>
                 </MenuItem>
-                
+
                 <MenuItem onClick={handleHideAll}>
                     <ListItemIcon>
                         <VisibilityOff fontSize="small" />

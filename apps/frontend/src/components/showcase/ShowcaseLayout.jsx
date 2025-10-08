@@ -1,6 +1,6 @@
 /**
  * ShowcaseLayout Component
- * 
+ *
  * Provides shared layout structure for the tables showcase
  * including the header, navigation, and feature summary
  */
@@ -41,7 +41,7 @@ const ShowcaseLayout = ({ children }) => {
                             <li>Real-time data refresh capabilities</li>
                         </Typography>
                     </Box>
-                    
+
                     <Box>
                         <Typography variant="subtitle2" color="primary" gutterBottom>
                             User Interface
@@ -53,7 +53,7 @@ const ShowcaseLayout = ({ children }) => {
                             <li>Full accessibility compliance (WCAG 2.1)</li>
                         </Typography>
                     </Box>
-                    
+
                     <Box>
                         <Typography variant="subtitle2" color="primary" gutterBottom>
                             Actions & Export

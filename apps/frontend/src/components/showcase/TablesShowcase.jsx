@@ -1,13 +1,13 @@
 /**
  * TablesShowcase Component - Refactored Orchestrator
- * 
+ *
  * Reduced from 437 lines to ~80 lines by extracting components:
  * - ShowcaseNavigation: Tab management and navigation
  * - ShowcaseLayout: Shared layout and feature summary
  * - PostsTableDemo: Top Posts table demonstration
- * - UsersTableDemo: User Management table demonstration  
+ * - UsersTableDemo: User Management table demonstration
  * - GenericTableDemo: Generic data table demonstration
- * 
+ *
  * Benefits:
  * - 82% reduction in component size (437 → ~80 lines)
  * - Better separation of concerns
@@ -26,7 +26,7 @@ import GenericTableDemo from '../../__mocks__/components/showcase/tables/Generic
 
 /**
  * Main Tables Showcase Orchestrator
- * 
+ *
  * Coordinates the showcase components while maintaining all original functionality.
  * Now focused purely on state management and component coordination.
  */
@@ -41,13 +41,13 @@ const TablesShowcase = () => {
         <ShowcaseLayout>
             {/* Showcase Alert */}
             <Alert severity="info" sx={{ mb: 3 }}>
-                <strong>Enhanced Data Tables Showcase:</strong> Explore three different implementations 
-                of our enterprise-grade data table system with advanced features like sorting, 
+                <strong>Enhanced Data Tables Showcase:</strong> Explore three different implementations
+                of our enterprise-grade data table system with advanced features like sorting,
                 filtering, bulk operations, and export capabilities.
             </Alert>
 
             {/* Navigation Tabs */}
-            <ShowcaseNavigation 
+            <ShowcaseNavigation
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
             />

@@ -1,6 +1,6 @@
 /**
  * Enhanced Component Index
- * 
+ *
  * Centralized exports for all standardized UI components.
  * Import from this file to ensure consistent component usage.
  */

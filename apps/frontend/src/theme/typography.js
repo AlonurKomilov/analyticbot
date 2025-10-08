@@ -1,6 +1,6 @@
 /**
  * Typography System - Enhanced visual hierarchy and consistent typography scales
- * 
+ *
  * This module provides:
  * - Hierarchical typography components
  * - Consistent font scales and weights
@@ -24,7 +24,7 @@ export const TYPOGRAPHY_SCALE = {
     lineHeight: 1.2,
     letterSpacing: '-0.02em'
   },
-  
+
   // Primary headings
   h1: {
     fontSize: '2.5rem',    // 40px
@@ -32,7 +32,7 @@ export const TYPOGRAPHY_SCALE = {
     lineHeight: 1.3,
     letterSpacing: '-0.01em'
   },
-  
+
   // Section headings
   h2: {
     fontSize: '2rem',      // 32px
@@ -40,28 +40,28 @@ export const TYPOGRAPHY_SCALE = {
     lineHeight: 1.35,
     letterSpacing: '-0.005em'
   },
-  
+
   // Subsection headings
   h3: {
     fontSize: '1.5rem',    // 24px
     fontWeight: 600,
     lineHeight: 1.4
   },
-  
+
   // Component headings
   h4: {
     fontSize: '1.25rem',   // 20px
     fontWeight: 600,
     lineHeight: 1.4
   },
-  
+
   // Card/widget headings
   h5: {
     fontSize: '1.125rem',  // 18px
     fontWeight: 600,
     lineHeight: 1.4
   },
-  
+
   // Small headings
   h6: {
     fontSize: '1rem',      // 16px
@@ -119,7 +119,7 @@ export const PrimaryContentArea = styled(Box)(({ theme }) => ({
   padding: SEMANTIC_SPACING.SECTION_SPACING,
   marginBottom: SEMANTIC_SPACING.SECTION_SPACING,
   position: 'relative',
-  
+
   // Enhanced visual separation
   '&::before': {
     content: '""',
@@ -148,12 +148,12 @@ export const ContentDivider = styled(Box)(({ theme }) => ({
   height: '1px',
   backgroundColor: theme.palette.divider,
   margin: `${SEMANTIC_SPACING.SECTION_SPACING}px 0`,
-  
+
   // Enhanced divider with gradient
-  background: `linear-gradient(90deg, 
-    transparent 0%, 
-    ${theme.palette.divider} 20%, 
-    ${theme.palette.divider} 80%, 
+  background: `linear-gradient(90deg,
+    transparent 0%,
+    ${theme.palette.divider} 20%,
+    ${theme.palette.divider} 80%,
     transparent 100%
   )`
 }));
@@ -169,7 +169,7 @@ export const SectionSpacer = styled(Box)(() => ({
 export const typographyUtils = {
   // Apply consistent heading hierarchy
   applyHeadingScale: (level) => TYPOGRAPHY_SCALE[level] || TYPOGRAPHY_SCALE.h6,
-  
+
   // Get semantic spacing for typography
   getTypographySpacing: (context) => {
     const spacingMap = {
@@ -180,7 +180,7 @@ export const typographyUtils = {
     };
     return spacingMap[context] || SEMANTIC_SPACING.ELEMENT_SPACING;
   },
-  
+
   // Generate consistent text styles
   textStyles: {
     primary: {
@@ -213,16 +213,16 @@ export const typographyUtils = {
 export const ContentHierarchy = {
   // Primary content blocks
   Primary: PrimaryContentArea,
-  
-  // Secondary content blocks  
+
+  // Secondary content blocks
   Secondary: SecondaryContentArea,
-  
+
   // Typography components
   PageTitle,
   SectionHeader,
   SubsectionHeader,
   CardTitle,
-  
+
   // Layout helpers
   Divider: ContentDivider,
   Spacer: SectionSpacer

@@ -1,6 +1,6 @@
 /**
  * GenericTableDemo Component
- * 
+ *
  * Extracted from DataTablesShowcase - showcases the Generic Enhanced Data Table
  * with flexible configuration and custom column renderers
  */
@@ -38,15 +38,15 @@ const GenericTableDemo = () => {
             align: 'center',
             width: 120,
             Cell: ({ value }) => (
-                <Typography variant="body2" sx={{ 
+                <Typography variant="body2" sx={{
                     px: 1,
                     py: 0.5,
                     borderRadius: 1,
-                    bgcolor: value === 'Report' ? 'primary.light' : 
-                            value === 'Export' ? 'success.light' : 
+                    bgcolor: value === 'Report' ? 'primary.light' :
+                            value === 'Export' ? 'success.light' :
                             value === 'Metrics' ? 'info.light' : 'grey.200',
-                    color: value === 'Report' ? 'primary.contrastText' : 
-                           value === 'Export' ? 'success.contrastText' : 
+                    color: value === 'Report' ? 'primary.contrastText' :
+                           value === 'Export' ? 'success.contrastText' :
                            value === 'Metrics' ? 'info.contrastText' : 'text.primary'
                 }}>
                     {value}
@@ -64,9 +64,9 @@ const GenericTableDemo = () => {
                     px: 1,
                     py: 0.5,
                     borderRadius: 1,
-                    bgcolor: value === 'completed' ? 'success.light' : 
+                    bgcolor: value === 'completed' ? 'success.light' :
                             value === 'processing' ? 'warning.light' : 'error.light',
-                    color: value === 'completed' ? 'success.contrastText' : 
+                    color: value === 'completed' ? 'success.contrastText' :
                            value === 'processing' ? 'warning.contrastText' : 'error.contrastText'
                 }}>
                     {value}
@@ -96,7 +96,7 @@ const GenericTableDemo = () => {
                     Generic Enhanced Data Table
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                    Flexible, reusable data table component that can be configured for any data structure. 
+                    Flexible, reusable data table component that can be configured for any data structure.
                     Demonstrates the core enhanced table functionality with custom columns and renderers.
                 </Typography>
             </Box>
@@ -105,21 +105,21 @@ const GenericTableDemo = () => {
                 subtitle="File management system with advanced table features"
                 data={mockGenericData}
                 columns={genericColumns}
-                
+
                 enablePagination={true}
                 defaultPageSize={10}
                 enableSorting={true}
                 defaultSortBy="date"
                 defaultSortDirection="desc"
-                
+
                 enableSearch={true}
                 enableFiltering={true}
                 searchPlaceholder="Search files and reports..."
-                
+
                 enableColumnVisibility={true}
                 enableSelection={true}
                 enableBulkActions={true}
-                
+
                 bulkActions={[
                     {
                         label: 'Download Selected',
@@ -134,7 +134,7 @@ const GenericTableDemo = () => {
                         color: 'error'
                     }
                 ]}
-                
+
                 rowActions={[
                     {
                         icon: <AnalyticsIcon />,
@@ -143,13 +143,13 @@ const GenericTableDemo = () => {
                         color: 'primary'
                     }
                 ]}
-                
+
                 enableExport={true}
                 exportFilename="system-files-report"
-                
+
                 enableRefresh={true}
                 onRefresh={() => console.log('Refreshing data...')}
-                
+
                 tableAriaLabel="System files and reports data table"
             />
         </>

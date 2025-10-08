@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 
 /**
  * useFormValidation - Comprehensive form validation hook
- * 
+ *
  * Features:
  * - Real-time field validation
  * - Form-level validation
@@ -164,9 +164,9 @@ export const useFormValidation = (initialValues = {}, validationRules = {}) => {
     // Handle form submission
     const handleSubmit = useCallback(async (onSubmit) => {
         setIsSubmitting(true);
-        
+
         const isValid = validateForm();
-        
+
         if (isValid && onSubmit) {
             try {
                 await onSubmit(values);
@@ -174,7 +174,7 @@ export const useFormValidation = (initialValues = {}, validationRules = {}) => {
                 console.error('Form submission error:', error);
             }
         }
-        
+
         setIsSubmitting(false);
         return isValid;
     }, [validateForm, values]);

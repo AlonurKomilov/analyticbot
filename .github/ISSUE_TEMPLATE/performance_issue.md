@@ -26,7 +26,7 @@ assignees: []
 
 ### Response Times
 - Current average: [X]ms
-- Current p95: [X]ms  
+- Current p95: [X]ms
 - Current p99: [X]ms
 - Expected/target: [X]ms
 
@@ -44,9 +44,9 @@ assignees: []
 ## Steps to Reproduce
 **How to reproduce the performance issue:**
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Environment Information
 - **Environment:** Production/Staging/Development
@@ -104,20 +104,20 @@ assignees: []
 ## Potential Root Causes
 **What might be causing the performance issue?**
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Proposed Solutions
 **If you have ideas for fixing the performance issue:**
 
 ### Short-term fixes:
-1. 
-2. 
+1.
+2.
 
 ### Long-term optimizations:
-1. 
-2. 
+1.
+2.
 
 ## Benchmarking
 **Performance benchmarks to validate fixes:**
@@ -133,7 +133,7 @@ assignees: []
 
 **Priority:**
 - [ ] P0 - Critical performance degradation
-- [ ] P1 - High impact performance issue  
+- [ ] P1 - High impact performance issue
 - [ ] P2 - Medium performance concern
 - [ ] P3 - Optimization opportunity
 

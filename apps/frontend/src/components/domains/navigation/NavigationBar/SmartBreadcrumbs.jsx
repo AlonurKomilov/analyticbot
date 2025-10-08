@@ -15,7 +15,7 @@ import { useBreadcrumbs, shouldShowBreadcrumbs } from './breadcrumbUtils';
 
 /**
  * SmartBreadcrumbs Component
- * 
+ *
  * Provides intelligent breadcrumb navigation including:
  * - Automatic breadcrumb generation from routes
  * - Icon integration for each breadcrumb level
@@ -23,40 +23,40 @@ import { useBreadcrumbs, shouldShowBreadcrumbs } from './breadcrumbUtils';
  * - Responsive behavior (desktop vs mobile)
  * - Semantic HTML structure for accessibility
  */
-const SmartBreadcrumbs = ({ 
-    className, 
+const SmartBreadcrumbs = ({
+    className,
     maxItems = 3,
     showOnMobile = false,
-    ...props 
+    ...props
 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const location = useLocation();
     const breadcrumbs = useBreadcrumbs();
-    
+
     // Don't show breadcrumbs on mobile by default unless explicitly requested
     if (isMobile && !showOnMobile) {
         return null;
     }
-    
+
     // Don't show breadcrumbs on certain pages
     if (!shouldShowBreadcrumbs(location.pathname)) {
         return null;
     }
-    
+
     // Don't show breadcrumbs if only home breadcrumb exists
     if (breadcrumbs.length <= 1) {
         return null;
     }
-    
+
     const handleBreadcrumbClick = (event, path) => {
         event.preventDefault();
         navigate(path);
     };
 
     return (
-        <Breadcrumbs 
+        <Breadcrumbs
             separator={<NavigateNextIcon fontSize="small" />}
             maxItems={maxItems}
             className={className}
@@ -75,26 +75,26 @@ const SmartBreadcrumbs = ({
             {breadcrumbs.map((crumb, index) => {
                 const isLast = index === breadcrumbs.length - 1;
                 const IconComponent = crumb.icon;
-                
+
                 return isLast ? (
                     // Current page - not clickable
-                    <Box 
+                    <Box
                         key={crumb.path}
-                        sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
                             gap: 0.5,
                             color: 'text.primary'
                         }}
                     >
                         {IconComponent && (
-                            <IconComponent 
-                                fontSize="small" 
+                            <IconComponent
+                                fontSize="small"
                                 sx={{ color: 'primary.main' }}
                             />
                         )}
-                        <Typography 
-                            variant="body2" 
+                        <Typography
+                            variant="body2"
                             color="text.primary"
                             sx={{ fontWeight: 500 }}
                         >
@@ -120,13 +120,13 @@ const SmartBreadcrumbs = ({
                         }}
                     >
                         {IconComponent && (
-                            <IconComponent 
+                            <IconComponent
                                 fontSize="small"
                                 sx={{ color: 'inherit' }}
                             />
                         )}
-                        <Typography 
-                            variant="body2" 
+                        <Typography
+                            variant="body2"
                             color="inherit"
                         >
                             {crumb.label}

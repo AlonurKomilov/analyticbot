@@ -15,16 +15,16 @@ export class MockDataProvider extends DataProvider {
         this.mockData = mockData || this._getDefaultMockData();
         this.delayMs = 100; // Simulate network delay
     }
-    
+
     async isAvailable() {
         // Mock provider is always "available"
         await this._simulateDelay();
         return true;
     }
-    
+
     async getAnalytics(channelId) {
         await this._simulateDelay();
-        
+
         return {
             channelId,
             postDynamics: this.mockData.postDynamics,
@@ -38,26 +38,26 @@ export class MockDataProvider extends DataProvider {
             generatedAt: new Date().toISOString()
         };
     }
-    
+
     async getTopPosts(channelId, options = {}) {
         await this._simulateDelay();
-        
+
         const { limit = 10, sortBy = 'views' } = options;
         let posts = [...this.mockData.topPosts];
-        
+
         // Sort by specified criteria
         if (sortBy === 'engagement') {
             posts.sort((a, b) => b.engagementRate - a.engagementRate);
         } else {
             posts.sort((a, b) => b.views - a.views);
         }
-        
+
         return posts.slice(0, limit);
     }
-    
+
     async getEngagementMetrics(channelId, options = {}) {
         await this._simulateDelay();
-        
+
         return {
             channelId,
             metrics: this.mockData.engagementMetrics,
@@ -65,21 +65,21 @@ export class MockDataProvider extends DataProvider {
             generatedAt: new Date().toISOString()
         };
     }
-    
+
     async getRecommendations(channelId) {
         await this._simulateDelay();
-        
+
         return {
             channelId,
             recommendations: this.mockData.bestTimeRecommendations,
             generatedAt: new Date().toISOString()
         };
     }
-    
+
     getProviderName() {
         return 'mock';
     }
-    
+
     /**
      * Set custom mock data
      * @param {Object} mockData - Custom mock data to use
@@ -87,7 +87,7 @@ export class MockDataProvider extends DataProvider {
     setMockData(mockData) {
         this.mockData = mockData;
     }
-    
+
     /**
      * Set network delay simulation
      * @param {number} delayMs - Delay in milliseconds
@@ -95,7 +95,7 @@ export class MockDataProvider extends DataProvider {
     setDelay(delayMs) {
         this.delayMs = delayMs;
     }
-    
+
     /**
      * Simulate network delay
      * @private
@@ -105,7 +105,7 @@ export class MockDataProvider extends DataProvider {
             await new Promise(resolve => setTimeout(resolve, this.delayMs));
         }
     }
-    
+
     /**
      * Get default mock data
      * @private

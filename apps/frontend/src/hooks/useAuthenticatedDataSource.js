@@ -1,6 +1,6 @@
 /**
  * 🔐 Authenticated Data Source Hooks
- * 
+ *
  * Enhanced data source hooks that integrate with AuthContext for JWT authentication.
  * These hooks automatically handle token-based API requests and authentication errors.
  */
@@ -16,7 +16,7 @@ import { createAuthenticatedDataProvider } from '../providers/DataProvider.js';
  */
 export const useAuthenticatedDataProvider = (baseUrl = null) => {
     const authContext = useAuth();
-    
+
     const dataProvider = useMemo(() => {
         const provider = createAuthenticatedDataProvider(authContext, baseUrl);
         return provider;

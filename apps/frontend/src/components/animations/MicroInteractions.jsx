@@ -1,6 +1,6 @@
 /**
  * Micro-interactions System
- * 
+ *
  * Subtle animations, hover effects, and feedback mechanisms to enhance UX:
  * - Smooth transitions and animations
  * - Interactive hover states
@@ -11,11 +11,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Fade, 
-  Grow, 
-  Slide, 
+import {
+  Box,
+  Fade,
+  Grow,
+  Slide,
   Zoom,
   Collapse,
   CircularProgress,
@@ -93,7 +93,7 @@ export const InteractiveCard = styled(Box)(({ theme, interactive = true, hoverEf
   backgroundColor: theme.palette.background.paper,
   transition: 'all 0.2s ease-in-out',
   cursor: interactive ? 'pointer' : 'default',
-  
+
   ...(interactive && {
     '&:hover': {
       ...(hoverEffect === 'lift' && {
@@ -109,7 +109,7 @@ export const InteractiveCard = styled(Box)(({ theme, interactive = true, hoverEf
         transform: 'scale(1.02)'
       })
     },
-    
+
     '&:active': {
       transform: hoverEffect === 'lift' ? 'translateY(-2px)' : 'scale(0.98)',
       transition: 'all 0.1s ease-in-out'
@@ -134,7 +134,7 @@ export const AnimatedButton = styled(Box)(({ theme, variant = 'contained', disab
   alignItems: 'center',
   justifyContent: 'center',
   minHeight: '44px',
-  
+
   // Variant styles
   ...(variant === 'contained' && {
     backgroundColor: theme.palette.primary.main,
@@ -145,7 +145,7 @@ export const AnimatedButton = styled(Box)(({ theme, variant = 'contained', disab
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
     }
   }),
-  
+
   ...(variant === 'outlined' && {
     backgroundColor: 'transparent',
     color: theme.palette.primary.main,
@@ -156,7 +156,7 @@ export const AnimatedButton = styled(Box)(({ theme, variant = 'contained', disab
       transform: 'translateY(-1px)'
     }
   }),
-  
+
   // Ripple effect container
   '&::before': {
     content: '""',
@@ -170,7 +170,7 @@ export const AnimatedButton = styled(Box)(({ theme, variant = 'contained', disab
     transform: 'translate(-50%, -50%)',
     transition: 'width 0.6s, height 0.6s'
   },
-  
+
   '&:active::before': !disabled && {
     width: '300px',
     height: '300px'
@@ -201,11 +201,11 @@ export const FloatingElement = ({ children, duration = 3, delay = 0 }) => {
 /**
  * Staggered Animation Container
  */
-export const StaggeredAnimation = ({ 
-  children, 
-  animation = 'slideIn', 
+export const StaggeredAnimation = ({
+  children,
+  animation = 'slideIn',
   delay = 100,
-  duration = 300 
+  duration = 300
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -242,11 +242,11 @@ export const StaggeredAnimation = ({
 /**
  * Loading State with Skeleton Animation
  */
-export const SkeletonLoader = ({ 
-  width = '100%', 
-  height = '20px', 
+export const SkeletonLoader = ({
+  width = '100%',
+  height = '20px',
   variant = 'rectangular',
-  animation = 'pulse' 
+  animation = 'pulse'
 }) => {
   const skeletonPulse = keyframes`
     0% { opacity: 1; }
@@ -267,12 +267,12 @@ export const SkeletonLoader = ({
         height,
         backgroundColor: 'grey.300',
         borderRadius: variant === 'circular' ? '50%' : DESIGN_TOKENS.layout.borderRadius.sm,
-        animation: animation === 'pulse' 
+        animation: animation === 'pulse'
           ? `${skeletonPulse} 1.5s ease-in-out infinite`
           : `${skeletonWave} 2s ease-in-out infinite`,
         position: 'relative',
         overflow: 'hidden',
-        
+
         ...(animation === 'wave' && {
           '&::after': {
             content: '""',
@@ -293,11 +293,11 @@ export const SkeletonLoader = ({
 /**
  * Success/Error Feedback Animation
  */
-export const FeedbackAnimation = ({ 
-  type = 'success', 
-  show = false, 
+export const FeedbackAnimation = ({
+  type = 'success',
+  show = false,
   children,
-  duration = 2000 
+  duration = 2000
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -338,11 +338,11 @@ export const FeedbackAnimation = ({
 /**
  * Progress Indicator with Animation
  */
-export const AnimatedProgress = ({ 
-  value = 0, 
-  type = 'linear', 
+export const AnimatedProgress = ({
+  value = 0,
+  type = 'linear',
   showValue = false,
-  color = 'primary' 
+  color = 'primary'
 }) => {
   const [animatedValue, setAnimatedValue] = useState(0);
 
@@ -421,16 +421,16 @@ export const TouchRipple = ({ children, ...props }) => {
     const size = Math.max(rect.width, rect.height);
     const x = event.clientX - rect.left - size / 2;
     const y = event.clientY - rect.top - size / 2;
-    
+
     const newRipple = {
       x,
       y,
       size,
       id: Date.now()
     };
-    
+
     setRipples(prev => [...prev, newRipple]);
-    
+
     setTimeout(() => {
       setRipples(prev => prev.filter(ripple => ripple.id !== newRipple.id));
     }, 600);

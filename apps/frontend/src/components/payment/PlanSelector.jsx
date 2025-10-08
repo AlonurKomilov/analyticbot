@@ -55,13 +55,13 @@ const getFeatureIcon = (feature) => {
   return <Check sx={{ fontSize: 16 }} />;
 };
 
-const PlanCard = ({ 
-  plan, 
-  billingCycle, 
-  isPopular, 
-  isSelected, 
-  onSelect, 
-  disabled = false 
+const PlanCard = ({
+  plan,
+  billingCycle,
+  isPopular,
+  isSelected,
+  onSelect,
+  disabled = false
 }) => {
   const price = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
   const originalPrice = billingCycle === 'yearly' ? plan.price_monthly * 12 : null;
@@ -132,7 +132,7 @@ const PlanCard = ({
               / {billingCycle === 'yearly' ? 'year' : 'month'}
             </Typography>
           </Box>
-          
+
           {billingCycle === 'yearly' && originalPrice && savings > 0 && (
             <Box mt={1}>
               <Typography
@@ -193,11 +193,11 @@ const PlanCard = ({
   );
 };
 
-const PlanSelector = ({ 
-  userId, 
-  onPlanSelected, 
+const PlanSelector = ({
+  userId,
+  onPlanSelected,
   showPaymentForm = false,
-  preselectedPlanId = null 
+  preselectedPlanId = null
 }) => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -223,15 +223,15 @@ const PlanSelector = ({
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await paymentAPI.getAvailablePlans();
       const activePlans = response.filter(plan => plan.is_active);
       setPlans(activePlans);
 
       // Auto-select most popular plan if none selected
       if (!selectedPlan && activePlans.length > 0) {
-        const popularPlan = activePlans.find(plan => 
-          plan.name.toLowerCase().includes('pro') || 
+        const popularPlan = activePlans.find(plan =>
+          plan.name.toLowerCase().includes('pro') ||
           plan.name.toLowerCase().includes('premium')
         ) || activePlans[Math.floor(activePlans.length / 2)];
         setSelectedPlan(popularPlan);
@@ -289,7 +289,7 @@ const PlanSelector = ({
   }
 
   if (showPayment && selectedPlan) {
-    const planPriceId = billingCycle === 'yearly' 
+    const planPriceId = billingCycle === 'yearly'
       ? selectedPlan.stripe_yearly_price_id || selectedPlan.stripe_price_id
       : selectedPlan.stripe_price_id;
 
@@ -381,12 +381,12 @@ const PlanSelector = ({
       {/* Plans Grid */}
       <Grid container spacing={3} mb={4}>
         {plans.map((plan, index) => {
-          const isPopular = plan.name.toLowerCase().includes('pro') || 
+          const isPopular = plan.name.toLowerCase().includes('pro') ||
                            plan.name.toLowerCase().includes('premium') ||
                            index === Math.floor(plans.length / 2);
-          
+
           const hasPrice = billingCycle === 'yearly' ? plan.price_yearly : plan.price_monthly;
-          
+
           return (
             <Grid item xs={12} md={plans.length <= 2 ? 6 : 4} key={plan.id}>
               <PlanCard

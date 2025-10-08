@@ -36,8 +36,8 @@ const OverviewTab = ({ auditLogs = [] }) => {
                                     <React.Fragment key={log.id}>
                                         <ListItem>
                                             <ListItemAvatar>
-                                                <Avatar sx={{ 
-                                                    bgcolor: log.success ? 'success.main' : 'error.main' 
+                                                <Avatar sx={{
+                                                    bgcolor: log.success ? 'success.main' : 'error.main'
                                                 }}>
                                                     {log.success ? <CheckCircleIcon /> : <WarningIcon />}
                                                 </Avatar>
@@ -54,7 +54,7 @@ const OverviewTab = ({ auditLogs = [] }) => {
                         </CardContent>
                     </Card>
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>

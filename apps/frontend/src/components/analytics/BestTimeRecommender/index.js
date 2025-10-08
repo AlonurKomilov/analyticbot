@@ -1,6 +1,6 @@
 /**
  * BestTimeRecommender - Refactored modular components
- * 
+ *
  * This is the new, refactored BestTimeRecommender with separated concerns:
  * - TimeFrameFilters: Time frame and content type filter controls
  * - BestTimeCards: Recommended time cards with confidence scores
@@ -9,7 +9,7 @@
  * - RecommenderFooter: Status and metadata display
  * - useRecommenderLogic: Business logic and state management
  * - timeUtils: Time formatting and calculation utilities
- * 
+ *
  * Mock data is handled by existing __mocks__/analytics/bestTime.js
  */
 

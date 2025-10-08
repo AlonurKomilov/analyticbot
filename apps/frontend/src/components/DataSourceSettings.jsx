@@ -32,7 +32,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       return false;
     }
   });
-  
+
   const [apiStatus, setApiStatus] = useState('unknown'); // unknown, online, offline
   const [lastChecked, setLastChecked] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -44,15 +44,15 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
-      
+
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':11400');
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
         signal: controller.signal
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (response.ok) {
         setApiStatus('online');
       } else {
@@ -79,10 +79,10 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   const handleToggleChange = (event) => {
     const newValue = event.target.checked;
     setUseRealAPI(newValue);
-    
+
     // Save preference to localStorage
     localStorage.setItem('useRealAPI', JSON.stringify(newValue));
-    
+
     // Notify parent component
     if (onDataSourceChange) {
       onDataSourceChange(newValue ? 'api' : 'mock');
@@ -122,7 +122,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
             {useRealAPI ? <ApiIcon /> : <MockIcon />}
             Data Source Settings
           </Typography>
-          
+
           <Chip
             icon={getStatusIcon()}
             label={`API ${apiStatus}`}
@@ -149,7 +149,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
                   {useRealAPI ? 'Real API Data' : 'Demo Data'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {useRealAPI 
+                  {useRealAPI
                     ? 'Connect to live analytics data from your channels'
                     : 'Use professional demo data for testing and preview'
                   }
@@ -165,8 +165,8 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
             <Typography variant="subtitle2" gutterBottom>
               Current Data Source:
             </Typography>
-            <Alert 
-              severity={useRealAPI ? 'info' : 'success'} 
+            <Alert
+              severity={useRealAPI ? 'info' : 'success'}
               sx={{ mb: 1 }}
               icon={useRealAPI ? <ApiIcon /> : <MockIcon />}
             >
@@ -199,7 +199,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
                 {isChecking ? 'Checking...' : 'Check Again'}
               </Button>
             </Box>
-            
+
             <Alert severity={apiStatus === 'online' ? 'success' : 'warning'}>
               <Typography variant="body2">
                 {apiStatus === 'online' ? (
@@ -223,7 +223,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
             <Alert severity="warning">
               <Typography variant="body2">
                 <strong>Auto-switching to Demo Data</strong><br />
-                The API is currently unavailable. You'll automatically be switched to demo data in a few seconds 
+                The API is currently unavailable. You'll automatically be switched to demo data in a few seconds
                 to ensure the best user experience.
               </Typography>
             </Alert>

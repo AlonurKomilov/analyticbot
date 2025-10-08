@@ -41,9 +41,9 @@ export const PostDisplayCell = ({ row }) => (
             />
         )}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography 
-                variant="body2" 
-                sx={{ 
+            <Typography
+                variant="body2"
+                sx={{
                     fontWeight: 'medium',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -55,9 +55,9 @@ export const PostDisplayCell = ({ row }) => (
                 {row.title || row.content || 'Post content'}
             </Typography>
             {row.type && (
-                <Chip 
-                    size="small" 
-                    label={row.type} 
+                <Chip
+                    size="small"
+                    label={row.type}
                     variant="outlined"
                     sx={{ mt: 0.5, height: 20, fontSize: '0.7rem' }}
                 />
@@ -120,7 +120,7 @@ export const CommentsCell = ({ value }) => (
 export const EngagementCell = ({ row }) => {
     const rate = calculateEngagementRate(row);
     const rateNum = parseFloat(rate);
-    
+
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
             <Typography variant="body2" fontWeight="medium">
@@ -154,11 +154,11 @@ export const EngagementCell = ({ row }) => {
 export const PerformanceCell = ({ row }) => {
     const score = getPerformanceScore(row);
     const { level, color } = getPerformanceLevel(score);
-    
+
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Tooltip title={`Performance Score: ${score}/100`}>
-                <StatusChip 
+                <StatusChip
                     label={level}
                     status={color}
                     size="small"

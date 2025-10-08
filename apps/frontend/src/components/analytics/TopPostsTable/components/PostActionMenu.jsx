@@ -6,12 +6,12 @@ import {
 } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 
-const PostActionMenu = ({ 
-    post, 
-    anchorEl, 
-    selectedPostId, 
-    onMenuClick, 
-    onMenuClose 
+const PostActionMenu = ({
+    post,
+    anchorEl,
+    selectedPostId,
+    onMenuClick,
+    onMenuClose
 }) => {
     const isOpen = Boolean(anchorEl) && selectedPostId === post.id;
 
@@ -25,7 +25,7 @@ const PostActionMenu = ({
             >
                 <MoreVertIcon fontSize="small" />
             </IconButton>
-            
+
             <Menu
                 anchorEl={anchorEl}
                 open={isOpen}

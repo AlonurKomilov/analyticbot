@@ -35,7 +35,7 @@ from .cross_channel import (
     CrossChannelOrchestrator,
     IntegrationOpportunityService,
 )
-from .modeling.predictive_modeling_service import PredictiveModelingService
+from .modeling import PredictiveModelingService
 from .orchestrator import (
     ComprehensiveAnalysisService,
     IntelligenceAggregationService,

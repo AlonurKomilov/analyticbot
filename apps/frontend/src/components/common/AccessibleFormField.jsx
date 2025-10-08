@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-    TextField, 
-    FormControl, 
-    FormHelperText, 
+import {
+    TextField,
+    FormControl,
+    FormHelperText,
     Typography,
     Box
 } from '@mui/material';
@@ -10,7 +10,7 @@ import { generateId } from '../../utils/accessibility.js';
 
 /**
  * Enhanced accessible form field component
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.label - Field label
  * @param {string} props.value - Field value
@@ -42,15 +42,15 @@ const AccessibleFormField = React.forwardRef(({
     disabled = false,
     ...props
 }, ref) => {
-    
+
     // Generate unique IDs for accessibility
     const fieldId = React.useMemo(() => generateId('form-field'), []);
     const helperId = React.useMemo(() => generateId('helper'), []);
     const errorId = React.useMemo(() => generateId('error'), []);
-    
+
     // Character count for fields with maxLength
     const characterCount = maxLength ? `${value.length}/${maxLength}` : null;
-    
+
     // Helper text with character count
     const enhancedHelperText = React.useMemo(() => {
         const parts = [];
@@ -58,7 +58,7 @@ const AccessibleFormField = React.forwardRef(({
         if (characterCount) parts.push(characterCount);
         return parts.join(' • ');
     }, [helperText, characterCount]);
-    
+
     // Accessibility attributes
     const ariaProps = {
         'aria-required': required,
@@ -68,10 +68,10 @@ const AccessibleFormField = React.forwardRef(({
             enhancedHelperText ? helperId : null
         ].filter(Boolean).join(' ') || undefined
     };
-    
+
     return (
-        <FormControl 
-            fullWidth 
+        <FormControl
+            fullWidth
             error={!!error}
             size={size}
             disabled={disabled}
@@ -106,13 +106,13 @@ const AccessibleFormField = React.forwardRef(({
                 }}
                 {...props}
             />
-            
+
             {/* Error message */}
             {error && (
-                <FormHelperText 
+                <FormHelperText
                     id={errorId}
                     role="alert"
-                    sx={{ 
+                    sx={{
                         color: 'error.main',
                         fontWeight: 500,
                         mt: 0.5
@@ -121,10 +121,10 @@ const AccessibleFormField = React.forwardRef(({
                     {error}
                 </FormHelperText>
             )}
-            
+
             {/* Helper text and character count */}
             {enhancedHelperText && !error && (
-                <FormHelperText 
+                <FormHelperText
                     id={helperId}
                     sx={{ mt: 0.5 }}
                 >
@@ -140,16 +140,16 @@ AccessibleFormField.displayName = 'AccessibleFormField';
 /**
  * Form fieldset component for grouping related fields
  */
-export const FormFieldset = ({ 
-    legend, 
-    children, 
+export const FormFieldset = ({
+    legend,
+    children,
     description,
     required = false,
-    ...props 
+    ...props
 }) => {
     const legendId = React.useMemo(() => generateId('legend'), []);
     const descriptionId = React.useMemo(() => generateId('description'), []);
-    
+
     return (
         <Box
             component="fieldset"
@@ -174,18 +174,18 @@ export const FormFieldset = ({
             <legend id={legendId}>
                 {required ? `${legend} *` : legend}
             </legend>
-            
+
             {description && (
-                <Typography 
-                    variant="body2" 
-                    color="text.secondary" 
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
                     id={descriptionId}
                     sx={{ mb: 2 }}
                 >
                     {description}
                 </Typography>
             )}
-            
+
             {children}
         </Box>
     );
@@ -194,14 +194,14 @@ export const FormFieldset = ({
 /**
  * Form validation summary component
  */
-export const FormValidationSummary = ({ 
-    errors = {}, 
+export const FormValidationSummary = ({
+    errors = {},
     title = "Please fix the following errors:"
 }) => {
     const errorList = Object.entries(errors).filter(([_, error]) => error);
-    
+
     if (errorList.length === 0) return null;
-    
+
     return (
         <Box
             role="alert"

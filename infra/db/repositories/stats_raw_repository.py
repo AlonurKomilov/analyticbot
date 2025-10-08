@@ -59,8 +59,8 @@ class AsyncpgStatsRawRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
                 """
-                SELECT json, fetched_at 
-                FROM stats_raw 
+                SELECT json, fetched_at
+                FROM stats_raw
                 WHERE channel_id = $1 AND key = $2
                 ORDER BY fetched_at DESC
                 LIMIT 1
@@ -100,8 +100,8 @@ class AsyncpgStatsRawRepository:
         """
         async with self.pool.acquire() as conn:
             query = """
-                SELECT json, fetched_at 
-                FROM stats_raw 
+                SELECT json, fetched_at
+                FROM stats_raw
                 WHERE channel_id = $1 AND key = $2
             """
             params = [channel_id, key]
@@ -185,12 +185,12 @@ class AsyncpgStatsRawRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(*) as total_records,
                     COUNT(DISTINCT key) as unique_keys,
                     MIN(fetched_at) as earliest_fetch,
                     MAX(fetched_at) as latest_fetch
-                FROM stats_raw 
+                FROM stats_raw
                 WHERE channel_id = $1
                 """,
                 channel_id,

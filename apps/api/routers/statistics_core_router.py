@@ -22,7 +22,7 @@ from apps.api.schemas.analytics import OverviewResponse, SeriesResponse
 
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def get_channel_overview(
     request: Request,
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -109,7 +109,7 @@ async def get_channel_growth_statistics(
     window: str = Query(
         default="D", regex="^(D|H|W)$", description="Time window (D=Daily, W=Weekly, H=Hourly)"
     ),
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -173,7 +173,7 @@ async def get_historical_metrics(
     channel_id: int,
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -228,7 +228,7 @@ async def get_historical_top_posts(
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
     limit: int = Query(10, ge=1, le=50, description="Number of top posts to return"),
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -288,7 +288,7 @@ async def get_traffic_sources_statistics(
     channel_id: int,
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):

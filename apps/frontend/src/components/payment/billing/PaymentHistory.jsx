@@ -1,6 +1,6 @@
 /**
  * PaymentHistory Component
- * 
+ *
  * Extracted from SubscriptionDashboard - displays recent payment transactions
  * with detailed information and status indicators
  */

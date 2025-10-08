@@ -1,22 +1,22 @@
 /**
  * Micro-Interactions Demo Page
- * 
+ *
  * Comprehensive demonstration of all micro-interaction components:
  * - Interactive buttons with various effects
- * - Animated cards with different entrance animations  
+ * - Animated cards with different entrance animations
  * - Loading states and skeleton animations
  * - Feedback animations and hover effects
  * - Staggered content animations
  * - Floating elements and pulse effects
- * 
+ *
  * This page serves as both a showcase and a testing ground
  * for all micro-interaction components.
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
+import {
+  Box,
+  Typography,
   Container,
   Grid,
   Alert,
@@ -28,7 +28,7 @@ import {
   FormControlLabel,
   Slider
 } from '@mui/material';
-import { 
+import {
   Play as PlayIcon,
   Pause as PauseIcon,
   Refresh as RefreshIcon,
@@ -43,8 +43,8 @@ import {
 } from '@mui/icons-material';
 
 // Micro-interaction components
-import { 
-  StaggeredAnimation, 
+import {
+  StaggeredAnimation,
   FloatingElement,
   FeedbackAnimation,
   PulseAnimation,
@@ -54,17 +54,17 @@ import {
   SkeletonLoader
 } from '../animations/MicroInteractions.jsx';
 
-import { 
-  InteractiveButton, 
+import {
+  InteractiveButton,
   InteractiveIconButton,
-  AnimatedFab 
+  AnimatedFab
 } from '../animations/InteractiveButtons.jsx';
 
-import { 
-  AnimatedCard, 
-  ExpandableCard, 
+import {
+  AnimatedCard,
+  ExpandableCard,
   AnimatedMetricCard,
-  DashboardCard 
+  DashboardCard
 } from '../animations/InteractiveCards.jsx';
 
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
@@ -84,17 +84,17 @@ const MicroInteractionsDemoPage = () => {
 
   // Demo interaction handlers
   const handleClick = () => {
-    setDemoStats(prev => ({ 
-      ...prev, 
+    setDemoStats(prev => ({
+      ...prev,
       clicks: prev.clicks + 1,
-      interactions: prev.interactions + 1 
+      interactions: prev.interactions + 1
     }));
   };
 
   const handleHover = () => {
-    setDemoStats(prev => ({ 
-      ...prev, 
-      hovers: prev.hovers + 1 
+    setDemoStats(prev => ({
+      ...prev,
+      hovers: prev.hovers + 1
     }));
   };
 
@@ -102,13 +102,13 @@ const MicroInteractionsDemoPage = () => {
     setLoading(true);
     setShowSuccess(false);
     setShowError(false);
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     setLoading(false);
     const success = Math.random() > 0.3; // 70% success rate
-    
+
     if (success) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -116,7 +116,7 @@ const MicroInteractionsDemoPage = () => {
       setShowError(true);
       setTimeout(() => setShowError(false), 3000);
     }
-    
+
     handleClick();
   };
 
@@ -139,7 +139,7 @@ const MicroInteractionsDemoPage = () => {
     {
       title: 'Hover Events',
       value: demoStats.hovers,
-      previousValue: Math.max(0, demoStats.hovers - 1), 
+      previousValue: Math.max(0, demoStats.hovers - 1),
       unit: '',
       trend: 'positive',
       icon: <AnalyticsIcon />,
@@ -162,11 +162,11 @@ const MicroInteractionsDemoPage = () => {
         {/* Page Header */}
         <StaggeredAnimation delay={100}>
           <Box sx={{ mb: 6, textAlign: 'center' }}>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              sx={{ 
-                mb: 2, 
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                mb: 2,
                 fontWeight: 700,
                 background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
                 backgroundClip: 'text',
@@ -176,7 +176,7 @@ const MicroInteractionsDemoPage = () => {
             >
               Micro-Interactions Showcase
             </Typography>
-            
+
             <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
               Experience smooth animations and responsive feedback
             </Typography>
@@ -184,7 +184,7 @@ const MicroInteractionsDemoPage = () => {
             {/* Controls */}
             <Paper sx={{ p: 3, mb: 4, maxWidth: 600, mx: 'auto' }}>
               <Typography variant="h6" sx={{ mb: 2 }}>Demo Controls</Typography>
-              
+
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <FormControlLabel
                   control={
@@ -195,7 +195,7 @@ const MicroInteractionsDemoPage = () => {
                   }
                   label="Enable Animations"
                 />
-                
+
                 <Box>
                   <Typography variant="body2" gutterBottom>
                     Animation Speed: {animationSpeed}x
@@ -243,7 +243,7 @@ const MicroInteractionsDemoPage = () => {
           <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
             Interactive Buttons
           </Typography>
-          
+
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <DashboardCard
@@ -260,7 +260,7 @@ const MicroInteractionsDemoPage = () => {
                   >
                     Glow Effect
                   </InteractiveButton>
-                  
+
                   <InteractiveButton
                     onClick={handleClick}
                     onMouseEnter={handleHover}
@@ -270,7 +270,7 @@ const MicroInteractionsDemoPage = () => {
                   >
                     Scale Effect
                   </InteractiveButton>
-                  
+
                   <InteractiveButton
                     onClick={handleClick}
                     onMouseEnter={handleHover}
@@ -302,11 +302,11 @@ const MicroInteractionsDemoPage = () => {
                   >
                     Test Loading
                   </InteractiveButton>
-                  
+
                   <FeedbackAnimation type="success" show={showSuccess}>
                     <Chip label="Success!" color="success" />
                   </FeedbackAnimation>
-                  
+
                   <FeedbackAnimation type="error" show={showError}>
                     <Chip label="Error occurred" color="error" />
                   </FeedbackAnimation>
@@ -321,12 +321,12 @@ const MicroInteractionsDemoPage = () => {
           <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
             Interactive Cards
           </Typography>
-          
+
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
               <AnimatedCard
                 entrance="grow"
-                sx={{ 
+                sx={{
                   p: 3,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease-in-out',
@@ -397,7 +397,7 @@ const MicroInteractionsDemoPage = () => {
           <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
             Special Effects
           </Typography>
-          
+
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <Paper sx={{ p: 4, textAlign: 'center' }}>
@@ -450,7 +450,7 @@ const MicroInteractionsDemoPage = () => {
 
         {/* Tips and Information */}
         <Box sx={{ mb: 4 }}>
-          <Alert 
+          <Alert
             severity="info"
             sx={{
               bgcolor: 'info.50',
@@ -460,8 +460,8 @@ const MicroInteractionsDemoPage = () => {
             }}
           >
             <Typography variant="body2">
-              <strong>🎨 Implementation Notes:</strong> All animations use CSS transforms and opacity 
-              for optimal performance. Hardware acceleration is enabled for smooth 60fps animations. 
+              <strong>🎨 Implementation Notes:</strong> All animations use CSS transforms and opacity
+              for optimal performance. Hardware acceleration is enabled for smooth 60fps animations.
               Reduced motion preferences are respected for accessibility.
             </Typography>
           </Alert>
@@ -476,7 +476,7 @@ const MicroInteractionsDemoPage = () => {
           entrance="zoom"
           color="primary"
         />
-        
+
         <AnimatedFab
           onClick={handleClick}
           icon={<DownloadIcon />}

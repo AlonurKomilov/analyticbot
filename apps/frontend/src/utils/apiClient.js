@@ -18,7 +18,7 @@ class ApiClient {
         this.defaultHeaders = {
             'Content-Type': 'application/json',
         };
-        
+
         // Debug logging for API configuration
         console.log('🔧 API Client Configuration:', {
             baseURL: this.baseURL,
@@ -49,7 +49,7 @@ class ApiClient {
     async routeThroughDataService(method, url, data = null) {
         const currentSource = dataSourceManager.getDataSource();
         const dataService = dataServiceFactory.getService(currentSource);
-        
+
         // Map common API endpoints to data service methods
         if (url.includes('/initial-data')) {
             return await dataService.getInitialData();
@@ -69,7 +69,7 @@ class ApiClient {
             const channelId = this.extractChannelId(url) || 'demo_channel';
             return await dataService.getPostDynamics(channelId);
         }
-        
+
         // Fallback to original fetch for unhandled routes
         return null;
     }
@@ -152,7 +152,7 @@ class ApiClient {
             // Check content type before trying to parse JSON
             const contentType = response.headers.get('content-type');
             let responseData;
-            
+
             if (contentType && contentType.includes('application/json')) {
                 try {
                     responseData = await response.json();
@@ -201,21 +201,21 @@ class ApiClient {
             }
 
             // Handle connection refused - NO auto-switch, user should sign in to demo account
-            if (error.message.includes('ERR_CONNECTION_REFUSED') || 
+            if (error.message.includes('ERR_CONNECTION_REFUSED') ||
                 error.message.includes('Failed to fetch') ||
                 error.message.includes('Network request failed')) {
-                
+
                 // Only log in development mode
                 if (import.meta.env.DEV) {
                     console.warn('API connection failed - user should sign in to demo account for mock data');
                 }
-                
+
                 // NO automatic switching - user should sign in to demo account instead
                 // localStorage.setItem('useRealAPI', 'false'); // REMOVED - no auto-switch
-                // window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
+                // window.dispatchEvent(new CustomEvent('dataSourceChanged', {
                 //     detail: { source: 'mock', reason: 'api_unavailable' }
                 // })); // REMOVED - no auto-switch
-                
+
                 // Create a user-friendly error without auto-switching
                 const connectionError = new Error('API is currently unavailable. Please sign in to a demo account for mock data.');
                 connectionError.response = { status: 503, autoSwitched: false };
@@ -228,7 +228,7 @@ class ApiClient {
                     endpoint,
                     error: error.message
                 });
-                
+
                 await this.sleep(RETRY_DELAY * attempt);
                 return this.request(endpoint, options, attempt + 1);
             }
@@ -340,10 +340,10 @@ class ApiClient {
 
             // Set timeout first
             xhr.timeout = REQUEST_TIMEOUT;
-            
+
             // Open the request
             xhr.open('POST', `${this.baseURL}${endpoint}`);
-            
+
             // Set auth header after opening the request
             const twaInitData = window.Telegram?.WebApp?.initData || '';
             try {
@@ -365,7 +365,7 @@ class ApiClient {
             const xhr = new XMLHttpRequest();
             const formData = new FormData();
             formData.append('file', file);
-            
+
             // Add channel_id if provided
             if (channelId) {
                 formData.append('channel_id', channelId.toString());
@@ -440,10 +440,10 @@ class ApiClient {
 
             // Set timeout first
             xhr.timeout = REQUEST_TIMEOUT;
-            
+
             // Open the request
             xhr.open('POST', `${this.baseURL}/api/v1/media/upload-direct`);
-            
+
             // Set auth header after opening the request
             const twaInitData = window.Telegram?.WebApp?.initData || '';
             try {
@@ -575,7 +575,7 @@ class ApiClient {
     async getAdvancedTrends(channelId, period = 7) {
         const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
         const { from, to } = this.getPeriodDateRange(period);
-        
+
         return Promise.all([
             this.get(`/api/v2/analytics/channels/${numericChannelId}/trending?from=${from}&to=${to}`),
             this.getRealTimeMetrics(numericChannelId),
@@ -594,7 +594,7 @@ class ApiClient {
         const to = new Date();
         const from = new Date();
         from.setDate(from.getDate() - periodDays);
-        
+
         return {
             from: from.toISOString(),
             to: to.toISOString()
@@ -608,7 +608,7 @@ class ApiClient {
         // Convert string channel ID to integer and period to date range
         const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
         const { from, to } = this.getPeriodDateRange(period);
-        
+
         return Promise.all([
             this.get(`/api/v2/analytics/channels/${numericChannelId}/overview?from=${from}&to=${to}`),
             this.get(`/api/v2/analytics/channels/${numericChannelId}/growth?from=${from}&to=${to}`),

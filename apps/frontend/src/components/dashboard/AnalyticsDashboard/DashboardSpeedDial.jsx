@@ -14,10 +14,10 @@ import {
 
 /**
  * DashboardSpeedDial Component
- * 
+ *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
  * Provides floating action button with quick access to common actions
- * 
+ *
  * Responsibilities:
  * - Floating action button positioned at bottom-right
  * - Quick access to refresh, export, share, print, and settings
@@ -25,7 +25,7 @@ import {
  * - Hover tooltips for each action
  * - Customizable action handlers
  */
-const DashboardSpeedDial = React.memo(({ 
+const DashboardSpeedDial = React.memo(({
     onRefresh,
     onExport = () => {}, // TODO: Implement export functionality
     onShare = () => {}, // TODO: Implement share functionality

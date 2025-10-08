@@ -1,6 +1,6 @@
 /**
  * Mobile-Responsive Enhanced Dashboard
- * 
+ *
  * Mobile-first dashboard implementation with:
  * - Improved tablet experience (768-1024px)
  * - Touch-optimized interactions
@@ -10,18 +10,18 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  Chip, 
-  IconButton, 
+import {
+  Box,
+  Typography,
+  Alert,
+  Chip,
+  IconButton,
   Tooltip,
   useTheme,
   useMediaQuery,
   Fab
 } from '@mui/material';
-import { 
+import {
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingIcon,
@@ -38,8 +38,8 @@ import EnhancedSection from '../layout/EnhancedSection.jsx';
 import EnhancedCard from '../layout/EnhancedCard.jsx';
 
 // Mobile responsive components
-import { 
-  MobileNavigationDrawer, 
+import {
+  MobileNavigationDrawer,
   SwipeableTabNavigation,
   MobileCardStack,
   ResponsiveGrid
@@ -61,30 +61,30 @@ import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 
 const MobileResponsiveDashboard = () => {
-  const { 
+  const {
     isGlobalLoading,
     isLoading,
     fetchData,
-    scheduledPosts, 
+    scheduledPosts,
     channels,
-    addChannel, 
+    addChannel,
     removeChannel,
     dataSource
   } = useAppStore();
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLandscape = useMediaQuery('(orientation: landscape)');
-  
+
   // Mobile navigation state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [fullScreenWidget, setFullScreenWidget] = useState(null);
-  
+
   const isLoadingData = isGlobalLoading() || isLoading('fetchData');
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -111,15 +111,15 @@ const MobileResponsiveDashboard = () => {
 
   // Navigation items for mobile drawer
   const navigationItems = [
-    { 
-      label: 'Dashboard', 
-      path: '/dashboard', 
+    {
+      label: 'Dashboard',
+      path: '/dashboard',
       icon: <TrendingIcon />,
       badge: null
     },
-    { 
-      label: 'Analytics', 
-      path: '/analytics', 
+    {
+      label: 'Analytics',
+      path: '/analytics',
       icon: <TrendingIcon />,
       badge: 'New'
     }
@@ -130,8 +130,8 @@ const MobileResponsiveDashboard = () => {
     return (
       <TouchTargetProvider>
         <Box sx={{ p: { xs: 2, md: 3 } }}>
-          <EnhancedSection 
-            title="Analytics Dashboard" 
+          <EnhancedSection
+            title="Analytics Dashboard"
             subtitle="Loading your analytics data..."
             level={1}
           />
@@ -178,7 +178,7 @@ const MobileResponsiveDashboard = () => {
                   </Typography>
                 </Box>
               </Box>
-              
+
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Chip
                   icon={<SpeedIcon sx={{ fontSize: 16 }} />}
@@ -186,7 +186,7 @@ const MobileResponsiveDashboard = () => {
                   color={getDataSourceStatus().color}
                   size="small"
                 />
-                <IconButton 
+                <IconButton
                   onClick={handleRefresh}
                   size="large"
                   disabled={isLoadingData}
@@ -216,25 +216,25 @@ const MobileResponsiveDashboard = () => {
                 <AnalyticsDashboard />
               </MobileCardStack>
             )}
-            
+
             {activeTab === 1 && (
               <MobileCardStack>
                 <AnalyticsDashboard />
               </MobileCardStack>
             )}
-            
+
             {activeTab === 2 && (
               <MobileCardStack>
                 <ScheduledPostsList posts={scheduledPosts} />
               </MobileCardStack>
             )}
-            
+
             {activeTab === 3 && (
               <MobileCardStack>
-                <AddChannel 
-                  channels={channels} 
-                  onAdd={addChannel} 
-                  onRemove={removeChannel} 
+                <AddChannel
+                  channels={channels}
+                  onAdd={addChannel}
+                  onRemove={removeChannel}
                 />
               </MobileCardStack>
             )}
@@ -312,7 +312,7 @@ const MobileResponsiveDashboard = () => {
               <TabletStatusBar statusItems={statusItems} />
             </Box>
           }
-          
+
           primaryContent={
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <TabletCollapsibleCard
@@ -322,7 +322,7 @@ const MobileResponsiveDashboard = () => {
               >
                 <AIServicesGrid />
               </TabletCollapsibleCard>
-              
+
               <TabletCollapsibleCard
                 title="Analytics Overview"
                 subtitle="Performance metrics and insights"
@@ -334,7 +334,7 @@ const MobileResponsiveDashboard = () => {
               </TabletCollapsibleCard>
             </Box>
           }
-          
+
           secondaryContent={
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <TabletCollapsibleCard
@@ -344,25 +344,25 @@ const MobileResponsiveDashboard = () => {
               >
                 <ScheduledPostsList posts={scheduledPosts} />
               </TabletCollapsibleCard>
-              
+
               <TabletCollapsibleCard
                 title="Channel Management"
                 subtitle={`${channels?.length || 0} channels connected`}
                 defaultExpanded={true}
               >
-                <AddChannel 
-                  channels={channels} 
-                  onAdd={addChannel} 
-                  onRemove={removeChannel} 
+                <AddChannel
+                  channels={channels}
+                  onAdd={addChannel}
+                  onRemove={removeChannel}
                 />
               </TabletCollapsibleCard>
             </Box>
           }
-          
+
           quickActions={
-            <Alert 
-              severity="info" 
-              sx={{ 
+            <Alert
+              severity="info"
+              sx={{
                 bgcolor: 'primary.50',
                 border: '1px solid',
                 borderColor: 'primary.200'
@@ -387,9 +387,9 @@ const MobileResponsiveDashboard = () => {
           subtitle="Full desktop experience"
           level={1}
         />
-        <ResponsiveGrid 
-          mobileColumns={1} 
-          tabletColumns={2} 
+        <ResponsiveGrid
+          mobileColumns={1}
+          tabletColumns={2}
           desktopColumns={3}
           spacing="lg"
         >
@@ -398,10 +398,10 @@ const MobileResponsiveDashboard = () => {
           <Box>
             <ScheduledPostsList posts={scheduledPosts} />
             <Box sx={{ mt: 3 }}>
-              <AddChannel 
-                channels={channels} 
-                onAdd={addChannel} 
-                onRemove={removeChannel} 
+              <AddChannel
+                channels={channels}
+                onAdd={addChannel}
+                onRemove={removeChannel}
               />
             </Box>
           </Box>

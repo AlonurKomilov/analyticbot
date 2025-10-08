@@ -163,11 +163,11 @@ if eval $BUILD_CMD; then
     echo ""
     echo -e "${GREEN}✅ Build completed successfully!${NC}"
     echo -e "${BLUE}⏱️  Build time: ${duration}s${NC}"
-    
+
     # Show image size
     IMAGE_SIZE=$(docker images analyticbot:$BUILD_TARGET --format "table {{.Size}}" | tail -n 1)
     echo -e "${BLUE}📦 Image size: $IMAGE_SIZE${NC}"
-    
+
     echo ""
     echo -e "${GREEN}🎉 Image ready: analyticbot:$BUILD_TARGET${NC}"
     echo "To run: docker run -it analyticbot:$BUILD_TARGET"

@@ -17,7 +17,7 @@ export { default as MediaPreview } from './MediaPreview';
 // Scheduling
 export { default as ScheduledPostsList } from './ScheduledPostsList';
 
-// Admin & Diagnostic  
+// Admin & Diagnostic
 export { default as DiagnosticPanel } from './DiagnosticPanel';
 export { default as StorageFileBrowser } from './StorageFileBrowser';
 
@@ -25,7 +25,7 @@ export { default as StorageFileBrowser } from './StorageFileBrowser';
 export { default as AdvancedAnalyticsDashboard } from './analytics/AdvancedAnalyticsDashboard';
 export { default as MetricsCard } from './analytics/MetricsCard';
 
-// Alert System Components  
+// Alert System Components
 export { RealTimeAlertsSystem } from './alerts';
 
 // Chart Components
@@ -33,11 +33,11 @@ export { PostViewDynamicsChart } from './charts';
 export { TrendsChart } from './charts/TrendsChart';
 
 // Common Components (Barrel Export)
-export { 
-    AccessibleFormField, 
-    ErrorBoundary, 
-    ExportButton, 
-    ShareButton, 
+export {
+    AccessibleFormField,
+    ErrorBoundary,
+    ExportButton,
+    ShareButton,
     ToastNotification,
     UnifiedButton  // New consolidated button component
 } from './common';
@@ -63,7 +63,7 @@ export {
 } from './payment';
 
 // Domain Components (Clean Architecture)
-export { 
+export {
     SuperAdminDashboard,
     ServicesOverview,
     NavigationBar,

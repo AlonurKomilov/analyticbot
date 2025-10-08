@@ -88,7 +88,7 @@ class OrchestratorProtocol(Protocol):
     @abstractmethod
     async def coordinate_comprehensive_analysis(
         self, channel_id: int, parameters: dict[str, Any] | None = None
-    ) -> CoordinationResult:
+    ) -> dict[str, Any]:
         """Coordinate comprehensive analytics analysis"""
         ...
 

@@ -67,7 +67,7 @@ import { useDataSource, useAnalytics } from './hooks/useDataSource.js';
 function MyComponent() {
   const { currentDataSource, isUsingMock, switchDataSource } = useDataSource();
   const { channelOverview, loading, error } = useAnalytics(channelId, days);
-  
+
   return (
     <div>
       <p>Data Source: {currentDataSource}</p>
@@ -132,11 +132,11 @@ class PaymentGatewayAdapter(ABC):
     @abstractmethod
     def get_adapter_name(self) -> str:
         pass
-    
+
     @abstractmethod
     async def create_customer(self, user_data: dict) -> dict:
         pass
-    
+
     @abstractmethod
     async def create_payment_intent(self, amount, currency, customer_id, payment_method_id, metadata=None) -> dict:
         pass
@@ -148,7 +148,7 @@ class PaymentGatewayAdapter(ABC):
 class MockPaymentAdapter(PaymentGatewayAdapter):
     def get_adapter_name(self) -> str:
         return "mock_payment_gateway"
-    
+
     async def create_customer(self, user_data: dict) -> dict:
         # Generate realistic mock customer data
         customer_id = f"cus_mock_{uuid.uuid4().hex[:12]}"
@@ -161,7 +161,7 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
 class StripePaymentAdapter(PaymentGatewayAdapter):
     def get_adapter_name(self) -> str:
         return "stripe"
-    
+
     async def create_customer(self, user_data: dict) -> dict:
         # Real Stripe API integration
         customer = stripe.Customer.create(**user_data)
@@ -206,7 +206,7 @@ class TelegramAnalyticsAdapter(AnalyticsAdapter):
     def __init__(self, bot_token: str, rate_limit_config: RateLimitConfig):
         self.bot_token = bot_token
         self.rate_limiter = RateLimiter(rate_limit_config)
-    
+
     async def get_channel_analytics(self, channel_id: str, start_date: datetime, end_date: datetime) -> dict:
         # Real Telegram Bot API integration with rate limiting
         channel_info = await self._get_channel_info(channel_id)
@@ -331,10 +331,10 @@ function AnalyticsDashboard({ channelId }) {
           Switch to {isUsingMock ? 'Real' : 'Mock'} Data
         </button>
       </div>
-      
+
       {loading && <div>Loading analytics...</div>}
       {error && <div>Error: {error.message}</div>}
-      
+
       {channelOverview && (
         <div>
           <h2>Channel Analytics</h2>
@@ -426,25 +426,25 @@ npm run deploy
 // Good: Using hooks with proper error handling
 function MyComponent({ channelId }) {
   const { channelOverview, loading, error } = useAnalytics(channelId);
-  
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage error={error} />;
   if (!channelOverview) return <EmptyState />;
-  
+
   return <AnalyticsDisplay data={channelOverview} />;
 }
 
 // Bad: Direct API calls without abstraction
 function MyComponent({ channelId }) {
   const [data, setData] = useState(null);
-  
+
   useEffect(() => {
     // Direct API call - hard to switch between mock/real
     fetch(`/api/analytics/${channelId}`)
       .then(res => res.json())
       .then(setData);
   }, [channelId]);
-  
+
   return <div>{data?.subscribers}</div>;
 }
 ```
@@ -462,10 +462,10 @@ class MyPaymentAdapter(PaymentGatewayAdapter):
     def __init__(self, config):
         self.config = config
         logger.info(f"Initialized {self.get_adapter_name()} adapter")
-    
+
     def get_adapter_name(self) -> str:
         return "my_payment_provider"
-    
+
     async def create_customer(self, user_data: dict) -> dict:
         try:
             # Implementation with proper error handling
@@ -475,7 +475,7 @@ class MyPaymentAdapter(PaymentGatewayAdapter):
         except Exception as e:
             logger.error(f"Failed to create customer: {e}")
             return {"success": False, "error": str(e)}
-    
+
     async def health_check(self) -> dict:
         try:
             await self._make_api_call('health')
@@ -497,13 +497,13 @@ class Settings:
     def __init__(self):
         self.USE_MOCK_ANALYTICS = self._get_bool_env('USE_MOCK_ANALYTICS', default=False)
         self.USE_MOCK_PAYMENT = self._get_bool_env('USE_MOCK_PAYMENT', default=False)
-        
+
         if not self.USE_MOCK_PAYMENT:
             self.STRIPE_SECRET_KEY = self._get_required_env('STRIPE_SECRET_KEY')
-            
+
         if not self.USE_MOCK_ANALYTICS:
             self.TELEGRAM_BOT_TOKEN = self._get_required_env('TELEGRAM_BOT_TOKEN')
-    
+
     def _get_required_env(self, key: str) -> str:
         value = os.getenv(key)
         if not value:
@@ -623,7 +623,7 @@ print("Analytics adapters:", analytics_health)
 - Implement realistic response delays in development
 - Avoid generating expensive mock data on every request
 
-### Real System Optimization  
+### Real System Optimization
 
 - Implement proper rate limiting and retry logic
 - Cache API responses where appropriate

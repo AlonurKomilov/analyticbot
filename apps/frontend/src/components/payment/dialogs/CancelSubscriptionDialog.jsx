@@ -1,6 +1,6 @@
 /**
  * CancelSubscriptionDialog Component
- * 
+ *
  * Extracted from SubscriptionDashboard - handles subscription cancellation
  * with confirmation, options, and feedback collection
  */
@@ -27,12 +27,12 @@ import {
 import { Button } from '../../common';
 import { formatDate } from '../utils/paymentUtils.js';
 
-const CancelSubscriptionDialog = ({ 
-  open, 
-  onClose, 
-  onConfirm, 
+const CancelSubscriptionDialog = ({
+  open,
+  onClose,
+  onConfirm,
   subscription,
-  canceling = false 
+  canceling = false
 }) => {
   const [cancelType, setCancelType] = useState('end_of_period');
   const [reason, setReason] = useState('');
@@ -59,7 +59,7 @@ const CancelSubscriptionDialog = ({
           <Typography variant="h6">Cancel Subscription</Typography>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body2">
@@ -84,7 +84,7 @@ const CancelSubscriptionDialog = ({
                     Cancel at end of billing period
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {subscription?.current_period_end 
+                    {subscription?.current_period_end
                       ? `Access continues until ${formatDate(subscription.current_period_end)}`
                       : 'Access continues until current period ends'
                     }
@@ -137,8 +137,8 @@ const CancelSubscriptionDialog = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 1 }}>
-        <Button 
-          variant="secondary" 
+        <Button
+          variant="secondary"
           onClick={handleClose}
           disabled={canceling}
         >

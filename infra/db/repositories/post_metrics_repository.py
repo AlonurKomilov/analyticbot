@@ -89,7 +89,7 @@ class AsyncpgPostMetricsRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT * FROM post_metrics 
+                SELECT * FROM post_metrics
                 WHERE channel_id = $1 AND msg_id = $2
                 ORDER BY snapshot_time DESC
                 LIMIT $3
@@ -113,7 +113,7 @@ class AsyncpgPostMetricsRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
                 """
-                SELECT * FROM post_metrics 
+                SELECT * FROM post_metrics
                 WHERE channel_id = $1 AND msg_id = $2
                 ORDER BY snapshot_time DESC
                 LIMIT 1
@@ -136,7 +136,7 @@ class AsyncpgPostMetricsRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     COUNT(DISTINCT msg_id) as total_posts,
                     AVG(views) as avg_views,
                     SUM(views) as total_views,
@@ -146,8 +146,8 @@ class AsyncpgPostMetricsRepository:
                     SUM(replies_count) as total_replies,
                     AVG(reactions_count) as avg_reactions,
                     SUM(reactions_count) as total_reactions
-                FROM post_metrics 
-                WHERE channel_id = $1 
+                FROM post_metrics
+                WHERE channel_id = $1
                 AND snapshot_time > NOW() - INTERVAL '%s hours'
                 """,
                 channel_id,
@@ -211,7 +211,7 @@ class AsyncpgPostMetricsRepository:
                 params.append(channel_id)
 
             query = f"""
-                SELECT 
+                SELECT
                     channel_id, msg_id,
                     MAX(views) as views,
                     MAX(forwards) as forwards,
@@ -219,7 +219,7 @@ class AsyncpgPostMetricsRepository:
                     MAX(reactions_count) as reactions_count,
                     (MAX(forwards) + MAX(replies_count) + MAX(reactions_count)) as total_engagement,
                     MAX(snapshot_time) as latest_snapshot
-                FROM post_metrics 
+                FROM post_metrics
                 {where_clause}
                 GROUP BY channel_id, msg_id
                 ORDER BY total_engagement DESC, views DESC
@@ -241,7 +241,7 @@ class AsyncpgPostMetricsRepository:
         async with self.pool.acquire() as conn:
             result = await conn.execute(
                 """
-                DELETE FROM post_metrics 
+                DELETE FROM post_metrics
                 WHERE snapshot_time < NOW() - INTERVAL '%s days'
                 """,
                 days,

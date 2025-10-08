@@ -1,6 +1,6 @@
 /**
  * 📝 Registration Form Component
- * 
+ *
  * Professional user registration form with validation, strength indicators, and error handling.
  * Integrates with AuthContext for JWT authentication and user creation.
  */
@@ -76,7 +76,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
     };
 
     const { score: passwordScore, requirements: passwordRequirements } = calculatePasswordStrength(formData.password);
-    
+
     const getPasswordStrengthColor = (score) => {
         if (score < 40) return 'error';
         if (score < 80) return 'warning';
@@ -162,7 +162,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
@@ -178,9 +178,9 @@ const RegisterForm = ({ onToggleMode = null }) => {
                 full_name: formData.fullName
             };
             console.log('🚀 Registration payload:', payload);
-            
+
             const result = await register(payload);
-            
+
             if (!result.success) {
                 setRegisterError(result.error || 'Registration failed. Please try again.');
             }
@@ -222,12 +222,12 @@ const RegisterForm = ({ onToggleMode = null }) => {
                 <CardContent sx={{ p: 4 }}>
                     {/* Header */}
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
-                        <RegisterIcon 
-                            sx={{ 
-                                fontSize: 48, 
+                        <RegisterIcon
+                            sx={{
+                                fontSize: 48,
                                 color: DESIGN_TOKENS.colors.primary.main,
                                 mb: 1
-                            }} 
+                            }}
                         />
                         <Typography variant="h4" component="h1" gutterBottom>
                             Create Account
@@ -382,9 +382,9 @@ const RegisterForm = ({ onToggleMode = null }) => {
                                                             <CloseIcon sx={{ fontSize: 16, color: 'error.main' }} />
                                                         )}
                                                     </ListItemIcon>
-                                                    <ListItemText 
+                                                    <ListItemText
                                                         primary={text}
-                                                        primaryTypographyProps={{ 
+                                                        primaryTypographyProps={{
                                                             variant: 'caption',
                                                             color: passwordRequirements[key] ? 'success.main' : 'text.secondary'
                                                         }}

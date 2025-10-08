@@ -201,7 +201,7 @@ class OptimizedAsyncPgPool:
         """Acquire connection with monitoring"""
         if self._pool is None:
             raise RuntimeError("Database pool not initialized")
-            
+
         start_time = time.time()
         try:
             async with self._pool.acquire() as conn:

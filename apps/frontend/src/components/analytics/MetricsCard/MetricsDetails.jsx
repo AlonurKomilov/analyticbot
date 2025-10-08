@@ -22,7 +22,7 @@ const MetricsDetails = React.memo(({ metrics, expanded }) => {
     return (
         <Collapse in={expanded}>
             <Divider sx={{ my: 2, bgcolor: 'rgba(255,255,255,0.2)' }} />
-            
+
             <Grid container spacing={2}>
                 <Grid item xs={6}>
                     <Box sx={{ textAlign: 'center' }}>
@@ -37,7 +37,7 @@ const MetricsDetails = React.memo(({ metrics, expanded }) => {
                         </Typography>
                     </Box>
                 </Grid>
-                
+
                 <Grid item xs={6}>
                     <Box sx={{ textAlign: 'center' }}>
                         <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', mx: 'auto', mb: 1, width: 32, height: 32 }}>
@@ -60,21 +60,21 @@ const MetricsDetails = React.memo(({ metrics, expanded }) => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
                     Overall Performance: {formatMetricValue(performanceScore, 'score')}/100
                 </Typography>
-                <Box 
-                    sx={{ 
-                        width: '100%', 
-                        height: 8, 
-                        borderRadius: 4, 
-                        bgcolor: 'rgba(255,255,255,0.2)' 
+                <Box
+                    sx={{
+                        width: '100%',
+                        height: 8,
+                        borderRadius: 4,
+                        bgcolor: 'rgba(255,255,255,0.2)'
                     }}
                 >
-                    <Box 
-                        sx={{ 
-                            width: `${Math.min(performanceScore, 100)}%`, 
-                            height: '100%', 
+                    <Box
+                        sx={{
+                            width: `${Math.min(performanceScore, 100)}%`,
+                            height: '100%',
                             borderRadius: 4,
                             bgcolor: performanceScore >= 70 ? '#4caf50' : performanceScore >= 40 ? '#ff9800' : '#f44336'
-                        }} 
+                        }}
                     />
                 </Box>
             </Box>

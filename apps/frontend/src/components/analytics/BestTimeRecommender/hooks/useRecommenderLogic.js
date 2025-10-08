@@ -9,7 +9,7 @@ export const useRecommenderLogic = () => {
     const [error, setError] = useState(null);
     const [recommendations, setRecommendations] = useState(null);
     const [aiInsights, setAiInsights] = useState([]);
-    
+
     // Get store methods and data source
     const { fetchBestTime } = useAppStore();
 
@@ -18,16 +18,16 @@ export const useRecommenderLogic = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             const result = await fetchBestTime(DEFAULT_DEMO_CHANNEL_ID, timeFrame, contentType);
-            
+
             let recommendationsData = null;
             if (result && typeof result === 'object') {
                 recommendationsData = result;
             }
-            
+
             setRecommendations(recommendationsData);
-            
+
             // Generate AI insights based on recommendations
             if (recommendationsData) {
                 const insights = generateAIInsights(recommendationsData);
@@ -35,7 +35,7 @@ export const useRecommenderLogic = () => {
             } else {
                 setAiInsights([]);
             }
-            
+
         } catch (err) {
             setError(err.message);
             console.error('Error loading recommendations:', err);
@@ -70,7 +70,7 @@ export const useRecommenderLogic = () => {
                 description: 'Faollik darajasi hafta davomida 15% oshgan'
             }
         ];
-        
+
         return insights.slice(0, Math.min(insights.length, 4));
     };
 
@@ -85,7 +85,7 @@ export const useRecommenderLogic = () => {
             console.log('BestTimeRecommender: Data source changed, reloading...');
             loadRecommendations();
         };
-        
+
         window.addEventListener('dataSourceChanged', handleDataSourceChange);
         return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
     }, [loadRecommendations]);
@@ -98,7 +98,7 @@ export const useRecommenderLogic = () => {
         error,
         recommendations,
         aiInsights,
-        
+
         // Actions
         setTimeFrame,
         setContentType,

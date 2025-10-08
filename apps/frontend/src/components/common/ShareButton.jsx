@@ -32,12 +32,12 @@ import { useDataSource } from '../../hooks/useDataSource.js';
  * Share Button Component for Analytics Reports
  * Updated to use new mock/real data source architecture
  */
-const ShareButton = ({ 
-    channelId = 'demo_channel', 
+const ShareButton = ({
+    channelId = 'demo_channel',
     dataType = 'engagement',
     disabled = false,
     size = 'medium',
-    ...props 
+    ...props
 }) => {
     const { dataSource, isUsingRealAPI } = useDataSource();
     const [open, setOpen] = useState(false);
@@ -73,7 +73,7 @@ const ShareButton = ({
 
         try {
             const dataService = dataServiceFactory.getService(dataSource);
-            
+
             if (isUsingRealAPI) {
                 // Use real API
                 const response = await dataService.createShareLink(dataType, channelId, ttl);
@@ -117,16 +117,16 @@ const ShareButton = ({
 
     const formatExpiryTime = (expiresAt) => {
         if (!expiresAt) return 'No expiration';
-        
+
         const date = new Date(expiresAt);
         const now = new Date();
         const diffMs = date.getTime() - now.getTime();
-        
+
         if (diffMs <= 0) return 'Expired';
-        
+
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-        
+
         if (diffHours > 0) {
             return `Expires in ${diffHours}h ${diffMinutes}m`;
         } else {
@@ -148,8 +148,8 @@ const ShareButton = ({
                 Share
             </Button>
 
-            <Dialog 
-                open={open} 
+            <Dialog
+                open={open}
                 onClose={handleClose}
                 maxWidth="sm"
                 fullWidth
@@ -173,21 +173,21 @@ const ShareButton = ({
                     {!shareLink ? (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <Typography variant="body2" color="text.secondary">
-                                Create a shareable link for your analytics report. 
+                                Create a shareable link for your analytics report.
                                 The link will expire after the selected time period.
                             </Typography>
 
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <Chip 
+                                <Chip
                                     icon={<LinkIcon />}
-                                    label={`Report: ${dataType}`} 
-                                    color="primary" 
-                                    variant="outlined" 
+                                    label={`Report: ${dataType}`}
+                                    color="primary"
+                                    variant="outlined"
                                 />
-                                <Chip 
-                                    label={`Channel: ${channelId}`} 
-                                    color="secondary" 
-                                    variant="outlined" 
+                                <Chip
+                                    label={`Channel: ${channelId}`}
+                                    color="secondary"
+                                    variant="outlined"
                                 />
                             </Box>
 
@@ -253,15 +253,15 @@ const ShareButton = ({
                             </Box>
 
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                <Chip 
+                                <Chip
                                     size="small"
-                                    label={`Token: ${shareLink.token?.substring(0, 8)}...`} 
-                                    variant="outlined" 
+                                    label={`Token: ${shareLink.token?.substring(0, 8)}...`}
+                                    variant="outlined"
                                 />
-                                <Chip 
+                                <Chip
                                     size="small"
-                                    label={`Access Count: ${shareLink.access_count || 0}`} 
-                                    variant="outlined" 
+                                    label={`Access Count: ${shareLink.access_count || 0}`}
+                                    variant="outlined"
                                 />
                             </Box>
                         </Box>
@@ -292,8 +292,8 @@ const ShareButton = ({
                 onClose={() => setSuccess(null)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert 
-                    onClose={() => setSuccess(null)} 
+                <Alert
+                    onClose={() => setSuccess(null)}
                     severity="success"
                     variant="filled"
                 >
@@ -308,8 +308,8 @@ const ShareButton = ({
                 onClose={() => setError(null)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert 
-                    onClose={() => setError(null)} 
+                <Alert
+                    onClose={() => setError(null)}
                     severity="error"
                     variant="filled"
                 >

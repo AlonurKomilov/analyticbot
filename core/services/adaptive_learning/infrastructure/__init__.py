@@ -14,9 +14,13 @@ from ..monitoring.monitoring_infrastructure import MonitoringConfig, MonitoringI
 # Import models and service from new versioning package (refactored microservices)
 from ..versioning import ModelVersioningService
 from ..versioning.models import DeploymentStage, ModelStatus, ModelVersion, ModelVersioningConfig
+from .monitoring_infrastructure import MonitoringInfrastructure, get_monitoring_infrastructure
 
 __all__ = [
-    # Monitoring Infrastructure
+    # Core Monitoring Infrastructure
+    "MonitoringInfrastructure",
+    "get_monitoring_infrastructure",
+    # Legacy Monitoring Infrastructure
     "MonitoringInfrastructureService",
     "MonitoringConfig",
     # Feedback Storage

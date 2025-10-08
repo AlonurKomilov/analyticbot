@@ -5,7 +5,7 @@ import { SPACING_SCALE, SEMANTIC_SPACING } from './theme/spacingSystem.js';
 const theme = createTheme({
   // Standardized spacing system
   spacing: 8, // Base unit: 8px
-  
+
   // Custom spacing scale for consistent design
   spacingScale: SPACING_SCALE,
   semanticSpacing: SEMANTIC_SPACING,
@@ -19,7 +19,7 @@ const theme = createTheme({
     },
     secondary: {
       main: '#f85149', // High contrast red
-      light: '#ff7b7b', 
+      light: '#ff7b7b',
       dark: '#da3633',
       contrastText: '#ffffff'
     },
@@ -38,7 +38,7 @@ const theme = createTheme({
     error: {
       main: '#f85149', // High contrast red
       light: '#ff7b7b',
-      dark: '#da3633', 
+      dark: '#da3633',
       contrastText: '#ffffff'
     },
     background: {
@@ -60,7 +60,7 @@ const theme = createTheme({
       lineHeight: 1.25,
     },
     h2: {
-      fontSize: '1.5rem', 
+      fontSize: '1.5rem',
       fontWeight: 600,
       lineHeight: 1.25,
     },

@@ -12,7 +12,7 @@ export * from './churnPredictor.js';
 // Predictive Analytics Mock Data
 export * from './predictiveAnalytics.js';
 
-// Security Monitor Mock Data  
+// Security Monitor Mock Data
 export * from './securityMonitor.js';
 
 // Default exports for easy component imports

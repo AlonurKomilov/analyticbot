@@ -39,18 +39,18 @@ if [[ -n "$ENV_FILE" ]]; then
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
         [[ -z "${line// }" ]] && continue
-        
+
         # Extract variable name and value
         if [[ "$line" =~ ^[[:space:]]*([^=]+)=(.*)$ ]]; then
             var_name="${BASH_REMATCH[1]}"
             var_value="${BASH_REMATCH[2]}"
-            
+
             # Remove surrounding quotes if present
             var_value="${var_value%\"}"
             var_value="${var_value#\"}"
             var_value="${var_value%\'}"
             var_value="${var_value#\'}"
-            
+
             # Export the variable
             export "$var_name"="$var_value"
         fi
@@ -63,7 +63,7 @@ fi
 # Required environment variables (based on your .env structure)
 REQUIRED_VARS=(
     "POSTGRES_USER"
-    "POSTGRES_PASSWORD" 
+    "POSTGRES_PASSWORD"
     "POSTGRES_DB"
     "POSTGRES_HOST"
     "POSTGRES_PORT"
@@ -108,7 +108,7 @@ echo -e "\n${YELLOW}⚙️  Optional Variables (with defaults):${NC}"
 for var_default in "${OPTIONAL_VARS[@]}"; do
     var="${var_default%%:*}"
     default="${var_default##*:}"
-    
+
     if [[ -z "${!var}" ]]; then
         echo -e "  ⚠️  ${YELLOW}$var${NC} - Using default: $default"
     else
@@ -127,7 +127,7 @@ if [[ -f ".env.development" ]]; then
     fi
 fi
 
-# Check production environment  
+# Check production environment
 if [[ -f ".env.production" ]]; then
     echo -e "  ✅ ${GREEN}.env.production${NC} - Found (Production config)"
     if [[ -f ".env.production.example" ]]; then

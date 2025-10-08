@@ -27,31 +27,31 @@ run_test() {
     local test_name="$1"
     local command="$2"
     local expected_exit_code="${3:-0}"
-    
+
     echo -e "${YELLOW}📋 Test: $test_name${NC}"
     echo "   Command: $command"
-    
+
     # Change to project root
     cd "$PROJECT_ROOT"
-    
+
     # Run the command and capture exit code
     if eval "$command" > /tmp/test_output.log 2>&1; then
         local exit_code=0
     else
         local exit_code=$?
     fi
-    
+
     # Show output
     echo "   Output:"
     cat /tmp/test_output.log | sed 's/^/   /'
-    
+
     # Check result
     if [[ $exit_code -eq $expected_exit_code ]]; then
         echo -e "   ${GREEN}✅ PASSED${NC} (exit code: $exit_code)"
     else
         echo -e "   ${RED}❌ FAILED${NC} (expected: $expected_exit_code, got: $exit_code)"
     fi
-    
+
     echo
     return $exit_code
 }
@@ -60,7 +60,7 @@ run_test() {
 check_file() {
     local file="$1"
     local description="$2"
-    
+
     if [[ -f "$PROJECT_ROOT/$file" ]]; then
         local size=$(du -h "$PROJECT_ROOT/$file" | cut -f1)
         local perms=$(stat -c "%a" "$PROJECT_ROOT/$file")
@@ -75,7 +75,7 @@ check_file() {
 echo -e "${BOLD}${YELLOW}📂 Environment Files Check${NC}"
 echo "=========================="
 check_file ".env.development" "Development configuration"
-check_file ".env.production" "Production configuration" 
+check_file ".env.production" "Production configuration"
 check_file ".env.development.example" "Development template"
 check_file ".env.production.example" "Production template"
 check_file ".env" "Generic configuration (optional)"
@@ -86,7 +86,7 @@ run_test "Basic Environment Check (Development)" \
     "./scripts/check-env.sh" \
     0
 
-# Test 2: Comprehensive validation with development file  
+# Test 2: Comprehensive validation with development file
 run_test "Comprehensive Validation (Development)" \
     "./scripts/validate-env.sh" \
     0
@@ -95,15 +95,15 @@ run_test "Comprehensive Validation (Development)" \
 if [[ -f "$PROJECT_ROOT/.env.development" ]] && [[ -f "$PROJECT_ROOT/.env.production" ]]; then
     echo -e "${YELLOW}🔄 Switching to production environment for testing...${NC}"
     mv "$PROJECT_ROOT/.env.development" "$PROJECT_ROOT/.env.development.backup"
-    
+
     run_test "Basic Environment Check (Production)" \
         "./scripts/check-env.sh" \
         0
-        
+
     run_test "Comprehensive Validation (Production)" \
         "./scripts/validate-env.sh" \
         0
-    
+
     # Restore development file
     mv "$PROJECT_ROOT/.env.development.backup" "$PROJECT_ROOT/.env.development"
     echo -e "${GREEN}✅ Restored development environment${NC}"

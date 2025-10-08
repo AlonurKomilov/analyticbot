@@ -9,10 +9,10 @@ import {
 
 /**
  * TimeRangeControls - Memoized time range and refresh interval controls
- * 
+ *
  * Optimized for multi-user dashboard performance by preventing unnecessary re-renders
  * when parent component state changes.
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.timeRange - Current time range value
  * @param {string} props.refreshInterval - Current refresh interval value

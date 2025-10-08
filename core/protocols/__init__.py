@@ -73,6 +73,116 @@ class AnalyticsFusionServiceProtocol(ServiceProtocol):
         """Generate AI-powered recommendations"""
         ...
 
+    # Historical analytics methods
+    async def get_last_updated_at(self, channel_id: int) -> datetime | None:
+        """Get last updated timestamp for channel data"""
+        ...
+
+    async def get_channel_overview(
+        self, channel_id: int, from_date: datetime, to_date: datetime
+    ) -> dict[str, Any]:
+        """Get channel overview with historical metrics"""
+        ...
+
+    async def get_growth_time_series(
+        self, channel_id: int, from_date: datetime, to_date: datetime, window_days: int
+    ) -> list[dict[str, Any]]:
+        """Get growth time series data"""
+        ...
+
+    async def get_historical_metrics(
+        self, channel_id: int, from_date: datetime, to_date: datetime
+    ) -> dict[str, Any]:
+        """Get historical metrics data"""
+        ...
+
+    async def get_top_posts(
+        self, channel_id: int, from_date: datetime, to_date: datetime, limit: int
+    ) -> list[dict[str, Any]]:
+        """Get top performing posts"""
+        ...
+
+    async def get_traffic_sources(
+        self, channel_id: int, from_date: datetime, to_date: datetime
+    ) -> dict[str, Any]:
+        """Get traffic sources data"""
+        ...
+
+    # Orchestration methods
+    async def coordinate_comprehensive_analysis(
+        self, channel_id: int, parameters: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Coordinate comprehensive analytics analysis"""
+        ...
+
+    # Admin and system methods
+    async def get_system_statistics_admin(self) -> dict[str, Any]:
+        """Get system statistics for admin"""
+        ...
+
+    async def get_admin_audit_logs(self, limit: int = 50) -> list[dict[str, Any]]:
+        """Get admin audit logs"""
+        ...
+
+    async def check_system_health(self) -> dict[str, Any]:
+        """Check system health status"""
+        ...
+
+    # Engagement analytics methods
+    async def get_engagement_insights(
+        self, channel_id: int, period: str, metrics_type: str
+    ) -> dict[str, Any]:
+        """Get engagement insights for channel"""
+        ...
+
+    async def get_engagement_trends(self, channel_id: int, period: str) -> dict[str, Any]:
+        """Get engagement trends data"""
+        ...
+
+    async def get_audience_insights(self, channel_id: int, period: str) -> dict[str, Any]:
+        """Get audience insights"""
+        ...
+
+    async def get_audience_demographics(self, channel_id: int) -> dict[str, Any]:
+        """Get audience demographics"""
+        ...
+
+    async def get_audience_behavior_patterns(self, channel_id: int) -> dict[str, Any]:
+        """Get audience behavior patterns"""
+        ...
+
+    # Report and comparison methods
+    async def get_period_comparison(self, channel_id: int) -> dict[str, Any]:
+        """Get period comparison data"""
+        ...
+
+    async def get_metrics_comparison(self, channel_id: int) -> dict[str, Any]:
+        """Get metrics comparison data"""
+        ...
+
+    async def get_performance_summary(self, channel_id: int, days: int) -> dict[str, Any]:
+        """Get performance summary"""
+        ...
+
+    # Content analytics methods
+    async def get_trending_posts(
+        self, channel_id: int, from_date: datetime, to_date: datetime, limit: int
+    ) -> dict[str, Any]:
+        """Get trending posts"""
+        ...
+
+    async def get_temporal_engagement_patterns(self, channel_id: int) -> dict[str, Any]:
+        """Get temporal engagement patterns"""
+        ...
+
+    async def get_content_engagement_patterns(self, channel_id: int) -> dict[str, Any]:
+        """Get content engagement patterns"""
+        ...
+
+    async def get_user_engagement_patterns(self, channel_id: int) -> dict[str, Any]:
+        """Get user engagement patterns"""
+        ...
+
 
 class RedisClientProtocol(ServiceProtocol):
     """Redis client interface for caching and session management"""
@@ -317,6 +427,59 @@ class ChannelRepositoryProtocol(Protocol):
 
     async def update_channel(self, channel_id: int, channel_data: dict[str, Any]) -> dict[str, Any]:
         """Update a channel"""
+        ...
+
+
+class DeepLearningServiceProtocol(ServiceProtocol):
+    """Deep learning service interface for ML predictions and training"""
+
+    async def predict_growth(
+        self,
+        channel_id: int,
+        historical_data: list[dict[str, Any]],
+        forecast_horizon: int = 7,
+        include_uncertainty: bool = True,
+    ) -> dict[str, Any]:
+        """Predict channel growth using ML models"""
+        ...
+
+    async def predict_engagement(
+        self,
+        content: str,
+        channel_id: int,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Predict content engagement"""
+        ...
+
+    async def analyze_content(
+        self,
+        content: str,
+        analysis_types: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Analyze content quality and characteristics"""
+        ...
+
+    async def train_model(
+        self,
+        channel_id: int,
+        model_type: str,
+        training_data: dict[str, Any],
+        config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Train ML model with new data"""
+        ...
+
+    async def get_model_performance(
+        self,
+        channel_id: int,
+        model_type: str,
+    ) -> dict[str, Any]:
+        """Get model performance metrics"""
+        ...
+
+    def clear_cache(self) -> None:
+        """Clear prediction cache"""
         ...
 
 

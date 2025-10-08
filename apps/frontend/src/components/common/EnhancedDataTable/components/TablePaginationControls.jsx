@@ -19,17 +19,17 @@ const TablePaginationControls = ({
     if (!enablePagination) {
         return null;
     }
-    
+
     const handleChangePage = (event, newPage) => {
         onPageChange(newPage);
     };
-    
+
     const handleChangeRowsPerPage = (event) => {
         const newPageSize = parseInt(event.target.value, 10);
         onPageSizeChange(newPageSize);
         onPageChange(0); // Reset to first page
     };
-    
+
     return (
         <TablePagination
             component="div"
@@ -40,7 +40,7 @@ const TablePaginationControls = ({
             onRowsPerPageChange={handleChangeRowsPerPage}
             rowsPerPageOptions={PAGE_SIZE_OPTIONS}
             labelRowsPerPage="Rows per page:"
-            labelDisplayedRows={({ from, to, count }) => 
+            labelDisplayedRows={({ from, to, count }) =>
                 `${from}-${to} of ${count !== -1 ? count : `more than ${to}`}`
             }
         />

@@ -15,11 +15,11 @@ import {
 
 /**
  * MetricsSummary - Memoized summary statistics grid for chart metrics
- * 
+ *
  * Displays key metrics (total views, average, growth rate, peak views) in a responsive grid.
  * Optimized for multi-user performance by preventing unnecessary re-renders when
  * parent component state changes but summary stats remain the same.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Object} props.summaryStats - Summary statistics object
  * @param {number} props.summaryStats.totalViews - Total post views
@@ -49,7 +49,7 @@ const MetricsSummary = React.memo(({ summaryStats }) => {
                     </CardContent>
                 </Card>
             </Grid>
-            
+
             <Grid item xs={6} sm={3}>
                 <Card variant="outlined">
                     <CardContent variant="metric">
@@ -75,8 +75,8 @@ const MetricsSummary = React.memo(({ summaryStats }) => {
                                 Growth %
                             </Typography>
                         </Box>
-                        <Typography variant="h6" sx={{ 
-                            color: summaryStats.growthRate >= 0 ? 'success.main' : 'error.main' 
+                        <Typography variant="h6" sx={{
+                            color: summaryStats.growthRate >= 0 ? 'success.main' : 'error.main'
                         }}>
                             {summaryStats.growthRate > 0 ? '+' : ''}{summaryStats.growthRate}%
                         </Typography>

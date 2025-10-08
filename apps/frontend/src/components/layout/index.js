@@ -1,13 +1,13 @@
 /**
  * Layout Components Index
- * 
+ *
  * Enhanced layout system for improved visual hierarchy and mobile responsiveness
  */
 
 export { default as EnhancedDashboardLayout } from './EnhancedDashboardLayout.jsx';
 export { default as EnhancedSection } from './EnhancedSection.jsx';
 export { default as EnhancedCard } from './EnhancedCard.jsx';
-export { 
+export {
   default as LayoutUtils,
   HierarchyContainer,
   ResponsiveWrapper,

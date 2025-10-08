@@ -43,10 +43,10 @@ fi
 # Update bot code to use HTTPS validation (revert development HTTP allowance)
 if grep -q "settings.ENVIRONMENT == 'development'" apps/bot/handlers/user_handlers.py; then
     echo "🔄 Reverting bot code to require HTTPS (removing development HTTP allowance)"
-    
+
     # Create backup
     cp apps/bot/handlers/user_handlers.py apps/bot/handlers/user_handlers.py.backup.$(date +%Y%m%d_%H%M%S)
-    
+
     # Revert to original HTTPS-only validation
     cat > /tmp/https_only_validation.py << 'EOF'
 def _is_public_https(url: str) -> bool:

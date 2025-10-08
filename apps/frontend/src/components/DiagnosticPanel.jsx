@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { 
-    Paper, 
-    Typography, 
-    Box, 
+import {
+    Paper,
+    Typography,
+    Box,
     Chip,
     Stack,
     Accordion,
@@ -25,7 +25,7 @@ const DiagnosticPanel = () => {
     useEffect(() => {
         const originalError = console.error;
         const originalWarn = console.warn;
-        
+
         console.error = (...args) => {
             setConsoleErrors(prev => [...prev.slice(-4), {
                 message: args.join(' '),
@@ -51,7 +51,7 @@ const DiagnosticPanel = () => {
     const getStoreStatus = () => {
         const loadedIcon = <><span aria-hidden="true">✅</span> Loaded</>;
         const notLoadedIcon = <><span aria-hidden="true">❌</span> Not loaded</>;
-        
+
         return {
             isConnected: store.isConnected,
             dataSource: store.dataSource,
@@ -68,15 +68,15 @@ const DiagnosticPanel = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <BugIcon color="primary" />
                 <Typography variant="h6">System Diagnostics</Typography>
-                <Chip 
-                    label={consoleErrors.length > 0 ? `${consoleErrors.length} Errors` : "No Errors"} 
+                <Chip
+                    label={consoleErrors.length > 0 ? `${consoleErrors.length} Errors` : "No Errors"}
                     color={consoleErrors.length > 0 ? "error" : "success"}
-                    size="small" 
+                    size="small"
                 />
-                <Chip 
-                    label={consoleWarnings.length > 0 ? `${consoleWarnings.length} Warnings` : "No Warnings"} 
+                <Chip
+                    label={consoleWarnings.length > 0 ? `${consoleWarnings.length} Warnings` : "No Warnings"}
                     color={consoleWarnings.length > 0 ? "warning" : "success"}
-                    size="small" 
+                    size="small"
                 />
             </Box>
 

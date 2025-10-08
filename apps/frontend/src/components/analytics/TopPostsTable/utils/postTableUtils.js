@@ -5,7 +5,7 @@
 // Format number with K/M suffixes
 export const formatNumber = (num) => {
     if (!num && num !== 0) return '0';
-    
+
     const number = parseInt(num);
     if (number >= 1000000) {
         return (number / 1000000).toFixed(1) + 'M';
@@ -19,11 +19,11 @@ export const formatNumber = (num) => {
 // Format date to relative time
 export const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
-    
+
     const postDate = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - postDate) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 1) {
         return `${Math.floor(diffInHours * 60)} min ago`;
     } else if (diffInHours < 24) {
@@ -44,7 +44,7 @@ export const calculateEngagementRate = (post) => {
 export const getPerformanceBadge = (post) => {
     const engagementRate = parseFloat(calculateEngagementRate(post));
     const views = post.views || 0;
-    
+
     if (engagementRate > 10 && views > 10000) {
         return { label: <><span aria-hidden="true">🔥</span> Viral</>, color: 'error' };
     } else if (engagementRate > 5) {

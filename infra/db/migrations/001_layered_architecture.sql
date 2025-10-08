@@ -8,17 +8,17 @@ CREATE TABLE IF NOT EXISTS scheduled_posts (
     content TEXT NOT NULL DEFAULT '',
     channel_id VARCHAR(100) NOT NULL,
     user_id VARCHAR(100) NOT NULL,
-    
+
     -- Scheduling timestamps
     scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE,
-    
+
     -- Status and metadata
     status VARCHAR(50) NOT NULL DEFAULT 'draft',
     tags TEXT[] DEFAULT '{}',
     metadata JSONB DEFAULT '{}',
-    
+
     -- Media attachments
     media_urls TEXT[] DEFAULT '{}',
     media_types TEXT[] DEFAULT '{}'
@@ -29,29 +29,29 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id ON scheduled_posts(user_i
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_channel_id ON scheduled_posts(channel_id);
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_status ON scheduled_posts(status);
 CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_at ON scheduled_posts(scheduled_at);
-CREATE INDEX IF NOT EXISTS idx_scheduled_posts_ready_delivery ON scheduled_posts(status, scheduled_at) 
+CREATE INDEX IF NOT EXISTS idx_scheduled_posts_ready_delivery ON scheduled_posts(status, scheduled_at)
     WHERE status = 'scheduled';
 
 -- Create deliveries table
 CREATE TABLE IF NOT EXISTS deliveries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID NOT NULL REFERENCES scheduled_posts(id) ON DELETE CASCADE,
-    
+
     -- Delivery tracking
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     attempted_at TIMESTAMP WITH TIME ZONE,
     delivered_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    
+
     -- Delivery details
     delivery_channel_id VARCHAR(100) NOT NULL,
     message_id VARCHAR(100), -- Telegram message ID after delivery
-    
+
     -- Error handling
     error_message TEXT,
     retry_count INTEGER NOT NULL DEFAULT 0,
     max_retries INTEGER NOT NULL DEFAULT 3,
-    
+
     -- Delivery metadata
     delivery_metadata JSONB DEFAULT '{}'
 );
@@ -83,7 +83,7 @@ END;
 $$ language 'plpgsql';
 
 -- Create trigger to automatically update updated_at on scheduled_posts
-CREATE TRIGGER update_scheduled_posts_updated_at 
-    BEFORE UPDATE ON scheduled_posts 
-    FOR EACH ROW 
+CREATE TRIGGER update_scheduled_posts_updated_at
+    BEFORE UPDATE ON scheduled_posts
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();

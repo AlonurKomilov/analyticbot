@@ -6,7 +6,7 @@ All clients follow clean architecture principles with proper error handling.
 """
 
 from .analytics_client import (
-    AnalyticsClient, 
+    AnalyticsClient,
     AnalyticsClientError,
     # Backward compatibility aliases
     AnalyticsV2Client,
@@ -16,7 +16,7 @@ from .analytics_client import (
 __all__ = [
     # Clean Architecture (primary)
     "AnalyticsClient",
-    "AnalyticsClientError", 
+    "AnalyticsClientError",
     # Backward compatibility
     "AnalyticsV2Client",
     "AnalyticsV2ClientError",

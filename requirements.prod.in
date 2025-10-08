@@ -21,7 +21,7 @@ aiogram-i18n>=1.4
 fluent.runtime>=0.4.0
 telethon>=1.30.3
 
-# Authentication & Security  
+# Authentication & Security
 python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6

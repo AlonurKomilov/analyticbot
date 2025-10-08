@@ -46,15 +46,15 @@ export const ValidatedTextField = React.forwardRef(({
 }, ref) => {
     const error = errors[name];
     const characterCount = value?.length || 0;
-    
+
     const handleChange = useCallback((event) => {
         const newValue = event.target.value;
-        
+
         // Apply maxLength if specified
         if (maxLength && newValue.length > maxLength) {
             return;
         }
-        
+
         onChange?.(event);
     }, [onChange, maxLength]);
 
@@ -127,9 +127,9 @@ export const ValidatedSelect = ({
     const error = errors[name];
 
     return (
-        <FormControl 
-            fullWidth={fullWidth} 
-            variant={variant} 
+        <FormControl
+            fullWidth={fullWidth}
+            variant={variant}
             size={size}
             error={!!error}
             sx={sx}
@@ -160,8 +160,8 @@ export const ValidatedSelect = ({
                     </MenuItem>
                 )}
                 {options.map((option) => (
-                    <MenuItem 
-                        key={option.value} 
+                    <MenuItem
+                        key={option.value}
                         value={option.value}
                         disabled={option.disabled}
                     >
@@ -179,17 +179,17 @@ export const ValidatedSelect = ({
 /**
  * FormSection - Reusable form section with consistent styling
  */
-export const FormSection = ({ 
-    title, 
-    subtitle, 
-    children, 
+export const FormSection = ({
+    title,
+    subtitle,
+    children,
     required = false,
-    sx = {} 
+    sx = {}
 }) => (
     <Box sx={{ mb: 3, ...sx }}>
         {title && (
-            <Typography 
-                variant="h6" 
+            <Typography
+                variant="h6"
                 fontWeight={600}
                 sx={{ mb: subtitle ? 0.5 : 2 }}
             >
@@ -197,8 +197,8 @@ export const FormSection = ({
             </Typography>
         )}
         {subtitle && (
-            <Typography 
-                variant="body2" 
+            <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ mb: 2 }}
             >
@@ -214,9 +214,9 @@ export const FormSection = ({
 /**
  * FormActions - Standardized form action buttons
  */
-export const FormActions = ({ 
-    onSubmit, 
-    onCancel, 
+export const FormActions = ({
+    onSubmit,
+    onCancel,
     onReset,
     submitLabel = 'Submit',
     cancelLabel = 'Cancel',
@@ -225,17 +225,17 @@ export const FormActions = ({
     disabled = false,
     submitColor = 'primary',
     align = 'right', // 'left', 'center', 'right', 'space-between'
-    sx = {} 
+    sx = {}
 }) => (
-    <Box 
-        sx={{ 
-            display: 'flex', 
-            gap: 2, 
+    <Box
+        sx={{
+            display: 'flex',
+            gap: 2,
             mt: 3,
-            justifyContent: align === 'space-between' ? 'space-between' : 
-                           align === 'center' ? 'center' : 
+            justifyContent: align === 'space-between' ? 'space-between' :
+                           align === 'center' ? 'center' :
                            align === 'left' ? 'flex-start' : 'flex-end',
-            ...sx 
+            ...sx
         }}
     >
         {align === 'space-between' && onReset && (
@@ -250,7 +250,7 @@ export const FormActions = ({
                 </Button>
             </Box>
         )}
-        
+
         <Box sx={{ display: 'flex', gap: 1 }}>
             {onCancel && (
                 <Button
@@ -262,7 +262,7 @@ export const FormActions = ({
                     {cancelLabel}
                 </Button>
             )}
-            
+
             {align !== 'space-between' && onReset && (
                 <Button
                     variant="outlined"
@@ -273,7 +273,7 @@ export const FormActions = ({
                     {resetLabel}
                 </Button>
             )}
-            
+
             <Button
                 variant="contained"
                 color={submitColor}

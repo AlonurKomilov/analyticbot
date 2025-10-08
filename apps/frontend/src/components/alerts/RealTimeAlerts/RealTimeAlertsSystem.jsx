@@ -28,11 +28,11 @@ import NotificationEngine from './NotificationEngine.jsx';
 
 /**
  * RealTimeAlertsSystem - Main orchestrator for real-time alert management
- * 
+ *
  * Refactored from 486-line monolithic component to modular architecture.
  * Manages state coordination, API calls, and coordinates between extracted components.
  * Reduced from 486 lines to ~150 lines (69% reduction).
- * 
+ *
  * @param {Object} props - Component props
  * @param {string} props.channelId - Channel ID for alert monitoring
  */
@@ -120,8 +120,8 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
 
   // Toggle rule enabled state
   const handleToggleRule = useCallback((ruleId) => {
-    setAlertRules(prev => prev.map(rule => 
-      rule.id === ruleId 
+    setAlertRules(prev => prev.map(rule =>
+      rule.id === ruleId
         ? { ...rule, enabled: !rule.enabled }
         : rule
     ));
@@ -167,13 +167,13 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
               )}
             </Badge>
             <Typography variant="h6">Real-time Alerts</Typography>
-            <StatusChip 
+            <StatusChip
               label={`${alertRules.filter(rule => rule.enabled).length} rules active`}
-              size="small" 
+              size="small"
               variant="primary"
             />
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <IconButton onClick={() => setSettingsOpen(true)}>
               <SettingsIcon />
@@ -185,14 +185,14 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
         </Box>
 
         {/* Alerts List */}
-        <AlertsList 
+        <AlertsList
           alerts={alerts}
           isExpanded={isExpanded}
           onDeleteAlert={handleDeleteAlert}
         />
 
         {/* Rule Manager Dialog */}
-        <RuleManager 
+        <RuleManager
           alertRules={alertRules}
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
@@ -201,7 +201,7 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
         />
 
         {/* New Rule Dialog */}
-        <NewRuleDialog 
+        <NewRuleDialog
           open={newRuleDialog}
           onClose={() => setNewRuleDialog(false)}
           onSubmit={handleAddNewRule}
@@ -210,7 +210,7 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
         />
 
         {/* Notification Engine */}
-        <NotificationEngine 
+        <NotificationEngine
           alertRules={alertRules}
           onNewAlerts={handleNewAlerts}
           existingAlerts={alerts}

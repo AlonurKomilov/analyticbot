@@ -62,25 +62,25 @@ services:
       MTPROTO_ENABLED: "true"
       MTPROTO_UPDATES_ENABLED: "true"
       MTPROTO_POOL_ENABLED: "true"
-      
+
       # Account pool configuration
       MTPROTO_ACCOUNTS: "session1,session2,session3"
       MTPROTO_RPS_PER_ACCOUNT: "0.7"
       MTPROTO_MAX_CONCURRENCY_PER_ACCOUNT: "2"
       MTPROTO_GLOBAL_RPS: "2.5"
-      
+
       # Proxy pool (optional)
       MTPROTO_PROXY_ENABLED: "false"
       # MTPROTO_PROXIES: "socks5://user:pass@proxy1:1080,socks5://user:pass@proxy2:1080"
-      
+
       # Observability
       OBS_PROMETHEUS_ENABLED: "true"
       PROMETHEUS_PORT: "9108"
-      
+
       # Health checks
       HEALTH_BIND: "0.0.0.0:8091"
       GRACEFUL_SHUTDOWN_TIMEOUT_S: "25"
-      
+
       # Database - Internal Docker network ports
       DATABASE_URL: "postgresql+asyncpg://analytic:change_me@db:5432/analytic_bot"
       REDIS_URL: "redis://redis:6379/0"

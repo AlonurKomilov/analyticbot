@@ -150,7 +150,9 @@ class MTProtoSettings(BaseSettings):
 
     model_config = {
         # Clean Architecture: Load environment-specific files
-        "env_file": [".env.production", ".env.development"] if os.getenv("ENVIRONMENT") != "development" else [".env.development", ".env.production"],
+        "env_file": [".env.production", ".env.development"]
+        if os.getenv("ENVIRONMENT") != "development"
+        else [".env.development", ".env.production"],
         "case_sensitive": False,
         "extra": "ignore",  # Ignore extra environment variables
     }

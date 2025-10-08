@@ -3,7 +3,7 @@ import { useAppStore } from '../store/appStore';
 
 /**
  * Hook for managing API failure dialog state
- * 
+ *
  * This hook monitors for API connection failures and provides
  * methods to handle user responses to connection issues.
  */
@@ -12,17 +12,17 @@ export const useApiFailureDialog = () => {
     const [currentError, setCurrentError] = useState(null);
     const [isRetrying, setIsRetrying] = useState(false);
 
-    const { 
+    const {
         ui,
-        switchToMockWithUserConsent, 
+        switchToMockWithUserConsent,
         retryApiConnection,
-        clearError 
+        clearError
     } = useAppStore();
 
     // Monitor for API connection errors
     useEffect(() => {
         const error = ui.fetchData?.error;
-        
+
         if (error && error.type === 'API_CONNECTION_FAILED') {
             setCurrentError(error);
             setIsDialogOpen(true);

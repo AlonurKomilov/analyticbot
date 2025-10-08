@@ -18,7 +18,7 @@ error_count=0
 check_file() {
     local file=$1
     local description=$2
-    
+
     if [ -f "$file" ]; then
         echo -e "${GREEN}✅ $description${NC}"
         echo "   📁 $file"
@@ -34,7 +34,7 @@ check_content() {
     local file=$1
     local pattern=$2
     local description=$3
-    
+
     if [ -f "$file" ] && grep -q "$pattern" "$file"; then
         echo -e "${GREEN}✅ $description${NC}"
     else

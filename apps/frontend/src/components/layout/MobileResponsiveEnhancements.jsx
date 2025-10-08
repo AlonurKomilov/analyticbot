@@ -1,6 +1,6 @@
 /**
  * Mobile Responsive Enhancements
- * 
+ *
  * Enhanced mobile responsive utilities and components for:
  * - Improved tablet experience (768-1024px)
  * - Touch-optimized interactions
@@ -9,11 +9,11 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Box, 
-  Drawer, 
-  IconButton, 
-  useTheme, 
+import {
+  Box,
+  Drawer,
+  IconButton,
+  useTheme,
   useMediaQuery,
   Divider,
   List,
@@ -37,9 +37,9 @@ import { DESIGN_TOKENS } from '../../theme/designTokens.js';
  * Enhanced Mobile Navigation Drawer
  * Better mobile navigation with improved touch targets and organization
  */
-export const MobileNavigationDrawer = ({ 
-  open, 
-  onClose, 
+export const MobileNavigationDrawer = ({
+  open,
+  onClose,
   navigationItems = [],
   currentPath = '',
   showChannelStatus = false,
@@ -49,27 +49,27 @@ export const MobileNavigationDrawer = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const defaultNavItems = [
-    { 
-      label: 'Dashboard', 
-      path: '/dashboard', 
+    {
+      label: 'Dashboard',
+      path: '/dashboard',
       icon: <DashboardIcon />,
       badge: channelCount > 0 ? `${channelCount} channels` : null
     },
-    { 
-      label: 'Analytics', 
-      path: '/analytics', 
+    {
+      label: 'Analytics',
+      path: '/analytics',
       icon: <AnalyticsIcon />,
       badge: null
     },
-    { 
-      label: 'Scheduled Posts', 
-      path: '/posts', 
+    {
+      label: 'Scheduled Posts',
+      path: '/posts',
       icon: <ScheduleIcon />,
       badge: null
     },
-    { 
-      label: 'Settings', 
-      path: '/settings', 
+    {
+      label: 'Settings',
+      path: '/settings',
       icon: <SettingsIcon />,
       badge: null
     }
@@ -105,11 +105,11 @@ export const MobileNavigationDrawer = ({
         <Box sx={{ fontSize: '1.125rem', fontWeight: 600, color: 'primary.main' }}>
           Analytics Bot
         </Box>
-        <IconButton 
+        <IconButton
           onClick={onClose}
           size="small"
-          sx={{ 
-            minWidth: '44px', 
+          sx={{
+            minWidth: '44px',
             minHeight: '44px',
             color: 'primary.main'
           }}
@@ -146,15 +146,15 @@ export const MobileNavigationDrawer = ({
               <ListItemIcon sx={{ minWidth: '40px', color: 'inherit' }}>
                 {item.icon}
               </ListItemIcon>
-              <ListItemText 
+              <ListItemText
                 primary={item.label}
                 sx={{ '& .MuiListItemText-primary': { fontWeight: 500 } }}
               />
               {item.badge && (
-                <Chip 
-                  label={item.badge} 
-                  size="small" 
-                  color="primary" 
+                <Chip
+                  label={item.badge}
+                  size="small"
+                  color="primary"
                   variant="outlined"
                 />
               )}
@@ -170,7 +170,7 @@ export const MobileNavigationDrawer = ({
             <Box sx={{ fontSize: '0.875rem', color: 'text.secondary', mb: 1 }}>
               Status
             </Box>
-            <Chip 
+            <Chip
               label={`${channelCount} Connected Channels`}
               color={channelCount > 0 ? 'success' : 'default'}
               size="small"
@@ -186,9 +186,9 @@ export const MobileNavigationDrawer = ({
  * Swipeable Tab Navigation
  * Enhanced tab navigation with swipe gestures for mobile
  */
-export const SwipeableTabNavigation = ({ 
-  tabs = [], 
-  activeTab = 0, 
+export const SwipeableTabNavigation = ({
+  tabs = [],
+  activeTab = 0,
   onTabChange,
   children,
   enableSwipe = true
@@ -202,7 +202,7 @@ export const SwipeableTabNavigation = ({
   // Touch handlers for swipe gestures
   const handleTouchStart = (e) => {
     if (!enableSwipe || !isMobile) return;
-    
+
     const touch = e.touches[0];
     setStartX(touch.clientX);
     setStartY(touch.clientY);
@@ -285,10 +285,10 @@ export const SwipeableTabNavigation = ({
           >
             {tab.label}
             {tab.badge && (
-              <Chip 
-                label={tab.badge} 
-                size="small" 
-                color="primary" 
+              <Chip
+                label={tab.badge}
+                size="small"
+                color="primary"
                 sx={{ ml: 1, height: '20px', fontSize: '0.75rem' }}
               />
             )}
@@ -339,7 +339,7 @@ export const SwipeableTabNavigation = ({
 export const MobileCardStack = ({ children, spacing = 'md' }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const spacingMap = { sm: 2, md: 3, lg: 4 };
   const spacingValue = spacingMap[spacing] || 3;
 
@@ -361,17 +361,17 @@ export const MobileCardStack = ({ children, spacing = 'md' }) => {
 /**
  * Responsive Grid with Mobile Optimization
  */
-export const ResponsiveGrid = ({ 
-  children, 
-  mobileColumns = 1, 
-  tabletColumns = 2, 
+export const ResponsiveGrid = ({
+  children,
+  mobileColumns = 1,
+  tabletColumns = 2,
   desktopColumns = 3,
   spacing = 'md'
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-  
+
   const columns = isMobile ? mobileColumns : isTablet ? tabletColumns : desktopColumns;
   const spacingMap = { sm: 2, md: 3, lg: 4 };
   const spacingValue = spacingMap[spacing] || 3;

@@ -5,7 +5,7 @@ import { SPACING_SCALE, SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
 /**
  * ModernCard - Enhanced card component with contemporary design
- * 
+ *
  * Features:
  * - Subtle elevation and hover effects
  * - Rounded corners with consistent border radius
@@ -20,7 +20,7 @@ const StyledCard = styled(Card, {
   borderRadius: theme.spacing(1.5), // 12px
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
   border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
-  
+
   // Base styles for all variants
   ...(variant === 'default' && {
     boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -29,7 +29,7 @@ const StyledCard = styled(Card, {
       transform: 'translateY(-2px)',
     } : {},
   }),
-  
+
   // Elevated variant - more prominent shadow
   ...(variant === 'elevated' && {
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
@@ -38,7 +38,7 @@ const StyledCard = styled(Card, {
       transform: 'translateY(-4px)',
     } : {},
   }),
-  
+
   // Interactive variant - clear hover intent
   ...(variant === 'interactive' && {
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -53,7 +53,7 @@ const StyledCard = styled(Card, {
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     } : {},
   }),
-  
+
   // Flat variant - minimal shadow
   ...(variant === 'flat' && {
     boxShadow: 'none',
@@ -78,7 +78,7 @@ const ModernCard = React.forwardRef(({
     switch (padding) {
       case 'none': return 0;
       case 'compact': return SPACING_SCALE.lg;      // 16px
-      case 'standard': return SEMANTIC_SPACING.ui.cardPadding;  // 24px  
+      case 'standard': return SEMANTIC_SPACING.ui.cardPadding;  // 24px
       case 'comfortable': return SPACING_SCALE.xxl; // 32px
       default: return SEMANTIC_SPACING.ui.cardPadding; // 24px
     }
@@ -109,28 +109,28 @@ ModernCard.displayName = 'ModernCard';
 /**
  * ModernCardHeader - Standardized card header with consistent styling
  */
-export const ModernCardHeader = ({ 
-  title, 
-  subtitle, 
-  action, 
+export const ModernCardHeader = ({
+  title,
+  subtitle,
+  action,
   icon,
-  sx = {} 
+  sx = {}
 }) => (
-  <Box 
-    sx={{ 
-      display: 'flex', 
-      alignItems: 'flex-start', 
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
       mb: subtitle ? SPACING_SCALE.sm : SPACING_SCALE.lg, // 8px or 16px
-      ...sx 
+      ...sx
     }}
   >
     <Box sx={{ display: 'flex', alignItems: 'center', gap: SPACING_SCALE.md, minWidth: 0 }}> {/* 12px gap */}
       {icon && (
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
             color: 'primary.main',
             flexShrink: 0
           }}
@@ -138,12 +138,12 @@ export const ModernCardHeader = ({
           {icon}
         </Box>
       )}
-      
+
       <Box sx={{ minWidth: 0 }}>
         {title && (
-          <Box 
-            component="h3" 
-            sx={{ 
+          <Box
+            component="h3"
+            sx={{
               m: 0,
               typography: 'h6',
               fontWeight: 600,
@@ -156,11 +156,11 @@ export const ModernCardHeader = ({
             {title}
           </Box>
         )}
-        
+
         {subtitle && (
-          <Box 
-            component="p" 
-            sx={{ 
+          <Box
+            component="p"
+            sx={{
               m: 0,
               mt: SPACING_SCALE.xs, // 4px
               typography: 'body2',
@@ -175,7 +175,7 @@ export const ModernCardHeader = ({
         )}
       </Box>
     </Box>
-    
+
     {action && (
       <Box sx={{ flexShrink: 0, ml: SPACING_SCALE.lg }}> {/* 16px */}
         {action}
@@ -187,18 +187,18 @@ export const ModernCardHeader = ({
 /**
  * ModernCardActions - Standardized card actions area
  */
-export const ModernCardActions = ({ 
-  children, 
+export const ModernCardActions = ({
+  children,
   justify = 'flex-end',
-  sx = {} 
+  sx = {}
 }) => (
-  <CardActions 
-    sx={{ 
+  <CardActions
+    sx={{
       pt: SPACING_SCALE.lg,  // 16px
-      px: 0, 
+      px: 0,
       justifyContent: justify,
       gap: SPACING_SCALE.sm, // 8px
-      ...sx 
+      ...sx
     }}
   >
     {children}

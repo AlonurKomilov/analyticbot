@@ -8,17 +8,17 @@ import {
 
 /**
  * SummaryStatsGrid Component
- * 
+ *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
  * Displays dashboard summary statistics in responsive grid
- * 
+ *
  * Responsibilities:
  * - Four main statistics cards (Posts, Views, Engagement, Peak Views)
  * - Responsive grid layout (stacks on mobile, 4 columns on desktop)
  * - Consistent card styling and colors
  * - Centered text alignment for readability
  */
-const SummaryStatsGrid = React.memo(({ 
+const SummaryStatsGrid = React.memo(({
     stats = {
         totalPosts: '248',
         averageViews: '12.4K',
@@ -40,7 +40,7 @@ const SummaryStatsGrid = React.memo(({
                     </CardContent>
                 </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={3}>
                 <Card sx={{ textAlign: 'center', height: '100%' }}>
                     <CardContent>
@@ -53,7 +53,7 @@ const SummaryStatsGrid = React.memo(({
                     </CardContent>
                 </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={3}>
                 <Card sx={{ textAlign: 'center', height: '100%' }}>
                     <CardContent>
@@ -66,7 +66,7 @@ const SummaryStatsGrid = React.memo(({
                     </CardContent>
                 </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={3}>
                 <Card sx={{ textAlign: 'center', height: '100%' }}>
                     <CardContent>

@@ -11,7 +11,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
+
   /* Enhanced custom properties for accessibility */
   --focus-color: #2196F3;
   --focus-color-high-contrast: #000000;
@@ -155,8 +155,8 @@ input, select, textarea {
   min-height: 44px;
 }
 
-input:focus-visible, 
-select:focus-visible, 
+input:focus-visible,
+select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid var(--focus-color);
   outline-offset: 2px;
@@ -167,14 +167,14 @@ textarea:focus-visible {
   :root {
     --focus-color: var(--focus-color-high-contrast);
   }
-  
+
   *:focus-visible {
     outline: 3px solid var(--focus-color-high-contrast);
     outline-offset: 2px;
     background-color: #ffff00;
     color: #000000;
   }
-  
+
   button:focus-visible {
     outline: 3px solid var(--focus-color-high-contrast);
     background-color: #ffff00;
@@ -192,7 +192,7 @@ textarea:focus-visible {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   button:hover:not(:disabled) {
     transform: none;
   }
@@ -204,16 +204,16 @@ textarea:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  
+
   a:hover {
     color: #747bff;
   }
-  
+
   button {
     background-color: #f9f9f9;
     color: #213547;
   }
-  
+
   button:focus-visible {
     outline: 3px solid #2196F3;
   }
@@ -225,11 +225,11 @@ textarea:focus-visible {
   [aria-hidden="true"] {
     display: none !important;
   }
-  
+
   a[href]:after {
     content: " (" attr(href) ")";
   }
-  
+
   button {
     border: 1px solid #000;
     background: white;

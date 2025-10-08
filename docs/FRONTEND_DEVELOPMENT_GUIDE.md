@@ -24,7 +24,7 @@ Your AnalyticBot now has **two frontend environments**:
 
 ### Production Environment (For testing & deployment)
 ```bash
-# Start production environment  
+# Start production environment
 ./scripts/frontend-helper.sh docker-prod
 
 # Access at: http://localhost:3000
@@ -38,7 +38,7 @@ sudo docker-compose --profile dev up -d
 
 # This starts:
 # - Development frontend (5173) with hot reload
-# - API backend (8000) 
+# - API backend (8000)
 # - Database (5433)
 # - Redis (6380)
 # - Bot service
@@ -108,7 +108,7 @@ nano apps/frontend/src/components/AnalyticsDashboard.jsx
 
 ### Hot Module Replacement (HMR)
 - **Edit any React component** → Changes appear instantly
-- **Edit CSS/styles** → Styles update without page refresh  
+- **Edit CSS/styles** → Styles update without page refresh
 - **Edit configuration** → Automatic restart when needed
 
 ### Development Tools
@@ -122,7 +122,7 @@ nano apps/frontend/src/components/AnalyticsDashboard.jsx
 ```bash
 # These files are watched for changes:
 apps/frontend/src/**/*.js
-apps/frontend/src/**/*.jsx  
+apps/frontend/src/**/*.jsx
 apps/frontend/src/**/*.ts
 apps/frontend/src/**/*.tsx
 apps/frontend/src/**/*.css
@@ -137,7 +137,7 @@ apps/frontend/public/**/*
 # Development logs (detailed)
 sudo docker logs -f analyticbot-frontend-dev
 
-# Production logs (nginx access logs)  
+# Production logs (nginx access logs)
 sudo docker logs -f analyticbot-frontend
 
 # Combined view
@@ -162,7 +162,7 @@ curl http://localhost:3000  # Production
 # Test development performance
 curl -w "@-" -o /dev/null -s http://localhost:5173 <<< "
 time_namelookup:  %{time_namelookup}
-time_connect:     %{time_connect}  
+time_connect:     %{time_connect}
 time_appconnect:  %{time_appconnect}
 time_pretransfer: %{time_pretransfer}
 time_redirect:    %{time_redirect}
@@ -241,7 +241,7 @@ NODE_ENV=development
 ### Vite Configuration
 Edit `apps/frontend/vite.config.js` for:
 - Custom build settings
-- Proxy configuration  
+- Proxy configuration
 - Plugin settings
 - Performance optimization
 
@@ -250,7 +250,7 @@ Edit `apps/frontend/vite.config.js` for:
 Your development environment is ready when:
 
 - ✅ Development frontend runs on http://localhost:5173
-- ✅ Production frontend runs on http://localhost:3000  
+- ✅ Production frontend runs on http://localhost:3000
 - ✅ Hot reload works (edit files, see instant changes)
 - ✅ Both environments show your accessibility-enhanced UI
 - ✅ API proxy works through both frontends

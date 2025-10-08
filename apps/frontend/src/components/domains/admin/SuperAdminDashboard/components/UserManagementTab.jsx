@@ -17,10 +17,10 @@ import { getStatusColor } from '../utils/adminUtils';
  * UserManagementTab Component
  * User management interface with suspend/reactivate functionality
  */
-const UserManagementTab = ({ 
-    users = [], 
-    onSuspendUser, 
-    onReactivateUser 
+const UserManagementTab = ({
+    users = [],
+    onSuspendUser,
+    onReactivateUser
 }) => {
     return (
         <>
@@ -48,15 +48,15 @@ const UserManagementTab = ({
                                 <TableCell>{user.username || 'N/A'}</TableCell>
                                 <TableCell>{user.full_name || 'N/A'}</TableCell>
                                 <TableCell>
-                                    <Chip 
-                                        label={user.status} 
+                                    <Chip
+                                        label={user.status}
                                         color={getStatusColor(user.status)}
                                         size="small"
                                     />
                                 </TableCell>
                                 <TableCell>
-                                    <Chip 
-                                        label={user.subscription_tier || 'free'} 
+                                    <Chip
+                                        label={user.subscription_tier || 'free'}
                                         variant="outlined"
                                         size="small"
                                     />

@@ -12,14 +12,14 @@ export const initializeDataSource = async () => {
         // API health check with reasonable timeout for devtunnel connections
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort('Connection timeout after 5 seconds'), 5000); // 5 second timeout
-        
+
         const response = await fetch(`${API_BASE_URL}/health`, {
             method: 'GET',
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (response.ok) {
             // API is available, keep current preference or default to API
             const savedPreference = localStorage.getItem('useRealAPI');
@@ -51,22 +51,22 @@ export const initializeApp = async () => {
     try {
         // Initialize data source
         const dataSource = await initializeDataSource();
-        
+
         // Dispatch initialization event
-        window.dispatchEvent(new CustomEvent('appInitialized', { 
+        window.dispatchEvent(new CustomEvent('appInitialized', {
             detail: { dataSource, timestamp: Date.now() }
         }));
-        
+
         return { success: true, dataSource };
     } catch (error) {
         console.error('App initialization error:', error);
-        
+
         // Don't fallback to demo mode - user should sign in to demo account instead
         console.info('App initialization encountered an error - continuing with API mode for demo authentication');
-        window.dispatchEvent(new CustomEvent('appInitialized', { 
+        window.dispatchEvent(new CustomEvent('appInitialized', {
             detail: { dataSource: 'api', error: error.message, timestamp: Date.now() }
         }));
-        
+
         return { success: false, dataSource: 'api', error: error.message };
     }
 };
@@ -81,9 +81,9 @@ export const showDataSourceNotification = (dataSource, reason = null) => {
         'api_unavailable': '⚠️ API unavailable - switched to demo mode automatically',
         'api_error': '❌ API error - using demo data as fallback'
     };
-    
+
     const message = messages[reason] || messages[dataSource];
-    
+
     // Create a simple toast notification
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -102,9 +102,9 @@ export const showDataSourceNotification = (dataSource, reason = null) => {
         transition: opacity 0.3s ease;
     `;
     notification.textContent = message;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-remove after 4 seconds
     setTimeout(() => {
         notification.style.opacity = '0';

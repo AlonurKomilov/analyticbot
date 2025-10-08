@@ -1,6 +1,6 @@
 /**
  * 🔧 Admin Dashboard - System Management Interface
- * 
+ *
  * Administrative interface for system management, user oversight,
  * and analytics monitoring. Only accessible to admin users.
  */
@@ -228,10 +228,10 @@ const AdminDashboard = () => {
                         <TableCell>{channel.id}</TableCell>
                         <TableCell>{channel.name}</TableCell>
                         <TableCell>
-                          <Chip 
-                            label={`User ${channel.user_id}`} 
-                            size="small" 
-                            color="primary" 
+                          <Chip
+                            label={`User ${channel.user_id}`}
+                            size="small"
+                            color="primary"
                           />
                         </TableCell>
                         <TableCell>{channel.total_subscribers?.toLocaleString()}</TableCell>
@@ -245,8 +245,8 @@ const AdminDashboard = () => {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete Channel">
-                            <IconButton 
-                              size="small" 
+                            <IconButton
+                              size="small"
                               color="error"
                               onClick={() => setDeleteDialog({ open: true, channelId: channel.id })}
                             >
@@ -301,8 +301,8 @@ const AdminDashboard = () => {
           <Button onClick={() => setDeleteDialog({ open: false, channelId: null })}>
             Cancel
           </Button>
-          <Button 
-            onClick={() => handleDeleteChannel(deleteDialog.channelId)} 
+          <Button
+            onClick={() => handleDeleteChannel(deleteDialog.channelId)}
             color="error"
             variant="contained"
           >

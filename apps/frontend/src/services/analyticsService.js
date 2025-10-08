@@ -2,11 +2,11 @@
  * Unified Analytics Service
  * Consolidates all analytics-related functionality into a single, comprehensive service
  * Replaces: analyticsAPIService, demoAnalyticsService, mockService (analytics portions), dataService
- * 
+ *
  * Features:
  * - Clean adapter pattern for mock/real data switching
  * - Intelligent caching with TTL
- * - Realistic delay simulation  
+ * - Realistic delay simulation
  * - Comprehensive error handling
  * - Consistent API across all methods
  * - Performance monitoring
@@ -20,12 +20,12 @@ import { DEFAULT_DEMO_CHANNEL_ID } from '../__mocks__/constants.js';
 import { apiClient } from '../api/client.js';
 
 // Import mock data generators (for fallback compatibility)
-import { 
+import {
     mockAnalyticsData,
     getMockPostDynamics,
     getMockTopPosts,
     getMockBestTime,
-    getMockEngagementMetrics 
+    getMockEngagementMetrics
 } from '../__mocks__/index.js';
 
 /**
@@ -255,7 +255,7 @@ class MockAnalyticsAdapter {
 
     async getAnalyticsOverview(channelId = DEFAULT_DEMO_CHANNEL_ID) {
         await this._simulateDelay();
-        
+
         const overview = generateAnalyticsOverview(channelId);
         return {
             ...overview,
@@ -265,7 +265,7 @@ class MockAnalyticsAdapter {
 
     async getPostDynamics(channelId, hours = 24) {
         await this.addDelay();
-        
+
         try {
             // Use backend API for mock data (single source of truth)
             const response = await this.apiClient.get('/unified-analytics/demo/post-dynamics', {
@@ -290,7 +290,7 @@ class MockAnalyticsAdapter {
 
     async getTopPosts(channelId, period = 'today', sortBy = 'views') {
         await this._simulateDelay();
-        
+
         try {
             // Use backend API for mock data (single source of truth)
             const response = await this.apiClient.get('/unified-analytics/demo/top-posts', {
@@ -319,7 +319,7 @@ class MockAnalyticsAdapter {
 
     async getEngagementMetrics(channelId, period = '7d') {
         await this._simulateDelay();
-        
+
         return {
             channelId,
             period,
@@ -331,7 +331,7 @@ class MockAnalyticsAdapter {
 
     async getBestTime(channelId, timeframe = 'week') {
         await this._simulateDelay();
-        
+
         try {
             // Use backend API for mock data (single source of truth)
             const response = await this.apiClient.get('/unified-analytics/demo/best-time', {
@@ -359,7 +359,7 @@ class MockAnalyticsAdapter {
 
     async getAIRecommendations(channelId) {
         await this._simulateDelay();
-        
+
         try {
             // Use backend API for mock data (single source of truth)
             const response = await this.apiClient.get('/unified-analytics/demo/ai-recommendations', {
@@ -385,14 +385,14 @@ class MockAnalyticsAdapter {
 
     async healthCheck() {
         await this._simulateDelay(100);
-        
+
         return {
             status: 'healthy',
             adapter: 'mock_analytics',
             timestamp: Date.now(),
             features: [
                 'analytics_overview',
-                'post_dynamics', 
+                'post_dynamics',
                 'top_posts',
                 'engagement_metrics',
                 'best_time',
@@ -414,7 +414,7 @@ class MockAnalyticsAdapter {
     _parseTimeframeToPeriod(timeframe) {
         const mapping = {
             '1h': 1,
-            '6h': 6, 
+            '6h': 6,
             '12h': 12,
             '24h': 24,
             '1d': 24,
@@ -437,7 +437,7 @@ class UnifiedAnalyticsService {
         this.realAdapter = new RealAnalyticsAdapter();
         this.mockAdapter = new MockAnalyticsAdapter();
         this.logger = configUtils.createLogger('UnifiedAnalyticsService');
-        
+
         // Performance tracking
         this.metrics = {
             requests: 0,
@@ -466,7 +466,7 @@ class UnifiedAnalyticsService {
             // Check cache first
             const cacheKey = this.cacheManager.generateKey(method, params);
             const cached = this.cacheManager.get(cacheKey);
-            
+
             if (cached) {
                 this.metrics.cacheHits++;
                 this.logger.debug(`Cache hit for ${method}`);
@@ -484,7 +484,7 @@ class UnifiedAnalyticsService {
             // Track performance
             const responseTime = performance.now() - startTime;
             this.metrics.totalResponseTime += responseTime;
-            
+
             this.logger.debug(`${method} completed in ${responseTime.toFixed(2)}ms`);
             return result;
 
@@ -501,7 +501,7 @@ class UnifiedAnalyticsService {
     _getMethodTTL(method) {
         const ttls = {
             getAnalyticsOverview: 2 * 60 * 1000,    // 2 minutes
-            getPostDynamics: 5 * 60 * 1000,         // 5 minutes  
+            getPostDynamics: 5 * 60 * 1000,         // 5 minutes
             getTopPosts: 10 * 60 * 1000,            // 10 minutes
             getEngagementMetrics: 5 * 60 * 1000,    // 5 minutes
             getBestTime: 30 * 60 * 1000,            // 30 minutes
@@ -539,14 +539,14 @@ class UnifiedAnalyticsService {
     async healthCheck() {
         const adapter = this._getCurrentAdapter();
         const health = await adapter.healthCheck();
-        
+
         return {
             ...health,
             service: 'unified_analytics',
             cache: this.cacheManager.getStats(),
             performance: {
                 totalRequests: this.metrics.requests,
-                cacheHitRate: this.metrics.requests > 0 ? 
+                cacheHitRate: this.metrics.requests > 0 ?
                     (this.metrics.cacheHits / this.metrics.requests * 100).toFixed(2) + '%' : '0%',
                 avgResponseTime: this.metrics.requests > 0 ?
                     (this.metrics.totalResponseTime / this.metrics.requests).toFixed(2) + 'ms' : '0ms',
@@ -601,7 +601,7 @@ export const analyticsService = new UnifiedAnalyticsService();
 // Export class for testing
 export { UnifiedAnalyticsService };
 
-// Export adapters for direct access if needed  
+// Export adapters for direct access if needed
 export { RealAnalyticsAdapter, MockAnalyticsAdapter, AnalyticsCacheManager };
 
 export default analyticsService;

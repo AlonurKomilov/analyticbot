@@ -30,7 +30,7 @@ import { formatNumber, formatDate, calculateEngagementRate } from '../../../util
 export const PostDisplayCell = ({ post }) => (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: 350 }}>
         {post.media && post.media.length > 0 && (
-            <Avatar 
+            <Avatar
                 variant="rounded"
                 sx={{ width: 48, height: 48, flexShrink: 0 }}
                 src={post.media[0].url}
@@ -39,9 +39,9 @@ export const PostDisplayCell = ({ post }) => (
             </Avatar>
         )}
         <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography 
-                variant="body2" 
-                sx={{ 
+            <Typography
+                variant="body2"
+                sx={{
                     fontWeight: 500,
                     lineHeight: 1.4,
                     display: '-webkit-box',
@@ -53,10 +53,10 @@ export const PostDisplayCell = ({ post }) => (
                 {post.text || 'No text content'}
             </Typography>
             {post.post_url && (
-                <Link 
-                    href={post.post_url} 
-                    target="_blank" 
-                    variant="caption" 
+                <Link
+                    href={post.post_url}
+                    target="_blank"
+                    variant="caption"
                     sx={{ color: 'primary.main', textDecoration: 'none' }}
                 >
                     View Original
@@ -85,13 +85,13 @@ export const EngagementCell = ({ post }) => {
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-            <TrendingIcon 
-                fontSize="small" 
-                sx={{ color: getEngagementColor(engagementRate) }} 
+            <TrendingIcon
+                fontSize="small"
+                sx={{ color: getEngagementColor(engagementRate) }}
             />
-            <Typography 
-                variant="body2" 
-                sx={{ 
+            <Typography
+                variant="body2"
+                sx={{
                     fontWeight: 500,
                     color: getEngagementColor(engagementRate)
                 }}
@@ -114,8 +114,8 @@ export const StatusCell = ({ post }) => {
     };
 
     return (
-        <Chip 
-            label={post.status || 'Published'} 
+        <Chip
+            label={post.status || 'Published'}
             color={getStatusColor(post.status)}
             size="small"
             variant="filled"
@@ -186,8 +186,8 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         minWidth: 120,
         sortable: true,
         renderCell: (value, row) => (
-            <MetricCell 
-                value={row.views || 0} 
+            <MetricCell
+                value={row.views || 0}
                 icon={ViewsIcon}
                 color="primary.main"
             />
@@ -200,8 +200,8 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         minWidth: 120,
         sortable: true,
         renderCell: (value, row) => (
-            <MetricCell 
-                value={row.likes || 0} 
+            <MetricCell
+                value={row.likes || 0}
                 icon={LikeIcon}
                 color="error.main"
             />
@@ -214,8 +214,8 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         minWidth: 120,
         sortable: true,
         renderCell: (value, row) => (
-            <MetricCell 
-                value={row.shares || 0} 
+            <MetricCell
+                value={row.shares || 0}
                 icon={ShareIcon}
                 color="info.main"
             />
@@ -228,8 +228,8 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         minWidth: 120,
         sortable: true,
         renderCell: (value, row) => (
-            <MetricCell 
-                value={row.comments || 0} 
+            <MetricCell
+                value={row.comments || 0}
                 icon={CommentIcon}
                 color="warning.main"
             />

@@ -1,6 +1,6 @@
 /**
  * UsageMetrics Component
- * 
+ *
  * Extracted from SubscriptionDashboard - displays subscription usage statistics,
  * limits, and progress indicators
  */
@@ -81,7 +81,7 @@ const UsageMetrics = ({ subscription, usage }) => {
           {metrics.map((metric, index) => {
             const percentage = getUsagePercentage(metric.current, metric.limit);
             const progressColor = getProgressColor(percentage);
-            
+
             return (
               <Grid item xs={12} sm={6} key={index}>
                 <Box>
@@ -91,7 +91,7 @@ const UsageMetrics = ({ subscription, usage }) => {
                       {metric.label}
                     </Typography>
                   </Box>
-                  
+
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                     <Typography variant="body2" color="text.secondary">
                       {metric.current.toLocaleString()}{metric.unit && ` ${metric.unit}`} / {metric.limit.toLocaleString()}{metric.unit && ` ${metric.unit}`}
@@ -100,21 +100,21 @@ const UsageMetrics = ({ subscription, usage }) => {
                       {percentage.toFixed(0)}%
                     </Typography>
                   </Box>
-                  
+
                   <LinearProgress
                     variant="determinate"
                     value={percentage}
                     color={progressColor}
                     sx={{ height: 6, borderRadius: 3 }}
                   />
-                  
+
                   {percentage >= 90 && (
                     <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
                       Approaching limit - consider upgrading
                     </Typography>
                   )}
                 </Box>
-                
+
                 {index < metrics.length - 1 && index % 2 === 1 && (
                   <Divider sx={{ mt: 2 }} />
                 )}

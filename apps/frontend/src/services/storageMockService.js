@@ -15,7 +15,7 @@ class StorageMockService {
 
     async getStorageFiles(limit = 20, offset = 0) {
         await this.simulateDelay();
-        
+
         const mockFiles = [
             { id: 1, name: 'analytics_report.csv', size: 15234, type: 'csv', created: '2025-09-10T10:30:00Z' },
             { id: 2, name: 'post_dynamics.png', size: 45621, type: 'png', created: '2025-09-09T15:45:00Z' },
@@ -26,11 +26,11 @@ class StorageMockService {
             { id: 7, name: 'media_assets.tar.gz', size: 234567, type: 'tar.gz', created: '2025-09-04T12:10:00Z' },
             { id: 8, name: 'database_backup.sql', size: 89012, type: 'sql', created: '2025-09-03T08:30:00Z' }
         ];
-        
+
         const startIndex = offset;
         const endIndex = Math.min(offset + limit, mockFiles.length);
         const paginatedFiles = mockFiles.slice(startIndex, endIndex);
-        
+
         return {
             files: paginatedFiles,
             total: mockFiles.length,
@@ -42,7 +42,7 @@ class StorageMockService {
 
     async uploadFile(file) {
         await this.simulateDelay();
-        
+
         return {
             id: Date.now(),
             name: file.name,
@@ -55,7 +55,7 @@ class StorageMockService {
 
     async deleteFile(fileId) {
         await this.simulateDelay();
-        
+
         return {
             success: true,
             fileId,

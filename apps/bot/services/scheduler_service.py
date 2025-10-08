@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from apps.bot.domain.models import InlineButtonsPayload
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
-# TODO: Define proper repository protocols 
+# TODO: Define proper repository protocols
 # For now using Any to maintain compatibility while removing direct infra imports
 
 logger = logging.getLogger(__name__)

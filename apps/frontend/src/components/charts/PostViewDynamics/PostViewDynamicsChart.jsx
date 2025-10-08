@@ -17,7 +17,7 @@ import { LoadingState, EmptyState, StatusFooter } from './StatusComponents.jsx';
 
 /**
  * PostViewDynamicsChart - Main orchestrator for post view dynamics analytics
- * 
+ *
  * Refactored from 623-line monolithic component to modular architecture.
  * Manages state, data fetching, and coordinates between extracted components.
  * Optimized for multi-user dashboard performance with reduced re-renders.
@@ -30,10 +30,10 @@ const PostViewDynamicsChart = () => {
     const [data, setData] = useState([]);
     const [autoRefresh] = useState(true);
     const [refreshInterval, setRefreshInterval] = useState('30s');
-    
+
     // Get store methods
     const { fetchPostDynamics } = useAppStore();
-    
+
     // Use refs to track state and prevent unnecessary re-renders
     const isMountedRef = useRef(true);
     const dataRef = useRef([]);
@@ -54,7 +54,7 @@ const PostViewDynamicsChart = () => {
         try {
             const currentTimeRange = timeRangeRef.current;
             const result = await fetchPostDynamics(currentTimeRange);
-            
+
             if (isMountedRef.current) {
                 dataRef.current = result || [];
                 setData(result || []);
@@ -72,12 +72,12 @@ const PostViewDynamicsChart = () => {
             isLoadingRef.current = false;
         }
     }, []); // Remove dependencies to prevent infinite loops
-    
+
     // Handle time range changes with debouncing
     const handleTimeRangeChange = useCallback((newTimeRange) => {
         timeRangeRef.current = newTimeRange;
         setTimeRange(newTimeRange);
-        
+
         // Debounce time range changes to prevent rapid API calls
         setTimeout(() => {
             if (isMountedRef.current && timeRangeRef.current === newTimeRange) {
@@ -89,7 +89,7 @@ const PostViewDynamicsChart = () => {
     // Initial load (only once)
     useEffect(() => {
         let mounted = true;
-        
+
         const initialLoad = async () => {
             // Small delay to avoid race conditions
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -97,9 +97,9 @@ const PostViewDynamicsChart = () => {
                 loadData();
             }
         };
-        
+
         initialLoad();
-        
+
         return () => {
             mounted = false;
         };
@@ -122,7 +122,7 @@ const PostViewDynamicsChart = () => {
         if (process.env.NODE_ENV === 'development') {
             console.log('PostViewDynamicsChart: Setting up auto-refresh every', intervalMs, 'ms');
         }
-        
+
         const interval = setInterval(() => {
             if (isMountedRef.current && !isLoadingRef.current) {
                 if (process.env.NODE_ENV === 'development') {
@@ -131,7 +131,7 @@ const PostViewDynamicsChart = () => {
                 loadData();
             }
         }, intervalMs);
-        
+
         return () => {
             if (process.env.NODE_ENV === 'development') {
                 console.log('PostViewDynamicsChart: Clearing auto-refresh interval');
@@ -152,19 +152,19 @@ const PostViewDynamicsChart = () => {
         if (!data || !Array.isArray(data) || data.length === 0) {
             return [];
         }
-        
+
         try {
             const transformedData = data.map((point, index) => {
                 if (!point || typeof point !== 'object') {
                     return null;
                 }
-                
+
                 return {
-                    time: point.timestamp ? 
-                        new Date(point.timestamp).toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                        }) : 
+                    time: point.timestamp ?
+                        new Date(point.timestamp).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) :
                         point.time || `Point ${index + 1}`,
                     views: Math.max(0, Number(point.views) || 0),
                     likes: Math.max(0, Number(point.likes || point.reactions) || 0),
@@ -173,7 +173,7 @@ const PostViewDynamicsChart = () => {
                     timestamp: point.timestamp || new Date().toISOString()
                 };
             }).filter(Boolean);
-            
+
             return transformedData;
         } catch (error) {
             console.error('Error transforming chart data:', error);
@@ -188,7 +188,7 @@ const PostViewDynamicsChart = () => {
         try {
             const latest = chartData[chartData.length - 1] || {};
             const previous = chartData[chartData.length - 2] || {};
-            
+
             const total = chartData.reduce((sum, item) => sum + (item.views || 0), 0);
             const avgViews = Math.round(total / chartData.length) || 0;
             const currentViews = latest.views || 0;
@@ -230,8 +230,8 @@ const PostViewDynamicsChart = () => {
                         Post View Dynamics
                     </Typography>
                 </Box>
-                
-                <TimeRangeControls 
+
+                <TimeRangeControls
                     timeRange={timeRange}
                     refreshInterval={refreshInterval}
                     onTimeRangeChange={handleTimeRangeChange}
@@ -256,7 +256,7 @@ const PostViewDynamicsChart = () => {
             {!loading && chartData.length === 0 && <EmptyState />}
 
             {/* Status Footer */}
-            <StatusFooter 
+            <StatusFooter
                 autoRefresh={autoRefresh}
                 refreshInterval={refreshInterval}
                 summaryStats={summaryStats}

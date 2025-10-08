@@ -27,7 +27,7 @@ export const getActivityLevel = (user) => {
     const posts = user.total_posts || 0;
     const channels = user.total_channels || 0;
     const score = posts + (channels * 10);
-    
+
     if (score > 500) return 'high';
     if (score > 100) return 'medium';
     if (score > 0) return 'low';
@@ -37,7 +37,7 @@ export const getActivityLevel = (user) => {
 export const getStatusColor = (status) => {
     const colors = {
         'active': 'success',
-        'inactive': 'warning', 
+        'inactive': 'warning',
         'suspended': 'error',
         'premium': 'primary'
     };
@@ -46,12 +46,12 @@ export const getStatusColor = (status) => {
 
 export const formatDateAgo = (dateString) => {
     if (!dateString) return 'Never';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
@@ -62,7 +62,7 @@ export const formatDateAgo = (dateString) => {
 
 export const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    
+
     try {
         return new Date(dateString).toLocaleString('en-US', {
             year: 'numeric',
@@ -81,7 +81,7 @@ export const formatDate = (dateString) => {
  */
 export const UserActivity = ({ user }) => {
     const activityLevel = getActivityLevel(user);
-    
+
     return (
         <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" fontWeight="medium">
@@ -91,7 +91,7 @@ export const UserActivity = ({ user }) => {
                 Channels / Posts
             </Typography>
             <Box sx={{ mt: 0.5 }}>
-                <Chip 
+                <Chip
                     label={activityLevel}
                     size="small"
                     variant="outlined"
@@ -117,25 +117,25 @@ export const UserRiskScore = ({ user }) => {
         if (score >= 20) return 'info';
         return 'success';
     };
-    
+
     const getRiskLevel = (score) => {
         if (score >= 70) return 'High Risk';
         if (score >= 40) return 'Medium Risk';
         if (score >= 20) return 'Low Risk';
         return 'Safe';
     };
-    
+
     return (
         <Tooltip title={`Risk Score: ${riskScore}/100`}>
             <Box sx={{ textAlign: 'center' }}>
-                <Typography 
-                    variant="h6" 
+                <Typography
+                    variant="h6"
                     color={`${getRiskColor(riskScore)}.main`}
                     fontWeight="bold"
                 >
                     {riskScore}%
                 </Typography>
-                <Chip 
+                <Chip
                     label={getRiskLevel(riskScore)}
                     size="small"
                     color={getRiskColor(riskScore)}

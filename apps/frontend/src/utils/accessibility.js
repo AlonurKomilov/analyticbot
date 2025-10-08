@@ -10,7 +10,7 @@ export const announceToScreenReader = (message, priority = 'polite') => {
     if (announcer) {
         announcer.setAttribute('aria-live', priority);
         announcer.textContent = message;
-        
+
         // Clear after announcement
         setTimeout(() => {
             announcer.textContent = '';
@@ -59,7 +59,7 @@ export const focusManagement = {
         const focusableElements = containerElement.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
-        
+
         if (focusableElements.length === 0) return;
 
         const firstElement = focusableElements[0];
@@ -98,18 +98,18 @@ export const ariaLabels = {
     loading: (action) => `${action} in progress`,
     error: (context) => `Error in ${context}`,
     success: (action) => `${action} completed successfully`,
-    
+
     // Form-specific labels
     required: (label) => `${label} (required)`,
     optional: (label) => `${label} (optional)`,
     invalid: (label, error) => `${label} - ${error}`,
-    
+
     // Navigation labels
     breadcrumb: (path) => `You are here: ${path.join(' > ')}`,
     pagination: (current, total) => `Page ${current} of ${total}`,
-    
+
     // Data labels
-    sortButton: (column, direction) => 
+    sortButton: (column, direction) =>
         `Sort by ${column} ${direction === 'asc' ? 'ascending' : 'descending'}`,
     filterButton: (type, value) => `Filter by ${type}: ${value}`,
 };
@@ -190,10 +190,10 @@ export const contrastHelpers = {
         // This is a simplified check - in production, use a proper contrast checking library
         const foregroundLuminance = getLuminance(foreground);
         const backgroundLuminance = getLuminance(background);
-        
-        const contrast = (Math.max(foregroundLuminance, backgroundLuminance) + 0.05) / 
+
+        const contrast = (Math.max(foregroundLuminance, backgroundLuminance) + 0.05) /
                         (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
-        
+
         return level === 'AAA' ? contrast >= 7 : contrast >= 4.5;
     }
 };
@@ -206,12 +206,12 @@ const getLuminance = (color) => {
     const r = parseInt(hex.substr(0, 2), 16);
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
-    
+
     const [rs, gs, bs] = [r, g, b].map(c => {
         c = c / 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
     });
-    
+
     return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 };
 
@@ -221,7 +221,7 @@ const getLuminance = (color) => {
 export const screenReaderUtils = {
     // Hide decorative content from screen readers
     hideFromScreenReader: () => ({ 'aria-hidden': true }),
-    
+
     // Show content only to screen readers
     screenReaderOnly: {
         position: 'absolute',
@@ -234,7 +234,7 @@ export const screenReaderUtils = {
         whiteSpace: 'nowrap',
         border: '0'
     },
-    
+
     // Announce state changes
     announceStateChange: (oldState, newState, context) => {
         const message = `${context} changed from ${oldState} to ${newState}`;

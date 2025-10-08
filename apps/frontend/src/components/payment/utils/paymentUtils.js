@@ -1,6 +1,6 @@
 /**
  * Payment Utilities
- * 
+ *
  * Shared utility functions for payment and subscription components
  */
 

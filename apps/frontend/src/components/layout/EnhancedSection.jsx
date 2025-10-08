@@ -1,6 +1,6 @@
 /**
  * Enhanced Section Component
- * 
+ *
  * Improved visual section with:
  * - Better typography hierarchy
  * - Consistent spacing
@@ -11,7 +11,7 @@
 import React from 'react';
 import { Box, Typography, Divider, Tooltip } from '@mui/material';
 import { IconButton } from '../common/TouchTargetCompliance.jsx';
-import { 
+import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon,
   Info as InfoIcon
@@ -71,7 +71,7 @@ const EnhancedSection = ({
             >
               {title}
             </Typography>
-            
+
             {info && (
               <Tooltip title={info}>
                 <InfoIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -80,9 +80,9 @@ const EnhancedSection = ({
           </Box>
 
           {subtitle && (
-            <Typography 
-              variant="subtitle1" 
-              sx={{ 
+            <Typography
+              variant="subtitle1"
+              sx={{
                 color: 'text.secondary',
                 fontWeight: 500,
                 mb: description ? 0.5 : 0
@@ -93,9 +93,9 @@ const EnhancedSection = ({
           )}
 
           {description && (
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 color: 'text.secondary',
                 lineHeight: 1.4,
                 maxWidth: '80%'
@@ -109,14 +109,14 @@ const EnhancedSection = ({
         {/* Actions and Controls */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
           {actions}
-          
+
           {collapsible && (
             <IconButton
               onClick={onToggleCollapse}
               size="small"
-              sx={{ 
+              sx={{
                 color: 'text.secondary',
-                '&:hover': { 
+                '&:hover': {
                   color: 'text.primary',
                   bgcolor: 'action.hover'
                 }
@@ -130,12 +130,12 @@ const EnhancedSection = ({
 
       {/* Visual Separator for emphasized sections */}
       {emphasis && level <= 2 && (
-        <Divider 
-          sx={{ 
+        <Divider
+          sx={{
             mb: 3,
             borderColor: 'primary.main',
             borderWidth: 1
-          }} 
+          }}
         />
       )}
 

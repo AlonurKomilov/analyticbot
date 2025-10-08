@@ -1,6 +1,6 @@
 /**
  * 🛡️ Protected Route Component
- * 
+ *
  * Route guard that ensures only authenticated users can access protected routes.
  * Provides seamless redirects and loading states.
  */
@@ -12,11 +12,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ProtectedLayout from '../layout/ProtectedLayout';
 
-const ProtectedRoute = ({ 
-    children, 
+const ProtectedRoute = ({
+    children,
     redirectTo = '/login',
     requiredRole = null,
-    fallbackComponent = null 
+    fallbackComponent = null
 }) => {
     const { isAuthenticated, isLoading, user } = useAuth();
     const location = useLocation();
@@ -44,10 +44,10 @@ const ProtectedRoute = ({
 
     // Redirect to login if not authenticated
     if (!isAuthenticated) {
-        return <Navigate 
-            to="/auth" 
-            state={{ from: location }} 
-            replace 
+        return <Navigate
+            to="/auth"
+            state={{ from: location }}
+            replace
         />;
     }
 
@@ -56,13 +56,13 @@ const ProtectedRoute = ({
         if (fallbackComponent) {
             return fallbackComponent;
         }
-        
+
         return (
             <Box
                 sx={{
                     display: 'flex',
                     justifyContent: 'center',
-                    alignItems: 'center',  
+                    alignItems: 'center',
                     minHeight: '50vh',
                     flexDirection: 'column',
                     gap: 2,

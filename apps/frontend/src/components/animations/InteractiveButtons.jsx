@@ -1,6 +1,6 @@
 /**
  * Enhanced Interactive Buttons
- * 
+ *
  * Button components with advanced micro-interactions:
  * - Smooth hover animations
  * - Loading states with spinners
@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Button as MuiButton,
   IconButton as MuiIconButton,
   Box,
@@ -28,7 +28,7 @@ import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 /**
  * Enhanced Button with Micro-interactions
  */
-export const InteractiveButton = ({ 
+export const InteractiveButton = ({
   children,
   loading = false,
   success = false,
@@ -73,10 +73,10 @@ export const InteractiveButton = ({
     if (loading) {
       return (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CircularProgress 
-            size={16} 
+          <CircularProgress
+            size={16}
             color="inherit"
-            sx={{ 
+            sx={{
               animation: 'spin 1s linear infinite'
             }}
           />
@@ -118,7 +118,7 @@ export const InteractiveButton = ({
 
   const getHoverStyles = () => {
     if (disabled || loading) return {};
-    
+
     const hoverStyles = {
       lift: {
         transform: 'translateY(-2px)',
@@ -131,7 +131,7 @@ export const InteractiveButton = ({
         transform: 'scale(1.05)'
       }
     };
-    
+
     return hoverStyles[hoverEffect] || hoverStyles.lift;
   };
 
@@ -155,14 +155,14 @@ export const InteractiveButton = ({
           transition: 'all 0.2s ease-in-out',
           position: 'relative',
           overflow: 'hidden',
-          
+
           ...(isHovered && getHoverStyles()),
-          
+
           '&:focus-visible': {
             outline: `2px solid ${color === 'primary' ? '#58a6ff' : '#f85149'}`,
             outlineOffset: '2px'
           },
-          
+
           // Touch feedback for mobile
           '@media (hover: none)': {
             '&:active': {
@@ -170,7 +170,7 @@ export const InteractiveButton = ({
               transition: 'transform 0.1s ease-out'
             }
           },
-          
+
           ...props.sx
         }}
         {...props}
@@ -222,14 +222,14 @@ export const InteractiveIconButton = ({
 
   const getHoverStyles = () => {
     if (disabled || loading) return {};
-    
+
     const hoverStyles = {
       scale: { transform: 'scale(1.1)' },
-      glow: { 
+      glow: {
         boxShadow: `0 0 0 2px ${color === 'primary' ? '#58a6ff40' : '#f8514940'}`,
         backgroundColor: `${color === 'primary' ? '#58a6ff' : '#f85149'}10`
       },
-      bounce: { 
+      bounce: {
         animation: 'bounce 0.6s ease-in-out',
         '@keyframes bounce': {
           '0%, 20%, 53%, 80%, 100%': { transform: 'translate3d(0,0,0)' },
@@ -239,7 +239,7 @@ export const InteractiveIconButton = ({
         }
       }
     };
-    
+
     return hoverStyles[hoverEffect] || hoverStyles.scale;
   };
 
@@ -282,14 +282,14 @@ export const InteractiveIconButton = ({
           ...getSize(),
           borderRadius: DESIGN_TOKENS.layout.borderRadius.md,
           transition: 'all 0.2s ease-in-out',
-          
+
           ...(isHovered && getHoverStyles()),
-          
+
           '&:focus-visible': {
             outline: `2px solid ${color === 'primary' ? '#58a6ff' : '#f85149'}`,
             outlineOffset: '2px'
           },
-          
+
           // Touch feedback for mobile
           '@media (hover: none)': {
             '&:active': {
@@ -297,7 +297,7 @@ export const InteractiveIconButton = ({
               transition: 'transform 0.1s ease-out'
             }
           },
-          
+
           ...props.sx
         }}
         {...props}
@@ -366,17 +366,17 @@ export const AnimatedFab = ({
             zIndex: 1000,
             transition: 'all 0.3s ease-in-out',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            
+
             ...(isHovered && {
               transform: 'scale(1.1) translateY(-2px)',
               boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
             }),
-            
+
             '&:active': {
               transform: 'scale(0.95)',
               transition: 'transform 0.1s ease-out'
             },
-            
+
             ...props.sx
           }}
           {...props}

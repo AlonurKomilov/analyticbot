@@ -11,8 +11,11 @@ NO BUSINESS LOGIC - only service coordination and routing.
 
 import asyncio
 import logging
+from dataclasses import asdict
 from datetime import datetime
 from typing import Any
+
+from core.protocols import AnalyticsFusionServiceProtocol
 
 from ..infrastructure.data_access import DataAccessService
 from ..protocols.analytics_protocols import AnalyticsCoreProtocol
@@ -29,7 +32,7 @@ from ..protocols.orchestrator_protocols import (
 logger = logging.getLogger(__name__)
 
 
-class AnalyticsOrchestratorService(OrchestratorProtocol):
+class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceProtocol):
     """
     Lightweight analytics orchestrator service.
 
@@ -77,7 +80,7 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
 
     async def coordinate_comprehensive_analysis(
         self, channel_id: int, parameters: dict[str, Any] | None = None
-    ) -> CoordinationResult:
+    ) -> dict[str, Any]:
         """Coordinate comprehensive analytics analysis"""
         start_time = datetime.utcnow()
         request_id = f"comp_analysis_{channel_id}_{int(start_time.timestamp())}"
@@ -98,13 +101,13 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
             result = await self.route_analytics_request(request)
 
             logger.info(f"✅ Completed comprehensive analysis in {result.execution_time_ms}ms")
-            return result
+            return asdict(result)
 
         except Exception as e:
             logger.error(f"❌ Error coordinating comprehensive analysis: {e}")
             coordination_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-            return CoordinationResult(
+            result = CoordinationResult(
                 request_id=request_id,
                 request_type=RequestType.COMPREHENSIVE_ANALYSIS,
                 success=False,
@@ -113,6 +116,7 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
                 services_used=[],
                 errors=[str(e)],
             )
+            return asdict(result)
 
     async def route_analytics_request(self, request: OrchestrationRequest) -> CoordinationResult:
         """Route request to appropriate services"""
@@ -663,3 +667,211 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
         except Exception as e:
             logger.error(f"❌ Service {service_name} execution failed: {e}")
             return {"error": str(e), "service": service_name}
+
+    # ==================== AnalyticsFusionServiceProtocol Implementation ====================
+
+    def get_service_name(self) -> str:
+        """Get service identifier"""
+        return "analytics_orchestrator"
+
+    async def health_check(self) -> dict[str, Any]:
+        """
+        Service health check
+
+        Implements: ServiceProtocol.health_check
+        """
+        return await self.check_system_health()
+
+    async def get_realtime_metrics(self, channel_id: int) -> dict[str, Any]:
+        """
+        Get real-time metrics for a channel
+
+        Implements: AnalyticsFusionServiceProtocol.get_realtime_metrics
+        """
+        try:
+            request = OrchestrationRequest(
+                request_id=f"realtime_{channel_id}_{datetime.utcnow().timestamp()}",
+                request_type=RequestType.COMPREHENSIVE_ANALYSIS,
+                channel_id=channel_id,
+                parameters={"metrics_type": "real_time", "time_range": "1h"},
+            )
+
+            result = await self.route_analytics_request(request)
+
+            return {
+                "channel_id": channel_id,
+                "metrics_type": "real_time",
+                "timestamp": datetime.utcnow().isoformat(),
+                "data": result.results if result.success else {},
+                "success": result.success,
+                "execution_time_ms": result.execution_time_ms,
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get realtime metrics for channel {channel_id}: {e}")
+            return {"channel_id": channel_id, "error": str(e), "status": "failed"}
+
+    async def calculate_performance_score(self, channel_id: int, period: int) -> dict[str, Any]:
+        """
+        Calculate performance score for a channel
+
+        Implements: AnalyticsFusionServiceProtocol.calculate_performance_score
+        """
+        try:
+            request = OrchestrationRequest(
+                request_id=f"performance_{channel_id}_{datetime.utcnow().timestamp()}",
+                request_type=RequestType.COMPREHENSIVE_ANALYSIS,
+                channel_id=channel_id,
+                parameters={"analysis_type": "performance", "period_days": period},
+            )
+
+            result = await self.route_analytics_request(request)
+
+            # Extract performance metrics
+            performance_data = result.results if result.success else {}
+
+            return {
+                "channel_id": channel_id,
+                "period": period,
+                "performance_score": performance_data.get("performance_score", 50),
+                "components": performance_data.get("components", {}),
+                "recommendations": performance_data.get("recommendations", []),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to calculate performance score for channel {channel_id}: {e}")
+            return {"channel_id": channel_id, "period": period, "error": str(e), "status": "failed"}
+
+    async def get_live_monitoring_data(self, channel_id: int) -> dict[str, Any]:
+        """
+        Get live monitoring data
+
+        Implements: AnalyticsFusionServiceProtocol.get_live_monitoring_data
+        """
+        try:
+            # Use existing comprehensive analysis with monitoring focus
+            result = await self.coordinate_comprehensive_analysis(
+                channel_id=channel_id, parameters={"monitoring": True, "live_data": True}
+            )
+
+            return {
+                "channel_id": channel_id,
+                "status": "live",
+                "last_updated": datetime.utcnow().isoformat(),
+                "monitoring_data": result.get("results", {}) if result.get("success") else {},
+                "health_status": "healthy" if result.get("success") else "degraded",
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get live monitoring data for channel {channel_id}: {e}")
+            return {"channel_id": channel_id, "error": str(e), "status": "failed"}
+
+    async def get_live_metrics(self, channel_id: int, hours: int = 6) -> dict[str, Any]:
+        """
+        Get real-time live metrics for monitoring dashboard
+
+        Implements: AnalyticsFusionServiceProtocol.get_live_metrics
+        """
+        try:
+            request = OrchestrationRequest(
+                request_id=f"live_metrics_{channel_id}_{datetime.utcnow().timestamp()}",
+                request_type=RequestType.COMPREHENSIVE_ANALYSIS,
+                channel_id=channel_id,
+                parameters={"time_range": f"{hours}h", "metrics_type": "live"},
+            )
+
+            result = await self.route_analytics_request(request)
+
+            return {
+                "channel_id": channel_id,
+                "time_window_hours": hours,
+                "timestamp": datetime.utcnow().isoformat(),
+                "metrics": result.results if result.success else {},
+                "status": "live" if result.success else "error",
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get live metrics for channel {channel_id}: {e}")
+            return {"channel_id": channel_id, "hours": hours, "error": str(e), "status": "failed"}
+
+    async def generate_analytical_report(
+        self, channel_id: int, report_type: str, days: int
+    ) -> dict[str, Any]:
+        """
+        Generate comprehensive analytical reports
+
+        Implements: AnalyticsFusionServiceProtocol.generate_analytical_report
+        """
+        try:
+            request = OrchestrationRequest(
+                request_id=f"report_{channel_id}_{report_type}_{datetime.utcnow().timestamp()}",
+                request_type=RequestType.COMPREHENSIVE_ANALYSIS,
+                channel_id=channel_id,
+                parameters={
+                    "report_type": report_type,
+                    "period_days": days,
+                    "include_recommendations": True,
+                },
+            )
+
+            result = await self.route_analytics_request(request)
+
+            return {
+                "channel_id": channel_id,
+                "report_type": report_type,
+                "period_days": days,
+                "report": result.results if result.success else {},
+                "generated_at": datetime.utcnow().isoformat(),
+                "success": result.success,
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to generate analytical report for channel {channel_id}: {e}")
+            return {
+                "channel_id": channel_id,
+                "report_type": report_type,
+                "error": str(e),
+                "status": "failed",
+            }
+
+    async def generate_recommendations(self, channel_id: int) -> dict[str, Any]:
+        """
+        Generate AI-powered recommendations
+
+        Implements: AnalyticsFusionServiceProtocol.generate_recommendations
+        """
+        try:
+            # Use intelligence service for AI recommendations
+            if "intelligence" in self.service_instances:
+                intelligence_service = self.service_instances["intelligence"]
+                if hasattr(intelligence_service, "generate_recommendations"):
+                    recommendations = await intelligence_service.generate_recommendations(
+                        channel_id
+                    )
+                else:
+                    recommendations = ["Service method not available"]
+            else:
+                # Fallback recommendations based on comprehensive analysis
+                analysis_result = await self.coordinate_comprehensive_analysis(
+                    channel_id=channel_id, parameters={"focus": "recommendations"}
+                )
+                recommendations = analysis_result.get("results", {}).get(
+                    "recommendations",
+                    [
+                        "Maintain consistent posting schedule",
+                        "Engage with audience comments",
+                        "Use trending hashtags",
+                    ],
+                )
+
+            return {
+                "channel_id": channel_id,
+                "recommendations": recommendations,
+                "generated_at": datetime.utcnow().isoformat(),
+                "recommendation_type": "ai_powered",
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to generate recommendations for channel {channel_id}: {e}")
+            return {"channel_id": channel_id, "error": str(e), "status": "failed"}

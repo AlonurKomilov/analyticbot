@@ -3,7 +3,7 @@ import { Alert } from '@mui/material';
 
 /**
  * ChartErrorBoundary - Error boundary component for chart rendering errors
- * 
+ *
  * Catches and handles JavaScript errors in the chart component tree,
  * providing a fallback UI when chart rendering fails.
  */

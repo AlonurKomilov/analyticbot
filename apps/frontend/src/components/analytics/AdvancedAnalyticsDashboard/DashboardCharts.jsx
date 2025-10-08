@@ -34,17 +34,17 @@ const DashboardCharts = React.memo(({ trends }) => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <RechartsTooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="views" 
-                  stroke={theme.palette.primary.main} 
+                <Line
+                  type="monotone"
+                  dataKey="views"
+                  stroke={theme.palette.primary.main}
                   strokeWidth={3}
                   name="Views"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="engagement" 
-                  stroke={theme.palette.secondary.main} 
+                <Line
+                  type="monotone"
+                  dataKey="engagement"
+                  stroke={theme.palette.secondary.main}
                   strokeWidth={3}
                   name="Engagement"
                 />

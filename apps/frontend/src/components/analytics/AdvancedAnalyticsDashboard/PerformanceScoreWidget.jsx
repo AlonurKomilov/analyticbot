@@ -21,11 +21,11 @@ const PerformanceScoreWidget = React.memo(({ metrics }) => {
             🎯 Performance Score
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 2 }}>
-            <Box 
-              sx={{ 
-                width: 120, 
-                height: 120, 
-                borderRadius: '50%', 
+            <Box
+              sx={{
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
                 background: `conic-gradient(${theme.palette.success.main} ${(metrics?.engagementRate || 0) * 3.6}deg, ${theme.palette.grey[300]} 0deg)`,
                 display: 'flex',
                 alignItems: 'center',
@@ -34,11 +34,11 @@ const PerformanceScoreWidget = React.memo(({ metrics }) => {
                 mb: 2
               }}
             >
-              <Box 
-                sx={{ 
-                  width: 90, 
-                  height: 90, 
-                  borderRadius: '50%', 
+              <Box
+                sx={{
+                  width: 90,
+                  height: 90,
+                  borderRadius: '50%',
                   backgroundColor: theme.palette.background.paper,
                   display: 'flex',
                   alignItems: 'center',

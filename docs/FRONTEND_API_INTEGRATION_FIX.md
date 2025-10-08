@@ -23,7 +23,7 @@ async def get_initial_data(user_id: int = 12345):
 Leveraged existing Pydantic models from `apps/bot/models/twa.py`:
 - `InitialDataResponse` - Main response model
 - `User` - User profile data
-- `Plan` - Subscription plan details  
+- `Plan` - Subscription plan details
 - `Channel` - Channel information
 - `ScheduledPost` - Scheduled posts data
 
@@ -66,7 +66,7 @@ $ curl http://localhost:8000/initial-data | jq
    - Schedule repository for user's scheduled posts
    - Plan repository for subscription details
 
-2. **Add Authentication**: 
+2. **Add Authentication**:
    - Extract user_id from JWT token or session
    - Implement proper user authentication middleware
    - Remove hardcoded user_id default

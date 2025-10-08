@@ -44,8 +44,8 @@ const SmartAlertsPanel = React.memo(({ overview, postDynamics, topPosts }) => {
       {/* Alerts Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Tooltip title="Smart alerts">
-          <IconButton 
-            size="small" 
+          <IconButton
+            size="small"
             onClick={() => setShowAlerts(!showAlerts)}
             color={alerts.length > 0 ? "warning" : "default"}
           >
@@ -65,7 +65,7 @@ const SmartAlertsPanel = React.memo(({ overview, postDynamics, topPosts }) => {
         <List sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
           {alerts.map((alert) => (
             <ListItem key={alert.id} sx={{ mb: 1 }}>
-              <Alert 
+              <Alert
                 severity={alert.type}
                 sx={{ width: '100%' }}
                 action={

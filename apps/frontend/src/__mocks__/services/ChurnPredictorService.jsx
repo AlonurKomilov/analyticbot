@@ -35,11 +35,11 @@ import ModernCard, { ModernCardHeader } from '../../components/common/ModernCard
 import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
 // Import mock data
-import { 
-    churnPredictorStats, 
-    mockChurnPredictions, 
-    retentionStrategies, 
-    riskSegments 
+import {
+    churnPredictorStats,
+    mockChurnPredictions,
+    retentionStrategies,
+    riskSegments
 } from '../aiServices/churnPredictor.js';
 
 /**
@@ -106,7 +106,7 @@ const ChurnPredictorService = () => {
                 <Typography variant="body1" color="text.secondary">
                     Predict customer churn and implement retention strategies using AI-powered analysis.
                 </Typography>
-                
+
                 <Alert severity="info" sx={{ mt: 2 }}>
                     🎭 Demo Mode: Showing sample churn prediction data. In production, this would analyze real customer behavior patterns.
                 </Alert>
@@ -126,7 +126,7 @@ const ChurnPredictorService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -139,7 +139,7 @@ const ChurnPredictorService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -152,7 +152,7 @@ const ChurnPredictorService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -198,8 +198,8 @@ const ChurnPredictorService = () => {
                     }
                 />
 
-                <Tabs 
-                    value={currentTab} 
+                <Tabs
+                    value={currentTab}
                     onChange={handleTabChange}
                     sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
                 >
@@ -214,7 +214,7 @@ const ChurnPredictorService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Customer Risk Analysis ({filteredUsers.length} customers)
                         </Typography>
-                        
+
                         <Grid container spacing={2}>
                             {(filteredUsers || []).map((user, index) => (
                                 <Grid item xs={12} md={6} key={index}>
@@ -231,14 +231,14 @@ const ChurnPredictorService = () => {
                                                 </Box>
                                                 {getRiskIcon(user.risk)}
                                             </Box>
-                                            
+
                                             <Box sx={{ mb: 2 }}>
                                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                                     Risk Score: {user.score}%
                                                 </Typography>
-                                                <LinearProgress 
-                                                    variant="determinate" 
-                                                    value={user.score} 
+                                                <LinearProgress
+                                                    variant="determinate"
+                                                    value={user.score}
                                                     sx={{
                                                         height: 8,
                                                         borderRadius: 4,
@@ -248,13 +248,13 @@ const ChurnPredictorService = () => {
                                                     }}
                                                 />
                                             </Box>
-                                            
+
                                             <Typography variant="body2" sx={{ mb: 1 }}>
                                                 <strong>Risk Factors:</strong>
                                             </Typography>
                                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                                 {(user.factors || []).map((factor, index) => (
-                                                    <Chip 
+                                                    <Chip
                                                         key={index}
                                                         label={factor}
                                                         size="small"
@@ -276,7 +276,7 @@ const ChurnPredictorService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Recommended Retention Strategies
                         </Typography>
-                        
+
                         <Grid container spacing={2}>
                             {(strategies || []).map((strategy, index) => (
                                 <Grid item xs={12} md={6} key={index}>
@@ -288,18 +288,18 @@ const ChurnPredictorService = () => {
                                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                                 {strategy.description}
                                             </Typography>
-                                            
+
                                             <Box sx={{ mb: 2 }}>
                                                 <Typography variant="body2" sx={{ mb: 1 }}>
                                                     Target Audience:
                                                 </Typography>
-                                                <Chip 
+                                                <Chip
                                                     label={strategy.targetAudience}
                                                     color="primary"
                                                     variant="outlined"
                                                 />
                                             </Box>
-                                            
+
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <Typography variant="body2">
                                                     Expected Impact: <strong>{strategy.expectedImpact}</strong>
@@ -322,11 +322,11 @@ const ChurnPredictorService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Prediction Settings
                         </Typography>
-                        
+
                         <Alert severity="info">
                             🎭 Demo Mode: Settings are simulated for demonstration purposes.
                         </Alert>
-                        
+
                         <Box sx={{ mt: 2 }}>
                             <Typography variant="body1">
                                 Configure churn prediction parameters, model thresholds, and notification settings.

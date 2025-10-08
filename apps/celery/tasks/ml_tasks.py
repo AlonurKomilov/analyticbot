@@ -74,7 +74,7 @@ def train_growth_model(
         logger.info(f"Starting growth model training for channel {channel_id}")
 
         # Import here to avoid loading heavy libraries at startup
-        from core.services.deep_learning.growth.growth_forecaster_service import (
+        from core.services.deep_learning.growth_forecaster.growth_forecaster_service import (
             GrowthForecasterService,
         )
         from core.services.deep_learning.infrastructure.gpu_config import GPUConfigService
@@ -114,7 +114,6 @@ def train_growth_model(
             data=df,
             forecast_horizon=forecast_horizon,
             include_uncertainty=include_uncertainty,
-            return_attention=False,
         )
 
         self.update_state(state="PROGRESS", meta={"progress": 90, "status": "Finalizing results"})

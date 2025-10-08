@@ -5,7 +5,7 @@ The TWA frontend was showing mixed mock and real API data because individual com
 
 ## Root Cause Analysis
 1. **PostViewDynamicsChart.jsx**: Made direct API calls with fallback to mock data
-2. **TopPostsTable.jsx**: Used direct fetch() calls instead of store methods  
+2. **TopPostsTable.jsx**: Used direct fetch() calls instead of store methods
 3. **BestTimeRecommender.jsx**: Had hardcoded API endpoints with mock fallbacks
 4. **Missing synchronization**: No mechanism to notify components when data source changed
 
@@ -17,7 +17,7 @@ The TWA frontend was showing mixed mock and real API data because individual com
 - ✅ Added event listener for data source changes
 - ✅ Proper data handling for both mock and API responses
 
-### 2. Updated TopPostsTable.jsx  
+### 2. Updated TopPostsTable.jsx
 - ✅ Removed hardcoded fetch() calls to localhost:8000
 - ✅ Now uses `fetchTopPosts()` from store
 - ✅ Added `useAppStore` import and data source awareness
@@ -46,15 +46,15 @@ Each analytics component now:
 ### Event-Driven Refresh
 When data source changes:
 1. `AnalyticsDashboard` clears analytics cache
-2. Dispatches `dataSourceChanged` custom event  
+2. Dispatches `dataSourceChanged` custom event
 3. All analytics components listen for this event
 4. Components reload data using new source configuration
 
 ### Data Flow
 ```
-User toggles API mode → AnalyticsDashboard.handleDataSourceChange() 
-→ store.setDataSource() → store.clearAnalyticsData() 
-→ window.dispatchEvent('dataSourceChanged') 
+User toggles API mode → AnalyticsDashboard.handleDataSourceChange()
+→ store.setDataSource() → store.clearAnalyticsData()
+→ window.dispatchEvent('dataSourceChanged')
 → Components reload with new source
 ```
 
@@ -72,7 +72,7 @@ User toggles API mode → AnalyticsDashboard.handleDataSourceChange()
 
 ## Files Modified
 - `apps/frontend/src/components/PostViewDynamicsChart.jsx`
-- `apps/frontend/src/components/TopPostsTable.jsx` 
+- `apps/frontend/src/components/TopPostsTable.jsx`
 - `apps/frontend/src/components/BestTimeRecommender.jsx`
 - `apps/frontend/src/components/AnalyticsDashboard.jsx`
 

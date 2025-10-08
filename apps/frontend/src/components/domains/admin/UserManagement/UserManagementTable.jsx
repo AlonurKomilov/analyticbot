@@ -3,33 +3,33 @@ import {
     Chip
 } from '@mui/material';
 import { EnhancedDataTable } from '../../../common/EnhancedDataTable';
-import { 
-    UserAvatar, 
-    UserInfo, 
-    UserContact 
+import {
+    UserAvatar,
+    UserInfo,
+    UserContact
 } from './UserDisplayComponents';
-import { 
-    UserActivity, 
-    UserRiskScore, 
-    UserLastActive, 
+import {
+    UserActivity,
+    UserRiskScore,
+    UserLastActive,
     getStatusColor,
-    formatDate 
+    formatDate
 } from './UserUtils';
 import { UserActions } from './UserActions';
 
 /**
  * UserManagementTable - Optimized and modular user management component
- * 
+ *
  * Refactored from 597 lines to ~150 lines by:
  * - Extracting display components
  * - Moving utility functions to separate file
  * - Using composition over large inline components
  * - Leveraging existing EnhancedDataTable infrastructure
  */
-const UserManagementTable = ({ 
-    users = [], 
-    loading = false, 
-    error = null, 
+const UserManagementTable = ({
+    users = [],
+    loading = false,
+    error = null,
     onRefresh,
     onUserUpdate,
     onUserDelete,
@@ -70,8 +70,8 @@ const UserManagementTable = ({
             align: 'center',
             width: 120,
             Cell: ({ row: user }) => (
-                <Chip 
-                    label={user.status} 
+                <Chip
+                    label={user.status}
                     color={getStatusColor(user.status)}
                     size="small"
                     variant="filled"

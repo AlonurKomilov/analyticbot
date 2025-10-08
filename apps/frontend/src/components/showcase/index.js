@@ -1,6 +1,6 @@
 /**
  * Showcase Components Index
- * 
+ *
  * Centralized exports for the refactored tables showcase components
  */
 

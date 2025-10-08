@@ -42,7 +42,7 @@ export class DemoAPIService {
             slow: 300,
             ai_processing: 500
         };
-        
+
         const delay = delays[type] || delays.default;
         await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -54,17 +54,17 @@ export class DemoAPIService {
      */
     async getPostDynamics(params = {}) {
         const { hours = 24 } = params;
-        
+
         // Validate parameters
         if (hours < 1 || hours > 168) {
             throw new Error('Hours parameter must be between 1 and 168');
         }
 
         await this._simulateDelay('default');
-        
+
         try {
             const data = await analyticsService.getDemoPostDynamics(hours);
-            return this._formatResponse(data, { 
+            return this._formatResponse(data, {
                 params: { hours },
                 count: data.length
             });
@@ -75,22 +75,22 @@ export class DemoAPIService {
 
     /**
      * GET /analytics/demo/posts/top
-     * @param {Object} params - Query parameters  
+     * @param {Object} params - Query parameters
      * @param {number} params.count - Number of posts (1-100)
      */
     async getTopPosts(params = {}) {
         const { count = 10 } = params;
-        
+
         // Validate parameters
         if (count < 1 || count > 100) {
             throw new Error('Count parameter must be between 1 and 100');
         }
 
         await this._simulateDelay('default');
-        
+
         try {
             const data = await analyticsService.getDemoTopPosts(count);
-            return this._formatResponse(data, { 
+            return this._formatResponse(data, {
                 params: { count },
                 total: data.length
             });
@@ -104,10 +104,10 @@ export class DemoAPIService {
      */
     async getBestTimes() {
         await this._simulateDelay('slow'); // AI processing takes longer
-        
+
         try {
             const data = await analyticsService.getDemoBestTimes();
-            return this._formatResponse(data, { 
+            return this._formatResponse(data, {
                 algorithm: 'engagement_optimization',
                 confidence: 'high'
             });
@@ -121,10 +121,10 @@ export class DemoAPIService {
      */
     async getAIRecommendations() {
         await this._simulateDelay('ai_processing'); // AI processing simulation
-        
+
         try {
             const data = await analyticsService.getDemoAIRecommendations();
-            return this._formatResponse(data, { 
+            return this._formatResponse(data, {
                 model_version: 'v2.1.0',
                 processing_time_ms: Math.floor(Math.random() * 300) + 200
             });
@@ -138,7 +138,7 @@ export class DemoAPIService {
      */
     async getBatchData(requests = []) {
         const results = {};
-        
+
         for (const request of requests) {
             try {
                 switch (request.endpoint) {
@@ -161,8 +161,8 @@ export class DemoAPIService {
                 results[request.endpoint] = { error: error.message };
             }
         }
-        
-        return this._formatResponse(results, { 
+
+        return this._formatResponse(results, {
             batch: true,
             requested: requests.length,
             successful: Object.keys(results).filter(k => !results[k].error).length
@@ -174,7 +174,7 @@ export class DemoAPIService {
      */
     async getHealth() {
         await this._simulateDelay('fast');
-        
+
         return this._formatResponse({
             status: 'healthy',
             service: 'demo-analytics',
@@ -182,7 +182,7 @@ export class DemoAPIService {
             cache_stats: { hits: 0, misses: 0, size: 0 }, // Simplified cache stats
             endpoints: [
                 '/demo/posts/dynamics',
-                '/demo/posts/top', 
+                '/demo/posts/top',
                 '/demo/timing/best',
                 '/demo/recommendations/ai'
             ]
@@ -195,7 +195,7 @@ export class DemoAPIService {
     async clearCache() {
         // Cache clearing handled by main analyticsService
         analyticsService.clearCache('demo');
-        
+
         return this._formatResponse({
             message: 'Demo cache cleared successfully',
             timestamp: new Date().toISOString()
@@ -212,17 +212,17 @@ export const demoEndpoints = {
      * GET /analytics/demo/posts/dynamics equivalent
      */
     getPostDynamics: (hours = 24) => demoAPI.getPostDynamics({ hours }),
-    
+
     /**
-     * GET /analytics/demo/posts/top equivalent  
+     * GET /analytics/demo/posts/top equivalent
      */
     getTopPosts: (count = 10) => demoAPI.getTopPosts({ count }),
-    
+
     /**
      * GET /analytics/demo/timing/best equivalent
      */
     getBestTimes: () => demoAPI.getBestTimes(),
-    
+
     /**
      * GET /analytics/demo/recommendations/ai equivalent
      */

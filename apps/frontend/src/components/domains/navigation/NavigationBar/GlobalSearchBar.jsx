@@ -15,7 +15,7 @@ import GlobalSearchDialog from '../../../../components/common/GlobalSearchDialog
 
 /**
  * GlobalSearchBar Component
- * 
+ *
  * Handles global search functionality including:
  * - Desktop search bar with keyboard shortcut hint
  * - Mobile search button
@@ -27,7 +27,7 @@ import GlobalSearchDialog from '../../../../components/common/GlobalSearchDialog
 const GlobalSearchBar = ({ className, ...props }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-    
+
     // Local state for search dialog
     const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
@@ -87,19 +87,19 @@ const GlobalSearchBar = ({ className, ...props }) => {
                         {...props}
                     >
                         <SearchIcon fontSize="small" color="action" />
-                        <Typography 
-                            variant="body2" 
+                        <Typography
+                            variant="body2"
                             color="text.secondary"
                             sx={{ flexGrow: 1, textAlign: 'left' }}
                         >
                             Search...
                         </Typography>
-                        <Chip 
-                            label="⌘K" 
-                            size="small" 
+                        <Chip
+                            label="⌘K"
+                            size="small"
                             variant="outlined"
-                            sx={{ 
-                                height: 20, 
+                            sx={{
+                                height: 20,
                                 fontSize: '0.7rem',
                                 '& .MuiChip-label': {
                                     px: 0.5

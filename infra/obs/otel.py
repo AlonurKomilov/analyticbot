@@ -96,6 +96,7 @@ class MTProtoTracer:
                 span.record_exception(e)
                 # Safe to access trace here since OTEL_AVAILABLE is True
                 from opentelemetry import trace as otel_trace
+
                 span.set_status(otel_trace.Status(otel_trace.StatusCode.ERROR, str(e)))
             raise
         finally:

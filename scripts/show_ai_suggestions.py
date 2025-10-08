@@ -2,10 +2,12 @@
 """
 Show AI suggestions from Smart Auto-Fixer
 """
+
+import asyncio
 import os
 import sys
-import asyncio
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from scripts.ai_fix_enhanced import CodeFixer
 
@@ -13,13 +15,13 @@ from scripts.ai_fix_enhanced import CodeFixer
 async def main():
     """Show AI suggestions without applying them"""
     print("🔍 Getting AI suggestions from Smart Auto-Fixer...")
-    
+
     fixer = CodeFixer()
-    
+
     # Analyze issues
     print("📋 Analyzing code issues...")
     issues = fixer.analyze_code_issues()
-    
+
     # Show current issues
     print("\n📊 Current Issues Found:")
     for issue_type, issue_list in issues.items():
@@ -30,21 +32,21 @@ async def main():
                 print(f"    {i+1}. {issue}")
             if len(issue_list) > 3:
                 print(f"    ... and {len(issue_list) - 3} more")
-    
+
     # Get AI suggestions
     has_issues = any(len(issue_list) > 0 for issue_list in issues.values())
     if fixer.client and has_issues:
         print("\n🤖 Getting AI suggestions from Claude 3.5 Haiku...")
         prompt = fixer.create_ai_prompt(None, issues)
         ai_response = await fixer.get_ai_suggestions(prompt)
-        
+
         if ai_response:
-            print("\n" + "="*60)
+            print("\n" + "=" * 60)
             print("🎯 AI SUGGESTIONS FROM CLAUDE 3.5 HAIKU")
-            print("="*60)
+            print("=" * 60)
             print(ai_response)
-            print("="*60)
-            
+            print("=" * 60)
+
             # Parse and show structured fixes
             fixes = fixer.parse_ai_suggestions(ai_response)
             if fixes:
@@ -53,7 +55,7 @@ async def main():
                     print(f"\n{i}. File: {fix.get('file', 'Unknown')}")
                     print(f"   Line: {fix.get('line', 'Unknown')}")
                     print(f"   Issue: {fix.get('issue', 'Unknown')}")
-                    if fix.get('explanation'):
+                    if fix.get("explanation"):
                         print(f"   Explanation: {fix['explanation']}")
         else:
             print("❌ No AI suggestions received")

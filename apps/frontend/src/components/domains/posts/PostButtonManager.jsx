@@ -7,42 +7,42 @@ import { Box, Typography, List, ListItem, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ButtonConstructor from '../../ButtonConstructor';
 
-const PostButtonManager = ({ 
-    buttons = [], 
-    onAddButton, 
+const PostButtonManager = ({
+    buttons = [],
+    onAddButton,
     onRemoveButton,
-    disabled = false 
+    disabled = false
 }) => {
     return (
         <Box>
             <Typography variant="h6" sx={{ mb: 2 }}>
                 Inline Buttons (Optional)
             </Typography>
-            
-            <ButtonConstructor 
-                onAddButton={onAddButton} 
+
+            <ButtonConstructor
+                onAddButton={onAddButton}
                 disabled={disabled}
                 aria-label="Add inline button"
             />
-            
+
             {buttons.length > 0 && (
                 <Box sx={{ mt: 2 }}>
-                    <Typography 
-                        variant="subtitle2" 
+                    <Typography
+                        variant="subtitle2"
                         sx={{ mb: 1 }}
                         id="buttons-list-label"
                     >
                         Added Buttons:
                     </Typography>
-                    <List 
-                        dense 
+                    <List
+                        dense
                         aria-labelledby="buttons-list-label"
                         sx={{ bgcolor: 'background.paper', borderRadius: 1 }}
                     >
                         {buttons.map((button, index) => (
-                            <ListItem 
+                            <ListItem
                                 key={`${button.text}-${index}`}
-                                sx={{ 
+                                sx={{
                                     py: 0.5,
                                     display: 'flex',
                                     justifyContent: 'space-between',

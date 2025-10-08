@@ -16,7 +16,12 @@ class AsyncpgPostRepository:
         self.pool = pool
 
     async def upsert_post(
-        self, channel_id: int, msg_id: int, date: datetime, text: str = "", links_json: list | None = None
+        self,
+        channel_id: int,
+        msg_id: int,
+        date: datetime,
+        text: str = "",
+        links_json: list | None = None,
     ) -> dict[str, Any]:
         """Insert or update a post with UPSERT behavior.
 
@@ -111,8 +116,8 @@ class AsyncpgPostRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT * FROM posts 
-                WHERE channel_id = $1 
+                SELECT * FROM posts
+                WHERE channel_id = $1
                 ORDER BY date DESC, msg_id DESC
                 LIMIT $2 OFFSET $3
                 """,
@@ -165,7 +170,7 @@ class AsyncpgPostRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT * FROM posts 
+                SELECT * FROM posts
                 WHERE date > NOW() - INTERVAL '%s hours'
                 ORDER BY date DESC, msg_id DESC
                 LIMIT $1
@@ -193,10 +198,10 @@ class AsyncpgPostRepository:
                 SELECT COALESCE(SUM(pm.views), 0)
                 FROM posts p
                 LEFT JOIN LATERAL (
-                    SELECT views 
-                    FROM post_metrics 
+                    SELECT views
+                    FROM post_metrics
                     WHERE channel_id = p.channel_id AND msg_id = p.msg_id
-                    ORDER BY snapshot_time DESC 
+                    ORDER BY snapshot_time DESC
                     LIMIT 1
                 ) pm ON true
                 WHERE p.channel_id = $1 AND p.date BETWEEN $2 AND $3
@@ -214,7 +219,7 @@ class AsyncpgPostRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT 
+                SELECT
                     p.msg_id,
                     p.date,
                     p.text,
@@ -226,9 +231,9 @@ class AsyncpgPostRepository:
                 FROM posts p
                 LEFT JOIN LATERAL (
                     SELECT views, forwards, replies_count, reactions
-                    FROM post_metrics 
+                    FROM post_metrics
                     WHERE channel_id = p.channel_id AND msg_id = p.msg_id
-                    ORDER BY snapshot_time DESC 
+                    ORDER BY snapshot_time DESC
                     LIMIT 1
                 ) pm ON true
                 WHERE p.channel_id = $1 AND p.date BETWEEN $2 AND $3

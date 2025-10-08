@@ -1,6 +1,6 @@
 /**
  * Advanced Performance Optimization System
- * 
+ *
  * This module provides:
  * - Smart component splitting strategies
  * - Dynamic import optimization
@@ -15,7 +15,7 @@ import { Box, CircularProgress, Skeleton } from '@mui/material';
 // Performance-aware loading states
 export const LOADING_STRATEGIES = {
   SKELETON: 'skeleton',
-  SPINNER: 'spinner', 
+  SPINNER: 'spinner',
   PROGRESSIVE: 'progressive',
   INLINE: 'inline'
 };
@@ -48,12 +48,12 @@ export class SmartLazyLoader {
     const enhancedImportFn = async () => {
       const startTime = performance.now();
       let attempts = 0;
-      
+
       while (attempts < retryCount) {
         try {
           const module = await importFn();
           const loadTime = performance.now() - startTime;
-          
+
           // Track performance metrics
           this.performanceMetrics.set(name, {
             loadTime,
@@ -61,12 +61,12 @@ export class SmartLazyLoader {
             attempts: attempts + 1,
             success: true
           });
-          
+
           return module;
         } catch (error) {
           attempts++;
           console.warn(`Failed to load ${name} (attempt ${attempts}/${retryCount}):`, error);
-          
+
           if (attempts >= retryCount) {
             this.performanceMetrics.set(name, {
               loadTime: performance.now() - startTime,
@@ -77,7 +77,7 @@ export class SmartLazyLoader {
             });
             throw error;
           }
-          
+
           // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
         }
@@ -85,7 +85,7 @@ export class SmartLazyLoader {
     };
 
     const LazyComponent = lazy(enhancedImportFn);
-    
+
     // Add preload capability
     LazyComponent.preload = () => {
       if (!this.loadCache.has(name)) {
@@ -152,7 +152,7 @@ export class SmartLazyLoader {
             }
           });
         }, { rootMargin: '200px' });
-        
+
         // Observe a trigger element (could be passed as option)
         const triggerElement = document.querySelector('[data-preload-trigger]');
         if (triggerElement) {
@@ -194,8 +194,8 @@ export const smartLoader = new SmartLazyLoader();
 /**
  * Performance-aware loading components
  */
-export const PerformanceLoadingFallback = memo(({ 
-  strategy = LOADING_STRATEGIES.SKELETON, 
+export const PerformanceLoadingFallback = memo(({
+  strategy = LOADING_STRATEGIES.SKELETON,
   height = 200,
   lines = 3,
   variant = 'rectangular'
@@ -216,14 +216,14 @@ export const PerformanceLoadingFallback = memo(({
             ))}
           </Box>
         );
-      
+
       case LOADING_STRATEGIES.SPINNER:
         return (
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
               height,
               minHeight: 200
             }}
@@ -231,7 +231,7 @@ export const PerformanceLoadingFallback = memo(({
             <CircularProgress size={40} />
           </Box>
         );
-      
+
       case LOADING_STRATEGIES.PROGRESSIVE:
         return (
           <Box sx={{ p: 2 }}>
@@ -243,13 +243,13 @@ export const PerformanceLoadingFallback = memo(({
             </Box>
           </Box>
         );
-      
+
       case LOADING_STRATEGIES.INLINE:
         return (
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
               gap: 1,
               p: 1,
               opacity: 0.7
@@ -259,7 +259,7 @@ export const PerformanceLoadingFallback = memo(({
             <span>Loading...</span>
           </Box>
         );
-      
+
       default:
         return <CircularProgress />;
     }
@@ -273,9 +273,9 @@ PerformanceLoadingFallback.displayName = 'PerformanceLoadingFallback';
 /**
  * Enhanced Suspense wrapper with performance tracking
  */
-export const PerformanceSuspense = memo(({ 
-  children, 
-  fallback, 
+export const PerformanceSuspense = memo(({
+  children,
+  fallback,
   name = 'UnknownSuspense',
   onLoad,
   onError,
@@ -379,13 +379,13 @@ export const bundleAnalyzer = {
       lineCount = 0,
       dependencies = []
     } = metrics;
-    
+
     // Rough estimate in KB
     const baseSize = 5; // Base React component overhead
     const importOverhead = importCount * 2; // 2KB per import estimate
     const codeSize = lineCount * 0.1; // 0.1KB per line estimate
     const depSize = dependencies.length * 10; // 10KB per major dependency
-    
+
     return Math.round(baseSize + importOverhead + codeSize + depSize);
   },
 
@@ -395,10 +395,10 @@ export const bundleAnalyzer = {
   monitorChunkSizes: () => {
     if ('performance' in window && 'getEntriesByType' in performance) {
       const resources = performance.getEntriesByType('resource');
-      const chunks = resources.filter(resource => 
+      const chunks = resources.filter(resource =>
         resource.name.includes('.js') && resource.name.includes('chunk')
       );
-      
+
       return chunks.map(chunk => ({
         name: chunk.name.split('/').pop(),
         size: chunk.transferSize,
@@ -413,7 +413,7 @@ export const bundleAnalyzer = {
    */
   getOptimalLoadingStrategy: (metrics = {}) => {
     const { networkSpeed = 'unknown', deviceMemory = 4 } = metrics;
-    
+
     if (networkSpeed === 'slow-2g' || deviceMemory < 2) {
       return {
         strategy: 'progressive',

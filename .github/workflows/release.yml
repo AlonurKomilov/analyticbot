@@ -52,9 +52,9 @@ jobs:
           else
             VERSION="${GITHUB_REF#refs/tags/}"
           fi
-          
+
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          
+
           if [[ "${VERSION}" =~ -alpha|-beta|-rc ]]; then
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
@@ -109,7 +109,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7-alpine
         options: >-
@@ -211,7 +211,7 @@ jobs:
         run: |
           # Pull the built image and test basic functionality
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate-release.outputs.version }}
-          
+
           # Run basic smoke test
           docker run --rm -e BOT_TOKEN=dummy_token ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.validate-release.outputs.version }} python -c "import bot; print('✅ Import successful')"
 
@@ -231,7 +231,7 @@ jobs:
         id: release-notes
         run: |
           VERSION="${{ needs.validate-release.outputs.version }}"
-          
+
           # Extract changelog for this version
           if [ -f CHANGELOG.md ]; then
             # Get content between current version and previous version
@@ -239,7 +239,7 @@ jobs:
           else
             echo "Release ${VERSION}" > release_notes.md
           fi
-          
+
           # Add Docker image information
           echo "" >> release_notes.md
           echo "## 🐳 Docker Images" >> release_notes.md
@@ -251,7 +251,7 @@ jobs:
           echo "```" >> release_notes.md
           echo "" >> release_notes.md
           echo "**Image Digest:** \`${{ needs.build-images.outputs.image-digest }}\`" >> release_notes.md
-          
+
           # Add deployment information
           echo "" >> release_notes.md
           echo "## 🚀 Deployment" >> release_notes.md
@@ -262,7 +262,7 @@ jobs:
           echo "docker-compose pull" >> release_notes.md
           echo "docker-compose up -d" >> release_notes.md
           echo "```" >> release_notes.md
-          
+
           if [[ "${{ needs.validate-release.outputs.is_prerelease }}" == "true" ]]; then
             echo "" >> release_notes.md
             echo "⚠️ **This is a pre-release version** - use with caution in production environments." >> release_notes.md
@@ -313,7 +313,7 @@ jobs:
         run: |
           VERSION="${{ needs.validate-release.outputs.version }}"
           PRERELEASE="${{ needs.validate-release.outputs.is_prerelease }}"
-          
+
           if [[ "${PRERELEASE}" == "true" ]]; then
             EMOJI="🧪"
             RELEASE_TYPE="Pre-release"
@@ -321,7 +321,7 @@ jobs:
             EMOJI="🚀"
             RELEASE_TYPE="Release"
           fi
-          
+
           curl -X POST -H 'Content-type: application/json' \
             --data "{
               \"text\": \"${EMOJI} ${RELEASE_TYPE} ${VERSION} is now available!\",
@@ -346,7 +346,7 @@ jobs:
             --body "## Deployment Checklist for ${VERSION}
 
           - [ ] Verify all tests pass
-          - [ ] Review security scan results  
+          - [ ] Review security scan results
           - [ ] Backup production database
           - [ ] Deploy to staging environment
           - [ ] Run staging smoke tests

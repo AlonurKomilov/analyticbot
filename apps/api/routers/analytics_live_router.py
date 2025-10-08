@@ -15,7 +15,7 @@ from apps.api.middleware.auth import get_current_user
 
 # Services
 from apps.bot.clients.analytics_client import AnalyticsClient
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ async def get_live_metrics_optimized(
     channel_id: int,
     hours: int = Query(6, ge=1, le=24, description="Hours of recent data"),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
     """
     ## ⚡ Optimized Live Metrics
@@ -202,9 +202,13 @@ async def get_live_metrics_optimized(
             "timestamp": datetime.utcnow().isoformat(),
             "channel_id": channel_id,
             "time_window_hours": hours,
-            "metrics": analysis_result.results if hasattr(analysis_result, "results") else {},
+            "metrics": analysis_result.get("results", {})
+            if isinstance(analysis_result, dict)
+            else {},
             "status": "live",
-            "success": analysis_result.success if hasattr(analysis_result, "success") else False,
+            "success": analysis_result.get("success", False)
+            if isinstance(analysis_result, dict)
+            else False,
         }
 
         return live_metrics

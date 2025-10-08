@@ -24,11 +24,11 @@ FAILED_TESTS=0
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
-    
+
     echo -n "Testing $test_name... "
-    
+
     if eval "$test_command" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ PASS${NC}"
         PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -171,7 +171,7 @@ CRITICAL_FILES=(
 for file_check in "${CRITICAL_FILES[@]}"; do
     file_path="${file_check%:*}"
     min_size="${file_check#*:}"
-    
+
     if [[ -f "$file_path" ]]; then
         file_size=$(wc -c < "$file_path")
         if [[ $file_size -gt $min_size ]]; then
@@ -215,13 +215,13 @@ if [[ $FAILED_TESTS -eq 0 ]]; then
     echo "4. Test payment flows with real transactions"
     echo ""
     echo -e "${BOLD}${GREEN}💰 REVENUE GENERATION: READY TO ACTIVATE${NC}"
-    
+
 elif [[ $COMPLETION_PERCENTAGE -ge 90 ]]; then
     echo -e "${BOLD}${YELLOW}⚠️  VERIFICATION MOSTLY COMPLETE ($COMPLETION_PERCENTAGE%)${NC}"
     echo -e "${YELLOW}Minor issues detected, but system is deployable${NC}"
     echo ""
     echo -e "${YELLOW}Review failed tests above and proceed with caution${NC}"
-    
+
 else
     echo -e "${BOLD}${RED}❌ VERIFICATION FAILED ($COMPLETION_PERCENTAGE%)${NC}"
     echo -e "${RED}Critical issues detected - do not deploy to production${NC}"

@@ -20,7 +20,7 @@ export const useTableData = ({
     const visibleColumns = useMemo(() => {
         return columns.filter(col => columnVisibility[col.id]);
     }, [columns, columnVisibility]);
-    
+
     // Process data (filter, sort, paginate)
     const processedResult = useMemo(() => {
         return processTableData({
@@ -43,7 +43,7 @@ export const useTableData = ({
         page,
         pageSize
     ]);
-    
+
     return {
         visibleColumns,
         ...processedResult

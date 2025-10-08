@@ -105,7 +105,7 @@ curl -X POST https://api.your-domain.com/api/payments/webhook/stripe \
 ### Common Issues & Solutions
 
 #### Issue: Webhook Returns 400/401 Error
-**Solution**: 
+**Solution**:
 - Verify webhook signing secret is correct
 - Check endpoint URL is accessible
 - Ensure SSL certificate is valid

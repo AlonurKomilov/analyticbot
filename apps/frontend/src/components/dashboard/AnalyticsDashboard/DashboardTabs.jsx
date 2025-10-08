@@ -14,10 +14,10 @@ import {
 
 /**
  * DashboardTabs Component
- * 
+ *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
  * Handles tab navigation system with accessibility features
- * 
+ *
  * Responsibilities:
  * - Tab navigation between dashboard sections
  * - ARIA compliance for screen readers
@@ -25,9 +25,9 @@ import {
  * - Full-width responsive layout
  * - Icon and text labels for each tab
  */
-const DashboardTabs = React.memo(({ 
-    activeTab, 
-    onTabChange 
+const DashboardTabs = React.memo(({
+    activeTab,
+    onTabChange
 }) => {
     const tabConfig = [
         {
@@ -69,10 +69,10 @@ const DashboardTabs = React.memo(({
                 <Tabs
                     value={activeTab}
                     onChange={onTabChange}
-                    sx={{ 
-                        borderBottom: 1, 
+                    sx={{
+                        borderBottom: 1,
                         borderColor: 'divider',
-                        '& .MuiTab-root': { 
+                        '& .MuiTab-root': {
                             minHeight: 64,
                             '&:focus-visible': {
                                 outline: '2px solid #2196F3',
@@ -88,8 +88,8 @@ const DashboardTabs = React.memo(({
                             key={index}
                             icon={tab.icon}
                             label={tab.label}
-                            sx={{ 
-                                fontSize: '0.9rem', 
+                            sx={{
+                                fontSize: '0.9rem',
                                 fontWeight: 'bold',
                                 ...(tab.specialColor && { color: tab.specialColor })
                             }}

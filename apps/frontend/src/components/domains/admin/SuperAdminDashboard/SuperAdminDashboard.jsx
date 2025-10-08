@@ -30,7 +30,7 @@ import { useAdminDashboardState } from './hooks/useAdminDashboardState.js';
 
 /**
  * SuperAdminDashboard - Refactored Modular Component
- * 
+ *
  * Administrative dashboard with comprehensive system management:
  * - Overview tab with recent activity and system health
  * - User management with suspend/reactivate functionality
@@ -54,25 +54,25 @@ const SuperAdminDashboard = () => {
         showError,
         clearNotifications
     } = useAdminDashboardState();
-    
+
     // Admin API data
     const { stats, users, auditLogs, loading, error: apiError, suspendUser, reactivateUser } = useAdminDashboard();
     const { adminAnalytics } = useAdminAnalytics();
-    
+
     // Set API errors to notification state
     useEffect(() => {
         if (apiError) {
             showError(apiError);
         }
     }, [apiError, showError]);
-    
+
     // User suspension handler
     const handleSuspendUser = async () => {
         if (!suspendDialog.user || !suspensionReason.trim()) {
             showError('Please provide a suspension reason');
             return;
         }
-        
+
         try {
             await suspendUser(suspendDialog.user.id, suspensionReason);
             showSuccess(`User ${suspendDialog.user.username || 'Unknown'} has been suspended`);
@@ -81,7 +81,7 @@ const SuperAdminDashboard = () => {
             showError(`Failed to suspend user: ${err.message}`);
         }
     };
-    
+
     // User reactivation handler
     const handleReactivateUser = async (userId) => {
         try {
@@ -91,7 +91,7 @@ const SuperAdminDashboard = () => {
             showError(`Failed to reactivate user: ${err.message}`);
         }
     };
-    
+
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
@@ -102,7 +102,7 @@ const SuperAdminDashboard = () => {
             </Container>
         );
     }
-    
+
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
             {/* Header */}
@@ -112,7 +112,7 @@ const SuperAdminDashboard = () => {
                     Super Admin Dashboard
                 </Typography>
             </Box>
-            
+
             {/* Alerts */}
             {error && (
                 <Alert severity="error" sx={{ mb: 3 }} onClose={clearNotifications}>
@@ -124,42 +124,42 @@ const SuperAdminDashboard = () => {
                     {success}
                 </Alert>
             )}
-            
+
             {/* System Stats Cards */}
             <AdminStatsCards stats={stats} />
-            
+
             {/* Main Content Tabs */}
             <Paper sx={{ width: '100%' }}>
-                <AdminTabNavigation 
-                    activeTab={activeTab} 
-                    onTabChange={setActiveTab} 
+                <AdminTabNavigation
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
                 />
-                
+
                 {/* Overview Tab */}
                 <TabPanel value={activeTab} index={0}>
                     <OverviewTab auditLogs={auditLogs} />
                 </TabPanel>
-                
+
                 {/* User Management Tab */}
                 <TabPanel value={activeTab} index={1}>
-                    <UserManagementTab 
+                    <UserManagementTab
                         users={users}
                         onSuspendUser={openSuspendDialog}
                         onReactivateUser={handleReactivateUser}
                     />
                 </TabPanel>
-                
+
                 {/* Audit Logs Tab */}
                 <TabPanel value={activeTab} index={2}>
                     <AuditLogsTab auditLogs={auditLogs} />
                 </TabPanel>
-                
+
                 {/* System Configuration Tab */}
                 <TabPanel value={activeTab} index={3}>
                     <SystemConfigTab />
                 </TabPanel>
             </Paper>
-            
+
             {/* User Suspension Dialog */}
             <SuspendUserDialog
                 open={suspendDialog.open}

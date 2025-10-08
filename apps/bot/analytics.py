@@ -36,20 +36,14 @@ RELOCATED IMPLEMENTATION: Analytics modules properly organized in bot structure
 - Web Services: bot/services/
 """
 
+from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
 from apps.bot.services.dashboard_service import (
     DashboardFactory,
     RealTimeDashboard,
     VisualizationEngine,
     create_dashboard,
     create_visualization_engine,
-)
-from apps.bot.services.ml.ai_insights import (
-    AIInsightsGenerator,
-    create_ai_insights_generator,
-)
-from apps.bot.services.ml.predictive_engine import (
-    PredictiveAnalyticsEngine,
-    create_predictive_engine,
 )
 from apps.bot.services.reporting_service import (
     AutomatedReportingSystem,
@@ -60,10 +54,8 @@ from apps.bot.services.reporting_service import (
 from apps.bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
 
 __all__ = [
-    "PredictiveAnalyticsEngine",
-    "create_predictive_engine",
-    "AIInsightsGenerator",
-    "create_ai_insights_generator",
+    "create_ml_coordinator",
+    "create_bot_ml_facade",
     "AdvancedDataProcessor",
     "create_data_processor",
     "VisualizationEngine",
@@ -84,8 +76,8 @@ async def create_analytics_suite():
     """
     return {
         "data_processor": await create_data_processor(),
-        "predictive_engine": await create_predictive_engine(),
-        "ai_insights": await create_ai_insights_generator(),
+        "ml_coordinator": create_ml_coordinator(),
+        "bot_ml_facade": create_bot_ml_facade(),
         "visualization_engine": await create_visualization_engine(),
         "dashboard": await create_dashboard(),
         "reporting_system": await create_reporting_system(),
@@ -99,11 +91,11 @@ async def analytics_health_check():
     try:
         health_results = {}
         data_processor = await create_data_processor()
-        health_results["data_processor"] = await data_processor.health_check()
-        predictive_engine = await create_predictive_engine()
-        health_results["predictive_engine"] = await predictive_engine.health_check()
-        ai_insights = await create_ai_insights_generator()
-        health_results["ai_insights"] = await ai_insights.health_check()
+        # health_results["data_processor"] = await data_processor.health_check()  # Method not available
+        ml_coordinator = create_ml_coordinator()
+        health_results["ml_coordinator"] = await ml_coordinator.health_check()
+        bot_ml_facade = create_bot_ml_facade()
+        health_results["bot_ml_facade"] = await bot_ml_facade.get_service_status()
         from apps.bot.services.dashboard_service import health_check as dashboard_health
 
         health_results["dashboard_service"] = await dashboard_health()

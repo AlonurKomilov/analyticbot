@@ -25,7 +25,7 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email) {
       setError('Email is required');
       return;
@@ -79,7 +79,7 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
         </Alert>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-          We've sent password reset instructions to <strong>{email}</strong>. 
+          We've sent password reset instructions to <strong>{email}</strong>.
           Please check your email and follow the link to reset your password.
         </Typography>
 

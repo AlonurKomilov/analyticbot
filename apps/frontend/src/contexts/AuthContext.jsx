@@ -1,6 +1,6 @@
 /**
  * 🔒 Authentication Context - JWT User Authentication
- * 
+ *
  * Provides centralized authentication state management for the React app.
  * Integrates with the backend JWT authentication system.
  */
@@ -102,51 +102,51 @@ export const AuthProvider = ({ children }) => {
     const login = useCallback(async (email, password) => {
         try {
             setIsLoading(true);
-            
+
             const response = await apiClient.post('/auth/login', { email, password });
             console.log('Login API full response:', response); // Debug log
             console.log('Login API response data:', response.data); // Debug log
-            
+
             const data = response.data;
             const { access_token, refresh_token, user: userData } = data;
-            
+
             // Validate required fields
             if (!access_token || !userData) {
                 console.error('Invalid login response structure:', { access_token: !!access_token, userData: !!userData });
                 throw new Error('Invalid login response: missing required fields');
             }
-            
+
             // Store tokens securely
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
             localStorage.setItem('user', JSON.stringify(userData));
-            
+
             // Check if this is a demo user based on email or user data
-            const isDemoUser = email.includes('demo@') || 
-                              email.includes('viewer@') || 
+            const isDemoUser = email.includes('demo@') ||
+                              email.includes('viewer@') ||
                               email.includes('guest@') ||
                               userData.is_demo === true ||
                               userData.email?.includes('demo') ||
                               window.location.search.includes('demo=true'); // URL param for testing
-            
+
             if (isDemoUser) {
                 localStorage.setItem('is_demo_user', 'true');
                 console.info('🎭 Demo user detected - enhanced demo experience enabled');
             } else {
                 localStorage.removeItem('is_demo_user');
             }
-            
+
             // Update state
             setToken(access_token);
             setUser(userData);
-            
+
             console.log('Login successful:', userData?.username || userData?.email || 'user');
             return { success: true };
         } catch (error) {
             console.error('Login error:', error);
-            return { 
-                success: false, 
-                error: error.message || 'Network error. Please try again.' 
+            return {
+                success: false,
+                error: error.message || 'Network error. Please try again.'
             };
         } finally {
             setIsLoading(false);
@@ -158,18 +158,18 @@ export const AuthProvider = ({ children }) => {
         try {
             const data = await apiClient.post('/auth/register', userData);
             const { access_token, refresh_token, user: userInfo } = data;
-            
+
             // Store auth data
             setStoredAuth(access_token, refresh_token, userInfo);
             setToken(access_token);
             setUser(userInfo);
-            
+
             return { success: true };
         } catch (error) {
             console.error('Registration error:', error);
-            return { 
-                success: false, 
-                error: 'Network error. Please try again.' 
+            return {
+                success: false,
+                error: 'Network error. Please try again.'
             };
         } finally {
             setIsLoading(false);
@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }) => {
             clearStoredAuth();
             setToken(null);
             setUser(null);
-            
+
             // Redirect to login page
             window.location.href = '/login';
         }
@@ -206,11 +206,11 @@ export const AuthProvider = ({ children }) => {
 
             const data = await apiClient.post('/auth/refresh', { refresh_token: storedRefreshToken });
             const newToken = data.access_token;
-            
+
             // Update stored token
             localStorage.setItem(TOKEN_KEY, newToken);
             setToken(newToken);
-            
+
             return true;
         } catch (error) {
             console.error('Token refresh error:', error);

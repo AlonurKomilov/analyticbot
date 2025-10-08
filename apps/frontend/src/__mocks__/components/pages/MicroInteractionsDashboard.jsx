@@ -1,6 +1,6 @@
 /**
  * Micro-Interactions Enhanced Dashboard
- * 
+ *
  * Dashboard with comprehensive micro-interactions:
  * - Smooth page transitions
  * - Interactive cards and buttons
@@ -11,17 +11,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  Chip, 
+import {
+  Box,
+  Typography,
+  Alert,
+  Chip,
   Tooltip,
   useTheme,
   useMediaQuery,
   Grid
 } from '@mui/material';
-import { 
+import {
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingIcon,
@@ -37,21 +37,21 @@ import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 import EnhancedSection from '../layout/EnhancedSection.jsx';
 
 // Micro-interaction components
-import { 
-  StaggeredAnimation, 
+import {
+  StaggeredAnimation,
   FloatingElement,
   FeedbackAnimation
 } from '../animations/MicroInteractions.jsx';
-import { 
-  InteractiveButton, 
+import {
+  InteractiveButton,
   InteractiveIconButton,
-  AnimatedFab 
+  AnimatedFab
 } from '../animations/InteractiveButtons.jsx';
-import { 
-  AnimatedCard, 
-  ExpandableCard, 
+import {
+  AnimatedCard,
+  ExpandableCard,
   AnimatedMetricCard,
-  DashboardCard 
+  DashboardCard
 } from '../animations/InteractiveCards.jsx';
 
 // Mobile responsive components (fallback for mobile/tablet)
@@ -65,21 +65,21 @@ import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 
 const MicroInteractionsDashboard = () => {
-  const { 
+  const {
     isGlobalLoading,
     isLoading,
     fetchData,
-    scheduledPosts, 
+    scheduledPosts,
     channels,
-    addChannel, 
+    addChannel,
     removeChannel,
     dataSource
   } = useAppStore();
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-  
+
   // State for micro-interactions
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
@@ -90,14 +90,14 @@ const MicroInteractionsDashboard = () => {
     posts: true,
     channels: true
   });
-  
+
   const isLoadingData = isGlobalLoading() || isLoading('fetchData');
-  
+
   // Use mobile-responsive dashboard for smaller screens
   if (isMobile || isTablet) {
     return <MobileResponsiveDashboard />;
   }
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -175,13 +175,13 @@ const MicroInteractionsDashboard = () => {
         <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', p: 4 }}>
           <StaggeredAnimation delay={150}>
             <Box sx={{ mb: 4 }}>
-              <EnhancedSection 
-                title="Analytics Dashboard" 
+              <EnhancedSection
+                title="Analytics Dashboard"
                 subtitle="Loading your analytics data..."
                 level={1}
               />
             </Box>
-            
+
             <Grid container spacing={4}>
               {[1, 2, 3, 4].map((i) => (
                 <Grid item xs={12} sm={6} md={3} key={i}>
@@ -189,7 +189,7 @@ const MicroInteractionsDashboard = () => {
                 </Grid>
               ))}
             </Grid>
-            
+
             <Box sx={{ mt: 4 }}>
               <Grid container spacing={4}>
                 <Grid item xs={12} md={8}>
@@ -234,7 +234,7 @@ const MicroInteractionsDashboard = () => {
                       }}
                     />
                   </FeedbackAnimation>
-                  
+
                   <Tooltip title={`Last updated: ${lastRefresh.toLocaleTimeString()}`}>
                     <div>
                       <InteractiveIconButton
@@ -248,7 +248,7 @@ const MicroInteractionsDashboard = () => {
                       </InteractiveIconButton>
                     </div>
                   </Tooltip>
-                  
+
                   <Tooltip title="Dashboard Settings">
                     <div>
                       <InteractiveIconButton hoverEffect="glow">
@@ -371,10 +371,10 @@ const MicroInteractionsDashboard = () => {
                 entrance="grow"
                 delay={600}
               >
-                <AddChannel 
-                  channels={channels} 
-                  onAdd={addChannel} 
-                  onRemove={removeChannel} 
+                <AddChannel
+                  channels={channels}
+                  onAdd={addChannel}
+                  onRemove={removeChannel}
                 />
               </DashboardCard>
             </StaggeredAnimation>
@@ -384,9 +384,9 @@ const MicroInteractionsDashboard = () => {
         {/* Quick Tips */}
         <Box sx={{ mt: 4 }}>
           <FloatingElement duration={5} delay={1}>
-            <Alert 
-              severity="info" 
-              sx={{ 
+            <Alert
+              severity="info"
+              sx={{
                 bgcolor: 'primary.50',
                 border: '1px solid',
                 borderColor: 'primary.200',
@@ -399,7 +399,7 @@ const MicroInteractionsDashboard = () => {
               }}
             >
               <Typography variant="body2">
-                <strong>💡 Pro Tip:</strong> Hover over cards and buttons to see interactive effects. 
+                <strong>💡 Pro Tip:</strong> Hover over cards and buttons to see interactive effects.
                 All animations are optimized for smooth 60fps performance!
               </Typography>
             </Alert>

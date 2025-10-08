@@ -1,6 +1,6 @@
 /**
  * AIServicesGrid - AI services navigation component
- * 
+ *
  * Extracted from MainDashboard.jsx to provide focused AI services display
  * with navigation capabilities.
  */
@@ -67,11 +67,11 @@ const AIServicesGrid = () => {
 
   return (
     <Box>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mb: 3
       }}>
         <Typography variant="h6" fontWeight={600}>
           AI Services Quick Access
@@ -85,70 +85,70 @@ const AIServicesGrid = () => {
           View All Services
         </StandardButton>
       </Box>
-      
-      <GridContainer 
+
+      <GridContainer
         gap="md"
         columns={{ xs: 1, sm: 2, md: 2, lg: 4 }}
       >
         {aiServices.map((service) => {
           const IconComponent = service.icon;
           return (
-            <StandardCard 
+            <StandardCard
               key={service.name}
               variant="interactive"
               interactive
               onClick={() => navigate(service.path)}
-              sx={{ 
+              sx={{
                 height: '100%',
                 cursor: 'pointer'
               }}
             >
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between', 
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   mb: 2
                 }}
               >
-                <IconComponent 
-                  sx={{ 
-                    fontSize: DESIGN_TOKENS.components.icon.sizes.lg, 
+                <IconComponent
+                  sx={{
+                    fontSize: DESIGN_TOKENS.components.icon.sizes.lg,
                     color: 'primary.main'
-                  }} 
+                  }}
                 />
-                <Chip 
-                  label={service.status} 
+                <Chip
+                  label={service.status}
                   color={getStatusColor(service.status)}
                   size="small"
                 />
               </Box>
-              
-              <Typography 
-                variant="h6" 
-                fontWeight={600} 
+
+              <Typography
+                variant="h6"
+                fontWeight={600}
                 sx={{ mb: 1 }}
               >
                 {service.name}
               </Typography>
-              
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                sx={{ 
-                  mb: 2, 
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mb: 2,
                   minHeight: 40,
                   lineHeight: 1.4
                 }}
               >
                 {service.description}
               </Typography>
-              
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  fontSize: '0.85rem' 
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '0.85rem'
                 }}
               >
                 {Object.entries(service.metrics).map(([key, value]) => (

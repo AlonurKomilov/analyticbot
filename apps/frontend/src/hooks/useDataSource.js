@@ -18,19 +18,19 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
         pollingInterval = 30000, // 30 seconds
         autoCheckAvailability = true
     } = options;
-    
+
     const [isAvailable, setIsAvailable] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [lastCheck, setLastCheck] = useState(null);
-    
+
     const pollingRef = useRef(null);
     const providerRef = useRef(dataProvider);
-    
+
     // Update provider reference when it changes
     useEffect(() => {
         providerRef.current = dataProvider;
-        
+
         if (onProviderChange) {
             onProviderChange({
                 provider: dataProvider.getProviderName(),
@@ -38,17 +38,17 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             });
         }
     }, [dataProvider, onProviderChange]);
-    
+
     // Check provider availability
     const checkAvailability = useCallback(async (force = false) => {
         // Don't check too frequently unless forced
         if (!force && lastCheck && (Date.now() - lastCheck) < 10000) {
             return isAvailable;
         }
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const available = await providerRef.current.isAvailable();
             setIsAvailable(available);
@@ -63,12 +63,12 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setIsLoading(false);
         }
     }, [isAvailable, lastCheck]);
-    
+
     // Get analytics data
     const getAnalytics = useCallback(async (channelId) => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const data = await providerRef.current.getAnalytics(channelId);
             return data;
@@ -80,12 +80,12 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setIsLoading(false);
         }
     }, []);
-    
+
     // Get top posts
     const getTopPosts = useCallback(async (channelId, options = {}) => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const data = await providerRef.current.getTopPosts(channelId, options);
             return data;
@@ -97,12 +97,12 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setIsLoading(false);
         }
     }, []);
-    
+
     // Get engagement metrics
     const getEngagementMetrics = useCallback(async (channelId, options = {}) => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const data = await providerRef.current.getEngagementMetrics(channelId, options);
             return data;
@@ -114,12 +114,12 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setIsLoading(false);
         }
     }, []);
-    
+
     // Get recommendations
     const getRecommendations = useCallback(async (channelId) => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const data = await providerRef.current.getRecommendations(channelId);
             return data;
@@ -131,21 +131,21 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setIsLoading(false);
         }
     }, []);
-    
+
     // Setup availability polling and initial check
     useEffect(() => {
         // Initial availability check if enabled
         if (autoCheckAvailability) {
             checkAvailability(true);
         }
-        
+
         // Setup availability polling if enabled
         if (enableStatusPolling) {
             pollingRef.current = setInterval(() => {
                 checkAvailability(false);
             }, pollingInterval);
         }
-        
+
         return () => {
             if (pollingRef.current) {
                 clearInterval(pollingRef.current);
@@ -153,7 +153,7 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             }
         };
     }, [autoCheckAvailability, enableStatusPolling, pollingInterval, checkAvailability]);
-    
+
     return {
         // State
         isAvailable,
@@ -161,18 +161,18 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
         error,
         lastCheck,
         providerName: dataProvider.getProviderName(),
-        
+
         // Data fetching methods
         getAnalytics,
         getTopPosts,
         getEngagementMetrics,
         getRecommendations,
-        
+
         // Utilities
         checkAvailability,
         isOnline: isAvailable === true,
         isOffline: isAvailable === false,
-        
+
         // Clear error
         clearError: () => setError(null),
     };
@@ -187,13 +187,13 @@ export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = prod
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const fetchAnalytics = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const analyticsData = await dataProvider.getAnalytics(channelId);
             setData(analyticsData);
@@ -206,12 +206,12 @@ export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = prod
             setIsLoading(false);
         }
     }, [channelId, dataProvider, data]);
-    
+
     // Auto-fetch on mount and provider change
     useEffect(() => {
         fetchAnalytics();
     }, [dataProvider, channelId]);
-    
+
     return {
         data,
         isLoading,
@@ -228,13 +228,13 @@ export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataPr
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const fetchTopPosts = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const postsData = await dataProvider.getTopPosts(channelId, options);
             setData(postsData);
@@ -247,11 +247,11 @@ export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataPr
             setIsLoading(false);
         }
     }, [channelId, options, dataProvider, data]);
-    
+
     useEffect(() => {
         fetchTopPosts();
     }, [dataProvider, channelId, options]);
-    
+
     return {
         data,
         isLoading,
@@ -268,13 +268,13 @@ export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const fetchEngagementMetrics = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const metricsData = await dataProvider.getEngagementMetrics(channelId, options);
             setData(metricsData);
@@ -287,11 +287,11 @@ export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {
             setIsLoading(false);
         }
     }, [channelId, options, dataProvider, data]);
-    
+
     useEffect(() => {
         fetchEngagementMetrics();
     }, [dataProvider, channelId, options]);
-    
+
     return {
         data,
         isLoading,
@@ -308,13 +308,13 @@ export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider 
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const fetchRecommendations = useCallback(async (forceRefresh = false) => {
         if (!forceRefresh && data) return data;
-        
+
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const recommendationsData = await dataProvider.getRecommendations(channelId);
             setData(recommendationsData);
@@ -327,11 +327,11 @@ export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider 
             setIsLoading(false);
         }
     }, [channelId, dataProvider, data]);
-    
+
     useEffect(() => {
         fetchRecommendations();
     }, [dataProvider, channelId]);
-    
+
     return {
         data,
         isLoading,
@@ -349,24 +349,24 @@ export const useAllAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = p
     const topPosts = useTopPosts(channelId, {}, dataProvider);
     const engagementMetrics = useEngagementMetrics(channelId, {}, dataProvider);
     const recommendations = useRecommendations(channelId, dataProvider);
-    
+
     const isLoading = analytics.isLoading || topPosts.isLoading || engagementMetrics.isLoading || recommendations.isLoading;
     const hasError = analytics.error || topPosts.error || engagementMetrics.error || recommendations.error;
-    
+
     const refetchAll = useCallback(() => {
         analytics.refetch(true);
         topPosts.refetch(true);
         engagementMetrics.refetch(true);
         recommendations.refetch(true);
     }, [analytics, topPosts, engagementMetrics, recommendations]);
-    
+
     const clearAllErrors = useCallback(() => {
         analytics.clearError();
         topPosts.clearError();
         engagementMetrics.clearError();
         recommendations.clearError();
     }, [analytics, topPosts, engagementMetrics, recommendations]);
-    
+
     return {
         analytics: analytics.data,
         topPosts: topPosts.data,

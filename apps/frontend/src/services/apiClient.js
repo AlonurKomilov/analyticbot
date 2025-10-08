@@ -38,7 +38,7 @@ apiClient.interceptors.response.use(
     // Handle common error cases
     if (error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           // Unauthorized - clear tokens and redirect to login
@@ -65,7 +65,7 @@ apiClient.interceptors.response.use(
         default:
           console.error('API Error:', data.detail || error.message);
       }
-      
+
       // Re-throw with enhanced error info
       const enhancedError = new Error(data.detail || data.message || error.message);
       enhancedError.status = status;

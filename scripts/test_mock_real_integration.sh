@@ -25,7 +25,7 @@ print_test_result() {
     local test_name=$1
     local result=$2
     TESTS_RUN=$((TESTS_RUN + 1))
-    
+
     if [ "$result" = "PASS" ]; then
         echo -e "${GREEN}✓${NC} $test_name"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -40,9 +40,9 @@ run_test() {
     local test_name=$1
     local test_command=$2
     local timeout=${3:-30}
-    
+
     echo -e "${BLUE}Running:${NC} $test_name"
-    
+
     if timeout $timeout bash -c "$test_command" > /dev/null 2>&1; then
         print_test_result "$test_name" "PASS"
         return 0
@@ -55,7 +55,7 @@ run_test() {
 echo ""
 echo "📋 Test Plan:"
 echo "1. Frontend Architecture Tests"
-echo "2. Backend Adapter Tests" 
+echo "2. Backend Adapter Tests"
 echo "3. Configuration Tests"
 echo "4. Data Source Switching Tests"
 echo "5. Mock System Tests"
@@ -78,7 +78,7 @@ run_test "ModernAdvancedAnalyticsDashboard exists" "test -f apps/frontend/src/co
 run_test "AnalyticsAdapterDemo exists" "test -f apps/frontend/src/components/demo/AnalyticsAdapterDemo.jsx"
 run_test "PostViewDynamicsChart.new exists" "test -f apps/frontend/src/components/PostViewDynamicsChart.new.jsx"
 
-# 2. Backend Adapter Tests  
+# 2. Backend Adapter Tests
 echo ""
 echo -e "${YELLOW}2. Backend Adapter Tests${NC}"
 echo "--------------------------"
@@ -123,14 +123,14 @@ echo "------------------------------"
 # Test JavaScript syntax validity
 if command -v node >/dev/null 2>&1; then
     run_test "DataSourceManager syntax valid" "node -c apps/frontend/src/utils/dataSourceManager.js"
-    run_test "useDataSource hook syntax valid" "node -c apps/frontend/src/hooks/useDataSource.js" 
+    run_test "useDataSource hook syntax valid" "node -c apps/frontend/src/hooks/useDataSource.js"
     run_test "MockService syntax valid" "node -c apps/frontend/src/services/mockService.js"
     run_test "DataService syntax valid" "node -c apps/frontend/src/services/dataService.js"
 else
     echo -e "${YELLOW}⚠${NC} Node.js not available - skipping syntax tests"
 fi
 
-# Test Python syntax validity  
+# Test Python syntax validity
 if command -v python3 >/dev/null 2>&1; then
     run_test "Mock payment adapter syntax" "python3 -m py_compile apps/bot/services/adapters/mock_payment_adapter.py"
     run_test "Stripe payment adapter syntax" "python3 -m py_compile apps/bot/services/adapters/stripe_payment_adapter.py"
@@ -193,7 +193,7 @@ echo "-----------------------------"
 
 # Check critical directories exist
 run_test "Frontend adapters directory" "test -d apps/frontend/src/hooks"
-run_test "Frontend services directory" "test -d apps/frontend/src/services"  
+run_test "Frontend services directory" "test -d apps/frontend/src/services"
 run_test "Frontend config directory" "test -d apps/frontend/src/config"
 run_test "Backend adapters directory" "test -d apps/bot/services/adapters"
 
@@ -214,7 +214,7 @@ if [ $TESTS_FAILED -eq 0 ]; then
     echo ""
     echo "✅ Clean separation between mock and real systems"
     echo "✅ Frontend hooks and services architecture implemented"
-    echo "✅ Backend adapter pattern implemented" 
+    echo "✅ Backend adapter pattern implemented"
     echo "✅ Configuration management in place"
     echo "✅ Components refactored to use new architecture"
     echo "✅ Comprehensive documentation provided"

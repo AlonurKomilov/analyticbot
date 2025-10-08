@@ -16,21 +16,21 @@ import {
 
 /**
  * AlertsList - Memoized component for displaying real-time alerts
- * 
+ *
  * Handles alert display with filtering, severity indicators, and real-time updates.
  * Optimized for high-frequency alert updates in multi-user dashboard scenarios.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Array} props.alerts - Array of alert objects
  * @param {boolean} props.isExpanded - Whether the alerts list is expanded
  * @param {Function} props.onDeleteAlert - Callback for deleting alerts
  * @param {number} props.maxAlerts - Maximum number of alerts to display (default: 10)
  */
-const AlertsList = React.memo(({ 
-  alerts = [], 
-  isExpanded = false, 
+const AlertsList = React.memo(({
+  alerts = [],
+  isExpanded = false,
   onDeleteAlert,
-  maxAlerts = 10 
+  maxAlerts = 10
 }) => {
   return (
     <Collapse in={isExpanded}>
@@ -40,9 +40,9 @@ const AlertsList = React.memo(({
           {alerts.slice(0, maxAlerts).map((alert) => {
             const IconComponent = alert.icon;
             return (
-              <ListItem 
+              <ListItem
                 key={alert.id}
-                sx={{ 
+                sx={{
                   border: '1px solid',
                   borderColor: `${alert.type}.light`,
                   borderRadius: 1,
@@ -51,9 +51,9 @@ const AlertsList = React.memo(({
                   opacity: alert.read ? 0.7 : 1,
                 }}
                 secondaryAction={
-                  <IconButton 
-                    edge="end" 
-                    aria-label="delete" 
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
                     onClick={() => onDeleteAlert?.(alert.id)}
                     size="small"
                   >

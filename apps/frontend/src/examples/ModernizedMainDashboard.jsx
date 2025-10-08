@@ -1,6 +1,6 @@
 /**
  * Example: Modernized MainDashboard with Standardized Spacing
- * 
+ *
  * This demonstrates how to apply the new spacing system to replace
  * hardcoded values with semantic spacing tokens.
  */
@@ -29,8 +29,8 @@ const ModernizedMainDashboard = () => {
     const [selectedTab, setSelectedTab] = useState(0);
 
     return (
-        <Container 
-            maxWidth="xl" 
+        <Container
+            maxWidth="xl"
             sx={{
                 // Use semantic spacing for container
                 ...spacingUtils.patterns.containerSpacing(),
@@ -38,14 +38,14 @@ const ModernizedMainDashboard = () => {
             }}
         >
             {/* AI Services Section with standardized spacing */}
-            <ModernCard 
-                variant="gradient" 
-                sx={{ 
+            <ModernCard
+                variant="gradient"
+                sx={{
                     mb: SPACING_SCALE.xl,  // 24px standardized margin
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                 }}
             >
-                <ModernCardHeader 
+                <ModernCardHeader
                     title="AI-Powered Analytics Suite"
                     subtitle="Intelligent content analysis and optimization"
                     action={
@@ -58,13 +58,13 @@ const ModernizedMainDashboard = () => {
                         />
                     }
                 />
-                
+
                 <Grid container spacing={SPACING_SCALE.xl}> {/* 24px grid spacing */}
                     {/* Service Cards with consistent internal spacing */}
                     <Grid item xs={12} md={4}>
-                        <ModernCard 
-                            variant="clean" 
-                            sx={{ 
+                        <ModernCard
+                            variant="clean"
+                            sx={{
                                 height: '100%',
                                 ...spacingUtils.patterns.cardPadding() // Semantic card padding
                             }}
@@ -75,8 +75,8 @@ const ModernizedMainDashboard = () => {
                                 <Typography variant="body2" color="text.secondary">
                                     Advanced AI analysis of post performance
                                 </Typography>
-                                <Button 
-                                    variant="outlined" 
+                                <Button
+                                    variant="outlined"
                                     size="small"
                                     sx={{ mt: SPACING_SCALE.sm }} // 8px top margin
                                 >
@@ -85,7 +85,7 @@ const ModernizedMainDashboard = () => {
                             </Box>
                         </ModernCard>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={4}>
                         <ModernCard variant="clean" sx={{ height: '100%' }}>
                             <Box sx={spacingUtils.patterns.stack('md')}>
@@ -94,8 +94,8 @@ const ModernizedMainDashboard = () => {
                                 <Typography variant="body2" color="text.secondary">
                                     ML-powered optimal posting times
                                 </Typography>
-                                <Button 
-                                    variant="outlined" 
+                                <Button
+                                    variant="outlined"
                                     size="small"
                                     sx={{ mt: SPACING_SCALE.sm }}
                                 >
@@ -104,7 +104,7 @@ const ModernizedMainDashboard = () => {
                             </Box>
                         </ModernCard>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={4}>
                         <ModernCard variant="clean" sx={{ height: '100%' }}>
                             <Box sx={spacingUtils.patterns.stack('md')}>
@@ -113,8 +113,8 @@ const ModernizedMainDashboard = () => {
                                 <Typography variant="body2" color="text.secondary">
                                     Deep learning audience behavior analysis
                                 </Typography>
-                                <Button 
-                                    variant="outlined" 
+                                <Button
+                                    variant="outlined"
                                     size="small"
                                     sx={{ mt: SPACING_SCALE.sm }}
                                 >
@@ -127,8 +127,8 @@ const ModernizedMainDashboard = () => {
             </ModernCard>
 
             {/* System Status with semantic spacing */}
-            <ModernCard 
-                variant="elevated" 
+            <ModernCard
+                variant="elevated"
                 sx={{ mb: SPACING_SCALE.xxl }} // 32px section gap
             >
                 <ModernCardHeader
@@ -156,12 +156,12 @@ const ModernizedMainDashboard = () => {
                         </Box>
                     }
                 />
-                
+
                 <Grid container spacing={SPACING_SCALE.lg}> {/* 16px grid spacing */}
                     <Grid item xs={12} md={6}>
-                        <ModernCard 
+                        <ModernCard
                             variant="outlined"
-                            sx={{ 
+                            sx={{
                                 height: '100%',
                                 p: SEMANTIC_SPACING.ui.cardPadding // Semantic padding
                             }}
@@ -187,11 +187,11 @@ const ModernizedMainDashboard = () => {
                             </Box>
                         </ModernCard>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={6}>
-                        <ModernCard 
+                        <ModernCard
                             variant="outlined"
-                            sx={{ 
+                            sx={{
                                 height: '100%',
                                 p: SEMANTIC_SPACING.ui.cardPadding
                             }}
@@ -222,7 +222,7 @@ const ModernizedMainDashboard = () => {
 
             {/* Tabbed Content with consistent spacing */}
             <ModernCard variant="clean" style={{ height: '100%' }}>
-                <ModernCardHeader 
+                <ModernCardHeader
                     title="Control Center"
                     action={
                         <Chip
@@ -233,35 +233,35 @@ const ModernizedMainDashboard = () => {
                         />
                     }
                 />
-                <Tabs 
-                    value={selectedTab} 
+                <Tabs
+                    value={selectedTab}
                     onChange={(_, newValue) => setSelectedTab(newValue)}
                     variant="fullWidth"
-                    sx={{ 
-                        borderBottom: 1, 
-                        borderColor: 'divider', 
+                    sx={{
+                        borderBottom: 1,
+                        borderColor: 'divider',
                         mb: SPACING_SCALE.xl // 24px bottom margin
                     }}
                 >
-                    <Tab 
-                        label="Dashboard" 
-                        icon={<Icon name="dashboard" />} 
+                    <Tab
+                        label="Dashboard"
+                        icon={<Icon name="dashboard" />}
                     />
-                    <Tab 
-                        label="Create Post" 
-                        icon={<Icon name="create" />} 
+                    <Tab
+                        label="Create Post"
+                        icon={<Icon name="create" />}
                     />
-                    <Tab 
-                        label="Analytics" 
-                        icon={<Icon name="analytics" />} 
+                    <Tab
+                        label="Analytics"
+                        icon={<Icon name="analytics" />}
                     />
                 </Tabs>
 
                 <Box variant="tabContent">
                     {selectedTab === 0 && (
-                        <Box 
+                        <Box
                             variant="responsiveGrid"
-                            sx={{ 
+                            sx={{
                                 display: 'grid',
                                 gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
                                 gap: SPACING_SCALE.xl // 24px grid gap
@@ -271,10 +271,10 @@ const ModernizedMainDashboard = () => {
                                 {/* AnalyticsDashboard would be loaded here */}
                                 <Typography variant="h6">Analytics Dashboard Content</Typography>
                             </Box>
-                            
+
                             <Stack spacing={SPACING_SCALE.xl}> {/* 24px stack spacing */}
-                                <Paper 
-                                    sx={{ 
+                                <Paper
+                                    sx={{
                                         p: SEMANTIC_SPACING.ui.cardPadding,
                                         borderRadius: 2
                                     }}
@@ -286,9 +286,9 @@ const ModernizedMainDashboard = () => {
                                         No scheduled posts available
                                     </Typography>
                                 </Paper>
-                                
-                                <Paper 
-                                    sx={{ 
+
+                                <Paper
+                                    sx={{
                                         p: SEMANTIC_SPACING.ui.cardPadding,
                                         borderRadius: 2
                                     }}
@@ -303,9 +303,9 @@ const ModernizedMainDashboard = () => {
                             </Stack>
                         </Box>
                     )}
-                    
+
                     {selectedTab === 1 && (
-                        <Box 
+                        <Box
                             variant="responsiveGridLg"
                             sx={{
                                 display: 'grid',
@@ -323,7 +323,7 @@ const ModernizedMainDashboard = () => {
                             </Box>
                         </Box>
                     )}
-                    
+
                     {selectedTab === 2 && (
                         <Box sx={{ p: SEMANTIC_SPACING.ui.cardPadding }}>
                             <Typography variant="h6">Advanced Analytics</Typography>

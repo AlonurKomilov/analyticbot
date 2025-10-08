@@ -26,10 +26,10 @@ DOMAIN=${2:-localhost}
 case $CERT_TYPE in
     "self-signed")
         echo -e "${YELLOW}📋 Generating self-signed certificate for development...${NC}"
-        
+
         # Generate private key
         openssl genrsa -out docker/nginx/ssl/key.pem 2048
-        
+
         # Create certificate signing request config
         cat > docker/nginx/ssl/csr.conf <<EOF
 [req]
@@ -50,45 +50,45 @@ EOF
 
         # Generate certificate
         openssl req -new -x509 -key docker/nginx/ssl/key.pem -out docker/nginx/ssl/cert.pem -days 365 -config docker/nginx/ssl/csr.conf
-        
+
         echo -e "${GREEN}✅ Self-signed certificate generated for ${DOMAIN}${NC}"
         echo -e "${YELLOW}⚠️  Note: Browser will show security warning for self-signed certificates${NC}"
         ;;
-        
+
     "letsencrypt")
         if [ "$DOMAIN" = "localhost" ]; then
             echo -e "${RED}❌ Let's Encrypt requires a real domain name${NC}"
             echo -e "${BLUE}💡 Usage: $0 letsencrypt your-domain.com${NC}"
             exit 1
         fi
-        
+
         echo -e "${YELLOW}📋 Setting up Let's Encrypt certificate for ${DOMAIN}...${NC}"
-        
+
         # Create temporary self-signed certificate for initial setup
         openssl genrsa -out docker/nginx/ssl/key.pem 2048
         openssl req -new -x509 -key docker/nginx/ssl/key.pem -out docker/nginx/ssl/cert.pem -days 1 -subj "/CN=${DOMAIN}"
-        
+
         echo -e "${BLUE}🚀 Starting nginx with temporary certificate...${NC}"
         docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml up -d nginx-proxy
-        
+
         sleep 5
-        
+
         echo -e "${BLUE}🔐 Requesting Let's Encrypt certificate...${NC}"
         docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml run --rm certbot \
             certbot certonly --webroot --webroot-path=/var/www/certbot \
             --email admin@${DOMAIN} --agree-tos --no-eff-email \
             -d ${DOMAIN}
-        
+
         # Copy Let's Encrypt certificates to nginx directory
         docker run --rm -v $(pwd)/docker/nginx/ssl:/etc/letsencrypt certbot/certbot \
             sh -c "cp /etc/letsencrypt/live/${DOMAIN}/fullchain.pem /etc/letsencrypt/cert.pem && \
                    cp /etc/letsencrypt/live/${DOMAIN}/privkey.pem /etc/letsencrypt/key.pem"
-        
+
         echo -e "${GREEN}✅ Let's Encrypt certificate obtained for ${DOMAIN}${NC}"
         echo -e "${BLUE}🔄 Restarting nginx with real certificate...${NC}"
         docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml -f docker/docker-compose.proxy.yml restart nginx-proxy
         ;;
-        
+
     *)
         echo -e "${RED}❌ Invalid certificate type: ${CERT_TYPE}${NC}"
         echo -e "${BLUE}Usage: $0 [self-signed|letsencrypt] [domain]${NC}"

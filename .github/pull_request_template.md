@@ -2,7 +2,7 @@
 
 **Type of Change**
 - [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] ✨ New feature (non-breaking change which adds functionality)  
+- [ ] ✨ New feature (non-breaking change which adds functionality)
 - [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] 🔧 Refactoring (code change that neither fixes a bug nor adds a feature)
 - [ ] 📚 Documentation update
@@ -31,7 +31,7 @@ Related to #[issue_number]
 - [ ] Configuration changes
 - [ ] Dependencies updated
 
-### Frontend Changes  
+### Frontend Changes
 - [ ] UI components modified/added
 - [ ] State management updates
 - [ ] Routing changes
@@ -152,15 +152,15 @@ API_TIMEOUT=30
 **Migration Guide**
 If this introduces breaking changes, provide a step-by-step guide for users to migrate:
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## 🔗 Related Issues/PRs
 
 **Issues**
 - Closes #[issue_number]
-- Related to #[issue_number]  
+- Related to #[issue_number]
 - Depends on #[issue_number]
 
 **Pull Requests**
@@ -175,7 +175,7 @@ Anything specific reviewers should pay attention to or test.
 
 **Post-Merge Tasks**
 - [ ] Update project board
-- [ ] Notify stakeholders  
+- [ ] Notify stakeholders
 - [ ] Schedule deployment
 - [ ] Monitor metrics after deployment
 - [ ] Update external documentation

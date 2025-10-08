@@ -11,7 +11,7 @@
 - **File**: `apps/frontend/src/utils/apiClient.js`
 - **Changes**: Added enterprise methods:
   - `exportToCsv(reportType, channelId, period)`
-  - `exportToPng(reportType, channelId, period)` 
+  - `exportToPng(reportType, channelId, period)`
   - `createShareLink(reportType, channelId, options)`
   - `getSharedReport(shareToken)`
   - `revokeShareLink(shareToken)`
@@ -26,7 +26,7 @@
   - Material-UI integration
 - **Status**: ✅ Completed - Ready for production use
 
-### 4. Share Component Creation  
+### 4. Share Component Creation
 - **File**: `apps/frontend/src/components/common/ShareButton.jsx` (334 lines)
 - **Features**:
   - Dialog-based share link creation

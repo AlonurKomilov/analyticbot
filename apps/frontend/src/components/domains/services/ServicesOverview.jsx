@@ -15,7 +15,7 @@ const ServicesOverview = () => {
                 <Typography variant="body1" color="text.secondary">
                     Select a service from the sidebar to get started with AI-powered analytics and automation.
                 </Typography>
-                
+
                 {/* TODO: Add services grid/overview */}
                 <Box sx={{ mt: 3 }}>
                     <Typography variant="body2" color="text.secondary" fontStyle="italic">

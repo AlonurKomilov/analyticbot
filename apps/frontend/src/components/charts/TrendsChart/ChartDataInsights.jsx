@@ -13,19 +13,19 @@ const ChartDataInsights = React.memo(({ data }) => {
 
     return (
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-            <StatusChip 
-                label={`${dataPointsCount} data points`} 
-                size="small" 
+            <StatusChip
+                label={`${dataPointsCount} data points`}
+                size="small"
                 variant="primary"
             />
-            <StatusChip 
-                label={`Peak: ${peakViews.toLocaleString()} views`} 
-                size="small" 
+            <StatusChip
+                label={`Peak: ${peakViews.toLocaleString()} views`}
+                size="small"
                 variant="success"
             />
-            <StatusChip 
-                label={`Avg engagement: ${avgEngagement}`} 
-                size="small" 
+            <StatusChip
+                label={`Avg engagement: ${avgEngagement}`}
+                size="small"
                 variant="info"
             />
         </Box>

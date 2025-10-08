@@ -22,29 +22,29 @@ const TableToolbar = ({
     // Content
     title,
     subtitle,
-    
+
     // Search props
     enableSearch,
     searchQuery,
     setSearchQuery,
     searchPlaceholder,
-    
+
     // Export props
     enableExport,
     onExport,
     exportFilename,
-    
+
     // Column management props
     enableColumnVisibility,
     columns,
     columnVisibility,
     setColumnVisibility,
-    
+
     // Density props
     enableDensityToggle,
     density,
     setDensity,
-    
+
     // Refresh props
     enableRefresh,
     onRefresh,
@@ -64,7 +64,7 @@ const TableToolbar = ({
                     </Typography>
                 )}
             </Box>
-            
+
             {/* Action buttons */}
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 {/* Search */}
@@ -75,7 +75,7 @@ const TableToolbar = ({
                         searchPlaceholder={searchPlaceholder}
                     />
                 )}
-                
+
                 {/* Export */}
                 {enableExport && (
                     <TableExport
@@ -83,7 +83,7 @@ const TableToolbar = ({
                         exportFilename={exportFilename}
                     />
                 )}
-                
+
                 {/* Column Visibility */}
                 {enableColumnVisibility && (
                     <TableColumns
@@ -92,7 +92,7 @@ const TableToolbar = ({
                         setColumnVisibility={setColumnVisibility}
                     />
                 )}
-                
+
                 {/* Density Toggle */}
                 {enableDensityToggle && (
                     <TableDensity
@@ -100,7 +100,7 @@ const TableToolbar = ({
                         setDensity={setDensity}
                     />
                 )}
-                
+
                 {/* Refresh */}
                 {enableRefresh && onRefresh && (
                     <Tooltip title="Refresh Data">

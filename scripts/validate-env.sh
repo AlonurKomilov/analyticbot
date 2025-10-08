@@ -38,18 +38,18 @@ if [[ -n "$ENV_FILE" ]]; then
         # Skip comments and empty lines
         [[ "$line" =~ ^[[:space:]]*# ]] && continue
         [[ -z "${line// }" ]] && continue
-        
+
         # Extract variable name and value
         if [[ "$line" =~ ^[[:space:]]*([^=]+)=(.*)$ ]]; then
             var_name="${BASH_REMATCH[1]}"
             var_value="${BASH_REMATCH[2]}"
-            
+
             # Remove surrounding quotes if present
             var_value="${var_value%\"}"
             var_value="${var_value#\"}"
             var_value="${var_value%\'}"
             var_value="${var_value#\'}"
-            
+
             # Export the variable
             export "$var_name"="$var_value"
         fi
@@ -66,7 +66,7 @@ VALIDATION_WARNINGS=()
 validate_required_var() {
     local var_name="$1"
     local var_value="${!var_name}"
-    
+
     if [[ -z "$var_value" ]]; then
         VALIDATION_ERRORS+=("Required variable $var_name is missing")
         return 1
@@ -83,7 +83,7 @@ validate_secret_key() {
             if [[ ${#SECRET_KEY} -lt 32 ]]; then
                 VALIDATION_ERRORS+=("SECRET_KEY must be at least 32 characters long (current: ${#SECRET_KEY})")
             fi
-            
+
             # Check for common weak patterns (but be more specific)
             if [[ "$SECRET_KEY" == "password123" ]] || [[ "$SECRET_KEY" == "123456789" ]] || [[ "$SECRET_KEY" == "secretkey" ]] || [[ "$SECRET_KEY" == "your_secret_key_here" ]]; then
                 VALIDATION_WARNINGS+=("SECRET_KEY appears to be a common placeholder - consider using a more random key")
@@ -101,14 +101,14 @@ validate_jwt_config() {
             if [[ ${#JWT_SECRET_KEY} -lt 32 ]]; then
                 VALIDATION_ERRORS+=("JWT_SECRET_KEY must be at least 32 characters long (current: ${#JWT_SECRET_KEY})")
             fi
-            
+
             # Check for common weak patterns (but be more specific)
             if [[ "$JWT_SECRET_KEY" == "password123" ]] || [[ "$JWT_SECRET_KEY" == "123456789" ]] || [[ "$JWT_SECRET_KEY" == "secretkey" ]] || [[ "$JWT_SECRET_KEY" == "your_jwt_secret_here" ]]; then
                 VALIDATION_WARNINGS+=("JWT_SECRET_KEY appears to be a common placeholder - consider using a more random key")
             fi
         fi
     fi
-    
+
     # Validate JWT algorithm
     if [[ -n "$JWT_ALGORITHM" ]]; then
         case "$JWT_ALGORITHM" in
@@ -124,12 +124,12 @@ validate_postgres_config() {
     validate_required_var "POSTGRES_DB"
     validate_required_var "POSTGRES_HOST"
     validate_required_var "POSTGRES_PORT"
-    
+
     # Validate port is numeric
     if [[ -n "$POSTGRES_PORT" ]] && ! [[ "$POSTGRES_PORT" =~ ^[0-9]+$ ]]; then
         VALIDATION_ERRORS+=("POSTGRES_PORT must be numeric (current: $POSTGRES_PORT)")
     fi
-    
+
     # Check password strength
     if [[ -n "$POSTGRES_PASSWORD" ]] && [[ ${#POSTGRES_PASSWORD} -lt 8 ]]; then
         VALIDATION_WARNINGS+=("POSTGRES_PASSWORD is less than 8 characters - consider using a stronger password")
@@ -139,7 +139,7 @@ validate_postgres_config() {
 validate_api_config() {
     validate_required_var "API_HOST"
     validate_required_var "API_PORT"
-    
+
     # Validate API port is numeric and in valid range
     if [[ -n "$API_PORT" ]]; then
         if ! [[ "$API_PORT" =~ ^[0-9]+$ ]]; then
@@ -153,14 +153,14 @@ validate_api_config() {
 validate_telegram_config() {
     validate_required_var "BOT_TOKEN"
     validate_required_var "ADMIN_IDS"
-    
+
     # Validate bot token format (skip if it contains variable substitution)
     if [[ -n "$BOT_TOKEN" ]] && [[ "$BOT_TOKEN" != *"\${"* ]]; then
         if ! [[ "$BOT_TOKEN" =~ ^[0-9]+:[a-zA-Z0-9_-]+$ ]]; then
             VALIDATION_ERRORS+=("BOT_TOKEN format appears invalid (should be like: 123456789:ABC-DEF...)")
         fi
     fi
-    
+
     # Validate admin IDs (can be comma-separated or array format)
     if [[ -n "$ADMIN_IDS" ]]; then
         # Skip validation if it contains variable substitution
@@ -188,7 +188,7 @@ validate_optional_config() {
             *) VALIDATION_WARNINGS+=("LOG_LEVEL '$LOG_LEVEL' is not a standard level (DEBUG, INFO, WARNING, ERROR, CRITICAL)") ;;
         esac
     fi
-    
+
     # Validate ENVIRONMENT
     if [[ -n "$ENVIRONMENT" ]]; then
         case "$ENVIRONMENT" in
@@ -196,7 +196,7 @@ validate_optional_config() {
             *) VALIDATION_WARNINGS+=("ENVIRONMENT '$ENVIRONMENT' is not standard (development, production, testing, staging)") ;;
         esac
     fi
-    
+
     # Validate DEBUG
     if [[ -n "$DEBUG" ]]; then
         case "$DEBUG" in
@@ -263,7 +263,7 @@ fi
 # Connection tests (if no errors)
 if [[ ${#VALIDATION_ERRORS[@]} -eq 0 ]]; then
     echo -e "\n${YELLOW}🔗 Testing Connections...${NC}"
-    
+
     # Test PostgreSQL connection (if available)
     if command -v pg_isready >/dev/null 2>&1; then
         if pg_isready -h "${POSTGRES_HOST:-localhost}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER}" >/dev/null 2>&1; then
@@ -274,7 +274,7 @@ if [[ ${#VALIDATION_ERRORS[@]} -eq 0 ]]; then
     else
         echo -e "ℹ️  ${BLUE}PostgreSQL client not available for connection test${NC}"
     fi
-    
+
     # Test Redis connection (if configured)
     if [[ -n "$REDIS_URL" ]] && command -v redis-cli >/dev/null 2>&1; then
         if redis-cli -u "$REDIS_URL" ping >/dev/null 2>&1; then

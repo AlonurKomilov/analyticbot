@@ -46,7 +46,7 @@ const ChurnPredictorService = () => {
     const [autoRefresh, setAutoRefresh] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     // Real data state
     const [stats, setStats] = useState(null);
     const [riskUsers, setRiskUsers] = useState([]);
@@ -57,7 +57,7 @@ const ChurnPredictorService = () => {
         const loadChurnData = async () => {
             setLoading(true);
             setError(null);
-            
+
             try {
                 // Real API calls would go here
                 const [statsResponse, usersResponse, strategiesResponse] = await Promise.all([
@@ -65,7 +65,7 @@ const ChurnPredictorService = () => {
                     apiClient.get('/ai/churn/predictions'),
                     apiClient.get('/ai/churn/strategies')
                 ]);
-                
+
                 setStats(statsResponse.data);
                 setRiskUsers(usersResponse.data);
                 setStrategies(strategiesResponse.data);
@@ -119,7 +119,7 @@ const ChurnPredictorService = () => {
         );
     }
 
-    // Show error state  
+    // Show error state
     if (error) {
         return (
             <Box sx={{ p: 3 }}>
@@ -142,9 +142,9 @@ const ChurnPredictorService = () => {
                     <Typography variant="h4" component="h1" fontWeight={600}>
                         Churn Predictor
                     </Typography>
-                    <Chip 
-                        label="Beta" 
-                        color="warning" 
+                    <Chip
+                        label="Beta"
+                        color="warning"
                         variant="filled"
                         sx={{ ml: 'auto' }}
                     />
@@ -157,9 +157,9 @@ const ChurnPredictorService = () => {
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6} md={3}>
                         <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
-                            <Typography 
-                                variant="h4" 
-                                color="error.main" 
+                            <Typography
+                                variant="h4"
+                                color="error.main"
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
@@ -172,9 +172,9 @@ const ChurnPredictorService = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
-                            <Typography 
-                                variant="h4" 
-                                color="warning.main" 
+                            <Typography
+                                variant="h4"
+                                color="warning.main"
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
@@ -187,9 +187,9 @@ const ChurnPredictorService = () => {
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
                         <ModernCard variant="standard" sx={{ textAlign: 'center' }}>
-                            <Typography 
-                                variant="h4" 
-                                color="success.main" 
+                            <Typography
+                                variant="h4"
+                                color="success.main"
                                 fontWeight={600}
                                 sx={{ mb: SEMANTIC_SPACING.ELEMENT_SPACING }}
                             >
@@ -219,8 +219,8 @@ const ChurnPredictorService = () => {
 
             {/* Service Tabs */}
             <ModernCard variant="elevated">
-                <Tabs 
-                    value={currentTab} 
+                <Tabs
+                    value={currentTab}
                     onChange={(e, newValue) => setCurrentTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: 'divider' }}
                 >
@@ -261,12 +261,12 @@ const ChurnPredictorService = () => {
 
                         <List>
                             {riskUsers && riskUsers.length > 0 ? riskUsers.map((user) => (
-                                <ListItem 
+                                <ListItem
                                     key={user.userId || user.id}
-                                    sx={{ 
-                                        border: 1, 
-                                        borderColor: 'divider', 
-                                        borderRadius: 2, 
+                                    sx={{
+                                        border: 1,
+                                        borderColor: 'divider',
+                                        borderRadius: 2,
                                         mb: 2,
                                         flexDirection: 'column',
                                         alignItems: 'stretch'
@@ -284,21 +284,21 @@ const ChurnPredictorService = () => {
                                             <Typography variant="h6" sx={{ minWidth: 60, textAlign: 'center' }}>
                                                 {user.riskScore}%
                                             </Typography>
-                                            <Chip 
+                                            <Chip
                                                 label={user.riskLevel.toUpperCase()}
                                                 color={getRiskColor(user.riskLevel)}
                                                 size="small"
                                             />
                                         </Box>
                                     </Box>
-                                    
+
                                     <Box sx={{ pl: 7 }}>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                                             <strong>Risk Factors:</strong>
                                         </Typography>
                                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                             {(user.factors || []).map((factor, index) => (
-                                                <Chip 
+                                                <Chip
                                                     key={index}
                                                     label={factor}
                                                     size="small"
@@ -325,7 +325,7 @@ const ChurnPredictorService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Recommended Retention Strategies
                         </Typography>
-                        
+
                         <Grid container spacing={3}>
                             {strategies && strategies.length > 0 ? strategies.map((strategy, index) => (
                                 <Grid item xs={12} md={6} key={index}>
@@ -333,7 +333,7 @@ const ChurnPredictorService = () => {
                                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
                                             {strategy.strategy}
                                         </Typography>
-                                        
+
                                         <Box sx={{ mb: 2 }}>
                                             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                                                 Effectiveness Rate
@@ -342,18 +342,18 @@ const ChurnPredictorService = () => {
                                                 {strategy.effectiveness}
                                             </Typography>
                                         </Box>
-                                        
-                                        <Chip 
+
+                                        <Chip
                                             label={strategy.targetGroup}
                                             color="primary"
                                             size="small"
                                             sx={{ mb: 2 }}
                                         />
-                                        
+
                                         <Typography variant="body2" color="text.secondary">
                                             {strategy.description}
                                         </Typography>
-                                        
+
                                         <Button
                                             variant="outlined"
                                             fullWidth
@@ -380,28 +380,28 @@ const ChurnPredictorService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Churn Prediction Settings
                         </Typography>
-                        
+
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <FormControlLabel
                                 control={
-                                    <Switch 
+                                    <Switch
                                         checked={autoMonitoring}
                                         onChange={(e) => setAutoMonitoring(e.target.checked)}
                                     />
                                 }
                                 label="Automatic Risk Monitoring"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch defaultChecked />}
                                 label="Real-time Alerts"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch />}
                                 label="Weekly Risk Reports"
                             />
-                            
+
                             <Alert severity="warning" sx={{ mt: 2 }}>
                                 This service is in Beta. Prediction accuracy may vary and should be used in conjunction with other retention strategies.
                             </Alert>

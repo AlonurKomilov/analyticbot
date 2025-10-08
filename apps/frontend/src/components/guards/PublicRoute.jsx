@@ -1,6 +1,6 @@
 /**
  * 🚪 Public Route Component
- * 
+ *
  * Route guard for public routes (login, register) that redirects authenticated users
  * to the main application to prevent accessing auth pages when already logged in.
  */
@@ -11,8 +11,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { Box, Typography } from '@mui/material';
 
-const PublicRoute = ({ 
-    children, 
+const PublicRoute = ({
+    children,
     redirectTo = '/',
     restricted = true // If true, redirect authenticated users away
 }) => {

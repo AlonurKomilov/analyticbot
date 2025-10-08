@@ -11,18 +11,18 @@ echo ""
 # Check services are running
 echo "🔍 Service Status:"
 API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:11400/health 2>/dev/null || echo "000")
-FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:11300/ 2>/dev/null || echo "000") 
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:11300/ 2>/dev/null || echo "000")
 
 if [ "$API_STATUS" = "200" ]; then
     echo "   ✅ API Service (11400): Running"
-else 
+else
     echo "   ⚠️  API Service (11400): Not responding"
 fi
 
 if [ "$FRONTEND_STATUS" = "200" ]; then
     echo "   ✅ Frontend Service (11300): Running"
 else
-    echo "   ⚠️  Frontend Service (11300): Not responding" 
+    echo "   ⚠️  Frontend Service (11300): Not responding"
 fi
 
 echo ""

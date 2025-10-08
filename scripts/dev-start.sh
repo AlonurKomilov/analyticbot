@@ -48,7 +48,7 @@ echo -e "${BLUE}🔍 Checking infrastructure...${NC}"
         docker-compose up -d db || echo "⚠️  Could not start PostgreSQL container (Docker permission issue?)"
         sleep 3
     fi
-    
+
     # Check Redis
     if ! nc -z localhost 10200 2>/dev/null; then
         echo "⚠️  Redis not running on port 10200"
@@ -63,24 +63,24 @@ start_service() {
     local command=$2
     local port=$3
     local log_file="logs/dev_${service_name}.log"
-    
+
     # Create logs directory
     mkdir -p logs
-    
+
     echo -e "${BLUE}🚀 Starting ${service_name} on port ${port}...${NC}"
-    
+
     # Kill any existing process on the port
     if lsof -ti:${port} >/dev/null 2>&1; then
         echo -e "${YELLOW}🔄 Killing existing process on port ${port}${NC}"
         kill -9 $(lsof -ti:${port}) 2>/dev/null || true
         sleep 1
     fi
-    
+
     # Start the service
     nohup bash -c "${command}" > ${log_file} 2>&1 &
     local pid=$!
     echo $pid > "logs/dev_${service_name}.pid"
-    
+
     # Wait a moment and check if it started
     sleep 2
     if kill -0 $pid 2>/dev/null; then
@@ -129,7 +129,7 @@ case $SERVICE in
     "stop")
         # Stop all development services
         echo -e "${YELLOW}🛑 Stopping all development services...${NC}"
-        
+
         # Stop services by PID file (safer approach)
         for pid_file in logs/dev_*.pid; do
             if [ -f "$pid_file" ]; then
@@ -151,28 +151,28 @@ case $SERVICE in
                 rm -f "$pid_file"
             fi
         done
-        
+
         # More selective port cleanup - only kill our specific processes
         echo -e "${BLUE}🔍 Checking for remaining development processes...${NC}"
-        
+
         # Check for uvicorn (API) processes specifically
         if pgrep -f "uvicorn.*11400" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping remaining API processes${NC}"
             pkill -f "uvicorn.*11400" || true
         fi
-        
-        # Check for npm/vite (Frontend) processes specifically  
+
+        # Check for npm/vite (Frontend) processes specifically
         if pgrep -f "vite.*11300" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping remaining frontend processes${NC}"
             pkill -f "vite.*11300" || true
         fi
-        
+
         # Check for bot processes
         if pgrep -f "apps.bot.run_bot" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping remaining bot processes${NC}"
             pkill -f "apps.bot.run_bot" || true
         fi
-        
+
         echo -e "${GREEN}✅ All development services stopped${NC}"
         echo -e "${BLUE}ℹ️  Note: External tunnels (devtunnels, ngrok) remain active${NC}"
         exit 0
@@ -181,35 +181,35 @@ case $SERVICE in
         # Check status of all services
         echo -e "${BLUE}📊 Development Services Status:${NC}"
         echo "=================================="
-        
+
         # Check API - Development Environment Port 11400
         if curl -s http://localhost:11400/health >/dev/null 2>&1; then
             echo -e "API (11400):     ${GREEN}✅ Running${NC}"
         else
             echo -e "API (11400):     ${RED}❌ Stopped${NC}"
         fi
-        
+
         # Check Frontend - Development Environment Port 11300
         if curl -s http://localhost:11300 >/dev/null 2>&1; then
             echo -e "Frontend (11300): ${GREEN}✅ Running${NC}"
         else
             echo -e "Frontend (11300): ${RED}❌ Stopped${NC}"
         fi
-        
+
         # Check Bot (by PID file)
         if [ -f "logs/dev_bot.pid" ] && kill -0 $(cat logs/dev_bot.pid) 2>/dev/null; then
             echo -e "Bot:             ${GREEN}✅ Running${NC}"
         else
             echo -e "Bot:             ${RED}❌ Stopped${NC}"
         fi
-        
+
         # Check Infrastructure
         if nc -z localhost 5432 2>/dev/null; then
             echo -e "PostgreSQL:      ${GREEN}✅ Running${NC}"
         else
             echo -e "PostgreSQL:      ${RED}❌ Stopped${NC}"
         fi
-        
+
         if nc -z localhost 6379 2>/dev/null; then
             echo -e "Redis:           ${GREEN}✅ Running${NC}"
         else

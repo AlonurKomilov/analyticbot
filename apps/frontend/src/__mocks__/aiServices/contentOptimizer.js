@@ -11,51 +11,51 @@ export const contentOptimizerStats = {
 };
 
 export const recentOptimizations = [
-    { 
-        id: 1, 
-        content: 'Product Launch Post', 
-        improvement: '+42%', 
-        timestamp: '2 minutes ago', 
+    {
+        id: 1,
+        content: 'Product Launch Post',
+        improvement: '+42%',
+        timestamp: '2 minutes ago',
         status: 'success',
         originalScore: 68,
         optimizedScore: 96,
         suggestions: ['Added emotional triggers', 'Improved call-to-action', 'Optimized hashtags']
     },
-    { 
-        id: 2, 
-        content: 'Weekly Newsletter', 
-        improvement: '+28%', 
-        timestamp: '15 minutes ago', 
+    {
+        id: 2,
+        content: 'Weekly Newsletter',
+        improvement: '+28%',
+        timestamp: '15 minutes ago',
         status: 'success',
         originalScore: 72,
         optimizedScore: 92,
         suggestions: ['Enhanced readability', 'Better structure', 'Added urgency words']
     },
-    { 
-        id: 3, 
-        content: 'Blog Article Draft', 
-        improvement: '+51%', 
-        timestamp: '1 hour ago', 
+    {
+        id: 3,
+        content: 'Blog Article Draft',
+        improvement: '+51%',
+        timestamp: '1 hour ago',
         status: 'success',
         originalScore: 59,
         optimizedScore: 89,
         suggestions: ['SEO optimization', 'Improved headlines', 'Added engagement hooks']
     },
-    { 
-        id: 4, 
-        content: 'Social Media Campaign', 
-        improvement: '+38%', 
-        timestamp: '2 hours ago', 
+    {
+        id: 4,
+        content: 'Social Media Campaign',
+        improvement: '+38%',
+        timestamp: '2 hours ago',
         status: 'success',
         originalScore: 65,
         optimizedScore: 90,
         suggestions: ['Trend alignment', 'Audience targeting', 'Visual content tips']
     },
-    { 
-        id: 5, 
-        content: 'Email Marketing Copy', 
-        improvement: '+29%', 
-        timestamp: '3 hours ago', 
+    {
+        id: 5,
+        content: 'Email Marketing Copy',
+        improvement: '+29%',
+        timestamp: '3 hours ago',
         status: 'success',
         originalScore: 70,
         optimizedScore: 90,
@@ -117,7 +117,7 @@ export const trendInsights = [
         action: 'Schedule optimized content during peak hours'
     },
     {
-        title: 'Visual Content Impact', 
+        title: 'Visual Content Impact',
         insight: 'Optimized posts with visuals get 60% more engagement',
         impact: 'Very High',
         action: 'Always include visual content suggestions'

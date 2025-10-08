@@ -1,6 +1,6 @@
 /**
  * DashboardPage - Main dashboard overview page
- * 
+ *
  * Enhanced with improved visual hierarchy:
  * - Uses new EnhancedDashboardLayout for better organization
  * - Improved content grouping and spacing
@@ -39,19 +39,19 @@ const DashboardPage = () => {
 
 // Legacy implementation (preserved for backward compatibility)
 const LegacyDashboardPage = () => {
-  const { 
+  const {
     isGlobalLoading,
     isLoading,
     fetchData,
-    scheduledPosts, 
+    scheduledPosts,
     channels,
-    addChannel, 
+    addChannel,
     removeChannel,
     dataSource
   } = useAppStore();
-  
+
   const isLoadingData = isGlobalLoading() || isLoading('fetchData');
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -72,27 +72,27 @@ const LegacyDashboardPage = () => {
         <SectionHeader level={1}>
           Analytics Dashboard
         </SectionHeader>
-        
+
         <Stack spacing={4}>
           {/* System Status Section */}
           <SystemStatusWidget dataSource={dataSource} />
-          
+
           {/* AI Services Section */}
           <AIServicesGrid />
-          
+
           {/* Main Analytics Dashboard */}
           <Stack spacing={3}>
             <SectionHeader level={2}>Analytics Overview</SectionHeader>
             <AnalyticsDashboard />
           </Stack>
-          
+
           {/* Sidebar Content */}
           <Stack spacing={3}>
             <ScheduledPostsList posts={scheduledPosts} />
-            <AddChannel 
-              channels={channels} 
-              onAdd={addChannel} 
-              removeChannel={removeChannel} 
+            <AddChannel
+              channels={channels}
+              onAdd={addChannel}
+              removeChannel={removeChannel}
             />
           </Stack>
         </Stack>

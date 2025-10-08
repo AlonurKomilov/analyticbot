@@ -35,7 +35,7 @@ As a [type of user], I want [goal] so that [reason/benefit].
 Define what "done" looks like:
 
 - [ ] Criteria 1
-- [ ] Criteria 2  
+- [ ] Criteria 2
 - [ ] Criteria 3
 - [ ] Documentation updated
 - [ ] Tests added

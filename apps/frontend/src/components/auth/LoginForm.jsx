@@ -1,6 +1,6 @@
 /**
  * 🔒 Login Form Component
- * 
+ *
  * Professional login form with validation, loading states, and error handling.
  * Integrates with AuthContext for JWT authentication.
  */
@@ -88,7 +88,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!validateForm()) {
             return;
         }
@@ -98,7 +98,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
 
         try {
             const result = await login(formData.email, formData.password);
-            
+
             if (!result.success) {
                 setLoginError(result.error || 'Login failed. Please try again.');
             }
@@ -136,12 +136,12 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
                 <CardContent sx={{ p: 4 }}>
                     {/* Header */}
                     <Box sx={{ textAlign: 'center', mb: 3 }}>
-                        <LoginIcon 
-                            sx={{ 
-                                fontSize: 48, 
+                        <LoginIcon
+                            sx={{
+                                fontSize: 48,
                                 color: DESIGN_TOKENS.colors.primary.main,
                                 mb: 1
-                            }} 
+                            }}
                         />
                         <Typography variant="h4" component="h1" gutterBottom>
                             Welcome Back

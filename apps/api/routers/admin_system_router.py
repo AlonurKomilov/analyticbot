@@ -27,7 +27,7 @@ from apps.api.middleware.auth import (
 from apps.shared.performance import performance_timer
 
 # Updated import to use new microservices
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 router = APIRouter(
@@ -64,7 +64,7 @@ class AuditLogEntry(BaseModel):
 @router.get("/stats", response_model=SystemStats)
 async def get_system_statistics(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
     """
     ## 📊 Get System Statistics (Admin)
@@ -102,7 +102,7 @@ async def get_system_statistics(
 async def get_recent_admin_actions(
     limit: int = Query(50, ge=1, le=500),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
     """
     ## 📋 Get Recent Admin Actions
@@ -146,7 +146,7 @@ async def get_recent_admin_actions(
 @router.get("/health")
 async def get_system_health(
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
     """
     ## 🏥 Get System Health (Admin)

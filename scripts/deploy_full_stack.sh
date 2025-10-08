@@ -4,7 +4,7 @@ set -e
 # AnalyticBot Full Stack Deployment Script
 # This script sets up and runs the complete system:
 # - API Backend (FastAPI)
-# - Bot Service (Aiogram) 
+# - Bot Service (Aiogram)
 # - Frontend (React/Vite)
 # - Database (PostgreSQL/SQLite)
 # - Cache (Redis - optional)
@@ -62,7 +62,7 @@ export BOT_TOKEN=${BOT_TOKEN:-"your_bot_token_here"}
 export JWT_SECRET_KEY=${JWT_SECRET_KEY:-"dev_secret_key_123"}
 export TWA_HOST_URL=${TWA_HOST_URL:-"http://localhost:3000"}
 export POSTGRES_USER=${POSTGRES_USER:-"analytic"}
-export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"change_me"} 
+export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"change_me"}
 export POSTGRES_DB=${POSTGRES_DB:-"analytic_bot"}
 
 print_status "Environment variables set for development"
@@ -86,7 +86,7 @@ wait_for_service() {
     local url=$1
     local max_attempts=30
     local attempt=1
-    
+
     echo -n "Waiting for $url "
     while [ $attempt -le $max_attempts ]; do
         if curl -s "$url" > /dev/null 2>&1; then
@@ -98,7 +98,7 @@ wait_for_service() {
         sleep 2
         attempt=$((attempt + 1))
     done
-    
+
     echo ""
     print_error "Service at $url failed to start within $((max_attempts * 2)) seconds"
     return 1
@@ -131,14 +131,14 @@ fi
 # Frontend setup
 if [ "$SETUP_FRONTEND" = "true" ]; then
     echo -e "${BLUE}Setting up Frontend...${NC}"
-    
+
     if [ -d "apps/frontend" ]; then
         cd apps/frontend
-        
+
         # Check if node is available
         if command -v node > /dev/null 2>&1; then
             print_status "Node.js found: $(node --version)"
-            
+
             # Install dependencies
             if [ -f "package.json" ]; then
                 if [ ! -d "node_modules" ]; then
@@ -151,7 +151,7 @@ if [ "$SETUP_FRONTEND" = "true" ]; then
             print_warning "Node.js not found, frontend will not be built"
             SETUP_FRONTEND=false
         fi
-        
+
         cd ../..
     else
         print_warning "Frontend directory not found"
@@ -162,23 +162,23 @@ fi
 # Docker deployment
 if [ "$USE_DOCKER" = "true" ]; then
     echo -e "${BLUE}Starting Docker services...${NC}"
-    
+
     # Check if Docker is available
     if command -v docker > /dev/null 2>&1 && command -v docker-compose > /dev/null 2>&1; then
         # Stop existing containers
         docker-compose down > /dev/null 2>&1 || true
-        
+
         # Start services
         docker-compose up -d db redis
         print_status "Database and Redis started"
-        
+
         # Wait for database
         sleep 10
-        
+
         # Start application services
         docker-compose up -d api bot
         print_status "API and Bot services started"
-        
+
         # Wait for API to be ready
         if wait_for_service "http://localhost:$PORT_API/health"; then
             print_status "Docker deployment successful"
@@ -194,25 +194,25 @@ if [ "$USE_DOCKER" = "true" ]; then
 # Local development deployment
 else
     echo -e "${BLUE}Starting local development services...${NC}"
-    
+
     # Check ports
     if ! check_port $PORT_API; then
         print_error "API port $PORT_API is in use. Please stop other services or change the port."
         exit 1
     fi
-    
+
     if [ "$SETUP_FRONTEND" = "true" ]; then
         if ! check_port $PORT_FRONTEND; then
             print_warning "Frontend port $PORT_FRONTEND is in use"
         fi
     fi
-    
+
     # Start API service
     echo -e "${BLUE}Starting API service...${NC}"
     .venv/bin/python -m uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT_API > logs/api.log 2>&1 &
     API_PID=$!
     echo "API PID: $API_PID" > pids/api.pid
-    
+
     # Wait for API to be ready
     if wait_for_service "http://localhost:$PORT_API/health"; then
         print_status "API service started successfully"
@@ -221,14 +221,14 @@ else
         kill $API_PID 2>/dev/null || true
         exit 1
     fi
-    
+
     # Start Bot service
     echo -e "${BLUE}Starting Bot service...${NC}"
     .venv/bin/python apps/bot/run_bot.py > logs/bot.log 2>&1 &
     BOT_PID=$!
     echo "Bot PID: $BOT_PID" > pids/bot.pid
     sleep 3
-    
+
     if ps -p $BOT_PID > /dev/null; then
         print_status "Bot service started successfully"
     else
@@ -236,7 +236,7 @@ else
         kill $API_PID 2>/dev/null || true
         exit 1
     fi
-    
+
     # Start Frontend service
     if [ "$SETUP_FRONTEND" = "true" ]; then
         echo -e "${BLUE}Starting Frontend service...${NC}"
@@ -245,7 +245,7 @@ else
         FRONTEND_PID=$!
         echo "Frontend PID: $FRONTEND_PID" > ../../pids/frontend.pid
         cd ../..
-        
+
         sleep 5
         if ps -p $FRONTEND_PID > /dev/null; then
             print_status "Frontend service started successfully"

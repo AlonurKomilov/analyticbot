@@ -1,6 +1,6 @@
 /**
  * Enhanced Interactive Cards
- * 
+ *
  * Card components with advanced micro-interactions:
  * - Smooth hover effects and animations
  * - Loading states with skeleton animations
@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
+import {
   Card as MuiCard,
   CardContent,
   CardHeader,
@@ -88,7 +88,7 @@ export const AnimatedCard = ({
         overflow: 'hidden',
         transition: 'all 0.3s ease-in-out',
         boxShadow: elevation === 0 ? 'none' : `0 ${elevation * 2}px ${elevation * 4}px rgba(0, 0, 0, 0.1)`,
-        
+
         ...(isHovered && interactive && {
           '&::before': {
             content: '""',
@@ -101,7 +101,7 @@ export const AnimatedCard = ({
             opacity: 0.8
           }
         }),
-        
+
         ...props.sx
       }}
       {...props}
@@ -153,13 +153,13 @@ export const ExpandableCard = ({
     setIsAnimating(true);
     setExpanded(!expanded);
     onExpand?.(!expanded);
-    
+
     // Reset animation state after transition
     setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
-    <AnimatedCard 
+    <AnimatedCard
       interactive={false}
       loading={loading}
       {...props}
@@ -178,7 +178,7 @@ export const ExpandableCard = ({
                 transition: 'transform 0.3s ease-in-out',
                 minWidth: '44px',
                 minHeight: '44px',
-                
+
                 '&:hover': {
                   backgroundColor: 'action.hover',
                   transform: expanded ? 'rotate(180deg) scale(1.1)' : 'rotate(0deg) scale(1.1)'
@@ -202,9 +202,9 @@ export const ExpandableCard = ({
           }
         }}
       />
-      
-      <Collapse 
-        in={expanded} 
+
+      <Collapse
+        in={expanded}
         timeout={300}
         unmountOnExit
       >
@@ -238,29 +238,29 @@ export const AnimatedMetricCard = ({
 
   useEffect(() => {
     if (loading) return;
-    
+
     setIsAnimating(true);
     const startValue = previousValue || 0;
     const endValue = value || 0;
     const startTime = Date.now();
-    
+
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / animationDuration, 1);
-      
+
       // Easing function for smooth animation
       const easeOutCubic = 1 - Math.pow(1 - progress, 3);
       const currentValue = startValue + (endValue - startValue) * easeOutCubic;
-      
+
       setDisplayValue(currentValue);
-      
+
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
         setIsAnimating(false);
       }
     };
-    
+
     requestAnimationFrame(animate);
   }, [value, previousValue, animationDuration, loading]);
 
@@ -286,7 +286,7 @@ export const AnimatedMetricCard = ({
             {title}
           </Typography>
           {icon && (
-            <Box sx={{ 
+            <Box sx={{
               color: getTrendColor(),
               transform: isAnimating ? 'scale(1.1)' : 'scale(1)',
               transition: 'transform 0.2s ease-in-out'
@@ -295,11 +295,11 @@ export const AnimatedMetricCard = ({
             </Box>
           )}
         </Box>
-        
-        <Typography 
-          variant="h4" 
+
+        <Typography
+          variant="h4"
           component="div"
-          sx={{ 
+          sx={{
             color: getTrendColor(),
             fontWeight: 700,
             mb: 1,
@@ -313,12 +313,12 @@ export const AnimatedMetricCard = ({
             `${formatValue(displayValue)}${unit}`
           )}
         </Typography>
-        
+
         {previousValue !== undefined && !loading && (
-          <Typography 
-            variant="body2" 
+          <Typography
+            variant="body2"
             color="text.secondary"
-            sx={{ 
+            sx={{
               opacity: isAnimating ? 0.6 : 1,
               transition: 'opacity 0.2s ease-in-out'
             }}
@@ -351,7 +351,7 @@ export const DashboardCard = ({
 
   const handleRefresh = async () => {
     if (!onRefresh) return;
-    
+
     setIsRefreshing(true);
     try {
       await onRefresh();
@@ -364,20 +364,20 @@ export const DashboardCard = ({
     if (loading || isRefreshing) {
       return <CardSkeleton />;
     }
-    
+
     if (error) {
       return (
-        <Box sx={{ 
-          p: 3, 
+        <Box sx={{
+          p: 3,
           textAlign: 'center',
           color: 'error.main'
         }}>
           <Typography variant="h6">Error loading data</Typography>
           {refreshable && (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                mt: 1, 
+            <Typography
+              variant="body2"
+              sx={{
+                mt: 1,
                 cursor: 'pointer',
                 '&:hover': { textDecoration: 'underline' }
               }}
@@ -389,11 +389,11 @@ export const DashboardCard = ({
         </Box>
       );
     }
-    
+
     if (empty) {
       return (
-        <Box sx={{ 
-          p: 3, 
+        <Box sx={{
+          p: 3,
           textAlign: 'center',
           color: 'text.secondary'
         }}>
@@ -401,7 +401,7 @@ export const DashboardCard = ({
         </Box>
       );
     }
-    
+
     return (
       <CardContent>
         <StaggeredAnimation>
@@ -430,7 +430,7 @@ export const DashboardCard = ({
           }}
         />
       )}
-      
+
       {getCardContent()}
     </AnimatedCard>
   );

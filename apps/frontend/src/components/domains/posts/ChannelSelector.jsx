@@ -5,25 +5,25 @@
 import React, { useMemo } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 
-const ChannelSelector = ({ 
-    channels = [], 
-    selectedChannel, 
-    onChange, 
+const ChannelSelector = ({
+    channels = [],
+    selectedChannel,
+    onChange,
     error,
-    disabled = false 
+    disabled = false
 }) => {
     // Memoized channel options
-    const channelOptions = useMemo(() => 
+    const channelOptions = useMemo(() =>
         channels.map(channel => ({
             value: channel.id,
             label: channel.title || channel.username || 'Unknown Channel'
-        })), 
+        })),
         [channels]
     );
 
     return (
         <FormControl fullWidth error={!!error} disabled={disabled}>
-            <InputLabel 
+            <InputLabel
                 id="channel-select-label"
                 required
                 aria-label="Select channel for posting"
@@ -41,8 +41,8 @@ const ChannelSelector = ({
             >
                 {channelOptions.length > 0 ? (
                     channelOptions.map((option) => (
-                        <MenuItem 
-                            key={option.value} 
+                        <MenuItem
+                            key={option.value}
                             value={option.value}
                             aria-label={`Select ${option.label}`}
                         >
@@ -55,22 +55,22 @@ const ChannelSelector = ({
                     </MenuItem>
                 )}
             </Select>
-            
+
             {!error && channelOptions.length === 0 && (
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="channel-help"
                     sx={{ mt: 0.5 }}
                 >
                     No channels available. Please add a channel first.
                 </Typography>
             )}
-            
+
             {error && (
-                <Typography 
-                    variant="caption" 
-                    color="error" 
+                <Typography
+                    variant="caption"
+                    color="error"
                     id="channel-error"
                     role="alert"
                     sx={{ mt: 0.5, display: 'block' }}

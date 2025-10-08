@@ -17,7 +17,7 @@ class AuthAwareAPIService {
      */
     async initialize() {
         if (this.isInitialized) return;
-        
+
         try {
             // Try to get current user info from backend
             const response = await apiClient.get('/initial-data');
@@ -35,7 +35,7 @@ class AuthAwareAPIService {
      */
     isDemoUser() {
         if (!this.userInfo) return false;
-        
+
         // Check if user data indicates demo user
         const demoUsernames = ['Demo User', 'Demo Viewer', 'Demo Guest', 'Demo Admin'];
         return demoUsernames.includes(this.userInfo.user?.username);
@@ -46,15 +46,15 @@ class AuthAwareAPIService {
      */
     getDemoUserType() {
         if (!this.isDemoUser()) return null;
-        
+
         const username = this.userInfo.user?.username;
         const typeMap = {
             'Demo User': 'full_featured',
-            'Demo Viewer': 'read_only', 
+            'Demo Viewer': 'read_only',
             'Demo Guest': 'limited',
             'Demo Admin': 'admin'
         };
-        
+
         return typeMap[username] || 'limited';
     }
 
@@ -64,18 +64,18 @@ class AuthAwareAPIService {
     async makeRequest(endpoint, options = {}) {
         // Ensure we're initialized
         await this.initialize();
-        
+
         try {
             const response = await apiClient.request({
                 url: endpoint,
                 method: 'GET',
                 ...options
             });
-            
+
             return response.data;
         } catch (error) {
             console.error(`API request failed for ${endpoint}:`, error);
-            
+
             // Don't fallback to frontend mocks - let the error bubble up
             throw new Error(`API call failed: ${error.message}`);
         }
@@ -140,15 +140,15 @@ class AuthAwareAPIService {
     async login(credentials) {
         try {
             const response = await apiClient.post('/auth/login', credentials);
-            
+
             if (response.data.access_token) {
                 // Store token
                 localStorage.setItem('authToken', response.data.access_token);
-                
+
                 // Reinitialize to get user info
                 this.isInitialized = false;
                 await this.initialize();
-                
+
                 return {
                     success: true,
                     token: response.data.access_token,
@@ -157,7 +157,7 @@ class AuthAwareAPIService {
                     demoType: this.getDemoUserType()
                 };
             }
-            
+
             throw new Error('No access token received');
         } catch (error) {
             return {
@@ -172,11 +172,11 @@ class AuthAwareAPIService {
             // Clear tokens
             localStorage.removeItem('authToken');
             sessionStorage.removeItem('authToken');
-            
+
             // Reset service state
             this.isInitialized = false;
             this.userInfo = null;
-            
+
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };

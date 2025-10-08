@@ -10,12 +10,12 @@ export const formatNumber = (num) => {
     if (num === null || num === undefined || isNaN(num)) {
         return '0';
     }
-    
+
     const validNum = Number(num);
     if (isNaN(validNum)) {
         return '0';
     }
-    
+
     if (validNum >= 1000000) {
         return (validNum / 1000000).toFixed(1) + 'M';
     } else if (validNum >= 1000) {
@@ -31,7 +31,7 @@ export const formatDate = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = (now - date) / (1000 * 60 * 60);
-    
+
     if (diffInHours < 1) {
         return `${Math.floor(diffInHours * 60)} min ago`;
     } else if (diffInHours < 24) {
@@ -56,11 +56,11 @@ export const calculateEngagementRate = (post) => {
 export const getPerformanceScore = (post) => {
     const engagementRate = parseFloat(calculateEngagementRate(post));
     const views = post.views || 0;
-    
+
     // Weight engagement rate and view count
     const engagementScore = Math.min(engagementRate * 10, 70); // Max 70 points for engagement
     const viewScore = Math.min((views / 1000) * 30, 30); // Max 30 points for views
-    
+
     return Math.round(engagementScore + viewScore);
 };
 

@@ -59,16 +59,16 @@ export const topPostsData = [
 export const getTopPosts = async (period = 'today', sortBy = 'views') => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  
+
   const posts = [...topPostsData];
-  
+
   // Sort based on criteria
   if (sortBy === 'engagement') {
     posts.sort((a, b) => b.engagement - a.engagement);
   } else if (sortBy === 'reactions') {
     posts.sort((a, b) => b.reactions - a.reactions);
   }
-  
+
   return {
     posts,
     period,

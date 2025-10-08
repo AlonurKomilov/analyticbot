@@ -17,7 +17,7 @@ try {
     console.log('   - Stats:', Object.keys(churnPredictor.churnPredictorStats));
     console.log('   - Predictions:', churnPredictor.mockChurnPredictions.length, 'users');
 
-    // Predictive Analytics Mock Data  
+    // Predictive Analytics Mock Data
     const predictiveAnalytics = require('../predictiveAnalytics.js');
     console.log('✅ Predictive Analytics mock data loaded successfully');
     console.log('   - Stats:', Object.keys(predictiveAnalytics.predictiveStats));

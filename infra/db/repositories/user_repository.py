@@ -19,7 +19,7 @@ class AsyncpgUserRepository(IUserRepository):
         """Get user by ID"""
         query = """
             SELECT u.id, u.username, u.created_at, p.name as subscription_tier
-            FROM users u 
+            FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
             WHERE u.id = $1
         """
@@ -35,7 +35,7 @@ class AsyncpgUserRepository(IUserRepository):
         query = """
             INSERT INTO users (id, username, plan_id)
             VALUES ($1, $2, $3)
-            ON CONFLICT (id) DO UPDATE SET 
+            ON CONFLICT (id) DO UPDATE SET
                 username = EXCLUDED.username
             RETURNING id, username, created_at
         """
@@ -63,7 +63,7 @@ class AsyncpgUserRepository(IUserRepository):
             return False
 
         query = f"""
-            UPDATE users 
+            UPDATE users
             SET {', '.join(set_clauses)}
             WHERE id = ${param_count}
         """
@@ -103,7 +103,7 @@ class AsyncpgUserRepository(IUserRepository):
         query = """
             SELECT u.id, u.username, u.created_at, u.hashed_password,
                    p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login
-            FROM users u 
+            FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
             WHERE u.email = $1
         """
@@ -115,7 +115,7 @@ class AsyncpgUserRepository(IUserRepository):
         query = """
             SELECT u.id, u.username, u.created_at, u.hashed_password,
                    p.name as subscription_tier, u.email, u.full_name, u.role, u.status, u.last_login
-            FROM users u 
+            FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
             WHERE u.username = $1
         """

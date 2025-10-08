@@ -12,7 +12,7 @@ assignees: []
 
 ## Security Issue Type
 - [ ] Authentication bypass
-- [ ] Authorization vulnerability  
+- [ ] Authorization vulnerability
 - [ ] Input validation issue
 - [ ] SQL injection
 - [ ] Cross-site scripting (XSS)
@@ -52,9 +52,9 @@ assignees: []
 ## Steps to Reproduce
 **Provide detailed steps to reproduce the vulnerability:**
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Proof of Concept
 **If applicable, provide a proof of concept (sanitized to avoid actual exploitation):**
@@ -91,7 +91,7 @@ assignees: []
 
 **Response Priority:**
 - [ ] P0 - Patch immediately
-- [ ] P1 - Patch within 24 hours  
+- [ ] P1 - Patch within 24 hours
 - [ ] P2 - Patch within 1 week
 - [ ] P3 - Patch in next release
 

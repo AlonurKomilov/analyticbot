@@ -19,25 +19,25 @@
 ### 1. Usage Metrics
 ```sql
 -- Export usage tracking
-SELECT 
+SELECT
     DATE(created_at) as date,
     COUNT(*) as total_exports,
     COUNT(CASE WHEN format = 'csv' THEN 1 END) as csv_exports,
     COUNT(CASE WHEN format = 'png' THEN 1 END) as png_exports,
     COUNT(DISTINCT user_id) as unique_users
-FROM export_logs 
+FROM export_logs
 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 GROUP BY DATE(created_at)
 ORDER BY date;
 
--- Share usage tracking  
-SELECT 
+-- Share usage tracking
+SELECT
     DATE(created_at) as date,
     COUNT(*) as links_created,
     COUNT(DISTINCT share_token) as unique_links,
     AVG(access_count) as avg_access_per_link,
     COUNT(DISTINCT channel_id) as channels_shared
-FROM shared_reports 
+FROM shared_reports
 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 GROUP BY DATE(created_at)
 ORDER BY date;
@@ -97,13 +97,13 @@ const trackShareUsage = (reportType, ttlHours, success) => {
 const handleExport = async (format) => {
   setLoading(true);
   setError(null);
-  
+
   // Track export start
   trackExportUsage(reportType, format, false);
-  
+
   try {
     // ... existing export logic ...
-    
+
     // Track export success
     trackExportUsage(reportType, format, true);
     onExportComplete?.(filename, format);
@@ -136,10 +136,10 @@ async def export_csv(...):
         "user_id": request.headers.get("user-id"),
         "timestamp": datetime.utcnow().isoformat()
     })
-    
+
     try:
         # ... existing logic ...
-        
+
         # Log export success
         logger.info(f"CSV export successful", extra={
             "event": "export_completed",
@@ -148,7 +148,7 @@ async def export_csv(...):
             "file_size": len(csv_content.getvalue()),
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
     except Exception as e:
         # Log export failure
         logger.error(f"CSV export failed", extra={
@@ -164,7 +164,7 @@ async def export_csv(...):
 # Create monitoring/weekly_report.py
 def generate_weekly_feature_report():
     """Generate weekly report on export/share feature usage"""
-    
+
     report = {
         "week_ending": datetime.now().strftime("%Y-%m-%d"),
         "export_metrics": {
@@ -185,7 +185,7 @@ def generate_weekly_feature_report():
             "user_satisfaction": get_feature_satisfaction_score()
         }
     }
-    
+
     return report
 ```
 
@@ -196,7 +196,7 @@ def generate_weekly_feature_report():
 - **5-10 exports per day** across all users
 - **2-5 share links created per day**
 
-### Month 1 Post-Deployment  
+### Month 1 Post-Deployment
 - **50-60%** of active users regularly use export
 - **30-40%** of active users use share functionality
 - **80+ exports per week** across all users
@@ -212,7 +212,7 @@ def generate_weekly_feature_report():
 
 ### Quantitative Metrics
 - **Feature adoption rate > 50%** within 30 days
-- **Weekly export volume > 100 files** within 60 days  
+- **Weekly export volume > 100 files** within 60 days
 - **Share link access rate > 70%** (links actually get used)
 - **Support ticket reduction > 25%** for data access questions
 

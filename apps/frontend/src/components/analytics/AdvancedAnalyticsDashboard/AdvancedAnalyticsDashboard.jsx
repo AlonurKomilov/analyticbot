@@ -12,17 +12,17 @@ import PerformanceScoreWidget from './PerformanceScoreWidget';
 
 const AdvancedAnalyticsDashboard = ({ channelId = 'demo_channel' }) => {
   const { dataSource, isUsingRealAPI, switchDataSource } = useDataSource();
-  const { 
-    overview, 
-    postDynamics, 
-    topPosts, 
+  const {
+    overview,
+    postDynamics,
+    topPosts,
     bestTime,
     isLoading,
     hasError,
     errors,
-    actions 
+    actions
   } = useAllAnalytics(channelId);
-  
+
   const [trends, setTrends] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -49,7 +49,7 @@ const AdvancedAnalyticsDashboard = ({ channelId = 'demo_channel' }) => {
     try {
       await Promise.all([
         actions.refreshOverview?.(),
-        actions.refreshPostDynamics?.(), 
+        actions.refreshPostDynamics?.(),
         actions.refreshTopPosts?.()
       ]);
     } catch (error) {
@@ -62,7 +62,7 @@ const AdvancedAnalyticsDashboard = ({ channelId = 'demo_channel' }) => {
   // Handle loading and error states
   if (isLoading || hasError) {
     return (
-      <DataSourceStatus 
+      <DataSourceStatus
         isLoading={isLoading}
         hasError={hasError}
         errors={errors}
@@ -78,7 +78,7 @@ const AdvancedAnalyticsDashboard = ({ channelId = 'demo_channel' }) => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header with Data Source Status */}
-      <DataSourceStatus 
+      <DataSourceStatus
         isLoading={refreshing}
         hasError={false}
         errors={{}}
@@ -90,7 +90,7 @@ const AdvancedAnalyticsDashboard = ({ channelId = 'demo_channel' }) => {
       />
 
       {/* Smart Alerts Panel */}
-      <SmartAlertsPanel 
+      <SmartAlertsPanel
         overview={overview}
         postDynamics={postDynamics}
         topPosts={topPosts}

@@ -33,12 +33,12 @@ import { useApiFailureDialog } from '../../../hooks/useApiFailureDialog';
 
 /**
  * AnalyticsDashboard - Refactored Orchestrator Component
- * 
+ *
  * Phase 3.1 Refactoring - Reduced from 539 lines to ~150 lines
- * 
+ *
  * This is the main orchestrator component that coordinates all extracted
  * dashboard sub-components while maintaining existing functionality.
- * 
+ *
  * Extracted Components:
  * - DashboardHeader: Header, breadcrumbs, settings
  * - SummaryStatsGrid: Statistics cards
@@ -46,7 +46,7 @@ import { useApiFailureDialog } from '../../../hooks/useApiFailureDialog';
  * - LoadingOverlay: Loading states
  * - DashboardSpeedDial: Quick actions
  * - TabPanel: Accessible tab content
- * 
+ *
  * Benefits:
  * - 72% reduction in component size (539 → ~150 lines)
  * - Independent component memoization
@@ -58,15 +58,15 @@ const AnalyticsDashboard = () => {
     const [lastUpdated, setLastUpdated] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
-    
+
     // Channel configuration
     const channelId = 'demo_channel'; // Default channel for analytics
-    
+
     // Store integration
     const { dataSource, setDataSource, fetchData, isUsingRealAPI, clearAnalyticsData } = useAppStore();
-    
+
     // API failure dialog management
-    const { 
+    const {
         isDialogOpen: isApiFailureDialogOpen,
         currentError: apiError,
         isRetrying,
@@ -88,16 +88,16 @@ const AnalyticsDashboard = () => {
     const handleDataSourceChange = async (newSource) => {
         setDataSource(newSource);
         setIsLoading(true);
-        
+
         try {
             await fetchData(newSource);
             clearAnalyticsData();
             setLastUpdated(new Date());
-            
+
             // Force refresh of analytics data with new source
             setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
-                    detail: { source: newSource } 
+                window.dispatchEvent(new CustomEvent('dataSourceChanged', {
+                    detail: { source: newSource }
                 }));
             }, 100);
         } catch (error) {
@@ -160,7 +160,7 @@ const AnalyticsDashboard = () => {
                             <AnalyticsIcon color="primary" />
                             Phase 2.1 Week 2 - Key Features
                         </Typography>
-                        
+
                         <Grid container spacing={2}>
                             <Grid item xs={12} md={4}>
                                 <Card variant="outlined" sx={{ height: '100%' }}>

@@ -19,11 +19,11 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('connecting');
-    
+
     const intervalRef = useRef(null);
     const retryCountRef = useRef(0);
     const mountedRef = useRef(true);
-    
+
     // Get store methods for fallback data
     const { getCachedData, setCachedData } = useAppStore();
 
@@ -40,13 +40,13 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
     // Fetch real-time analytics data
     const fetchRealTimeData = useCallback(async (isRetry = false) => {
         if (!mountedRef.current) return;
-        
+
         try {
             if (!isRetry) {
                 setLoading(true);
                 setError(null);
             }
-            
+
             setConnectionStatus('fetching');
 
             // Make API call for real-time data
@@ -80,7 +80,7 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
 
         } catch (err) {
             console.error('Real-time analytics fetch failed:', err);
-            
+
             if (!mountedRef.current) return;
 
             retryCountRef.current += 1;
@@ -170,12 +170,12 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
         error,
         lastUpdated,
         connectionStatus,
-        
+
         // Controls
         refresh,
         pauseRealTime,
         resumeRealTime,
-        
+
         // Status helpers
         isConnected: connectionStatus === 'connected',
         isOffline: connectionStatus === 'cached',
@@ -192,7 +192,7 @@ export const useQuickAnalytics = (channelId, widgetType = 'dashboard') => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     const fetchQuickData = useCallback(async () => {
         try {
             setLoading(true);
@@ -265,7 +265,7 @@ export const usePerformanceMetrics = (channelId, period = 30) => {
     useEffect(() => {
         if (channelId) {
             fetchPerformanceData();
-            
+
             // Update every 60 seconds for performance metrics
             const interval = setInterval(fetchPerformanceData, 60000);
             return () => clearInterval(interval);
@@ -279,7 +279,7 @@ export const usePerformanceMetrics = (channelId, period = 30) => {
         loading,
         error,
         refresh: fetchPerformanceData,
-        
+
         // Performance helpers
         isGoodPerformance: score >= 70,
         isExcellentPerformance: score >= 85,

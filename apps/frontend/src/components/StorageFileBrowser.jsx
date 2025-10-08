@@ -42,9 +42,9 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
         storageFiles = { files: [], total: 0, limit: 20, offset: 0 },
         isLoading
     } = useAppStore();
-    
+
     const { hapticFeedback } = useTelegramWebApp();
-    
+
     // Local state
     const [page, setPage] = useState(1);
     const [filterType, setFilterType] = useState('all');
@@ -131,15 +131,15 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
 
     // Filter files based on search and type
     const filteredFiles = storageFiles.files.filter(file => {
-        const matchesSearch = !searchQuery || 
+        const matchesSearch = !searchQuery ||
             file.filename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             file.caption?.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        const matchesType = filterType === 'all' || 
+
+        const matchesType = filterType === 'all' ||
             (filterType === 'images' && file.media_type?.startsWith('image/')) ||
             (filterType === 'videos' && file.media_type?.startsWith('video/')) ||
             (filterType === 'documents' && !file.media_type?.startsWith('image/') && !file.media_type?.startsWith('video/'));
-        
+
         return matchesSearch && matchesType;
     });
 
@@ -213,7 +213,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
             ) : filteredFiles.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                     <Typography variant="body1" color="text.secondary">
-                        {storageFiles.files.length === 0 ? 
+                        {storageFiles.files.length === 0 ?
                             'No files in storage yet. Upload some files to see them here.' :
                             'No files match your search criteria.'
                         }
@@ -223,8 +223,8 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                 <Grid container spacing={2}>
                     {filteredFiles.map((file) => (
                         <Grid item xs={12} sm={6} md={4} key={file.file_id}>
-                            <Card 
-                                sx={{ 
+                            <Card
+                                sx={{
                                     cursor: 'pointer',
                                     '&:hover': { elevation: 4 }
                                 }}
@@ -239,11 +239,11 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                                         sx={{ objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    <Box 
-                                        sx={{ 
-                                            height: 140, 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+                                    <Box
+                                        sx={{
+                                            height: 140,
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             justifyContent: 'center',
                                             backgroundColor: 'grey.100'
                                         }}
@@ -251,7 +251,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                                         {getFileIcon(file.media_type)}
                                     </Box>
                                 )}
-                                
+
                                 <CardContent sx={{ pb: 1 }}>
                                     <Typography variant="body2" noWrap>
                                         {file.filename || 'Unnamed file'}
@@ -316,7 +316,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                                     />
                                 </Box>
                             )}
-                            
+
                             <Typography variant="subtitle1" gutterBottom>
                                 <strong>Filename:</strong> {selectedFile.filename || 'Unnamed'}
                             </Typography>

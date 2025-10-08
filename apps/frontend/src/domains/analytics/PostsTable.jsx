@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { EnhancedDataTable } from '../../components/common/EnhancedDataTable';
 import { useAppStore } from '../../store/appStore.js';
-import { 
-    PostDisplayCell, 
-    ViewsCell, 
-    LikesCell, 
-    SharesCell, 
-    CommentsCell, 
-    EngagementCell, 
-    PerformanceCell, 
-    DateCell, 
-    StatusCell 
+import {
+    PostDisplayCell,
+    ViewsCell,
+    LikesCell,
+    SharesCell,
+    CommentsCell,
+    EngagementCell,
+    PerformanceCell,
+    DateCell,
+    StatusCell
 } from './PostsDisplayComponents';
 import { PostActions, PostBulkActions } from './PostsActions';
 import { generateMockPosts } from './PostsUtils';
@@ -30,7 +30,7 @@ const PostsTable = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             if (dataSource === 'mock') {
                 // Use mock data
                 setTimeout(() => {
@@ -55,7 +55,7 @@ const PostsTable = () => {
 
     useEffect(() => {
         loadTopPosts();
-        
+
         // Listen for data source changes
         const handleDataSourceChange = () => loadTopPosts();
         window.addEventListener('dataSourceChanged', handleDataSourceChange);
@@ -65,7 +65,7 @@ const PostsTable = () => {
     // Action handlers
     const handleRowAction = useCallback((action, post) => {
         console.log(`Action ${action} on post:`, post);
-        
+
         switch (action) {
             case 'view':
                 // Open post details
@@ -92,7 +92,7 @@ const PostsTable = () => {
 
     const handleBulkAction = useCallback((action, selectedPosts) => {
         console.log(`Bulk action ${action} on posts:`, selectedPosts);
-        
+
         switch (action) {
             case 'download':
                 // Download bulk reports
@@ -189,8 +189,8 @@ const PostsTable = () => {
             width: 80,
             disableSort: true,
             Cell: ({ value }) => (
-                <PostActions 
-                    row={value} 
+                <PostActions
+                    row={value}
                     onAction={handleRowAction}
                 />
             )
@@ -218,7 +218,7 @@ const PostsTable = () => {
             error={error}
             onRefresh={loadTopPosts}
             bulkActions={(selectedRows) => (
-                <PostBulkActions 
+                <PostBulkActions
                     selectedRows={selectedRows}
                     onBulkAction={handleBulkAction}
                 />

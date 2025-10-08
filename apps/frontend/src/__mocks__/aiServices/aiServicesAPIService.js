@@ -1,7 +1,7 @@
 /**
  * AI Services API Service - Backend Integration
  * Replaces duplicate frontend mock data generation with backend API calls
- * 
+ *
  * This service now connects to backend mock endpoints instead of generating
  * data locally, creating a single source of truth for AI services mock data.
  */

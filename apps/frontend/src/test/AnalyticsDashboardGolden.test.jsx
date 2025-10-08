@@ -1,6 +1,6 @@
 /**
  * Golden Standard Test Example - AnalyticsDashboard
- * 
+ *
  * This demonstrates the ideal testing patterns for this project:
  * - Clean component isolation using MSW
  * - No mixed production/test logic
@@ -273,7 +273,7 @@ describe('AnalyticsDashboard - Golden Standard Test', () => {
   describe('Performance', () => {
     it('renders without unnecessary re-renders', async () => {
       const renderSpy = vi.fn();
-      
+
       const TestComponent = () => {
         renderSpy();
         return <AnalyticsDashboard />;

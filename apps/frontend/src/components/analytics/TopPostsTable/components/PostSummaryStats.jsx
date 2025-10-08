@@ -19,12 +19,12 @@ const PostSummaryStats = ({ summaryStats }) => {
             <Typography variant="h3" id="summary-stats-title" className="sr-only">
                 Posts Summary Statistics
             </Typography>
-            
-            <Box 
-                sx={{ 
-                    display: 'flex', 
-                    gap: 2, 
-                    mb: 3, 
+
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 2,
+                    mb: 3,
                     flexWrap: 'wrap',
                     '& > *': { flex: '1 1 200px', minWidth: 200 }
                 }}
@@ -42,7 +42,7 @@ const PostSummaryStats = ({ summaryStats }) => {
                         </Typography>
                     </CardContent>
                 </Card>
-                
+
                 <Card variant="outlined">
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

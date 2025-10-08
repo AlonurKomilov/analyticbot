@@ -18,15 +18,15 @@ const AppSkeleton = React.memo(() => (
 AppSkeleton.displayName = 'AppSkeleton';
 
 const ErrorAlert = React.memo(({ error, onRetry }) => (
-    <Alert 
-        severity="error" 
+    <Alert
+        severity="error"
         sx={{ mb: 2 }}
         action={
             onRetry && (
-                <button onClick={onRetry} style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: 'inherit', 
+                <button onClick={onRetry} style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'inherit',
                     cursor: 'pointer',
                     textDecoration: 'underline'
                 }}>
@@ -42,12 +42,12 @@ const ErrorAlert = React.memo(({ error, onRetry }) => (
 ErrorAlert.displayName = 'ErrorAlert';
 
 function App() {
-    const { 
-        isGlobalLoading, 
-        getError, 
+    const {
+        isGlobalLoading,
+        getError,
         fetchData,
         channels,
-        scheduledPosts 
+        scheduledPosts
     } = useAppStore();
 
     // Memoize computed values

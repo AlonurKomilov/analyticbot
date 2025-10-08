@@ -234,11 +234,11 @@ if [[ $CRITICAL_ISSUES -eq 0 ]]; then
     echo "2. Run: ./deploy_production.sh"
     echo "3. Set up Stripe webhooks (see STRIPE_WEBHOOK_SETUP_GUIDE.md)"
     echo "4. Test payment flows with real transactions"
-    
+
     echo ""
     print_info "Deployment Command:"
     echo "  sudo ./deploy_production.sh"
-    
+
 else
     print_error "$CRITICAL_ISSUES critical issue(s) found"
     print_warning "Please resolve critical issues before production deployment"

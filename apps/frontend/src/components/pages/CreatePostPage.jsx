@@ -1,6 +1,6 @@
 /**
  * CreatePostPage - Dedicated post creation page
- * 
+ *
  * Focused page for post creation workflow with media management.
  * Extracted from the tab interface in MainDashboard.
  */
@@ -32,46 +32,46 @@ const CreatePostPage = () => {
         <SectionHeader level={1}>
           Create New Post
         </SectionHeader>
-        
-        <Box sx={{ 
+
+        <Box sx={{
           display: 'grid',
           gap: DESIGN_TOKENS.layout.grid.gap.md,
-          gridTemplateColumns: { 
-            xs: '1fr', 
-            md: '2fr 1fr' 
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: '2fr 1fr'
           }
         }}>
           {/* Main Content - Post Creator */}
           <Box>
-            <PostCreator 
-              onSubmit={addPost} 
-              onSchedule={schedulePost} 
+            <PostCreator
+              onSubmit={addPost}
+              onSchedule={schedulePost}
             />
           </Box>
-          
+
           {/* Sidebar - Media Management */}
           <Stack spacing={3}>
             <Box>
               <SectionHeader level={3}>Media Upload</SectionHeader>
-              <EnhancedMediaUploader 
-                onMediaSelect={setLocalSelectedMedia} 
+              <EnhancedMediaUploader
+                onMediaSelect={setLocalSelectedMedia}
               />
             </Box>
-            
+
             {localSelectedMedia.length > 0 && (
               <Box>
                 <SectionHeader level={3}>Selected Media</SectionHeader>
-                <MediaPreview 
-                  media={localSelectedMedia} 
+                <MediaPreview
+                  media={localSelectedMedia}
                   onRemove={handleRemoveMedia}
                 />
               </Box>
             )}
-            
+
             <Box>
               <SectionHeader level={3}>File Browser</SectionHeader>
-              <StorageFileBrowser 
-                onFileSelect={setLocalSelectedMedia} 
+              <StorageFileBrowser
+                onFileSelect={setLocalSelectedMedia}
               />
             </Box>
           </Stack>

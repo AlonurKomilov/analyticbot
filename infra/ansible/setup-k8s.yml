@@ -6,7 +6,7 @@
     k8s_version: "1.28.0"
     docker_version: "24.0"
     domain_name: "{{ domain_name | default('analyticbot.com') }}"
-  
+
   pre_tasks:
     - name: Update apt cache
       apt:
@@ -78,7 +78,7 @@
 
         - name: Install Docker
           apt:
-            name: 
+            name:
               - docker-ce
               - docker-ce-cli
               - containerd.io
@@ -273,17 +273,17 @@
       debug:
         msg: |
           Kubernetes cluster setup completed!
-          
+
           Cluster info:
           - Master node: {{ ansible_default_ipv4.address }}
           - Kubernetes version: {{ k8s_version }}
           - CNI: Flannel
           - Ingress: NGINX
-          
+
           To access cluster:
           1. Copy kubeconfig: scp root@{{ ansible_default_ipv4.address }}:/etc/kubernetes/admin.conf ~/.kube/config
           2. Test: kubectl get nodes
-          
+
           Next steps:
           1. Deploy AnalyticBot: ./infrastructure/deploy-k8s.sh
           2. Configure DNS to point to {{ ansible_default_ipv4.address }}

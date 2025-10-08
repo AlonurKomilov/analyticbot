@@ -1,14 +1,14 @@
 /**
  * Standardized UI Components Library
- * 
+ *
  * This file provides consistent, reusable UI components that follow design tokens.
  * All components in the app should use these instead of creating custom variants.
  */
 
 import React from 'react';
-import { 
-  Button as MuiButton, 
-  Card as MuiCard, 
+import {
+  Button as MuiButton,
+  Card as MuiCard,
   CardContent as MuiCardContent,
   TextField as MuiTextField,
   Typography as MuiTypography,
@@ -19,14 +19,14 @@ import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS, getButtonProps, getCardProps, getStatusColor, createTransition, createElevation } from '../../theme/designTokens.js';
 
 // Standardized Button Component
-export const StandardButton = React.forwardRef(({ 
-  size = 'medium', 
-  variant = 'primary', 
-  children, 
-  ...props 
+export const StandardButton = React.forwardRef(({
+  size = 'medium',
+  variant = 'primary',
+  children,
+  ...props
 }, ref) => {
   const buttonProps = getButtonProps(size, variant);
-  
+
   return (
     <MuiButton
       ref={ref}
@@ -53,14 +53,14 @@ export const StandardButton = React.forwardRef(({
 });
 
 // Standardized Card Component
-export const StandardCard = React.forwardRef(({ 
-  variant = 'default', 
-  children, 
+export const StandardCard = React.forwardRef(({
+  variant = 'default',
+  children,
   interactive = false,
-  ...props 
+  ...props
 }, ref) => {
   const cardProps = getCardProps(variant);
-  
+
   return (
     <MuiCard
       ref={ref}
@@ -87,12 +87,12 @@ export const StandardCard = React.forwardRef(({
 });
 
 // Standardized Input Component
-export const StandardInput = React.forwardRef(({ 
-  size = 'medium', 
-  ...props 
+export const StandardInput = React.forwardRef(({
+  size = 'medium',
+  ...props
 }, ref) => {
   const inputSize = DESIGN_TOKENS.components.input.sizes[size];
-  
+
   return (
     <MuiTextField
       ref={ref}
@@ -111,16 +111,16 @@ export const StandardInput = React.forwardRef(({
 });
 
 // Standardized Typography Component
-export const StandardTypography = React.forwardRef(({ 
-  variant = 'body1', 
+export const StandardTypography = React.forwardRef(({
+  variant = 'body1',
   size,
   weight = 'normal',
-  children, 
-  ...props 
+  children,
+  ...props
 }, ref) => {
   const fontSize = size ? DESIGN_TOKENS.typography.scale[size] : undefined;
   const fontWeight = DESIGN_TOKENS.typography.weights[weight];
-  
+
   return (
     <MuiTypography
       ref={ref}
@@ -138,14 +138,14 @@ export const StandardTypography = React.forwardRef(({
 });
 
 // Standardized Status Chip Component
-export const StandardStatusChip = React.forwardRef(({ 
+export const StandardStatusChip = React.forwardRef(({
   status = 'info',
   label,
   size = 'medium',
-  ...props 
+  ...props
 }, ref) => {
   const statusColors = getStatusColor(status);
-  
+
   return (
     <MuiChip
       ref={ref}
@@ -166,10 +166,10 @@ export const StandardStatusChip = React.forwardRef(({
 });
 
 // Standardized Section Header Component
-export const SectionHeader = React.forwardRef(({ 
-  children, 
+export const SectionHeader = React.forwardRef(({
+  children,
   level = 2,
-  ...props 
+  ...props
 }, ref) => {
   const variants = {
     1: { variant: 'h1', size: '3xl' },
@@ -177,16 +177,16 @@ export const SectionHeader = React.forwardRef(({
     3: { variant: 'h3', size: 'xl' },
     4: { variant: 'h4', size: 'lg' }
   };
-  
+
   const config = variants[level] || variants[2];
-  
+
   return (
     <StandardTypography
       ref={ref}
       variant={config.variant}
       size={config.size}
       weight="semibold"
-      sx={{ 
+      sx={{
         mb: DESIGN_TOKENS.layout.grid.gap.sm,
         color: 'text.primary'
       }}
@@ -198,10 +198,10 @@ export const SectionHeader = React.forwardRef(({
 });
 
 // Standardized Page Container
-export const PageContainer = React.forwardRef(({ 
+export const PageContainer = React.forwardRef(({
   maxWidth = 'xl',
   children,
-  ...props 
+  ...props
 }, ref) => {
   return (
     <div
@@ -225,14 +225,14 @@ export const PageContainer = React.forwardRef(({
 });
 
 // Standardized Grid Container
-export const GridContainer = React.forwardRef(({ 
+export const GridContainer = React.forwardRef(({
   gap = 'md',
   columns = { xs: 1, sm: 2, md: 3, lg: 4 },
   children,
-  ...props 
+  ...props
 }, ref) => {
   const gridGap = DESIGN_TOKENS.layout.grid.gap[gap];
-  
+
   return (
     <div
       ref={ref}

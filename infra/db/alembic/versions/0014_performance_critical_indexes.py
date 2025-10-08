@@ -19,7 +19,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Add critical performance indexes based on audit analysis."""
-    
+
     # High-Priority Analytics Queries - Missing from previous migrations
     op.execute("""
     CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sent_posts_sent_at_interval

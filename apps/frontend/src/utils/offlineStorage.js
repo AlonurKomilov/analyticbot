@@ -23,7 +23,7 @@ class OfflineStorage {
             performance: 7200000,   // 2 hours for performance metrics
             mobile: 600000          // 10 minutes for mobile widget data
         };
-        
+
         this.maxCacheSize = 50 * 1024 * 1024; // 50MB max cache size
         this.compressionEnabled = true;
     }
@@ -34,11 +34,11 @@ class OfflineStorage {
     generateCacheKey(type, identifier, options = {}) {
         const { period, format, timestamp } = options;
         let key = `${type}_${identifier}`;
-        
+
         if (period) key += `_${period}`;
         if (format) key += `_${format}`;
         if (timestamp) key += `_${timestamp}`;
-        
+
         return key;
     }
 
@@ -62,10 +62,10 @@ class OfflineStorage {
             };
 
             await localforage.setItem(key, cacheEntry);
-            
+
             // Clean up old cache entries if needed
             await this.cleanupCache();
-            
+
             return true;
         } catch (error) {
             console.error('Failed to cache analytics data:', error);
@@ -80,20 +80,20 @@ class OfflineStorage {
         try {
             const key = this.generateCacheKey(type, channelId, options);
             const cacheEntry = await localforage.getItem(key);
-            
+
             if (!cacheEntry) return null;
 
             // Check if cache is still valid
             const maxAge = this.maxAge[type] || this.maxAge.analytics;
             const isExpired = (Date.now() - cacheEntry.timestamp) > maxAge;
-            
+
             if (isExpired) {
                 await localforage.removeItem(key);
                 return null;
             }
 
             // Decompress data if needed
-            const data = cacheEntry.metadata?.compressed 
+            const data = cacheEntry.metadata?.compressed
                 ? this.decompressData(cacheEntry.data)
                 : cacheEntry.data;
 
@@ -159,14 +159,14 @@ class OfflineStorage {
         try {
             const keys = await localforage.keys();
             const channels = new Set();
-            
+
             keys.forEach(key => {
                 const parts = key.split('_');
                 if (parts.length >= 2) {
                     channels.add(parts[1]); // Channel ID is typically the second part
                 }
             });
-            
+
             return Array.from(channels);
         } catch (error) {
             console.error('Failed to get cached channels:', error);
@@ -183,20 +183,20 @@ class OfflineStorage {
             let totalSize = 0;
             const typeCount = {};
             const channelCount = {};
-            
+
             for (const key of keys) {
                 const entry = await localforage.getItem(key);
                 if (entry && entry.metadata) {
                     totalSize += entry.metadata.size || 0;
-                    
+
                     const type = entry.type || 'unknown';
                     typeCount[type] = (typeCount[type] || 0) + 1;
-                    
+
                     const channelId = entry.channelId || 'unknown';
                     channelCount[channelId] = (channelCount[channelId] || 0) + 1;
                 }
             }
-            
+
             return {
                 totalEntries: keys.length,
                 totalSize,
@@ -219,20 +219,20 @@ class OfflineStorage {
             const keys = await localforage.keys();
             const now = Date.now();
             let cleanedCount = 0;
-            
+
             for (const key of keys) {
                 const entry = await localforage.getItem(key);
                 if (entry && entry.timestamp) {
                     const type = entry.type || 'analytics';
                     const maxAge = this.maxAge[type] || this.maxAge.analytics;
-                    
+
                     if ((now - entry.timestamp) > maxAge) {
                         await localforage.removeItem(key);
                         cleanedCount++;
                     }
                 }
             }
-            
+
             console.log(`Cleaned up ${cleanedCount} expired cache entries`);
             return cleanedCount;
         } catch (error) {
@@ -262,14 +262,14 @@ class OfflineStorage {
         try {
             const keys = await localforage.keys();
             let clearedCount = 0;
-            
+
             for (const key of keys) {
                 if (key.includes(`_${channelId}_`) || key.includes(`_${channelId}`)) {
                     await localforage.removeItem(key);
                     clearedCount++;
                 }
             }
-            
+
             console.log(`Cleared ${clearedCount} cache entries for channel ${channelId}`);
             return clearedCount;
         } catch (error) {
@@ -296,7 +296,7 @@ class OfflineStorage {
      */
     decompressData(compressedData) {
         try {
-            return typeof compressedData === 'string' 
+            return typeof compressedData === 'string'
                 ? JSON.parse(compressedData)
                 : compressedData;
         } catch (error) {
@@ -324,7 +324,7 @@ class OfflineStorage {
         try {
             const channels = await this.getCachedChannels();
             let syncedCount = 0;
-            
+
             for (const channelId of channels) {
                 try {
                     // Fetch fresh data and update cache
@@ -335,7 +335,7 @@ class OfflineStorage {
                     console.warn(`Failed to sync data for channel ${channelId}:`, error);
                 }
             }
-            
+
             console.log(`Synced ${syncedCount} channels with server`);
             return syncedCount;
         } catch (error) {
@@ -352,10 +352,10 @@ class OfflineStorage {
             // Test if storage is available
             await localforage.setItem('test', 'test');
             await localforage.removeItem('test');
-            
+
             // Clean up old cache on startup
             await this.cleanupCache();
-            
+
             console.log('Offline storage initialized successfully');
             return true;
         } catch (error) {

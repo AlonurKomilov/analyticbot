@@ -18,7 +18,7 @@ const TimeFrameFilters = ({ timeFrame, setTimeFrame, contentType, setContentType
                     🤖 AI Posting Time Recommendations
                 </Typography>
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                     <InputLabel id="timeframe-label">Vaqt oralig'i</InputLabel>
@@ -33,7 +33,7 @@ const TimeFrameFilters = ({ timeFrame, setTimeFrame, contentType, setContentType
                         <MenuItem value="year">Yil</MenuItem>
                     </Select>
                 </FormControl>
-                
+
                 <FormControl size="small" sx={{ minWidth: 120 }}>
                     <InputLabel id="content-type-label">Kontent turi</InputLabel>
                     <Select

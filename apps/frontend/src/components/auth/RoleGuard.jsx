@@ -1,6 +1,6 @@
 /**
  * 🔒 Role-Based Access Control Components
- * 
+ *
  * React components for role-based UI rendering and permission checks.
  * Integrates with AuthContext to provide RBAC functionality.
  */
@@ -50,45 +50,45 @@ export const hasPermission = (userRole, permission) => {
 /**
  * RoleGuard Component - Shows content only if user has required role
  */
-export const RoleGuard = ({ 
-  children, 
-  requiredRole, 
+export const RoleGuard = ({
+  children,
+  requiredRole,
   fallback = null,
-  requireExact = false 
+  requireExact = false
 }) => {
   const { user } = useAuth();
-  
+
   if (!user) {
     return fallback;
   }
-  
+
   const userRole = user.role || 'guest';
-  
+
   // Check role requirement
-  const hasRequiredRole = requireExact 
+  const hasRequiredRole = requireExact
     ? userRole.toLowerCase() === requiredRole.toLowerCase()
     : hasRole(userRole, requiredRole);
-  
+
   return hasRequiredRole ? children : fallback;
 };
 
 /**
  * PermissionGuard Component - Shows content only if user has required permission
  */
-export const PermissionGuard = ({ 
-  children, 
-  requiredPermission, 
-  fallback = null 
+export const PermissionGuard = ({
+  children,
+  requiredPermission,
+  fallback = null
 }) => {
   const { user } = useAuth();
-  
+
   if (!user) {
     return fallback;
   }
-  
+
   const userRole = user.role || 'guest';
   const hasRequiredPermission = hasPermission(userRole, requiredPermission);
-  
+
   return hasRequiredPermission ? children : fallback;
 };
 
@@ -130,14 +130,14 @@ export const UserOrHigher = ({ children, fallback = null }) => {
  */
 export const useRBAC = () => {
   const { user } = useAuth();
-  
+
   const userRole = user?.role || 'guest';
-  
+
   return {
     user,
     userRole,
     hasRole: (requiredRole, requireExact = false) => {
-      return requireExact 
+      return requireExact
         ? userRole.toLowerCase() === requiredRole.toLowerCase()
         : hasRole(userRole, requiredRole);
     },

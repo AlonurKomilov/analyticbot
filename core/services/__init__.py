@@ -4,7 +4,7 @@ Contains core business logic without external dependencies
 """
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import UUID
 
 from core.models import (
@@ -46,13 +46,14 @@ class ScheduleService:
         """
         # Business rule: cannot schedule posts in the past
         from datetime import timezone
-        now = datetime.now(timezone.utc)
-        
+
+        now = datetime.now(UTC)
+
         # Ensure scheduled_at is timezone-aware
         if scheduled_at.tzinfo is None:
             # Assume UTC if no timezone is provided
-            scheduled_at = scheduled_at.replace(tzinfo=timezone.utc)
-        
+            scheduled_at = scheduled_at.replace(tzinfo=UTC)
+
         if scheduled_at <= now:
             raise ValueError("Cannot schedule posts in the past")
 
@@ -91,7 +92,8 @@ class ScheduleService:
 
         # Business rule: validate rescheduling
         from datetime import timezone
-        now = datetime.now(timezone.utc)
+
+        now = datetime.now(UTC)
         if post.scheduled_at <= now and post.status == PostStatus.SCHEDULED:
             raise ValueError("Cannot reschedule to past time")
 

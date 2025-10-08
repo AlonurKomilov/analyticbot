@@ -51,15 +51,15 @@ const OverviewMetrics = React.memo(({ metrics }) => {
                 <Typography color="text.secondary" gutterBottom variant="body2">
                   Growth Rate
                 </Typography>
-                <Typography 
-                  variant="h5" 
+                <Typography
+                  variant="h5"
                   component="div"
                   sx={{ color: getMetricColor(metrics?.growthRate, { good: 10, warning: 5 }, theme) }}
                 >
                   {metrics?.growthRate?.toFixed(1)}%
                 </Typography>
               </Box>
-              {metrics?.growthRate > 0 ? 
+              {metrics?.growthRate > 0 ?
                 <TrendingUpIcon sx={{ color: getMetricColor(metrics?.growthRate, { good: 10, warning: 5 }, theme), fontSize: 40 }} /> :
                 <TrendingDownIcon color="error" sx={{ fontSize: 40 }} />
               }
@@ -81,11 +81,11 @@ const OverviewMetrics = React.memo(({ metrics }) => {
                   {metrics?.engagementRate?.toFixed(1)}%
                 </Typography>
               </Box>
-              <Box 
-                sx={{ 
-                  width: 40, 
-                  height: 40, 
-                  borderRadius: '50%', 
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
                   backgroundColor: theme.palette.primary.main,
                   display: 'flex',
                   alignItems: 'center',
@@ -115,16 +115,16 @@ const OverviewMetrics = React.memo(({ metrics }) => {
                   {metrics?.reachScore}%
                 </Typography>
               </Box>
-              <LinearProgress 
-                variant="determinate" 
-                value={metrics?.reachScore || 0} 
-                sx={{ 
-                  width: 40, 
-                  height: 8, 
+              <LinearProgress
+                variant="determinate"
+                value={metrics?.reachScore || 0}
+                sx={{
+                  width: 40,
+                  height: 8,
                   borderRadius: 4,
                   transform: 'rotate(-90deg)',
                   transformOrigin: 'center'
-                }} 
+                }}
               />
             </Box>
           </CardContent>
@@ -144,11 +144,11 @@ const OverviewMetrics = React.memo(({ metrics }) => {
                   {formatNumber(metrics?.activeUsers)}
                 </Typography>
               </Box>
-              <Box 
-                sx={{ 
-                  width: 40, 
-                  height: 40, 
-                  borderRadius: '8px', 
+              <Box
+                sx={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: '8px',
                   backgroundColor: theme.palette.success.light,
                   display: 'flex',
                   alignItems: 'center',

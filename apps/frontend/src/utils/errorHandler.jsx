@@ -54,7 +54,7 @@ export class ErrorHandler {
      */
     static showUserError(error) {
         const message = this.getErrorMessage(error);
-        
+
         // Use browser notification API if available
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('Error occurred', {
@@ -74,11 +74,11 @@ export class ErrorHandler {
         if (error.response?.data?.detail) {
             return error.response.data.detail;
         }
-        
+
         if (error.message) {
             return error.message;
         }
-        
+
         return 'An unexpected error occurred';
     }
 

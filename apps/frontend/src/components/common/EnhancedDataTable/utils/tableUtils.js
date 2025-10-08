@@ -11,9 +11,9 @@
  */
 export const filterDataBySearch = (data, searchQuery, columns) => {
     if (!searchQuery.trim()) return data;
-    
+
     const query = searchQuery.toLowerCase();
-    return data.filter(row => 
+    return data.filter(row =>
         columns.some(col => {
             const value = col.accessor ? col.accessor(row) : row[col.id];
             return String(value).toLowerCase().includes(query);
@@ -32,10 +32,10 @@ export const filterDataByColumns = (data, columnFilters, columns) => {
     return data.filter(row => {
         return Object.entries(columnFilters).every(([columnId, filterValue]) => {
             if (!filterValue.trim()) return true;
-            
+
             const column = columns.find(col => col.id === columnId);
             if (!column) return true;
-            
+
             const value = column.accessor ? column.accessor(row) : row[columnId];
             return String(value).toLowerCase().includes(filterValue.toLowerCase());
         });
@@ -52,14 +52,14 @@ export const filterDataByColumns = (data, columnFilters, columns) => {
  */
 export const sortData = (data, sortBy, sortDirection, columns) => {
     if (!sortBy) return data;
-    
+
     const column = columns.find(col => col.id === sortBy);
     if (!column) return data;
-    
+
     return [...data].sort((a, b) => {
         const aValue = column.accessor ? column.accessor(a) : a[sortBy];
         const bValue = column.accessor ? column.accessor(b) : b[sortBy];
-        
+
         // Handle different data types
         let comparison = 0;
         if (typeof aValue === 'number' && typeof bValue === 'number') {
@@ -69,7 +69,7 @@ export const sortData = (data, sortBy, sortDirection, columns) => {
         } else {
             comparison = String(aValue).localeCompare(String(bValue));
         }
-        
+
         return sortDirection === 'desc' ? -comparison : comparison;
     });
 };
@@ -105,15 +105,15 @@ export const processTableData = ({
     // Apply filters
     let filtered = filterDataBySearch(data, searchQuery, columns);
     filtered = filterDataByColumns(filtered, columnFilters, columns);
-    
+
     // Apply sorting
     const sorted = sortData(filtered, sortBy, sortDirection, columns);
-    
+
     // Calculate pagination
     const totalItems = sorted.length;
     const totalPages = Math.ceil(totalItems / pageSize);
     const paginated = paginateData(sorted, page, pageSize);
-    
+
     return {
         processedData: sorted,
         paginatedData: paginated,

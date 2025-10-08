@@ -186,14 +186,14 @@ backup_strategy:
       retention: "7_days"
       rto: "< 5 minutes"
       rpo: "< 1 minute"
-      
+
     tier_2_warm:
       method: "incremental_basebackup"
       frequency: "hourly"
       retention: "30_days"
       rto: "< 30 minutes"
       rpo: "< 1 hour"
-      
+
     tier_3_cold:
       method: "full_pg_dump"
       frequency: "daily"

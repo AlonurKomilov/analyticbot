@@ -52,7 +52,7 @@ resource "local_file" "k8s_install_script" {
 # Null resource to run Ansible after Terraform
 resource "null_resource" "run_ansible" {
   depends_on = [local_file.ansible_inventory]
-  
+
   provisioner "local-exec" {
     command = "cd ${path.module}/../ansible && ansible-playbook -i inventory.ini setup-k8s.yml"
   }
@@ -82,7 +82,7 @@ output "next_steps" {
   description = "Next steps after infrastructure setup"
   value = <<-EOT
     Phase 0 Infrastructure Setup Complete!
-    
+
     Next Steps:
     1. Update DNS records to point ${var.domain_name} to ${var.server_ip}
     2. Run deployment script: ./infrastructure/deploy-k8s.sh

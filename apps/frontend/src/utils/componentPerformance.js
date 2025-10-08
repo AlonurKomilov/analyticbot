@@ -13,10 +13,10 @@ class ComponentPerformanceTracker {
         this.wastedRenders = new Map();
         this.heavyComponents = new Set();
         this.performanceObserver = null;
-        
+
         this.init();
     }
-    
+
     init() {
         // Track long tasks that might indicate heavy component renders
         if ('PerformanceObserver' in window) {
@@ -27,14 +27,14 @@ class ComponentPerformanceTracker {
                     }
                 });
             });
-            
+
             this.performanceObserver.observe({ entryTypes: ['longtask'] });
         }
     }
-    
+
     trackComponentRender(componentName, renderTime, props = {}, prevProps = {}) {
         const now = performance.now();
-        
+
         // Initialize component metrics
         if (!this.componentMetrics.has(componentName)) {
             this.componentMetrics.set(componentName, {
@@ -46,74 +46,74 @@ class ComponentPerformanceTracker {
                 lastRenderProps: null
             });
         }
-        
+
         const metrics = this.componentMetrics.get(componentName);
-        
+
         // Update render count
         metrics.renderCount++;
         this.renderCounts.set(componentName, metrics.renderCount);
-        
+
         // Update render time metrics
         metrics.totalRenderTime += renderTime;
         metrics.averageRenderTime = metrics.totalRenderTime / metrics.renderCount;
         metrics.maxRenderTime = Math.max(metrics.maxRenderTime, renderTime);
-        
+
         // Check for wasted renders (same props)
         if (metrics.lastRenderProps && this.arePropsEqual(props, metrics.lastRenderProps)) {
             metrics.wastedRenders++;
             this.wastedRenders.set(componentName, metrics.wastedRenders);
             console.warn(`🔄 Potentially wasted render in ${componentName}`);
         }
-        
+
         metrics.lastRenderProps = { ...props };
-        
+
         // Mark as heavy component if consistently slow
         if (metrics.averageRenderTime > 16) { // More than one frame at 60fps
             this.heavyComponents.add(componentName);
         }
-        
+
         // Log performance warnings
         if (renderTime > 50) {
             console.warn(`⚠️ Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`);
         }
-        
+
         return metrics;
     }
-    
+
     arePropsEqual(props1, props2) {
         const keys1 = Object.keys(props1);
         const keys2 = Object.keys(props2);
-        
+
         if (keys1.length !== keys2.length) return false;
-        
+
         return keys1.every(key => {
             const val1 = props1[key];
             const val2 = props2[key];
-            
+
             // Shallow comparison
             if (typeof val1 === 'object' && typeof val2 === 'object') {
                 return JSON.stringify(val1) === JSON.stringify(val2);
             }
-            
+
             return val1 === val2;
         });
     }
-    
+
     getComponentMetrics(componentName) {
         return this.componentMetrics.get(componentName) || null;
     }
-    
+
     getAllMetrics() {
         return Object.fromEntries(this.componentMetrics);
     }
-    
+
     getTopSlowComponents(limit = 5) {
         return Array.from(this.componentMetrics.entries())
             .sort(([, a], [, b]) => b.averageRenderTime - a.averageRenderTime)
             .slice(0, limit)
             .map(([name, metrics]) => ({ name, ...metrics }));
     }
-    
+
     getTopWastedRenders(limit = 5) {
         return Array.from(this.componentMetrics.entries())
             .filter(([, metrics]) => metrics.wastedRenders > 0)
@@ -121,13 +121,13 @@ class ComponentPerformanceTracker {
             .slice(0, limit)
             .map(([name, metrics]) => ({ name, wastedRenders: metrics.wastedRenders }));
     }
-    
+
     generateOptimizationReport() {
         const slowComponents = this.getTopSlowComponents();
         const wastedRenders = this.getTopWastedRenders();
-        
+
         console.group('🔧 Component Performance Optimization Report');
-        
+
         if (slowComponents.length > 0) {
             console.group('🐌 Slowest Components');
             slowComponents.forEach(({ name, averageRenderTime, renderCount, maxRenderTime }) => {
@@ -140,7 +140,7 @@ class ComponentPerformanceTracker {
             });
             console.groupEnd();
         }
-        
+
         if (wastedRenders.length > 0) {
             console.group('🔄 Components with Wasted Renders');
             wastedRenders.forEach(({ name, wastedRenders }) => {
@@ -148,7 +148,7 @@ class ComponentPerformanceTracker {
             });
             console.groupEnd();
         }
-        
+
         // Heavy components recommendations
         if (this.heavyComponents.size > 0) {
             console.group('⚡ Optimization Recommendations');
@@ -164,9 +164,9 @@ class ComponentPerformanceTracker {
             });
             console.groupEnd();
         }
-        
+
         console.groupEnd();
-        
+
         return {
             slowComponents,
             wastedRenders,
@@ -174,7 +174,7 @@ class ComponentPerformanceTracker {
             totalComponents: this.componentMetrics.size
         };
     }
-    
+
     cleanup() {
         if (this.performanceObserver) {
             this.performanceObserver.disconnect();
@@ -190,33 +190,33 @@ export const useComponentPerformance = (componentName, props = {}) => {
     const renderStartTime = useRef(performance.now());
     const prevProps = useRef(props);
     const renderCount = useRef(0);
-    
+
     // Initialize tracker
     if (!componentTracker) {
         componentTracker = new ComponentPerformanceTracker();
     }
-    
+
     // Track render start
     useEffect(() => {
         renderStartTime.current = performance.now();
         renderCount.current++;
     });
-    
+
     // Track render end
     useEffect(() => {
         const renderEndTime = performance.now();
         const renderTime = renderEndTime - renderStartTime.current;
-        
+
         componentTracker.trackComponentRender(
             componentName,
             renderTime,
             props,
             prevProps.current
         );
-        
+
         prevProps.current = props;
     });
-    
+
     return {
         getMetrics: () => componentTracker.getComponentMetrics(componentName),
         renderCount: renderCount.current
@@ -224,36 +224,36 @@ export const useComponentPerformance = (componentName, props = {}) => {
 };
 
 // Render profiler component
-export const RenderProfiler = ({ 
-    name, 
-    children, 
+export const RenderProfiler = ({
+    name,
+    children,
     onRender,
-    trackProps = true 
+    trackProps = true
 }) => {
     const [renderTime, setRenderTime] = useState(0);
     const startTime = useRef(performance.now());
-    
+
     useEffect(() => {
         startTime.current = performance.now();
     });
-    
+
     useEffect(() => {
         const endTime = performance.now();
         const duration = endTime - startTime.current;
         setRenderTime(duration);
-        
+
         if (onRender) {
             onRender(name, duration);
         }
-        
+
         // Track with global tracker
         if (!componentTracker) {
             componentTracker = new ComponentPerformanceTracker();
         }
-        
+
         componentTracker.trackComponentRender(name, duration);
     });
-    
+
     return children;
 };
 
@@ -261,21 +261,21 @@ export const RenderProfiler = ({
 export const withPerformanceMonitoring = (WrappedComponent, componentName) => {
     const PerformanceMonitoredComponent = (props) => {
         const { getMetrics } = useComponentPerformance(componentName || WrappedComponent.name, props);
-        
+
         // Memoize the component to prevent unnecessary re-renders
         const MemoizedComponent = useMemo(() => {
             return React.memo(WrappedComponent);
         }, []);
-        
+
         return (
             <RenderProfiler name={componentName || WrappedComponent.name}>
                 <MemoizedComponent {...props} />
             </RenderProfiler>
         );
     };
-    
+
     PerformanceMonitoredComponent.displayName = `withPerformanceMonitoring(${componentName || WrappedComponent.name})`;
-    
+
     return PerformanceMonitoredComponent;
 };
 
@@ -283,32 +283,32 @@ export const withPerformanceMonitoring = (WrappedComponent, componentName) => {
 export const PerformanceDevTools = ({ enabled = process.env.NODE_ENV === 'development' }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [report, setReport] = useState(null);
-    
+
     useEffect(() => {
         if (!enabled || !componentTracker) return;
-        
+
         const handleKeyPress = (event) => {
             // Ctrl/Cmd + Shift + P to toggle performance DevTools
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'P') {
                 event.preventDefault();
                 setIsVisible(!isVisible);
-                
+
                 if (!isVisible) {
                     const newReport = componentTracker.generateOptimizationReport();
                     setReport(newReport);
                 }
             }
         };
-        
+
         document.addEventListener('keydown', handleKeyPress);
-        
+
         return () => {
             document.removeEventListener('keydown', handleKeyPress);
         };
     }, [enabled, isVisible]);
-    
+
     if (!enabled || !isVisible || !report) return null;
-    
+
     return (
         <div style={{
             position: 'fixed',
@@ -329,7 +329,7 @@ export const PerformanceDevTools = ({ enabled = process.env.NODE_ENV === 'develo
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <h3 style={{ margin: 0, color: '#4CAF50' }}>⚡ Performance DevTools</h3>
-                <button 
+                <button
                     onClick={() => setIsVisible(false)}
                     style={{
                         background: 'none',
@@ -342,11 +342,11 @@ export const PerformanceDevTools = ({ enabled = process.env.NODE_ENV === 'develo
                     ✕
                 </button>
             </div>
-            
+
             <div style={{ marginBottom: '16px' }}>
                 <strong>📊 Total Components Tracked: {report.totalComponents}</strong>
             </div>
-            
+
             {report.slowComponents.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ color: '#FFA726', margin: '0 0 8px 0' }}>🐌 Slowest Components</h4>
@@ -357,7 +357,7 @@ export const PerformanceDevTools = ({ enabled = process.env.NODE_ENV === 'develo
                     ))}
                 </div>
             )}
-            
+
             {report.wastedRenders.length > 0 && (
                 <div style={{ marginBottom: '16px' }}>
                     <h4 style={{ color: '#FF7043', margin: '0 0 8px 0' }}>🔄 Wasted Renders</h4>
@@ -368,7 +368,7 @@ export const PerformanceDevTools = ({ enabled = process.env.NODE_ENV === 'develo
                     ))}
                 </div>
             )}
-            
+
             <div style={{ fontSize: '10px', opacity: 0.7, marginTop: '16px' }}>
                 Press Ctrl/Cmd + Shift + P to toggle
             </div>

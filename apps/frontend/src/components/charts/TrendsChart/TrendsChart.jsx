@@ -21,13 +21,13 @@ import TimeRangeControls from './TimeRangeControls';
 import ChartDataInsights from './ChartDataInsights';
 import ChartRenderer from './ChartRenderer';
 
-const TrendsChart = React.memo(({ 
-    data = [], 
-    loading = false, 
+const TrendsChart = React.memo(({
+    data = [],
+    loading = false,
     title = "Trends Analysis",
     onRefresh,
     onExport,
-    height = 400 
+    height = 400
 }) => {
     const [chartType, setChartType] = useState('line');
     const [timeRange, setTimeRange] = useState('7d');
@@ -82,13 +82,13 @@ const TrendsChart = React.memo(({
         return (
             <Card sx={{ height }}>
                 <CardContent>
-                    <Box 
-                        sx={{ 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            height: height - 50 
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: height - 50
                         }}
                     >
                         <TimelineIcon sx={{ fontSize: 64, color: 'grey.400' }} />
@@ -102,34 +102,34 @@ const TrendsChart = React.memo(({
         <Card sx={{ height }}>
             <CardContent>
                 {/* Header with controls */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    mb: 2 
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 2
                 }}>
                     <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <ChartIcon color="primary" />
                         {title}
                     </Typography>
-                    
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {/* Time Range Selector */}
-                        <TimeRangeControls 
+                        <TimeRangeControls
                             timeRange={timeRange}
                             onTimeRangeChange={handleTimeRangeChange}
                         />
 
                         {/* Chart Type Selector */}
-                        <ChartTypeSelector 
+                        <ChartTypeSelector
                             chartType={chartType}
                             onChartTypeChange={handleChartTypeChange}
                         />
 
                         {/* Action buttons */}
                         <Tooltip title="Toggle brush/zoom">
-                            <IconButton 
-                                size="small" 
+                            <IconButton
+                                size="small"
                                 onClick={handleBrushToggle}
                                 color={showBrush ? "primary" : "default"}
                             >
@@ -159,7 +159,7 @@ const TrendsChart = React.memo(({
                 <ChartDataInsights data={filteredData} />
 
                 {/* Chart */}
-                <ChartRenderer 
+                <ChartRenderer
                     chartType={chartType}
                     data={filteredData}
                     showBrush={showBrush}

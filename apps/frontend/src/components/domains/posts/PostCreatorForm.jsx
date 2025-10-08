@@ -1,25 +1,25 @@
 import React from 'react';
 import { Grid, Box, Button } from '@mui/material';
 import ModernCard, { ModernCardHeader } from '../../common/ModernCard';
-import { 
-    ValidatedTextField, 
-    ValidatedSelect, 
-    FormSection, 
-    FormActions 
+import {
+    ValidatedTextField,
+    ValidatedSelect,
+    FormSection,
+    FormActions
 } from '../../common/forms';
 import { useFormValidation } from '../../common/forms';
 
 /**
  * PostCreatorForm - Modernized post creation form
- * 
+ *
  * Demonstrates the new form components and validation system.
  * Reduced complexity by using reusable form patterns.
  */
-const PostCreatorForm = ({ 
-    channels = [], 
-    onSubmit, 
-    onSchedule, 
-    loading = false 
+const PostCreatorForm = ({
+    channels = [],
+    onSubmit,
+    onSchedule,
+    loading = false
 }) => {
     // Form validation rules
     const validationRules = {
@@ -86,7 +86,7 @@ const PostCreatorForm = ({
             />
 
             <Box component="form">
-                <FormSection 
+                <FormSection
                     title="Content"
                     subtitle="Write your post content"
                     required
@@ -151,7 +151,7 @@ const PostCreatorForm = ({
                     loading={loading}
                     disabled={!isValid}
                     align="space-between"
-                    sx={{ 
+                    sx={{
                         borderTop: '1px solid',
                         borderColor: 'divider',
                         pt: 3,

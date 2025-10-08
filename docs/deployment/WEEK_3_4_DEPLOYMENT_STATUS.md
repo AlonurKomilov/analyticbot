@@ -82,7 +82,7 @@ GET /api/v2/analytics/advanced/performance/score/{channel_id}
    ```bash
    # With Docker permissions:
    docker-compose restart api
-   
+
    # Alternative: Direct process restart
    sudo systemctl restart analyticbot-api
    # or kill and restart the uvicorn process
@@ -98,7 +98,7 @@ GET /api/v2/analytics/advanced/performance/score/{channel_id}
    ```bash
    # Test new endpoints
    curl "http://localhost:8000/api/v2/analytics/advanced/dashboard/123"
-   
+
    # Test frontend integration
    # Navigate to: http://localhost:3000/analytics
    # Click "Advanced Analytics" tab

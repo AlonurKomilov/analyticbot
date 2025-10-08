@@ -88,7 +88,7 @@ class AdvancedDataProcessor:
         except Exception as e:
             logger.error(f"Data ingestion failed: {str(e)}")
             raise
-    
+
     async def _setup_streaming(self, source: str, **kwargs) -> pd.DataFrame:
         """Setup streaming data source (placeholder implementation)"""
         logger.info(f"Setting up streaming from: {source}")
@@ -394,7 +394,7 @@ class AdvancedDataProcessor:
                         corr_val = correlation_matrix.iloc[i, j]
                         try:
                             # Handle different types of correlation values
-                            if hasattr(corr_val, 'item') and callable(corr_val.item):
+                            if hasattr(corr_val, "item") and callable(corr_val.item):
                                 # For pandas/numpy scalars with .item() method
                                 corr_val_float = float(corr_val.item())
                             elif isinstance(corr_val, (int, float)):
@@ -403,7 +403,7 @@ class AdvancedDataProcessor:
                             else:
                                 # Skip non-numeric values
                                 continue
-                            
+
                             if abs(corr_val_float) > 0.7:  # High correlation threshold
                                 high_correlations.append(
                                     {

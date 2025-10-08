@@ -8,10 +8,9 @@ from unittest.mock import AsyncMock, MagicMock
 import psutil
 import pytest
 
-from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
-from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.scheduler_service import SchedulerService
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 
 
 class TestPerformanceBenchmarks:
@@ -30,9 +29,9 @@ class TestPerformanceBenchmarks:
         # Mock the methods that SchedulerService actually calls
         scheduler_repo.create_scheduled_post = AsyncMock(return_value=123)
         scheduler_repo.update_post_status = AsyncMock(return_value=None)
-        scheduler_repo.get_pending_posts = AsyncMock(return_value=[
-            {"id": i, "text": f"Post {i}", "channel_id": i % 10} for i in range(50)
-        ])
+        scheduler_repo.get_pending_posts = AsyncMock(
+            return_value=[{"id": i, "text": f"Post {i}", "channel_id": i % 10} for i in range(50)]
+        )
         bot = AsyncMock()
         analytics_service = AnalyticsService(bot, analytics_repo)
         scheduler_service = SchedulerService(bot, scheduler_repo, analytics_repo)

@@ -8,10 +8,10 @@ export { default as MobileNavigationDrawer } from './MobileNavigationDrawer';
 
 // Utilities exports
 export { NAVIGATION_CONFIG } from './navigationConfig';
-export { 
-    generateBreadcrumbs, 
-    useBreadcrumbs, 
-    shouldShowBreadcrumbs 
+export {
+    generateBreadcrumbs,
+    useBreadcrumbs,
+    shouldShowBreadcrumbs
 } from './breadcrumbUtils';
 
 // Default export

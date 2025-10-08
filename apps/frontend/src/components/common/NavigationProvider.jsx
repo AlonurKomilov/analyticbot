@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 /**
  * Navigation Context Provider
- * 
+ *
  * Manages global navigation state including:
  * - Navigation history and analytics
  * - User preferences (theme, layout)
@@ -35,7 +35,7 @@ const useNavigationAnalytics = () => {
                 const lastView = updated[updated.length - 1];
                 lastView.duration = Date.now() - lastView.timestamp;
             }
-            
+
             return [...updated, view].slice(-50); // Keep last 50 views
         });
 
@@ -117,7 +117,7 @@ const useNavigationHistoryInternal = () => {
         updatePreferences(prev => {
             const bookmarks = prev.bookmarks || [];
             const exists = bookmarks.find(b => b.path === bookmark.path);
-            
+
             if (!exists) {
                 const updated = [bookmark, ...bookmarks].slice(0, 20); // Max 20 bookmarks
                 return { bookmarks: updated };
@@ -142,7 +142,7 @@ const useNavigationHistoryInternal = () => {
     // Track current page
     useEffect(() => {
         const pathSegments = location.pathname.split('/').filter(Boolean);
-        const title = pathSegments.length > 0 
+        const title = pathSegments.length > 0
             ? pathSegments[pathSegments.length - 1]
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -226,7 +226,7 @@ const useNotificationsInternal = () => {
     }, []);
 
     const markAsRead = useCallback((id) => {
-        setNotifications(prev => 
+        setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
         );
     }, []);
@@ -255,7 +255,7 @@ const useNotificationsInternal = () => {
 export const NavigationProvider = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    
+
     // Hooks
     const { pageViews, trackPageView } = useNavigationAnalytics();
     const { preferences, updatePreferences } = useUserPreferences();
@@ -274,7 +274,7 @@ export const NavigationProvider = ({ children }) => {
     // Navigation helpers
     const navigateWithTracking = useCallback((path, options = {}) => {
         navigate(path, options);
-        
+
         // Track navigation
         if (options.title) {
             trackPageView(path, options.title);
@@ -287,13 +287,13 @@ export const NavigationProvider = ({ children }) => {
     useEffect(() => {
         // Update page title based on current route
         const pathSegments = location.pathname.split('/').filter(Boolean);
-        const title = pathSegments.length > 0 
+        const title = pathSegments.length > 0
             ? pathSegments[pathSegments.length - 1]
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ')
             : 'Dashboard';
-        
+
         setPageTitle(title);
         document.title = `${title} - AnalyticBot`;
         trackPageView(location.pathname, title);
@@ -333,7 +333,7 @@ export const NavigationProvider = ({ children }) => {
         // Navigation
         navigate: navigateWithTracking,
         ...navigationHistory,
-        
+
         // Search
         ...navigationSearch,
 
@@ -349,7 +349,7 @@ export const NavigationProvider = ({ children }) => {
         formatPath: (path) => {
             return path.split('/').filter(Boolean).join(' > ') || 'Dashboard';
         },
-        
+
         getRouteInfo: (path) => {
             // Route metadata could be enhanced here
             return {
@@ -370,11 +370,11 @@ export const NavigationProvider = ({ children }) => {
 // Hook to use navigation context
 export const useNavigation = () => {
     const context = useContext(NavigationContext);
-    
+
     if (context === undefined) {
         throw new Error('useNavigation must be used within a NavigationProvider');
     }
-    
+
     return context;
 };
 
@@ -395,15 +395,15 @@ export const useNavigationSearch = () => {
 };
 
 export const useNotifications = () => {
-    const { 
-        notifications, 
-        unreadCount, 
-        addNotification, 
-        markAsRead, 
-        removeNotification, 
-        clearAllNotifications 
+    const {
+        notifications,
+        unreadCount,
+        addNotification,
+        markAsRead,
+        removeNotification,
+        clearAllNotifications
     } = useNavigation();
-    
+
     return {
         notifications,
         unreadCount,

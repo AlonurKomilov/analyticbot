@@ -34,7 +34,7 @@ const AddChannel = () => {
         const value = e.target.value;
         setChannelName(value);
         setStatus({ success: false, message: '' });
-        
+
         if (value) {
             validateChannelName(value);
         } else {
@@ -44,7 +44,7 @@ const AddChannel = () => {
 
     const handleAdd = async (e) => {
         e.preventDefault();
-        
+
         if (!validateChannelName(channelName)) {
             return;
         }
@@ -56,9 +56,9 @@ const AddChannel = () => {
             setValidationError('');
             setStatus({ success: true, message: 'Channel added successfully!' });
         } catch (error) {
-            setStatus({ 
-                success: false, 
-                message: error.message || 'Unable to add channel. Please check the channel name and try again.' 
+            setStatus({
+                success: false,
+                message: error.message || 'Unable to add channel. Please check the channel name and try again.'
             });
         }
     };
@@ -68,7 +68,7 @@ const AddChannel = () => {
     const canSubmit = channelName.trim() && !validationError && !loading;
 
     return (
-        <Box 
+        <Box
             component="form"
             onSubmit={handleAdd}
             sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: '8px' }}
@@ -78,14 +78,14 @@ const AddChannel = () => {
             <Typography variant="h2" id="add-channel-title" sx={{ fontSize: '1.25rem', mb: 2 }}>
                 Add New Channel
             </Typography>
-            
+
             {/* Live region for form status */}
             <div aria-live="polite" aria-atomic="true" className="sr-only">
                 {loading && "Adding channel..."}
                 {status.success && "Channel added successfully"}
                 {(error || status.message) && !status.success && `Error: ${error || status.message}`}
             </div>
-            
+
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 <TextField
                     fullWidth
@@ -111,7 +111,7 @@ const AddChannel = () => {
                     type="submit"
                     variant="contained"
                     disabled={!canSubmit}
-                    sx={{ 
+                    sx={{
                         minWidth: '100px',
                         '&:focus-visible': {
                             outline: '2px solid #fff',
@@ -130,11 +130,11 @@ const AddChannel = () => {
                     )}
                 </UnifiedButton>
             </Box>
-            
+
             {validationError && (
-                <Typography 
-                    variant="caption" 
-                    color="error" 
+                <Typography
+                    variant="caption"
+                    color="error"
                     id="channel-error"
                     role="alert"
                     sx={{ display: 'block', mb: 1 }}
@@ -142,21 +142,21 @@ const AddChannel = () => {
                     {validationError}
                 </Typography>
             )}
-            
+
             {!canSubmit && !validationError && channelName && (
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="add-button-help"
                     sx={{ display: 'block', mb: 1 }}
                 >
                     Please enter a valid channel username to continue
                 </Typography>
             )}
-            
+
             {(status.message || error) && !loading && (
-                <Alert 
-                    severity={status.success && !error ? 'success' : 'error'} 
+                <Alert
+                    severity={status.success && !error ? 'success' : 'error'}
                     sx={{ mt: 2 }}
                     role="alert"
                 >
@@ -167,10 +167,10 @@ const AddChannel = () => {
                     )} {error || status.message}
                 </Alert>
             )}
-            
-            <Typography 
-                variant="caption" 
-                color="text.secondary" 
+
+            <Typography
+                variant="caption"
+                color="text.secondary"
                 id="channel-help"
                 sx={{ display: 'block', mt: 1 }}
             >

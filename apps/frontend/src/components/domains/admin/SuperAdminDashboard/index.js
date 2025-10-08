@@ -1,24 +1,24 @@
 /**
  * SuperAdminDashboard - Refactored modular components
- * 
+ *
  * Main Component:
  * - SuperAdminDashboard: Core admin dashboard with tab-based interface
- * 
+ *
  * Tab Components:
  * - OverviewTab: System overview with recent activity and health status
  * - UserManagementTab: User management with suspend/reactivate functionality
  * - AuditLogsTab: Administrative audit trail with action logs
  * - SystemConfigTab: System configuration interface
- * 
+ *
  * UI Components:
  * - AdminStatsCards: System statistics display cards
  * - AdminTabNavigation: Tab navigation for dashboard sections
  * - SuspendUserDialog: Modal dialog for user suspension
  * - TabPanel: Utility component for tab content rendering
- * 
+ *
  * Hooks:
  * - useAdminDashboardState: State management for tabs, dialogs, notifications
- * 
+ *
  * Utils:
  * - adminUtils: Formatting and helper functions for admin dashboard
  */

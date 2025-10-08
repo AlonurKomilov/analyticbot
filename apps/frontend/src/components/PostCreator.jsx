@@ -1,6 +1,6 @@
 /**
  * PostCreator - Refactored post creation component with focused sub-components
- * 
+ *
  * This component has been decomposed from a 396-line monolith into:
  * - PostContentInput: Text content input with validation
  * - ChannelSelector: Channel selection with memoized options
@@ -32,7 +32,7 @@ const PostCreator = React.memo(() => {
         schedulePost,
         pendingMedia
     } = useAppStore();
-    
+
     const responsive = useResponsive();
 
     // Enhanced form state management
@@ -72,7 +72,7 @@ const PostCreator = React.memo(() => {
         if (Object.keys(errors).length > 0) return;
 
         await executeWithLoading(async () => {
-            const inline_buttons = buttons.length > 0 
+            const inline_buttons = buttons.length > 0
                 ? buttons.map(btn => [{ text: btn.text, url: btn.url }])
                 : null;
 
@@ -89,17 +89,17 @@ const PostCreator = React.memo(() => {
     }, [formState, buttons, pendingMedia, executeWithLoading, schedulePost, resetForm, setFormErrors]);
 
     // Determine if form can be submitted
-    const canSubmit = useMemo(() => 
-        canSubmitForm(formState, formErrors), 
+    const canSubmit = useMemo(() =>
+        canSubmitForm(formState, formErrors),
         [formState, formErrors]
     );
 
     return (
         <Box
-            sx={{ 
-                width: '100%', 
-                maxWidth: { xs: '100%', sm: 600 }, 
-                mx: 'auto', 
+            sx={{
+                width: '100%',
+                maxWidth: { xs: '100%', sm: 600 },
+                mx: 'auto',
                 p: { xs: 2, sm: 3 },
                 mb: { xs: 2, sm: 0 }
             }}
@@ -108,10 +108,10 @@ const PostCreator = React.memo(() => {
             aria-labelledby="post-creator-title"
             noValidate
         >
-            <Typography 
-                variant="h2" 
+            <Typography
+                variant="h2"
                 id="post-creator-title"
-                sx={{ 
+                sx={{
                     fontSize: { xs: '1.25rem', sm: '1.5rem' },
                     mb: { xs: 2, sm: 3 },
                     textAlign: { xs: 'center', sm: 'left' }
@@ -119,13 +119,13 @@ const PostCreator = React.memo(() => {
             >
                 Create New Post
             </Typography>
-            
+
             {/* Live region for form status */}
             <div aria-live="polite" aria-atomic="true" className="sr-only">
                 {loading && "Creating your post..."}
                 {error && `Error: ${error}`}
             </div>
-            
+
             {error && (
                 <Alert severity="error" sx={{ mb: 2 }} role="alert">
                     <strong>Unable to create post:</strong> {error}
@@ -133,11 +133,11 @@ const PostCreator = React.memo(() => {
             )}
 
             {/* Post Content Section */}
-            <fieldset style={{ 
-                border: 'none', 
-                padding: 0, 
-                margin: 0, 
-                marginBottom: responsive.isMobile ? 16 : 24 
+            <fieldset style={{
+                border: 'none',
+                padding: 0,
+                margin: 0,
+                marginBottom: responsive.isMobile ? 16 : 24
             }}>
                 <legend className="sr-only">Post Content</legend>
                 <PostContentInput
@@ -191,7 +191,7 @@ const PostCreator = React.memo(() => {
             </fieldset>
 
             {/* Submit Section */}
-            <Box sx={{ 
+            <Box sx={{
                 mt: { xs: 3, sm: 4 },
                 display: 'flex',
                 justifyContent: { xs: 'center', sm: 'flex-start' }

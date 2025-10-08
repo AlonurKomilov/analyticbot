@@ -65,67 +65,67 @@ case "${1:-help}" in
         npm install
         print_success "Dependencies installed successfully"
         ;;
-        
+
     "dev")
         print_info "Starting development server..."
         print_info "Available at: http://localhost:5173"
         npm run dev
         ;;
-        
+
     "build")
         print_info "Building for production..."
         npm run build
         print_success "Build completed successfully"
         print_info "Files are in dist/ directory"
         ;;
-        
+
     "preview")
         print_info "Starting preview server..."
         print_info "Available at: http://localhost:4173"
         npm run preview
         ;;
-        
+
     "test")
         print_info "Running tests..."
         npm run test
         ;;
-        
+
     "test-watch")
         print_info "Running tests in watch mode..."
         npm run test:watch
         ;;
-        
+
     "test-a11y")
         print_info "Running accessibility tests..."
         npm run test:a11y
         ;;
-        
+
     "lint")
         print_info "Running ESLint..."
         npm run lint
         ;;
-        
+
     "lint-fix")
         print_info "Running ESLint with auto-fix..."
         npm run lint:fix
         ;;
-        
+
     "typecheck")
         print_info "Running TypeScript type checking..."
         npm run typecheck
         ;;
-        
+
     "analyze")
         print_info "Analyzing bundle size..."
         npm run analyze
         ;;
-        
+
     "clean")
         print_info "Cleaning build artifacts..."
         rm -rf dist node_modules/.vite
         print_success "Cleanup completed"
         ;;
-        
+
     "docker-dev")
         print_info "Starting frontend in Docker development mode..."
         cd ../..
@@ -134,7 +134,7 @@ case "${1:-help}" in
         print_info "Available at: http://localhost:5173 (Hot reload enabled)"
         print_info "Container logs: sudo docker logs -f analyticbot-frontend-dev"
         ;;
-        
+
     "docker-prod")
         print_info "Starting frontend in Docker production mode..."
         cd ../..
@@ -143,21 +143,21 @@ case "${1:-help}" in
         print_info "Available at: http://localhost:3000"
         print_info "Container logs: sudo docker logs -f analyticbot-frontend"
         ;;
-        
+
     "docker-build")
         print_info "Building Docker images..."
         cd ../..
         sudo docker-compose build frontend frontend-dev
         print_success "Docker images built successfully"
         ;;
-        
+
     "docker-stop")
         print_info "Stopping Docker containers..."
         cd ../..
         sudo docker-compose down frontend frontend-dev
         print_success "Docker containers stopped"
         ;;
-        
+
     "docker-logs")
         print_info "Showing frontend Docker logs..."
         cd ../..
@@ -167,23 +167,23 @@ case "${1:-help}" in
         echo "=== Production Logs ==="
         sudo docker logs analyticbot-frontend --tail 20 2>/dev/null || echo "Production container not running"
         ;;
-        
+
     "docker-status")
         print_info "Docker frontend status..."
         cd ../..
         sudo docker ps | grep frontend || echo "No frontend containers running"
         ;;
-        
+
     "test")
         print_info "Running comprehensive frontend tests..."
         cd ../..
         ./scripts/test-frontend.sh
         ;;
-        
+
     "help"|"--help"|"-h")
         show_help
         ;;
-        
+
     *)
         print_error "Unknown command: $1"
         echo ""

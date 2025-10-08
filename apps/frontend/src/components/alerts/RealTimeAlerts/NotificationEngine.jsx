@@ -2,21 +2,21 @@ import React, { useEffect, useRef } from 'react';
 
 /**
  * NotificationEngine - Handles real-time alert processing and WebSocket connections
- * 
+ *
  * Optimized for high-frequency updates and memory management in multi-user scenarios.
  * Manages alert checking intervals, data simulation, and notification generation.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Array} props.alertRules - Array of alert rule configurations
  * @param {Function} props.onNewAlerts - Callback when new alerts are generated
  * @param {Array} props.existingAlerts - Current alerts to prevent duplicates
  * @param {number} props.checkInterval - Interval for checking alerts in ms (default: 30000)
  */
-const NotificationEngine = React.memo(({ 
-  alertRules = [], 
-  onNewAlerts, 
+const NotificationEngine = React.memo(({
+  alertRules = [],
+  onNewAlerts,
   existingAlerts = [],
-  checkInterval = 30000 
+  checkInterval = 30000
 }) => {
   const intervalRef = useRef(null);
 
@@ -76,8 +76,8 @@ const NotificationEngine = React.memo(({
 
         if (shouldAlert) {
           // Check if we haven't already shown this alert recently (prevent spam)
-          const recentAlert = existingAlerts.find(alert => 
-            alert.ruleId === rule.id && 
+          const recentAlert = existingAlerts.find(alert =>
+            alert.ruleId === rule.id &&
             (currentTime - new Date(alert.timestamp)) < 300000 // 5 minutes
           );
 

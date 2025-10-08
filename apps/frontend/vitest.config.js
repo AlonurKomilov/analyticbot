@@ -7,10 +7,10 @@ export default defineConfig({
   test: {
     // Use jsdom for DOM testing
     environment: 'jsdom',
-    
+
     // Setup files
     setupFiles: ['./src/test/setup.js'],
-    
+
     // Coverage configuration
     coverage: {
       provider: 'v8',
@@ -32,18 +32,18 @@ export default defineConfig({
         }
       }
     },
-    
+
     // Global test configuration
     globals: true,
-    
+
     // Test file patterns
     include: ['src/**/*.{test,spec}.{js,jsx}'],
-    
+
     // Mock configuration
     mockReset: true,
     restoreMocks: true
   },
-  
+
   // Path resolution (same as main vite config)
   resolve: {
     alias: {

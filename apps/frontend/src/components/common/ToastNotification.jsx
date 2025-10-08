@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Snackbar, 
-    Alert, 
-    Slide, 
+import {
+    Snackbar,
+    Alert,
+    Slide,
     IconButton,
     Box,
     Typography
@@ -19,7 +19,7 @@ const SlideTransition = (props) => <Slide {...props} direction="up" />;
 
 /**
  * Accessible toast notification component with enhanced UX
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.open - Whether toast is visible
  * @param {Function} props.onClose - Close handler
@@ -172,21 +172,21 @@ export const useToast = () => {
 
     const showToast = (options) => {
         const id = Date.now() + Math.random();
-        const toast = { 
-            id, 
+        const toast = {
+            id,
             open: true,
-            ...options 
+            ...options
         };
-        
+
         setToasts(prev => [...prev, toast]);
-        
+
         // Auto-remove after duration
         if (!options.persistent) {
             setTimeout(() => {
                 removeToast(id);
             }, options.autoHideDuration || 6000);
         }
-        
+
         return id;
     };
 
@@ -194,16 +194,16 @@ export const useToast = () => {
         setToasts(prev => prev.filter(toast => toast.id !== id));
     };
 
-    const showSuccess = (message, options = {}) => 
+    const showSuccess = (message, options = {}) =>
         showToast({ message, severity: 'success', ...options });
-    
-    const showError = (message, options = {}) => 
+
+    const showError = (message, options = {}) =>
         showToast({ message, severity: 'error', ...options });
-    
-    const showWarning = (message, options = {}) => 
+
+    const showWarning = (message, options = {}) =>
         showToast({ message, severity: 'warning', ...options });
-    
-    const showInfo = (message, options = {}) => 
+
+    const showInfo = (message, options = {}) =>
         showToast({ message, severity: 'info', ...options });
 
     return {

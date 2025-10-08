@@ -64,8 +64,8 @@ export const categorizeError = (error) => {
     if (!error) return ERROR_TYPES.UNKNOWN_ERROR;
 
     // Network errors
-    if (error.name === 'NetworkError' || 
-        error.message?.includes('fetch') || 
+    if (error.name === 'NetworkError' ||
+        error.message?.includes('fetch') ||
         error.message?.includes('network') ||
         !navigator.onLine) {
         return ERROR_TYPES.NETWORK_ERROR;
@@ -97,7 +97,7 @@ export const categorizeError = (error) => {
     }
 
     // Validation errors
-    if (error.name === 'ValidationError' || 
+    if (error.name === 'ValidationError' ||
         error.message?.includes('validation') ||
         error.message?.includes('required') ||
         error.message?.includes('invalid')) {
@@ -156,14 +156,14 @@ export const CONTEXT_ERRORS = {
 export const getContextualError = (error, context) => {
     const errorType = categorizeError(error);
     const contextMessages = CONTEXT_ERRORS[context];
-    
+
     if (contextMessages && contextMessages[errorType]) {
         return {
             ...getUserFriendlyError(error),
             message: contextMessages[errorType]
         };
     }
-    
+
     return getUserFriendlyError(error);
 };
 
@@ -171,7 +171,7 @@ export const getContextualError = (error, context) => {
  * Formats error for display in UI components
  */
 export const formatErrorForDisplay = (error, context = null) => {
-    const errorInfo = context 
+    const errorInfo = context
         ? getContextualError(error, context)
         : getUserFriendlyError(error);
 

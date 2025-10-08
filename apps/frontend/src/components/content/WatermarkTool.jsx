@@ -35,7 +35,7 @@ const WatermarkTool = () => {
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [preview, setPreview] = useState(null);
-    
+
     // Watermark configuration
     const [watermarkConfig, setWatermarkConfig] = useState({
         text: 'Copyright © 2025',
@@ -68,7 +68,7 @@ const WatermarkTool = () => {
             setFile(selectedFile);
             setError(null);
             setResult(null);
-            
+
             // Create preview
             const reader = new FileReader();
             reader.onload = (e) => setPreview(e.target.result);
@@ -120,7 +120,7 @@ const WatermarkTool = () => {
             // Get the watermarked file
             const blob = await response.blob();
             const downloadUrl = URL.createObjectURL(blob);
-            
+
             setResult({
                 downloadUrl,
                 filename: `watermarked_${file.name}`,
@@ -153,7 +153,7 @@ const WatermarkTool = () => {
                 title="Image Watermark Tool"
                 subheader="Add copyright watermarks to protect your images"
             />
-            
+
             <CardContent>
                 {/* File Upload Section */}
                 <Box sx={{ mb: 4 }}>
@@ -161,7 +161,7 @@ const WatermarkTool = () => {
                         <ImageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
                         Upload Image
                     </Typography>
-                    
+
                     <Box
                         sx={{
                             border: '2px dashed',
@@ -185,18 +185,18 @@ const WatermarkTool = () => {
                             onChange={handleFileChange}
                             style={{ display: 'none' }}
                         />
-                        
+
                         <UploadIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
-                        
+
                         {file ? (
                             <Box>
                                 <Typography variant="body1" color="success.main">
                                     {file.name}
                                 </Typography>
-                                <Chip 
-                                    label={`${(file.size / 1024 / 1024).toFixed(2)} MB`} 
-                                    size="small" 
-                                    color="success" 
+                                <Chip
+                                    label={`${(file.size / 1024 / 1024).toFixed(2)} MB`}
+                                    size="small"
+                                    color="success"
                                     sx={{ mt: 1 }}
                                 />
                             </Box>

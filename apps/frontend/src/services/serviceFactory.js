@@ -10,7 +10,7 @@ export const isDemoUser = (requestData = null) => {
     const existingDemo = localStorage.getItem('is_demo_user') === 'true' ||
                         window.location.search.includes('demo=true') ||
                         window.location.hostname.includes('demo');
-    
+
     // For authentication requests, also check the email in request data
     if (requestData && typeof requestData === 'object') {
         const email = requestData.email || requestData.username;
@@ -18,16 +18,16 @@ export const isDemoUser = (requestData = null) => {
             // Only specific demo email patterns should trigger demo mode
             const validDemoPatterns = [
                 'demo@analyticbot.com',
-                'viewer@analyticbot.com', 
+                'viewer@analyticbot.com',
                 'guest@analyticbot.com',
                 'admin@analyticbot.com'
             ];
-            
+
             const isDemoEmail = validDemoPatterns.includes(email.toLowerCase()) ||
                                email.toLowerCase().startsWith('demo@') ||
                                email.toLowerCase().startsWith('viewer@') ||
                                email.toLowerCase().startsWith('guest@');
-            
+
             if (isDemoEmail) {
                 console.log('🎭 Demo email detected in request:', email);
                 return true;
@@ -37,7 +37,7 @@ export const isDemoUser = (requestData = null) => {
             }
         }
     }
-    
+
     return existingDemo;
 };
 
@@ -54,7 +54,7 @@ export const apiClient = {
             return realClient.default.get(url, config);
         }
     },
-    
+
     post: async (url, data, config) => {
         // Check for demo user with request data (especially for auth endpoints)
         if (isDemoUser(data)) {
@@ -67,7 +67,7 @@ export const apiClient = {
             return realClient.default.post(url, data, config);
         }
     },
-    
+
     put: async (url, data, config) => {
         if (isDemoUser()) {
             const mockClient = await import('../__mocks__/services/mockApiClient.js');
@@ -77,7 +77,7 @@ export const apiClient = {
             return realClient.default.put(url, data, config);
         }
     },
-    
+
     delete: async (url, config) => {
         if (isDemoUser()) {
             const mockClient = await import('../__mocks__/services/mockApiClient.js');
@@ -87,7 +87,7 @@ export const apiClient = {
             return realClient.default.delete(url, config);
         }
     },
-    
+
     uploadFileDirect: async (file, onProgress) => {
         if (isDemoUser()) {
             const mockClient = await import('../__mocks__/services/mockApiClient.js');

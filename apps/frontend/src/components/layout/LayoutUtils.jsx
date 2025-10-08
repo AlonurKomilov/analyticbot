@@ -1,6 +1,6 @@
 /**
  * Layout Utils
- * 
+ *
  * Utility functions and components for enhanced layout system
  */
 
@@ -33,7 +33,7 @@ export const LayoutUtils = {
         borderRadius: DESIGN_TOKENS.shape.borderRadius.sm
       }
     };
-    
+
     return styles[level] || styles.default;
   },
 
@@ -60,7 +60,7 @@ export const LayoutUtils = {
       3: { mb: 2, mt: 1 },
       default: { mb: 2, mt: 1 }
     };
-    
+
     return spacing[level] || spacing.default;
   }
 };
@@ -68,18 +68,18 @@ export const LayoutUtils = {
 /**
  * Enhanced Container with visual hierarchy support
  */
-export const HierarchyContainer = ({ 
-  children, 
+export const HierarchyContainer = ({
+  children,
   level = 'default',
   emphasis = false,
-  ...props 
+  ...props
 }) => {
   const theme = useTheme();
-  
-  const emphasisStyles = emphasis 
+
+  const emphasisStyles = emphasis
     ? LayoutUtils.getEmphasisStyles(level, theme)
     : {};
-    
+
   return (
     <Box
       sx={{
@@ -117,25 +117,25 @@ export const ResponsiveWrapper = ({ children, maxWidth = 'xl', ...props }) => (
 export const HierarchyDivider = ({ level = 1, spacing = 'md' }) => {
   const theme = useTheme();
   const spacingValue = DESIGN_TOKENS.spacing.section.gap[spacing];
-  
+
   const styles = {
-    1: { 
-      height: 2, 
+    1: {
+      height: 2,
       bgcolor: theme.palette.primary.main,
       opacity: 0.2
     },
-    2: { 
-      height: 1, 
+    2: {
+      height: 1,
       bgcolor: theme.palette.divider,
       opacity: 0.6
     },
-    3: { 
-      height: 1, 
+    3: {
+      height: 1,
       bgcolor: theme.palette.divider,
       opacity: 0.3
     }
   };
-  
+
   return (
     <Box
       sx={{

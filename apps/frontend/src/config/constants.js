@@ -6,7 +6,7 @@
 // Default channel for new users or when no channel is selected
 export const DEFAULT_CHANNEL_ID = 'default_channel';
 
-// Default user settings  
+// Default user settings
 export const DEFAULT_USER_SETTINGS = {
     max_channels: 3,
     plan: 'free',

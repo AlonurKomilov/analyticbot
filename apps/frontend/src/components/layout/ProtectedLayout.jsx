@@ -1,6 +1,6 @@
 /**
  * 🛡️ Protected Layout Component
- * 
+ *
  * Layout wrapper for authenticated routes that includes navigation bar
  * and proper spacing for protected content.
  */
@@ -14,7 +14,7 @@ const ProtectedLayout = ({ children }) => {
         <>
             {/* Global Navigation Bar */}
             <NavigationBar />
-            
+
             {/* Main Content Area with proper spacing */}
             <Box sx={{ pt: { xs: 7, sm: 8 } }}>
                 {children}

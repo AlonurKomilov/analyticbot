@@ -19,10 +19,10 @@ import DataSourceSettings from '../../DataSourceSettings';
 
 /**
  * DashboardHeader Component
- * 
+ *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
  * Handles header, breadcrumbs, data source controls, and status alerts
- * 
+ *
  * Responsibilities:
  * - Breadcrumb navigation
  * - Collapsible data source settings
@@ -37,13 +37,13 @@ const DashboardHeader = React.memo(({
         <>
             {/* Breadcrumbs */}
             <nav aria-label="Breadcrumb navigation">
-                <Breadcrumbs 
-                    separator={<NavigateNextIcon fontSize="small" aria-hidden="true" />} 
+                <Breadcrumbs
+                    separator={<NavigateNextIcon fontSize="small" aria-hidden="true" />}
                     sx={{ mb: 2 }}
                 >
-                    <Link 
-                        underline="hover" 
-                        color="inherit" 
+                    <Link
+                        underline="hover"
+                        color="inherit"
                         href="/"
                         sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                         aria-label="Go to homepage"
@@ -71,13 +71,13 @@ const DashboardHeader = React.memo(({
             </Collapse>
 
             {/* Alert for Current Status */}
-            <Alert 
-                severity="success" 
+            <Alert
+                severity="success"
                 sx={{ mb: 3 }}
                 icon={<SecurityIcon />}
                 role="status"
             >
-                <strong>🛡️ NEW: Week 5-6 Content Protection Available!</strong> Click the "Content Protection" tab below to access watermarking and theft detection tools. 
+                <strong>🛡️ NEW: Week 5-6 Content Protection Available!</strong> Click the "Content Protection" tab below to access watermarking and theft detection tools.
                 Premium features include image watermarking, content scanning, and security tools.
             </Alert>
         </>

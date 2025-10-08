@@ -21,7 +21,7 @@ from apps.api.schemas.analytics import PostListResponse
 
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ async def get_channel_engagement_insights(
         description="Level of engagement metrics",
     ),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """
@@ -120,7 +120,7 @@ async def get_channel_audience_insights(
     include_demographics: bool = Query(True, description="Include demographic analysis"),
     include_behavior: bool = Query(True, description="Include behavioral insights"),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """
@@ -210,7 +210,7 @@ async def get_trending_content_analysis(
         default="zscore", regex="^(zscore|ewma|hybrid)$", description="Trending detection method"
     ),
     min_engagement: float = Query(0.01, ge=0, le=1, description="Minimum engagement threshold"),
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -254,7 +254,10 @@ async def get_trending_content_analysis(
         # Get trending content with advanced analytics
         with performance_timer("trending_content_analysis"):
             trending_data = await service.get_trending_posts(
-                channel_id, from_, to_, window_hours, method, min_engagement
+                channel_id,
+                from_,
+                to_,
+                20,  # Default limit of 20 posts
             )
 
         response_data = PostListResponse(data=trending_data)  # type: ignore
@@ -289,7 +292,7 @@ async def get_engagement_patterns_analysis(
         "temporal", regex="^(temporal|content|user)$", description="Type of pattern analysis"
     ),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """
@@ -321,17 +324,11 @@ async def get_engagement_patterns_analysis(
         with performance_timer("engagement_patterns_analysis"):
             # Get pattern analysis based on type
             if pattern_type == "temporal":
-                patterns_data = await analytics_service.get_temporal_engagement_patterns(
-                    channel_id, days
-                )
+                patterns_data = await analytics_service.get_temporal_engagement_patterns(channel_id)
             elif pattern_type == "content":
-                patterns_data = await analytics_service.get_content_engagement_patterns(
-                    channel_id, days
-                )
+                patterns_data = await analytics_service.get_content_engagement_patterns(channel_id)
             else:  # user patterns
-                patterns_data = await analytics_service.get_user_engagement_patterns(
-                    channel_id, days
-                )
+                patterns_data = await analytics_service.get_user_engagement_patterns(channel_id)
 
         response_data = {
             "channel_id": channel_id,

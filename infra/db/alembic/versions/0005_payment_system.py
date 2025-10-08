@@ -173,10 +173,10 @@ def upgrade() -> None:
 
     # Update plans with default pricing
     op.execute("""
-        UPDATE plans SET 
-            price_monthly = CASE 
+        UPDATE plans SET
+            price_monthly = CASE
                 WHEN name = 'free' THEN 0.00
-                WHEN name = 'pro' THEN 9.99  
+                WHEN name = 'pro' THEN 9.99
                 WHEN name = 'business' THEN 29.99
                 ELSE 0.00
             END,

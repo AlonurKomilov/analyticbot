@@ -11,18 +11,18 @@ export default defineConfig({
       jsxImportSource: 'react'
     })
   ],
-  
+
   // Environment variable prefix
   envPrefix: ['VITE_', 'REACT_APP_'],
-  
+
   // Build optimizations
   build: {
     // Target modern browsers for smaller bundles
     target: 'es2020',
-    
+
     // Enable minification with advanced options
     minify: 'terser',
-    
+
     // Terser options for better compression
     terserOptions: {
       compress: {
@@ -31,7 +31,7 @@ export default defineConfig({
         pure_funcs: ['console.log', 'console.info'] // Remove specific console methods
       }
     },
-    
+
     // Optimize chunks with advanced splitting
     rollupOptions: {
       external: (id) => {
@@ -44,59 +44,59 @@ export default defineConfig({
           if (id.includes('node_modules/react') || id.includes('node_modules/@types/react')) {
             return 'react-core';
           }
-          
+
           // React Router
           if (id.includes('react-router')) {
             return 'react-router';
           }
-          
+
           // MUI Core Components
           if (id.includes('@mui/material') && !id.includes('icons')) {
             return 'mui-core';
           }
-          
+
           // Emotion styling
           if (id.includes('@emotion')) {
             return 'emotion';
           }
-          
+
           // MUI Icons - CRITICAL: Must load with React JSX runtime available
           if (id.includes('@mui/icons-material')) {
             // Don't split MUI icons into separate chunk to avoid JSX runtime issues
             // Force them into react-core chunk to ensure React is available
             return 'react-core';
           }
-          
+
           // Charts library
           if (id.includes('recharts')) {
             return 'charts-vendor';
           }
-          
+
           // Analytics components (app-specific)
           if (id.includes('/components/analytics/') || id.includes('/components/dashboard/')) {
             return 'analytics-app';
           }
-          
+
           // Admin components
           if (id.includes('/components/domains/admin/') || id.includes('/components/SuperAdmin')) {
             return 'admin-app';
           }
-          
-          // Services components  
+
+          // Services components
           if (id.includes('/services/') && id.includes('Service')) {
             return 'services-app';
           }
-          
+
           // Utilities and shared code
           if (id.includes('/utils/') || id.includes('/hooks/') || id.includes('/store/')) {
             return 'shared-utils';
           }
-          
+
           // Common components
           if (id.includes('/components/common/')) {
             return 'common-components';
           }
-          
+
           // All other vendor dependencies
           if (id.includes('node_modules')) {
             return 'vendor-misc';
@@ -124,20 +124,20 @@ export default defineConfig({
         tryCatchDeoptimization: false
       }
     },
-    
+
     // Source maps - disable in production to avoid dev file references
     sourcemap: process.env.NODE_ENV === 'development',
-    
+
     // Optimize assets with better thresholds
     assetsInlineLimit: 8192, // 8kb - inline small assets
-    
+
     // Chunk size warnings
     chunkSizeWarningLimit: 1000, // 1MB warning threshold
-    
+
     // CSS code splitting
     cssCodeSplit: true
   },
-  
+
   // Development optimizations
   server: {
     // Fast refresh
@@ -153,7 +153,7 @@ export default defineConfig({
       interval: 100
     }
   },
-  
+
   // Path resolution
   resolve: {
     alias: {
@@ -169,7 +169,7 @@ export default defineConfig({
       '@emotion/styled': resolve(__dirname, 'node_modules/@emotion/styled')
     }
   },
-  
+
   // Environment variables
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
@@ -180,7 +180,7 @@ export default defineConfig({
     // Ensure React is available globally for JSX runtime
     'global': 'globalThis',
   },
-  
+
   // Performance optimizations
   esbuild: {
     // Tree shaking for better bundle size

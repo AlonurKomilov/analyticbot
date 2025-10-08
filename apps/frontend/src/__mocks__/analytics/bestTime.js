@@ -24,7 +24,7 @@ export const bestTimeData = {
 export const getBestTime = async (timeframe = 'week') => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  
+
   return {
     ...bestTimeData,
     timeframe,

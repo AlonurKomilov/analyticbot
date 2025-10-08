@@ -1,6 +1,6 @@
 /**
  * Tablet-Optimized Components
- * 
+ *
  * Enhanced components specifically optimized for tablet experience (768-1024px):
  * - Better space utilization
  * - Touch-friendly interactions
@@ -33,7 +33,7 @@ import { DESIGN_TOKENS } from '../../theme/designTokens.js';
  * Tablet-Optimized Dashboard Layout
  * Adaptive layout that works well in both portrait and landscape tablet modes
  */
-export const TabletDashboardLayout = ({ 
+export const TabletDashboardLayout = ({
   header,
   primaryContent,
   secondaryContent,
@@ -45,11 +45,11 @@ export const TabletDashboardLayout = ({
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const isPortrait = useMediaQuery('(orientation: portrait)');
-  
+
   // In tablet portrait mode, stack vertically
   // In tablet landscape mode, use side-by-side layout
   const useVerticalLayout = isTablet && isPortrait;
-  
+
   return (
     <Box
       sx={{
@@ -66,15 +66,15 @@ export const TabletDashboardLayout = ({
       )}
 
       {/* Main Content Grid */}
-      <Grid 
-        container 
+      <Grid
+        container
         spacing={{ xs: 2, md: 3, lg: 4 }}
         sx={{ mb: 3 }}
       >
         {/* Primary Content */}
-        <Grid 
-          item 
-          xs={12} 
+        <Grid
+          item
+          xs={12}
           md={useVerticalLayout ? 12 : 8}
           order={{ xs: 1, md: 1 }}
         >
@@ -82,9 +82,9 @@ export const TabletDashboardLayout = ({
         </Grid>
 
         {/* Secondary Content */}
-        <Grid 
-          item 
-          xs={12} 
+        <Grid
+          item
+          xs={12}
           md={useVerticalLayout ? 12 : 4}
           order={{ xs: 2, md: 2 }}
         >
@@ -106,22 +106,22 @@ export const TabletDashboardLayout = ({
  * Collapsible Tablet Card
  * Card component optimized for tablet with collapsible content
  */
-export const TabletCollapsibleCard = ({ 
-  title, 
+export const TabletCollapsibleCard = ({
+  title,
   subtitle,
-  children, 
+  children,
   defaultExpanded = true,
   showFullscreen = false,
   onFullscreen,
   headerActions,
-  ...props 
+  ...props
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
   return (
-    <Card 
+    <Card
       elevation={1}
       sx={{
         borderRadius: DESIGN_TOKENS.layout.borderRadius.md,
@@ -137,11 +137,11 @@ export const TabletCollapsibleCard = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {headerActions}
             {showFullscreen && (
-              <IconButton 
+              <IconButton
                 onClick={onFullscreen}
                 size="small"
-                sx={{ 
-                  minWidth: '44px', 
+                sx={{
+                  minWidth: '44px',
                   minHeight: '44px'
                 }}
               >
@@ -151,8 +151,8 @@ export const TabletCollapsibleCard = ({
             <IconButton
               onClick={() => setExpanded(!expanded)}
               size="small"
-              sx={{ 
-                minWidth: '44px', 
+              sx={{
+                minWidth: '44px',
                 minHeight: '44px',
                 transform: expanded ? 'rotate(0deg)' : 'rotate(180deg)',
                 transition: 'transform 0.2s ease-in-out'
@@ -174,7 +174,7 @@ export const TabletCollapsibleCard = ({
           pb: 1
         }}
       />
-      
+
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent sx={{ pt: 0 }}>
           {children}
@@ -192,11 +192,11 @@ export const TabletAnalyticsGrid = ({ widgets = [], spacing = 3 }) => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLandscape = useMediaQuery('(orientation: landscape)');
-  
+
   // Different grid layouts based on orientation
   const getGridCols = () => {
     if (!isTablet) return { xs: 12, sm: 6, md: 4, lg: 3 };
-    
+
     // Tablet-specific layouts
     if (isLandscape) {
       return { xs: 12, md: 4 }; // 3 columns in landscape
@@ -222,8 +222,8 @@ export const TabletAnalyticsGrid = ({ widgets = [], spacing = 3 }) => {
  * Tablet Touch-Optimized Button Group
  * Button group with enhanced touch targets for tablet
  */
-export const TabletButtonGroup = ({ 
-  buttons = [], 
+export const TabletButtonGroup = ({
+  buttons = [],
   orientation = 'horizontal',
   fullWidth = false,
   spacing = 'sm'
@@ -269,9 +269,9 @@ export const TabletButtonGroup = ({
  * Tablet Split View Component
  * Split view that adapts to tablet orientations
  */
-export const TabletSplitView = ({ 
-  leftContent, 
-  rightContent, 
+export const TabletSplitView = ({
+  leftContent,
+  rightContent,
   defaultSplit = 50,
   minLeftWidth = 300,
   minRightWidth = 300
@@ -280,7 +280,7 @@ export const TabletSplitView = ({
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLandscape = useMediaQuery('(orientation: landscape)');
-  
+
   // Force vertical split on tablet portrait
   const forceVertical = isTablet && !isLandscape;
 
@@ -313,7 +313,7 @@ export const TabletSplitView = ({
  * Tablet-Optimized Status Bar
  * Status indicators optimized for tablet viewing
  */
-export const TabletStatusBar = ({ 
+export const TabletStatusBar = ({
   statusItems = [],
   showLabels = true,
   compact = false
@@ -341,20 +341,20 @@ export const TabletStatusBar = ({
               {item.icon}
             </Box>
           )}
-          
+
           {!compact && showLabels && (
             <Typography variant="body2" color="text.secondary">
               {item.label}
             </Typography>
           )}
-          
+
           <Chip
             label={item.value}
             color={item.status || 'default'}
             size={isTablet ? 'medium' : 'small'}
             variant={item.variant || 'filled'}
           />
-          
+
           {index < statusItems.length - 1 && (
             <Box
               sx={{

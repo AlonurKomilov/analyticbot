@@ -6,31 +6,31 @@ import {
     Analytics as AnalyticsIcon,
     Psychology as AIIcon,
     Edit as PostIcon,
-    
+
     // Service Icons
     TrendingUp as TrendingIcon,
     Security as SecurityIcon,
     AutoAwesome as OptimizeIcon,
     QueryStats as PredictIcon,
-    
+
     // Status Icons
     CheckCircle as OnlineIcon,
     Shield as SecureIcon,
     FlashOn as RealtimeIcon,
-    
+
     // Action Icons
     Refresh as RefreshIcon,
     Download as DownloadIcon,
     Share as ShareIcon,
     Settings as SettingsIcon,
     Add as CreateIcon,
-    
+
     // Data Icons
     Visibility as ViewsIcon,
     ThumbUp as LikeIcon,
     Comment as CommentIcon,
     Star as StarIcon,
-    
+
     // Tech Icons
     Code as TechIcon,
     Storage as DatabaseIcon,
@@ -44,31 +44,31 @@ export const ICON_COMPONENTS = {
     analytics: AnalyticsIcon,
     ai: AIIcon,
     posts: PostIcon,
-    
-    // Services  
+
+    // Services
     trending: TrendingIcon,
     security: SecurityIcon,
     optimize: OptimizeIcon,
     predict: PredictIcon,
-    
+
     // Status
     online: OnlineIcon,
     secure: SecureIcon,
     realtime: RealtimeIcon,
-    
+
     // Actions
     refresh: RefreshIcon,
     download: DownloadIcon,
     share: ShareIcon,
     settings: SettingsIcon,
     create: CreateIcon,
-    
+
     // Data
     views: ViewsIcon,
     likes: LikeIcon,
     comments: CommentIcon,
     star: StarIcon,
-    
+
     // Tech
     tech: TechIcon,
     database: DatabaseIcon,
@@ -78,7 +78,7 @@ export const ICON_COMPONENTS = {
 // Standardized Icon Sizes
 export const ICON_SIZES = {
     xs: 12,  // Inline text
-    sm: 16,  // Forms, chips  
+    sm: 16,  // Forms, chips
     md: 24,  // Buttons, cards
     lg: 32,  // Headers
     xl: 48,  // Empty states
@@ -89,24 +89,24 @@ export const ICON_SIZES = {
  * Professional Icon Component
  * Replaces emoji usage with consistent Material-UI icons
  */
-export const Icon = ({ 
-    name, 
-    size = 'md', 
-    color = 'inherit', 
+export const Icon = ({
+    name,
+    size = 'md',
+    color = 'inherit',
     className,
-    ...props 
+    ...props
 }) => {
     const IconComponent = ICON_COMPONENTS[name];
-    
+
     if (!IconComponent) {
         console.warn(`Icon '${name}' not found in ICON_COMPONENTS`);
         return null;
     }
-    
+
     const iconSize = typeof size === 'string' ? ICON_SIZES[size] : size;
-    
+
     return (
-        <IconComponent 
+        <IconComponent
             sx={{ fontSize: iconSize, color }}
             className={className}
             {...props}
@@ -117,16 +117,16 @@ export const Icon = ({
 /**
  * Status Chip with Professional Icons
  */
-export const StatusChip = ({ 
-    status, 
-    label, 
-    color = 'primary', 
+export const StatusChip = ({
+    status,
+    label,
+    color = 'primary',
     size = 'medium',
-    ...props 
+    ...props
 }) => {
     const statusIcons = {
         online: 'online',
-        analytics: 'analytics', 
+        analytics: 'analytics',
         secure: 'secure',
         ai: 'ai',
         realtime: 'realtime',
@@ -135,7 +135,7 @@ export const StatusChip = ({
         warning: 'optimize',
         error: 'security'
     };
-    
+
     return (
         <Chip
             icon={<Icon name={statusIcons[status]} size="sm" />}

@@ -38,8 +38,8 @@ class AsyncpgChannelDailyRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT day, value 
-                FROM channel_daily 
+                SELECT day, value
+                FROM channel_daily
                 WHERE channel_id = $1 AND metric = $2 AND day BETWEEN $3 AND $4
                 ORDER BY day ASC
                 """,
@@ -75,8 +75,8 @@ class AsyncpgChannelDailyRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
                 """
-                SELECT day, value 
-                FROM channel_daily 
+                SELECT day, value
+                FROM channel_daily
                 WHERE channel_id = $1 AND metric = $2
                 ORDER BY day DESC
                 LIMIT 1
@@ -95,8 +95,8 @@ class AsyncpgChannelDailyRepository:
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
                 """
-                SELECT metric, value 
-                FROM channel_daily 
+                SELECT metric, value
+                FROM channel_daily
                 WHERE channel_id = $1 AND day = $2
                 """,
                 channel_id,

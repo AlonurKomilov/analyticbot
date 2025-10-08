@@ -5,11 +5,11 @@
 import React from 'react';
 import { Button, CircularProgress, Typography } from '@mui/material';
 
-const PostSubmitButton = ({ 
-    onSubmit, 
-    loading = false, 
-    disabled = false, 
-    canSubmit = true 
+const PostSubmitButton = ({
+    onSubmit,
+    loading = false,
+    disabled = false,
+    canSubmit = true
 }) => {
     return (
         <>
@@ -17,7 +17,7 @@ const PostSubmitButton = ({
                 variant="contained"
                 onClick={onSubmit}
                 disabled={loading || disabled || !canSubmit}
-                sx={{ 
+                sx={{
                     mt: 2,
                     '&:focus-visible': {
                         outline: '2px solid #fff',
@@ -35,11 +35,11 @@ const PostSubmitButton = ({
                     'Schedule Post'
                 )}
             </Button>
-            
+
             {!canSubmit && !loading && (
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="submit-help"
                     sx={{ mt: 0.5 }}
                 >

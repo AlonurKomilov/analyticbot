@@ -9,7 +9,7 @@
 # Root configuration files - require admin approval
 /.github/                    @admin-team @devops-lead
 /docker-compose.yml          @devops-lead @backend-lead
-/Dockerfile                  @devops-lead @backend-lead  
+/Dockerfile                  @devops-lead @backend-lead
 /pyproject.toml              @backend-lead @lead-maintainer
 /poetry.lock                 @backend-lead
 /requirements.txt            @backend-lead
@@ -53,7 +53,7 @@
 /twa-frontend/src/services/  @frontend-team @backend-team
 /twa-frontend/src/utils/     @frontend-team
 
-# Testing infrastructure - require testing team approval  
+# Testing infrastructure - require testing team approval
 /tests/                      @qa-team @backend-lead
 /twa-frontend/src/**/*.test.* @qa-team @frontend-team
 /pytest.ini                 @qa-team @backend-lead
@@ -127,12 +127,12 @@
 # Team Definitions (for reference - configured in GitHub organization settings):
 #
 # @admin-team: Repository administrators with full access
-# @lead-maintainer: Primary maintainer responsible for project direction  
+# @lead-maintainer: Primary maintainer responsible for project direction
 # @project-lead: Technical project lead
 #
 # @backend-team: Backend developers
 # @backend-lead: Backend team lead
-# @frontend-team: Frontend/UI developers  
+# @frontend-team: Frontend/UI developers
 # @frontend-lead: Frontend team lead
 #
 # @devops-team: DevOps/Infrastructure team

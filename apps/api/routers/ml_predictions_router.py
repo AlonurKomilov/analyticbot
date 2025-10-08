@@ -4,6 +4,11 @@ ML Predictions Router
 
 API endpoints for Machine Learning predictions (Growth, Engagement, Content Analysis)
 Uses Celery for background processing to avoid blocking the event loop.
+
+Clean Architecture:
+- Depends on DeepLearningServiceProtocol (abstraction)
+- No direct imports from service internals
+- Proper dependency injection pattern
 """
 
 import logging
@@ -13,9 +18,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from apps.celery.celery_app import celery_app
-from core.services.deep_learning.growth.growth_forecaster_service import GrowthForecasterService
-from core.services.deep_learning.infrastructure.gpu_config import GPUConfigService
-from core.services.deep_learning.infrastructure.model_loader import ModelLoader
+from core.protocols import DeepLearningServiceProtocol
+from core.services.deep_learning import DLOrchestratorService
 
 logger = logging.getLogger(__name__)
 
@@ -61,14 +65,19 @@ class TaskStatusResponse(BaseModel):
 # ==================== Dependencies ====================
 
 
-async def get_growth_forecaster() -> GrowthForecasterService:
-    """Dependency to get GrowthForecasterService instance"""
+async def get_dl_service() -> DeepLearningServiceProtocol:
+    """
+    Dependency to get Deep Learning Service instance
+
+    Returns protocol abstraction for proper dependency inversion.
+    Implementation: DLOrchestratorService
+    """
     try:
-        gpu_config = GPUConfigService()
-        model_loader = ModelLoader()
-        return GrowthForecasterService(gpu_config=gpu_config, model_loader=model_loader)
+        service = DLOrchestratorService()
+        await service.start_services()
+        return service
     except Exception as e:
-        logger.error(f"Failed to initialize GrowthForecasterService: {e}")
+        logger.error(f"Failed to initialize Deep Learning Service: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="ML service temporarily unavailable",
@@ -98,7 +107,7 @@ async def get_growth_forecaster() -> GrowthForecasterService:
 )
 async def predict_growth(
     request: GrowthPredictionRequest,
-    service: GrowthForecasterService = Depends(get_growth_forecaster),
+    dl_service: DeepLearningServiceProtocol = Depends(get_dl_service),
 ):
     """
     Submit growth prediction task to Celery.
@@ -107,26 +116,32 @@ async def predict_growth(
     """
     try:
         # NOTE: In production, fetch actual historical data from database
-        # For now, use a placeholder that Celery task will handle
-        sample_data = {
-            "data": [
-                {"date": "2025-10-01", "subscribers": 1000, "views": 5000},
-                {"date": "2025-10-02", "subscribers": 1010, "views": 5100},
-                {"date": "2025-10-03", "subscribers": 1025, "views": 5300},
-                {"date": "2025-10-04", "subscribers": 1040, "views": 5450},
-                {"date": "2025-10-05", "subscribers": 1055, "views": 5600},
-            ]
-        }
+        # For now, use sample data for demonstration
+        sample_data = [
+            {"date": "2025-10-01", "subscribers": 1000, "views": 5000},
+            {"date": "2025-10-02", "subscribers": 1010, "views": 5100},
+            {"date": "2025-10-03", "subscribers": 1025, "views": 5300},
+            {"date": "2025-10-04", "subscribers": 1040, "views": 5450},
+            {"date": "2025-10-05", "subscribers": 1055, "views": 5600},
+        ]
 
-        # Submit to Celery (non-blocking)
-        result = await service.predict_growth_via_celery(
+        # Call the service directly (will be moved to Celery in next iteration)
+        result = await dl_service.predict_growth(
             channel_id=request.channel_id,
-            data=sample_data,
+            historical_data=sample_data,
             forecast_horizon=request.forecast_horizon,
             include_uncertainty=request.include_uncertainty,
         )
 
-        return TaskResponse(**result)
+        # For now, return immediate result (TODO: move to Celery)
+        return TaskResponse(
+            task_id="immediate",
+            channel_id=request.channel_id,
+            status="complete",
+            message="Prediction completed",
+            estimated_time="0s",
+            check_status_at="/ml/task-status/immediate",
+        )
 
     except Exception as e:
         logger.error(f"Failed to submit prediction task: {e}", exc_info=True)
@@ -192,15 +207,15 @@ async def get_task_status(task_id: str):
 @router.get(
     "/health", summary="ML Service Health", description="Check health and statistics of ML services"
 )
-async def ml_service_health(service: GrowthForecasterService = Depends(get_growth_forecaster)):
+async def ml_service_health(dl_service: DeepLearningServiceProtocol = Depends(get_dl_service)):
     """
     Get ML service health statistics.
 
     Returns device info, model status, cache stats, etc.
     """
     try:
-        health = service.get_service_health()
-        return {"status": "healthy", "services": {"growth_forecaster": health}}
+        health = await dl_service.health_check()
+        return {"status": "healthy", "services": {"deep_learning": health}}
     except Exception as e:
         logger.error(f"Failed to get service health: {e}", exc_info=True)
         return {"status": "unhealthy", "error": str(e)}
@@ -212,14 +227,14 @@ async def ml_service_health(service: GrowthForecasterService = Depends(get_growt
 @router.post(
     "/clear-cache", summary="Clear ML Cache", description="Clear prediction cache (admin only)"
 )
-async def clear_ml_cache(service: GrowthForecasterService = Depends(get_growth_forecaster)):
+async def clear_ml_cache(dl_service: DeepLearningServiceProtocol = Depends(get_dl_service)):
     """
     Clear ML prediction cache.
 
     Use this when models are updated or to free memory.
     """
     try:
-        service.clear_cache()
+        dl_service.clear_cache()
         return {"status": "success", "message": "ML prediction cache cleared"}
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}", exc_info=True)

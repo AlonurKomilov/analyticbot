@@ -19,7 +19,7 @@ class AsyncpgAdminRepository(IAdminRepository):
         """Get admin by username"""
         query = """
             SELECT id, username, role, permissions, created_at, last_login
-            FROM admins 
+            FROM admins
             WHERE username = $1 AND is_active = true
         """
         row = await self._pool.fetchrow(query, username)
@@ -66,7 +66,7 @@ class AsyncpgAdminRepository(IAdminRepository):
             return False
 
         query = f"""
-            UPDATE admins 
+            UPDATE admins
             SET {', '.join(set_clauses)}, updated_at = NOW()
             WHERE id = ${param_count}
         """

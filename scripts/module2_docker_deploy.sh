@@ -101,38 +101,38 @@ services:
 
   # AnalyticBot API
   api:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: analyticbot-api-test
     environment:
       # Database Configuration
       DATABASE_URL: postgresql+asyncpg://analyticbot:testpass123@postgres:5432/analyticbot_test
-      
-      # Redis Configuration  
+
+      # Redis Configuration
       REDIS_URL: redis://:testredis123@redis:6379/0
-      
+
       # Application Configuration
       ENVIRONMENT: testing
       DEBUG: "true"
       LOG_LEVEL: DEBUG
-      
+
       # API Configuration
       API_HOST: 0.0.0.0
       API_PORT: 8000
       CORS_ORIGINS: "*"
-      
+
       # Bot Configuration (mock for testing)
       BOT_TOKEN: "test_token_for_module2"
       WEBHOOK_SECRET: "test_webhook_secret"
-      
+
       # AI Configuration (mock for testing)
       OPENAI_API_KEY: "test_openai_key"
-      
+
       # Security (test values)
       JWT_SECRET_KEY: "test_jwt_secret_key_for_module2_validation"
       ENCRYPTION_KEY: "test_encryption_key_12345"
-      
+
     ports:
       - "8001:8000"  # Different port for testing
     depends_on:
@@ -155,29 +155,29 @@ services:
 
   # AnalyticBot Bot (optional for full testing)
   bot:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: analyticbot-bot-test
     environment:
       # Database Configuration
       DATABASE_URL: postgresql+asyncpg://analyticbot:testpass123@postgres:5432/analyticbot_test
-      
+
       # Redis Configuration
       REDIS_URL: redis://:testredis123@redis:6379/0
-      
+
       # Application Configuration
       ENVIRONMENT: testing
       DEBUG: "true"
       LOG_LEVEL: DEBUG
-      
+
       # Bot Configuration (mock for testing)
       BOT_TOKEN: "test_token_for_module2"
       WEBHOOK_SECRET: "test_webhook_secret"
-      
-      # AI Configuration (mock for testing)  
+
+      # AI Configuration (mock for testing)
       OPENAI_API_KEY: "test_openai_key"
-      
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -232,13 +232,13 @@ counter=0
 while [[ $counter -lt $timeout ]]; do
     postgres_health=$(docker inspect --format='{{.State.Health.Status}}' analyticbot-postgres-test 2>/dev/null || echo "unhealthy")
     redis_health=$(docker inspect --format='{{.State.Health.Status}}' analyticbot-redis-test 2>/dev/null || echo "unhealthy")
-    
+
     if [[ "$postgres_health" == "healthy" && "$redis_health" == "healthy" ]]; then
         echo "✅ Dependencies are healthy"
         log_message "INFO" "Dependencies health check passed"
         break
     fi
-    
+
     echo "⏳ Waiting for dependencies... (${counter}s/${timeout}s)"
     sleep 5
     ((counter+=5))
@@ -268,7 +268,7 @@ while [[ $counter -lt $timeout ]]; do
         log_message "INFO" "API health check passed"
         break
     fi
-    
+
     echo "⏳ Waiting for API... (${counter}s/${timeout}s)"
     sleep 10
     ((counter+=10))
@@ -277,14 +277,14 @@ done
 if [[ $counter -ge $timeout ]]; then
     echo "❌ API health check failed"
     log_message "ERROR" "API health check timeout"
-    
+
     # Show container logs for debugging
     echo -e "\n📋 Container Status:"
     docker compose -f "$COMPOSE_FILE" ps
-    
+
     echo -e "\n📋 API Logs:"
     docker compose -f "$COMPOSE_FILE" logs api
-    
+
     exit 1
 fi
 

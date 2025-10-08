@@ -27,7 +27,7 @@ initializeApp().then((result) => {
   if (import.meta.env.DEV) {
     console.log('🚀 App initialized:', result);
   }
-  
+
   // Show notification about data source
   if (result.dataSource === 'mock' && result.error) {
     showDataSourceNotification('mock', 'api_unavailable');
@@ -68,7 +68,7 @@ const mockTelegram = {
 // Set up Telegram WebApp
 if (typeof window !== 'undefined') {
   window.Telegram = window.Telegram || mockTelegram;
-  
+
   // Initialize TWA
   if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();

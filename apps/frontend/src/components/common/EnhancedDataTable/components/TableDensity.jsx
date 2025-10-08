@@ -21,12 +21,12 @@ const TableDensity = ({
     setDensity
 }) => {
     const [densityMenuAnchor, setDensityMenuAnchor] = useState(null);
-    
+
     const handleDensityChange = (densityKey) => {
         setDensity(densityKey);
         setDensityMenuAnchor(null);
     };
-    
+
     return (
         <>
             <Tooltip title="Table Density">
@@ -37,7 +37,7 @@ const TableDensity = ({
                     <SettingsIcon />
                 </IconButton>
             </Tooltip>
-            
+
             <Menu
                 anchorEl={densityMenuAnchor}
                 open={Boolean(densityMenuAnchor)}
@@ -48,7 +48,7 @@ const TableDensity = ({
                 </MenuItem>
                 <Divider />
                 {DENSITY_OPTIONS.map(option => (
-                    <MenuItem 
+                    <MenuItem
                         key={option.key}
                         selected={density === option.key}
                         onClick={() => handleDensityChange(option.key)}

@@ -1,6 +1,6 @@
 /**
  * 📺 Channel Selector Component
- * 
+ *
  * Professional channel selection component with search, creation, and management.
  * Replaces hardcoded demo_channel with dynamic user channel selection.
  */
@@ -36,7 +36,7 @@ import {
 import { useUserChannels } from '../hooks/useUserChannels.js';
 import { DESIGN_TOKENS } from '../theme/designTokens.js';
 
-const ChannelSelector = ({ 
+const ChannelSelector = ({
     onChannelChange = null,
     showCreateButton = true,
     showRefreshButton = true,
@@ -68,8 +68,8 @@ const ChannelSelector = ({
     const [searchTerm, setSearchTerm] = useState('');
 
     // Filter channels based on search term
-    const filteredChannels = channels.filter(channel => 
-        !searchTerm || 
+    const filteredChannels = channels.filter(channel =>
+        !searchTerm ||
         channel.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         channel.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -147,10 +147,10 @@ const ChannelSelector = ({
             {/* Channel Selection Section */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {/* Main Channel Selector */}
-                <FormControl 
-                    variant={variant} 
-                    size={size} 
-                    sx={{ 
+                <FormControl
+                    variant={variant}
+                    size={size}
+                    sx={{
                         flex: 1,
                         minWidth: 200
                     }}
@@ -174,7 +174,7 @@ const ChannelSelector = ({
                                     <Typography variant="body2">
                                         {channel.name}
                                     </Typography>
-                                    <Chip 
+                                    <Chip
                                         label={`ID: ${channel.id}`}
                                         size="small"
                                         variant="outlined"
@@ -231,14 +231,14 @@ const ChannelSelector = ({
                                             </Typography>
                                         )}
                                         <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
-                                            <Chip 
+                                            <Chip
                                                 label={`ID: ${channel.id}`}
                                                 size="small"
                                                 variant="outlined"
                                                 sx={{ height: 16, fontSize: '0.65rem' }}
                                             />
                                             {channel.telegram_channel_id && (
-                                                <Chip 
+                                                <Chip
                                                     label={`TG: ${channel.telegram_channel_id}`}
                                                     size="small"
                                                     variant="outlined"
@@ -298,7 +298,7 @@ const ChannelSelector = ({
             )}
 
             {/* Create Channel Dialog */}
-            <Dialog 
+            <Dialog
                 open={createDialogOpen}
                 onClose={() => !creating && setCreateDialogOpen(false)}
                 maxWidth="sm"
@@ -358,13 +358,13 @@ const ChannelSelector = ({
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setCreateDialogOpen(false)}
                         disabled={creating}
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleCreateChannel}
                         variant="contained"
                         disabled={creating || !newChannelData.name.trim()}

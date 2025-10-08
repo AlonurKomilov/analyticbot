@@ -1,6 +1,6 @@
 /**
  * AnalyticsPage - Dedicated analytics page
- * 
+ *
  * Full-featured analytics dashboard without distractions.
  * Extracted from the tab interface in MainDashboard.
  */
@@ -13,7 +13,7 @@ import { useAppStore } from '../../store/appStore.js';
 
 const AnalyticsPage = () => {
   const { fetchData } = useAppStore();
-  
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -24,7 +24,7 @@ const AnalyticsPage = () => {
         <SectionHeader level={1}>
           Advanced Analytics
         </SectionHeader>
-        
+
         <AnalyticsDashboard />
       </PageContainer>
     </TouchTargetProvider>

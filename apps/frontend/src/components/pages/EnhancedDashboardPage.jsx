@@ -1,9 +1,9 @@
 /**
  * Enhanced Dashboard Page with Micro-Interactions
- * 
+ *
  * Improved visual hierarchy with:
  * - Better content organization and spacing
- * - Clear primary/secondary content areas  
+ * - Clear primary/secondary content areas
  * - Reduced cognitive load through better grouping
  * - Enhanced visual flow and emphasis
  * - Responsive layout optimization
@@ -17,7 +17,7 @@ import { Box, Typography, Alert, Tooltip, useTheme, useMediaQuery, Fade } from '
 import { IconButton } from '../common/TouchTargetCompliance.jsx';
 import ErrorBoundary from '../common/ErrorBoundary.jsx';
 import { StatusChip } from '../common';
-import { 
+import {
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingIcon,
@@ -32,18 +32,18 @@ import EnhancedSection from '../layout/EnhancedSection.jsx';
 import EnhancedCard from '../layout/EnhancedCard.jsx';
 
 // Micro-interaction components
-import { 
-  StaggeredAnimation, 
+import {
+  StaggeredAnimation,
   FloatingElement,
   FeedbackAnimation
 } from '../animations/MicroInteractions.jsx';
-import { 
-  InteractiveButton, 
-  InteractiveIconButton 
+import {
+  InteractiveButton,
+  InteractiveIconButton
 } from '../animations/InteractiveButtons.jsx';
-import { 
-  AnimatedCard, 
-  DashboardCard 
+import {
+  AnimatedCard,
+  DashboardCard
 } from '../animations/InteractiveCards.jsx';
 
 // Mobile responsive dashboard
@@ -58,28 +58,28 @@ import ScheduledPostsList from '../ScheduledPostsList.jsx';
 import ChannelSelector from '../ChannelSelector.jsx';
 
 const EnhancedDashboardPage = () => {
-  const { 
+  const {
     isGlobalLoading,
     isLoading,
     fetchData,
-    scheduledPosts, 
+    scheduledPosts,
     channels,
-    addChannel, 
+    addChannel,
     removeChannel,
     dataSource
   } = useAppStore();
-  
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-  
+
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const isLoadingData = isGlobalLoading() || isLoading('fetchData');
-  
+
   useEffect(() => {
     fetchData();
     // Trigger page load animation
@@ -117,8 +117,8 @@ const EnhancedDashboardPage = () => {
         <EnhancedDashboardLayout
           header={
             <StaggeredAnimation delay={150}>
-              <EnhancedSection 
-                title="Analytics Dashboard" 
+              <EnhancedSection
+                title="Analytics Dashboard"
                 subtitle="Loading your analytics data..."
                 level={1}
               />
@@ -143,9 +143,9 @@ const EnhancedDashboardPage = () => {
     <TouchTargetProvider>
       <Box sx={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
         <ErrorBoundary>
-          <Box 
-            sx={{ 
-              height: '100%', 
+          <Box
+            sx={{
+              height: '100%',
               overflow: 'visible',
               opacity: pageLoaded ? 1 : 0,
               transition: 'opacity 0.8s ease-in-out',
@@ -174,7 +174,7 @@ const EnhancedDashboardPage = () => {
                         showRefreshButton={false}
                       />
                     </Box>
-                    
+
                     <FeedbackAnimation type="success" show={showSuccess}>
                       <StatusChip
                         icon={<SpeedIcon sx={{ fontSize: 16 }} />}
@@ -189,7 +189,7 @@ const EnhancedDashboardPage = () => {
                         }}
                       />
                     </FeedbackAnimation>
-                    
+
                     <Tooltip title={`Last updated: ${lastRefresh.toLocaleTimeString()}`}>
                       <div>
                         <InteractiveIconButton
@@ -203,7 +203,7 @@ const EnhancedDashboardPage = () => {
                         </InteractiveIconButton>
                       </div>
                     </Tooltip>
-                    
+
                     <Tooltip title="Dashboard Settings">
                       <div>
                         <InteractiveIconButton hoverEffect="glow">
@@ -251,7 +251,7 @@ const EnhancedDashboardPage = () => {
                 </Tooltip>
               }
             >
-              <AnalyticsDashboard 
+              <AnalyticsDashboard
                 selectedChannel={selectedChannel}
                 channelId={selectedChannel?.id}
               />
@@ -277,10 +277,10 @@ const EnhancedDashboardPage = () => {
               subtitle={`${channels?.length || 0} channels connected`}
               level={3}
             >
-              <AddChannel 
-                channels={channels} 
-                onAdd={addChannel} 
-                onRemove={removeChannel} 
+              <AddChannel
+                channels={channels}
+                onAdd={addChannel}
+                onRemove={removeChannel}
               />
             </EnhancedSection>
           </>
@@ -288,9 +288,9 @@ const EnhancedDashboardPage = () => {
 
         // Quick Actions - Most accessible in sidebar
         quickActions={
-          <Alert 
-            severity="info" 
-            sx={{ 
+          <Alert
+            severity="info"
+            sx={{
               bgcolor: 'primary.50',
               border: '1px solid',
               borderColor: 'primary.200'

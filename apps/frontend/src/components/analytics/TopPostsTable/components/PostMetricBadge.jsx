@@ -4,11 +4,11 @@ import { getPerformanceBadge } from '../utils/postTableUtils.js';
 
 const PostMetricBadge = ({ post }) => {
     const badge = getPerformanceBadge(post);
-    
+
     return (
-        <StatusChip 
-            size="small" 
-            label={badge.label} 
+        <StatusChip
+            size="small"
+            label={badge.label}
             variant={badge.color}
         />
     );

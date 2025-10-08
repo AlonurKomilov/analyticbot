@@ -14,13 +14,13 @@ export const useAppStore = create(
     subscribeWithSelector((set, get) => ({
         // Data source configuration
         dataSource: localStorage.getItem('useRealAPI') === 'true' ? 'api' : 'mock',
-        
+
         // Data state
         user: null,
         plan: null,
         channels: [],
         scheduledPosts: [],
-        
+
         // UI state
         ui: {
             global: createLoadingState(),
@@ -36,7 +36,7 @@ export const useAppStore = create(
             fetchBestTime: createLoadingState(),
             fetchEngagementMetrics: createLoadingState()
         },
-        
+
         // NEW: Analytics data state
         analytics: {
             postDynamics: null,
@@ -45,7 +45,7 @@ export const useAppStore = create(
             engagementMetrics: null,
             lastAnalyticsUpdate: null
         },
-        
+
         // Media state
         pendingMedia: {
             file_id: null,
@@ -54,7 +54,7 @@ export const useAppStore = create(
             uploadProgress: 0
         },
 
-        
+
         // Helper functions for UI state management
         setLoading: (operation, isLoading) => set(state => ({
             ui: {
@@ -66,7 +66,7 @@ export const useAppStore = create(
                 }
             }
         })),
-        
+
         setError: (operation, error) => set(state => ({
             ui: {
                 ...state.ui,
@@ -77,7 +77,7 @@ export const useAppStore = create(
                 }
             }
         })),
-        
+
         clearError: (operation) => set(state => ({
             ui: {
                 ...state.ui,
@@ -93,45 +93,45 @@ export const useAppStore = create(
             const previousSource = get().dataSource;
             set({ dataSource: source });
             localStorage.setItem('useRealAPI', source === 'api' ? 'true' : 'false');
-            
+
             // If data source actually changed, dispatch event
             if (previousSource !== source) {
                 setTimeout(() => {
-                    window.dispatchEvent(new CustomEvent('dataSourceChanged', { 
-                        detail: { source, previousSource } 
+                    window.dispatchEvent(new CustomEvent('dataSourceChanged', {
+                        detail: { source, previousSource }
                     }));
                 }, 100);
             }
         },
-        
+
         // Check if using real API
         isUsingRealAPI: () => get().dataSource === 'api',
-        
+
         // Boshlang'ich ma'lumotlarni backend'dan loading (with throttling)
         fetchData: async (forceSource = null) => {
             const operation = 'fetchData';
             const currentSource = forceSource || get().dataSource;
             const now = Date.now();
-            
+
             // Throttle requests to prevent rapid successive calls
             const lastFetchKey = `lastFetch_${operation}`;
             const lastFetchTime = get()[lastFetchKey] || 0;
             const minInterval = 3000; // Minimum 3 seconds between fetchData requests
-            
+
             if (now - lastFetchTime < minInterval && !forceSource) {
                 console.log(`FetchData: Throttling request (last fetch ${now - lastFetchTime}ms ago)`);
                 return;
             }
-            
+
             // Update last fetch time immediately to prevent concurrent calls
             set(state => ({ ...state, [lastFetchKey]: now }));
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let data;
-                
+
                 if (currentSource === 'api') {
                     try {
                         // Try real API first - correct endpoint
@@ -140,7 +140,7 @@ export const useAppStore = create(
                     } catch (apiError) {
                         console.log('⚠️ Real API unavailable');
                         console.log('API Error details:', apiError.message);
-                        
+
                         // Store the error for user dialog instead of auto-switching
                         get().setError(operation, {
                             type: 'API_CONNECTION_FAILED',
@@ -148,7 +148,7 @@ export const useAppStore = create(
                             originalError: apiError,
                             timestamp: Date.now()
                         });
-                        
+
                         // Don't auto-switch - let the UI handle this
                         throw apiError;
                     }
@@ -158,14 +158,14 @@ export const useAppStore = create(
                     const { analyticsService } = await import('../services/analyticsService.js');
                     data = await analyticsService.getAnalyticsOverview();
                 }
-                
+
                 set({
                     channels: data.channels || [],
                     scheduledPosts: data.scheduled_posts || [],
                     plan: data.plan,
                     user: data.user,
                 });
-                
+
                 get().setLoading(operation, false);
             } catch (error) {
                 // Fallback to empty state if everything fails
@@ -186,15 +186,15 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 const newChannel = await apiClient.post('/analytics/channels', {
                     channel_username: channelUsername
                 });
-                
+
                 set((state) => ({
                     channels: [...state.channels, newChannel]
                 }));
-                
+
                 get().setLoading(operation, false);
                 return newChannel;
             } catch (error) {
@@ -214,10 +214,10 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 // Create preview URL
                 const previewUrl = URL.createObjectURL(file);
-                
+
                 set(state => ({
                     pendingMedia: {
                         ...state.pendingMedia,
@@ -225,7 +225,7 @@ export const useAppStore = create(
                         uploadProgress: 0
                     }
                 }));
-                
+
                 const response = await apiClient.uploadFile('/upload-media', file, (progress) => {
                     set(state => ({
                         pendingMedia: {
@@ -234,7 +234,7 @@ export const useAppStore = create(
                         }
                     }));
                 });
-                
+
                 set(state => ({
                     pendingMedia: {
                         ...state.pendingMedia,
@@ -243,7 +243,7 @@ export const useAppStore = create(
                         uploadProgress: 100
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -265,10 +265,10 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 // Create preview URL
                 const previewUrl = URL.createObjectURL(file);
-                
+
                 set(state => ({
                     pendingMedia: {
                         ...state.pendingMedia,
@@ -278,7 +278,7 @@ export const useAppStore = create(
                         uploadType: channelId ? 'direct_channel' : 'storage'
                     }
                 }));
-                
+
                 const response = await apiClient.uploadFileDirect(file, channelId, (progressData) => {
                     set(state => ({
                         pendingMedia: {
@@ -290,7 +290,7 @@ export const useAppStore = create(
                         }
                     }));
                 });
-                
+
                 set(state => ({
                     pendingMedia: {
                         ...state.pendingMedia,
@@ -303,7 +303,7 @@ export const useAppStore = create(
                         upload_speed: response.upload_speed
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -324,13 +324,13 @@ export const useAppStore = create(
         getStorageFiles: async (limit = 20, offset = 0) => {
             const operation = 'getStorageFiles';
             const currentSource = get().dataSource;
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let response;
-                
+
                 if (currentSource === 'api') {
                     try {
                         response = await apiClient.getStorageFiles(limit, offset);
@@ -338,7 +338,7 @@ export const useAppStore = create(
                     } catch (apiError) {
                         console.log('⚠️ API unavailable for storage files, using demo data');
                         console.log('Storage API Error:', apiError.message);
-                        
+
                         // Fallback to mock storage files
                         const { storageMockService } = await import('../services/storageMockService.js');
                         response = await storageMockService.getStorageFiles(limit, offset);
@@ -349,7 +349,7 @@ export const useAppStore = create(
                     const { storageMockService } = await import('../services/storageMockService.js');
                     response = await storageMockService.getStorageFiles(limit, offset);
                 }
-                
+
                 set(() => ({
                     storageFiles: {
                         files: response.files || [],
@@ -358,7 +358,7 @@ export const useAppStore = create(
                         offset: response.offset || 0
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -372,7 +372,7 @@ export const useAppStore = create(
                 throw error;
             }
         },
-        
+
         // Media tozalash
         clearPendingMedia: () => set(state => {
             if (state.pendingMedia.previewUrl) {
@@ -394,17 +394,17 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 const newPost = await apiClient.post('/schedule-post', postData);
-                
+
                 set(state => ({
                     scheduledPosts: [...state.scheduledPosts, newPost]
                         .sort((a, b) => new Date(a.schedule_time) - new Date(b.schedule_time))
                 }));
-                
+
                 // Clear pending media after successful scheduling
                 get().clearPendingMedia();
-                
+
                 get().setLoading(operation, false);
                 return newPost;
             } catch (error) {
@@ -424,13 +424,13 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 await apiClient.delete(`/schedule/${postId}`);
-                
+
                 set(state => ({
                     scheduledPosts: state.scheduledPosts.filter(post => post.id !== postId)
                 }));
-                
+
                 get().setLoading(operation, false);
             } catch (error) {
                 ErrorHandler.handleError(error, {
@@ -450,26 +450,26 @@ export const useAppStore = create(
             const operation = 'fetchPostDynamics';
             const currentSource = get().dataSource;
             const now = Date.now();
-            
+
             // Throttle requests to prevent rapid successive calls
             const lastFetchKey = `lastFetch_${operation}_${period}`;
             const lastFetchTime = get()[lastFetchKey] || 0;
             const minInterval = 2000; // Minimum 2 seconds between requests
-            
+
             if (now - lastFetchTime < minInterval) {
                 console.log(`PostDynamics: Throttling request (last fetch ${now - lastFetchTime}ms ago)`);
                 return get().analytics?.postDynamics || [];
             }
-            
+
             // Update last fetch time immediately to prevent concurrent calls
             set(state => ({ ...state, [lastFetchKey]: now }));
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let response;
-                
+
                 if (currentSource === 'api') {
                     try {
                         // Use proper analytics v2 API with date range
@@ -479,7 +479,7 @@ export const useAppStore = create(
                             from.setDate(from.getDate() - parseInt(periodDays.replace('h', '')) / 24);
                             return { from: from.toISOString(), to: to.toISOString() };
                         };
-                        
+
                         const { from, to } = getPeriodDateRange(period);
                         response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/post-dynamics?from=${from}&to=${to}`);
                         console.log('✅ Post dynamics loaded from real API');
@@ -495,7 +495,7 @@ export const useAppStore = create(
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getPostDynamics(channelId);
                 }
-                
+
                 set(state => ({
                     analytics: {
                         ...state.analytics,
@@ -503,7 +503,7 @@ export const useAppStore = create(
                         lastAnalyticsUpdate: Date.now()
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -522,13 +522,13 @@ export const useAppStore = create(
         fetchTopPosts: async (channelId = 'demo_channel', period = 'today', sortBy = 'views') => {
             const operation = 'fetchTopPosts';
             const currentSource = get().dataSource;
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let response;
-                
+
                 if (currentSource === 'api') {
                     try {
                         // Use proper analytics v2 API with date range
@@ -540,7 +540,7 @@ export const useAppStore = create(
                             from.setDate(from.getDate() - days);
                             return { from: from.toISOString(), to: to.toISOString() };
                         };
-                        
+
                         const { from, to } = getPeriodDateRange(period);
                         response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/top-posts?from=${from}&to=${to}&sort=${sortBy}`);
                         console.log('✅ Top posts loaded from real API');
@@ -555,7 +555,7 @@ export const useAppStore = create(
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getTopPosts(channelId, period, sortBy);
                 }
-                
+
                 set(state => ({
                     analytics: {
                         ...state.analytics,
@@ -563,7 +563,7 @@ export const useAppStore = create(
                         lastAnalyticsUpdate: Date.now()
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -583,13 +583,13 @@ export const useAppStore = create(
         fetchBestTime: async (channelId = 'demo_channel', timeframe = 'week', contentType = 'all') => {
             const operation = 'fetchBestTime';
             const currentSource = get().dataSource;
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let response;
-                
+
                 if (currentSource === 'api') {
                     try {
                         // Use proper analytics v2 API
@@ -606,7 +606,7 @@ export const useAppStore = create(
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getBestTime(channelId);
                 }
-                
+
                 set(state => ({
                     analytics: {
                         ...state.analytics,
@@ -614,7 +614,7 @@ export const useAppStore = create(
                         lastAnalyticsUpdate: Date.now()
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -634,13 +634,13 @@ export const useAppStore = create(
         fetchEngagementMetrics: async (period = '7d') => {
             const operation = 'fetchEngagementMetrics';
             const currentSource = get().dataSource;
-            
+
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 let response;
-                
+
                 if (currentSource === 'api') {
                     try {
                         // Use proper analytics v2 API with date range
@@ -651,7 +651,7 @@ export const useAppStore = create(
                             from.setDate(from.getDate() - days);
                             return { from: from.toISOString(), to: to.toISOString() };
                         };
-                        
+
                         const { from, to } = getPeriodDateRange(period);
                         response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?from=${from}&to=${to}`);
                         console.log('✅ Engagement metrics loaded from real API');
@@ -666,7 +666,7 @@ export const useAppStore = create(
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getEngagementMetrics(channelId);
                 }
-                
+
                 set(state => ({
                     analytics: {
                         ...state.analytics,
@@ -674,7 +674,7 @@ export const useAppStore = create(
                         lastAnalyticsUpdate: Date.now()
                     }
                 }));
-                
+
                 get().setLoading(operation, false);
                 return response;
             } catch (error) {
@@ -706,13 +706,13 @@ export const useAppStore = create(
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
-                
+
                 await apiClient.delete(`/channels/${channelId}`);
-                
+
                 set(state => ({
                     channels: state.channels.filter(channel => channel.id !== channelId)
                 }));
-                
+
                 get().setLoading(operation, false);
             } catch (error) {
                 ErrorHandler.handleError(error, {
@@ -728,20 +728,20 @@ export const useAppStore = create(
         // No longer allow switching to mock - redirect to demo login instead
         switchToMockWithUserConsent: async () => {
             console.log('❌ Frontend mock switching disabled - redirecting to demo login');
-            
+
             // Redirect to demo login instead of switching to frontend mock
             const demoLoginUrl = `/login?demo=true&redirect=${encodeURIComponent(window.location.pathname)}`;
             window.location.href = demoLoginUrl;
-            
+
             return false; // No switch occurred
         },
 
         retryApiConnection: async () => {
             console.log('🔄 User requested API retry');
-            
+
             // Clear previous errors
             get().clearError('fetchData');
-            
+
             try {
                 // Force retry with API source
                 await get().fetchData('api');

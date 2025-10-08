@@ -181,14 +181,14 @@ try:
     from tests.e2e.test_payment_workflows import TestSubscriptionPurchaseWorkflow
     from tests.e2e.test_analytics_workflows import TestAnalyticsDataCollectionWorkflow
     from tests.e2e.test_multi_service_integration import TestCompleteSystemIntegration
-    
+
     # Test mock patterns
     from unittest.mock import AsyncMock
-    
+
     print("✅ All E2E test classes imported successfully")
     print("✅ Mock infrastructure available")
     print("✅ E2E test infrastructure validated")
-    
+
 except ImportError as e:
     print(f"❌ Import error: {e}")
     exit(1)

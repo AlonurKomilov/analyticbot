@@ -6,7 +6,7 @@ Your AnalyticBot frontend has been significantly enhanced with comprehensive acc
 
 ## ✅ **Critical Issues Fixed**
 
-### 1. **Emoji Accessibility** 
+### 1. **Emoji Accessibility**
 - ✅ Added `aria-hidden="true"` to all decorative emojis across components
 - ✅ Fixed `AnalyticsDashboard.jsx`, `BestTimeRecommender.jsx`, `TopPostsTable.jsx`, `EnhancedMediaUploader.jsx`, `DiagnosticPanel.jsx`
 - ✅ Content emojis (part of actual text) remain accessible as intended

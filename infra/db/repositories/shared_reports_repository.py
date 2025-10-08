@@ -31,7 +31,7 @@ class AsyncPgSharedReportsRepository(SharedReportsRepository):
         """Create a new shared report"""
         query = """
         INSERT INTO shared_reports (
-            id, share_token, report_type, channel_id, 
+            id, share_token, report_type, channel_id,
             period, format, expires_at, created_at, access_count
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING id;
@@ -71,9 +71,9 @@ class AsyncPgSharedReportsRepository(SharedReportsRepository):
     async def get_shared_report(self, share_token: str) -> dict[str, Any] | None:
         """Get shared report by token"""
         query = """
-        SELECT id, share_token, report_type, channel_id, period, 
+        SELECT id, share_token, report_type, channel_id, period,
                format, created_at, expires_at, access_count
-        FROM shared_reports 
+        FROM shared_reports
         WHERE share_token = $1;
         """
 
@@ -103,7 +103,7 @@ class AsyncPgSharedReportsRepository(SharedReportsRepository):
     async def increment_access_count(self, share_token: str) -> None:
         """Increment access count for a shared report"""
         query = """
-        UPDATE shared_reports 
+        UPDATE shared_reports
         SET access_count = access_count + 1,
             last_accessed_at = $1
         WHERE share_token = $2;
@@ -143,7 +143,7 @@ class AsyncPgSharedReportsRepository(SharedReportsRepository):
     async def cleanup_expired(self) -> int:
         """Clean up expired shared reports"""
         query = """
-        DELETE FROM shared_reports 
+        DELETE FROM shared_reports
         WHERE expires_at < $1;
         """
 
@@ -169,12 +169,12 @@ class AsyncPgSharedReportsRepository(SharedReportsRepository):
     ) -> list[dict[str, Any]]:
         """Get shared reports for a specific channel"""
         query = """
-        SELECT id, share_token, report_type, channel_id, period, 
+        SELECT id, share_token, report_type, channel_id, period,
                format, created_at, expires_at, access_count
-        FROM shared_reports 
-        WHERE channel_id = $1 
+        FROM shared_reports
+        WHERE channel_id = $1
         AND expires_at > $2
-        ORDER BY created_at DESC 
+        ORDER BY created_at DESC
         LIMIT $3;
         """
 

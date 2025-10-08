@@ -15,7 +15,7 @@ const HelpPage = () => {
                 <Typography variant="body1" color="text.secondary">
                     Find answers to frequently asked questions and get support.
                 </Typography>
-                
+
                 {/* TODO: Implement help content */}
                 <Box sx={{ mt: 3 }}>
                     <Typography variant="body2" color="text.secondary" fontStyle="italic">

@@ -13,7 +13,7 @@ const SystemConfigTab = () => {
         <>
             <Typography variant="h6" gutterBottom>System Configuration</Typography>
             <Alert severity="info">
-                System configuration management coming soon. This will allow runtime configuration 
+                System configuration management coming soon. This will allow runtime configuration
                 of security settings, feature flags, and operational parameters.
             </Alert>
         </>

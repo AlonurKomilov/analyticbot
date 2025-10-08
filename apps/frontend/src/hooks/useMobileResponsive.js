@@ -1,6 +1,6 @@
 /**
  * Mobile Responsive Hooks
- * 
+ *
  * Custom hooks for enhanced mobile and tablet interactions
  */
 
@@ -13,19 +13,19 @@ import { useTheme, useMediaQuery } from '@mui/material';
  */
 export const useEnhancedResponsive = () => {
   const theme = useTheme();
-  
+
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const isLandscape = useMediaQuery('(orientation: landscape)');
   const isPortrait = useMediaQuery('(orientation: portrait)');
-  
+
   // Device type detection
   const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
-  
+
   // Touch capability detection
   const isTouchDevice = useMediaQuery('(hover: none)');
-  
+
   return {
     isMobile,
     isTablet,
@@ -34,7 +34,7 @@ export const useEnhancedResponsive = () => {
     isPortrait,
     isTouchDevice,
     deviceType,
-    
+
     // Responsive values
     getValue: (config) => {
       if (typeof config === 'object') {
@@ -61,10 +61,10 @@ export const useSwipeGesture = (options = {}) => {
     threshold = 50,
     preventDefault = false
   } = options;
-  
+
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
-  
+
   const handleTouchStart = useCallback((e) => {
     if (preventDefault) e.preventDefault();
     setTouchEnd(null);
@@ -73,7 +73,7 @@ export const useSwipeGesture = (options = {}) => {
       y: e.targetTouches[0].clientY
     });
   }, [preventDefault]);
-  
+
   const handleTouchMove = useCallback((e) => {
     if (preventDefault) e.preventDefault();
     setTouchEnd({
@@ -81,16 +81,16 @@ export const useSwipeGesture = (options = {}) => {
       y: e.targetTouches[0].clientY
     });
   }, [preventDefault]);
-  
+
   const handleTouchEnd = useCallback((e) => {
     if (!touchStart || !touchEnd) return;
-    
+
     const deltaX = touchStart.x - touchEnd.x;
     const deltaY = touchStart.y - touchEnd.y;
-    
+
     const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
     const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
-    
+
     if (isHorizontalSwipe && Math.abs(deltaX) > threshold) {
       if (deltaX > 0) {
         onSwipeLeft?.();
@@ -98,7 +98,7 @@ export const useSwipeGesture = (options = {}) => {
         onSwipeRight?.();
       }
     }
-    
+
     if (isVerticalSwipe && Math.abs(deltaY) > threshold) {
       if (deltaY > 0) {
         onSwipeUp?.();
@@ -107,7 +107,7 @@ export const useSwipeGesture = (options = {}) => {
       }
     }
   }, [touchStart, touchEnd, threshold, onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown]);
-  
+
   return {
     onTouchStart: handleTouchStart,
     onTouchMove: handleTouchMove,
@@ -122,26 +122,26 @@ export const useSwipeGesture = (options = {}) => {
 export const useMobileDrawer = (initialOpen = false) => {
   const [isOpen, setIsOpen] = useState(initialOpen);
   const { isMobile } = useEnhancedResponsive();
-  
+
   const open = useCallback(() => {
     setIsOpen(true);
   }, []);
-  
+
   const close = useCallback(() => {
     setIsOpen(false);
   }, []);
-  
+
   const toggle = useCallback(() => {
     setIsOpen(prev => !prev);
   }, []);
-  
+
   // Auto-close on desktop
   useEffect(() => {
     if (!isMobile && isOpen) {
       setIsOpen(false);
     }
   }, [isMobile, isOpen]);
-  
+
   return {
     isOpen,
     open,
@@ -160,7 +160,7 @@ export const useMobileDrawer = (initialOpen = false) => {
  */
 export const useTouchFriendlyButton = (baseProps = {}) => {
   const { isMobile, isTablet, isTouchDevice } = useEnhancedResponsive();
-  
+
   const enhancedProps = {
     ...baseProps,
     size: isMobile || isTablet ? 'large' : baseProps.size || 'medium',
@@ -170,7 +170,7 @@ export const useTouchFriendlyButton = (baseProps = {}) => {
       ...baseProps.sx
     }
   };
-  
+
   return enhancedProps;
 };
 
@@ -180,7 +180,7 @@ export const useTouchFriendlyButton = (baseProps = {}) => {
  */
 export const useResponsiveGrid = (config = {}) => {
   const { deviceType, isPortrait } = useEnhancedResponsive();
-  
+
   const defaultConfigs = {
     mobile: {
       columns: 1,
@@ -198,12 +198,12 @@ export const useResponsiveGrid = (config = {}) => {
       direction: 'row'
     }
   };
-  
+
   const currentConfig = {
     ...defaultConfigs[deviceType],
     ...config[deviceType]
   };
-  
+
   return {
     ...currentConfig,
     deviceType
@@ -216,17 +216,17 @@ export const useResponsiveGrid = (config = {}) => {
  */
 export const useMobileSpacing = () => {
   const { getValue } = useEnhancedResponsive();
-  
+
   const getSpacing = useCallback((config) => {
     if (typeof config === 'number') return config;
-    
+
     return getValue({
       mobile: config.xs || config.mobile || 1,
       tablet: config.sm || config.tablet || 2,
       desktop: config.md || config.desktop || 3
     });
   }, [getValue]);
-  
+
   return { getSpacing };
 };
 
@@ -236,7 +236,7 @@ export const useMobileSpacing = () => {
  */
 export const useAdaptiveTypography = () => {
   const { deviceType } = useEnhancedResponsive();
-  
+
   const getVariant = useCallback((baseVariant) => {
     const variants = {
       mobile: {
@@ -264,10 +264,10 @@ export const useAdaptiveTypography = () => {
         h6: 'h6'
       }
     };
-    
+
     return variants[deviceType][baseVariant] || baseVariant;
   }, [deviceType]);
-  
+
   return { getVariant };
 };
 
@@ -278,23 +278,23 @@ export const useAdaptiveTypography = () => {
 export const useOrientationChange = (callback, delay = 300) => {
   const { isLandscape, isPortrait } = useEnhancedResponsive();
   const timeoutRef = useRef(null);
-  
+
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    
+
     timeoutRef.current = setTimeout(() => {
       callback({ isLandscape, isPortrait });
     }, delay);
-    
+
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
   }, [isLandscape, isPortrait, callback, delay]);
-  
+
   return { isLandscape, isPortrait };
 };
 

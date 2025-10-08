@@ -12,7 +12,6 @@ from aiogram_i18n import I18nContext
 
 from apps.bot.keyboards.analytics import kb_alert_types, kb_alerts_main, kb_confirmation
 from apps.bot.middlewares.throttle import throttle
-from apps.shared.factory import get_repository_factory
 from config.settings import Settings
 from core.repositories.alert_repository import AlertSubscription, AlertSubscriptionRepository
 

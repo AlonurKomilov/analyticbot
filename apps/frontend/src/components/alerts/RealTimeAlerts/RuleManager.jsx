@@ -20,10 +20,10 @@ import {
 
 /**
  * RuleManager - Memoized component for alert rule configuration and management
- * 
+ *
  * Handles CRUD operations for alert rules, threshold settings, validation,
  * and preview functionality. Optimized for rule management performance.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Array} props.alertRules - Array of alert rule objects
  * @param {boolean} props.open - Whether the settings dialog is open
@@ -31,12 +31,12 @@ import {
  * @param {Function} props.onToggleRule - Callback to toggle rule enabled state
  * @param {Function} props.onAddRule - Callback to open new rule dialog
  */
-const RuleManager = React.memo(({ 
-  alertRules = [], 
-  open = false, 
+const RuleManager = React.memo(({
+  alertRules = [],
+  open = false,
   onClose,
   onToggleRule,
-  onAddRule 
+  onAddRule
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

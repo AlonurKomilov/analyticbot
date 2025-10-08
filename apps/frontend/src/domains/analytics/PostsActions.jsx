@@ -87,7 +87,7 @@ export const PostActions = ({ row, onAction }) => {
                     </ListItemIcon>
                     <ListItemText primary="Download Report" />
                 </MenuItem>
-                <MenuItem 
+                <MenuItem
                     onClick={() => handleAction('delete')}
                     sx={{ color: 'error.main' }}
                 >
@@ -116,24 +116,24 @@ export const PostBulkActions = ({ selectedRows, onBulkAction }) => {
     return (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <Tooltip title="Download Selected Reports">
-                <IconButton 
-                    size="small" 
+                <IconButton
+                    size="small"
                     onClick={() => handleBulkAction('download')}
                 >
                     <DownloadIcon fontSize="small" />
                 </IconButton>
             </Tooltip>
             <Tooltip title="View Analytics for Selected">
-                <IconButton 
-                    size="small" 
+                <IconButton
+                    size="small"
                     onClick={() => handleBulkAction('analytics')}
                 >
                     <AnalyticsIcon fontSize="small" />
                 </IconButton>
             </Tooltip>
             <Tooltip title="Delete Selected Posts">
-                <IconButton 
-                    size="small" 
+                <IconButton
+                    size="small"
                     onClick={() => handleBulkAction('delete')}
                     sx={{ color: 'error.main' }}
                 >

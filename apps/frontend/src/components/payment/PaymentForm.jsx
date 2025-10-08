@@ -6,7 +6,7 @@ import {
   useStripe,
   useElements
 } from '@stripe/react-stripe-js';
-import { 
+import {
   Alert,
   Button,
   Card,
@@ -43,16 +43,16 @@ const CARD_ELEMENT_OPTIONS = {
   hidePostalCode: false,
 };
 
-const PaymentFormContent = ({ 
-  planId, 
-  userId, 
-  onSuccess, 
+const PaymentFormContent = ({
+  planId,
+  userId,
+  onSuccess,
   onError,
-  trialDays = null 
+  trialDays = null
 }) => {
   const stripe = useStripe();
   const elements = useElements();
-  
+
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -61,7 +61,7 @@ const PaymentFormContent = ({
   const handleCardChange = (event) => {
     setError(null);
     setCardComplete(event.complete);
-    
+
     if (event.error) {
       setError(event.error.message);
     }
@@ -115,7 +115,7 @@ const PaymentFormContent = ({
         const { error: confirmError } = await stripe.confirmCardPayment(
           response.client_secret
         );
-        
+
         if (confirmError) {
           throw new Error(confirmError.message);
         } else {

@@ -1,6 +1,6 @@
 /**
  * UsersTableDemo Component
- * 
+ *
  * Extracted from DataTablesShowcase - showcases the Enhanced User Management Table
  * with user administration features and bulk operations
  */
@@ -131,7 +131,7 @@ const UsersTableDemo = () => {
                     Enhanced User Management Table
                 </Typography>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                    Administrative interface for user management with bulk operations, role management, 
+                    Administrative interface for user management with bulk operations, role management,
                     and detailed user information. Includes suspension workflows and audit capabilities.
                 </Typography>
             </Box>

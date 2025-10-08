@@ -23,7 +23,7 @@ print_test_result() {
     local test_name=$1
     local result=$2
     TESTS_RUN=$((TESTS_RUN + 1))
-    
+
     if [ "$result" = "PASS" ]; then
         echo -e "${GREEN}✓${NC} $test_name"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -36,9 +36,9 @@ print_test_result() {
 run_test() {
     local test_name=$1
     local test_command=$2
-    
+
     echo -e "${BLUE}Testing:${NC} $test_name"
-    
+
     if eval "$test_command" > /dev/null 2>&1; then
         print_test_result "$test_name" "PASS"
         return 0
@@ -219,7 +219,7 @@ if [ $TESTS_FAILED -eq 0 ]; then
     echo -e "${GREEN}🎉 EXCELLENT! Complete mock/real separation achieved!${NC}"
     echo ""
     echo "✅ Legacy patterns eliminated from components"
-    echo "✅ New architecture properly implemented"  
+    echo "✅ New architecture properly implemented"
     echo "✅ Data source integration working"
     echo "✅ Store using centralized mock service"
     echo "✅ Import/export patterns clean"

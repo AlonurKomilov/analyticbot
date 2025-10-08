@@ -1,6 +1,6 @@
 /**
  * 👤 User Profile Page
- * 
+ *
  * Comprehensive user profile management with account settings,
  * password change, and profile information editing.
  */
@@ -130,7 +130,7 @@ const ProfilePage = () => {
         try {
             // Simulate API call to update profile
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             // Update user context
             updateUser({
                 ...user,
@@ -161,7 +161,7 @@ const ProfilePage = () => {
         try {
             // Simulate API call to change password
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             setSuccess('Password changed successfully!');
             setPasswordData({
                 currentPassword: '',
@@ -207,11 +207,11 @@ const ProfilePage = () => {
         <Container maxWidth="md" sx={{ py: 4 }}>
             {/* Header */}
             <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Avatar 
-                    sx={{ 
-                        width: 80, 
-                        height: 80, 
-                        mx: 'auto', 
+                <Avatar
+                    sx={{
+                        width: 80,
+                        height: 80,
+                        mx: 'auto',
                         mb: 2,
                         bgcolor: 'primary.main',
                         fontSize: '2rem'
@@ -223,15 +223,15 @@ const ProfilePage = () => {
                     {user?.full_name || user?.username || 'User Profile'}
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mb: 2 }}>
-                    <Chip 
-                        label={user?.role || 'User'} 
-                        color="primary" 
+                    <Chip
+                        label={user?.role || 'User'}
+                        color="primary"
                         variant="outlined"
                         icon={<BadgeIcon />}
                     />
-                    <Chip 
-                        label={user?.status || 'Active'} 
-                        color="success" 
+                    <Chip
+                        label={user?.status || 'Active'}
+                        color="success"
                         variant="outlined"
                     />
                 </Box>

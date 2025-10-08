@@ -1,6 +1,6 @@
 /**
  * Centralized Design Tokens
- * 
+ *
  * This file establishes consistent design patterns across the entire application.
  * All components should reference these tokens instead of hardcoded values.
  */
@@ -107,23 +107,23 @@ export const DESIGN_TOKENS = {
         large: { height: 48, fontSize: '1.125rem', padding: '12px 20px' }
       }
     },
-    
+
     card: {
       variants: {
-        default: { 
-          elevation: 1, 
-          borderRadius: 12, 
-          padding: '16px' 
+        default: {
+          elevation: 1,
+          borderRadius: 12,
+          padding: '16px'
         },
-        elevated: { 
-          elevation: 4, 
-          borderRadius: 12, 
+        elevated: {
+          elevation: 4,
+          borderRadius: 12,
           padding: '20px',
           border: '1px solid rgba(255, 255, 255, 0.1)'
         },
-        interactive: { 
-          elevation: 2, 
-          borderRadius: 12, 
+        interactive: {
+          elevation: 2,
+          borderRadius: 12,
           padding: '16px',
           cursor: 'pointer',
           '&:hover': { elevation: 6, transform: 'translateY(-2px)' }
@@ -202,7 +202,7 @@ export const DESIGN_TOKENS = {
       xl: '1280px',
       '2xl': '1536px'
     },
-    
+
     borderRadius: {
       none: '0px',
       sm: '4px',
@@ -212,7 +212,7 @@ export const DESIGN_TOKENS = {
       '2xl': '24px',
       full: '9999px'
     },
-    
+
     container: {
       padding: {
         xs: '16px',
@@ -237,7 +237,7 @@ export const DESIGN_TOKENS = {
       normal: '250ms',
       slow: '400ms'
     },
-    
+
     easing: {
       ease: 'cubic-bezier(0.4, 0, 0.2, 1)',
       easeIn: 'cubic-bezier(0.4, 0, 1, 1)',

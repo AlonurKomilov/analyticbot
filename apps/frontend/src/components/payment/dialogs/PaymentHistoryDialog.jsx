@@ -1,6 +1,6 @@
 /**
  * PaymentHistoryDialog Component
- * 
+ *
  * Extracted from SubscriptionDashboard - displays detailed payment history
  * in a modal dialog with filtering and export options
  */
@@ -33,10 +33,10 @@ import {
 import { Button } from '../../common';
 import { formatCurrency, formatDate } from '../utils/paymentUtils.js';
 
-const PaymentHistoryDialog = ({ 
-  open, 
-  onClose, 
-  paymentHistory = [] 
+const PaymentHistoryDialog = ({
+  open,
+  onClose,
+  paymentHistory = []
 }) => {
   const getPaymentStatusIcon = (status) => {
     switch (status) {
@@ -81,7 +81,7 @@ const PaymentHistoryDialog = ({
           </IconButton>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent sx={{ minHeight: 400 }}>
         {paymentHistory.length === 0 ? (
           <Box textAlign="center" py={4}>
@@ -107,7 +107,7 @@ const PaymentHistoryDialog = ({
                         size="small"
                       />
                       <Tooltip title="Download Invoice">
-                        <IconButton 
+                        <IconButton
                           size="small"
                           onClick={() => handleDownloadReceipt(payment.id)}
                         >

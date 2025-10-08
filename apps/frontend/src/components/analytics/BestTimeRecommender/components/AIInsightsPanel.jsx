@@ -14,13 +14,13 @@ import { getAIInsightIcon } from '../utils/timeUtils.js';
 const AIInsightsPanel = ({ aiInsights }) => {
     if (!aiInsights || aiInsights.length === 0) {
         return (
-            <Box sx={{ 
-                textAlign: 'center', 
+            <Box sx={{
+                textAlign: 'center',
                 p: 4,
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
                 height: 300,
                 color: 'text.secondary'
             }}>

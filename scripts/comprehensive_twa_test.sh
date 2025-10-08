@@ -264,7 +264,7 @@ echo "  Network: http://173.212.236.167:3000"
 echo
 echo -e "${BLUE}🎯 Key Features Implemented:${NC}"
 echo "  • Professional data source toggle (API/Mock)"
-echo "  • Real-time API status checking"  
+echo "  • Real-time API status checking"
 echo "  • Persistent user preferences"
 echo "  • Professional Material-UI dashboard"
 echo "  • 35K+ mock analytics data"

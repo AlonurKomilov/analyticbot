@@ -36,7 +36,7 @@ import { useNavigation } from './NavigationProvider';
 
 /**
  * Global Search Dialog Component
- * 
+ *
  * Provides comprehensive search across:
  * - Navigation routes
  * - Recent pages
@@ -45,14 +45,14 @@ import { useNavigation } from './NavigationProvider';
  */
 const GlobalSearchDialog = ({ open, onClose }) => {
     const navigate = useNavigate();
-    const { 
-        recentPages, 
-        bookmarks, 
-        searchHistory, 
+    const {
+        recentPages,
+        bookmarks,
+        searchHistory,
         addSearchHistory,
-        addBookmark 
+        addBookmark
     } = useNavigation();
-    
+
     const [query, setQuery] = useState('');
 
     // Define all searchable routes and actions
@@ -159,8 +159,8 @@ const GlobalSearchDialog = ({ open, onClose }) => {
         }
 
         const lowerQuery = query.toLowerCase();
-        
-        const matchingRoutes = allRoutes.filter(route => 
+
+        const matchingRoutes = allRoutes.filter(route =>
             route.title.toLowerCase().includes(lowerQuery) ||
             route.description.toLowerCase().includes(lowerQuery) ||
             route.keywords.some(keyword => keyword.toLowerCase().includes(lowerQuery))
@@ -192,14 +192,14 @@ const GlobalSearchDialog = ({ open, onClose }) => {
         if (addSearchHistory && query.trim()) {
             addSearchHistory(query);
         }
-        
+
         if (item.path) {
             navigate(item.path);
         } else if (item.query) {
             setQuery(item.query);
             return; // Don't close dialog for history items
         }
-        
+
         onClose();
         setQuery('');
     };
@@ -218,12 +218,12 @@ const GlobalSearchDialog = ({ open, onClose }) => {
 
         return (
             <Box sx={{ mb: 2 }}>
-                <Typography 
-                    variant="caption" 
-                    sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 1, 
+                <Typography
+                    variant="caption"
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
                         mb: 1,
                         color: 'text.secondary',
                         fontWeight: 600,
@@ -234,11 +234,11 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                     <SectionIcon fontSize="small" />
                     {title}
                 </Typography>
-                
+
                 <List dense>
                     {items.map((item, index) => {
                         const ItemIcon = item.icon || (type === 'history' ? HistoryIcon : LaunchIcon);
-                        
+
                         return (
                             <ListItem key={`${type}-${index}`} disablePadding>
                                 <ListItemButton
@@ -253,7 +253,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                                     <ListItemIcon sx={{ minWidth: 36 }}>
                                         <ItemIcon fontSize="small" />
                                     </ListItemIcon>
-                                    
+
                                     <ListItemText
                                         primary={item.title || item.query}
                                         secondary={item.description || item.path}
@@ -266,12 +266,12 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                                             color: 'text.secondary'
                                         }}
                                     />
-                                    
+
                                     {type === 'routes' && (
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <BookmarkIcon
                                                 fontSize="small"
-                                                sx={{ 
+                                                sx={{
                                                     cursor: 'pointer',
                                                     color: 'text.secondary',
                                                     '&:hover': { color: 'primary.main' }
@@ -280,7 +280,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                                             />
                                         </Box>
                                     )}
-                                    
+
                                     {item.timestamp && (
                                         <Chip
                                             label="Recent"
@@ -314,7 +314,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
             <DialogTitle sx={{ pb: 1, fontWeight: 600 }}>
                 Search Navigation
             </DialogTitle>
-            
+
             <DialogContent>
                 <TextField
                     fullWidth
@@ -340,27 +340,27 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                         icon={LaunchIcon}
                         type="routes"
                     />
-                    
+
                     {filteredResults.recent.length > 0 && <Divider sx={{ my: 2 }} />}
-                    
+
                     <ResultSection
                         title="Recent Pages"
                         items={filteredResults.recent}
                         icon={HistoryIcon}
                         type="recent"
                     />
-                    
+
                     {filteredResults.bookmarks.length > 0 && <Divider sx={{ my: 2 }} />}
-                    
+
                     <ResultSection
                         title="Bookmarks"
                         items={filteredResults.bookmarks}
                         icon={BookmarkIcon}
                         type="bookmarks"
                     />
-                    
+
                     {filteredResults.history.length > 0 && <Divider sx={{ my: 2 }} />}
-                    
+
                     <ResultSection
                         title="Search History"
                         items={filteredResults.history}

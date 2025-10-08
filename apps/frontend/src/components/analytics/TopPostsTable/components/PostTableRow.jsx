@@ -11,18 +11,18 @@ import PostMetricBadge from './PostMetricBadge.jsx';
 import PostActionMenu from './PostActionMenu.jsx';
 import { formatNumber, formatDate, calculateEngagementRate } from '../utils/postTableUtils.js';
 
-const PostTableRow = ({ 
-    post, 
-    index, 
-    anchorEl, 
-    selectedPostId, 
-    onMenuClick, 
-    onMenuClose 
+const PostTableRow = ({
+    post,
+    index,
+    anchorEl,
+    selectedPostId,
+    onMenuClick,
+    onMenuClose
 }) => {
     return (
-        <TableRow 
+        <TableRow
             key={post.id}
-            sx={{ 
+            sx={{
                 '&:nth-of-type(odd)': { bgcolor: 'action.hover' },
                 '&:hover': { bgcolor: 'action.selected' }
             }}
@@ -32,20 +32,20 @@ const PostTableRow = ({
                     #{index + 1}
                 </Typography>
             </TableCell>
-            
+
             <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar 
-                        src={post.thumbnail} 
+                    <Avatar
+                        src={post.thumbnail}
                         alt={post.title || 'Post thumbnail'}
                         sx={{ width: 40, height: 40 }}
                     >
                         📝
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
+                        <Typography
+                            variant="subtitle2"
+                            sx={{
                                 fontWeight: 'bold',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -57,10 +57,10 @@ const PostTableRow = ({
                         >
                             {post.title || 'Untitled Post'}
                         </Typography>
-                        <Typography 
-                            variant="caption" 
+                        <Typography
+                            variant="caption"
                             color="primary.main"
-                            sx={{ 
+                            sx={{
                                 display: 'inline-block',
                                 px: 1,
                                 py: 0.25,
@@ -74,35 +74,35 @@ const PostTableRow = ({
                     </Box>
                 </Box>
             </TableCell>
-            
+
             <TableCell align="center">
                 <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                     {formatNumber(post.views || 0)}
                 </Typography>
             </TableCell>
-            
+
             <TableCell align="center">
                 <Typography variant="body2">
                     {formatNumber(post.likes || 0)}
                 </Typography>
             </TableCell>
-            
+
             <TableCell align="center">
                 <Typography variant="body2">
                     {formatNumber(post.shares || 0)}
                 </Typography>
             </TableCell>
-            
+
             <TableCell align="center">
                 <Typography variant="body2">
                     {formatNumber(post.comments || 0)}
                 </Typography>
             </TableCell>
-            
+
             <TableCell align="center">
-                <Typography 
-                    variant="body2" 
-                    sx={{ 
+                <Typography
+                    variant="body2"
+                    sx={{
                         fontWeight: 'bold',
                         color: parseFloat(calculateEngagementRate(post)) > 5 ? 'success.main' : 'text.primary'
                     }}
@@ -110,11 +110,11 @@ const PostTableRow = ({
                     {calculateEngagementRate(post)}%
                 </Typography>
             </TableCell>
-            
+
             <TableCell align="center">
                 <PostMetricBadge post={post} />
             </TableCell>
-            
+
             <TableCell align="center">
                 <Tooltip title={new Date(post.created_at).toLocaleString()}>
                     <Typography variant="caption" color="text.secondary">
@@ -122,7 +122,7 @@ const PostTableRow = ({
                     </Typography>
                 </Tooltip>
             </TableCell>
-            
+
             <TableCell align="center">
                 <PostActionMenu
                     post={post}

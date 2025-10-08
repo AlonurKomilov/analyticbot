@@ -1,6 +1,6 @@
 /**
  * SubscriptionCard Component
- * 
+ *
  * Extracted from SubscriptionDashboard - displays subscription plan details,
  * status, billing information, and quick actions
  */
@@ -25,10 +25,10 @@ import {
 } from '@mui/icons-material';
 import { formatCurrency, formatDate, getStatusColor, getStatusIcon, calculateDaysUntilNextBilling } from '../utils/paymentUtils.js';
 
-const SubscriptionCard = ({ 
-  subscription, 
-  onHistoryClick, 
-  onSettingsClick 
+const SubscriptionCard = ({
+  subscription,
+  onHistoryClick,
+  onSettingsClick
 }) => {
   const daysUntilNextBilling = calculateDaysUntilNextBilling(subscription.current_period_end);
   const isTrialing = subscription.status === 'trialing';
@@ -84,7 +84,7 @@ const SubscriptionCard = ({
             {isTrialing && (
               <Alert severity="info" sx={{ mb: 2 }}>
                 <Typography variant="body2">
-                  You're in your free trial period. 
+                  You're in your free trial period.
                   {daysUntilNextBilling > 0 && ` ${daysUntilNextBilling} days remaining.`}
                 </Typography>
               </Alert>
@@ -101,7 +101,7 @@ const SubscriptionCard = ({
             {isCanceled && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 <Typography variant="body2">
-                  Your subscription has been canceled. 
+                  Your subscription has been canceled.
                   {subscription.current_period_end && ` Access ends on ${formatDate(subscription.current_period_end)}.`}
                 </Typography>
               </Alert>
@@ -113,7 +113,7 @@ const SubscriptionCard = ({
               <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                 Billing Information
               </Typography>
-              
+
               {subscription.current_period_start && (
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <CalendarToday sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -125,7 +125,7 @@ const SubscriptionCard = ({
 
               {!isCanceled && subscription.current_period_end && (
                 <Typography variant="body2" color="text.secondary">
-                  Next billing: {formatDate(subscription.current_period_end)} 
+                  Next billing: {formatDate(subscription.current_period_end)}
                   {daysUntilNextBilling > 0 && ` (${daysUntilNextBilling} days)`}
                 </Typography>
               )}

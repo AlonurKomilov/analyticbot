@@ -29,6 +29,7 @@ import pandas as pd
 
 try:
     from jinja2 import Environment, FileSystemLoader
+
     JINJA2_AVAILABLE = True
 except ImportError:
     JINJA2_AVAILABLE = False
@@ -41,17 +42,24 @@ schedule = None
 
 try:
     import schedule
+
     SCHEDULE_AVAILABLE = True
 except ImportError:
-    # Simple fallback - we'll handle the types at usage sites  
+    # Simple fallback - we'll handle the types at usage sites
     pass
 
 # PDF generation dependencies (optional)
 try:
-    from reportlab.lib.pagesizes import letter as _letter
-    from reportlab.lib.styles import ParagraphStyle as _ParagraphStyle, getSampleStyleSheet as _getSampleStyleSheet
-    from reportlab.platypus import SimpleDocTemplate as _SimpleDocTemplate, Table as _Table, TableStyle as _TableStyle, Paragraph as _Paragraph, Spacer as _Spacer
     from reportlab.lib import colors as _colors
+    from reportlab.lib.pagesizes import letter as _letter
+    from reportlab.lib.styles import ParagraphStyle as _ParagraphStyle
+    from reportlab.lib.styles import getSampleStyleSheet as _getSampleStyleSheet
+    from reportlab.platypus import Paragraph as _Paragraph
+    from reportlab.platypus import SimpleDocTemplate as _SimpleDocTemplate
+    from reportlab.platypus import Spacer as _Spacer
+    from reportlab.platypus import Table as _Table
+    from reportlab.platypus import TableStyle as _TableStyle
+
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -59,6 +67,7 @@ except ImportError:
 # Excel generation dependencies (optional)
 try:
     import openpyxl  # type: ignore
+
     OPENPYXL_AVAILABLE = True
 except ImportError:
     OPENPYXL_AVAILABLE = False
@@ -174,13 +183,15 @@ class AutomatedReportingSystem:
         """Generate PDF report"""
         try:
             if not REPORTLAB_AVAILABLE:
-                return {"error": "ReportLab not available for PDF generation. Install with: pip install reportlab"}
+                return {
+                    "error": "ReportLab not available for PDF generation. Install with: pip install reportlab"
+                }
 
             # Import locally to ensure they're available
+            from reportlab.lib import colors
             from reportlab.lib.pagesizes import letter
             from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-            from reportlab.lib import colors
+            from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
             pagesize = letter
             doc = SimpleDocTemplate(str(output_path), pagesize=pagesize)
@@ -267,7 +278,9 @@ class AutomatedReportingSystem:
         """Generate Excel report"""
         try:
             if not OPENPYXL_AVAILABLE:
-                return {"error": "OpenPyXL not available for Excel generation. Install with: pip install openpyxl"}
+                return {
+                    "error": "OpenPyXL not available for Excel generation. Install with: pip install openpyxl"
+                }
 
             # Import locally to ensure they're available
             import openpyxl  # type: ignore
@@ -286,7 +299,10 @@ class AutomatedReportingSystem:
                 cell.font = Font(bold=True)  # type: ignore
                 if Fill:
                     from openpyxl.styles import PatternFill  # type: ignore
-                    cell.fill = PatternFill(start_color="CCCCCC", end_color="CCCCCC", fill_type="solid")  # type: ignore
+
+                    cell.fill = PatternFill(
+                        start_color="CCCCCC", end_color="CCCCCC", fill_type="solid"
+                    )  # type: ignore
 
             for row_num, row_data in enumerate(data.iterrows(), 2):
                 for col_num, value in enumerate(row_data[1], 1):
@@ -302,7 +318,9 @@ class AutomatedReportingSystem:
                             if len(str(cell.value)) > max_length:
                                 max_length = len(str(cell.value))
                         except Exception as e:
-                            logger.warning(f"Error processing cell value in column {column_letter}: {e}")
+                            logger.warning(
+                                f"Error processing cell value in column {column_letter}: {e}"
+                            )
                     adjusted_width = min(max_length + 2, 50)
                     worksheet.column_dimensions[column_letter].width = adjusted_width  # type: ignore
                 except Exception as e:
@@ -571,7 +589,7 @@ class AutomatedReportingSystem:
                     schedule.every().monday.at("09:00").do(generate_scheduled_report)
                 elif schedule_time.lower() == "monthly":
                     # Use monthly scheduling if available
-                    if hasattr(schedule.every(), 'month'):
+                    if hasattr(schedule.every(), "month"):
                         schedule.every().month.do(generate_scheduled_report)  # type: ignore[attr-defined]
                     else:
                         # Fallback to daily if month is not available
@@ -597,7 +615,9 @@ class AutomatedReportingSystem:
             return {
                 "status": "scheduled",
                 "schedule_name": schedule_name,
-                "next_run": str(schedule.jobs[-1].next_run) if schedule and schedule.jobs else "Unknown",
+                "next_run": str(schedule.jobs[-1].next_run)
+                if schedule and schedule.jobs
+                else "Unknown",
             }
 
         except Exception as e:
@@ -643,11 +663,11 @@ class AutomatedReportingSystem:
             # Email body
             body = f"""
             Automated Report Generated
-            
+
             Please find the attached report generated by AnalyticBot.
-            
+
             Generated at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-            
+
             Best regards,
             AnalyticBot Reporting System
             """

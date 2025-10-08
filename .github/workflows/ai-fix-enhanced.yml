@@ -65,7 +65,7 @@ jobs:
           FIX_TYPE="all"
           TARGET_BRANCH=""
           CREATE_PR="true"
-          
+
           # Check trigger conditions
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             SHOULD_RUN="true"
@@ -87,7 +87,7 @@ jobs:
               CREATE_PR="false"
             fi
           fi
-          
+
           echo "should_run=$SHOULD_RUN" >> $GITHUB_OUTPUT
           echo "fix_type=$FIX_TYPE" >> $GITHUB_OUTPUT
           echo "target_branch=$TARGET_BRANCH" >> $GITHUB_OUTPUT
@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: should-run
     if: needs.should-run.outputs.should_run == 'true'
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -107,12 +107,12 @@ jobs:
           POSTGRES_DB: analytic_bot
           POSTGRES_USER: analytic
           POSTGRES_PASSWORD: change_me
-        ports: 
+        ports:
           - "5432:5432"
         options: >-
           --health-cmd="pg_isready -U analytic -d analytic_bot"
-          --health-interval=5s 
-          --health-timeout=3s 
+          --health-interval=5s
+          --health-timeout=3s
           --health-retries=30
 
       redis:
@@ -133,8 +133,8 @@ jobs:
           script: |
             const login = context.payload.comment.user.login;
             const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
-              owner: context.repo.owner, 
-              repo: context.repo.repo, 
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               username: login
             });
             if (!['admin','maintain','write'].includes(data.permission)) {
@@ -172,13 +172,13 @@ jobs:
       - name: Wait for services
         run: |
           echo "Waiting for PostgreSQL..."
-          for i in {1..60}; do 
+          for i in {1..60}; do
             pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" && break
             sleep 2
           done
-          
+
           echo "Waiting for Redis..."
-          for i in {1..30}; do 
+          for i in {1..30}; do
             redis-cli -h localhost -p 6379 ping && break
             sleep 1
           done
@@ -196,46 +196,46 @@ jobs:
         if: needs.should-run.outputs.fix_type == 'all' || needs.should-run.outputs.fix_type == 'formatting'
         run: |
           echo "🎨 Applying code formatting fixes..."
-          
+
           # Remove unused imports and variables
           autoflake --remove-all-unused-imports --remove-unused-variables --in-place --recursive . || true
-          
+
           # Fix Python syntax to newer versions
           find . -name "*.py" -not -path "./venv/*" -not -path "./.git/*" -exec pyupgrade --py311-plus {} \; || true
-          
+
           # Sort imports
           isort . --profile black || true
-          
+
           # Format code with Black
           black . || true
-          
+
           # Format with Ruff
           ruff format . || true
-          
+
           echo "✅ Code formatting completed"
 
       - name: 2️⃣ Import and Structure Fixes
         if: needs.should-run.outputs.fix_type == 'all' || needs.should-run.outputs.fix_type == 'imports'
         run: |
           echo "📦 Applying import and structure fixes..."
-          
+
           # Fix import organization
           ruff check --select I --fix . || true
-          
+
           # Fix common code issues
           ruff check --fix . || true
-          
+
           echo "✅ Import fixes completed"
 
       - name: 3️⃣ Type Hint Enhancements
         if: needs.should-run.outputs.fix_type == 'all' || needs.should-run.outputs.fix_type == 'type-hints'
         run: |
           echo "🏷️ Enhancing type hints..."
-          
+
           # Run mypy and collect issues
           git fetch origin main >/dev/null 2>&1 || true
           CHANGED_FILES=$(git diff --name-only --diff-filter=AMR origin/main... | grep -E '\.py$' || echo "")
-          
+
           if [ -n "$CHANGED_FILES" ]; then
             echo "Checking type hints for changed files: $CHANGED_FILES"
             mypy $CHANGED_FILES --ignore-missing-imports --no-error-summary || true
@@ -243,36 +243,36 @@ jobs:
             echo "No Python files changed, running mypy on key modules..."
             mypy bot/ --ignore-missing-imports --no-error-summary || true
           fi
-          
+
           echo "✅ Type hint check completed"
 
       - name: 4️⃣ Security Fixes
         if: needs.should-run.outputs.fix_type == 'all' || needs.should-run.outputs.fix_type == 'security'
         run: |
           echo "🔒 Applying security fixes..."
-          
+
           # Run Bandit security linter
           bandit -r . -f json -o bandit-report.json || true
-          
+
           # Check for security issues in dependencies
           safety check --json --output safety-report.json || true
-          
+
           # Apply Ruff security fixes
           ruff check --select S --fix . || true
-          
+
           echo "✅ Security fixes completed"
 
       - name: 5️⃣ Performance Optimizations
         if: needs.should-run.outputs.fix_type == 'all' || needs.should-run.outputs.fix_type == 'performance'
         run: |
           echo "⚡ Applying performance optimizations..."
-          
+
           # Apply performance-related fixes
           ruff check --select PERF --fix . || true
-          
+
           # Check for common performance issues
           ruff check --select UP --fix . || true  # pyupgrade rules
-          
+
           echo "✅ Performance optimizations completed"
 
       - name: 6️⃣ Run Tests and Quality Checks
@@ -283,28 +283,28 @@ jobs:
           REDIS_URL: redis://localhost:6379
         run: |
           echo "🧪 Running quality checks..."
-          
+
           set +e  # Don't exit on error
-          
+
           # Run tests
           echo "Running tests..."
           pytest -q --maxfail=5 --disable-warnings | tee test_results.txt
           TEST_EXIT=$?
-          
+
           # Generate coverage report
           echo "Generating coverage report..."
           coverage xml || true
-          
+
           # Check coverage for changed files
           git fetch origin main >/dev/null 2>&1 || true
           diff-cover coverage.xml --compare-branch origin/main --fail-under=70 | tee coverage_results.txt || true
-          
+
           # Final formatting pass
           ruff format . || true
-          
+
           echo "tests_passed=$([ $TEST_EXIT -eq 0 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
           echo "✅ Quality checks completed (exit code: $TEST_EXIT)"
-          
+
           set -e
 
       - name: 7️⃣ AI-Powered Fixes (if available)
@@ -312,43 +312,43 @@ jobs:
         continue-on-error: true
         run: |
           echo "🤖 Applying AI-powered fixes..."
-          
+
           # Create context for AI
           cat > ai_context.txt << 'EOF'
           Please analyze the following code issues and provide fixes:
-          
+
           === TEST RESULTS ===
           EOF
-          
+
           cat test_results.txt >> ai_context.txt || true
-          
+
           echo -e "\n=== COVERAGE RESULTS ===" >> ai_context.txt
           cat coverage_results.txt >> ai_context.txt || true
-          
+
           echo -e "\n=== CURRENT DIFF ===" >> ai_context.txt
           git diff origin/main... >> ai_context.txt || true
-          
+
           # Call AI fixing script if it exists
           if [ -f "scripts/ai_fix.py" ]; then
             python scripts/ai_fix.py --context ai_context.txt --apply || echo "AI fix script failed, continuing..."
           else
             echo "AI fix script not found, skipping AI fixes"
           fi
-          
+
           echo "✅ AI fixes attempted"
 
       - name: 8️⃣ Final Cleanup and Validation
         run: |
           echo "🧹 Final cleanup and validation..."
-          
+
           # Final formatting pass
           ruff format . || true
           ruff check --fix . || true
-          
+
           # Remove any generated cache files
           find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
           find . -name "*.pyc" -delete 2>/dev/null || true
-          
+
           echo "✅ Cleanup completed"
 
       - name: Check if changes were made
@@ -378,7 +378,7 @@ jobs:
           - Security improvements
           - Performance optimizations
           - Type hint enhancements
-          
+
           Fix type: ${{ needs.should-run.outputs.fix_type }}
           Triggered by: ${{ github.event_name }}"
           git push
@@ -390,25 +390,25 @@ jobs:
           script: |
             const branchName = `auto-fix-${new Date().toISOString().slice(0,10)}-${Math.random().toString(36).substr(2, 9)}`;
             const baseBranch = '${{ needs.should-run.outputs.target_branch }}' || 'main';
-            
+
             // Create and push new branch
             await exec.exec('git', ['checkout', '-b', branchName]);
             await exec.exec('git', ['config', 'user.name', 'auto-fixer[bot]']);
             await exec.exec('git', ['config', 'user.email', 'auto-fixer-bot@users.noreply.github.com']);
             await exec.exec('git', ['add', '-A']);
             await exec.exec('git', ['commit', '-m', `🤖 Auto-fix: Apply code quality improvements
-            
+
             Applied fixes:
             - Code formatting (ruff, black, isort)
-            - Import organization  
+            - Import organization
             - Security improvements
             - Performance optimizations
             - Type hint enhancements
-            
+
             Fix type: ${{ needs.should-run.outputs.fix_type }}
             Triggered by: ${{ github.event_name }}`]);
             await exec.exec('git', ['push', 'origin', branchName]);
-            
+
             // Create PR
             const { data: pr } = await github.rest.pulls.create({
               owner: context.repo.owner,
@@ -445,7 +445,7 @@ jobs:
               ---
               *This PR was created automatically by the Smart Auto-Fixer workflow*`
             });
-            
+
             // Add labels
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
@@ -453,7 +453,7 @@ jobs:
               issue_number: pr.number,
               labels: ['auto-fix', 'enhancement', 'automated']
             });
-            
+
             console.log(`Created PR #${pr.number}: ${pr.html_url}`);
 
       - name: Comment on PR/Issue
@@ -461,15 +461,15 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const issueNumber = context.eventName === 'issue_comment' 
-              ? context.payload.issue.number 
+            const issueNumber = context.eventName === 'issue_comment'
+              ? context.payload.issue.number
               : context.payload.pull_request.number;
-              
+
             const hasChanges = '${{ steps.changes.outputs.has_changes }}' === 'true';
             const testsPass = '${{ steps.quality_check.outputs.tests_passed }}' === 'true';
-            
+
             let body = `## 🤖 Auto-Fixer Results\n\n`;
-            
+
             if (hasChanges) {
               body += `✅ **Applied automatic fixes:**\n`;
               body += `- Code formatting and style improvements\n`;
@@ -479,18 +479,18 @@ jobs:
             } else {
               body += `ℹ️ **No automatic fixes needed** - code is already in good shape!\n\n`;
             }
-            
+
             body += `### 📊 Quality Metrics\n`;
             body += `- **Tests**: ${testsPass ? '✅ Passing' : '❌ Some failures'}\n`;
             body += `- **Fix Type**: \`${{ needs.should-run.outputs.fix_type }}\`\n`;
             body += `- **Changes Made**: ${hasChanges ? 'Yes' : 'No'}\n\n`;
-            
+
             if (!testsPass) {
               body += `⚠️ **Note**: Some tests are still failing. You may need to review and fix manually.\n\n`;
             }
-            
+
             body += `*Run \`/ai-fix\` to trigger fixes again*`;
-            
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -526,7 +526,7 @@ jobs:
           echo "**Fix Type**: ${{ needs.should-run.outputs.fix_type }}" >> $GITHUB_STEP_SUMMARY
           echo "**Result**: ${{ needs.auto-fix.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ needs.auto-fix.result }}" = "success" ]; then
             echo "✅ Auto-fixes applied successfully!" >> $GITHUB_STEP_SUMMARY
           else

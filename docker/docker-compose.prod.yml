@@ -227,7 +227,7 @@ networks:
     ipam:
       config:
         - subnet: 172.21.1.0/24
-  
+
   backend:
     driver: bridge
     name: analyticbot_backend_prod
@@ -237,7 +237,7 @@ networks:
     ipam:
       config:
         - subnet: 172.21.2.0/24
-  
+
   database:
     driver: bridge
     name: analyticbot_database_prod

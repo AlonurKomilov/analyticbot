@@ -78,12 +78,13 @@ class ModelUpdate:
     model_id: str
     version: str
     version_type: ModelVersionType
+    status: UpdateStatus
     changes: dict[str, Any]
     performance_before: dict[str, float]
     timestamp: datetime = field(default_factory=datetime.utcnow)
     performance_after: dict[str, float] | None = None
     rollback_available: bool = True
-    metadata: dict[str, Any] | None = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,7 +98,7 @@ class LearningProgress:
     training_loss: float
     validation_metrics: dict[str, float]
     timestamp: datetime
-    metadata: dict[str, Any] | None = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class LearningProtocol(ABC):
@@ -400,6 +401,30 @@ class DeploymentStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     ROLLED_BACK = "rolled_back"
+
+
+@dataclass
+class LearningContext:
+    """Context object for learning operations - centralized definition"""
+
+    model_id: str
+    task_id: str
+    strategy: LearningStrategy
+    context_id: str = ""
+    learning_scenario: str = ""
+    context_data: dict[str, Any] = field(default_factory=dict)
+    performance_metrics: dict[str, Any] = field(default_factory=dict)
+    learning_progression: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    task_boundaries: dict[str, Any] = field(default_factory=dict)
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+    last_updated: str = ""
+    learning_statistics: dict[str, Any] = field(
+        default_factory=lambda: {"total_updates": 0, "average_loss": 0.0, "last_update": None}
+    )
+    memory_buffer: list[Any] = field(default_factory=list)
+    adaptation_history: list[Any] = field(default_factory=list)
 
 
 @dataclass

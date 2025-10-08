@@ -1,6 +1,6 @@
 /**
  * Enhanced Dashboard Layout Component
- * 
+ *
  * Improved visual hierarchy with:
  * - Better spacing and card organization
  * - Primary/secondary content areas
@@ -13,7 +13,7 @@ import React from 'react';
 import { Box, Grid, useTheme, useMediaQuery } from '@mui/material';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
-const EnhancedDashboardLayout = ({ 
+const EnhancedDashboardLayout = ({
   header,
   primaryContent,
   secondaryContent,

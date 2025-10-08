@@ -15,14 +15,14 @@ import {
 export const UserAvatar = ({ user, size = 40 }) => (
     <Avatar
         src={user.profile_photo_url}
-        sx={{ 
-            width: size, 
-            height: size, 
+        sx={{
+            width: size,
+            height: size,
             bgcolor: 'primary.main',
             fontSize: size * 0.4
         }}
     >
-        {user.full_name ? user.full_name.charAt(0).toUpperCase() : 
+        {user.full_name ? user.full_name.charAt(0).toUpperCase() :
          user.username ? user.username.charAt(0).toUpperCase() : '?'}
     </Avatar>
 );

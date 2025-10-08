@@ -142,7 +142,7 @@ sudo lsof -ti:3000 | xargs sudo kill -9
 
 When changing ports, update these files:
 1. `docker-compose.yml` - Development port mappings
-2. `infra/docker/docker-compose.prod.yml` - Production port mappings  
+2. `infra/docker/docker-compose.prod.yml` - Production port mappings
 3. `.env` - Environment variables
 4. `apps/frontend/.env.docker` - Frontend API URLs
 5. Documentation and scripts referencing specific ports

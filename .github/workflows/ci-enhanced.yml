@@ -39,7 +39,7 @@ env:
   REDIS_URL: redis://localhost:6379/0
   TWA_HOST_URL: http://localhost:5173
   ENFORCE_PLAN_LIMITS: true
-  
+
   # Performance settings
   PYTHONUNBUFFERED: 1
   PYTHONDONTWRITEBYTECODE: 1
@@ -56,7 +56,7 @@ jobs:
       should_run_tests: ${{ steps.changes.outputs.should_run }}
       python_files_changed: ${{ steps.changes.outputs.python_files }}
       docker_changed: ${{ steps.changes.outputs.docker }}
-      
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,19 +78,19 @@ jobs:
             # Check changed files for PR
             CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
             echo "Changed files: $CHANGED_FILES"
-            
+
             if echo "$CHANGED_FILES" | grep -E '\.(py|toml|txt|yml|yaml|dockerfile)$' > /dev/null; then
               echo "should_run=true" >> $GITHUB_OUTPUT
             else
               echo "should_run=false" >> $GITHUB_OUTPUT
             fi
-            
+
             if echo "$CHANGED_FILES" | grep -E '\.py$' > /dev/null; then
               echo "python_files=true" >> $GITHUB_OUTPUT
             else
               echo "python_files=false" >> $GITHUB_OUTPUT
             fi
-            
+
             if echo "$CHANGED_FILES" | grep -E '(docker|Docker|compose)' > /dev/null; then
               echo "docker=true" >> $GITHUB_OUTPUT
             else
@@ -105,11 +105,11 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run_tests == 'true'
     timeout-minutes: 10
-    
+
     strategy:
       matrix:
         python-version: ["3.11", "3.12"]
-        
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -140,7 +140,7 @@ jobs:
           echo "::group::Ruff Check"
           ruff check . --output-format=github
           echo "::endgroup::"
-          
+
           echo "::group::Ruff Format Check"
           ruff format --check .
           echo "::endgroup::"
@@ -184,7 +184,7 @@ jobs:
     needs: [preflight, quality]
     if: needs.preflight.outputs.should_run_tests == 'true'
     timeout-minutes: 15
-    
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -249,7 +249,7 @@ jobs:
             pg_isready -h localhost -p 5432 -U analytic -d analytic_bot && break
             sleep 2
           done
-          
+
           echo "Waiting for Redis..."
           for i in {1..15}; do
             redis-cli -h localhost -p 6379 ping && break
@@ -277,7 +277,7 @@ jobs:
           flags: database-tests
           name: database-coverage
 
-  # Application tests  
+  # Application tests
   app-tests:
     name: Application Tests
     runs-on: ubuntu-latest
@@ -361,7 +361,7 @@ jobs:
             pg_isready -h localhost -p 5432 -U analytic -d analytic_bot && break
             sleep 2
           done
-          
+
           for i in {1..15}; do
             redis-cli -h localhost -p 6379 ping && break
             sleep 2
@@ -420,7 +420,7 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.should_run_tests == 'true'
     timeout-minutes: 15
-    
+
     defaults:
       run:
         working-directory: twa-frontend
@@ -453,7 +453,7 @@ jobs:
       - name: Run tests
         run: |
           npm run test:coverage
-          
+
       - name: Build check
         run: npm run build
 
@@ -532,14 +532,14 @@ jobs:
           docker compose exec -T api python -c "
           import asyncio
           from bot.database.db import get_pool, is_db_healthy
-          
+
           async def test():
               print('Testing database connection...')
               healthy = await is_db_healthy()
               print(f'Database healthy: {healthy}')
               assert healthy, 'Database should be healthy'
               print('✅ All smoke tests passed!')
-              
+
           asyncio.run(test())
           "
 
@@ -592,13 +592,13 @@ jobs:
           app_tests="${{ needs.app-tests.result }}"
           frontend_tests="${{ needs.frontend-tests.result }}"
           compose_tests="${{ needs.compose-tests.result }}"
-          
+
           # Check for failures (skipped is OK)
-          if [[ "$preflight" == "failure" || 
-                "$quality" == "failure" || 
-                "$db_tests" == "failure" || 
-                "$app_tests" == "failure" || 
-                "$frontend_tests" == "failure" || 
+          if [[ "$preflight" == "failure" ||
+                "$quality" == "failure" ||
+                "$db_tests" == "failure" ||
+                "$app_tests" == "failure" ||
+                "$frontend_tests" == "failure" ||
                 "$compose_tests" == "failure" ]]; then
             echo "❌ Some tests failed!"
             exit 1

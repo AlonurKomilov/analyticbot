@@ -35,12 +35,12 @@ def upgrade() -> None:
     CREATE INDEX IF NOT EXISTS idx_post_metrics_channel_id_ts ON post_metrics (channel_id, ts DESC);
     """)
     op.execute("""
-    CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id_status 
+    CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id_status
     ON scheduled_posts (user_id, status);
     """)
     op.execute("""
-    CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_time_status 
-    ON scheduled_posts (scheduled_time, status) 
+    CREATE INDEX IF NOT EXISTS idx_scheduled_posts_scheduled_time_status
+    ON scheduled_posts (scheduled_time, status)
     WHERE status = 'pending';
     """)
 

@@ -1,13 +1,13 @@
 import React from 'react';
-import { 
-    Paper, 
-    Typography, 
-    Box, 
-    Chip, 
-    List, 
-    ListItem, 
-    ListItemIcon, 
-    ListItemText 
+import {
+    Paper,
+    Typography,
+    Box,
+    Chip,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText
 } from '@mui/material';
 import {
     CheckCircle as CheckIcon,
@@ -65,7 +65,7 @@ const TouchTargetComplianceSummary = () => {
                 <TouchIcon color="primary" />
                 Touch Target Compliance Summary
             </Typography>
-            
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 All interactive elements now meet WCAG 2.1 AA minimum 44px touch target requirements
             </Typography>
@@ -84,9 +84,9 @@ const TouchTargetComplianceSummary = () => {
                                 primary={item.component}
                                 secondary={`${item.before} → ${item.after}`}
                             />
-                            <Chip 
-                                label={item.status} 
-                                color="success" 
+                            <Chip
+                                label={item.status}
+                                color="success"
                                 size="small"
                                 sx={{ ml: 1 }}
                             />
@@ -96,19 +96,19 @@ const TouchTargetComplianceSummary = () => {
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                <Chip 
+                <Chip
                     icon={<AccessibilityIcon />}
-                    label="WCAG 2.1 AA Compliant" 
-                    color="success" 
+                    label="WCAG 2.1 AA Compliant"
+                    color="success"
                 />
-                <Chip 
+                <Chip
                     icon={<TouchIcon />}
-                    label="Mobile Optimized" 
-                    color="primary" 
+                    label="Mobile Optimized"
+                    color="primary"
                 />
-                <Chip 
-                    label="Development Audit Tool Included" 
-                    variant="outlined" 
+                <Chip
+                    label="Development Audit Tool Included"
+                    variant="outlined"
                 />
             </Box>
 

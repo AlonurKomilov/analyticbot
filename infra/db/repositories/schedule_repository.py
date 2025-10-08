@@ -154,7 +154,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     async def get_ready_for_delivery(self) -> list[ScheduledPost]:
         """Get all posts that are ready for delivery"""
         query = """
-        SELECT * FROM scheduled_posts 
+        SELECT * FROM scheduled_posts
         WHERE status = $1 AND scheduled_at <= $2
         ORDER BY scheduled_at ASC
         """
@@ -201,7 +201,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     async def update_post_status(self, post_id: int, status: str) -> bool:
         """Update the status of a scheduled post"""
         query = """
-        UPDATE scheduled_posts 
+        UPDATE scheduled_posts
         SET status = $2, updated_at = NOW()
         WHERE id = $1
         """
@@ -224,15 +224,15 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Create a new scheduled post and return its ID"""
         query = """
         INSERT INTO scheduled_posts (
-            user_id, channel_id, post_text, schedule_time, 
+            user_id, channel_id, post_text, schedule_time,
             media_id, media_type, inline_buttons, status, created_at
         ) VALUES (
             $1, $2, $3, $4, $5, $6, $7, 'pending', NOW()
         ) RETURNING id
         """
-        
+
         inline_buttons_json = json.dumps(inline_buttons) if inline_buttons else None
-        
+
         result = await self.db.fetchval(
             query,
             user_id,
@@ -250,31 +250,31 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         query = """
         SELECT id, user_id, channel_id, post_text, schedule_time,
                media_id, media_type, inline_buttons, status, created_at
-        FROM scheduled_posts 
+        FROM scheduled_posts
         WHERE status = 'pending' AND schedule_time <= NOW()
         ORDER BY schedule_time ASC
         LIMIT $1
         """
-        
+
         rows = await self.db.fetch(query, limit)
         posts = []
         for row in rows:
             post_dict = dict(row)
             # Parse inline_buttons JSON if present
-            if post_dict.get('inline_buttons'):
+            if post_dict.get("inline_buttons"):
                 try:
-                    post_dict['inline_buttons'] = json.loads(post_dict['inline_buttons'])
+                    post_dict["inline_buttons"] = json.loads(post_dict["inline_buttons"])
                 except (json.JSONDecodeError, TypeError):
-                    post_dict['inline_buttons'] = None
+                    post_dict["inline_buttons"] = None
             posts.append(post_dict)
-        
+
         return posts
 
     async def count_user_posts_this_month(self, user_id: int) -> int:
         """Count posts created by user in current month"""
         query = """
-        SELECT COUNT(*) FROM scheduled_posts 
-        WHERE user_id = $1 
+        SELECT COUNT(*) FROM scheduled_posts
+        WHERE user_id = $1
         AND created_at >= date_trunc('month', CURRENT_DATE)
         AND created_at < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
         """
@@ -303,7 +303,7 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """Map domain status to database status"""
         mapping = {
             PostStatus.SCHEDULED: "scheduled",
-            PostStatus.PUBLISHED: "published", 
+            PostStatus.PUBLISHED: "published",
             PostStatus.FAILED: "failed",
             PostStatus.DRAFT: "draft",
             PostStatus.CANCELLED: "cancelled",
@@ -442,7 +442,7 @@ class AsyncpgDeliveryRepository(DeliveryRepository):
     async def get_failed_retryable(self) -> list[Delivery]:
         """Get failed deliveries that can be retried"""
         query = """
-        SELECT * FROM deliveries 
+        SELECT * FROM deliveries
         WHERE status IN ($1, $2) AND retry_count < max_retries
         ORDER BY attempted_at ASC
         """

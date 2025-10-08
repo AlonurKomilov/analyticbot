@@ -53,7 +53,7 @@ make up
 
 ### 🐳 Production (Docker)
 - `make up` - Start Docker services
-- `make down` - Stop Docker services  
+- `make down` - Stop Docker services
 - `make logs` - Follow Docker logs
 - `make ps` - List Docker services
 - `make migrate` - Run database migrations

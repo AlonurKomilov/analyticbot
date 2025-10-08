@@ -40,16 +40,16 @@ EmptyState.displayName = 'EmptyState';
 
 /**
  * StatusFooter - Memoized footer showing refresh status and indicators
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.autoRefresh - Whether auto-refresh is enabled
  * @param {string} props.refreshInterval - Current refresh interval
  * @param {Object} props.summaryStats - Summary statistics for growth indicator
  */
-export const StatusFooter = React.memo(({ 
-    autoRefresh = false, 
-    refreshInterval = 'disabled', 
-    summaryStats = null 
+export const StatusFooter = React.memo(({
+    autoRefresh = false,
+    refreshInterval = 'disabled',
+    summaryStats = null
 }) => (
     <Box variant="statusFooter">
         <Typography variant="caption" color="text.secondary">
@@ -57,18 +57,18 @@ export const StatusFooter = React.memo(({
         </Typography>
         <Box variant="chipGroup">
             {autoRefresh && refreshInterval !== 'disabled' && (
-                <Chip 
-                    size="small" 
-                    label="🔄 Avtomatik yangilash" 
-                    color="primary" 
+                <Chip
+                    size="small"
+                    label="🔄 Avtomatik yangilash"
+                    color="primary"
                     variant="outlined"
                 />
             )}
             {summaryStats && summaryStats.growthRate > 10 && (
-                <Chip 
-                    size="small" 
+                <Chip
+                    size="small"
                     label={<><span aria-hidden="true">📈</span> Yuqori o'sish</>}
-                    color="success" 
+                    color="success"
                 />
             )}
         </Box>

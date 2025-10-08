@@ -16,7 +16,7 @@ const createCleanAPI = () => {
     client: apiClient,
     payment: paymentAPI,
     auth: authAwareAPI,
-    
+
     // Analytics methods - all go through authentication-aware API
     analytics: {
       getInitialData: () => authAwareAPI.getInitialData(),
@@ -26,24 +26,24 @@ const createCleanAPI = () => {
       getBestTime: (channelId, timeframe = 'week') => authAwareAPI.getBestTime(channelId, timeframe),
       getEngagementMetrics: (channelId, period = '7d') => authAwareAPI.getEngagementMetrics(channelId, period)
     },
-    
+
     // AI Services methods
     ai: {
       analyzeSecurity: (content) => authAwareAPI.analyzeContentSecurity(content),
       predictChurn: (channelId) => authAwareAPI.predictChurn(channelId),
       optimizeContent: (content, options = {}) => authAwareAPI.optimizeContent(content, options)
     },
-    
+
     // Authentication methods
     login: (credentials) => authAwareAPI.login(credentials),
     logout: () => authAwareAPI.logout(),
-    
+
     // Utility methods
     isDemoUser: () => authAwareAPI.isDemoUser(),
     getDemoType: () => authAwareAPI.getDemoUserType(),
     getStatus: () => authAwareAPI.getStatus(),
     refresh: () => authAwareAPI.refresh(),
-    
+
     // Initialize service
     initialize: () => authAwareAPI.initialize()
   };

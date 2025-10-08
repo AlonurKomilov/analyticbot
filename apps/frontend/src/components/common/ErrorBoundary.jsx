@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
 
         // Log error for debugging
         console.error('ErrorBoundary caught an error:', error, errorInfo);
-        
+
         // You can also send error to error reporting service here
         if (window.Sentry) {
             window.Sentry.captureException(error, {
@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
         if (this.state.hasError) {
             const isNetworkError = this.state.error?.name === 'NetworkError' ||
                                  this.state.error?.message?.includes('fetch');
-            
+
             return (
                 <Box
                     sx={{
@@ -60,26 +60,26 @@ class ErrorBoundary extends React.Component {
                 >
                     <Card sx={{ maxWidth: 500, width: '100%' }}>
                         <CardContent sx={{ p: 4 }}>
-                            <BugReportIcon 
-                                sx={{ fontSize: 64, color: 'error.main', mb: 2 }} 
+                            <BugReportIcon
+                                sx={{ fontSize: 64, color: 'error.main', mb: 2 }}
                                 aria-hidden="true"
                             />
-                            
-                            <Typography 
-                                variant="h1" 
+
+                            <Typography
+                                variant="h1"
                                 id="error-title"
                                 sx={{ fontSize: '1.5rem', mb: 2, fontWeight: 'bold' }}
                             >
                                 {isNetworkError ? 'Connection Problem' : 'Oops! Something went wrong'}
                             </Typography>
-                            
-                            <Typography 
-                                variant="body1" 
+
+                            <Typography
+                                variant="body1"
                                 id="error-description"
-                                color="text.secondary" 
+                                color="text.secondary"
                                 sx={{ mb: 3 }}
                             >
-                                {isNetworkError 
+                                {isNetworkError
                                     ? 'Unable to connect to our servers. Please check your internet connection and try again.'
                                     : 'We encountered an unexpected error. Our team has been notified and is working on a fix.'
                                 }
@@ -94,9 +94,9 @@ class ErrorBoundary extends React.Component {
                                         <Typography variant="body2" component="div" sx={{ fontFamily: 'inherit', fontSize: 'inherit', mt: 1 }}>
                                             <strong>Component Stack:</strong>
                                         </Typography>
-                                        <pre style={{ 
-                                            whiteSpace: 'pre-wrap', 
-                                            fontSize: '0.7rem', 
+                                        <pre style={{
+                                            whiteSpace: 'pre-wrap',
+                                            fontSize: '0.7rem',
                                             marginTop: '8px',
                                             fontFamily: 'inherit',
                                             margin: '8px 0 0 0',
@@ -124,7 +124,7 @@ class ErrorBoundary extends React.Component {
                                 >
                                     Try Again
                                 </Button>
-                                
+
                                 <Button
                                     variant="outlined"
                                     onClick={this.handleReload}
@@ -138,10 +138,10 @@ class ErrorBoundary extends React.Component {
                                     Reload Page
                                 </Button>
                             </Box>
-                            
-                            <Typography 
-                                variant="caption" 
-                                color="text.secondary" 
+
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
                                 sx={{ display: 'block', mt: 2 }}
                             >
                                 If the problem persists, please contact support or try refreshing the page.
@@ -163,7 +163,7 @@ export const withErrorBoundary = (Component, fallbackComponent = null) => {
             <Component {...props} />
         </ErrorBoundary>
     );
-    
+
     WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
     return WrappedComponent;
 };

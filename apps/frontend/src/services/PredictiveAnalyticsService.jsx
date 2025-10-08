@@ -45,7 +45,7 @@ const PredictiveAnalyticsService = () => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     // Real data state
     const [stats, setStats] = useState(null);
     const [predictions, setPredictions] = useState([]);
@@ -57,7 +57,7 @@ const PredictiveAnalyticsService = () => {
         const loadPredictiveData = async () => {
             setLoading(true);
             setError(null);
-            
+
             try {
                 // Real API calls would go here
                 const [statsResponse, predictionsResponse, insightsResponse, modelsResponse] = await Promise.all([
@@ -66,7 +66,7 @@ const PredictiveAnalyticsService = () => {
                     apiClient.get('/ai/predictive/insights'),
                     apiClient.get('/ai/predictive/models')
                 ]);
-                
+
                 setStats(statsResponse.data);
                 setPredictions(predictionsResponse.data);
                 setInsights(insightsResponse.data);
@@ -92,7 +92,7 @@ const PredictiveAnalyticsService = () => {
         );
     }
 
-    // Show error state  
+    // Show error state
     if (error) {
         return (
             <Box sx={{ p: 3 }}>
@@ -112,11 +112,11 @@ const PredictiveAnalyticsService = () => {
                 <PredictiveIcon color="primary" />
                 Predictive Analytics
             </Typography>
-            
+
             <Alert severity="info" sx={{ mb: 3 }}>
                 Real predictive analytics service - connects to actual API endpoints for data analysis.
             </Alert>
-            
+
             <Typography variant="body1">
                 This service provides enterprise-grade predictive modeling and trend analysis.
                 In production, it would display real forecasting data and analytical insights.

@@ -86,7 +86,7 @@ Get metadata about a share link without accessing the report.
 ```json
 {
   "report_type": "overview",
-  "channel_id": "123456789", 
+  "channel_id": "123456789",
   "period": 30,
   "created_at": "2024-02-01T15:30:00Z",
   "expires_at": "2024-02-02T15:30:00Z",
@@ -138,7 +138,7 @@ Retry-After: 12
 Content-Type: application/json
 
 {
-  "error": "rate_limit_exceeded", 
+  "error": "rate_limit_exceeded",
   "message": "Rate limit exceeded for share link creation",
   "retry_after": 12
 }
@@ -263,15 +263,15 @@ async function createShareLink(reportType, channelId) {
         headers: { 'Authorization': 'Bearer your-jwt-token' }
       }
     );
-    
+
     if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After');
       throw new Error(`Rate limited. Retry after ${retryAfter} seconds`);
     }
-    
+
     const shareData = await response.json();
     return shareData.share_url;
-    
+
   } catch (error) {
     console.error('Share link creation failed:', error);
     throw error;
@@ -303,7 +303,7 @@ curl "https://api.yourhost.com/api/v2/share/info/h8k2n9p4q7s1t6v3x8z2a5c9f4g7j1m
 
 ### Performance Metrics
 - **Response Times**: P50/P95/P99 latencies for creation and access
-- **Rate Limit Efficiency**: Bucket utilization and overflow rates  
+- **Rate Limit Efficiency**: Bucket utilization and overflow rates
 - **Cache Hit Rates**: Analytics data cache effectiveness
 - **Export Generation**: Time to generate CSV/PNG exports
 

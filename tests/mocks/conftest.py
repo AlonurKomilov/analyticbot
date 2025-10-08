@@ -6,9 +6,11 @@ Pytest configuration and utilities for all testing mocks.
 Provides centralized mock setup and teardown for consistent testing.
 """
 
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from typing import Generator, Any
-from unittest.mock import Mock, AsyncMock
 
 
 @pytest.fixture
@@ -18,11 +20,11 @@ def mock_analytics_service() -> Generator[Mock, None, None]:
     mock_service.get_channel_analytics.return_value = {
         "views": 1000,
         "engagement": 85,
-        "growth": 12.5
+        "growth": 12.5,
     }
     mock_service.get_post_performance.return_value = [
         {"id": "post_1", "views": 500, "engagement": 92},
-        {"id": "post_2", "views": 300, "engagement": 78}
+        {"id": "post_2", "views": 300, "engagement": 78},
     ]
     yield mock_service
 
@@ -34,7 +36,7 @@ def mock_auth_service() -> Generator[Mock, None, None]:
     mock_service.authenticate_user.return_value = {
         "user_id": 1,
         "email": "test@example.com",
-        "permissions": ["read", "write"]
+        "permissions": ["read", "write"],
     }
     mock_service.is_demo_user.return_value = False
     yield mock_service
@@ -47,7 +49,7 @@ def mock_payment_service() -> Generator[Mock, None, None]:
     mock_service.process_payment.return_value = {
         "transaction_id": "txn_123",
         "status": "completed",
-        "amount": 99.99
+        "amount": 99.99,
     }
     yield mock_service
 
@@ -58,7 +60,7 @@ def mock_ai_service() -> Generator[Mock, None, None]:
     mock_service = AsyncMock()
     mock_service.generate_content_suggestions.return_value = [
         {"topic": "AI Trends", "confidence": 0.95},
-        {"topic": "Tech Updates", "confidence": 0.87}
+        {"topic": "Tech Updates", "confidence": 0.87},
     ]
     yield mock_service
 
@@ -71,7 +73,7 @@ def mock_telegram_service() -> Generator[Mock, None, None]:
     mock_service.get_channel_info.return_value = {
         "id": 456,
         "title": "Test Channel",
-        "subscribers": 1000
+        "subscribers": 1000,
     }
     yield mock_service
 
@@ -105,7 +107,7 @@ def sample_user_data() -> dict:
         "email": "test@example.com",
         "username": "testuser",
         "created_at": "2024-01-01T00:00:00Z",
-        "is_active": True
+        "is_active": True,
     }
 
 
@@ -118,8 +120,8 @@ def sample_analytics_data() -> dict:
         "engagement_rate": 12.5,
         "top_posts": [
             {"id": "post_1", "views": 1000, "engagement": 95},
-            {"id": "post_2", "views": 800, "engagement": 87}
-        ]
+            {"id": "post_2", "views": 800, "engagement": 87},
+        ],
     }
 
 
@@ -132,34 +134,34 @@ def sample_ai_recommendations() -> list:
             "type": "content",
             "title": "Test Recommendation",
             "priority": "high",
-            "impact_score": 8.5
+            "impact_score": 8.5,
         },
         {
-            "id": "rec_2", 
+            "id": "rec_2",
             "type": "timing",
             "title": "Timing Optimization",
             "priority": "medium",
-            "impact_score": 7.2
-        }
+            "impact_score": 7.2,
+        },
     ]
 
 
 # Mock configuration helpers
 class MockConfig:
     """Configuration helper for consistent mock behavior"""
-    
+
     @staticmethod
     def setup_service_mocks(container):
         """Setup all service mocks in DI container"""
         # This would be called in test setup to configure
         # the DI container with mock services
         pass
-    
+
     @staticmethod
     def reset_all_mocks(*mocks):
         """Reset all provided mocks to clean state"""
         for mock in mocks:
-            if hasattr(mock, 'reset_mock'):
+            if hasattr(mock, "reset_mock"):
                 mock.reset_mock()
 
 
@@ -168,7 +170,7 @@ MOCK_API_RESPONSES = {
     "success": {"success": True, "data": {}, "message": "Operation completed"},
     "error": {"success": False, "error": "Mock error for testing", "code": 400},
     "not_found": {"success": False, "error": "Resource not found", "code": 404},
-    "unauthorized": {"success": False, "error": "Unauthorized access", "code": 401}
+    "unauthorized": {"success": False, "error": "Unauthorized access", "code": 401},
 }
 
 

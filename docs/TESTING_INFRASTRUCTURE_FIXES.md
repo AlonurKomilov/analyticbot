@@ -27,7 +27,7 @@ The following import warnings are **expected and normal** in a development envir
 ```python
 # These imports will work when test dependencies are installed:
 import pytest          # pip install pytest
-import asyncpg         # pip install asyncpg  
+import asyncpg         # pip install asyncpg
 import faker           # pip install faker
 from fastapi.testclient import TestClient  # pip install fastapi
 from sqlalchemy.ext.asyncio import AsyncSession  # pip install sqlalchemy[asyncio]
@@ -66,7 +66,7 @@ To run these tests in a complete environment, install test dependencies:
 # Install Python test dependencies
 pip install pytest pytest-asyncio pytest-mock faker
 
-# Install application dependencies  
+# Install application dependencies
 pip install fastapi uvicorn asyncpg sqlalchemy aiogram
 
 # Install development dependencies
@@ -76,7 +76,7 @@ pip install -r requirements.txt
 ## 🎯 **Architecture Benefits Maintained**
 
 ✅ **Clean Separation**: Test code properly separated from production code
-✅ **Centralized Mocking**: All mocks use consistent factory patterns  
+✅ **Centralized Mocking**: All mocks use consistent factory patterns
 ✅ **Error Resilience**: Tests handle missing dependencies gracefully
 ✅ **Type Safety**: Fixed type mismatches and null safety issues
 ✅ **Maintainability**: Single source of truth for mock creation

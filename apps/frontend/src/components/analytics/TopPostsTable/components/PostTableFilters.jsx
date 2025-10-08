@@ -10,11 +10,11 @@ import {
 
 const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
     return (
-        <Box 
-            sx={{ 
-                display: 'flex', 
-                gap: 2, 
-                mb: 3, 
+        <Box
+            sx={{
+                display: 'flex',
+                gap: 2,
+                mb: 3,
                 alignItems: 'center',
                 flexWrap: 'wrap'
             }}
@@ -22,7 +22,7 @@ const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
             <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
                 📊 Top Posts
             </Typography>
-            
+
             <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel id="time-filter-label">Time Period</InputLabel>
                 <Select
@@ -38,7 +38,7 @@ const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
                     <MenuItem value="month">This Month</MenuItem>
                 </Select>
             </FormControl>
-            
+
             <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel id="sort-by-label">Sort By</InputLabel>
                 <Select

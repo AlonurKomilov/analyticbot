@@ -4,7 +4,7 @@
 # Global settings
 global:
   environment: staging
-  
+
 # Image settings
 image:
   tag: "latest"
@@ -14,11 +14,11 @@ image:
 api:
   replicaCount: 2
   workers: 2
-  
+
   image:
     repository: analyticbot/api
     tag: "latest"
-    
+
   resources:
     limits:
       cpu: 500m
@@ -26,14 +26,14 @@ api:
     requests:
       cpu: 250m
       memory: 256Mi
-      
+
   autoscaling:
     enabled: true
     minReplicas: 2
     maxReplicas: 5
     targetCPUUtilizationPercentage: 80
     targetMemoryUtilizationPercentage: 85
-    
+
   service:
     type: ClusterIP
     port: 8000
@@ -41,11 +41,11 @@ api:
 # Bot Configuration
 bot:
   replicaCount: 1
-  
+
   image:
     repository: analyticbot/bot
     tag: "latest"
-    
+
   resources:
     limits:
       cpu: 250m
@@ -127,32 +127,32 @@ env:
   API_HOST: "0.0.0.0"
   API_PORT: "8000"
   CORS_ORIGINS: "https://bot.staging.analyticbot.dev,https://staging.analyticbot.dev"
-  
+
   # AI/ML Configuration
   OPENAI_MODEL: "gpt-3.5-turbo"
   MAX_TOKENS: "2000"
   TEMPERATURE: "0.8"
-  
+
   # Analytics Configuration
   ANALYTICS_RETENTION_DAYS: "30"
   BATCH_SIZE: "500"
-  
+
   # Monitoring Configuration
   PROMETHEUS_PORT: "9090"
   JAEGER_ENDPOINT: "http://jaeger-collector:14268/api/traces"
-  
+
   # Feature Flags
   ENABLE_ANALYTICS: "true"
   ENABLE_AI_FEATURES: "true"
   ENABLE_CACHING: "true"
   ENABLE_RATE_LIMITING: "false"
-  
+
   # Performance Configuration
   WORKER_PROCESSES: "2"
   CONNECTION_POOL_SIZE: "10"
   RATE_LIMIT_PER_MINUTE: "120"
   SESSION_TIMEOUT: "1800"
-  
+
   # Backup Configuration
   BACKUP_RETENTION_DAYS: "30"
 
@@ -174,7 +174,7 @@ securityContext:
 # Network Policies
 networkPolicies:
   enabled: false
-  
+
 # Service Monitor for Prometheus
 serviceMonitor:
   enabled: true

@@ -1,6 +1,6 @@
 /**
  * 🔒 MFA Setup Component
- * 
+ *
  * Two-factor authentication setup interface with QR code generation,
  * backup codes, and verification workflow.
  */
@@ -13,7 +13,7 @@ import {
   Button,
   TextField,
   Alert,
-  Stepper,  
+  Stepper,
   Step,
   StepLabel,
   CircularProgress,
@@ -49,7 +49,7 @@ const MFASetup = ({ onComplete }) => {
 
   const steps = [
     'Setup MFA',
-    'Scan QR Code', 
+    'Scan QR Code',
     'Verify Setup',
     'Save Backup Codes'
   ];
@@ -195,10 +195,10 @@ const MFASetup = ({ onComplete }) => {
               Secure Your Account
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Two-factor authentication (2FA) adds an extra layer of security by requiring 
+              Two-factor authentication (2FA) adds an extra layer of security by requiring
               a code from your mobile device in addition to your password.
             </Typography>
-            
+
             <Alert severity="info" sx={{ mb: 3, textAlign: 'left' }}>
               You'll need an authenticator app like Google Authenticator, Authy, or Microsoft Authenticator.
             </Alert>
@@ -232,8 +232,8 @@ const MFASetup = ({ onComplete }) => {
                   <CardContent sx={{ textAlign: 'center' }}>
                     <QrCodeIcon sx={{ fontSize: 48, mb: 2, color: 'primary.main' }} />
                     {setupData.qr_code ? (
-                      <img 
-                        src={setupData.qr_code} 
+                      <img
+                        src={setupData.qr_code}
                         alt="MFA QR Code"
                         style={{ maxWidth: '100%', height: 'auto' }}
                       />
@@ -251,10 +251,10 @@ const MFASetup = ({ onComplete }) => {
                     <Typography variant="subtitle1" gutterBottom>
                       Can't scan? Enter manually:
                     </Typography>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1, 
+                    <Box sx={{
+                      p: 2,
+                      bgcolor: 'grey.100',
+                      borderRadius: 1,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between'
@@ -295,7 +295,7 @@ const MFASetup = ({ onComplete }) => {
               label="Verification Code"
               value={verificationToken}
               onChange={(e) => setVerificationToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              inputProps={{ 
+              inputProps={{
                 maxLength: 6,
                 style: { textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' }
               }}
@@ -329,10 +329,10 @@ const MFASetup = ({ onComplete }) => {
               MFA Successfully Enabled!
             </Typography>
           </DialogTitle>
-          
+
           <DialogContent>
             <Alert severity="warning" sx={{ mb: 3 }}>
-              Save these backup codes in a safe place. Each code can only be used once and 
+              Save these backup codes in a safe place. Each code can only be used once and
               will help you regain access if you lose your device.
             </Alert>
 

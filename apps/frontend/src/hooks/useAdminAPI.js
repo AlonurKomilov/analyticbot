@@ -12,7 +12,7 @@ export const useAdminAPI = () => {
     const apiCall = useCallback(async (endpoint, options = {}) => {
         setIsLoading(true);
         setError(null);
-        
+
         try {
             const token = localStorage.getItem('adminToken');
             const response = await fetch(`/api/v1/superadmin/${endpoint}`, {
@@ -84,7 +84,7 @@ export const useAdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [auditLogs, setAuditLogs] = useState([]);
-    
+
     const adminAPI = useAdminAPI();
 
     const fetchDashboardData = useCallback(async () => {
@@ -108,17 +108,17 @@ export const useAdminDashboard = () => {
         stats,
         users,
         auditLogs,
-        
+
         // Loading states
         isLoading: adminAPI.isLoading,
         error: adminAPI.error,
         setError: adminAPI.setError,
-        
+
         // Actions
         fetchDashboardData,
         suspendUser: adminAPI.suspendUser,
         reactivateUser: adminAPI.reactivateUser,
-        
+
         // Individual fetchers for refresh
         refreshStats: async () => {
             const data = await adminAPI.fetchStats();

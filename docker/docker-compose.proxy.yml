@@ -68,6 +68,6 @@ services:
   # Override services to remove direct port exposure
   api:
     ports: []  # Remove direct port exposure - access through proxy only
-    
+
   frontend:
     ports: []  # Remove direct port exposure - access through proxy only

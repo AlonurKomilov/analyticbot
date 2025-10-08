@@ -11,7 +11,7 @@ const HeatmapVisualization = ({ recommendations }) => {
     const heatmapData = useMemo(() => {
         const hourlyPerformance = recommendations?.hourly_performance || generateHourlyPerformance();
         const maxValue = Math.max(...Object.values(hourlyPerformance));
-        
+
         return Array.from({ length: 24 }, (_, hour) => ({
             hour,
             value: hourlyPerformance[hour] || 0,
@@ -26,7 +26,7 @@ const HeatmapVisualization = ({ recommendations }) => {
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
                 {heatmapData.map((item) => (
-                    <Tooltip 
+                    <Tooltip
                         key={item.hour}
                         title={`${formatHour(item.hour)}: ${item.value} faollik`}
                     >
@@ -56,7 +56,7 @@ const HeatmapVisualization = ({ recommendations }) => {
                     </Tooltip>
                 ))}
             </Box>
-            
+
             {/* Heatmap Legend */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
                 <Typography variant="caption" color="text.secondary">

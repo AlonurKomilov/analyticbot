@@ -69,7 +69,7 @@ Link any related issues here:
 
 ### For Maintainers
 
-**Priority:** 
+**Priority:**
 - [ ] P0 - Critical (fix immediately)
 - [ ] P1 - High (fix in current sprint)
 - [ ] P2 - Medium (fix in next sprint)
@@ -77,7 +77,7 @@ Link any related issues here:
 
 **Component:**
 - [ ] Backend/API
-- [ ] Frontend/UI  
+- [ ] Frontend/UI
 - [ ] Database
 - [ ] CI/CD
 - [ ] Documentation

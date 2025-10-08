@@ -1,21 +1,21 @@
 /**
  * Enhanced Card Component
- * 
+ *
  * Improved card design with:
  * - Better visual hierarchy
  * - Consistent spacing and elevation
  * - Interactive states and animations
- * - Flexible header and footer layouts  
+ * - Flexible header and footer layouts
  * - Status indicators and badges
  */
 
 import React from 'react';
-import { 
-  Card as MuiCard, 
-  CardContent, 
+import {
+  Card as MuiCard,
+  CardContent,
   CardHeader as MuiCardHeader,
   CardActions,
-  Box, 
+  Box,
   Typography,
   Chip,
   IconButton,
@@ -29,7 +29,7 @@ const StyledCard = styled(MuiCard)(({ theme, variant, interactive, loading }) =>
   transition: 'all 0.2s ease-in-out',
   border: '1px solid',
   borderColor: theme.palette.divider,
-  
+
   // Variant styles
   ...(variant === 'elevated' && {
     boxShadow: theme.shadows[2],
@@ -38,12 +38,12 @@ const StyledCard = styled(MuiCard)(({ theme, variant, interactive, loading }) =>
       transform: 'translateY(-2px)'
     } : {}
   }),
-  
+
   ...(variant === 'outlined' && {
     boxShadow: 'none',
     borderColor: theme.palette.divider
   }),
-  
+
   ...(variant === 'filled' && {
     backgroundColor: theme.palette.grey[50],
     border: 'none'
@@ -65,14 +65,14 @@ const StyledCard = styled(MuiCard)(({ theme, variant, interactive, loading }) =>
   })
 }));
 
-const EnhancedCardHeader = ({ 
-  title, 
-  subtitle, 
-  status, 
+const EnhancedCardHeader = ({
+  title,
+  subtitle,
+  status,
   badge,
-  actions, 
+  actions,
   loading,
-  ...props 
+  ...props
 }) => {
   if (loading) {
     return (
@@ -93,9 +93,9 @@ const EnhancedCardHeader = ({
             {title}
           </Typography>
           {status && (
-            <Chip 
-              label={status.label} 
-              color={status.color || 'default'} 
+            <Chip
+              label={status.label}
+              color={status.color || 'default'}
               size="small"
               sx={{ height: 20, fontSize: '0.75rem' }}
             />
@@ -118,9 +118,9 @@ const EnhancedCardHeader = ({
         </Box>
       }
       subheader={subtitle && (
-        <Typography 
-          variant="body2" 
-          sx={{ 
+        <Typography
+          variant="body2"
+          sx={{
             color: 'text.secondary',
             mt: 0.5,
             lineHeight: 1.4
@@ -182,7 +182,7 @@ const EnhancedCard = ({
           loading={loading}
         />
       )}
-      
+
       <CardContent sx={{ pt: hasHeader ? 1 : 3 }}>
         {loading ? (
           <Box>
@@ -194,7 +194,7 @@ const EnhancedCard = ({
           children
         )}
       </CardContent>
-      
+
       {footerActions && !loading && (
         <CardActions sx={{ pt: 0, px: 3, pb: 2 }}>
           {footerActions}
@@ -218,10 +218,10 @@ export const InteractiveCard = (props) => (
 );
 
 export const StatusCard = ({ status, ...props }) => (
-  <EnhancedCard 
-    variant="filled" 
+  <EnhancedCard
+    variant="filled"
     status={status}
-    {...props} 
+    {...props}
   />
 );
 

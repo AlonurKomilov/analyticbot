@@ -27,43 +27,43 @@ import {
 /**
  * UserActions - Action menu for individual user rows
  */
-export const UserActions = ({ 
-    user, 
-    onEdit, 
-    onSuspend, 
-    onReactivate, 
-    onDelete, 
-    onMessage 
+export const UserActions = ({
+    user,
+    onEdit,
+    onSuspend,
+    onReactivate,
+    onDelete,
+    onMessage
 }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [suspendDialog, setSuspendDialog] = useState(false);
     const [suspendReason, setSuspendReason] = useState('');
-    
+
     const handleMenuOpen = (event) => {
         event.stopPropagation();
         setAnchorEl(event.currentTarget);
     };
-    
+
     const handleMenuClose = () => {
         setAnchorEl(null);
     };
-    
+
     const handleSuspend = () => {
         setSuspendDialog(true);
         handleMenuClose();
     };
-    
+
     const handleSuspendConfirm = () => {
         onSuspend?.(user, suspendReason);
         setSuspendDialog(false);
         setSuspendReason('');
     };
-    
+
     const handleAction = (action) => {
         handleMenuClose();
         action?.(user);
     };
-    
+
     return (
         <>
             <IconButton
@@ -73,7 +73,7 @@ export const UserActions = ({
             >
                 <MoreVertIcon />
             </IconButton>
-            
+
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
@@ -87,16 +87,16 @@ export const UserActions = ({
                     </ListItemIcon>
                     <ListItemText>Edit User</ListItemText>
                 </MenuItem>
-                
+
                 <MenuItem onClick={() => handleAction(onMessage)}>
                     <ListItemIcon>
                         <MessageIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText>Send Message</ListItemText>
                 </MenuItem>
-                
+
                 <Divider />
-                
+
                 {user.status === 'active' ? (
                     <MenuItem onClick={handleSuspend}>
                         <ListItemIcon>
@@ -112,10 +112,10 @@ export const UserActions = ({
                         <ListItemText>Reactivate User</ListItemText>
                     </MenuItem>
                 )}
-                
+
                 <Divider />
-                
-                <MenuItem 
+
+                <MenuItem
                     onClick={() => handleAction(onDelete)}
                     sx={{ color: 'error.main' }}
                 >
@@ -125,7 +125,7 @@ export const UserActions = ({
                     <ListItemText>Delete User</ListItemText>
                 </MenuItem>
             </Menu>
-            
+
             {/* Suspend Dialog */}
             <Dialog
                 open={suspendDialog}
@@ -153,13 +153,13 @@ export const UserActions = ({
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button 
+                    <Button
                         onClick={() => setSuspendDialog(false)}
                         color="inherit"
                     >
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={handleSuspendConfirm}
                         color="error"
                         variant="contained"

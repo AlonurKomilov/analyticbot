@@ -29,7 +29,7 @@ import { AdminOnly } from '../../../auth/RoleGuard';
 
 /**
  * ProfileMenu Component
- * 
+ *
  * Handles user profile dropdown menu including:
  * - User avatar display
  * - Profile navigation
@@ -42,7 +42,7 @@ const ProfileMenu = ({ className, ...props }) => {
     const navigate = useNavigate();
     const { isDarkMode, toggleTheme } = useNavigation();
     const { user, logout, isAuthenticated } = useAuth();
-    
+
     // Menu anchor state
     const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
 
@@ -50,42 +50,42 @@ const ProfileMenu = ({ className, ...props }) => {
     if (!isAuthenticated) {
         return null;
     }
-    
+
     // Menu open/close handlers
     const handleMenuOpen = (event) => {
         setProfileMenuAnchor(event.currentTarget);
     };
-    
+
     const handleMenuClose = () => {
         setProfileMenuAnchor(null);
     };
-    
+
     // Navigation handlers
     const handleProfileClick = () => {
         navigate('/profile');
         handleMenuClose();
     };
-    
+
     const handleSettingsClick = () => {
         navigate('/settings');
         handleMenuClose();
     };
-    
+
     const handleHelpClick = () => {
         navigate('/help');
         handleMenuClose();
     };
-    
+
     const handleAdminClick = () => {
         navigate('/admin');
         handleMenuClose();
     };
-    
+
     const handleThemeToggle = () => {
         toggleTheme();
         // Keep menu open for theme toggle
     };
-    
+
     const handleLogout = async () => {
         try {
             await logout();
@@ -136,10 +136,10 @@ const ProfileMenu = ({ className, ...props }) => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         {user?.email}
                     </Typography>
-                    <Chip 
-                        label={user?.role || 'User'} 
-                        size="small" 
-                        color="primary" 
+                    <Chip
+                        label={user?.role || 'User'}
+                        size="small"
+                        color="primary"
                         variant="outlined"
                     />
                 </Box>

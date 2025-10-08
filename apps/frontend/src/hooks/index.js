@@ -6,10 +6,10 @@ export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
 
 // Export unified analytics system
 export { useUnifiedAnalytics, ANALYTICS_PRESETS } from './useUnifiedAnalytics';
-export { 
+export {
     useDashboardAnalytics,
     useAdminAnalytics,
-    useMobileAnalytics, 
+    useMobileAnalytics,
     usePerformanceAnalytics,
     useHighFrequencyAnalytics
 } from './useSpecializedAnalytics';
@@ -68,7 +68,7 @@ export const useFormState = (initialState, validator) => {
     const updateField = useCallback((field, value) => {
         setState(prev => ({ ...prev, [field]: value }));
         setTouched(prev => ({ ...prev, [field]: true }));
-        
+
         if (validator) {
             setErrors(prev => {
                 const newState = { ...state, [field]: value };
@@ -80,10 +80,10 @@ export const useFormState = (initialState, validator) => {
 
     const validateForm = useCallback(() => {
         if (!validator) return true;
-        
+
         const formErrors = validator(state);
         setErrors(formErrors);
-        
+
         return Object.keys(formErrors).length === 0;
     }, [state, validator]);
 
@@ -116,7 +116,7 @@ export const useOptimizedList = (items, keyExtractor) => {
     }, [items, keyExtractor]);
 
     const getItem = useCallback((key) => itemsMap[key], [itemsMap]);
-    
+
     const sortedItems = useMemo(() => {
         return [...items].sort((a, b) => {
             const aKey = keyExtractor(a);
@@ -163,7 +163,7 @@ export const useMediaUpload = () => {
         }
 
         setUploadProgress(0);
-        
+
         // Use direct upload if channel specified, otherwise use regular upload
         if (channelId) {
             return uploadMediaDirect(file, channelId);
@@ -178,13 +178,13 @@ export const useMediaUpload = () => {
 
         try {
             const result = await handleUpload(file, channelId);
-            
+
             // Update progress state if callback provided
             if (onProgress && pendingMedia.uploadProgress !== undefined) {
                 setUploadProgress(pendingMedia.uploadProgress);
                 onProgress(pendingMedia.uploadProgress);
             }
-            
+
             return result;
         } catch (error) {
             setUploadProgress(0);
@@ -220,17 +220,17 @@ export const useTelegramWebApp = () => {
 
     useEffect(() => {
         const tg = window.Telegram?.WebApp;
-        
+
         if (tg) {
             // Initialize Telegram Web App
             tg.ready();
             tg.expand();
-            
+
             // Set theme
             if (tg.colorScheme === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
             }
-            
+
             setWebApp(tg);
             setIsReady(true);
         } else {

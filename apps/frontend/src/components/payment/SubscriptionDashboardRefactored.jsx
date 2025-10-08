@@ -1,13 +1,13 @@
 /**
  * SubscriptionDashboard - Refactored Orchestrator
- * 
+ *
  * Reduced from 434 lines to ~150 lines by extracting components:
  * - SubscriptionCard: Plan details and status display
  * - UsageMetrics: Usage statistics and limits
  * - PaymentHistory: Recent payment transactions
  * - CancelSubscriptionDialog: Cancellation workflow
  * - PaymentHistoryDialog: Detailed payment history
- * 
+ *
  * Benefits:
  * - 65% reduction in component size (434 → ~150 lines)
  * - Better separation of concerns
@@ -37,7 +37,7 @@ import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog.jsx';
 
 /**
  * Main Subscription Dashboard Orchestrator
- * 
+ *
  * Coordinates subscription-related components while maintaining all original functionality.
  * Now focused purely on state management and component coordination.
  */
@@ -92,11 +92,11 @@ const SubscriptionDashboard = ({ userId }) => {
         immediate: immediate,
         ...feedback
       });
-      
+
       // Reload subscription data
       await loadSubscriptionData();
       setCancelDialogOpen(false);
-      
+
     } catch (err) {
       setError(err.message || 'Failed to cancel subscription');
     } finally {
@@ -171,7 +171,7 @@ const SubscriptionDashboard = ({ userId }) => {
       />
 
       {/* Usage Metrics */}
-      <UsageMetrics 
+      <UsageMetrics
         subscription={subscription}
         usage={usage}
       />

@@ -1,6 +1,6 @@
 /**
  * Mock Registry - Central Index for all Mock Data
- * 
+ *
  * This file provides a centralized way to access all mock data
  * while maintaining the modular structure.
  */

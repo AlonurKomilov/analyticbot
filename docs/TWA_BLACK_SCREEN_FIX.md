@@ -4,7 +4,7 @@
 The TWA was showing a black screen due to multiple JavaScript errors:
 
 1. **Uncaught TypeError**: Cannot read properties of undefined (reading '1')
-2. **AreaChart Component Error**: Error in recharts AreaImpl component  
+2. **AreaChart Component Error**: Error in recharts AreaImpl component
 3. **Data Structure Mismatch**: Mock data format didn't match component expectations
 4. **Missing Error Boundaries**: Components crashed on data errors
 
@@ -61,8 +61,8 @@ return data.map((point, index) => {
         return null;
     }
     return {
-        time: point.timestamp ? 
-            new Date(point.timestamp).toLocaleTimeString() : 
+        time: point.timestamp ?
+            new Date(point.timestamp).toLocaleTimeString() :
             point.time || `Point ${index + 1}`,
         views: Number(point.views) || 0,
         likes: Number(point.likes || point.reactions) || 0
@@ -99,11 +99,11 @@ class ChartErrorBoundary extends React.Component {
     static getDerivedStateFromError(error) {
         return { hasError: true, error };
     }
-    
+
     componentDidCatch(error, errorInfo) {
         console.error('Chart Error:', error, errorInfo);
     }
-    
+
     render() {
         if (this.state.hasError) {
             return <Alert>Chart ma'lumotlarini ko'rsatishda xatolik</Alert>;
@@ -118,7 +118,7 @@ class ChartErrorBoundary extends React.Component {
 const safeNumber = (val) => Number(val) || 0;
 const chartData = useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) return [];
-    
+
     try {
         return data.map((point, index) => {
             // Validation and transformation

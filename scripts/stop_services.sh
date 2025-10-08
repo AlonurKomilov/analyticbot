@@ -39,7 +39,7 @@ if [ -d "pids" ]; then
         fi
         rm -f pids/api.pid
     fi
-    
+
     # Stop Bot
     if [ -f "pids/bot.pid" ]; then
         BOT_PID=$(cat pids/bot.pid)
@@ -49,7 +49,7 @@ if [ -d "pids" ]; then
         fi
         rm -f pids/bot.pid
     fi
-    
+
     # Stop Frontend
     if [ -f "pids/frontend.pid" ]; then
         FRONTEND_PID=$(cat pids/frontend.pid)

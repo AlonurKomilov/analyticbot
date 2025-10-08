@@ -18,7 +18,7 @@ import {
 import { EXPORT_FORMATS } from '../utils/exportUtils';
 
 /**
- * TableExport Component  
+ * TableExport Component
  * Renders export functionality with format selection menu
  */
 const TableExport = ({
@@ -26,12 +26,12 @@ const TableExport = ({
     exportFilename = 'data-export'
 }) => {
     const [exportMenuAnchor, setExportMenuAnchor] = useState(null);
-    
+
     const handleExportClick = (format) => {
         onExport?.(format);
         setExportMenuAnchor(null);
     };
-    
+
     const getFormatIcon = (format) => {
         switch (format.key) {
             case 'csv':
@@ -44,7 +44,7 @@ const TableExport = ({
                 return <ExportIcon fontSize="small" />;
         }
     };
-    
+
     return (
         <>
             <Tooltip title="Export Data">
@@ -55,7 +55,7 @@ const TableExport = ({
                     <ExportIcon />
                 </IconButton>
             </Tooltip>
-            
+
             <Menu
                 anchorEl={exportMenuAnchor}
                 open={Boolean(exportMenuAnchor)}
@@ -66,7 +66,7 @@ const TableExport = ({
                 </MenuItem>
                 <Divider />
                 {EXPORT_FORMATS.map(format => (
-                    <MenuItem 
+                    <MenuItem
                         key={format.key}
                         onClick={() => handleExportClick(format.key)}
                     >

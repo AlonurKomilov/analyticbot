@@ -15,7 +15,7 @@ const SettingsPage = () => {
                 <Typography variant="body1" color="text.secondary">
                     Configure your preferences and account settings.
                 </Typography>
-                
+
                 {/* TODO: Implement settings functionality */}
                 <Box sx={{ mt: 3 }}>
                     <Typography variant="body2" color="text.secondary" fontStyle="italic">

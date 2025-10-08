@@ -4,7 +4,7 @@
  * - services/apiClient.js (axios-based, interceptors, file upload)
  * - utils/apiClient.js (fetch-based, retry logic, TWA auth, data source routing)
  * - services/dataService.js (adapter pattern, analytics switching)
- * 
+ *
  * Features:
  * - Multiple authentication strategies (JWT, TWA)
  * - Retry logic with exponential backoff
@@ -47,7 +47,7 @@ class UnifiedApiClient {
         this.defaultHeaders = {
             'Content-Type': 'application/json',
         };
-        
+
         // Debug logging
         console.log('🔧 Unified API Client Configuration:', {
             baseURL: this.config.baseURL,
@@ -116,7 +116,7 @@ class UnifiedApiClient {
     async routeThroughDataService(method, url, data = null) {
         const currentSource = dataSourceManager.getDataSource();
         const dataService = dataServiceFactory.getService(currentSource);
-        
+
         // Map common API endpoints to data service methods
         if (url.includes('/initial-data')) {
             return await dataService.getInitialData();
@@ -136,7 +136,7 @@ class UnifiedApiClient {
             const channelId = this.extractChannelId(url) || 'demo_channel';
             return await dataService.getPostDynamics(channelId);
         }
-        
+
         return null; // Fallback to direct API
     }
 
@@ -191,7 +191,7 @@ class UnifiedApiClient {
         try {
             // Construct full URL
             const url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
-            
+
             // Prepare request configuration
             const requestConfig = {
                 method: options.method || 'GET',
@@ -214,7 +214,7 @@ class UnifiedApiClient {
             // Handle response
             let responseData;
             const contentType = response.headers.get('content-type');
-            
+
             if (contentType && contentType.includes('application/json')) {
                 try {
                     responseData = await response.json();
@@ -227,8 +227,8 @@ class UnifiedApiClient {
                 const textContent = await response.text();
                 if (!response.ok) {
                     const error = new Error(`API returned non-JSON response: ${response.status} ${response.statusText}`);
-                    error.response = { 
-                        status: response.status, 
+                    error.response = {
+                        status: response.status,
                         statusText: response.statusText,
                         data: textContent.substring(0, 200)
                     };
@@ -260,14 +260,14 @@ class UnifiedApiClient {
             }
 
             // Handle connection errors
-            if (error.message.includes('ERR_CONNECTION_REFUSED') || 
+            if (error.message.includes('ERR_CONNECTION_REFUSED') ||
                 error.message.includes('Failed to fetch') ||
                 error.message.includes('Network request failed')) {
-                
+
                 if (import.meta.env.DEV) {
                     console.warn('API connection failed - consider using demo mode');
                 }
-                
+
                 const connectionError = new Error('API is currently unavailable');
                 connectionError.response = { status: 503 };
                 throw connectionError;
@@ -279,7 +279,7 @@ class UnifiedApiClient {
                     endpoint,
                     error: error.message
                 });
-                
+
                 const delay = this.config.retryDelay * Math.pow(this.config.retryMultiplier, attempt - 1);
                 await this.sleep(delay);
                 return this.request(endpoint, options, attempt + 1);
@@ -299,26 +299,26 @@ class UnifiedApiClient {
     }
 
     async post(url, data = null, config = {}) {
-        return this.request(url, { 
-            method: 'POST', 
+        return this.request(url, {
+            method: 'POST',
             body: data,
-            ...config 
+            ...config
         });
     }
 
     async put(url, data = null, config = {}) {
-        return this.request(url, { 
-            method: 'PUT', 
+        return this.request(url, {
+            method: 'PUT',
             body: data,
-            ...config 
+            ...config
         });
     }
 
     async patch(url, data = null, config = {}) {
-        return this.request(url, { 
-            method: 'PATCH', 
+        return this.request(url, {
+            method: 'PATCH',
             body: data,
-            ...config 
+            ...config
         });
     }
 
@@ -332,7 +332,7 @@ class UnifiedApiClient {
     async uploadFile(url, file, onProgress = null, config = {}) {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         const uploadConfig = {
             method: 'POST',
             body: formData,
@@ -342,7 +342,7 @@ class UnifiedApiClient {
                 ...config.headers
             }
         };
-        
+
         // Remove Content-Type from default headers for file upload
         delete uploadConfig.headers['Content-Type'];
 
@@ -356,7 +356,7 @@ class UnifiedApiClient {
     async uploadFileDirect(file, channelId = null, onProgress = null) {
         const formData = new FormData();
         formData.append('file', file);
-        
+
         // Add channel_id if provided (from utils version)
         if (channelId) {
             formData.append('channel_id', channelId.toString());
@@ -370,7 +370,7 @@ class UnifiedApiClient {
                 ...this.getAuthHeaders()
             }
         };
-        
+
         // Remove Content-Type from default headers for file upload
         delete uploadConfig.headers['Content-Type'];
 
@@ -378,7 +378,7 @@ class UnifiedApiClient {
         // For now, we'll do a basic upload and call onProgress with completion
         try {
             const result = await this.request('/upload', uploadConfig);
-            
+
             // Call progress callback with completion if provided
             if (onProgress) {
                 onProgress({
@@ -388,7 +388,7 @@ class UnifiedApiClient {
                     speed: file.size // Approximate speed
                 });
             }
-            
+
             return result;
         } catch (error) {
             if (onProgress) {
@@ -409,7 +409,7 @@ class UnifiedApiClient {
     async getBatchAnalytics(channelId, period = 30) {
         const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
         const { from, to } = this.getPeriodDateRange(period);
-        
+
         return Promise.all([
             this.get(`/api/v2/analytics/channels/${numericChannelId}/overview?from=${from}&to=${to}`),
             this.get(`/api/v2/analytics/channels/${numericChannelId}/growth?from=${from}&to=${to}`),
@@ -435,7 +435,7 @@ class UnifiedApiClient {
         const to = new Date();
         const from = new Date();
         from.setDate(to.getDate() - period);
-        
+
         return {
             from: from.toISOString(),
             to: to.toISOString()
@@ -489,7 +489,7 @@ class UnifiedApiClient {
         const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId);
         const periodDays = parseInt(period.replace('d', '')) || 7;
         const { from, to } = this.getPeriodDateRange(periodDays);
-        
+
         return this.get(`/api/v2/analytics/channels/${numericChannelId}/export/${type}?from=${from}&to=${to}&format=csv`);
     }
 

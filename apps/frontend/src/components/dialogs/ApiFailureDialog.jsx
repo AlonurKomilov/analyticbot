@@ -20,22 +20,22 @@ import {
 
 /**
  * ApiFailureDialog - User Prompt for Data Source Fallback
- * 
+ *
  * This component appears when the API fails and asks the user
  * for explicit permission before switching to mock data.
- * 
+ *
  * Features:
  * - Clear explanation of the issue
  * - Options to retry or switch to demo mode
  * - No automatic switching without user consent
  */
-const ApiFailureDialog = ({ 
-    open, 
-    onClose, 
-    onRetry, 
-    onSwitchToMock, 
+const ApiFailureDialog = ({
+    open,
+    onClose,
+    onRetry,
+    onSwitchToMock,
     error,
-    isRetrying = false 
+    isRetrying = false
 }) => {
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -76,7 +76,7 @@ const ApiFailureDialog = ({
                 <WarningIcon color="warning" />
                 API Connection Failed
             </DialogTitle>
-            
+
             <DialogContent>
                 <Stack spacing={3}>
                     <Alert severity="warning" icon={<OfflineIcon />}>
@@ -100,10 +100,10 @@ const ApiFailureDialog = ({
                             <Typography variant="body2" color="text.secondary" gutterBottom>
                                 Technical details:
                             </Typography>
-                            <Box 
-                                sx={{ 
-                                    p: 2, 
-                                    bgcolor: 'grey.100', 
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    bgcolor: 'grey.100',
                                     borderRadius: 1,
                                     fontFamily: 'monospace',
                                     fontSize: '0.875rem',
@@ -120,17 +120,17 @@ const ApiFailureDialog = ({
                             You can choose to:
                         </Typography>
                         <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                            <Chip 
+                            <Chip
                                 icon={<CircularProgress size={16} />}
-                                label="Retry Connection" 
-                                variant="outlined" 
+                                label="Retry Connection"
+                                variant="outlined"
                                 size="small"
                                 color="primary"
                             />
-                            <Chip 
+                            <Chip
                                 icon={<SettingsIcon />}
-                                label="Use Demo Data" 
-                                variant="outlined" 
+                                label="Use Demo Data"
+                                variant="outlined"
                                 size="small"
                                 color="secondary"
                             />
@@ -147,7 +147,7 @@ const ApiFailureDialog = ({
                 >
                     Cancel
                 </Button>
-                
+
                 <Button
                     onClick={handleRetry}
                     disabled={isProcessing || isRetrying}
@@ -157,7 +157,7 @@ const ApiFailureDialog = ({
                 >
                     {isRetrying ? 'Retrying...' : 'Try Again'}
                 </Button>
-                
+
                 <Button
                     onClick={handleSwitchToMock}
                     disabled={isProcessing}

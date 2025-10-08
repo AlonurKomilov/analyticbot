@@ -117,7 +117,7 @@ AUTO_FIX_PATTERNS = [
 
 def apply_auto_fixes():
     """Apply safe automatic fixes"""
-    
+
     for filename_pattern, old_name, new_name in AUTO_FIX_PATTERNS:
         for root, dirs, files in os.walk('tests/'):
             for file in files:
@@ -126,17 +126,17 @@ def apply_auto_fixes():
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
-                        
+
                         # Replace function definition
                         pattern = f"def {old_name}("
                         replacement = f"def {new_name}("
-                        
+
                         if pattern in content:
                             new_content = content.replace(pattern, replacement)
                             with open(file_path, 'w', encoding='utf-8') as f:
                                 f.write(new_content)
                             print(f"✅ Fixed {old_name} → {new_name} in {file_path}")
-                            
+
                     except Exception as e:
                         print(f"❌ Error fixing {file_path}: {e}")
 

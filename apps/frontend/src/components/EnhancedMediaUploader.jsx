@@ -32,10 +32,10 @@ const EnhancedMediaUploader = () => {
         channels,
         isLoading
     } = useAppStore();
-    
+
     const { hapticFeedback } = useTelegramWebApp();
     const fileInputRef = useRef(null);
-    
+
     // Enhanced state management
     const [dragActive, setDragActive] = useState(false);
     const [selectedChannelId, setSelectedChannelId] = useState('');
@@ -262,14 +262,14 @@ const EnhancedMediaUploader = () => {
 
             {/* Upload Success & Stats */}
             {pendingMedia.file_id && !isUploading && (
-                <Alert 
-                    severity="success" 
+                <Alert
+                    severity="success"
                     sx={{ mt: 2 }}
                     action={
-                        <IconButton 
+                        <IconButton
                             onClick={handleClear}
-                            sx={{ 
-                                minWidth: '44px', 
+                            sx={{
+                                minWidth: '44px',
                                 minHeight: '44px',
                                 '@media (hover: none)': {
                                     minWidth: '44px',
@@ -291,7 +291,7 @@ const EnhancedMediaUploader = () => {
                                     label={`${formatSpeed(uploadStats.speed)}`}
                                     size="small"
                                     variant="outlined"
-                                    sx={{ 
+                                    sx={{
                                         minHeight: '32px',
                                         '@media (hover: none)': {
                                             minHeight: '36px'
@@ -306,7 +306,7 @@ const EnhancedMediaUploader = () => {
                                     size="small"
                                     variant="outlined"
                                     color={uploadStats.uploadType === 'direct_channel' ? 'primary' : 'default'}
-                                    sx={{ 
+                                    sx={{
                                         minHeight: '32px',
                                         '@media (hover: none)': {
                                             minHeight: '36px'
@@ -323,7 +323,7 @@ const EnhancedMediaUploader = () => {
             {pendingMedia.previewUrl && (
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>Preview:</Typography>
-                    {pendingMedia.file_type?.startsWith('image/') || 
+                    {pendingMedia.file_type?.startsWith('image/') ||
                      pendingMedia.metadata?.content_type?.startsWith('image/') ? (
                         <img
                             src={pendingMedia.previewUrl}

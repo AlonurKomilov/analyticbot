@@ -5,72 +5,61 @@ Protocol-compliant demo data service for demo mode
 
 import asyncio
 import random
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Any
+
+from apps.bot.models.twa import Channel, InitialDataResponse
 from core.protocols import DemoDataServiceProtocol
 from tests.mocks.constants import DEMO_API_DELAY_MS
-from apps.bot.models.twa import InitialDataResponse, Channel
 
 
 class MockDemoDataService(DemoDataServiceProtocol):
     """Mock demo data service for demo mode"""
-    
+
     def get_service_name(self) -> str:
         return "mock_demo_data_service"
-    
-    async def health_check(self) -> Dict[str, Any]:
+
+    async def health_check(self) -> dict[str, Any]:
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
         return {
             "service": "demo_data",
             "status": "healthy",
             "demo_mode": True,
-            "datasets_available": ["channels", "users", "analytics", "posts"]
+            "datasets_available": ["channels", "users", "analytics", "posts"],
         }
-    
-    async def get_initial_data(self, user_id: int | str = 1, demo_type: str = "standard") -> Dict[str, Any]:
+
+    async def get_initial_data(
+        self, user_id: int | str = 1, demo_type: str = "standard"
+    ) -> dict[str, Any]:
         """Get initial demo data for TWA initialization"""
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
-        
+
         # Import here to avoid circular import
-        from apps.bot.models.twa import InitialDataResponse
-        
+
         # Import the models we need
-        from apps.bot.models.twa import User, Plan, Channel
-        
-        # Generate demo user data  
+        from apps.bot.models.twa import Plan, User
+
+        # Generate demo user data
         user_id_int = int(user_id) if isinstance(user_id, str) else user_id or 1
-        demo_user = User(
-            id=user_id_int,
-            username=f"demo_user_{demo_type or 'limited'}"
-        )
-        
+        demo_user = User(id=user_id_int, username=f"demo_user_{demo_type or 'limited'}")
+
         # Generate demo plan based on demo_type
         if demo_type == "premium":
-            plan = Plan(
-                name="Premium",
-                max_channels=50,
-                max_posts_per_month=10000
-            )
+            plan = Plan(name="Premium", max_channels=50, max_posts_per_month=10000)
         else:
-            plan = Plan(
-                name="Free",
-                max_channels=5,
-                max_posts_per_month=100
-            )
-        
+            plan = Plan(name="Free", max_channels=5, max_posts_per_month=100)
+
         # Get sample channels (as dictionaries from protocol)
         channels_dicts = await self.seed_demo_channels(user_id or 1)
-        
+
         # Convert dict channels to Channel objects for InitialDataResponse
         channels = []
         for ch_dict in channels_dicts:
             channel_obj = Channel(
-                id=ch_dict["id"],
-                title=ch_dict["name"], 
-                username=ch_dict.get("username")
+                id=ch_dict["id"], title=ch_dict["name"], username=ch_dict.get("username")
             )
             channels.append(channel_obj)
-        
+
         # Generate demo features
         features = {
             "analytics_enabled": True,
@@ -78,80 +67,78 @@ class MockDemoDataService(DemoDataServiceProtocol):
             "ai_insights_enabled": demo_type == "premium",
             "advanced_features_enabled": demo_type == "premium",
             "alerts_enabled": True,
-            "share_links_enabled": True
+            "share_links_enabled": True,
         }
-        
+
         # Create InitialDataResponse and return as dict for protocol compatibility
         response = InitialDataResponse(
             user=demo_user,
             plan=plan,
             channels=channels,
-            scheduled_posts=[]  # Empty for demo
+            scheduled_posts=[],  # Empty for demo
         )
-        
+
         # Convert to dict for protocol compatibility
         return response.model_dump()
-    
-    async def reset_demo_data(self) -> Dict[str, Any]:
+
+    async def reset_demo_data(self) -> dict[str, Any]:
         """Reset demo data to initial state"""
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
-        
+
         return {
             "status": "success",
             "message": "Demo data has been reset to initial state",
             "reset_components": [
                 "user_preferences",
-                "channel_analytics", 
+                "channel_analytics",
                 "post_metrics",
-                "engagement_data"
+                "engagement_data",
             ],
             "reset_at": datetime.now().isoformat(),
-            "demo_mode": True
+            "demo_mode": True,
         }
-    
-    async def seed_demo_channels(self, user_id: int | str) -> List[Dict[str, Any]]:
+
+    async def seed_demo_channels(self, user_id: int | str) -> list[dict[str, Any]]:
         """Seed demo channels for user"""
         await asyncio.sleep(DEMO_API_DELAY_MS / 1000)
-        
+
         channel_templates = [
             {
                 "name": "Tech News Hub",
                 "category": "Technology",
                 "description": "Latest technology news and trends",
-                "members_range": (5000, 15000)
+                "members_range": (5000, 15000),
             },
             {
-                "name": "Business Insights", 
+                "name": "Business Insights",
                 "category": "Business",
                 "description": "Business strategy and market analysis",
-                "members_range": (3000, 10000)
+                "members_range": (3000, 10000),
             },
             {
                 "name": "Digital Marketing",
-                "category": "Marketing", 
+                "category": "Marketing",
                 "description": "Digital marketing tips and strategies",
-                "members_range": (2000, 8000)
+                "members_range": (2000, 8000),
             },
             {
                 "name": "Startup Stories",
                 "category": "Entrepreneurship",
                 "description": "Inspiring startup journeys and lessons",
-                "members_range": (1000, 5000)
-            }
+                "members_range": (1000, 5000),
+            },
         ]
-        
+
         seeded_channels = []
         num_channels = random.randint(2, 4)
-        
-        from apps.bot.models.twa import Channel
-        
+
         for i in range(num_channels):
             template = random.choice(channel_templates)
             # Create Channel object first to validate, then convert to dict for protocol compatibility
             channel_obj = Channel(
                 id=i + 1,  # Simple integer ID
                 title=template["name"],
-                username=f"{template['name'].lower().replace(' ', '_')}_demo_{i+1}"
+                username=f"{template['name'].lower().replace(' ', '_')}_demo_{i+1}",
             )
             # Convert to dict for protocol compatibility
             channel_dict = {
@@ -162,8 +149,8 @@ class MockDemoDataService(DemoDataServiceProtocol):
                 "description": template["description"],
                 "category": template["category"],
                 "is_active": True,
-                "demo_mode": True
+                "demo_mode": True,
             }
             seeded_channels.append(channel_dict)
-        
+
         return seeded_channels

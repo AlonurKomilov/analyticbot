@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 // Mock churn data
-import { 
-    churnPredictorStats, 
-    mockChurnPredictions, 
-    retentionStrategies, 
-    riskSegments 
+import {
+    churnPredictorStats,
+    mockChurnPredictions,
+    retentionStrategies,
+    riskSegments
 } from '../aiServices/churnPredictor.js';
 
 /**
@@ -26,47 +26,47 @@ class MockApiClient {
     // GET method simulation
     async get(url) {
         await this.delay();
-        
+
         // Route mock responses based on URL
         switch (url) {
             case '/ai/churn/stats':
                 return { data: churnPredictorStats };
-            
+
             case '/ai/churn/predictions':
                 return { data: mockChurnPredictions };
-            
+
             case '/ai/churn/strategies':
                 return { data: retentionStrategies };
-            
+
             case '/ai/predictive/stats':
                 const { predictiveStats } = await import('../aiServices/predictiveAnalytics.js');
                 return { data: predictiveStats };
-            
+
             case '/ai/predictive/forecasts':
                 const { mockForecasts } = await import('../aiServices/predictiveAnalytics.js');
                 return { data: mockForecasts };
-            
+
             case '/ai/predictive/insights':
                 const { trendInsights } = await import('../aiServices/predictiveAnalytics.js');
                 return { data: trendInsights };
-            
+
             case '/ai/predictive/models':
                 const { forecastModels } = await import('../aiServices/predictiveAnalytics.js');
                 return { data: forecastModels };
-            
+
             case '/health':
-                return { 
-                    data: { 
-                        status: "ok", 
+                return {
+                    data: {
+                        status: "ok",
                         environment: "demo",
                         version: "demo-mode",
                         timestamp: new Date().toISOString()
-                    } 
+                    }
                 };
-            
+
             case '/analytics/channels':
                 // Return demo channels data
-                return { 
+                return {
                     data: [
                         {
                             id: 'demo_channel_1',
@@ -79,7 +79,7 @@ class MockApiClient {
                             created_at: '2024-01-15T10:00:00Z'
                         },
                         {
-                            id: 'demo_channel_2', 
+                            id: 'demo_channel_2',
                             title: 'Demo Marketing Channel',
                             username: '@demo_marketing',
                             subscriber_count: 8350,
@@ -90,12 +90,12 @@ class MockApiClient {
                         }
                     ]
                 };
-            
+
             // Handle dynamic analytics endpoints
             default:
                 // Handle analytics insights for any channel ID
                 if (url.startsWith('/analytics/insights/')) {
-                    return { 
+                    return {
                         data: {
                             channel_analytics: {
                                 total_views: 125430,
@@ -107,10 +107,10 @@ class MockApiClient {
                         }
                     };
                 }
-                
+
                 // Handle channel metrics
                 if (url.includes('/analytics/channels/') && url.includes('/metrics')) {
-                    return { 
+                    return {
                         data: {
                             metrics: {
                                 views: 125430,
@@ -122,10 +122,10 @@ class MockApiClient {
                         }
                     };
                 }
-                
+
                 // Handle demo top posts
                 if (url.includes('/analytics/demo/top-posts')) {
-                    return { 
+                    return {
                         data: {
                             posts: [
                                 {
@@ -146,10 +146,10 @@ class MockApiClient {
                         }
                     };
                 }
-                
+
                 // Handle advanced recommendations
                 if (url.includes('/api/v2/analytics/advanced/recommendations/')) {
-                    return { 
+                    return {
                         data: {
                             recommendations: [
                                 {
@@ -166,7 +166,7 @@ class MockApiClient {
                         }
                     };
                 }
-                
+
                 // If no dynamic endpoint matches, throw error
                 throw new Error(`Mock endpoint not implemented: ${url}`);
         }
@@ -175,15 +175,15 @@ class MockApiClient {
     // POST method simulation
     async post(url, data, config = {}) {
         await this.delay();
-        
+
         // Handle authentication endpoints
         if (url === '/auth/login') {
             console.log('🎭 Mock login for demo user:', data.email);
-            
+
             // Validate demo credentials (matching backend)
             const validDemoEmails = [
-                'demo@analyticbot.com', 
-                'viewer@analyticbot.com', 
+                'demo@analyticbot.com',
+                'viewer@analyticbot.com',
                 'guest@analyticbot.com',
                 'admin@analyticbot.com'
             ];
@@ -193,7 +193,7 @@ class MockApiClient {
                 data.email.includes('viewer@') ||
                 data.email.includes('guest@')
             );
-            
+
             if (isDemoEmail) {
                 return {
                     data: {
@@ -214,10 +214,10 @@ class MockApiClient {
                 throw new Error('Demo mode: Use demo email addresses (demo@, viewer@, guest@)');
             }
         }
-        
+
         if (url === '/auth/register') {
             console.log('🎭 Mock registration for demo user:', data.email);
-            
+
             return {
                 data: {
                     access_token: `demo_token_${Date.now()}`,
@@ -233,7 +233,7 @@ class MockApiClient {
                 }
             };
         }
-        
+
         // Handle file uploads
         if (url === '/upload' || url.includes('upload')) {
             return {
@@ -247,7 +247,7 @@ class MockApiClient {
                 }
             };
         }
-        
+
         // Default success response
         return {
             data: {
@@ -284,7 +284,7 @@ class MockApiClient {
     // File upload simulation
     async uploadFileDirect(file, onProgress) {
         console.info('🎭 Demo mode: Simulating file upload');
-        
+
         // Simulate upload progress
         if (onProgress) {
             const progressSteps = [10, 25, 50, 75, 90, 100];
@@ -293,7 +293,7 @@ class MockApiClient {
                 onProgress(progress);
             }
         }
-        
+
         return {
             success: true,
             file_id: `demo_file_${Date.now()}`,

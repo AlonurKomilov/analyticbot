@@ -220,17 +220,17 @@ The performance pipeline includes Locust-based load testing:
 # Example load test scenario
 class UserBehavior(HttpUser):
     wait_time = between(1, 3)
-    
+
     def on_start(self):
         # User authentication
         pass
-    
+
     @task(3)
     def analytics_query(self):
         # Simulate analytics requests
         pass
-    
-    @task(1)  
+
+    @task(1)
     def subscription_check(self):
         # Simulate subscription verification
         pass
@@ -345,7 +345,7 @@ make security-scan
 # Jobs run in parallel where possible
 jobs:
   test-backend:     # ~5 minutes
-  test-frontend:    # ~3 minutes  
+  test-frontend:    # ~3 minutes
   security-scan:    # ~4 minutes
   performance-test: # ~8 minutes
 # Total pipeline time: ~8 minutes (vs ~20 sequential)
@@ -362,7 +362,7 @@ jobs:
 
 #### Coverage Labels
 - `cov:27` - Minimum 27% coverage
-- `cov:50` - Minimum 50% coverage  
+- `cov:50` - Minimum 50% coverage
 - `cov:80` - Minimum 80% coverage
 
 #### Performance Labels
@@ -385,7 +385,7 @@ jobs:
     elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'cov:27') }}" == "true" ]]; then
       COVERAGE_THRESHOLD=27
     fi
-    
+
     python -c "
     import xml.etree.ElementTree as ET
     tree = ET.parse('coverage.xml')

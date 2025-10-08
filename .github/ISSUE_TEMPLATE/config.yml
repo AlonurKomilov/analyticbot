@@ -1,5 +1,5 @@
 ---
-name: 🛠️ Configuration Template  
+name: 🛠️ Configuration Template
 about: Choose this to customize issue creation
 title: ""
 labels: []
@@ -11,15 +11,15 @@ contact_links:
   - name: 💬 Discussion Forum
     url: https://github.com/your-org/analyticbot/discussions
     about: For questions, feature discussions, and community support
-  
-  - name: 🔒 Security Vulnerabilities  
+
+  - name: 🔒 Security Vulnerabilities
     url: https://github.com/your-org/analyticbot/security/advisories/new
     about: Please use private vulnerability reporting for sensitive security issues
-  
+
   - name: 📖 Documentation
     url: https://your-docs-site.com
     about: Check our documentation for setup guides and API references
-  
+
   - name: 💡 Feature Ideas
     url: https://github.com/your-org/analyticbot/discussions/categories/ideas
     about: Share and discuss new feature ideas with the community

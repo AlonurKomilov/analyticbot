@@ -37,20 +37,20 @@ const ButtonConstructor = ({ onAddButton }) => {
     const canAdd = buttonText.trim() && (buttonType !== 'url' || (buttonUrl.trim() && !urlError));
 
     return (
-        <fieldset style={{ 
-            border: '1px solid #e0e0e0', 
-            borderRadius: '8px', 
+        <fieldset style={{
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
             padding: '16px',
             margin: 0
         }}>
-            <legend style={{ 
+            <legend style={{
                 padding: '0 8px',
                 fontWeight: 'bold',
                 color: '#666'
             }}>
                 Button Configuration
             </legend>
-            
+
             <Box variant="flexColumn" sx={{ gap: 2 }}>
                 <TextField
                     label="Button Text"
@@ -68,15 +68,15 @@ const ButtonConstructor = ({ onAddButton }) => {
                         maxLength: 50
                     }}
                 />
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="button-text-help"
                     sx={{ mt: -1 }}
                 >
                     Text that will appear on the button ({buttonText.length}/50 characters)
                 </Typography>
-                
+
                 <FormControl size="small">
                     <InputLabel id="button-type-label">Button Type</InputLabel>
                     <Select
@@ -89,16 +89,16 @@ const ButtonConstructor = ({ onAddButton }) => {
                     >
                         <MenuItem value="url">URL Link</MenuItem>
                     </Select>
-                    <Typography 
-                        variant="caption" 
-                        color="text.secondary" 
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
                         id="button-type-help"
                         sx={{ mt: 0.5 }}
                     >
                         Choose what happens when users click the button
                     </Typography>
                 </FormControl>
-                
+
                 {buttonType === 'url' && (
                     <>
                         <TextField
@@ -119,11 +119,11 @@ const ButtonConstructor = ({ onAddButton }) => {
                                 type: 'url'
                             }}
                         />
-                        
+
                         {urlError && (
-                            <Typography 
-                                variant="caption" 
-                                color="error" 
+                            <Typography
+                                variant="caption"
+                                color="error"
                                 id="url-error"
                                 role="alert"
                                 sx={{ mt: -1 }}
@@ -131,11 +131,11 @@ const ButtonConstructor = ({ onAddButton }) => {
                                 {urlError}
                             </Typography>
                         )}
-                        
+
                         {!urlError && buttonUrl && (
-                            <Typography 
-                                variant="caption" 
-                                color="text.secondary" 
+                            <Typography
+                                variant="caption"
+                                color="text.secondary"
                                 id="url-help"
                                 sx={{ mt: -1 }}
                             >
@@ -144,10 +144,10 @@ const ButtonConstructor = ({ onAddButton }) => {
                         )}
                     </>
                 )}
-                
-                <Button 
-                    onClick={handleAddButton} 
-                    variant="outlined" 
+
+                <Button
+                    onClick={handleAddButton}
+                    variant="outlined"
                     disabled={!canAdd}
                     aria-describedby="add-button-help"
                     sx={{
@@ -159,15 +159,15 @@ const ButtonConstructor = ({ onAddButton }) => {
                 >
                     Add Button
                 </Button>
-                
+
                 {!canAdd && (
-                    <Typography 
-                        variant="caption" 
-                        color="text.secondary" 
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
                         id="add-button-help"
                         sx={{ mt: -1 }}
                     >
-                        {!buttonText.trim() ? "Enter button text to continue" : 
+                        {!buttonText.trim() ? "Enter button text to continue" :
                          (buttonType === 'url' && !buttonUrl.trim()) ? "Enter a valid URL" :
                          urlError ? "Fix the URL error" : ""}
                     </Typography>

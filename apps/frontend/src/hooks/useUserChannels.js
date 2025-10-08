@@ -1,6 +1,6 @@
 /**
  * 🔐 User Channels Hooks
- * 
+ *
  * Hooks for managing user channels with authentication.
  * Provides channel selection, creation, and management functionality.
  */
@@ -18,7 +18,7 @@ export const useUserChannels = (options = {}) => {
     const { autoFetch = true, onChannelChange = null } = options;
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
-    
+
     const [channels, setChannels] = useState([]);
     const [selectedChannel, setSelectedChannel] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -71,7 +71,7 @@ export const useUserChannels = (options = {}) => {
 
             // Add new channel to local state
             setChannels(prev => [...prev, newChannel]);
-            
+
             // Auto-select the new channel
             setSelectedChannel(newChannel);
             onChannelChange?.(newChannel);
@@ -90,7 +90,7 @@ export const useUserChannels = (options = {}) => {
     const selectChannel = useCallback((channel) => {
         setSelectedChannel(channel);
         onChannelChange?.(channel);
-        
+
         // Store in localStorage for persistence
         try {
             localStorage.setItem('selectedChannelId', channel?.id?.toString() || '');
@@ -134,7 +134,7 @@ export const useUserChannels = (options = {}) => {
                         return;
                     }
                 }
-                
+
                 // Fallback to first channel
                 const firstChannel = channels[0];
                 setSelectedChannel(firstChannel);
@@ -170,7 +170,7 @@ export const useUserChannels = (options = {}) => {
  */
 export const useSelectedChannel = () => {
     const { selectedChannel, selectChannel, channels } = useUserChannels();
-    
+
     return {
         channel: selectedChannel,
         channelId: selectedChannel?.id,
@@ -206,7 +206,7 @@ export const useChannelAccess = (channelId) => {
         const hasChannelAccess = channels.some(
             channel => channel.id?.toString() === channelId?.toString()
         );
-        
+
         setHasAccess(hasChannelAccess);
         setChecking(false);
     }, [channelId, channels, isAuthenticated]);

@@ -17,7 +17,7 @@ import SmartBreadcrumbs from './SmartBreadcrumbs';
 
 /**
  * MobileNavigationDrawer Component
- * 
+ *
  * Handles mobile navigation drawer including:
  * - Slide-out navigation menu
  * - Complete route listing with icons
@@ -25,15 +25,15 @@ import SmartBreadcrumbs from './SmartBreadcrumbs';
  * - Active route highlighting
  * - Auto-close on navigation
  */
-const MobileNavigationDrawer = ({ 
-    open, 
-    onClose, 
+const MobileNavigationDrawer = ({
+    open,
+    onClose,
     className,
-    ...props 
+    ...props
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    
+
     const handleNavigate = (path) => {
         navigate(path);
         onClose(); // Close drawer after navigation
@@ -46,7 +46,7 @@ const MobileNavigationDrawer = ({
             onClose={onClose}
             className={className}
             PaperProps={{
-                sx: { 
+                sx: {
                     width: 280,
                     backgroundColor: 'background.paper'
                 }
@@ -55,11 +55,11 @@ const MobileNavigationDrawer = ({
         >
             {/* Account for AppBar height */}
             <Toolbar />
-            
+
             <Box sx={{ p: 2 }}>
                 {/* Mobile breadcrumbs */}
                 <Box sx={{ mb: 2 }}>
-                    <SmartBreadcrumbs 
+                    <SmartBreadcrumbs
                         showOnMobile={true}
                         maxItems={4}
                     />
@@ -68,10 +68,10 @@ const MobileNavigationDrawer = ({
                 <Divider sx={{ my: 2 }} />
 
                 {/* App Title */}
-                <Typography 
-                    variant="h6" 
-                    sx={{ 
-                        mb: 2, 
+                <Typography
+                    variant="h6"
+                    sx={{
+                        mb: 2,
                         fontWeight: 600,
                         color: 'primary.main',
                         textAlign: 'center'
@@ -85,14 +85,14 @@ const MobileNavigationDrawer = ({
                     {NAVIGATION_CONFIG.routes.map((route) => {
                         const IconComponent = route.icon;
                         const isActive = location.pathname === route.path;
-                        
+
                         return (
                             <React.Fragment key={route.id}>
                                 <ListItem disablePadding sx={{ mb: 1 }}>
                                     <ListItemButton
                                         onClick={() => handleNavigate(route.path)}
                                         selected={isActive}
-                                        sx={{ 
+                                        sx={{
                                             borderRadius: 2,
                                             minHeight: 56,
                                             '&.Mui-selected': {
@@ -110,19 +110,19 @@ const MobileNavigationDrawer = ({
                                         <ListItemIcon sx={{ minWidth: 48 }}>
                                             <IconComponent />
                                         </ListItemIcon>
-                                        <ListItemText 
+                                        <ListItemText
                                             primary={
-                                                <Typography 
-                                                    variant="body1" 
+                                                <Typography
+                                                    variant="body1"
                                                     sx={{ fontWeight: isActive ? 600 : 400 }}
                                                 >
                                                     {route.label}
                                                 </Typography>
                                             }
                                             secondary={
-                                                <Typography 
-                                                    variant="caption" 
-                                                    sx={{ 
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
                                                         color: isActive ? 'inherit' : 'text.secondary',
                                                         opacity: isActive ? 0.8 : 1
                                                     }}
@@ -142,21 +142,21 @@ const MobileNavigationDrawer = ({
                                                 <ListItemButton
                                                     onClick={() => handleNavigate(child.path)}
                                                     selected={location.pathname === child.path}
-                                                    sx={{ 
+                                                    sx={{
                                                         borderRadius: 1,
                                                         minHeight: 40,
                                                         pl: 4
                                                     }}
                                                 >
-                                                    <ListItemText 
+                                                    <ListItemText
                                                         primary={
                                                             <Typography variant="body2">
                                                                 {child.label}
                                                             </Typography>
                                                         }
                                                         secondary={
-                                                            <Typography 
-                                                                variant="caption" 
+                                                            <Typography
+                                                                variant="caption"
                                                                 color="text.secondary"
                                                             >
                                                                 {child.description}
@@ -176,9 +176,9 @@ const MobileNavigationDrawer = ({
                 <Divider sx={{ my: 2 }} />
 
                 {/* Quick Actions Section */}
-                <Typography 
-                    variant="subtitle2" 
-                    color="text.secondary" 
+                <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
                     sx={{ mb: 1, px: 1 }}
                 >
                     Quick Actions
@@ -186,7 +186,7 @@ const MobileNavigationDrawer = ({
                 <List dense>
                     {NAVIGATION_CONFIG.quickActions.map((action) => {
                         const IconComponent = action.icon;
-                        
+
                         return (
                             <ListItem key={action.id} disablePadding>
                                 <ListItemButton
@@ -198,7 +198,7 @@ const MobileNavigationDrawer = ({
                                             onClose();
                                         }
                                     }}
-                                    sx={{ 
+                                    sx={{
                                         borderRadius: 1,
                                         minHeight: 40
                                     }}
@@ -206,7 +206,7 @@ const MobileNavigationDrawer = ({
                                     <ListItemIcon sx={{ minWidth: 36 }}>
                                         <IconComponent fontSize="small" />
                                     </ListItemIcon>
-                                    <ListItemText 
+                                    <ListItemText
                                         primary={
                                             <Typography variant="body2">
                                                 {action.label}
@@ -214,8 +214,8 @@ const MobileNavigationDrawer = ({
                                         }
                                     />
                                     {action.shortcut && (
-                                        <Typography 
-                                            variant="caption" 
+                                        <Typography
+                                            variant="caption"
                                             color="text.disabled"
                                             sx={{ ml: 1 }}
                                         >

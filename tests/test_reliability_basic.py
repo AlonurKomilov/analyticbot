@@ -25,7 +25,9 @@ def test_idempotency_basic():
         print("✅ IdempotencyGuard import and initialization: PASSED")
 
         # Test IdempotencyStatus model
-        status = IdempotencyStatus(status="processing",             created_at=datetime.fromisoformat("2024-01-01T00:00:00+00:00"))
+        status = IdempotencyStatus(
+            status="processing", created_at=datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+        )
         assert status.status == "processing"
         print("✅ IdempotencyStatus model: PASSED")
 

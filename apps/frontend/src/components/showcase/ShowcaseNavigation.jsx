@@ -1,6 +1,6 @@
 /**
  * ShowcaseNavigation Component
- * 
+ *
  * Extracted from DataTablesShowcase - handles tab navigation
  * and tab panel rendering with proper accessibility
  */
@@ -52,8 +52,8 @@ const tabConfig = [
 const ShowcaseNavigation = ({ activeTab, onTabChange }) => {
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-            <Tabs 
-                value={activeTab} 
+            <Tabs
+                value={activeTab}
                 onChange={onTabChange}
                 variant="fullWidth"
                 aria-label="Data tables showcase navigation"

@@ -1,6 +1,6 @@
 /**
  * TopPostsTable - Refactored modular components
- * 
+ *
  * This is the new, refactored TopPostsTable with separated concerns:
  * - PostTableFilters: Time and sort filter controls
  * - PostSummaryStats: Statistics summary cards

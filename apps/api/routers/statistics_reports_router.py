@@ -17,7 +17,7 @@ from apps.api.middleware.auth import get_current_user
 
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 # Schemas
 
@@ -38,7 +38,7 @@ async def get_analytical_report(
     ),
     days: int = Query(30, ge=7, le=365, description="Days of historical data for analysis"),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """
@@ -97,7 +97,7 @@ async def get_data_source_comparison(
         "systems", regex="^(systems|periods|metrics)$", description="Type of comparison analysis"
     ),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """
@@ -195,7 +195,7 @@ async def get_top_posts_trends(
         regex="^(performance|engagement|growth)$",
         description="Type of trend analysis",
     ),
-    service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
     current_user: dict = Depends(get_current_user),
 ):
@@ -267,7 +267,7 @@ async def get_performance_summary_report(
     channel_id: int,
     days: int = Query(30, ge=7, le=90, description="Days for performance summary"),
     current_user: dict = Depends(get_current_user),
-    analytics_service: AnalyticsOrchestratorService = Depends(get_analytics_fusion_service),
+    analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
     """

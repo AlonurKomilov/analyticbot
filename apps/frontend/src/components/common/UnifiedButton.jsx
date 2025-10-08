@@ -1,6 +1,6 @@
 /**
  * Unified Button Component
- * 
+ *
  * Consolidates AccessibleButton, LoadingButton, and StandardButton into a single,
  * comprehensive button component with all features:
  * - Accessibility compliance (WCAG 2.1 AA)
@@ -19,7 +19,7 @@ import { DESIGN_TOKENS, getButtonProps, createTransition, createElevation } from
 // Enhanced styled button with all accessibility and design features
 const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading }) => {
   const sizeConfig = DESIGN_TOKENS.components.button.sizes[size] || DESIGN_TOKENS.components.button.sizes.medium;
-  
+
   return {
     textTransform: 'none',
     fontWeight: DESIGN_TOKENS.typography.weights.medium,
@@ -29,29 +29,29 @@ const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading })
     fontSize: sizeConfig.fontSize,
     cursor: loading ? 'not-allowed' : 'pointer',
     ...createTransition('all', 'fast'),
-    
+
     // Accessibility focus styles
     '&:focus-visible': {
       outline: `3px solid ${theme.palette.primary.main}`,
       outlineOffset: '2px',
       borderRadius: '8px',
     },
-    
+
     // Disabled state styling
     '&:disabled': {
       opacity: loading ? 0.8 : 0.6,
       cursor: 'not-allowed',
       pointerEvents: 'auto', // Allow focus for screen readers
     },
-    
+
     // Hover effects (disabled when loading)
     '&:hover:not(:disabled)': !loading ? {
       transform: 'translateY(-1px)',
       ...createElevation(2)
     } : {},
-    
 
-    
+
+
     // High contrast mode support
     '@media (prefers-contrast: high)': {
       '&:focus-visible': {
@@ -59,7 +59,7 @@ const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading })
         outlineOffset: '2px',
       }
     },
-    
+
     // Reduced motion support
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
@@ -67,7 +67,7 @@ const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading })
         transform: 'none',
       }
     },
-    
+
     // Icon spacing
     '& .MuiButton-startIcon': {
       marginRight: '8px',
@@ -80,7 +80,7 @@ const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading })
 
 /**
  * Unified Button Component
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.loading - Show loading state
  * @param {string} props.loadingText - Text to show when loading (for screen readers)
@@ -112,11 +112,11 @@ const UnifiedButton = React.forwardRef(({
   endIcon,
   ...props
 }, ref) => {
-  
+
   // Get design token button properties
   const buttonProps = getButtonProps(size, variant);
   const isDisabled = disabled || loading;
-  
+
   // Generate accessible attributes
   const accessibleProps = {
     'aria-label': ariaLabel || (typeof children === 'string' ? children : undefined),
@@ -127,10 +127,10 @@ const UnifiedButton = React.forwardRef(({
     ref,
     ...props
   };
-  
+
   // Loading spinner configuration
   const spinnerSize = size === 'small' ? 14 : size === 'large' ? 20 : 16;
-  
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <StyledButton
@@ -148,7 +148,7 @@ const UnifiedButton = React.forwardRef(({
       >
         {loading ? loadingText : children}
       </StyledButton>
-      
+
       {/* Loading indicator overlay */}
       {loading && (
         <div
@@ -165,9 +165,9 @@ const UnifiedButton = React.forwardRef(({
             color: 'white'
           }}
         >
-          <CircularProgress 
+          <CircularProgress
             size={spinnerSize}
-            color="inherit" 
+            color="inherit"
             aria-hidden="true"
           />
           <span aria-live="polite" className="sr-only">

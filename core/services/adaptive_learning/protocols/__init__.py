@@ -20,57 +20,56 @@ Key Benefits:
 """
 
 # Monitoring protocols
-from .monitoring_protocols import (
-    MonitoringProtocol,
-    MonitoringServiceProtocol,
-    PerformanceTrackerProtocol,
-    MonitoringInfrastructureProtocol,
-    PerformanceMetric,
-    PerformanceAlert,
-    PerformanceMetricType,
-    AlertSeverity
+# Drift detection protocols
+from .drift_protocols import (
+    DataDistribution,
+    DriftAlert,
+    DriftAnalysis,
+    DriftAnalyzerProtocol,
+    DriftDetectionMethod,
+    DriftDetectionProtocol,
+    DriftSeverity,
+    DriftType,
+    PerformanceDriftDetectorProtocol,
+    StatisticalDriftDetectorProtocol,
 )
 
 # Feedback protocols
 from .feedback_protocols import (
-    FeedbackProtocol,
-    FeedbackProcessorProtocol,
-    FeedbackStorageProtocol,
-    UserFeedback,
-    FeedbackBatch,
-    FeedbackAnalysis,
-    FeedbackType,
     ContentType,
+    FeedbackAnalysis,
+    FeedbackBatch,
+    FeedbackProcessorProtocol,
+    FeedbackProtocol,
     FeedbackQuality,
-    FeedbackSource
+    FeedbackSource,
+    FeedbackStorageProtocol,
+    FeedbackType,
+    UserFeedback,
 )
 
 # Learning protocols
 from .learning_protocols import (
-    LearningProtocol,
-    OnlineLearnerProtocol,
-    ModelVersioningProtocol,
     IncrementalUpdaterProtocol,
+    LearningProgress,
+    LearningProtocol,
+    LearningStrategy,
     LearningTask,
     ModelUpdate,
-    LearningProgress,
-    LearningStrategy,
+    ModelVersioningProtocol,
+    ModelVersionType,
+    OnlineLearnerProtocol,
     UpdateStatus,
-    ModelVersion
 )
-
-# Drift detection protocols
-from .drift_protocols import (
-    DriftDetectionProtocol,
-    DriftAnalyzerProtocol,
-    PerformanceDriftDetectorProtocol,
-    StatisticalDriftDetectorProtocol,
-    DriftAlert,
-    DriftAnalysis,
-    DataDistribution,
-    DriftType,
-    DriftSeverity,
-    DriftDetectionMethod
+from .monitoring_protocols import (
+    AlertSeverity,
+    MonitoringInfrastructureProtocol,
+    MonitoringProtocol,
+    MonitoringServiceProtocol,
+    PerformanceAlert,
+    PerformanceMetric,
+    PerformanceMetricType,
+    PerformanceTrackerProtocol,
 )
 
 __all__ = [
@@ -83,7 +82,6 @@ __all__ = [
     "PerformanceAlert",
     "PerformanceMetricType",
     "AlertSeverity",
-    
     # Feedback
     "FeedbackProtocol",
     "FeedbackProcessorProtocol",
@@ -95,7 +93,6 @@ __all__ = [
     "ContentType",
     "FeedbackQuality",
     "FeedbackSource",
-    
     # Learning
     "LearningProtocol",
     "OnlineLearnerProtocol",
@@ -106,8 +103,7 @@ __all__ = [
     "LearningProgress",
     "LearningStrategy",
     "UpdateStatus",
-    "ModelVersion",
-    
+    "ModelVersionType",
     # Drift Detection
     "DriftDetectionProtocol",
     "DriftAnalyzerProtocol",
@@ -118,5 +114,5 @@ __all__ = [
     "DataDistribution",
     "DriftType",
     "DriftSeverity",
-    "DriftDetectionMethod"
+    "DriftDetectionMethod",
 ]

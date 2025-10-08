@@ -1,9 +1,9 @@
 /**
  * EnhancedDataTable - Refactored modular components
- * 
+ *
  * Main Component:
  * - EnhancedDataTable: Core table component with all enterprise features
- * 
+ *
  * Sub-components:
  * - TableToolbar: Header with title, search, and action controls
  * - TableContent: Main table rendering with sorting and selection
@@ -12,12 +12,12 @@
  * - TableExport: Export menu with format selection
  * - TableColumns: Column visibility management
  * - TableDensity: Table density/padding controls
- * 
+ *
  * Hooks:
  * - useTableState: State management for pagination, sorting, filtering
  * - useTableData: Data processing with filtering, sorting, pagination
  * - useTableSelection: Row selection and bulk operations
- * 
+ *
  * Utilities:
  * - exportUtils: Export functions for CSV, Excel, PDF
  * - tableUtils: Data processing and filtering utilities

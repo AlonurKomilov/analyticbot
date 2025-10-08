@@ -11,7 +11,7 @@ export const usePostTableLogic = () => {
     const [posts, setPosts] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedPostId, setSelectedPostId] = useState(null);
-    
+
     // Get store methods
     const { fetchTopPosts } = useAppStore();
 
@@ -20,11 +20,11 @@ export const usePostTableLogic = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             // Get fresh store reference to avoid dependency issues
             const { fetchTopPosts } = useAppStore.getState();
             const result = await fetchTopPosts(DEFAULT_DEMO_CHANNEL_ID, timeFilter, sortBy);
-            
+
             // Ensure we always set an array
             let postsData = [];
             if (Array.isArray(result)) {
@@ -34,9 +34,9 @@ export const usePostTableLogic = () => {
             } else if (result && result.data && Array.isArray(result.data)) {
                 postsData = result.data;
             }
-            
+
             setPosts(postsData);
-            
+
         } catch (err) {
             setError(err.message);
             console.error('Error loading top posts:', err);
@@ -90,7 +90,7 @@ export const usePostTableLogic = () => {
                 thumbnail: null
             }
         ];
-        
+
         setPosts(mockPosts);
         setLoading(false);
     }, []);
@@ -129,7 +129,7 @@ export const usePostTableLogic = () => {
         anchorEl,
         selectedPostId,
         summaryStats,
-        
+
         // Actions
         setTimeFilter,
         setSortBy,

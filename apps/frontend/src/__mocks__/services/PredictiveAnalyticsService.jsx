@@ -34,11 +34,11 @@ import ModernCard, { ModernCardHeader } from '../../components/common/ModernCard
 import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
 // Import mock data
-import { 
-    predictiveStats, 
-    mockForecasts, 
-    trendInsights, 
-    forecastModels 
+import {
+    predictiveStats,
+    mockForecasts,
+    trendInsights,
+    forecastModels
 } from '../aiServices/predictiveAnalytics.js';
 
 /**
@@ -104,7 +104,7 @@ const PredictiveAnalyticsService = () => {
                 <Typography variant="body1" color="text.secondary">
                     Advanced forecasting and predictive modeling using machine learning algorithms.
                 </Typography>
-                
+
                 <Alert severity="info" sx={{ mt: 2 }}>
                     🎭 Demo Mode: Showing sample predictive analytics data. In production, this would analyze real historical data to make predictions.
                 </Alert>
@@ -124,7 +124,7 @@ const PredictiveAnalyticsService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -137,7 +137,7 @@ const PredictiveAnalyticsService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -150,7 +150,7 @@ const PredictiveAnalyticsService = () => {
                         </CardContent>
                     </ModernCard>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -184,8 +184,8 @@ const PredictiveAnalyticsService = () => {
                                     <MenuItem value="1y">1 Year</MenuItem>
                                 </Select>
                             </FormControl>
-                            <Button 
-                                variant="contained" 
+                            <Button
+                                variant="contained"
                                 onClick={handleAnalyze}
                                 disabled={isAnalyzing}
                             >
@@ -195,8 +195,8 @@ const PredictiveAnalyticsService = () => {
                     }
                 />
 
-                <Tabs 
-                    value={currentTab} 
+                <Tabs
+                    value={currentTab}
                     onChange={handleTabChange}
                     sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
                 >
@@ -211,7 +211,7 @@ const PredictiveAnalyticsService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Prediction Results
                         </Typography>
-                        
+
                         <TableContainer component={Paper} variant="outlined">
                             <Table>
                                 <TableHead>
@@ -232,8 +232,8 @@ const PredictiveAnalyticsService = () => {
                                             <TableCell>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                     {getTrendIcon(prediction.trend)}
-                                                    <Typography 
-                                                        variant="body2" 
+                                                    <Typography
+                                                        variant="body2"
                                                         sx={{ color: getTrendColor(prediction.trend) }}
                                                     >
                                                         {prediction.change}
@@ -241,7 +241,7 @@ const PredictiveAnalyticsService = () => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell>
-                                                <Chip 
+                                                <Chip
                                                     label={`${prediction.confidence}%`}
                                                     color={prediction.confidence > 80 ? 'success' : prediction.confidence > 60 ? 'warning' : 'error'}
                                                     size="small"
@@ -261,7 +261,7 @@ const PredictiveAnalyticsService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Trend Insights
                         </Typography>
-                        
+
                         <Grid container spacing={2}>
                             {(insights || []).map((insight, index) => (
                                 <Grid item xs={12} md={6} key={index}>
@@ -274,7 +274,7 @@ const PredictiveAnalyticsService = () => {
                                                 {insight.description}
                                             </Typography>
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Chip 
+                                                <Chip
                                                     label={insight.impact}
                                                     color={insight.impact === 'High' ? 'error' : insight.impact === 'Medium' ? 'warning' : 'success'}
                                                     size="small"
@@ -297,11 +297,11 @@ const PredictiveAnalyticsService = () => {
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             Prediction Models
                         </Typography>
-                        
+
                         <Alert severity="info" sx={{ mb: 2 }}>
                             🎭 Demo Mode: Model configurations are simulated for demonstration purposes.
                         </Alert>
-                        
+
                         <Grid container spacing={2}>
                             {(models || []).map((model, index) => (
                                 <Grid item xs={12} md={4} key={index}>
@@ -318,7 +318,7 @@ const PredictiveAnalyticsService = () => {
                                                     Accuracy: <strong>{model.accuracy}%</strong>
                                                 </Typography>
                                                 <Typography variant="body2">
-                                                    Status: <Chip 
+                                                    Status: <Chip
                                                         label={model.status}
                                                         color={model.status === 'Active' ? 'success' : 'default'}
                                                         size="small"

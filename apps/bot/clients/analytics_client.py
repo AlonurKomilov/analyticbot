@@ -134,10 +134,10 @@ class AnalyticsClientError(Exception):
 class AnalyticsClient:
     """
     Async HTTP client for Analytics Fusion API - Clean Architecture
-    
+
     Provides bot-friendly interface to analytics endpoints following clean architecture principles.
     Abstracts HTTP communication details and provides domain-specific methods.
-    
+
     Clean Architecture Benefits:
     - Domain-driven method naming
     - Service abstraction pattern

@@ -17,7 +17,7 @@ VALUES (
 
 -- Insert demo daily analytics data for the last 30 days
 INSERT INTO channel_daily (channel_id, date, subscribers, views, posts, engagement_rate)
-SELECT 
+SELECT
     -1001234567890,
     date_series.date,
     1500 + (EXTRACT(DAY FROM date_series.date) * 2), -- Growing subscribers
@@ -40,7 +40,7 @@ ON CONFLICT (channel_id, date) DO UPDATE SET
 
 -- Insert some demo posts for top posts analytics
 INSERT INTO posts (id, channel_id, message_id, content, views, date, created_at)
-VALUES 
+VALUES
     (1, -1001234567890, 1001, 'Welcome to our analytics demo! 🚀', 2500, CURRENT_DATE - INTERVAL '5 days', NOW()),
     (2, -1001234567890, 1002, 'Check out these amazing analytics features! 📊', 1800, CURRENT_DATE - INTERVAL '3 days', NOW()),
     (3, -1001234567890, 1003, 'Export your data easily with CSV and PNG options! 📈', 2200, CURRENT_DATE - INTERVAL '2 days', NOW()),
@@ -51,10 +51,10 @@ ON CONFLICT (id) DO UPDATE SET
     updated_at = NOW();
 
 -- Verify the data was inserted
-SELECT 'Demo channel created with ID:' as status, id, username, title, subscriber_count 
+SELECT 'Demo channel created with ID:' as status, id, username, title, subscriber_count
 FROM channels WHERE id = -1001234567890;
 
-SELECT 'Daily analytics records:' as status, COUNT(*) as record_count 
+SELECT 'Daily analytics records:' as status, COUNT(*) as record_count
 FROM channel_daily WHERE channel_id = -1001234567890;
 
 SELECT 'Demo posts created:' as status, COUNT(*) as post_count

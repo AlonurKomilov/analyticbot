@@ -22,13 +22,13 @@ import { useDataSource } from '../../hooks/useDataSource.js';
  * Export Button Component for Analytics Data
  * Updated to use new mock/real data source architecture
  */
-const ExportButton = ({ 
-    channelId = 'demo_channel', 
-    dataType = 'engagement', 
+const ExportButton = ({
+    channelId = 'demo_channel',
+    dataType = 'engagement',
     period = '7d',
     disabled = false,
     size = 'medium',
-    ...props 
+    ...props
 }) => {
     const { dataSource } = useDataSource();
     const [anchorEl, setAnchorEl] = useState(null);
@@ -91,7 +91,7 @@ const ExportButton = ({
             const dataService = dataServiceFactory.getService(dataSource);
             let response;
             let filename;
-            
+
             if (format === 'csv') {
                 response = await dataService.exportToCsv(dataType, channelId, period);
                 filename = `${dataType}_${channelId}_${period}.csv`;
@@ -99,7 +99,7 @@ const ExportButton = ({
                 response = await dataService.exportToPng(dataType, channelId, period);
                 filename = `${dataType}_${channelId}_${period}.png`;
             }
-            
+
             // Handle different response formats
             if (typeof response === 'string') {
                 downloadFile(response, filename, format);
@@ -152,7 +152,7 @@ const ExportButton = ({
                     <ListItemIcon>
                         <CsvIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                         primary="Export as CSV"
                         secondary="Spreadsheet format"
                     />
@@ -162,7 +162,7 @@ const ExportButton = ({
                     <ListItemIcon>
                         <PngIcon fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText 
+                    <ListItemText
                         primary="Export as PNG"
                         secondary="Chart image"
                     />
@@ -176,8 +176,8 @@ const ExportButton = ({
                 onClose={() => setSuccess(null)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert 
-                    onClose={() => setSuccess(null)} 
+                <Alert
+                    onClose={() => setSuccess(null)}
                     severity="success"
                     variant="filled"
                 >
@@ -192,8 +192,8 @@ const ExportButton = ({
                 onClose={() => setError(null)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert 
-                    onClose={() => setError(null)} 
+                <Alert
+                    onClose={() => setError(null)}
                     severity="error"
                     variant="filled"
                 >

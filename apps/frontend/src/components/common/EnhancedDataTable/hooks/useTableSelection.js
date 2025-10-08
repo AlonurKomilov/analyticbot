@@ -21,7 +21,7 @@ export const useTableSelection = ({
         setSelectedRows(newSelection);
         onSelectionChange?.(Array.from(newSelection));
     }, [selectedRows, setSelectedRows, onSelectionChange]);
-    
+
     const toggleAllSelection = useCallback(() => {
         if (isAllSelected) {
             setSelectedRows(new Set());
@@ -33,30 +33,30 @@ export const useTableSelection = ({
             onSelectionChange?.(allRowIndices);
         }
     }, [paginatedData, setSelectedRows, onSelectionChange]);
-    
+
     const clearSelection = useCallback(() => {
         setSelectedRows(new Set());
         onSelectionChange?.([]);
     }, [setSelectedRows, onSelectionChange]);
-    
+
     // Selection state calculations
     const isAllSelected = useMemo(() => {
         return paginatedData.length > 0 && selectedRows.size === paginatedData.length;
     }, [paginatedData.length, selectedRows.size]);
-    
+
     const isIndeterminate = useMemo(() => {
         return selectedRows.size > 0 && selectedRows.size < paginatedData.length;
     }, [selectedRows.size, paginatedData.length]);
-    
+
     const selectedCount = selectedRows.size;
     const hasSelection = selectedCount > 0;
-    
+
     return {
         // Actions
         toggleRowSelection,
         toggleAllSelection,
         clearSelection,
-        
+
         // State
         isAllSelected,
         isIndeterminate,

@@ -5,21 +5,21 @@ import { Button } from '../../common';
 const ChartTypeSelector = React.memo(({ chartType, onChartTypeChange }) => {
     return (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
-            <Button 
+            <Button
                 variant={chartType === 'line' ? 'primary' : 'secondary'}
                 size="small"
                 onClick={() => onChartTypeChange('line')}
             >
                 Line
             </Button>
-            <Button 
+            <Button
                 variant={chartType === 'area' ? 'primary' : 'secondary'}
                 size="small"
                 onClick={() => onChartTypeChange('area')}
             >
                 Area
             </Button>
-            <Button 
+            <Button
                 variant={chartType === 'bar' ? 'primary' : 'secondary'}
                 size="small"
                 onClick={() => onChartTypeChange('bar')}

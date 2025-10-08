@@ -53,7 +53,7 @@ const ContentProtectionDashboard = () => {
                 <Typography variant="subtitle1" color="text.secondary">
                     Protect your digital content with watermarks and theft detection
                 </Typography>
-                
+
                 {/* Feature Badges */}
                 <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
                     <Chip icon={<ShieldIcon />} label="Premium Security" color="primary" />
@@ -73,13 +73,13 @@ const ContentProtectionDashboard = () => {
                                 Image Watermarking
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Add custom watermarks to your images with full control over text, position, 
+                                Add custom watermarks to your images with full control over text, position,
                                 opacity, and styling to protect your visual content.
                             </Typography>
                         </CardContent>
                     </Card>
                 </Grid>
-                
+
                 <Grid item xs={12} md={6}>
                     <Card sx={{ height: '100%', bgcolor: 'secondary.50' }}>
                         <CardContent sx={{ textAlign: 'center' }}>
@@ -88,7 +88,7 @@ const ContentProtectionDashboard = () => {
                                 Theft Detection
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                Scan the web for unauthorized usage of your content using advanced 
+                                Scan the web for unauthorized usage of your content using advanced
                                 hash-based detection across multiple platforms.
                             </Typography>
                         </CardContent>
@@ -97,13 +97,13 @@ const ContentProtectionDashboard = () => {
             </Grid>
 
             {/* Premium Notice */}
-            <Alert 
-                severity="info" 
+            <Alert
+                severity="info"
                 icon={<StarIcon />}
                 sx={{ mb: 3 }}
             >
                 <Typography variant="body2">
-                    <strong>Premium Feature:</strong> Content Protection tools are available to premium subscribers. 
+                    <strong>Premium Feature:</strong> Content Protection tools are available to premium subscribers.
                     Upgrade your plan to access watermarking and theft detection capabilities.
                 </Typography>
             </Alert>

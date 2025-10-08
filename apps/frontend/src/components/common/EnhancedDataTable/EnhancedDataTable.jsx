@@ -24,7 +24,7 @@ import { EXPORT_FORMATS, exportToCsv, exportToExcel, exportToPdf } from './utils
 
 /**
  * Enhanced Data Table Component - Refactored Modular Version
- * 
+ *
  * Enterprise-grade data table with advanced features:
  * - Advanced pagination with customizable page sizes
  * - Multi-column sorting with visual indicators
@@ -43,65 +43,65 @@ export const EnhancedDataTable = ({
     columns = [],
     loading = false,
     error = null,
-    
+
     // Table configuration
     title = '',
     subtitle = '',
-    
+
     // Pagination
     enablePagination = true,
     defaultPageSize = 10,
-    
+
     // Sorting
     enableSorting = true,
     defaultSortBy = null,
     defaultSortDirection = 'asc',
-    
-    // Searching & Filtering  
+
+    // Searching & Filtering
     enableSearch = true,
     enableFiltering = true,
     searchPlaceholder = 'Search all columns...',
-    
+
     // Column management
     enableColumnVisibility = true,
     enableColumnReordering = false,
-    
+
     // Selection
     enableSelection = true,
     enableBulkActions = true,
-    
+
     // Export
     enableExport = true,
     exportFilename = 'data-export',
-    
+
     // Refresh
     enableRefresh = true,
     onRefresh,
-    
+
     // Density
     enableDensityToggle = true,
     defaultDensity = 'standard',
-    
+
     // Custom actions
     bulkActions = [],
     rowActions = [],
-    
+
     // Event handlers
     onRowClick,
     onSelectionChange,
     onSort,
     onFilter,
-    
+
     // Advanced features
     enableRealTimeUpdates = false,
     refreshInterval = 30000,
-    
+
     // Styling
     sx = {},
-    
+
     // Accessibility
     tableAriaLabel,
-    
+
     ...otherProps
 }) => {
     // State management using custom hooks
@@ -113,7 +113,7 @@ export const EnhancedDataTable = ({
         defaultSortDirection,
         defaultDensity
     });
-    
+
     const {
         page,
         setPage,
@@ -137,7 +137,7 @@ export const EnhancedDataTable = ({
         setSelectedRows,
         resetPage
     } = tableState;
-    
+
     // Data processing using custom hook
     const tableData = useTableData({
         data,
@@ -150,7 +150,7 @@ export const EnhancedDataTable = ({
         pageSize,
         columnVisibility
     });
-    
+
     const {
         visibleColumns,
         processedData,
@@ -158,7 +158,7 @@ export const EnhancedDataTable = ({
         totalItems,
         totalPages
     } = tableData;
-    
+
     // Selection management using custom hook
     const tableSelection = useTableSelection({
         paginatedData,
@@ -166,7 +166,7 @@ export const EnhancedDataTable = ({
         setSelectedRows,
         onSelectionChange
     });
-    
+
     const {
         toggleRowSelection,
         toggleAllSelection,
@@ -176,10 +176,10 @@ export const EnhancedDataTable = ({
         selectedCount,
         hasSelection
     } = tableSelection;
-    
+
     // Auto-refresh functionality
     const refreshIntervalRef = useRef(null);
-    
+
     useEffect(() => {
         if (enableRealTimeUpdates && onRefresh && refreshInterval > 0) {
             refreshIntervalRef.current = setInterval(onRefresh, refreshInterval);
@@ -190,21 +190,21 @@ export const EnhancedDataTable = ({
             };
         }
     }, [enableRealTimeUpdates, onRefresh, refreshInterval]);
-    
+
     // Export functionality
     const handleExport = useCallback((format) => {
         const headers = visibleColumns.map(col => col.header || col.id);
-        const exportData = selectedRows.size > 0 
+        const exportData = selectedRows.size > 0
             ? Array.from(selectedRows).map(index => paginatedData[index])
             : processedData;
-        
+
         const rows = exportData.map(row =>
             visibleColumns.map(col => {
                 const value = col.accessor ? col.accessor(row) : row[col.id];
                 return value;
             })
         );
-        
+
         switch (format) {
             case 'csv':
                 exportToCsv(headers, rows, exportFilename);
@@ -217,7 +217,7 @@ export const EnhancedDataTable = ({
                 break;
         }
     }, [processedData, selectedRows, visibleColumns, paginatedData, exportFilename, title]);
-    
+
     // Sorting handler
     const handleSort = useCallback((columnId, direction) => {
         setSortBy(columnId);
@@ -225,13 +225,13 @@ export const EnhancedDataTable = ({
         resetPage();
         onSort?.(columnId, direction);
     }, [setSortBy, setSortDirection, resetPage, onSort]);
-    
+
     // Search handler with page reset
     const handleSearchChange = useCallback((query) => {
         setSearchQuery(query);
         resetPage();
     }, [setSearchQuery, resetPage]);
-    
+
     // Error state
     if (error) {
         return (
@@ -252,7 +252,7 @@ export const EnhancedDataTable = ({
             </Paper>
         );
     }
-    
+
     return (
         <Paper sx={{ width: '100%', ...sx }} {...otherProps}>
             {/* Header Toolbar */}
@@ -277,7 +277,7 @@ export const EnhancedDataTable = ({
                 onRefresh={onRefresh}
                 loading={loading}
             />
-            
+
             {/* Main Table */}
             <TableContent
                 visibleColumns={visibleColumns}
@@ -299,7 +299,7 @@ export const EnhancedDataTable = ({
                 onRowClick={onRowClick}
                 rowActions={rowActions}
             />
-            
+
             {/* Pagination */}
             <TablePaginationControls
                 totalItems={totalItems}

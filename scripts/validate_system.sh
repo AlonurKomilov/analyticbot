@@ -7,7 +7,7 @@ echo "===================================="
 
 # Colors
 GREEN='\033[0;32m'
-RED='\033[0;31m' 
+RED='\033[0;31m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
@@ -36,10 +36,10 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_command="$2"
-    
+
     print_test "$test_name"
     TESTS_RUN=$((TESTS_RUN + 1))
-    
+
     if eval "$test_command" >/dev/null 2>&1; then
         print_pass "$test_name"
         TESTS_PASSED=$((TESTS_PASSED + 1))
@@ -60,7 +60,7 @@ run_test "API Health Endpoint" "curl -f -s http://localhost:8000/health"
 run_test "API Documentation" "curl -f -s http://localhost:8000/docs | grep -q 'swagger'"
 run_test "API CORS Headers" "curl -f -s -I http://localhost:8000/health | grep -i 'access-control'"
 
-# Frontend Tests  
+# Frontend Tests
 run_test "Frontend Homepage" "curl -f -s http://localhost:3000 | grep -q 'html'"
 run_test "Frontend Assets" "curl -f -s http://localhost:3000 | grep -q 'vite'"
 

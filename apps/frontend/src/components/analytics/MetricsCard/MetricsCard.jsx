@@ -21,11 +21,11 @@ import MetricsGrid from './MetricsGrid';
 import MetricsDetails from './MetricsDetails';
 import PerformanceInsights from './PerformanceInsights';
 
-const MetricsCard = React.memo(({ 
-    metrics, 
-    loading = false, 
-    onRefresh, 
-    showDetails = true 
+const MetricsCard = React.memo(({
+    metrics,
+    loading = false,
+    onRefresh,
+    showDetails = true
 }) => {
     const [expanded, setExpanded] = useState(false);
 
@@ -58,7 +58,7 @@ const MetricsCard = React.memo(({
     }
 
     return (
-        <Card sx={{ 
+        <Card sx={{
             height: '100%',
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -82,8 +82,8 @@ const MetricsCard = React.memo(({
                         )}
                         {showDetails && (
                             <Tooltip title={expanded ? "Show less" : "Show more"}>
-                                <IconButton 
-                                    size="small" 
+                                <IconButton
+                                    size="small"
                                     onClick={() => setExpanded(!expanded)}
                                     sx={{ color: 'white' }}
                                 >
@@ -99,9 +99,9 @@ const MetricsCard = React.memo(({
 
                 {/* Expanded Details */}
                 {showDetails && (
-                    <MetricsDetails 
-                        metrics={metrics} 
-                        expanded={expanded} 
+                    <MetricsDetails
+                        metrics={metrics}
+                        expanded={expanded}
                     />
                 )}
 

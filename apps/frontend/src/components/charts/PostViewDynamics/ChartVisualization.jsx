@@ -18,23 +18,23 @@ const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
-        <Box 
-            sx={{ 
-                bgcolor: 'background.paper', 
-                p: 1.5, 
-                border: 1, 
+        <Box
+            sx={{
+                bgcolor: 'background.paper',
+                p: 1.5,
+                border: 1,
                 borderColor: 'divider',
                 borderRadius: 1,
-                boxShadow: 2 
+                boxShadow: 2
             }}
         >
             <Typography variant="body2" fontWeight="medium">
                 {label}
             </Typography>
             {payload.map((entry, index) => (
-                <Typography 
-                    key={index} 
-                    variant="body2" 
+                <Typography
+                    key={index}
+                    variant="body2"
                     sx={{ color: entry.color }}
                 >
                     {entry.name}: {entry.value?.toLocaleString() || 0}
@@ -46,11 +46,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 /**
  * ChartVisualization - Memoized Recharts line chart component
- * 
+ *
  * Renders post view dynamics data using Recharts with responsive design.
  * Heavily optimized for performance with proper memoization to prevent
  * unnecessary re-renders in multi-user dashboard scenarios.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Array} props.data - Chart data array with timestamp and views
  * @param {string} props.timeRange - Current time range for chart formatting
@@ -61,7 +61,7 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
     // Memoized chart configuration based on time range and theme
     const chartConfig = useMemo(() => {
         const isDark = theme.palette.mode === 'dark';
-        
+
         return {
             strokeColor: theme.palette.primary.main,
             gridColor: isDark ? '#333' : '#f0f0f0',
@@ -71,24 +71,24 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
                 switch (timeRange) {
                     case '1h':
                     case '6h':
-                        return date.toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                        return date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
                         });
                     case '24h':
-                        return date.toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                        return date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
                         });
                     case '7d':
-                        return date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                        return date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
                         });
                     case '30d':
-                        return date.toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                        return date.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
                         });
                     default:
                         return date.toLocaleString();
@@ -100,7 +100,7 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
     // Memoized processed data
     const processedData = useMemo(() => {
         if (!data || !Array.isArray(data)) return [];
-        
+
         return data.map(item => ({
             timestamp: item.timestamp,
             views: Number(item.views) || 0,
@@ -125,22 +125,22 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
                         bottom: 20,
                     }}
                 >
-                    <CartesianGrid 
-                        strokeDasharray="3 3" 
+                    <CartesianGrid
+                        strokeDasharray="3 3"
                         stroke={chartConfig.gridColor}
                     />
-                    <XAxis 
+                    <XAxis
                         dataKey="timestamp"
                         tickFormatter={chartConfig.tickFormatter}
                         stroke={chartConfig.textColor}
                         fontSize={12}
                     />
-                    <YAxis 
+                    <YAxis
                         stroke={chartConfig.textColor}
                         fontSize={12}
                         tickFormatter={(value) => value.toLocaleString()}
                     />
-                    <Tooltip 
+                    <Tooltip
                         content={<CustomTooltip />}
                         labelFormatter={(value) => chartConfig.tickFormatter(value)}
                     />

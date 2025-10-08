@@ -7,11 +7,12 @@ Handles the complete OAuth flow with security best practices.
 
 import logging
 import secrets
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlencode
 
 from core.ports.security_ports import HttpClientPort, SecurityEventsPort
-from .config import SecurityConfig, get_security_config
+
+from .config import get_security_config
 from .models import AuthProvider, User, UserStatus
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class OAuthError(Exception):
     """OAuth-specific error without FastAPI coupling"""
+
     def __init__(self, message: str, status_code: int = 400, error_code: str | None = None):
         self.message = message
         self.status_code = status_code
@@ -39,13 +41,13 @@ class OAuthManager:
 
     def __init__(
         self,
-        http_client: Optional[HttpClientPort] = None,
-        security_events: Optional[SecurityEventsPort] = None
+        http_client: HttpClientPort | None = None,
+        security_events: SecurityEventsPort | None = None,
     ):
         self.config = get_security_config()
         self.http_client = http_client
         self.security_events = security_events
-        
+
         # No fallback HTTP client - apps layer must provide one
         # This enforces proper dependency injection
 
@@ -68,15 +70,17 @@ class OAuthManager:
                 "scope": "user:email",
             },
         }
-    
+
     async def _make_http_request(self, method: str, url: str, **kwargs) -> dict:
         """Make HTTP request using injected HTTP client port"""
         if not self.http_client:
-            raise OAuthError("HTTP client not configured - must be provided via dependency injection")
-        
+            raise OAuthError(
+                "HTTP client not configured - must be provided via dependency injection"
+            )
+
         try:
             # Use the injected HTTP client port
-            if method.upper() == 'POST':
+            if method.upper() == "POST":
                 return await self.http_client.post(url, **kwargs)
             else:
                 return await self.http_client.get(url, **kwargs)
@@ -150,7 +154,7 @@ class OAuthManager:
                 details={
                     "provider": provider,
                     "state": state[:8] + "...",  # Log partial state for security
-                }
+                },
             )
 
         logger.info(f"Generated OAuth authorization URL for {provider}")
@@ -194,16 +198,13 @@ class OAuthManager:
 
         try:
             token_data = await self._make_http_request(
-                "post",
-                provider_config["token_url"], 
-                data=data, 
-                headers=headers
+                "post", provider_config["token_url"], data=data, headers=headers
             )
 
             if "error" in token_data:
                 raise OAuthError(
                     f"OAuth token exchange failed: {token_data.get('error_description', 'Unknown error')}",
-                    400
+                    400,
                 )
 
             # Log successful token exchange
@@ -213,8 +214,8 @@ class OAuthManager:
                     event_type="oauth_token_exchanged",
                     details={
                         "provider": provider,
-                        "token_type": token_data.get("token_type", "bearer")
-                    }
+                        "token_type": token_data.get("token_type", "bearer"),
+                    },
                 )
 
             logger.info(f"Successfully exchanged code for token with {provider}")
@@ -249,9 +250,7 @@ class OAuthManager:
 
         try:
             user_info = await self._make_http_request(
-                "get",
-                provider_config["user_info_url"], 
-                headers=headers
+                "get", provider_config["user_info_url"], headers=headers
             )
 
             # Handle GitHub email separately (might be private)
@@ -263,10 +262,7 @@ class OAuthManager:
                 self.security_events.log_security_event(
                     user_id=None,
                     event_type="oauth_user_info_requested",
-                    details={
-                        "provider": provider,
-                        "has_email": 'email' in user_info
-                    }
+                    details={"provider": provider, "has_email": "email" in user_info},
                 )
 
             logger.info(f"Retrieved user info from {provider}")
@@ -284,9 +280,7 @@ class OAuthManager:
 
         try:
             emails = await self._make_http_request(
-                "get",
-                "https://api.github.com/user/emails", 
-                headers=headers
+                "get", "https://api.github.com/user/emails", headers=headers
             )
 
             # Find primary email
@@ -349,7 +343,7 @@ class OAuthManager:
             f"{username}_{provider}" if username else f"user_{provider}_{secrets.token_hex(4)}"
         )
 
-        # Create user object  
+        # Create user object
         user = User(
             email=email or f"noemail_{secrets.token_hex(8)}@{provider}.com",
             username=username,
@@ -415,6 +409,7 @@ class OAuthManager:
 # Global OAuth manager instance
 # Global OAuth manager instance - lazy initialization
 _oauth_manager = None
+
 
 def get_oauth_manager() -> OAuthManager:
     """Get the global OAuth manager instance"""

@@ -10,21 +10,21 @@ Updated for 4-Role Hierarchical System with backwards compatibility.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID, uuid4
-import warnings
 
 
 class AdminRole(str, Enum):
     """
     DEPRECATED: Legacy admin role hierarchy - use AdministrativeRole instead.
-    
+
     Migration mapping:
     - SUPPORT → AdministrativeRole.MODERATOR + customer_support permission
     - MODERATOR → AdministrativeRole.MODERATOR
     - ADMIN → AdministrativeRole.SUPER_ADMIN
     - SUPER_ADMIN → AdministrativeRole.SUPER_ADMIN
     """
+
     SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     MODERATOR = "moderator"
@@ -33,6 +33,7 @@ class AdminRole(str, Enum):
 
 class UserStatus(str, Enum):
     """User account status"""
+
     ACTIVE = "active"
     INACTIVE = "inactive"
     SUSPENDED = "suspended"
@@ -42,6 +43,7 @@ class UserStatus(str, Enum):
 
 class SystemStatus(str, Enum):
     """System component status"""
+
     ONLINE = "online"
     OFFLINE = "offline"
     MAINTENANCE = "maintenance"
@@ -50,6 +52,7 @@ class SystemStatus(str, Enum):
 
 class AuditAction(str, Enum):
     """Audit trail action types"""
+
     CREATE = "create"
     READ = "read"
     UPDATE = "update"
@@ -63,40 +66,41 @@ class AuditAction(str, Enum):
 @dataclass
 class AdminUser:
     """Admin user domain entity - Updated for 4-Role System"""
+
     id: UUID = field(default_factory=uuid4)
     username: str = ""
     email: str = ""
     password_hash: str = ""
-    
+
     # Role System - New hierarchical approach
     role: str = "moderator"  # Default to AdministrativeRole.MODERATOR.value
     legacy_role: AdminRole | None = None  # For backwards compatibility
-    additional_permissions: List[str] = field(default_factory=list)  # Extra permissions
+    additional_permissions: list[str] = field(default_factory=list)  # Extra permissions
     migration_profile: str | None = None  # Migration profile for special cases
-    
+
     status: UserStatus = UserStatus.ACTIVE
     first_name: str = ""
     last_name: str = ""
-    phone: Optional[str] = None
-    avatar_url: Optional[str] = None
+    phone: str | None = None
+    avatar_url: str | None = None
     timezone: str = "UTC"
     language: str = "en"
-    last_login: Optional[datetime] = None
-    last_activity: Optional[datetime] = None
+    last_login: datetime | None = None
+    last_activity: datetime | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    created_by: Optional[UUID] = None
-    
+    created_by: UUID | None = None
+
     # Security settings
     is_mfa_enabled: bool = False
     failed_login_attempts: int = 0
-    account_locked_until: Optional[datetime] = None
-    password_changed_at: Optional[datetime] = None
-    
+    account_locked_until: datetime | None = None
+    password_changed_at: datetime | None = None
+
     # Preferences
-    preferences: Dict[str, Any] = field(default_factory=dict)
-    permissions: List[str] = field(default_factory=list)  # Legacy permissions field
-    
+    preferences: dict[str, Any] = field(default_factory=dict)
+    permissions: list[str] = field(default_factory=list)  # Legacy permissions field
+
     def __post_init__(self):
         """Post-initialization validation and migration"""
         if not self.email:
@@ -104,17 +108,17 @@ class AdminUser:
         if not self.username:
             raise ValueError("Username is required")
         self._migrate_legacy_role()
-    
+
     def _migrate_legacy_role(self) -> None:
         """Migrate legacy AdminRole to new system if needed"""
         if self.legacy_role and not self._is_new_role_system():
             # Import here to avoid circular imports
             from core.security_engine.roles import migrate_admin_role
-            
+
             new_role, additional_perms = migrate_admin_role(self.legacy_role.value)
             self.role = new_role
             self.additional_permissions.extend(additional_perms)
-            
+
             # Set migration profile for special cases
             if self.legacy_role == AdminRole.SUPPORT:
                 self.migration_profile = "support_moderator"
@@ -124,6 +128,7 @@ class AdminUser:
         # Import here to avoid circular imports
         try:
             from core.security_engine.roles import AdministrativeRole
+
             new_role_values = [
                 AdministrativeRole.MODERATOR.value,
                 AdministrativeRole.SUPER_ADMIN.value,
@@ -136,11 +141,11 @@ class AdminUser:
         """Get all permissions for this admin user"""
         try:
             from core.security_engine.role_hierarchy import role_hierarchy_service
-            
+
             user_info = role_hierarchy_service.get_user_role_info(
                 role=self.role,
                 additional_permissions=self.additional_permissions,
-                migration_profile=self.migration_profile
+                migration_profile=self.migration_profile,
             )
             return user_info.permissions
         except ImportError:
@@ -151,7 +156,7 @@ class AdminUser:
         """Check if admin user has specific permission"""
         try:
             from core.security_engine.permissions import Permission
-            
+
             # Check new permission system
             user_permissions = self.get_permissions()
             if isinstance(permission, str):
@@ -160,83 +165,86 @@ class AdminUser:
                     return permission_enum in user_permissions
                 except ValueError:
                     pass
-            
+
             # Fallback to legacy permission check
             return permission in self.permissions
         except ImportError:
             # Legacy permission check only
             return permission in self.permissions
-    
+
     @property
     def full_name(self) -> str:
         """Get full name"""
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.username
-    
+
     @property
     def is_active(self) -> bool:
         """Check if user is active"""
         return self.status == UserStatus.ACTIVE
-    
+
     @property
     def is_locked(self) -> bool:
         """Check if account is locked"""
         if self.account_locked_until:
             return datetime.utcnow() < self.account_locked_until
         return False
-    
+
     def has_role(self, required_role) -> bool:
         """Check if user has required role or higher"""
         try:
             from core.security_engine.roles import has_role_or_higher
+
             # Use new role hierarchy system
             if isinstance(required_role, str):
                 return has_role_or_higher(self.role, required_role)
-            elif hasattr(required_role, 'value'):
+            elif hasattr(required_role, "value"):
                 return has_role_or_higher(self.role, required_role.value)
         except ImportError:
             pass
-        
+
         # Fallback to legacy role hierarchy
         legacy_role_hierarchy = {
             "support": 1,
-            "moderator": 2, 
+            "moderator": 2,
             "admin": 3,
             "super_admin": 4,
         }
-        
+
         current_role_str = self.role if isinstance(self.role, str) else self.role.value
         required_role_str = required_role if isinstance(required_role, str) else required_role.value
-        
+
         current_level = legacy_role_hierarchy.get(current_role_str, 0)
         required_level = legacy_role_hierarchy.get(required_role_str, 0)
-        
+
         return current_level >= required_level
 
 
 @dataclass
 class AdminSession:
     """Admin user session domain entity"""
+
     id: UUID = field(default_factory=uuid4)
     user_id: UUID = field(default_factory=uuid4)
     token: str = ""
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
-    device_info: Dict[str, Any] = field(default_factory=dict)
+    ip_address: str | None = None
+    user_agent: str | None = None
+    device_info: dict[str, Any] = field(default_factory=dict)
     expires_at: datetime = field(default_factory=lambda: datetime.utcnow())
     created_at: datetime = field(default_factory=datetime.utcnow)
     last_activity: datetime = field(default_factory=datetime.utcnow)
     is_active: bool = True
-    
+
     @property
     def is_expired(self) -> bool:
         """Check if session is expired"""
         return datetime.utcnow() > self.expires_at
-    
+
     def extend_session(self, hours: int = 24) -> None:
         """Extend session expiration"""
         from datetime import timedelta
+
         self.expires_at = datetime.utcnow() + timedelta(hours=hours)
         self.last_activity = datetime.utcnow()
 
@@ -244,19 +252,20 @@ class AdminSession:
 @dataclass
 class SystemComponent:
     """System component domain entity"""
+
     id: UUID = field(default_factory=uuid4)
     name: str = ""
     description: str = ""
     status: SystemStatus = SystemStatus.OFFLINE
     version: str = "1.0.0"
-    health_check_url: Optional[str] = None
-    last_health_check: Optional[datetime] = None
-    metrics: Dict[str, Any] = field(default_factory=dict)
-    config: Dict[str, Any] = field(default_factory=dict)
-    dependencies: List[str] = field(default_factory=list)
+    health_check_url: str | None = None
+    last_health_check: datetime | None = None
+    metrics: dict[str, Any] = field(default_factory=dict)
+    config: dict[str, Any] = field(default_factory=dict)
+    dependencies: list[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    
+
     @property
     def is_healthy(self) -> bool:
         """Check if component is healthy"""
@@ -266,36 +275,38 @@ class SystemComponent:
 @dataclass
 class AuditEntry:
     """Audit trail domain entity"""
+
     id: UUID = field(default_factory=uuid4)
-    user_id: Optional[UUID] = None
+    user_id: UUID | None = None
     action: AuditAction = AuditAction.READ
     resource_type: str = ""
-    resource_id: Optional[str] = None
+    resource_id: str | None = None
     description: str = ""
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    ip_address: str | None = None
+    user_agent: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    
+
     # Change tracking
-    old_values: Optional[Dict[str, Any]] = None
-    new_values: Optional[Dict[str, Any]] = None
+    old_values: dict[str, Any] | None = None
+    new_values: dict[str, Any] | None = None
 
 
 @dataclass
 class SystemConfig:
     """System configuration domain entity"""
+
     id: UUID = field(default_factory=uuid4)
     key: str = ""
     value: Any = None
     category: str = "general"
     description: str = ""
     is_sensitive: bool = False
-    validation_rules: Dict[str, Any] = field(default_factory=dict)
+    validation_rules: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    updated_by: Optional[UUID] = None
-    
+    updated_by: UUID | None = None
+
     def __post_init__(self):
         """Post-initialization validation"""
         if not self.key:
@@ -305,18 +316,19 @@ class SystemConfig:
 @dataclass
 class AdminNotification:
     """Admin notification domain entity"""
+
     id: UUID = field(default_factory=uuid4)
-    user_id: Optional[UUID] = None  # None for system-wide notifications
+    user_id: UUID | None = None  # None for system-wide notifications
     title: str = ""
     message: str = ""
     type: str = "info"  # info, warning, error, success
     priority: str = "normal"  # low, normal, high, urgent
     is_read: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    expires_at: Optional[datetime] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    expires_at: datetime | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
-    read_at: Optional[datetime] = None
-    
+    read_at: datetime | None = None
+
     @property
     def is_expired(self) -> bool:
         """Check if notification is expired"""
@@ -328,6 +340,7 @@ class AdminNotification:
 @dataclass
 class Permission:
     """Permission domain entity"""
+
     id: UUID = field(default_factory=uuid4)
     name: str = ""
     code: str = ""
@@ -335,7 +348,7 @@ class Permission:
     category: str = "general"
     is_system: bool = False
     created_at: datetime = field(default_factory=datetime.utcnow)
-    
+
     def __post_init__(self):
         """Post-initialization validation"""
         if not self.name or not self.code:
@@ -345,9 +358,10 @@ class Permission:
 @dataclass
 class RolePermission:
     """Role-Permission mapping domain entity"""
+
     role: AdminRole
     permission_code: str
-    granted_by: Optional[UUID] = None
+    granted_by: UUID | None = None
     granted_at: datetime = field(default_factory=datetime.utcnow)
 
 
@@ -355,14 +369,15 @@ class RolePermission:
 @dataclass(frozen=True)
 class UserPreferences:
     """User preferences value object"""
+
     theme: str = "light"
     notifications_enabled: bool = True
     email_notifications: bool = True
     timezone: str = "UTC"
     language: str = "en"
-    dashboard_layout: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
+    dashboard_layout: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
             "theme": self.theme,
@@ -377,6 +392,7 @@ class UserPreferences:
 @dataclass(frozen=True)
 class SecuritySettings:
     """Security settings value object"""
+
     password_min_length: int = 12
     password_require_uppercase: bool = True
     password_require_lowercase: bool = True
@@ -387,8 +403,8 @@ class SecuritySettings:
     max_failed_login_attempts: int = 5
     account_lockout_duration_minutes: int = 30
     mfa_required_for_admin: bool = True
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
             "password_min_length": self.password_min_length,

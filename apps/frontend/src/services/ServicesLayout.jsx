@@ -72,7 +72,7 @@ const ServicesLayout = () => {
         }
     ];
 
-    const currentService = services.find(service => 
+    const currentService = services.find(service =>
         location.pathname.includes(service.id)
     );
 
@@ -105,21 +105,21 @@ const ServicesLayout = () => {
                 }}
             >
                 <Box variant="drawerContent">
-                    <Typography 
+                    <Typography
                         variant="h6"
                         sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}
                     >
                         AI Services
                     </Typography>
-                    
+
                     <List disablePadding>
                         {services.map((service) => {
                             const IconComponent = service.icon;
                             const isActive = location.pathname === service.path;
-                            
+
                             return (
-                                <ListItem 
-                                    key={service.id} 
+                                <ListItem
+                                    key={service.id}
                                     disablePadding
                                     variant="navigation"
                                 >
@@ -136,7 +136,7 @@ const ServicesLayout = () => {
                                         <ListItemIcon variant="compact">
                                             <IconComponent />
                                         </ListItemIcon>
-                                        <ListItemText 
+                                        <ListItemText
                                             primary={service.name}
                                             secondary={service.description}
                                             primaryTypographyProps={{
@@ -145,7 +145,7 @@ const ServicesLayout = () => {
                                             }}
                                             secondaryTypographyProps={{
                                                 fontSize: '0.8rem',
-                                                sx: { 
+                                                sx: {
                                                     color: isActive ? 'inherit' : 'text.secondary',
                                                     opacity: isActive ? 0.8 : 1
                                                 }
@@ -167,8 +167,8 @@ const ServicesLayout = () => {
             </Drawer>
 
             {/* Main Content Area */}
-            <Box 
-                component="main" 
+            <Box
+                component="main"
                 variant="mainContent"
             >
                 <Outlet />

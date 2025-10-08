@@ -19,24 +19,24 @@ const AdminTabNavigation = ({ activeTab, onTabChange }) => {
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={activeTab} onChange={(e, newValue) => onTabChange(newValue)}>
-                <Tab 
-                    icon={<DashboardIcon />} 
-                    label="Overview" 
+                <Tab
+                    icon={<DashboardIcon />}
+                    label="Overview"
                     iconPosition="start"
                 />
-                <Tab 
-                    icon={<PeopleIcon />} 
-                    label="User Management" 
+                <Tab
+                    icon={<PeopleIcon />}
+                    label="User Management"
                     iconPosition="start"
                 />
-                <Tab 
-                    icon={<SecurityIcon />} 
-                    label="Audit Logs" 
+                <Tab
+                    icon={<SecurityIcon />}
+                    label="Audit Logs"
                     iconPosition="start"
                 />
-                <Tab 
-                    icon={<SettingsIcon />} 
-                    label="System Config" 
+                <Tab
+                    icon={<SettingsIcon />}
+                    label="System Config"
                     iconPosition="start"
                 />
             </Tabs>

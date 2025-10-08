@@ -31,13 +31,13 @@ import {
 import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
 
 // Import centralized mock data
-import { 
-    contentOptimizerStats, 
-    recentOptimizations, 
+import {
+    contentOptimizerStats,
+    recentOptimizations,
     optimizationSettings,
     mockContentAnalysis,
     optimizationMetrics,
-    trendInsights 
+    trendInsights
 } from '../__mocks__/aiServices/contentOptimizer.js';
 
 /**
@@ -81,7 +81,7 @@ const ContentOptimizerService = () => {
                 "Check out our new product! It's amazing and you should buy it now!",
                 { channelId: 'demo' }
             );
-            
+
             // Add to recent optimizations
             const newOptimization = {
                 id: optimizations.length + 1,
@@ -91,7 +91,7 @@ const ContentOptimizerService = () => {
                 status: 'success'
             };
             setOptimizations(prev => [newOptimization, ...prev.slice(0, 3)]);
-            
+
         } catch (err) {
             console.error('Optimization failed:', err);
             setError('Content optimization failed. Please try again.');
@@ -129,12 +129,12 @@ const ContentOptimizerService = () => {
                             AI-powered content enhancement for maximum engagement and performance
                         </Typography>
                     </Box>
-                    <Chip 
-                        label="Active" 
-                        color="success" 
+                    <Chip
+                        label="Active"
+                        color="success"
                         variant="filled"
-                        sx={{ 
-                            fontWeight: 600, 
+                        sx={{
+                            fontWeight: 600,
                             fontSize: '0.9rem',
                             height: 36,
                             boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
@@ -145,10 +145,10 @@ const ContentOptimizerService = () => {
                 {/* Enhanced Statistics Grid */}
                 <Grid container spacing={3}>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card 
+                        <Card
                             elevation={0}
-                            sx={{ 
-                                textAlign: 'center', 
+                            sx={{
+                                textAlign: 'center',
                                 p: 3,
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 color: 'white',
@@ -168,20 +168,20 @@ const ContentOptimizerService = () => {
                             <Typography variant="body1" sx={{ opacity: 0.9 }}>
                                 Total Optimized
                             </Typography>
-                            <OptimizeIcon sx={{ 
-                                position: 'absolute', 
-                                right: 16, 
-                                top: 16, 
-                                fontSize: 32, 
-                                opacity: 0.2 
+                            <OptimizeIcon sx={{
+                                position: 'absolute',
+                                right: 16,
+                                top: 16,
+                                fontSize: 32,
+                                opacity: 0.2
                             }} />
                         </Card>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card 
+                        <Card
                             elevation={0}
-                            sx={{ 
-                                textAlign: 'center', 
+                            sx={{
+                                textAlign: 'center',
                                 p: 3,
                                 background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                                 color: 'white',
@@ -201,20 +201,20 @@ const ContentOptimizerService = () => {
                             <Typography variant="body1" sx={{ opacity: 0.9 }}>
                                 Today's Count
                             </Typography>
-                            <AnalyticsIcon sx={{ 
-                                position: 'absolute', 
-                                right: 16, 
-                                top: 16, 
-                                fontSize: 32, 
-                                opacity: 0.2 
+                            <AnalyticsIcon sx={{
+                                position: 'absolute',
+                                right: 16,
+                                top: 16,
+                                fontSize: 32,
+                                opacity: 0.2
                             }} />
                         </Card>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card 
+                        <Card
                             elevation={0}
-                            sx={{ 
-                                textAlign: 'center', 
+                            sx={{
+                                textAlign: 'center',
                                 p: 3,
                                 background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
                                 color: 'white',
@@ -234,19 +234,19 @@ const ContentOptimizerService = () => {
                             <Typography variant="body1" sx={{ opacity: 0.9 }}>
                                 Avg Improvement
                             </Typography>
-                            <AnalyticsIcon sx={{ 
-                                position: 'absolute', 
-                                right: 16, 
-                                top: 16, 
-                                fontSize: 32, 
-                                opacity: 0.2 
+                            <AnalyticsIcon sx={{
+                                position: 'absolute',
+                                right: 16,
+                                top: 16,
+                                fontSize: 32,
+                                opacity: 0.2
                             }} />
                         </Card>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Card 
+                        <Card
                             elevation={0}
-                            sx={{ 
+                            sx={{
                                 p: 3,
                                 background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
                                 display: 'flex',
@@ -266,8 +266,8 @@ const ContentOptimizerService = () => {
                                 startIcon={<OptimizeIcon />}
                                 onClick={handleOptimize}
                                 disabled={isOptimizing}
-                                sx={{ 
-                                    width: '100%', 
+                                sx={{
+                                    width: '100%',
                                     minHeight: 56,
                                     backgroundColor: 'rgba(255,255,255,0.95)',
                                     color: 'primary.main',
@@ -294,22 +294,22 @@ const ContentOptimizerService = () => {
             </Box>
 
             {/* Enhanced Service Tabs */}
-            <Card 
+            <Card
                 elevation={0}
-                sx={{ 
+                sx={{
                     borderRadius: 3,
                     overflow: 'hidden',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
                 }}
             >
-                <Box sx={{ 
+                <Box sx={{
                     background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
                     p: 2
                 }}>
-                    <Tabs 
-                        value={currentTab} 
+                    <Tabs
+                        value={currentTab}
                         onChange={(e, newValue) => setCurrentTab(newValue)}
-                        sx={{ 
+                        sx={{
                             '& .MuiTabs-indicator': {
                                 backgroundColor: 'primary.main',
                                 height: 3,
@@ -326,21 +326,21 @@ const ContentOptimizerService = () => {
                             }
                         }}
                     >
-                        <Tab 
-                            label="Recent Activity" 
-                            icon={<AnalyticsIcon />} 
+                        <Tab
+                            label="Recent Activity"
+                            icon={<AnalyticsIcon />}
                             iconPosition="start"
                             sx={{ px: 3 }}
                         />
-                        <Tab 
-                            label="Settings" 
-                            icon={<SettingsIcon />} 
+                        <Tab
+                            label="Settings"
+                            icon={<SettingsIcon />}
                             iconPosition="start"
                             sx={{ px: 3 }}
                         />
-                        <Tab 
-                            label="Schedule" 
-                            icon={<ScheduleIcon />} 
+                        <Tab
+                            label="Schedule"
+                            icon={<ScheduleIcon />}
                             iconPosition="start"
                             sx={{ px: 3 }}
                         />
@@ -351,9 +351,9 @@ const ContentOptimizerService = () => {
                 <TabPanel value={currentTab} index={0}>
                     <CardContent sx={{ p: 4 }}>
                         {isOptimizing && (
-                            <Alert 
-                                severity="info" 
-                                sx={{ 
+                            <Alert
+                                severity="info"
+                                sx={{
                                     mb: 4,
                                     borderRadius: 2,
                                     '& .MuiAlert-message': {
@@ -365,11 +365,11 @@ const ContentOptimizerService = () => {
                                     <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
                                         🤖 AI is optimizing your content...
                                     </Typography>
-                                    <LinearProgress 
-                                        sx={{ 
+                                    <LinearProgress
+                                        sx={{
                                             borderRadius: 2,
                                             height: 6
-                                        }} 
+                                        }}
                                     />
                                 </Box>
                             </Alert>
@@ -379,26 +379,26 @@ const ContentOptimizerService = () => {
                             <Typography variant="h5" fontWeight={700}>
                                 Recent Optimizations
                             </Typography>
-                            <Chip 
+                            <Chip
                                 label={`${optimizations.length} completed`}
                                 size="small"
                                 color="primary"
                                 sx={{ ml: 2, fontWeight: 600 }}
                             />
                         </Box>
-                        
+
                         <Grid container spacing={3}>
                             {optimizations.map((item, index) => (
                                 <Grid item xs={12} key={item.id}>
-                                    <Card 
+                                    <Card
                                         elevation={0}
-                                        sx={{ 
+                                        sx={{
                                             p: 3,
                                             border: '1px solid',
                                             borderColor: 'divider',
                                             borderRadius: 3,
                                             position: 'relative',
-                                            background: index % 2 === 0 
+                                            background: index % 2 === 0
                                                 ? 'linear-gradient(135deg, #f8f9ff 0%, #f0f4f8 100%)'
                                                 : 'linear-gradient(135deg, #fff8f0 0%, #f8f4f0 100%)',
                                             '&:hover': {
@@ -428,10 +428,10 @@ const ContentOptimizerService = () => {
                                                     {item.timestamp}
                                                 </Typography>
                                             </Box>
-                                            <Chip 
-                                                label={item.improvement} 
-                                                color="success" 
-                                                sx={{ 
+                                            <Chip
+                                                label={item.improvement}
+                                                color="success"
+                                                sx={{
                                                     fontWeight: 700,
                                                     fontSize: '0.9rem',
                                                     height: 32
@@ -454,24 +454,24 @@ const ContentOptimizerService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Optimization Settings
                         </Typography>
-                        
+
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <FormControlLabel
                                 control={
-                                    <Switch 
+                                    <Switch
                                         checked={autoOptimization}
                                         onChange={(e) => setAutoOptimization(e.target.checked)}
                                     />
                                 }
                                 label="Automatic Content Optimization"
                             />
-                            
+
                             <Divider />
-                            
+
                             <Typography variant="subtitle1" fontWeight={600}>
                                 Optimization Targets
                             </Typography>
-                            
+
                             <FormControlLabel
                                 control={<Switch defaultChecked />}
                                 label="Engagement Rate"
@@ -498,7 +498,7 @@ const ContentOptimizerService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Optimization Schedule
                         </Typography>
-                        
+
                         <Alert severity="info">
                             Scheduled optimization features coming soon. Currently running in real-time mode.
                         </Alert>

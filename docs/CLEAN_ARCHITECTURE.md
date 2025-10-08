@@ -32,7 +32,7 @@ This project implements **Clean Architecture** principles with perfect layer sep
 
 ### ✅ **Dependency Rule**
 - **Core** has zero external dependencies
-- **Infrastructure** implements core interfaces  
+- **Infrastructure** implements core interfaces
 - **Applications** orchestrate core + infra
 
 ### ✅ **Framework Independence**
@@ -51,10 +51,10 @@ This project implements **Clean Architecture** principles with perfect layer sep
 core/                    # 🎯 Domain Layer (Framework-Free)
 ├── models/             # Domain entities (dataclasses)
 ├── services/           # Business logic
-├── ports/              # Abstract interfaces  
+├── ports/              # Abstract interfaces
 └── security_engine/    # Security domain
 
-infra/                   # 🔧 Infrastructure Layer  
+infra/                   # 🔧 Infrastructure Layer
 ├── db/                 # Database implementations
 ├── cache/              # Redis/caching
 ├── external/           # External API clients
@@ -64,7 +64,7 @@ apps/                    # 🚀 Application Layer
 ├── api/                # FastAPI web service
 ├── bot/                # Telegram bot
 ├── jobs/               # Background tasks
-├── frontend/           # React web interface  
+├── frontend/           # React web interface
 └── shared/             # Cross-app utilities
 
 config/                  # ⚙️ Application Settings
@@ -84,13 +84,13 @@ from dependency_injector import containers, providers
 class APIContainer(containers.DeclarativeContainer):
     # Database
     db_pool = providers.Resource(create_db_pool)
-    
+
     # Repositories (implement core ports)
     user_repo = providers.Factory(
-        UserRepository, 
+        UserRepository,
         pool=db_pool
     )
-    
+
     # Services (core business logic)
     analytics_service = providers.Factory(
         AnalyticsService,
@@ -121,7 +121,7 @@ async def get_users(
 def test_scheduled_post_validation():
     # Test pure domain logic without mocks
     post = ScheduledPost(content="", media_urls=[])
-    
+
     with pytest.raises(ValueError):
         post.__post_init__()
 ```
@@ -160,7 +160,7 @@ forbidden_modules = apps, infra, fastapi, pydantic
 ### Pre-commit Hooks
 
 ```yaml
-# .pre-commit-config.yaml  
+# .pre-commit-config.yaml
 repos:
 - repo: local
   hooks:
@@ -176,7 +176,7 @@ repos:
 The clean architecture enables:
 - **Easy testing** (no mocks needed for core)
 - **Framework swapping** (FastAPI → Django, etc.)
-- **Database changes** (PostgreSQL → MongoDB, etc.)  
+- **Database changes** (PostgreSQL → MongoDB, etc.)
 - **Microservice extraction** (each app can be independent)
 
 ## 📊 Architecture Health
@@ -185,7 +185,7 @@ The clean architecture enables:
 # Run architecture tests
 pytest tests/test_architecture.py
 
-# Check import compliance  
+# Check import compliance
 lint-imports
 
 # Generate dependency graph

@@ -37,8 +37,8 @@ const BestTimeRecommender = () => {
 
             {/* Error State */}
             {error && (
-                <Alert 
-                    severity="error" 
+                <Alert
+                    severity="error"
                     sx={{ mb: 2 }}
                     aria-live="polite"
                 >
@@ -48,11 +48,11 @@ const BestTimeRecommender = () => {
 
             {/* Loading State */}
             {loading && (
-                <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    p: 4 
+                <Box sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 4
                 }}>
                     <CircularProgress aria-label="Loading recommendations" />
                     <Typography variant="body2" sx={{ ml: 2 }}>

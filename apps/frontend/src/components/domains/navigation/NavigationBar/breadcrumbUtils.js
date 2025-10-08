@@ -33,27 +33,27 @@ const ROUTE_BREADCRUMB_MAP = {
 export const generateBreadcrumbs = (pathname) => {
     const segments = pathname.split('/').filter(Boolean);
     const breadcrumbs = [];
-    
+
     // Always start with home
     breadcrumbs.push({
         label: 'Dashboard',
         path: '/',
         icon: DashboardIcon
     });
-    
+
     // If we're on the home page, return just the home breadcrumb
     if (pathname === '/') {
         return breadcrumbs;
     }
-    
+
     // Build breadcrumbs from path segments
     let currentPath = '';
     segments.forEach((segment, index) => {
         currentPath += `/${segment}`;
-        
+
         // Look up breadcrumb info from route map
         const routeInfo = ROUTE_BREADCRUMB_MAP[currentPath];
-        
+
         if (routeInfo) {
             breadcrumbs.push({
                 label: routeInfo.label,
@@ -66,7 +66,7 @@ export const generateBreadcrumbs = (pathname) => {
                 .split('-')
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                 .join(' ');
-            
+
             breadcrumbs.push({
                 label,
                 path: currentPath,
@@ -74,7 +74,7 @@ export const generateBreadcrumbs = (pathname) => {
             });
         }
     });
-    
+
     return breadcrumbs;
 };
 

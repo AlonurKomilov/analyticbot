@@ -63,7 +63,7 @@ def upgrade():
     op.execute("""
         CREATE MATERIALIZED VIEW mv_channel_daily_recent AS
         SELECT channel_id, day, metric, value
-        FROM channel_daily 
+        FROM channel_daily
         WHERE day >= CURRENT_DATE - INTERVAL '120 days'
         WITH DATA;
     """)
@@ -77,9 +77,9 @@ def upgrade():
     op.execute("""
         CREATE MATERIALIZED VIEW mv_post_metrics_recent AS
         SELECT DISTINCT ON (channel_id, msg_id)
-            channel_id, msg_id, views, forwards, replies_count, 
+            channel_id, msg_id, views, forwards, replies_count,
             reactions, reactions_count, snapshot_time
-        FROM post_metrics 
+        FROM post_metrics
         WHERE snapshot_time >= NOW() - INTERVAL '120 days'
         ORDER BY channel_id, msg_id, snapshot_time DESC
         WITH DATA;

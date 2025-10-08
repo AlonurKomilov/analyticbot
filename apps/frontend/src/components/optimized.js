@@ -6,14 +6,14 @@
 // =================
 
 // Common utilities and frequently used components
-export { 
-    AccessibleButton, 
-    AccessibleFormField, 
-    ErrorBoundary, 
-    ExportButton, 
-    LoadingButton, 
-    ShareButton, 
-    ToastNotification 
+export {
+    AccessibleButton,
+    AccessibleFormField,
+    ErrorBoundary,
+    ExportButton,
+    LoadingButton,
+    ShareButton,
+    ToastNotification
 } from './common';
 
 // =================
@@ -40,6 +40,6 @@ export { default as NavigationBar } from './domains/navigation/NavigationBar';
 export * from './analytics';
 
 // =================
-// CHARTS BARREL  
+// CHARTS BARREL
 // =================
 export * from './charts';

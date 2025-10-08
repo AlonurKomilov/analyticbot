@@ -101,13 +101,13 @@ const TheftDetection = () => {
 
         try {
             // Mock API call - in real implementation, this would call:
-            // const response = await apiClient.post('/api/v1/content-protection/detection/scan', { 
-            //     content_hash: contentHash 
+            // const response = await apiClient.post('/api/v1/content-protection/detection/scan', {
+            //     content_hash: contentHash
             // });
-            
+
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 2000));
-            
+
             // Mock scan results
             const mockResults = [
                 {
@@ -137,7 +137,7 @@ const TheftDetection = () => {
             ];
 
             setScanResults(mockResults);
-            
+
             // Update scan history
             const newScan = {
                 id: Date.now(),
@@ -146,9 +146,9 @@ const TheftDetection = () => {
                 status: mockResults.length > 0 ? 'threat' : 'clean',
                 matchCount: mockResults.length
             };
-            
+
             setScanHistory(prev => [newScan, ...prev.slice(0, 9)]); // Keep last 10
-            
+
             // Update stats
             setStats(prev => ({
                 totalScans: prev.totalScans + 1,
@@ -192,7 +192,7 @@ const TheftDetection = () => {
                     title="Content Theft Detection"
                     subheader="Scan content hashes to detect unauthorized usage across the web"
                 />
-                
+
                 <CardContent>
                     {/* Stats Overview */}
                     <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -275,14 +275,14 @@ const TheftDetection = () => {
                         title="Scan Results"
                         subheader={`Found ${scanResults.length} potential matches`}
                         action={
-                            <Chip 
-                                label="Threats Detected" 
-                                color="error" 
-                                icon={<WarningIcon />} 
+                            <Chip
+                                label="Threats Detected"
+                                color="error"
+                                icon={<WarningIcon />}
                             />
                         }
                     />
-                    
+
                     <CardContent>
                         <List>
                             {scanResults.map((match, index) => (
@@ -297,7 +297,7 @@ const TheftDetection = () => {
                                                     <Typography variant="body1">
                                                         {match.url}
                                                     </Typography>
-                                                    <Chip 
+                                                    <Chip
                                                         label={`${match.matchPercentage}% match`}
                                                         size="small"
                                                         color={getSeverityColor(match.matchPercentage)}
@@ -307,8 +307,8 @@ const TheftDetection = () => {
                                             secondary={
                                                 <Box>
                                                     <Typography variant="body2" color="textSecondary">
-                                                        Platform: {match.platform} • 
-                                                        Last seen: {match.lastSeen.toLocaleDateString()} • 
+                                                        Platform: {match.platform} •
+                                                        Last seen: {match.lastSeen.toLocaleDateString()} •
                                                         Status: {match.status}
                                                     </Typography>
                                                 </Box>
@@ -316,7 +316,7 @@ const TheftDetection = () => {
                                         />
                                         <ListItemSecondaryAction>
                                             <Tooltip title="Open link">
-                                                <IconButton 
+                                                <IconButton
                                                     onClick={() => window.open(match.url, '_blank')}
                                                     size="small"
                                                 >
@@ -351,7 +351,7 @@ const TheftDetection = () => {
                     title="Recent Scans"
                     subheader="History of your content theft scans"
                 />
-                
+
                 <CardContent>
                     {scanHistory.length === 0 ? (
                         <Typography variant="body2" color="textSecondary" textAlign="center" py={3}>
@@ -376,7 +376,7 @@ const TheftDetection = () => {
                                                     <Typography variant="caption">
                                                         {scan.timestamp.toLocaleString()}
                                                     </Typography>
-                                                    <Chip 
+                                                    <Chip
                                                         label={scan.status === 'clean' ? 'Clean' : `${scan.matchCount} matches`}
                                                         size="small"
                                                         color={scan.status === 'clean' ? 'success' : 'error'}

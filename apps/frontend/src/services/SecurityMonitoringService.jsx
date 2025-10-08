@@ -37,12 +37,12 @@ import {
 } from '@mui/icons-material';
 
 // Import centralized mock data
-import { 
-    securityStats, 
-    mockSecurityAlerts, 
-    securityMetrics, 
+import {
+    securityStats,
+    mockSecurityAlerts,
+    securityMetrics,
     threatCategories,
-    riskAssessment 
+    riskAssessment
 } from '../__mocks__/aiServices/securityMonitor.js';
 
 /**
@@ -143,9 +143,9 @@ const SecurityMonitoringService = () => {
                     <Typography variant="h4" component="h1" fontWeight={600}>
                         Security Monitoring
                     </Typography>
-                    <Chip 
-                        label="Active" 
-                        color="success" 
+                    <Chip
+                        label="Active"
+                        color="success"
                         variant="filled"
                         sx={{ ml: 'auto' }}
                     />
@@ -191,9 +191,9 @@ const SecurityMonitoringService = () => {
                             <Badge
                                 variant="dot"
                                 color={realTimeMonitoring ? 'success' : 'default'}
-                                sx={{ 
-                                    '& .MuiBadge-badge': { 
-                                        right: '50%', 
+                                sx={{
+                                    '& .MuiBadge-badge': {
+                                        right: '50%',
                                         top: 8,
                                         animation: realTimeMonitoring ? 'pulse 2s infinite' : 'none'
                                     },
@@ -204,12 +204,12 @@ const SecurityMonitoringService = () => {
                                     }
                                 }}
                             >
-                                <ShieldIcon 
-                                    sx={{ 
-                                        fontSize: 40, 
+                                <ShieldIcon
+                                    sx={{
+                                        fontSize: 40,
                                         color: realTimeMonitoring ? 'success.main' : 'grey.500',
                                         mb: 1
-                                    }} 
+                                    }}
                                 />
                             </Badge>
                             <Typography variant="body2" color="text.secondary">
@@ -222,18 +222,18 @@ const SecurityMonitoringService = () => {
 
             {/* Service Tabs */}
             <Card>
-                <Tabs 
-                    value={currentTab} 
+                <Tabs
+                    value={currentTab}
                     onChange={(e, newValue) => setCurrentTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: 'divider' }}
                 >
-                    <Tab 
+                    <Tab
                         label={
                             <Badge badgeContent={alerts.length} color="error">
                                 Threat Alerts
                             </Badge>
-                        } 
-                        icon={<WarningIcon />} 
+                        }
+                        icon={<WarningIcon />}
                     />
                     <Tab label="Security Metrics" icon={<ShieldIcon />} />
                     <Tab label="Active Monitors" icon={<NotificationsIcon />} />
@@ -246,7 +246,7 @@ const SecurityMonitoringService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Recent Security Alerts
                         </Typography>
-                        
+
                         {alerts.length === 0 ? (
                             <Alert severity="success">
                                 No security threats detected. Your system is secure.
@@ -254,12 +254,12 @@ const SecurityMonitoringService = () => {
                         ) : (
                             <List>
                                 {[...alerts, ...threats].map((alert) => (
-                                    <ListItem 
+                                    <ListItem
                                         key={alert.id}
-                                        sx={{ 
-                                            border: 1, 
-                                            borderColor: 'divider', 
-                                            borderRadius: 2, 
+                                        sx={{
+                                            border: 1,
+                                            borderColor: 'divider',
+                                            borderRadius: 2,
                                             mb: 2,
                                             borderLeftColor: getSeverityColor(alert.severity) + '.main',
                                             borderLeftWidth: 4
@@ -274,12 +274,12 @@ const SecurityMonitoringService = () => {
                                                     <Typography variant="subtitle1" fontWeight={600}>
                                                         {alert.type}
                                                     </Typography>
-                                                    <Chip 
+                                                    <Chip
                                                         label={alert.severity.toUpperCase()}
                                                         color={getSeverityColor(alert.severity)}
                                                         size="small"
                                                     />
-                                                    <Chip 
+                                                    <Chip
                                                         label={alert.action}
                                                         variant="outlined"
                                                         size="small"
@@ -310,7 +310,7 @@ const SecurityMonitoringService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Security Score Breakdown
                         </Typography>
-                        
+
                         <TableContainer component={Paper} variant="outlined">
                             <Table>
                                 <TableHead>
@@ -325,15 +325,15 @@ const SecurityMonitoringService = () => {
                                         <TableRow key={index}>
                                             <TableCell>{metric.metric}</TableCell>
                                             <TableCell>
-                                                <Typography 
-                                                    variant="h6" 
+                                                <Typography
+                                                    variant="h6"
                                                     sx={{ color: getScoreColor(metric.status) }}
                                                 >
                                                     {metric.score}%
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>
-                                                <Chip 
+                                                <Chip
                                                     label={metric.status.replace('-', ' ')}
                                                     color={
                                                         metric.status === 'excellent' ? 'success' :
@@ -357,15 +357,15 @@ const SecurityMonitoringService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Security Monitor Status
                         </Typography>
-                        
+
                         <List>
                             {activeMonitors.map((monitor, index) => (
-                                <ListItem 
+                                <ListItem
                                     key={index}
-                                    sx={{ 
-                                        border: 1, 
-                                        borderColor: 'divider', 
-                                        borderRadius: 1, 
+                                    sx={{
+                                        border: 1,
+                                        borderColor: 'divider',
+                                        borderRadius: 1,
                                         mb: 1
                                     }}
                                 >
@@ -376,7 +376,7 @@ const SecurityMonitoringService = () => {
                                         primary={monitor.name}
                                         secondary={`Last update: ${monitor.lastUpdate}`}
                                     />
-                                    <Chip 
+                                    <Chip
                                         label={monitor.status}
                                         color={
                                             monitor.status === 'active' ? 'success' :
@@ -397,33 +397,33 @@ const SecurityMonitoringService = () => {
                         <Typography variant="h6" sx={{ mb: 3 }}>
                             Security Monitoring Settings
                         </Typography>
-                        
+
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <FormControlLabel
                                 control={
-                                    <Switch 
+                                    <Switch
                                         checked={realTimeMonitoring}
                                         onChange={(e) => setRealTimeMonitoring(e.target.checked)}
                                     />
                                 }
                                 label="Real-time Threat Monitoring"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch defaultChecked />}
                                 label="Email Alert Notifications"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch defaultChecked />}
                                 label="Auto-block Suspicious IPs"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch />}
                                 label="Advanced Threat Detection"
                             />
-                            
+
                             <FormControlLabel
                                 control={<Switch defaultChecked />}
                                 label="Security Audit Logging"

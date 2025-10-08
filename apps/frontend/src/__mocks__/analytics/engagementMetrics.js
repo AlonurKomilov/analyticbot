@@ -29,7 +29,7 @@ export const engagementData = {
 export const getEngagementMetrics = async (period = '7d') => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  
+
   return {
     ...engagementData,
     period,

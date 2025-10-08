@@ -3,10 +3,10 @@ import { Box } from '@mui/material';
 
 /**
  * TabPanel Component
- * 
+ *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
  * Provides accessible tab panel container for dashboard content
- * 
+ *
  * Responsibilities:
  * - ARIA-compliant tab panel implementation
  * - Proper hiding/showing of content based on active tab

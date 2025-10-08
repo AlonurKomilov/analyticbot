@@ -33,7 +33,7 @@ check_docker() {
         print_error "Docker is not installed or not in PATH"
         exit 1
     fi
-    
+
     if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
         print_error "Docker Compose is not installed or not in PATH"
         exit 1
@@ -91,7 +91,7 @@ show_help() {
 main() {
     check_docker
     COMPOSE_CMD=$(get_compose_cmd)
-    
+
     case "${1:-help}" in
         "start")
             if [ -n "$2" ]; then
@@ -103,7 +103,7 @@ main() {
             fi
             print_success "Services started successfully"
             ;;
-            
+
         "stop")
             if [ -n "$2" ]; then
                 print_info "Stopping service: $2"
@@ -114,7 +114,7 @@ main() {
             fi
             print_success "Services stopped successfully"
             ;;
-            
+
         "restart")
             if [ -n "$2" ]; then
                 print_info "Restarting service: $2"
@@ -125,7 +125,7 @@ main() {
             fi
             print_success "Services restarted successfully"
             ;;
-            
+
         "build")
             if [ -n "$2" ]; then
                 print_info "Building service: $2"
@@ -136,7 +136,7 @@ main() {
             fi
             print_success "Build completed successfully"
             ;;
-            
+
         "logs")
             if [ -n "$2" ]; then
                 print_info "Showing logs for service: $2"
@@ -146,12 +146,12 @@ main() {
                 $COMPOSE_CMD logs -f
             fi
             ;;
-            
+
         "status")
             print_info "Service status:"
             $COMPOSE_CMD ps
             ;;
-            
+
         "dev")
             print_info "Starting development environment..."
             $COMPOSE_CMD --profile dev up -d db redis api bot frontend-dev
@@ -159,7 +159,7 @@ main() {
             print_info "Frontend development server: http://localhost:5173"
             print_info "API server: http://localhost:8000"
             ;;
-            
+
         "prod")
             print_info "Starting production environment..."
             $COMPOSE_CMD up -d db redis api bot frontend
@@ -167,13 +167,13 @@ main() {
             print_info "Frontend: http://localhost:3000"
             print_info "API: http://localhost:8000"
             ;;
-            
+
         "full")
             print_info "Starting full environment (including workers)..."
             $COMPOSE_CMD --profile full up -d
             print_success "Full environment started"
             ;;
-            
+
         "clean")
             print_warning "This will remove all containers, networks, and volumes!"
             read -p "Are you sure? (y/N): " -n 1 -r
@@ -187,7 +187,7 @@ main() {
                 print_info "Cleanup cancelled"
             fi
             ;;
-            
+
         "health")
             print_info "Checking service health..."
             services=("db" "redis" "api" "frontend")
@@ -199,7 +199,7 @@ main() {
                 fi
             done
             ;;
-            
+
         "shell")
             if [ -n "$2" ]; then
                 print_info "Opening shell in service: $2"
@@ -209,11 +209,11 @@ main() {
                 echo "Example: $0 shell frontend"
             fi
             ;;
-            
+
         "help"|"--help"|"-h")
             show_help
             ;;
-            
+
         *)
             print_error "Unknown command: $1"
             echo ""

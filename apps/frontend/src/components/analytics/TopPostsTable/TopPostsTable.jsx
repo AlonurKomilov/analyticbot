@@ -47,8 +47,8 @@ const TopPostsTable = () => {
 
             {/* Error State */}
             {error && (
-                <Alert 
-                    severity="error" 
+                <Alert
+                    severity="error"
                     sx={{ mb: 2 }}
                     aria-live="polite"
                 >

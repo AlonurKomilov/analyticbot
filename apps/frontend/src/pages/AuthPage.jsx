@@ -1,6 +1,6 @@
 /**
  * 🔐 Authentication Page
- * 
+ *
  * Standalone authentication page that can be accessed via routes.
  * Handles both login and registration with URL-based state management.
  */
@@ -18,7 +18,7 @@ const AuthPage = () => {
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const { isAuthenticated } = useAuth();
-    
+
     // Get mode from URL params, default to 'login'
     const mode = searchParams.get('mode') || 'login';
     const [authMode, setAuthMode] = useState(mode);
@@ -64,8 +64,8 @@ const AuthPage = () => {
         >
             <Container maxWidth="sm">
                 {authMode === 'login' ? (
-                    <LoginForm 
-                        onToggleMode={toggleAuthMode} 
+                    <LoginForm
+                        onToggleMode={toggleAuthMode}
                         onForgotPassword={handleForgotPassword}
                     />
                 ) : authMode === 'register' ? (
@@ -73,8 +73,8 @@ const AuthPage = () => {
                 ) : authMode === 'forgot-password' ? (
                     <ForgotPasswordForm onBackToLogin={handleBackToLogin} />
                 ) : (
-                    <LoginForm 
-                        onToggleMode={toggleAuthMode} 
+                    <LoginForm
+                        onToggleMode={toggleAuthMode}
                         onForgotPassword={handleForgotPassword}
                     />
                 )}

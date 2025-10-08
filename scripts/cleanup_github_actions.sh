@@ -36,7 +36,7 @@ check_file() {
 create_backup() {
     echo -e "${YELLOW}📦 Creating backup...${NC}"
     mkdir -p "$BACKUP_DIR"
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ Backup directory created: $BACKUP_DIR${NC}"
     else
@@ -49,20 +49,20 @@ create_backup() {
 backup_and_remove() {
     local file_path="$1"
     local reason="$2"
-    
+
     if [ -f "$file_path" ]; then
         echo -e "${YELLOW}📋 Processing: $(basename "$file_path")${NC}"
         echo -e "   Reason: $reason"
-        
+
         # Copy to backup
         cp "$file_path" "$BACKUP_DIR/"
-        
+
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}   ✅ Backed up successfully${NC}"
-            
+
             # Remove original
             rm "$file_path"
-            
+
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}   ✅ Removed successfully${NC}"
                 return 0

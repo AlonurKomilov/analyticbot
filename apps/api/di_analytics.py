@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Union
 from unittest.mock import AsyncMock
 
+from core.protocols import AnalyticsFusionServiceProtocol
 from core.services.analytics_fusion import AnalyticsOrchestratorService
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
@@ -322,7 +323,7 @@ async def init_cache_adapter():
 # FastAPI dependencies
 
 
-async def get_analytics_fusion_service() -> AnalyticsOrchestratorService:
+async def get_analytics_fusion_service() -> AnalyticsFusionServiceProtocol:
     """Dependency to provide analytics fusion service"""
     return await init_analytics_fusion_service()
 

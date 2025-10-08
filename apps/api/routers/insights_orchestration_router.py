@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from apps.api.di_container.analytics_container import get_analytics_fusion_service
-from core.services.analytics_fusion import AnalyticsOrchestratorService
+from core.protocols import AnalyticsFusionServiceProtocol
 
 router = APIRouter(prefix="/insights/orchestration", tags=["Analytics Orchestration v2"])
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class WorkflowStatusResponse(BaseModel):
     timestamp: str
 
 
-async def get_orchestration_service() -> AnalyticsOrchestratorService:
+async def get_orchestration_service() -> AnalyticsFusionServiceProtocol:
     """Get analytics orchestrator service instance"""
     return await get_analytics_fusion_service()
 
@@ -46,7 +46,7 @@ async def get_orchestration_service() -> AnalyticsOrchestratorService:
 @router.post("/workflows/comprehensive", response_model=WorkflowStatusResponse)
 async def execute_comprehensive_analytics(
     request: ComprehensiveAnalyticsRequest,
-    orchestrator: AnalyticsOrchestratorService = Depends(get_orchestration_service),
+    orchestrator: AnalyticsFusionServiceProtocol = Depends(get_orchestration_service),
 ):
     """Execute comprehensive analytics workflow using new microservices"""
     try:
@@ -62,14 +62,14 @@ async def execute_comprehensive_analytics(
         )
 
         return WorkflowStatusResponse(
-            request_id=result.request_id,
-            status="completed" if result.success else "failed",
+            request_id=result.get("request_id", f"req_{request.channel_id}"),
+            status="completed" if result.get("success", False) else "failed",
             progress={
-                "services_used": result.services_used,
-                "execution_time_ms": result.execution_time_ms,
+                "services_used": result.get("services_used", []),
+                "execution_time_ms": result.get("execution_time_ms", 0),
             },
-            results=result.results if result.success else None,
-            error_message=result.errors[0] if result.errors else None,
+            results=result.get("results") if result.get("success", False) else None,
+            error_message=result.get("errors", [None])[0] if result.get("errors") else None,
             timestamp=datetime.utcnow().isoformat(),
         )
 
@@ -80,24 +80,17 @@ async def execute_comprehensive_analytics(
 
 @router.get("/health", response_model=dict[str, Any])
 async def get_orchestration_health(
-    orchestrator: AnalyticsOrchestratorService = Depends(get_orchestration_service),
+    orchestrator: AnalyticsFusionServiceProtocol = Depends(get_orchestration_service),
 ):
     """Get orchestration health status"""
     try:
         logger.info("🏥 Checking orchestration health")
 
-        services_health = await orchestrator.get_service_health()
-        healthy_services = sum(1 for health in services_health.values() if health.is_healthy)
-        total_services = len(services_health)
+        health_data = await orchestrator.health_check()
 
         return {
-            "service_status": "healthy" if healthy_services == total_services else "degraded",
-            "total_requests": orchestrator.request_count,
-            "services_health": {
-                name: "healthy" if health.is_healthy else "unhealthy"
-                for name, health in services_health.items()
-            },
-            "orchestrator_running": orchestrator.is_running,
+            "service_status": health_data.get("status", "unknown"),
+            "health_details": health_data,
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -108,26 +101,16 @@ async def get_orchestration_health(
 
 @router.get("/services", response_model=dict[str, Any])
 async def get_available_services(
-    orchestrator: AnalyticsOrchestratorService = Depends(get_orchestration_service),
+    orchestrator: AnalyticsFusionServiceProtocol = Depends(get_orchestration_service),
 ):
     """Get available microservices information"""
     try:
-        from core.services.analytics_fusion import MICROSERVICES
-
-        services_health = await orchestrator.get_service_health()
-
-        services_info = {}
-        for service_name, service_config in MICROSERVICES.items():
-            health = services_health.get(service_name)
-            services_info[service_name] = {
-                "description": service_config["description"],
-                "responsibility": service_config["responsibility"],
-                "status": "healthy" if health and health.is_healthy else "unknown",
-            }
+        health_data = await orchestrator.health_check()
 
         return {
-            "available_services": services_info,
-            "total_services": len(services_info),
+            "service_name": orchestrator.get_service_name(),
+            "health_status": health_data.get("status", "unknown"),
+            "services_info": health_data.get("services", {}),
             "timestamp": datetime.utcnow().isoformat(),
         }
 

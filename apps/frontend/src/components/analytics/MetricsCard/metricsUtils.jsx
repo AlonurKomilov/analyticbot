@@ -29,7 +29,7 @@ export const getPerformanceLevel = (score) => {
 
 export const formatMetricValue = (value, type = 'number') => {
     if (typeof value !== 'number') return '0';
-    
+
     switch (type) {
         case 'percentage':
             return `${value.toFixed(1)}%`;

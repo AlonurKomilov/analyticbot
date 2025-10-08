@@ -5,11 +5,11 @@
 import React from 'react';
 import { TextField, Typography } from '@mui/material';
 
-const ScheduleTimeInput = ({ 
-    value, 
-    onChange, 
+const ScheduleTimeInput = ({
+    value,
+    onChange,
     error,
-    disabled = false 
+    disabled = false
 }) => {
     const handleChange = (e) => {
         const newValue = e.target.value ? new Date(e.target.value) : null;
@@ -41,11 +41,11 @@ const ScheduleTimeInput = ({
                     'aria-required': 'true'
                 }}
             />
-            
+
             {!error && (
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="schedule-help"
                     sx={{ mt: 0.5, display: 'block' }}
                 >

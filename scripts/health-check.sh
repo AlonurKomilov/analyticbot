@@ -35,7 +35,7 @@ echo
 make_request() {
     local url="$1"
     local timeout="${2:-$TIMEOUT}"
-    
+
     if command -v curl >/dev/null 2>&1; then
         curl -s --max-time "$timeout" --connect-timeout 5 "$url" 2>/dev/null || echo '{"error": "connection_failed"}'
     elif command -v wget >/dev/null 2>&1; then
@@ -50,7 +50,7 @@ check_port() {
     local host="$1"
     local port="$2"
     local timeout="${3:-5}"
-    
+
     if command -v nc >/dev/null 2>&1; then
         nc -z -w"$timeout" "$host" "$port" >/dev/null 2>&1
     elif command -v timeout >/dev/null 2>&1; then
@@ -76,7 +76,7 @@ except:
 parse_status() {
     local json="$1"
     local field="${2:-status}"
-    
+
     if command -v jq >/dev/null 2>&1; then
         echo "$json" | jq -r ".$field // \"unknown\""
     else
@@ -91,7 +91,7 @@ show_service_status() {
     local status="$2"
     local details="$3"
     local response_time="$4"
-    
+
     case "$status" in
         "ok"|"healthy"|"ready"|"alive")
             echo -e "  ${GREEN}✅ $service_name${NC} - $status"
@@ -106,7 +106,7 @@ show_service_status() {
             echo -e "  ${PURPLE}❓ $service_name${NC} - $status"
             ;;
     esac
-    
+
     if [[ "$VERBOSE" == "true" && -n "$details" ]]; then
         echo "    Response time: ${response_time}ms"
         echo "    Details: $details"
@@ -122,13 +122,13 @@ if check_port "$API_HOST" "$API_PORT"; then
     api_response=$(make_request "http://$API_HOST:$API_PORT/health")
     end_time=$(date +%s%3N)
     response_time=$((end_time - start_time))
-    
+
     api_status=$(parse_status "$api_response" "status")
     api_env=$(parse_status "$api_response" "environment")
     api_version=$(parse_status "$api_response" "version")
-    
+
     show_service_status "API Server" "$api_status" "Environment: $api_env, Version: $api_version" "$response_time"
-    
+
     # Check API dependencies
     if [[ "$VERBOSE" == "true" ]]; then
         echo "  📊 Dependencies:"
@@ -178,7 +178,7 @@ if check_port "$API_HOST" "$MTPROTO_PORT"; then
     mtproto_response=$(make_request "http://$API_HOST:$MTPROTO_PORT/health")
     end_time=$(date +%s%3N)
     response_time=$((end_time - start_time))
-    
+
     mtproto_status=$(parse_status "$mtproto_response" "status")
     show_service_status "MTProto Service" "$mtproto_status" "Port accessible" "$response_time"
 else
@@ -201,7 +201,7 @@ if check_port "$API_HOST" "$FRONTEND_PORT"; then
     frontend_response=$(make_request "http://$API_HOST:$FRONTEND_PORT/")
     end_time=$(date +%s%3N)
     response_time=$((end_time - start_time))
-    
+
     if [[ "$frontend_response" == *"html"* ]] || [[ "$frontend_response" == *"<!DOCTYPE"* ]]; then
         show_service_status "Frontend Service" "healthy" "Serving content" "$response_time"
     else
@@ -274,7 +274,7 @@ echo
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     echo -e "${CYAN}🐳 Docker Services Check${NC}"
     echo "---------------------------"
-    
+
     # Check if any AnalyticBot containers are running
     if docker ps --format "table {{.Names}}\\t{{.Status}}" | grep -q analyticbot; then
         echo "  Docker containers:"

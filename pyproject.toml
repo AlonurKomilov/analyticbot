@@ -160,7 +160,7 @@ forbidden_modules = [
 
 [[tool.importlinter.contracts]]
 name = "No Direct Infra Imports in Apps"
-type = "forbidden" 
+type = "forbidden"
 source_modules = ["apps"]
 forbidden_modules = [
     "infra.databases",

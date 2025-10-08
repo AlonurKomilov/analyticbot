@@ -27,34 +27,34 @@ import GlobalDataSourceSwitch from '../../../../components/common/GlobalDataSour
 
 /**
  * Simplified NavigationBar Component
- * 
+ *
  * Orchestrates navigation sub-components:
  * - GlobalSearchBar: Search functionality and dialog
  * - ProfileMenu: User profile and settings dropdown
  * - NotificationMenu: Notifications badge and dropdown
  * - SmartBreadcrumbs: Dynamic breadcrumb navigation
  * - MobileNavigationDrawer: Mobile-specific navigation
- * 
+ *
  * Reduced from 833 lines to ~200 lines while maintaining full functionality
  */
 const NavigationBar = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
-    
+
     // Navigation context
     const { isDarkMode, toggleTheme } = useNavigation();
-    
+
     // Mobile drawer state
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
         <>
             {/* Main AppBar */}
-            <AppBar 
-                position="fixed" 
+            <AppBar
+                position="fixed"
                 elevation={1}
-                sx={{ 
+                sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     backgroundColor: 'background.paper',
                     color: 'text.primary',
@@ -76,24 +76,24 @@ const NavigationBar = () => {
                     )}
 
                     {/* Logo and title */}
-                    <Box 
-                        sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
                             cursor: 'pointer',
                             mr: 3
                         }}
                         onClick={() => navigate('/')}
                     >
-                        <Icon 
-                            name="analytics" 
-                            size="lg" 
-                            sx={{ mr: 1, color: 'primary.main' }} 
+                        <Icon
+                            name="analytics"
+                            size="lg"
+                            sx={{ mr: 1, color: 'primary.main' }}
                         />
-                        <Typography 
-                            variant="h6" 
+                        <Typography
+                            variant="h6"
                             component="h1"
-                            sx={{ 
+                            sx={{
                                 fontWeight: 600,
                                 display: { xs: 'none', sm: 'block' }
                             }}
@@ -104,16 +104,16 @@ const NavigationBar = () => {
 
                     {/* Desktop breadcrumbs */}
                     {!isMobile && (
-                        <SmartBreadcrumbs 
+                        <SmartBreadcrumbs
                             sx={{ ml: 2 }}
                             maxItems={3}
                         />
                     )}
 
                     {/* Right side actions */}
-                    <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
+                    <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: 1,
                         ml: 'auto'
                     }}>
@@ -124,8 +124,8 @@ const NavigationBar = () => {
                         <GlobalDataSourceSwitch showLabel={!isMobile} />
 
                         {/* Theme toggle */}
-                        <IconButton 
-                            onClick={toggleTheme} 
+                        <IconButton
+                            onClick={toggleTheme}
                             aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                             sx={{
                                 '&:hover': {

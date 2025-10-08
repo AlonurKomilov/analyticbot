@@ -19,10 +19,10 @@ export const mockAnalyticsService = analyticsService;
 export const demoAnalyticsService = analyticsService;
 
 // Export individual adapters for advanced use cases
-export { 
-    RealAnalyticsAdapter, 
-    MockAnalyticsAdapter, 
-    AnalyticsCacheManager 
+export {
+    RealAnalyticsAdapter,
+    MockAnalyticsAdapter,
+    AnalyticsCacheManager
 } from './analyticsService.js';
 
 // Export API client and data source manager

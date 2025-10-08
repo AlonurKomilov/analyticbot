@@ -13,10 +13,10 @@ import { Button } from '../../common';
 
 /**
  * NewRuleDialog - Memoized component for creating new alert rules
- * 
+ *
  * Provides form interface for creating new alert rules with validation,
  * metric type selection, condition configuration, and threshold settings.
- * 
+ *
  * @param {Object} props - Component props
  * @param {boolean} props.open - Whether the dialog is open
  * @param {Function} props.onClose - Callback to close the dialog
@@ -24,9 +24,9 @@ import { Button } from '../../common';
  * @param {Object} props.newRule - Current new rule object
  * @param {Function} props.onRuleChange - Callback when rule properties change
  */
-const NewRuleDialog = React.memo(({ 
-  open = false, 
-  onClose, 
+const NewRuleDialog = React.memo(({
+  open = false,
+  onClose,
   onSubmit,
   newRule = {
     name: '',
@@ -35,7 +35,7 @@ const NewRuleDialog = React.memo(({
     threshold: 10,
     enabled: true
   },
-  onRuleChange 
+  onRuleChange
 }) => {
   const handleFieldChange = (field, value) => {
     onRuleChange?.({ ...newRule, [field]: value });
@@ -107,8 +107,8 @@ const NewRuleDialog = React.memo(({
       </DialogContent>
       <DialogActions>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
-        <Button 
-          onClick={onSubmit} 
+        <Button
+          onClick={onSubmit}
           variant="primary"
           disabled={!newRule.name.trim()}
         >

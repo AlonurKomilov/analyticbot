@@ -25,7 +25,7 @@ class AsyncpgAlertSubscriptionRepository:
     async def create_subscription(self, subscription: AlertSubscription) -> AlertSubscription:
         """Create new alert subscription"""
         query = """
-            INSERT INTO alert_subscriptions 
+            INSERT INTO alert_subscriptions
             (chat_id, channel_id, kind, threshold, window_hours, enabled)
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, created_at, updated_at

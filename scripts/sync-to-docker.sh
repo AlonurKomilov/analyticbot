@@ -18,7 +18,7 @@ NC='\033[0m'
 echo -e "${BLUE}🛑 Stopping development services...${NC}"
 ./scripts/dev-start.sh stop
 
-# Stop Docker services  
+# Stop Docker services
 echo -e "${BLUE}🐳 Stopping Docker services...${NC}"
 sudo docker-compose down
 

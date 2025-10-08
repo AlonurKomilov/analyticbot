@@ -37,14 +37,14 @@ for image in $(docker images $IMAGE_NAME* --format "{{.Repository}}:{{.Tag}}"); 
     echo ""
     echo -e "${YELLOW}📋 Image: $image${NC}"
     echo "----------------------------------------"
-    
+
     # Get image ID
     IMAGE_ID=$(docker images $image --format "{{.ID}}")
-    
+
     # Show layer history
     echo -e "${BLUE}Layer History (most recent first):${NC}"
     docker history $image --format "table {{.CreatedBy}}\t{{.Size}}" --no-trunc | head -10
-    
+
     # Show layer sizes
     echo ""
     echo -e "${BLUE}Largest Layers:${NC}"
@@ -53,7 +53,7 @@ for image in $(docker images $IMAGE_NAME* --format "{{.Repository}}:{{.Tag}}"); 
         while read size command; do
             echo "  $size - $(echo $command | cut -c1-100)..."
         done
-    
+
     echo ""
 done
 
@@ -112,7 +112,7 @@ if [ -f "docker/Dockerfile" ]; then
     COPY_LAYERS=$(grep -c "^COPY\|^ADD" docker/Dockerfile)
     RUN_LAYERS=$(grep -c "^RUN" docker/Dockerfile)
     TOTAL_LAYERS=$((COPY_LAYERS + RUN_LAYERS))
-    
+
     if [ $TOTAL_LAYERS -gt 0 ]; then
         if [ $COPY_LAYERS -lt $RUN_LAYERS ]; then
             echo -e "${GREEN}✅ Good: More RUN than COPY layers ($RUN_LAYERS RUN, $COPY_LAYERS COPY)${NC}"

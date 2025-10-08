@@ -56,10 +56,10 @@ import NavigationBar from './components/domains/navigation/NavigationBar';
  */
 const OptimizedSuspense = ({ children, fallback }) => {
     return (
-        <Suspense 
+        <Suspense
             fallback={
                 fallback || (
-                    <Box sx={{ 
+                    <Box sx={{
                         minHeight: '400px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -68,12 +68,12 @@ const OptimizedSuspense = ({ children, fallback }) => {
                         gap: 2
                     }}>
                         <CircularProgress size={40} />
-                        <LinearProgress 
+                        <LinearProgress
                             sx={{ width: '200px', borderRadius: 1 }}
                             variant="indeterminate"
                         />
-                        <Box sx={{ 
-                            fontSize: '0.875rem', 
+                        <Box sx={{
+                            fontSize: '0.875rem',
                             color: 'text.secondary',
                             fontWeight: 500
                         }}>
@@ -93,12 +93,12 @@ const OptimizedSuspense = ({ children, fallback }) => {
  */
 const RoutePreloader = () => {
     const location = useLocation();
-    
+
     useEffect(() => {
         // Preload components based on current route
         preloadByRoute(location.pathname);
     }, [location.pathname]);
-    
+
     return null;
 };
 
@@ -111,7 +111,7 @@ const AppRouter = () => {
         // Initialize performance optimizations on app start
         initializePerformanceOptimizations();
     }, []);
-    
+
     return (
         <Router
             future={{
@@ -125,49 +125,49 @@ const AppRouter = () => {
                     <OptimizedSuspense>
                             <Routes>
                                 {/* Public Routes - Authentication */}
-                                <Route 
-                                    path="/auth" 
+                                <Route
+                                    path="/auth"
                                     element={
                                         <PublicRoute>
                                             <AuthPage />
                                         </PublicRoute>
-                                    } 
+                                    }
                                 />
                                 <Route path="/login" element={<Navigate to="/auth?mode=login" replace />} />
                                 <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
-                                <Route 
-                                    path="/reset-password" 
+                                <Route
+                                    path="/reset-password"
                                     element={
                                         <PublicRoute>
                                             <ResetPasswordForm />
                                         </PublicRoute>
-                                    } 
+                                    }
                                 />
 
                                 {/* Protected Routes - Main Application */}
-                                <Route 
-                                    path="/" 
+                                <Route
+                                    path="/"
                                     element={
                                         <ProtectedRoute>
                                             <DashboardPage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
                                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                                
+
                                 {/* Post Creation Route */}
-                                <Route 
-                                    path="/create" 
+                                <Route
+                                    path="/create"
                                     element={
                                         <ProtectedRoute>
                                             <CreatePostPage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* AI Services Routes */}
-                                <Route 
-                                    path="/services" 
+                                <Route
+                                    path="/services"
                                     element={
                                         <ProtectedRoute>
                                             <ServicesLayout />
@@ -181,67 +181,67 @@ const AppRouter = () => {
                                     <Route path="churn-predictor" element={<ChurnPredictorService />} />
                                     <Route path="security-monitoring" element={<SecurityMonitoringService />} />
                                 </Route>
-                                
+
                                 {/* Enhanced Data Tables Showcase */}
-                                <Route 
-                                    path="/tables" 
+                                <Route
+                                    path="/tables"
                                     element={
                                         <ProtectedRoute>
                                             <DataTablesShowcase />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* Analytics Dashboard */}
-                                <Route 
-                                    path="/analytics" 
+                                <Route
+                                    path="/analytics"
                                     element={
                                         <ProtectedRoute>
                                             <AnalyticsPage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* Admin Dashboard - Role-based protection */}
-                                <Route 
-                                    path="/admin" 
+                                <Route
+                                    path="/admin"
                                     element={
                                         <ProtectedRoute requiredRole="admin">
                                             <AdminDashboard />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* User Profile */}
-                                <Route 
-                                    path="/profile" 
+                                <Route
+                                    path="/profile"
                                     element={
                                         <ProtectedRoute>
                                             <ProfilePage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
 
                                 {/* Settings */}
-                                <Route 
-                                    path="/settings" 
+                                <Route
+                                    path="/settings"
                                     element={
                                         <ProtectedRoute>
                                             <SettingsPage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* Help & Support */}
-                                <Route 
-                                    path="/help" 
+                                <Route
+                                    path="/help"
                                     element={
                                         <ProtectedRoute>
                                             <HelpPage />
                                         </ProtectedRoute>
-                                    } 
+                                    }
                                 />
-                                
+
                                 {/* Fallback Routes */}
                                 <Route path="*" element={<Navigate to="/auth" replace />} />
                             </Routes>

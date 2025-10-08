@@ -23,8 +23,8 @@ const BestTimeCards = ({ recommendations }) => {
             <Grid container spacing={2}>
                 {recommendations.best_times.map((time, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>
-                        <Card 
-                            sx={{ 
+                        <Card
+                            sx={{
                                 height: '100%',
                                 border: index === 0 ? 2 : 1,
                                 borderColor: index === 0 ? 'success.main' : 'divider',
@@ -33,15 +33,15 @@ const BestTimeCards = ({ recommendations }) => {
                         >
                             <CardContent sx={{ textAlign: 'center', p: 2 }}>
                                 {index === 0 && (
-                                    <Chip 
-                                        size="small" 
+                                    <Chip
+                                        size="small"
                                         label={<><span aria-hidden="true">🏆</span> TOP</>}
-                                        color="success" 
+                                        color="success"
                                         sx={{ mb: 1 }}
                                     />
                                 )}
                                 <Typography variant="h6" sx={{ mb: 1 }}>
-                                    {daysOfWeek[time.day]} 
+                                    {daysOfWeek[time.day]}
                                 </Typography>
                                 <Typography variant="h5" color="primary" sx={{ mb: 1 }}>
                                     {formatHour(time.hour)}
@@ -50,9 +50,9 @@ const BestTimeCards = ({ recommendations }) => {
                                     <Typography variant="caption" color="text.secondary">
                                         Ishonch darajasi
                                     </Typography>
-                                    <LinearProgress 
-                                        variant="determinate" 
-                                        value={time.confidence} 
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={time.confidence}
                                         color={getConfidenceColor(time.confidence)}
                                         sx={{ mt: 0.5, height: 6, borderRadius: 3 }}
                                     />

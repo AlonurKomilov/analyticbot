@@ -31,7 +31,7 @@ export const postDynamicsData = {
 export const getPostDynamics = async (period = '24h') => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 300));
-  
+
   return {
     ...postDynamicsData,
     period,

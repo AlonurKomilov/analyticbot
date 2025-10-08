@@ -13,7 +13,6 @@ from uuid import uuid4
 from PIL import Image, ImageDraw, ImageFont
 from pydantic import BaseModel
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -5,12 +5,12 @@
 import React from 'react';
 import { TextField, Typography } from '@mui/material';
 
-const PostContentInput = ({ 
-    value, 
-    onChange, 
-    error, 
+const PostContentInput = ({
+    value,
+    onChange,
+    error,
     helperText,
-    disabled = false 
+    disabled = false
 }) => {
     return (
         <>
@@ -35,11 +35,11 @@ const PostContentInput = ({
                     maxLength: 4096
                 }}
             />
-            
+
             {!error && (
-                <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
                     id="text-help"
                     sx={{ mt: 0.5, display: 'block' }}
                 >

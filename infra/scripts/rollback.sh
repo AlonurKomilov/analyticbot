@@ -105,17 +105,17 @@ echo -e "${NC}"
 # List available versions
 if [[ "$LIST_VERSIONS" == true ]]; then
     log "📋 Available versions:"
-    
+
     # List Docker images
     echo -e "${BLUE}Docker Images:${NC}"
     docker images analyticbot --format "table {{.Repository}}\t{{.Tag}}\t{{.CreatedAt}}\t{{.Size}}"
-    
+
     # List deployment records
     echo -e "${BLUE}Deployment Records:${NC}"
     if [[ -d "$PROJECT_ROOT" ]]; then
         find "$PROJECT_ROOT" -name "deployment_*.json" -exec basename {} \; 2>/dev/null | sort -r | head -10
     fi
-    
+
     exit 0
 fi
 
@@ -138,7 +138,7 @@ if [[ "$FORCE_ROLLBACK" != true ]]; then
     echo "  - Rollback to previous version"
     echo "  - Restart services"
     echo -e "${NC}"
-    
+
     read -p "Are you sure you want to continue? (yes/no): " -r
     if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
         info "Rollback cancelled by user"
@@ -165,25 +165,25 @@ success "✅ Pre-rollback checks passed"
 # Create backup if requested
 if [[ "$CREATE_BACKUP" == true ]]; then
     log "💾 Creating backup..."
-    
+
     mkdir -p "$BACKUP_DIR"
     BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
     BACKUP_PATH="$BACKUP_DIR/$BACKUP_NAME"
-    
+
     # Database backup
     info "Creating database backup..."
     docker-compose -f "$DOCKER_DIR/docker-compose.prod.yml" exec -T postgres pg_dump \
         -U "${POSTGRES_USER:-analyticuser}" \
         -d "${POSTGRES_DB:-analyticbot}" \
         > "$BACKUP_PATH.sql" || warning "Database backup failed"
-    
+
     # Configuration backup
     info "Creating configuration backup..."
     tar -czf "$BACKUP_PATH.tar.gz" \
         "$PROJECT_ROOT/.env" \
         "$PROJECT_ROOT/infrastructure" \
         2>/dev/null || warning "Configuration backup failed"
-    
+
     success "✅ Backup created: $BACKUP_NAME"
 fi
 

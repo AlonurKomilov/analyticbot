@@ -1,19 +1,19 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { 
-    ResponsiveContainer, 
-    LineChart, 
-    AreaChart, 
-    BarChart, 
-    Line, 
-    Area, 
-    Bar, 
-    XAxis, 
-    YAxis, 
-    CartesianGrid, 
-    Tooltip as RechartsTooltip, 
-    Legend, 
-    Brush 
+import {
+    ResponsiveContainer,
+    LineChart,
+    AreaChart,
+    BarChart,
+    Line,
+    Area,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip as RechartsTooltip,
+    Legend,
+    Brush
 } from 'recharts';
 import CustomTooltip from './CustomTooltip';
 
@@ -45,18 +45,18 @@ const ChartRenderer = React.memo(({ chartType, data, showBrush, height }) => {
                         <YAxis tick={{ fontSize: 12 }} />
                         <RechartsTooltip content={<CustomTooltip />} />
                         <Legend />
-                        <Area 
-                            type="monotone" 
-                            dataKey="views" 
-                            stroke="#8884d8" 
+                        <Area
+                            type="monotone"
+                            dataKey="views"
+                            stroke="#8884d8"
                             fill="url(#viewsGradient)"
                             strokeWidth={2}
                             name="Views"
                         />
-                        <Area 
-                            type="monotone" 
-                            dataKey="engagement" 
-                            stroke="#82ca9d" 
+                        <Area
+                            type="monotone"
+                            dataKey="engagement"
+                            stroke="#82ca9d"
                             fill="url(#engagementGradient)"
                             strokeWidth={2}
                             name="Engagement"
@@ -88,28 +88,28 @@ const ChartRenderer = React.memo(({ chartType, data, showBrush, height }) => {
                         <YAxis tick={{ fontSize: 12 }} />
                         <RechartsTooltip content={<CustomTooltip />} />
                         <Legend />
-                        <Line 
-                            type="monotone" 
-                            dataKey="views" 
-                            stroke="#8884d8" 
+                        <Line
+                            type="monotone"
+                            dataKey="views"
+                            stroke="#8884d8"
                             strokeWidth={3}
                             dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#8884d8', strokeWidth: 2 }}
                             name="Views"
                         />
-                        <Line 
-                            type="monotone" 
-                            dataKey="engagement" 
-                            stroke="#82ca9d" 
+                        <Line
+                            type="monotone"
+                            dataKey="engagement"
+                            stroke="#82ca9d"
                             strokeWidth={3}
                             dot={{ fill: '#82ca9d', strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: '#82ca9d', strokeWidth: 2 }}
                             name="Engagement"
                         />
-                        <Line 
-                            type="monotone" 
-                            dataKey="reach" 
-                            stroke="#ffc658" 
+                        <Line
+                            type="monotone"
+                            dataKey="reach"
+                            stroke="#ffc658"
                             strokeWidth={2}
                             dot={{ fill: '#ffc658', strokeWidth: 2, r: 3 }}
                             name="Reach"

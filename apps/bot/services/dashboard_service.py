@@ -54,18 +54,23 @@ except ImportError:
         @staticmethod
         def Div(*args, **kwargs):
             return None
+
         @staticmethod
         def H1(*args, **kwargs):
             return None
+
         @staticmethod
         def H4(*args, **kwargs):
             return None
+
         @staticmethod
         def Hr(*args, **kwargs):
             return None
+
         @staticmethod
         def P(*args, **kwargs):
             return None
+
         @staticmethod
         def A(*args, **kwargs):
             return None
@@ -74,12 +79,15 @@ except ImportError:
         @staticmethod
         def Upload(*args, **kwargs):
             return None
+
         @staticmethod
         def Dropdown(*args, **kwargs):
             return None
+
         @staticmethod
         def Graph(*args, **kwargs):
             return None
+
         @staticmethod
         def Store(*args, **kwargs):
             return None

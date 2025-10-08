@@ -14,38 +14,38 @@ export const predictiveAnalyticsStats = {
 export const predictiveStats = predictiveAnalyticsStats;
 
 export const mockPredictions = [
-    { 
-        metric: 'Engagement Rate', 
-        current: '68%', 
-        predicted: '71%', 
-        trend: 'up', 
+    {
+        metric: 'Engagement Rate',
+        current: '68%',
+        predicted: '71%',
+        trend: 'up',
         confidence: '95%',
         timeframe: '14 days',
         factors: ['Optimal posting times', 'Content quality improvement', 'Audience growth']
     },
-    { 
-        metric: 'User Activity', 
-        current: '89%', 
-        predicted: '85%', 
-        trend: 'down', 
+    {
+        metric: 'User Activity',
+        current: '89%',
+        predicted: '85%',
+        trend: 'down',
         confidence: '79%',
         timeframe: '7 days',
         factors: ['Seasonal decline', 'Competition increase', 'Content saturation']
     },
-    { 
-        metric: 'Revenue Impact', 
-        current: '$12.4K', 
-        predicted: '$13.8K', 
-        trend: 'up', 
+    {
+        metric: 'Revenue Impact',
+        current: '$12.4K',
+        predicted: '$13.8K',
+        trend: 'up',
         confidence: '91%',
         timeframe: '30 days',
         factors: ['New product launch', 'Marketing campaign', 'Customer retention']
     },
-    { 
-        metric: 'Follower Growth', 
-        current: '2.3K/month', 
-        predicted: '2.8K/month', 
-        trend: 'up', 
+    {
+        metric: 'Follower Growth',
+        current: '2.3K/month',
+        predicted: '2.8K/month',
+        trend: 'up',
         confidence: '87%',
         timeframe: '30 days',
         factors: ['Viral content potential', 'Influencer collaborations', 'Hashtag optimization']

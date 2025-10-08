@@ -6,7 +6,7 @@
 
 ✅ **Comprehensive FastAPI Configuration**
 - Professional title and branding
-- Detailed API description with feature highlights  
+- Detailed API description with feature highlights
 - Version updated to 2.1.0 reflecting our refactoring
 - Contact information and licensing details
 - Structured OpenAPI tags with descriptions and emojis
@@ -41,7 +41,7 @@ GET  /analytics/channels                    # Channel management
 GET  /analytics/metrics                     # Basic metrics
 GET  /analytics/demo/posts/dynamics         # Demo data
 
-# Analytics V2 (Enhanced)  
+# Analytics V2 (Enhanced)
 GET  /analytics/v2/channels/{id}/overview   # Advanced channel insights
 GET  /analytics/v2/channels/{id}/growth     # Growth analytics
 GET  /analytics/v2/trends/posts/top         # Trending content
@@ -55,7 +55,7 @@ GET  /analytics/advanced/alerts/check/{id}       # Smart alerts
 ### **🤖 AI-Powered Services**
 ```http
 POST /ai/content/analyze           # Content optimization
-POST /ai/churn/predict            # User churn prediction  
+POST /ai/churn/predict            # User churn prediction
 POST /ai/security/analyze         # Security threat analysis
 ```
 

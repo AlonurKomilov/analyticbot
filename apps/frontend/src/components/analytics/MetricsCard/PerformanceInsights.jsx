@@ -25,7 +25,7 @@ const PerformanceInsights = React.memo(({ metrics }) => {
 
     if (engagementRate > 5) {
         insights.push({
-            label: "💡 Great Engagement", 
+            label: "💡 Great Engagement",
             color: 'rgba(33, 150, 243, 0.8)'
         });
     }
@@ -70,11 +70,11 @@ const PerformanceInsights = React.memo(({ metrics }) => {
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {insights.map((insight, index) => (
-                    <Chip 
+                    <Chip
                         key={index}
-                        label={insight.label} 
-                        size="small" 
-                        sx={{ bgcolor: insight.color, color: 'white' }} 
+                        label={insight.label}
+                        size="small"
+                        sx={{ bgcolor: insight.color, color: 'white' }}
                     />
                 ))}
             </Box>

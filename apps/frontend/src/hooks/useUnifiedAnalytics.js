@@ -46,7 +46,7 @@ export const ANALYTICS_PRESETS = {
 export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfig = {}) => {
     // Merge preset with custom configuration
     const config = { ...ANALYTICS_PRESETS[preset], ...customConfig };
-    
+
     // State management
     const [data, setData] = useState({
         overview: null,
@@ -59,20 +59,20 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         system: null,
         quick: null
     });
-    
+
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState({});
     const [lastUpdated, setLastUpdated] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('connecting');
-    
+
     // Refs for cleanup and retry logic
     const intervalRef = useRef(null);
     const retryCountRef = useRef(0);
     const mountedRef = useRef(true);
-    
+
     // Store integration
     const { getCachedData, setCachedData, dataSource } = useAppStore();
-    
+
     // Cleanup on unmount
     useEffect(() => {
         return () => {
@@ -82,63 +82,63 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             }
         };
     }, []);
-    
+
     /**
      * Core data fetching function with error handling and retry logic
      */
     const fetchAnalyticsData = useCallback(async (metrics = config.includeMetrics, isRetry = false) => {
         if (!mountedRef.current || !channelId) return;
-        
+
         try {
             if (!isRetry) {
                 setLoading(true);
                 setConnectionStatus('fetching');
             }
-            
+
             // Prepare API calls based on requested metrics
             const apiCalls = [];
             const metricKeys = [];
-            
+
             if (metrics.includes('overview')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/overview?period=30`));
                 metricKeys.push('overview');
             }
-            
+
             if (metrics.includes('growth')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/growth?period=30`));
                 metricKeys.push('growth');
             }
-            
+
             if (metrics.includes('engagement')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?period=30`));
                 metricKeys.push('engagement');
             }
-            
+
             if (metrics.includes('performance')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/performance?period=30`));
                 metricKeys.push('performance');
             }
-            
+
             if (metrics.includes('trends')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/trends?period=7`));
                 metricKeys.push('trends');
             }
-            
+
             if (metrics.includes('alerts')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/alerts`));
                 metricKeys.push('alerts');
             }
-            
+
             if (metrics.includes('users')) {
                 apiCalls.push(apiClient.get(`/api/v1/superadmin/users`));
                 metricKeys.push('users');
             }
-            
+
             if (metrics.includes('system')) {
                 apiCalls.push(apiClient.get(`/api/v1/superadmin/system-status`));
                 metricKeys.push('system');
             }
-            
+
             if (metrics.includes('quick')) {
                 apiCalls.push(apiClient.post('/api/mobile/v1/analytics/quick', {
                     channel_id: channelId,
@@ -146,29 +146,29 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
                 }));
                 metricKeys.push('quick');
             }
-            
+
             // Execute all API calls in parallel
             const results = await Promise.allSettled(apiCalls);
-            
+
             if (!mountedRef.current) return;
-            
+
             // Process results and update state
             const newData = { ...data };
             const newErrors = {};
-            
+
             results.forEach((result, index) => {
                 const metricKey = metricKeys[index];
-                
+
                 if (result.status === 'fulfilled') {
                     newData[metricKey] = result.value;
-                    
+
                     // Cache successful results if caching is enabled
                     if (config.caching) {
                         setCachedData(`analytics_${metricKey}_${channelId}`, result.value);
                     }
                 } else {
                     newErrors[metricKey] = result.reason?.message || 'Unknown error';
-                    
+
                     // Try to use cached data on error
                     if (config.caching) {
                         const cachedData = getCachedData(`analytics_${metricKey}_${channelId}`);
@@ -182,22 +182,22 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
                     }
                 }
             });
-            
+
             setData(newData);
             setErrors(newErrors);
             setLastUpdated(new Date());
             setConnectionStatus(Object.keys(newErrors).length === 0 ? 'connected' : 'partial');
             setLoading(false);
             retryCountRef.current = 0;
-            
+
         } catch (error) {
             console.error('Unified analytics fetch failed:', error);
-            
+
             if (!mountedRef.current) return;
-            
+
             retryCountRef.current += 1;
             setConnectionStatus('error');
-            
+
             // Auto-retry logic with exponential backoff
             if (retryCountRef.current <= config.retries) {
                 setTimeout(() => {
@@ -214,7 +214,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             }
         }
     }, [channelId, config, data, getCachedData, setCachedData]);
-    
+
     /**
      * Manual refresh function
      */
@@ -222,7 +222,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         retryCountRef.current = 0;
         fetchAnalyticsData(specificMetrics || config.includeMetrics);
     }, [fetchAnalyticsData, config.includeMetrics]);
-    
+
     /**
      * Pause real-time updates
      */
@@ -233,7 +233,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         }
         setConnectionStatus('paused');
     }, []);
-    
+
     /**
      * Resume real-time updates
      */
@@ -244,14 +244,14 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             setConnectionStatus('connecting');
         }
     }, [config, fetchAnalyticsData]);
-    
+
     /**
      * Get specific metric with fallback
      */
     const getMetric = useCallback((metricName, fallback = null) => {
         return data[metricName] || fallback;
     }, [data]);
-    
+
     /**
      * Check if specific metric has error
      */
@@ -261,19 +261,19 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         }
         return Object.keys(errors).length > 0;
     }, [errors]);
-    
+
     // Initialize and set up real-time updates
     useEffect(() => {
         if (!channelId) return;
-        
+
         // Initial fetch
         fetchAnalyticsData();
-        
+
         // Set up real-time interval if enabled
         if (config.realTime && config.interval > 0) {
             intervalRef.current = setInterval(() => fetchAnalyticsData(), config.interval);
         }
-        
+
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -281,7 +281,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             }
         };
     }, [channelId, fetchAnalyticsData, config.realTime, config.interval]);
-    
+
     // Return unified interface
     return {
         // Data access
@@ -290,23 +290,23 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         errors,
         lastUpdated,
         connectionStatus,
-        
-        // Controls  
+
+        // Controls
         refresh,
         pause,
         resume,
-        
+
         // Utilities
         getMetric,
         hasError,
-        
+
         // Status helpers
         isConnected: connectionStatus === 'connected',
         isPartiallyConnected: connectionStatus === 'partial',
         isPaused: connectionStatus === 'paused',
         isOffline: connectionStatus === 'cached',
         canRetry: retryCountRef.current <= config.retries,
-        
+
         // Configuration
         currentPreset: preset,
         currentConfig: config

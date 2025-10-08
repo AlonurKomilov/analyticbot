@@ -15,7 +15,7 @@ from ..models import (
     IncrementalLearningConfig,
     LearningResult,
 )
-from ....protocols.learning_protocols import LearningContext
+from ....protocols.learning_protocols import LearningContext, LearningStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +57,12 @@ class ContextManagementService:
             # Create new learning context
             context = LearningContext(
                 model_id=model_id,
-                previous_model_state=initial_model_state,
+                task_id=f"task_{model_id}",  # Generate task_id
+                strategy=LearningStrategy.INCREMENTAL,  # Default strategy
                 memory_buffer=initial_data[: self.config.memory_buffer_size]
                 if initial_data
                 else [],
-                task_boundaries=[],
+                task_boundaries={},  # Should be dict, not list
                 learning_statistics={
                     "total_updates": 0,
                     "total_epochs": 0,
@@ -72,6 +73,7 @@ class ContextManagementService:
                     "learning_rate_adjustments": 0,
                 },
                 adaptation_history=[],
+                metadata={"initial_model_state": initial_model_state} if initial_model_state else {}
             )
 
             self.learning_contexts[model_id] = context
@@ -116,7 +118,9 @@ class ContextManagementService:
             # Update task boundaries if this was a new task
             if task_info and task_info.get("is_new_task", False):
                 current_samples = context.learning_statistics["total_samples_processed"]
-                context.task_boundaries.append(current_samples)
+                # Store as dict entry instead of list append
+                task_key = f"task_{len(context.task_boundaries)}"
+                context.task_boundaries[task_key] = current_samples
 
             logger.debug(f"📊 Updated context for {model_id}")
             return True

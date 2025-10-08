@@ -9,6 +9,7 @@ Single Responsibility: Model operations only.
 """
 
 import logging
+from datetime import datetime
 from typing import Any
 
 import torch
@@ -94,7 +95,7 @@ class ModelOperationsService:
             return ModelEvaluation(
                 model_id=getattr(model, "model_id", "unknown"),
                 evaluation_type=evaluation_type,
-                metrics={"error": str(e)},
+                metrics={"error": 0.0},  # Use float for metrics
                 sample_count=0,
                 success=False,
             )
@@ -167,15 +168,15 @@ class ModelOperationsService:
             Success status
         """
         try:
-            # Store current model state
+            # Store current model state in metadata (since LearningContext doesn't have previous_model_state)
             current_state = model.state_dict().copy()
-            context.previous_model_state = current_state
+            context.metadata["previous_model_state"] = current_state
 
             # Add checkpoint to adaptation history if name provided
             if checkpoint_name:
                 checkpoint_record = {
                     "checkpoint_name": checkpoint_name,
-                    "timestamp": torch.datetime.now().isoformat(),
+                    "timestamp": datetime.now().isoformat(),
                     "parameter_count": sum(p.numel() for p in model.parameters()),
                     "model_size_mb": sum(p.numel() * p.element_size() for p in model.parameters())
                     / 1024
@@ -204,11 +205,12 @@ class ModelOperationsService:
             Success status
         """
         try:
-            if context.previous_model_state is None:
+            previous_state = context.metadata.get("previous_model_state")
+            if previous_state is None:
                 logger.warning("⚠️ No previous model state to restore")
                 return False
 
-            model.load_state_dict(context.previous_model_state)
+            model.load_state_dict(previous_state)
 
             logger.debug(f"🔄 Restored model state for {context.model_id}")
             return True
@@ -450,13 +452,14 @@ class ModelOperationsService:
 
         importance = {}
 
-        if context.previous_model_state:
+        previous_state = context.metadata.get("previous_model_state")
+        if previous_state:
             # Calculate importance based on parameter change magnitude
             current_state = model.state_dict()
 
             for name, param in model.named_parameters():
-                if name in context.previous_model_state:
-                    prev_param = context.previous_model_state[name]
+                if name in previous_state:
+                    prev_param = previous_state[name]
                     param_change = torch.abs(param.data - prev_param)
                     importance[name] = param_change
                 else:

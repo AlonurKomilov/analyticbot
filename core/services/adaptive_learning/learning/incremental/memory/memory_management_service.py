@@ -371,8 +371,12 @@ class MemoryManagementService:
                     cid = buffer_item.get("cluster_id", 0)
                     cluster_counts[cid] = cluster_counts.get(cid, 0) + 1
 
-                # Find most represented cluster
-                max_cluster = max(cluster_counts, key=cluster_counts.get)
+                # Find most represented cluster - handle empty clusters case
+                if not cluster_counts:
+                    logger.warning("No clusters found for clustering-based memory update")
+                    return False
+
+                max_cluster = max(cluster_counts.keys(), key=lambda k: cluster_counts[k])
 
                 # Replace random item from over-represented cluster
                 candidates = [

@@ -14,9 +14,10 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
-from apps.bot.models.payment import (
-    PaymentCreate,
-    PaymentResponse,
+from core.domain.payment import (
+    Money,
+    Payment,
+    PaymentData,
     PaymentStatus,
 )
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
@@ -47,8 +48,25 @@ class PaymentProcessingService(PaymentProcessingProtocol):
         self.payment_adapter = PaymentAdapterFactory.get_current_adapter()
         logger.info("💰 PaymentProcessingService initialized")
 
+    def _create_payment_entity(self, payment_data: dict[str, Any]) -> Payment:
+        """Helper method to convert database record to Payment domain entity"""
+        return Payment(
+            id=payment_data["id"],
+            user_id=payment_data["user_id"],
+            payment_method_id=payment_data["payment_method_id"],
+            amount=Money(amount=payment_data["amount"], currency=payment_data["currency"]),
+            status=payment_data["status"],
+            provider=payment_data["provider"],
+            provider_payment_id=payment_data["provider_payment_id"],
+            description=payment_data["description"],
+            subscription_id=payment_data["subscription_id"],
+            created_at=payment_data["created_at"],
+            updated_at=payment_data["updated_at"],
+            metadata=payment_data.get("metadata", {}),
+        )
+
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self, user_id: int, payment_data: PaymentData, idempotency_key: str | None = None
     ) -> PaymentResult:
         """
         Process a one-time payment transaction.
@@ -72,7 +90,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 logger.info(f"🔄 Returning existing payment for idempotency key: {idempotency_key}")
                 return PaymentResult(
                     success=existing_payment["status"] == PaymentStatus.SUCCEEDED,
-                    payment=PaymentResponse(**existing_payment),
+                    payment=self._create_payment_entity(existing_payment),
                     transaction_id=existing_payment["id"],
                 )
 
@@ -101,8 +119,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 "provider": payment_method["provider"],
                 "provider_payment_id": None,
                 "idempotency_key": idempotency_key,
-                "amount": payment_data.amount,
-                "currency": payment_data.currency,
+                "amount": payment_data.amount.amount,
+                "currency": payment_data.amount.currency,
                 "status": PaymentStatus.PENDING,
                 "description": payment_data.description,
                 "metadata": payment_data.metadata or {},
@@ -113,8 +131,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             try:
                 # Process payment with provider
                 provider_response = await self.payment_adapter.create_payment_intent(
-                    amount=payment_data.amount,
-                    currency=payment_data.currency,
+                    amount=payment_data.amount.amount,
+                    currency=payment_data.amount.currency,
                     customer_id=str(user_id),
                     payment_method_id=payment_method["provider_method_id"],
                     metadata=payment_data.metadata or {},
@@ -142,7 +160,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 logger.info(f"✅ Payment processed successfully: {payment_id}, status: {status}")
                 return PaymentResult(
                     success=status == PaymentStatus.SUCCEEDED,
-                    payment=PaymentResponse(**final_payment),
+                    payment=self._create_payment_entity(final_payment),
                     provider_response=provider_response,
                     transaction_id=payment_id,
                 )
@@ -161,7 +179,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 failed_payment = await self.repository.get_payment(payment_id)
                 return PaymentResult(
                     success=False,
-                    payment=PaymentResponse(**failed_payment) if failed_payment else None,
+                    payment=self._create_payment_entity(failed_payment) if failed_payment else None,
                     error_message=str(provider_error),
                     transaction_id=payment_id,
                 )
@@ -170,7 +188,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             logger.error(f"❌ Payment processing failed for user {user_id}: {e}")
             return PaymentResult(success=False, error_message=str(e))
 
-    async def validate_payment_data(self, payment_data: PaymentCreate) -> dict[str, Any]:
+    async def validate_payment_data(self, payment_data: PaymentData) -> dict[str, Any]:
         """
         Validate payment data before processing.
 
@@ -183,19 +201,19 @@ class PaymentProcessingService(PaymentProcessingProtocol):
         errors = []
 
         # Validate amount
-        if payment_data.amount <= 0:
+        if payment_data.amount.amount <= 0:
             errors.append("Payment amount must be greater than zero")
 
-        if payment_data.amount > Decimal("10000"):  # $10,000 limit
+        if payment_data.amount.amount > Decimal("10000"):  # $10,000 limit
             errors.append("Payment amount exceeds maximum limit")
 
         # Validate currency
-        if not payment_data.currency:
+        if not payment_data.amount.currency:
             errors.append("Currency is required")
 
         supported_currencies = ["USD", "UZS", "EUR"]
-        if payment_data.currency not in supported_currencies:
-            errors.append(f"Currency {payment_data.currency} is not supported")
+        if payment_data.amount.currency not in supported_currencies:
+            errors.append(f"Currency {payment_data.amount.currency} is not supported")
 
         # Validate payment method
         if not payment_data.payment_method_id:
@@ -225,10 +243,12 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 return PaymentResult(success=False, error_message="Payment is not in failed state")
 
             # Create new payment data from original
-            payment_data = PaymentCreate(
+            payment_data = PaymentData(
                 payment_method_id=original_payment["payment_method_id"],
-                amount=original_payment["amount"],
-                currency=original_payment["currency"],
+                amount=Money(
+                    amount=original_payment["amount"],
+                    currency=original_payment["currency"]
+                ),
                 description=f"Retry of payment {payment_id}",
                 metadata={
                     **original_payment.get("metadata", {}),
@@ -342,7 +362,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             logger.info(f"✅ Refund processed successfully: {refund_id}")
             return PaymentResult(
                 success=True,
-                payment=PaymentResponse(**refund_payment) if refund_payment else None,
+                payment=self._create_payment_entity(refund_payment) if refund_payment else None,
                 provider_response=provider_refund_response,
                 transaction_id=refund_id,
             )
@@ -351,7 +371,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             logger.error(f"❌ Refund processing failed for {payment_id}: {e}")
             return PaymentResult(success=False, error_message=str(e))
 
-    async def get_payment(self, payment_id: str) -> PaymentResponse | None:
+    async def get_payment(self, payment_id: str) -> Payment | None:
         """
         Get payment details by ID.
 
@@ -366,7 +386,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             if not payment:
                 return None
 
-            return PaymentResponse(**payment)
+            return self._create_payment_entity(payment)
 
         except Exception as e:
             logger.error(f"❌ Failed to get payment {payment_id}: {e}")

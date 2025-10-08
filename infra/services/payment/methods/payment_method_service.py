@@ -12,9 +12,9 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from apps.bot.models.payment import (
-    PaymentMethodCreate,
-    PaymentMethodResponse,
+from core.domain.payment import (
+    PaymentMethod,
+    PaymentMethodData,
     PaymentProvider,
 )
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
@@ -45,7 +45,7 @@ class PaymentMethodService(PaymentMethodProtocol):
         logger.info("💳 PaymentMethodService initialized")
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str | None = None
+        self, user_id: int, payment_method_data: PaymentMethodData, provider: str | None = None
     ) -> PaymentMethodResult:
         """
         Create a new payment method for a user.
@@ -100,8 +100,8 @@ class PaymentMethodService(PaymentMethodProtocol):
                 },
             )
 
-            # Create response object
-            payment_method = PaymentMethodResponse(
+            # Create domain entity
+            payment_method = PaymentMethod(
                 id=method_id,
                 user_id=user_id,
                 provider=PaymentProvider(provider) if isinstance(provider, str) else provider,
@@ -123,7 +123,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             logger.error(f"❌ Failed to create payment method for user {user_id}: {e}")
             return PaymentMethodResult(success=False, error_message=str(e))
 
-    async def get_user_payment_methods(self, user_id: int) -> list[PaymentMethodResponse]:
+    async def get_user_payment_methods(self, user_id: int) -> list[PaymentMethod]:
         """
         Retrieve all payment methods for a user.
 
@@ -139,7 +139,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             methods = await self.repository.get_user_payment_methods(str(user_id))
 
             payment_methods = [
-                PaymentMethodResponse(
+                PaymentMethod(
                     id=method["id"],
                     user_id=user_id,
                     provider=method["provider"],
@@ -161,7 +161,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             logger.error(f"❌ Failed to get payment methods for user {user_id}: {e}")
             return []
 
-    async def get_payment_method(self, method_id: str) -> PaymentMethodResponse | None:
+    async def get_payment_method(self, method_id: str) -> PaymentMethod | None:
         """
         Get a specific payment method by ID.
 
@@ -176,7 +176,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             if not method:
                 return None
 
-            return PaymentMethodResponse(
+            return PaymentMethod(
                 id=method["id"],
                 user_id=method["user_id"],
                 provider=method["provider"],
@@ -231,7 +231,7 @@ class PaymentMethodService(PaymentMethodProtocol):
                 )
 
             # Return updated method
-            payment_method = PaymentMethodResponse(**updated_method)
+            payment_method = PaymentMethod(**updated_method)
 
             logger.info(f"✅ Payment method updated successfully: {method_id}")
             return PaymentMethodResult(success=True, payment_method=payment_method)
@@ -324,7 +324,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             return False
 
     async def _validate_payment_method_data(
-        self, payment_method_data: PaymentMethodCreate
+        self, payment_method_data: PaymentMethodData
     ) -> dict[str, Any]:
         """
         Validate payment method data before creation.

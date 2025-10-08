@@ -18,9 +18,9 @@ from ..models import (
     BatchData,
     ImportanceWeights,
     IncrementalLearningConfig,
-    LearningContext,
     ModelEvaluation,
 )
+from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

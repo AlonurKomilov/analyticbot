@@ -13,9 +13,9 @@ from typing import Any
 
 from ..models import (
     IncrementalLearningConfig,
-    LearningContext,
     LearningResult,
 )
+from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

@@ -83,7 +83,8 @@ async def initialize_application(settings: MTProtoSettings) -> Any:
 
     # Initialize external services
     await container.external.health_server().start()
-    await container.external.global_tracer.init()
+    # Resource providers are automatically initialized
+    global_tracer = await container.external.global_tracer()
 
     logger.info("🚀 MTProto application initialized with decomposed containers")
     return container

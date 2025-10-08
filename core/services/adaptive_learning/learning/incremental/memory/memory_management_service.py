@@ -16,10 +16,10 @@ import numpy as np
 
 from ..models import (
     IncrementalLearningConfig,
-    LearningContext,
     MemoryOperation,
     MemoryStrategy,
 )
+from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

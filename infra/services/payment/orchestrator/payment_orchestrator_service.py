@@ -11,7 +11,7 @@ Single Responsibility: Orchestration and workflow coordination only.
 import logging
 from typing import Any
 
-from apps.bot.models.payment import PaymentCreate, SubscriptionCreate
+from core.domain.payment import PaymentData, SubscriptionData
 
 from core.protocols.payment.payment_protocols import (
     PaymentOrchestratorProtocol,
@@ -55,7 +55,7 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
     async def execute_payment_workflow(
         self,
         user_id: int,
-        payment_data: PaymentCreate,
+        payment_data: PaymentData,
         workflow_options: dict[str, Any] | None = None,
     ) -> PaymentResult:
         """
@@ -126,7 +126,7 @@ class PaymentOrchestratorService(PaymentOrchestratorProtocol):
     async def execute_subscription_workflow(
         self,
         user_id: int,
-        subscription_data: SubscriptionCreate,
+        subscription_data: SubscriptionData,
         workflow_options: dict[str, Any] | None = None,
     ) -> SubscriptionResult:
         """

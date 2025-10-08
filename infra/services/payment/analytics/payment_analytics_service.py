@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from ..protocols.payment_protocols import (
+from core.protocols.payment.payment_protocols import (
     PaymentAnalyticsProtocol,
     PaymentStats,
     SubscriptionStats,

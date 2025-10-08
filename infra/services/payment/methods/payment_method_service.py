@@ -19,7 +19,7 @@ from apps.bot.models.payment import (
 )
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 
-from ..protocols.payment_protocols import (
+from core.protocols.payment.payment_protocols import (
     PaymentMethodProtocol,
     PaymentMethodResult,
 )

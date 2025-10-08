@@ -128,7 +128,7 @@ def _create_subscription_service(user_repository=None, plan_repository=None, **k
 def _create_payment_microservices(payment_repository=None, **kwargs):
     """Create payment microservices architecture"""
     try:
-        from core.services.payment import (
+        from infra.services.payment import (
             PaymentAnalyticsService,
             PaymentGatewayManagerService,
             PaymentMethodService,
@@ -136,7 +136,7 @@ def _create_payment_microservices(payment_repository=None, **kwargs):
             PaymentProcessingService,
             WebhookService,
         )
-        from core.services.payment import (
+        from infra.services.payment import (
             SubscriptionService as PaymentSubscriptionService,
         )
 

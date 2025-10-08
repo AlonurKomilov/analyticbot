@@ -13,7 +13,7 @@ from typing import Any
 
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
 
-from ..protocols.payment_protocols import PaymentGatewayManagerProtocol
+from core.protocols.payment.payment_protocols import PaymentGatewayManagerProtocol
 
 logger = logging.getLogger(__name__)
 

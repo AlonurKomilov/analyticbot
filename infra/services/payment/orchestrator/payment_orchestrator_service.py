@@ -13,7 +13,7 @@ from typing import Any
 
 from apps.bot.models.payment import PaymentCreate, SubscriptionCreate
 
-from ..protocols.payment_protocols import (
+from core.protocols.payment.payment_protocols import (
     PaymentOrchestratorProtocol,
     PaymentResult,
     SubscriptionResult,

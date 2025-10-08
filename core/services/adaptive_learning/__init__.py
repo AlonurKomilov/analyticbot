@@ -17,10 +17,10 @@ Microservices:
 Each microservice is self-contained with its own components and clear responsibilities.
 """
 
-from .drift import DriftDetectionService
 from .deployment import ModelUpdateService
-from .learning import LearningTaskService
+from .drift import DriftDetectionService
 from .feedback import FeedbackCollectionService
+from .learning import LearningTaskService
 from .monitoring import PerformanceMonitoringService
 from .orchestrator import AdaptiveLearningOrchestrator
 
@@ -29,41 +29,40 @@ __author__ = "Analytics Bot Team"
 
 # Microservices registry
 MICROSERVICES = {
-    'drift': {
-        'main_service': DriftDetectionService,
-        'description': 'Model drift detection and analysis'
+    "drift": {
+        "main_service": DriftDetectionService,
+        "description": "Model drift detection and analysis",
     },
-    'deployment': {
-        'main_service': ModelUpdateService,
-        'description': 'Model deployment and updates'
+    "deployment": {
+        "main_service": ModelUpdateService,
+        "description": "Model deployment and updates",
     },
-    'learning': {
-        'main_service': LearningTaskService,
-        'description': 'Incremental learning and training'
+    "learning": {
+        "main_service": LearningTaskService,
+        "description": "Incremental learning and training",
     },
-    'feedback': {
-        'main_service': FeedbackCollectionService,
-        'description': 'User feedback collection and processing'
+    "feedback": {
+        "main_service": FeedbackCollectionService,
+        "description": "User feedback collection and processing",
     },
-    'monitoring': {
-        'main_service': PerformanceMonitoringService,
-        'description': 'Performance monitoring and alerting'
+    "monitoring": {
+        "main_service": PerformanceMonitoringService,
+        "description": "Performance monitoring and alerting",
     },
-    'orchestrator': {
-        'main_service': AdaptiveLearningOrchestrator,
-        'description': 'Central coordination and orchestration'
-    }
+    "orchestrator": {
+        "main_service": AdaptiveLearningOrchestrator,
+        "description": "Central coordination and orchestration",
+    },
 }
 
 __all__ = [
     # Main services
-    'DriftDetectionService',
-    'ModelUpdateService', 
-    'LearningTaskService',
-    'FeedbackCollectionService',
-    'PerformanceMonitoringService',
-    'AdaptiveLearningOrchestrator',
-    
+    "DriftDetectionService",
+    "ModelUpdateService",
+    "LearningTaskService",
+    "FeedbackCollectionService",
+    "PerformanceMonitoringService",
+    "AdaptiveLearningOrchestrator",
     # Registry
-    'MICROSERVICES'
+    "MICROSERVICES",
 ]

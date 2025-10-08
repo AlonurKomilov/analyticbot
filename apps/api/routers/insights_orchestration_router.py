@@ -91,7 +91,7 @@ async def get_orchestration_health(
         total_services = len(services_health)
 
         return {
-            "service_status": "healthy" if healthy_services == total_services else "degraded",
+            "service_status": ("healthy" if healthy_services == total_services else "degraded"),
             "total_requests": orchestrator.request_count,
             "services_health": {
                 name: "healthy" if health.is_healthy else "unhealthy"

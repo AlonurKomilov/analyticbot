@@ -5,7 +5,7 @@ Deep Learning Microservices Package
 This package contains all deep learning microservices following clean architecture:
 
 - orchestrator: Lightweight coordination service
-- engagement: Engagement prediction microservice  
+- engagement: Engagement prediction microservice
 - growth: Growth forecasting microservice
 - content: Content analysis microservice
 - infrastructure: Shared infrastructure components
@@ -21,6 +21,4 @@ try:
 except ImportError:
     from .orchestrator.dl_orchestrator_service import DLOrchestratorService
 
-__all__ = [
-    "DLOrchestratorService"
-]
+__all__ = ["DLOrchestratorService"]

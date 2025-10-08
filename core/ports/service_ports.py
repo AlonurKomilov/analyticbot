@@ -4,11 +4,11 @@ Service interfaces (ports) for clean architecture.
 These define contracts that external services must implement.
 """
 
-from typing import Protocol, runtime_checkable
 from datetime import datetime
+from typing import Protocol, runtime_checkable
 from uuid import UUID
 
-from core.models import ScheduledPost, Delivery
+from core.models import Delivery, ScheduledPost
 
 
 @runtime_checkable
@@ -108,7 +108,9 @@ class AnalyticsService(Protocol):
         """Track post delivery event"""
         ...
 
-    async def get_channel_stats(self, channel_id: str, from_date: datetime, to_date: datetime) -> dict:
+    async def get_channel_stats(
+        self, channel_id: str, from_date: datetime, to_date: datetime
+    ) -> dict:
         """Get channel analytics statistics"""
         ...
 

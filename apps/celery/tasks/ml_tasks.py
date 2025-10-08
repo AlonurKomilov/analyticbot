@@ -30,7 +30,12 @@ class MLTask(Task):
         """Log task failure for monitoring."""
         logger.error(
             f"ML Task {self.name} failed: {exc}",
-            extra={"task_id": task_id, "args": args, "kwargs": kwargs, "error": str(exc)},
+            extra={
+                "task_id": task_id,
+                "args": args,
+                "kwargs": kwargs,
+                "error": str(exc),
+            },
         )
 
     def on_success(self, retval, task_id, args, kwargs):
@@ -49,7 +54,10 @@ class MLTask(Task):
     default_retry_delay=60,
 )
 def train_growth_model(
-    self, channel_id: int, training_data: dict[str, Any], config: dict[str, Any] | None = None
+    self,
+    channel_id: int,
+    training_data: dict[str, Any],
+    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Train growth forecasting model for a channel.
@@ -77,7 +85,9 @@ def train_growth_model(
         from core.services.deep_learning.growth.growth_forecaster_service import (
             GrowthForecasterService,
         )
-        from core.services.deep_learning.infrastructure.gpu_config import GPUConfigService
+        from core.services.deep_learning.infrastructure.gpu_config import (
+            GPUConfigService,
+        )
         from core.services.deep_learning.infrastructure.model_loader import ModelLoader
 
         # Initialize required services
@@ -121,7 +131,10 @@ def train_growth_model(
 
         logger.info(
             f"Growth model training completed for channel {channel_id}",
-            extra={"forecast_horizon": forecast_horizon, "confidence": result.get("confidence", 0)},
+            extra={
+                "forecast_horizon": forecast_horizon,
+                "confidence": result.get("confidence", 0),
+            },
         )
 
         return {
@@ -136,7 +149,10 @@ def train_growth_model(
         }
 
     except Exception as exc:
-        logger.error(f"Growth model training failed for channel {channel_id}: {exc}", exc_info=True)
+        logger.error(
+            f"Growth model training failed for channel {channel_id}: {exc}",
+            exc_info=True,
+        )
         # Retry with exponential backoff
         raise self.retry(exc=exc)
 
@@ -170,7 +186,8 @@ def process_content_analysis(
     """
     try:
         logger.info(
-            f"Starting content analysis for post {post_id}", extra={"analysis_type": analysis_type}
+            f"Starting content analysis for post {post_id}",
+            extra={"analysis_type": analysis_type},
         )
 
         # TODO: ContentAnalyzer service not yet implemented
@@ -202,7 +219,11 @@ def process_content_analysis(
     default_retry_delay=30,
 )
 def generate_predictions(
-    self, channel_id: int, prediction_type: str, input_data: dict[str, Any], horizon: int = 30
+    self,
+    channel_id: int,
+    prediction_type: str,
+    input_data: dict[str, Any],
+    horizon: int = 30,
 ) -> dict[str, Any]:
     """
     Generate ML predictions for various metrics.
@@ -247,7 +268,10 @@ def generate_predictions(
         }
 
     except Exception as exc:
-        logger.error(f"Prediction generation failed for channel {channel_id}: {exc}", exc_info=True)
+        logger.error(
+            f"Prediction generation failed for channel {channel_id}: {exc}",
+            exc_info=True,
+        )
         raise self.retry(exc=exc)
 
 
@@ -287,7 +311,11 @@ def batch_train_models(
             extra={"channel_count": len(channel_ids)},
         )
 
-        return {"status": "success", "total_channels": len(channel_ids), "tasks": task_results}
+        return {
+            "status": "success",
+            "total_channels": len(channel_ids),
+            "tasks": task_results,
+        }
 
     except Exception as exc:
         logger.error(f"Batch training coordination failed: {exc}", exc_info=True)

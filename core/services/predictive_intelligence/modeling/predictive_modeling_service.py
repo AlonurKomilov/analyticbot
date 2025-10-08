@@ -44,7 +44,12 @@ class PredictiveModelingService(PredictiveModelingProtocol):
 
         # Modeling configuration
         self.modeling_config = {
-            "confidence_thresholds": {"very_high": 0.85, "high": 0.70, "medium": 0.55, "low": 0.40},
+            "confidence_thresholds": {
+                "very_high": 0.85,
+                "high": 0.70,
+                "medium": 0.55,
+                "low": 0.40,
+            },
             "prediction_horizons": {
                 "short_term": {"days": 7, "confidence_factor": 0.9},
                 "medium_term": {"days": 30, "confidence_factor": 0.7},
@@ -295,7 +300,11 @@ class PredictiveModelingService(PredictiveModelingProtocol):
 
         except Exception as e:
             logger.error(f"❌ Prediction validation failed: {e}")
-            return {"prediction_id": prediction_id, "validation_status": "failed", "error": str(e)}
+            return {
+                "prediction_id": prediction_id,
+                "validation_status": "failed",
+                "error": str(e),
+            }
 
     async def _get_base_predictions(self, prediction_request: dict[str, Any]) -> dict[str, Any]:
         """Get base predictions from existing predictive service"""
@@ -325,7 +334,9 @@ class PredictiveModelingService(PredictiveModelingProtocol):
             return {"predictions": {}, "base_confidence": 0.5}
 
     async def _enhance_with_context(
-        self, base_predictions: dict[str, Any], contextual_intelligence: ContextualIntelligence
+        self,
+        base_predictions: dict[str, Any],
+        contextual_intelligence: ContextualIntelligence,
     ) -> dict[str, Any]:
         """Enhance predictions with contextual intelligence"""
         enhanced_predictions = base_predictions.copy()
@@ -380,7 +391,9 @@ class PredictiveModelingService(PredictiveModelingProtocol):
         return enhanced_predictions
 
     async def _enhance_with_temporal_patterns(
-        self, enhanced_predictions: dict[str, Any], temporal_intelligence: TemporalIntelligence
+        self,
+        enhanced_predictions: dict[str, Any],
+        temporal_intelligence: TemporalIntelligence,
     ) -> dict[str, Any]:
         """Enhance predictions with temporal intelligence"""
         temporal_enhanced = enhanced_predictions.copy()
@@ -388,7 +401,7 @@ class PredictiveModelingService(PredictiveModelingProtocol):
         # Apply daily pattern enhancements
         daily_patterns = temporal_intelligence.daily_patterns
         if daily_patterns:
-            peak_hours = daily_patterns.get("peak_hours", [])
+            daily_patterns.get("peak_hours", [])
             consistency_score = daily_patterns.get("consistency_score", 0.5)
 
             # Adjust predictions based on daily consistency
@@ -400,7 +413,7 @@ class PredictiveModelingService(PredictiveModelingProtocol):
         # Apply weekly cycle enhancements
         weekly_cycles = temporal_intelligence.weekly_cycles
         if weekly_cycles:
-            cyclical_strength = weekly_cycles.get("cyclical_strength", 0.5)
+            weekly_cycles.get("cyclical_strength", 0.5)
             weekly_momentum = weekly_cycles.get("weekly_momentum", {})
 
             # Adjust growth predictions based on weekly momentum
@@ -522,13 +535,15 @@ class PredictiveModelingService(PredictiveModelingProtocol):
         return summary + "."
 
     async def _generate_detailed_explanation(
-        self, enhanced_predictions: dict[str, Any], intelligence_enhancements: dict[str, Any]
+        self,
+        enhanced_predictions: dict[str, Any],
+        intelligence_enhancements: dict[str, Any],
     ) -> str:
         """Generate detailed prediction explanation"""
         explanation_parts = []
 
         # Base prediction explanation
-        predictions = enhanced_predictions.get("predictions", {})
+        enhanced_predictions.get("predictions", {})
         explanation_parts.append(
             "Based on comprehensive analysis of historical data and current trends:"
         )
@@ -679,11 +694,13 @@ class PredictiveModelingService(PredictiveModelingProtocol):
         return {
             "improvement_factor": improvement_factor,
             "confidence_improvement": enhanced_conf - base_conf,
-            "enhancement_quality": "high"
-            if improvement_factor > 1.2
-            else "moderate"
-            if improvement_factor > 1.1
-            else "low",
+            "enhancement_quality": (
+                "high"
+                if improvement_factor > 1.2
+                else "moderate"
+                if improvement_factor > 1.1
+                else "low"
+            ),
         }
 
     def _calculate_contextual_confidence(self, contextual_intelligence: dict[str, Any]) -> float:
@@ -794,11 +811,9 @@ class PredictiveModelingService(PredictiveModelingProtocol):
             "expected_accuracy": expected_accuracy,
             "actual_accuracy": overall_accuracy,
             "calibration_error": calibration_error,
-            "calibration_quality": "good"
-            if calibration_error < 0.1
-            else "fair"
-            if calibration_error < 0.2
-            else "poor",
+            "calibration_quality": (
+                "good" if calibration_error < 0.1 else "fair" if calibration_error < 0.2 else "poor"
+            ),
         }
 
     def _generate_learning_insights(

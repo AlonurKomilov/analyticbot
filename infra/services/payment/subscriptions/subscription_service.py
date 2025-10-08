@@ -12,12 +12,14 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from apps.bot.models.payment import (
+from core.domain.payment import (
     BillingCycle,
-    SubscriptionCreate,
-    SubscriptionResponse,
+    Money,
+    Subscription,
+    SubscriptionData,
     SubscriptionStatus,
 )
+from apps.bot.models.payment import BillingCycle as AdapterBillingCycle
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 
 from core.protocols.payment.payment_protocols import (
@@ -46,8 +48,27 @@ class SubscriptionService(SubscriptionProtocol):
         self.payment_adapter = PaymentAdapterFactory.get_current_adapter()
         logger.info("🔄 SubscriptionService initialized")
 
+    def _create_subscription_entity(self, subscription_data: dict[str, Any]) -> Subscription:
+        """Helper method to convert database record to Subscription domain entity"""
+        return Subscription(
+            id=subscription_data["id"],
+            user_id=subscription_data["user_id"],
+            plan_id=subscription_data["plan_id"],
+            payment_method_id=subscription_data["payment_method_id"],
+            status=subscription_data["status"],
+            billing_cycle=subscription_data["billing_cycle"],
+            amount=Money(amount=subscription_data["amount"], currency=subscription_data["currency"]),
+            current_period_start=subscription_data["current_period_start"],
+            current_period_end=subscription_data["current_period_end"],
+            trial_ends_at=subscription_data.get("trial_ends_at"),
+            created_at=subscription_data["created_at"],
+            canceled_at=subscription_data.get("canceled_at"),
+            cancel_at_period_end=subscription_data.get("cancel_at_period_end", False),
+            metadata=subscription_data.get("metadata", {}),
+        )
+
     async def create_subscription(
-        self, user_id: int, subscription_data: SubscriptionCreate
+        self, user_id: int, subscription_data: SubscriptionData
     ) -> SubscriptionResult:
         """
         Create a new subscription for a user.
@@ -132,26 +153,12 @@ class SubscriptionService(SubscriptionProtocol):
             if not subscription:
                 raise ValueError("Subscription not found after creation")
 
-            subscription_response = SubscriptionResponse(
-                id=subscription["id"],
-                user_id=subscription["user_id"],
-                plan_id=subscription["plan_id"],
-                status=SubscriptionStatus(subscription["status"]),
-                billing_cycle=BillingCycle(subscription["billing_cycle"]),
-                amount=subscription["amount"],
-                currency=subscription["currency"],
-                current_period_start=subscription["current_period_start"],
-                current_period_end=subscription["current_period_end"],
-                trial_ends_at=subscription["trial_ends_at"],
-                created_at=subscription["created_at"],
-                canceled_at=subscription.get("canceled_at"),
-                cancel_at_period_end=subscription.get("cancel_at_period_end", False),
-            )
+            subscription_entity = self._create_subscription_entity(subscription)
 
             logger.info(f"✅ Subscription created successfully: {subscription_id}")
             return SubscriptionResult(
                 success=True,
-                subscription=subscription_response,
+                subscription=subscription_entity,
                 provider_response=provider_response,
             )
 
@@ -159,7 +166,7 @@ class SubscriptionService(SubscriptionProtocol):
             logger.error(f"❌ Failed to create subscription for user {user_id}: {e}")
             return SubscriptionResult(success=False, error_message=str(e))
 
-    async def get_user_subscription(self, user_id: int) -> SubscriptionResponse | None:
+    async def get_user_subscription(self, user_id: int) -> Subscription | None:
         """
         Get user's active subscription.
 
@@ -174,21 +181,7 @@ class SubscriptionService(SubscriptionProtocol):
             if not subscription:
                 return None
 
-            return SubscriptionResponse(
-                id=subscription["id"],
-                user_id=subscription["user_id"],
-                plan_id=subscription["plan_id"],
-                status=SubscriptionStatus(subscription["status"]),
-                billing_cycle=BillingCycle(subscription["billing_cycle"]),
-                amount=subscription["amount"],
-                currency=subscription["currency"],
-                current_period_start=subscription["current_period_start"],
-                current_period_end=subscription["current_period_end"],
-                trial_ends_at=subscription["trial_ends_at"],
-                created_at=subscription["created_at"],
-                canceled_at=subscription.get("canceled_at"),
-                cancel_at_period_end=subscription.get("cancel_at_period_end", False),
-            )
+            return self._create_subscription_entity(subscription)
 
         except Exception as e:
             logger.error(f"❌ Failed to get subscription for user {user_id}: {e}")
@@ -231,10 +224,10 @@ class SubscriptionService(SubscriptionProtocol):
                     success=False, error_message="Failed to update subscription"
                 )
 
-            subscription_response = SubscriptionResponse(**updated_subscription)
+            subscription_entity = self._create_subscription_entity(updated_subscription)
 
             logger.info(f"✅ Subscription updated successfully: {subscription_id}")
-            return SubscriptionResult(success=True, subscription=subscription_response)
+            return SubscriptionResult(success=True, subscription=subscription_entity)
 
         except Exception as e:
             logger.error(f"❌ Failed to update subscription {subscription_id}: {e}")
@@ -337,10 +330,10 @@ class SubscriptionService(SubscriptionProtocol):
             updated_subscription = await self.repository.update_subscription(
                 subscription_id, updates
             )
-            subscription_response = SubscriptionResponse(**updated_subscription)
+            subscription_entity = self._create_subscription_entity(updated_subscription)
 
             logger.info(f"✅ Subscription paused successfully: {subscription_id}")
-            return SubscriptionResult(success=True, subscription=subscription_response)
+            return SubscriptionResult(success=True, subscription=subscription_entity)
 
         except Exception as e:
             logger.error(f"❌ Failed to pause subscription {subscription_id}: {e}")
@@ -382,10 +375,10 @@ class SubscriptionService(SubscriptionProtocol):
             updated_subscription = await self.repository.update_subscription(
                 subscription_id, updates
             )
-            subscription_response = SubscriptionResponse(**updated_subscription)
+            subscription_entity = self._create_subscription_entity(updated_subscription)
 
             logger.info(f"✅ Subscription resumed successfully: {subscription_id}")
-            return SubscriptionResult(success=True, subscription=subscription_response)
+            return SubscriptionResult(success=True, subscription=subscription_entity)
 
         except Exception as e:
             logger.error(f"❌ Failed to resume subscription {subscription_id}: {e}")
@@ -435,10 +428,10 @@ class SubscriptionService(SubscriptionProtocol):
             updated_subscription = await self.repository.update_subscription(
                 subscription_id, updates
             )
-            subscription_response = SubscriptionResponse(**updated_subscription)
+            subscription_entity = self._create_subscription_entity(updated_subscription)
 
             logger.info(f"✅ Subscription plan changed successfully: {subscription_id}")
-            return SubscriptionResult(success=True, subscription=subscription_response)
+            return SubscriptionResult(success=True, subscription=subscription_entity)
 
         except Exception as e:
             logger.error(f"❌ Failed to change subscription plan {subscription_id}: {e}")
@@ -475,7 +468,7 @@ class SubscriptionService(SubscriptionProtocol):
             return []
 
     async def _validate_subscription_data(
-        self, subscription_data: SubscriptionCreate
+        self, subscription_data: SubscriptionData
     ) -> dict[str, Any]:
         """Validate subscription data before creation."""
         errors = []
@@ -511,7 +504,7 @@ class SubscriptionService(SubscriptionProtocol):
     async def _create_provider_subscription(
         self,
         user_id: int,
-        subscription_data: SubscriptionCreate,
+        subscription_data: SubscriptionData,
         subscription_id: str,
         plan: dict[str, Any],
     ) -> dict[str, Any]:
@@ -527,7 +520,7 @@ class SubscriptionService(SubscriptionProtocol):
                 customer_id=str(user_id),
                 payment_method_id=payment_method["provider_method_id"],
                 price_id=str(subscription_data.plan_id),
-                billing_cycle=subscription_data.billing_cycle,
+                billing_cycle=AdapterBillingCycle(subscription_data.billing_cycle.value),
                 metadata={},
             )
 

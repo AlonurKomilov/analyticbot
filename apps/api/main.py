@@ -29,7 +29,8 @@ from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 from apps.bot.api.content_protection_router import router as content_protection_router
-from apps.bot.api.payment_router import router as payment_router
+# TODO: Create payment_router when implementing payment API endpoints
+# from apps.bot.api.payment_router import router as payment_router
 
 # ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
 from apps.shared.di import close_container, get_container
@@ -271,7 +272,8 @@ app.include_router(mobile_router)  # Mobile-optimized endpoints (unique)
 app.include_router(content_protection_router)  # Content protection (unique)
 app.include_router(auth_router)  # Authentication (unique)
 app.include_router(superadmin_router)  # Super admin operations (unique)
-app.include_router(payment_router)  # Payment system (unique)
+# TODO: Include payment router when implemented
+# app.include_router(payment_router)  # Payment system (unique)
 
 # Include AI services router
 from apps.api.routers.ai_services_router import router as ai_services_router

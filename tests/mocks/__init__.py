@@ -1,5 +1,5 @@
 """
-Tests Mocks Module  
+Tests Mocks Module
 ==================
 
 Developer testing utilities and mock implementations.
@@ -10,7 +10,7 @@ Structure:
 - services/: Mock service implementations for testing
 - adapters/: Mock adapter implementations
 - data/: Test fixtures and sample data for tests
-- frontend/: Frontend testing mocks  
+- frontend/: Frontend testing mocks
 - archived/: Legacy mock implementations
 - conftest.py: Pytest configuration for mocks
 

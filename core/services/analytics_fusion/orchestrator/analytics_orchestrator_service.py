@@ -307,10 +307,10 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
                 for i in range(min(limit, 10)):
                     audit_logs.append(
                         {
-                            "id": f"audit_{i+1}",
-                            "action": f"admin_action_{i+1}",
-                            "user_id": f"admin_user_{i+1}",
-                            "details": f"Administrative action details {i+1}",
+                            "id": f"audit_{i + 1}",
+                            "action": f"admin_action_{i + 1}",
+                            "user_id": f"admin_user_{i + 1}",
+                            "details": f"Administrative action details {i + 1}",
                             "timestamp": (datetime.utcnow().timestamp() - i * 3600),
                             "ip_address": f"192.168.1.{100 + i}",
                             "success": True,
@@ -342,9 +342,9 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
                 "orchestrator": {
                     "running": self.is_running,
                     "request_count": self.request_count,
-                    "last_request": self.last_request_time.isoformat()
-                    if self.last_request_time
-                    else None,
+                    "last_request": (
+                        self.last_request_time.isoformat() if self.last_request_time else None
+                    ),
                 },
                 "summary": {
                     "total_services": len(service_health),
@@ -364,7 +364,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
                 "error": str(e),
                 "services": {},
                 "orchestrator": {"running": False},
-                "summary": {"total_services": 0, "healthy_services": 0, "overall_status": "error"},
+                "summary": {
+                    "total_services": 0,
+                    "healthy_services": 0,
+                    "overall_status": "error",
+                },
             }
 
     async def start_services(self) -> bool:
@@ -429,7 +433,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
             return {"error": str(e)}
 
     async def get_growth_time_series(
-        self, channel_id: int, from_date: datetime, to_date: datetime, window_days: int = 1
+        self,
+        channel_id: int,
+        from_date: datetime,
+        to_date: datetime,
+        window_days: int = 1,
     ) -> list[dict[str, Any]]:
         """Get growth time series data"""
         try:
@@ -550,8 +558,16 @@ class AnalyticsOrchestratorService(OrchestratorProtocol):
         return [
             RoutingRule(
                 request_type=RequestType.COMPREHENSIVE_ANALYSIS,
-                target_services=[ServiceType.CORE, ServiceType.REPORTING, ServiceType.INTELLIGENCE],
-                execution_order=[ServiceType.CORE, ServiceType.INTELLIGENCE, ServiceType.REPORTING],
+                target_services=[
+                    ServiceType.CORE,
+                    ServiceType.REPORTING,
+                    ServiceType.INTELLIGENCE,
+                ],
+                execution_order=[
+                    ServiceType.CORE,
+                    ServiceType.INTELLIGENCE,
+                    ServiceType.REPORTING,
+                ],
                 parallel_execution=False,
                 timeout_seconds=300,
             ),

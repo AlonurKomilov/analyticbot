@@ -10,12 +10,7 @@ Contains shared infrastructure services for deep learning microservices:
 - model_validator: Model validation utilities (future)
 """
 
-from .gpu_config import GPUConfigService, DeviceInfo
+from .gpu_config import DeviceInfo, GPUConfigService
 from .model_loader import ModelLoader, ModelMetadata
 
-__all__ = [
-    "GPUConfigService",
-    "DeviceInfo", 
-    "ModelLoader",
-    "ModelMetadata"
-]
+__all__ = ["GPUConfigService", "DeviceInfo", "ModelLoader", "ModelMetadata"]

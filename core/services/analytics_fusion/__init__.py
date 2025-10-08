@@ -33,7 +33,9 @@ __author__ = "Analytics Bot Team"
 try:
     from .orchestrator import AnalyticsOrchestratorService
 except ImportError:
-    from .orchestrator.analytics_orchestrator_service import AnalyticsOrchestratorService
+    from .orchestrator.analytics_orchestrator_service import (
+        AnalyticsOrchestratorService,
+    )
 
 # Individual microservices
 from .core import AnalyticsCoreService

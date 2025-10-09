@@ -70,12 +70,29 @@ class TemporalIntelligenceService(TemporalIntelligenceProtocol):
                     },
                 },
                 trends=[
-                    {"description": "Morning activity peaks at 9 AM", "confidence": 0.85},
-                    {"description": "Evening engagement highest at 6-9 PM", "confidence": 0.90},
-                    {"description": "Weekend content performs 20% better", "confidence": 0.80},
                     {
+                        "trend_id": "morning_peak",
+                        "description": "Morning activity peaks at 9 AM",
+                        "confidence": 0.85,
+                        "pattern": "daily",
+                    },
+                    {
+                        "trend_id": "evening_engagement",
+                        "description": "Evening engagement highest at 6-9 PM",
+                        "confidence": 0.90,
+                        "pattern": "daily",
+                    },
+                    {
+                        "trend_id": "weekend_performance",
+                        "description": "Weekend content performs 20% better",
+                        "confidence": 0.80,
+                        "pattern": "weekly",
+                    },
+                    {
+                        "trend_id": "midweek_optimal",
                         "description": "Tuesday-Wednesday optimal for announcements",
                         "confidence": 0.75,
+                        "pattern": "weekly",
                     },
                 ],
                 predictions={

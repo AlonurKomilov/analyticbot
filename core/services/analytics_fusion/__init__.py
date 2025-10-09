@@ -41,7 +41,6 @@ from .core import AnalyticsCoreService
 # Infrastructure
 from .infrastructure import CacheManager, ConfigManager, DataAccessService
 from .intelligence import IntelligenceService
-from .monitoring import LiveMonitoringService
 from .optimization import OptimizationService
 
 # Protocols for dependency injection
@@ -53,7 +52,18 @@ from .protocols import (
     OrchestratorProtocol,
     ReportingProtocol,
 )
-from .reporting import ReportingService
+
+# Import monitoring and reporting from alerts_fusion (temporary until we create proper services)
+# TODO: Create proper ReportingService and LiveMonitoringService in analytics_fusion
+try:
+    from core.services.alerts_fusion.live_monitoring_service import LiveMonitoringService
+except ImportError:
+    LiveMonitoringService = None  # type: ignore
+
+# ReportingService moved to apps layer - apps can import this module
+# but core should not import from apps
+# TODO: Create core ReportingService or make it a protocol
+ReportingService = None  # type: ignore  # Placeholder until proper implementation
 
 # Microservices registry
 MICROSERVICES = {
@@ -67,21 +77,21 @@ MICROSERVICES = {
         "description": "Core analytics processing",
         "responsibility": "Analytics calculations and processing",
     },
-    "reporting": {
-        "main_service": ReportingService,
-        "description": "Report generation and dashboards",
-        "responsibility": "Report creation and formatting",
-    },
+    # "reporting": {
+    #     "main_service": ReportingService,
+    #     "description": "Report generation and dashboards",
+    #     "responsibility": "Report creation and formatting",
+    # },
     "intelligence": {
         "main_service": IntelligenceService,
         "description": "AI insights and trend analysis",
         "responsibility": "AI-powered insights generation",
     },
-    "monitoring": {
-        "main_service": LiveMonitoringService,
-        "description": "Real-time monitoring and alerts",
-        "responsibility": "Live monitoring and alerting",
-    },
+    # "monitoring": {
+    #     "main_service": LiveMonitoringService,
+    #     "description": "Real-time monitoring and alerts",
+    #     "responsibility": "Live monitoring and alerting",
+    # },
     "optimization": {
         "main_service": OptimizationService,
         "description": "Performance optimization",

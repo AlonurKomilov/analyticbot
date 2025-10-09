@@ -4,22 +4,27 @@ Provides Redis-based implementation of the cache operations defined
 in AsyncCachePort protocol with proper error handling and connection management.
 """
 
-from typing import TYPE_CHECKING, Optional, Set
+from typing import TYPE_CHECKING, Any, Optional, Set
 
 from core.ports.cache_port import AsyncCachePort
 
 if TYPE_CHECKING:
     import redis.asyncio as redis
+else:
+    try:
+        import redis.asyncio as redis
+    except ImportError:
+        redis = None  # type: ignore
 
 
 class RedisCacheAdapter(AsyncCachePort):
-    """Redis implementation of CachePort protocol.
+    """Redis implementation of AsyncCachePort protocol.
 
     Wraps redis.asyncio.Redis client to provide cache operations
     with proper error handling and type conversion.
     """
 
-    def __init__(self, redis_client: "redis.Redis"):
+    def __init__(self, redis_client: Any):
         """Initialize adapter with Redis client.
 
         Args:
@@ -121,7 +126,7 @@ class InMemoryCacheAdapter(AsyncCachePort):
         pass
 
 
-def create_redis_cache_adapter(redis_client: Optional["redis.Redis"] = None) -> AsyncCachePort:
+def create_redis_cache_adapter(redis_client: Optional[Any] = None) -> AsyncCachePort:
     """Factory function to create appropriate cache adapter.
 
     Args:

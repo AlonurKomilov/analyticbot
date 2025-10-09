@@ -91,9 +91,9 @@ class EnhancedDeliveryService(BaseDeliveryService):
                 )
                 return {
                     "success": True,
-                    "message_id": existing_status.result.get("message_id")
-                    if existing_status.result
-                    else None,
+                    "message_id": (
+                        existing_status.result.get("message_id") if existing_status.result else None
+                    ),
                     "duplicate": True,
                     "cached_result": existing_status.result,
                     "delivery_id": delivery_id,
@@ -136,7 +136,10 @@ class EnhancedDeliveryService(BaseDeliveryService):
 
             # Check per-chat rate limit
             chat_allowed = await self.rate_limiter.acquire_with_delay(
-                bucket_id=channel_id, tokens=1, limit_type="chat", max_wait=max_rate_limit_wait
+                bucket_id=channel_id,
+                tokens=1,
+                limit_type="chat",
+                max_wait=max_rate_limit_wait,
             )
 
             if not chat_allowed:
@@ -146,7 +149,10 @@ class EnhancedDeliveryService(BaseDeliveryService):
 
             # Check global bot rate limit
             global_allowed = await self.rate_limiter.acquire_with_delay(
-                bucket_id="global_bot", tokens=1, limit_type="global", max_wait=max_rate_limit_wait
+                bucket_id="global_bot",
+                tokens=1,
+                limit_type="global",
+                max_wait=max_rate_limit_wait,
             )
 
             if not global_allowed:

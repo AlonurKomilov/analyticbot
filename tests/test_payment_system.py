@@ -34,12 +34,16 @@ class PaymentSystemTester:
 
         # Initialize Stripe adapter
         self.stripe_adapter = StripeAdapter(
-            api_key=self.settings.STRIPE_SECRET_KEY.get_secret_value()
-            if self.settings.STRIPE_SECRET_KEY
-            else "test_key",
-            webhook_secret=self.settings.STRIPE_WEBHOOK_SECRET.get_secret_value()
-            if self.settings.STRIPE_WEBHOOK_SECRET
-            else "test_secret",
+            api_key=(
+                self.settings.STRIPE_SECRET_KEY.get_secret_value()
+                if self.settings.STRIPE_SECRET_KEY
+                else "test_key"
+            ),
+            webhook_secret=(
+                self.settings.STRIPE_WEBHOOK_SECRET.get_secret_value()
+                if self.settings.STRIPE_WEBHOOK_SECRET
+                else "test_secret"
+            ),
         )
 
         # Initialize payment service (mock repository for testing)
@@ -67,7 +71,12 @@ class PaymentSystemTester:
 
         try:
             # Test payment method creation
-            method_data = {"brand": "visa", "last4": "4242", "exp_month": 12, "exp_year": 2025}
+            method_data = {
+                "brand": "visa",
+                "last4": "4242",
+                "exp_month": 12,
+                "exp_year": 2025,
+            }
 
             payment_method = await self.stripe_adapter.create_payment_method(
                 user_id=1, method_data=method_data
@@ -171,7 +180,9 @@ class PaymentSystemTester:
         try:
             # Test SubscriptionCreate model
             subscription_data = SubscriptionCreate(
-                plan_id=1, billing_cycle=BillingCycle.MONTHLY, payment_method_id="pm_test123"
+                plan_id=1,
+                billing_cycle=BillingCycle.MONTHLY,
+                payment_method_id="pm_test123",
             )
 
             self.log_test_result(
@@ -212,7 +223,9 @@ class PaymentSystemTester:
             # Test test mode setting
             test_mode = getattr(self.settings, "STRIPE_TEST_MODE", False)
             self.log_test_result(
-                "Test Mode Configuration", isinstance(test_mode, bool), f"Test mode: {test_mode}"
+                "Test Mode Configuration",
+                isinstance(test_mode, bool),
+                f"Test mode: {test_mode}",
             )
 
         except Exception as e:
@@ -265,9 +278,11 @@ class PaymentSystemTester:
             self.log_test_result(
                 "Stripe Dependencies Configuration",
                 stripe_deps_configured,
-                "Stripe React dependencies configured"
-                if stripe_deps_configured
-                else "Stripe dependencies missing",
+                (
+                    "Stripe React dependencies configured"
+                    if stripe_deps_configured
+                    else "Stripe dependencies missing"
+                ),
             )
 
         except Exception as e:
@@ -286,7 +301,7 @@ class PaymentSystemTester:
         print(f"Total Tests: {total_tests}")
         print(f"✅ Passed: {passed_tests}")
         print(f"❌ Failed: {failed_tests}")
-        print(f"Success Rate: {(passed_tests/total_tests)*100:.1f}%")
+        print(f"Success Rate: {(passed_tests / total_tests) * 100:.1f}%")
 
         if failed_tests > 0:
             print("\n❌ FAILED TESTS:")

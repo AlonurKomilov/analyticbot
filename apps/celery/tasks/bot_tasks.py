@@ -35,9 +35,9 @@ async def cleanup_resources():
 @enhanced_retry_task
 def send_post_task(scheduler_id: int):
     async def _run():
-        context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
+        ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            bot = get_container().bot_client()
+            get_container().bot_client()
             scheduler_repo_result = get_container().schedule_repo()
 
             # Handle potential coroutines
@@ -86,8 +86,8 @@ def remove_expired_schedulers():
     async def _run():
         context = ErrorContext().add("task", "remove_expired_schedulers")
         try:
-            bot = get_container().bot_client()
-            repo = get_container().schedule_repo()
+            get_container().bot_client()
+            get_container().schedule_repo()
             # TODO: Implement remove_expired using clean architecture patterns
             # For now, using safe placeholder that logs the request
             logger.info("remove_expired_schedulers called - placeholder implementation")
@@ -110,7 +110,7 @@ def send_scheduled_message():
         stats = {"processed": 0, "sent": 0, "errors": 0}
         try:
             # Get services from container with fallback handling
-            bot = get_container().bot_client()
+            get_container().bot_client()
             scheduler_service = get_container().scheduler_service()
             scheduler_repo_result = get_container().schedule_repo()
 
@@ -176,7 +176,7 @@ def update_post_views_task():
     async def _run() -> str:
         context = ErrorContext().add("task", "update_post_views_task")
         try:
-            bot = get_container().bot_client()
+            get_container().bot_client()
             analytics_service = get_container().analytics_service()
 
             # Safety check
@@ -275,9 +275,9 @@ def maintenance_cleanup():
     """Periodic maintenance: requeue stuck 'sending' posts and cleanup old posts."""
 
     async def _run():
-        bot = get_container().bot_client()
+        get_container().bot_client()
         try:
-            scheduler_repo = get_container().schedule_repo()
+            get_container().schedule_repo()
             # TODO: Implement requeue_stuck_sending_posts and cleanup_old_posts using clean architecture - PLACEHOLDER
             # Using safe placeholder implementation that logs the maintenance request
             logger.info("maintenance_cleanup called - using safe placeholder implementation")

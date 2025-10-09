@@ -105,9 +105,9 @@ async def get_payment_service() -> PaymentService:
 
     stripe_adapter = StripeAdapter(
         api_key=str(settings.STRIPE_SECRET_KEY) if settings.STRIPE_SECRET_KEY else "",
-        webhook_secret=str(settings.STRIPE_WEBHOOK_SECRET)
-        if settings.STRIPE_WEBHOOK_SECRET
-        else "",
+        webhook_secret=(
+            str(settings.STRIPE_WEBHOOK_SECRET) if settings.STRIPE_WEBHOOK_SECRET else ""
+        ),
     )
     payment_service = PaymentService(payment_repo)
     payment_service.register_adapter(stripe_adapter)
@@ -190,7 +190,9 @@ async def cancel_subscription(
 
 
 @router.get("/plans", response_model=list[PlanResponse])
-async def get_available_plans(payment_service: PaymentService = Depends(get_payment_service)):
+async def get_available_plans(
+    payment_service: PaymentService = Depends(get_payment_service),
+):
     """Get available subscription plans with pricing"""
     try:
         plans = await payment_service.get_available_plans()
@@ -217,7 +219,9 @@ async def get_payment_history(
 
 
 @router.get("/stats/payments", response_model=PaymentStats)
-async def get_payment_stats(payment_service: PaymentService = Depends(get_payment_service)):
+async def get_payment_stats(
+    payment_service: PaymentService = Depends(get_payment_service),
+):
     """Get payment statistics"""
     try:
         stats = await payment_service.get_payment_stats()
@@ -228,7 +232,9 @@ async def get_payment_stats(payment_service: PaymentService = Depends(get_paymen
 
 
 @router.get("/stats/subscriptions", response_model=SubscriptionStats)
-async def get_subscription_stats(payment_service: PaymentService = Depends(get_payment_service)):
+async def get_subscription_stats(
+    payment_service: PaymentService = Depends(get_payment_service),
+):
     """Get subscription statistics"""
     try:
         stats = await payment_service.get_subscription_stats()

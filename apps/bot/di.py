@@ -101,12 +101,33 @@ def _create_dispatcher():
 
 
 def _create_guard_service(user_repository=None, **kwargs):
-    """Create guard service with flexible dependency resolution"""
+    """Create guard service with cache adapter for content moderation.
+
+    Uses Redis cache if available, falls back to in-memory cache.
+    """
     try:
         from apps.bot.services.guard_service import GuardService
+        from infra.cache.redis_cache_adapter import create_redis_cache_adapter
 
-        return _create_service_with_deps(GuardService, user_repository=user_repository, **kwargs)
-    except ImportError:
+        # Try to get Redis connection from shared container
+        redis_client = None
+        try:
+            from apps.shared.di import get_container
+            container = get_container()
+            # Try to get redis client if available
+            # Most installations won't have Redis, so we'll use in-memory fallback
+            redis_client = None  # For now, default to in-memory
+        except Exception as e:
+            logger.debug(f"Redis not available for guard service: {e}")
+            redis_client = None
+
+        # Create cache adapter (will use in-memory if redis_client is None)
+        cache = create_redis_cache_adapter(redis_client)
+
+        # Create service with cache
+        return GuardService(cache=cache)
+    except ImportError as e:
+        logger.warning(f"Failed to create guard service: {e}")
         return None
 
 

@@ -1,5 +1,8 @@
 # Core ports package - Contains abstract interfaces and protocols
 
+# Cache ports (async)
+from .cache_port import AsyncCachePort
+
 # Repository ports (data access)
 # Health ports (new)
 from .health_ports import (
@@ -52,6 +55,8 @@ from .service_ports import (
 from .tg_client import TGClient
 
 __all__ = [
+    # Cache ports
+    "AsyncCachePort",
     # Repository ports
     "UserRepository",
     "AdminRepository",

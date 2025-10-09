@@ -1,36 +1,63 @@
 import re
 from typing import Optional
 
-try:
-    import redis.asyncio as redis  # type: ignore
-except Exception:  # pragma: no cover
-    redis = None  # type: ignore
+from core.ports.cache_port import AsyncCachePort
 
 
 class GuardService:
-    def __init__(self, redis_conn: Optional["redis.Redis"] = None):  # type: ignore[name-defined]
-        # Redis majburiy emas: yo'q bo'lsa in-memory set'lar ishlatilmaydi (faqat False qaytadi)
-        self.redis = redis_conn
+    """Service for managing content moderation and blacklist functionality.
+
+    Uses cache storage (via AsyncCachePort) to maintain per-channel blacklists
+    for content filtering and moderation.
+    """
+
+    def __init__(self, cache: Optional[AsyncCachePort] = None):
+        """Initialize guard service with cache backend.
+
+        Args:
+            cache: Async cache implementation for storing blacklists.
+                   If None, all operations become no-ops.
+        """
+        self.cache = cache
 
     def _key(self, channel_id: int) -> str:
+        """Generate cache key for channel blacklist."""
         return f"blacklist:{channel_id}"
 
-    async def add_word(self, channel_id: int, word: str):
-        if not self.redis:
-            return
-        await self.redis.sadd(self._key(channel_id), word.lower())
+    async def add_word(self, channel_id: int, word: str) -> None:
+        """Add a word to channel's blacklist.
 
-    async def remove_word(self, channel_id: int, word: str):
-        if not self.redis:
+        Args:
+            channel_id: Channel identifier
+            word: Word to add to blacklist (case-insensitive)
+        """
+        if not self.cache:
             return
-        await self.redis.srem(self._key(channel_id), word.lower())
+        await self.cache.sadd(self._key(channel_id), word.lower())
+
+    async def remove_word(self, channel_id: int, word: str) -> None:
+        """Remove a word from channel's blacklist.
+
+        Args:
+            channel_id: Channel identifier
+            word: Word to remove from blacklist
+        """
+        if not self.cache:
+            return
+        await self.cache.srem(self._key(channel_id), word.lower())
 
     async def list_words(self, channel_id: int) -> set[str]:
-        if not self.redis:
+        """Get all blacklisted words for a channel.
+
+        Args:
+            channel_id: Channel identifier
+
+        Returns:
+            Set of blacklisted words (lowercase)
+        """
+        if not self.cache:
             return set()
-        words = await self.redis.smembers(self._key(channel_id))
-        # Decode bytes from Redis into strings
-        return {word.decode("utf-8") for word in words}
+        return await self.cache.smembers(self._key(channel_id))
 
     async def is_blocked(self, channel_id: int, text: str) -> bool:
         blocked_words = await self.list_words(channel_id)

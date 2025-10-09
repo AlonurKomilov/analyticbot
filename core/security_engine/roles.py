@@ -74,7 +74,10 @@ def has_role_or_higher(user_role: str, required_role: str) -> bool:
 
 def is_administrative_role(role: str) -> bool:
     """Check if a role is administrative (MODERATOR or SUPER_ADMIN)."""
-    return role in [AdministrativeRole.MODERATOR.value, AdministrativeRole.SUPER_ADMIN.value]
+    return role in [
+        AdministrativeRole.MODERATOR.value,
+        AdministrativeRole.SUPER_ADMIN.value,
+    ]
 
 
 def is_application_role(role: str) -> bool:

@@ -59,10 +59,19 @@ def main():
     # Backend Infrastructure Tests
     print("\n📝 BACKEND INFRASTRUCTURE:")
     backend_files = [
-        ("/home/alonur/analyticbot/apps/bot/services/stripe_adapter.py", "Stripe Adapter"),
-        ("/home/alonur/analyticbot/apps/bot/api/payment_router.py", "Payment API Routes"),
+        (
+            "/home/alonur/analyticbot/apps/bot/services/stripe_adapter.py",
+            "Stripe Adapter",
+        ),
+        (
+            "/home/alonur/analyticbot/apps/bot/api/payment_router.py",
+            "Payment API Routes",
+        ),
         ("/home/alonur/analyticbot/config/settings.py", "Settings Configuration"),
-        ("/home/alonur/analyticbot/apps/bot/services/payment_service.py", "Payment Service"),
+        (
+            "/home/alonur/analyticbot/apps/bot/services/payment_service.py",
+            "Payment Service",
+        ),
     ]
 
     backend_results = []
@@ -89,7 +98,10 @@ def main():
             "/home/alonur/analyticbot/apps/frontend/src/services/paymentAPI.js",
             "Payment API Service",
         ),
-        ("/home/alonur/analyticbot/apps/frontend/src/services/apiClient.js", "API Client"),
+        (
+            "/home/alonur/analyticbot/apps/frontend/src/services/apiClient.js",
+            "API Client",
+        ),
     ]
 
     frontend_results = []
@@ -100,8 +112,14 @@ def main():
     # Configuration Tests
     print("\n⚙️ CONFIGURATION:")
     config_files = [
-        ("/home/alonur/analyticbot/apps/frontend/.env.example", "Frontend Environment Example"),
-        ("/home/alonur/analyticbot/WEEK_15_16_PAYMENT_SYSTEM_PLAN.md", "Implementation Plan"),
+        (
+            "/home/alonur/analyticbot/apps/frontend/.env.example",
+            "Frontend Environment Example",
+        ),
+        (
+            "/home/alonur/analyticbot/WEEK_15_16_PAYMENT_SYSTEM_PLAN.md",
+            "Implementation Plan",
+        ),
     ]
 
     config_results = []

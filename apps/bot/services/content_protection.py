@@ -57,7 +57,8 @@ class ContentProtectionService:
                 # Try to use custom font, fall back to default
                 try:
                     font = ImageFont.truetype(
-                        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", config.font_size
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                        config.font_size,
                     )
                 except Exception as e:
                     logger.warning(f"Failed to load custom font, using default: {e}")
@@ -76,7 +77,10 @@ class ContentProtectionService:
                         image.width - text_width - 20,
                         image.height - text_height - 20,
                     ),
-                    "center": ((image.width - text_width) // 2, (image.height - text_height) // 2),
+                    "center": (
+                        (image.width - text_width) // 2,
+                        (image.height - text_height) // 2,
+                    ),
                 }
 
                 x, y = positions[config.position]
@@ -188,7 +192,11 @@ class ContentProtectionService:
     async def detect_content_theft(self, content: str) -> dict:
         """Basic content anti-theft detection"""
 
-        theft_indicators = {"suspicious_patterns": [], "risk_level": "low", "recommendations": []}
+        theft_indicators = {
+            "suspicious_patterns": [],
+            "risk_level": "low",
+            "recommendations": [],
+        }
 
         # Check for common theft patterns
         suspicious_words = ["stolen", "copied", "repost", "found this", "not mine"]
@@ -240,7 +248,9 @@ class ContentProtectionService:
             # Apply watermarking for media content
             if file_path and content_type in ["image", "video"]:
                 watermark_config = WatermarkConfig(
-                    text=f"@AnalyticBot • User {user_id}", position="bottom-right", opacity=0.6
+                    text=f"@AnalyticBot • User {user_id}",
+                    position="bottom-right",
+                    opacity=0.6,
                 )
 
                 if content_type == "image":

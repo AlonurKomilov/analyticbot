@@ -246,7 +246,10 @@ class OAuthManager:
 
         provider_config = self.providers[provider]
 
-        headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        }
 
         try:
             user_info = await self._make_http_request(
@@ -276,7 +279,10 @@ class OAuthManager:
 
     async def _get_github_email(self, access_token: str) -> str | None:
         """Get primary email from GitHub API"""
-        headers = {"Authorization": f"Bearer {access_token}", "Accept": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        }
 
         try:
             emails = await self._make_http_request(
@@ -359,7 +365,12 @@ class OAuthManager:
         return user
 
     async def complete_oauth_flow(
-        self, provider: str, code: str, state: str, expected_state: str, redirect_uri: str
+        self,
+        provider: str,
+        code: str,
+        state: str,
+        expected_state: str,
+        redirect_uri: str,
     ) -> User:
         """
         Complete full OAuth authentication flow

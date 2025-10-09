@@ -18,48 +18,40 @@ class AnalyticsAdapter(ABC):
     @abstractmethod
     def get_adapter_name(self) -> str:
         """Return the adapter name"""
-        pass
 
     @abstractmethod
     async def get_channel_analytics(
         self, channel_id: str, start_date: datetime, end_date: datetime
     ) -> dict[str, Any]:
         """Get analytics data for a specific channel"""
-        pass
 
     @abstractmethod
     async def get_post_analytics(self, post_id: str, channel_id: str) -> dict[str, Any]:
         """Get analytics data for a specific post"""
-        pass
 
     @abstractmethod
     async def get_audience_demographics(self, channel_id: str) -> dict[str, Any]:
         """Get audience demographics for a channel"""
-        pass
 
     @abstractmethod
     async def get_engagement_metrics(
         self, channel_id: str, start_date: datetime, end_date: datetime
     ) -> dict[str, Any]:
         """Get engagement metrics for a date range"""
-        pass
 
     @abstractmethod
     async def get_growth_metrics(
         self, channel_id: str, start_date: datetime, end_date: datetime
     ) -> dict[str, Any]:
         """Get growth metrics for a date range"""
-        pass
 
     @abstractmethod
     async def health_check(self) -> dict[str, Any]:
         """Check adapter health and connectivity"""
-        pass
 
     @abstractmethod
     async def close(self):
         """Close adapter and clean up resources"""
-        pass
 
 
 class MockAnalyticsAdapter(AnalyticsAdapter):
@@ -216,7 +208,10 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                     "45-54": random.randint(10, 20),
                     "55+": random.randint(5, 15),
                 },
-                "gender": {"male": random.randint(45, 65), "female": random.randint(35, 55)},
+                "gender": {
+                    "male": random.randint(45, 65),
+                    "female": random.randint(35, 55),
+                },
                 "top_locations": [
                     {"country": "United States", "percentage": random.randint(20, 35)},
                     {"country": "United Kingdom", "percentage": random.randint(10, 20)},
@@ -421,9 +416,11 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                 "average_daily_growth": round(
                     (followers_data[-1]["value"] - followers_data[0]["value"]) / days, 2
                 ),
-                "best_growth_day": max(growth_rates, key=lambda x: x["new_followers"])["date"]
-                if growth_rates
-                else None,
+                "best_growth_day": (
+                    max(growth_rates, key=lambda x: x["new_followers"])["date"]
+                    if growth_rates
+                    else None
+                ),
             },
             "acquisition_channels": {
                 "organic_search": random.randint(30, 45),
@@ -438,7 +435,10 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
                 "90_day_retention": round(random.uniform(40, 60), 2),
                 "churn_rate": round(random.uniform(5, 15), 2),
             },
-            "time_series": {"followers_count": followers_data, "growth_rates": growth_rates},
+            "time_series": {
+                "followers_count": followers_data,
+                "growth_rates": growth_rates,
+            },
             "metadata": {
                 "generated_at": datetime.now().isoformat(),
                 "adapter": "mock_analytics",
@@ -473,4 +473,3 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
     async def close(self):
         """Close mock analytics adapter (no-op for mock)"""
         logger.info("MockAnalyticsAdapter closed")
-        pass

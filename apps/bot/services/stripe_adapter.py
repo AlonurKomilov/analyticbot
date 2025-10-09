@@ -126,9 +126,11 @@ class StripeAdapter(PaymentGatewayAdapter):
                 "method_type": getattr(payment_method, "type", "card"),
                 "last_four": getattr(getattr(payment_method, "card", None), "last4", None),
                 "brand": getattr(getattr(payment_method, "card", None), "brand", None),
-                "expires_at": f"{getattr(getattr(payment_method, 'card', None), 'exp_year', 2025)}-{getattr(getattr(payment_method, 'card', None), 'exp_month', 12):02d}-01"
-                if hasattr(payment_method, "card")
-                else None,
+                "expires_at": (
+                    f"{getattr(getattr(payment_method, 'card', None), 'exp_year', 2025)}-{getattr(getattr(payment_method, 'card', None), 'exp_month', 12):02d}-01"
+                    if hasattr(payment_method, "card")
+                    else None
+                ),
                 "customer_id": getattr(customer, "id", "cus_mock"),
             }
 
@@ -199,7 +201,8 @@ class StripeAdapter(PaymentGatewayAdapter):
 
             # Set default payment method
             stripe.Customer.modify(
-                customer.id, invoice_settings={"default_payment_method": payment_method_id}
+                customer.id,
+                invoice_settings={"default_payment_method": payment_method_id},
             )
 
             # Create subscription
@@ -265,7 +268,9 @@ class StripeAdapter(PaymentGatewayAdapter):
                     subscription_id, cancel_at_period_end=True
                 )
                 subscription_data = getattr(
-                    subscription, "__dict__", {"id": subscription_id, "status": "active"}
+                    subscription,
+                    "__dict__",
+                    {"id": subscription_id, "status": "active"},
                 )
 
             # Handle mock response

@@ -10,7 +10,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Services
-from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
+from apps.api.di_container.analytics_container import (
+    get_analytics_fusion_service,
+    get_cache,
+)
 
 # Auth
 from apps.api.middleware.auth import get_current_user
@@ -52,7 +55,11 @@ async def get_analytical_report(
     """
     try:
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "report_type": report_type, "days": days}
+        cache_params = {
+            "channel_id": channel_id,
+            "report_type": report_type,
+            "days": days,
+        }
         cache_key = cache.generate_cache_key("statistical_report", cache_params)
 
         # Try cache first (reports can be cached longer)
@@ -76,7 +83,9 @@ async def get_analytical_report(
             "generated_at": datetime.utcnow().isoformat(),
             "meta": {
                 "cache_hit": False,
-                "analysis_depth": "comprehensive" if report_type == "comprehensive" else "focused",
+                "analysis_depth": (
+                    "comprehensive" if report_type == "comprehensive" else "focused"
+                ),
             },
         }
 
@@ -94,7 +103,9 @@ async def get_analytical_report(
 async def get_data_source_comparison(
     channel_id: int,
     comparison_type: str = Query(
-        "systems", regex="^(systems|periods|metrics)$", description="Type of comparison analysis"
+        "systems",
+        regex="^(systems|periods|metrics)$",
+        description="Type of comparison analysis",
     ),
     current_user: dict = Depends(get_current_user),
     analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
@@ -246,7 +257,10 @@ async def get_top_posts_trends(
                 "limit": limit,
                 "channel_id": channel_id,
                 "trend_type": trend_type,
-                "analysis_period": {"from": from_date.isoformat(), "to": to_date.isoformat()},
+                "analysis_period": {
+                    "from": from_date.isoformat(),
+                    "to": to_date.isoformat(),
+                },
                 "cache_hit": False,
                 "analysis_category": "trending_statistics",
             },

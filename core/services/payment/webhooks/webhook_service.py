@@ -36,7 +36,10 @@ class WebhookService(WebhookProtocol):
     """
 
     def __init__(
-        self, payment_repository, payment_processing_service=None, subscription_service=None
+        self,
+        payment_repository,
+        payment_processing_service=None,
+        subscription_service=None,
     ):
         self.repository = payment_repository
         self.payment_processing_service = payment_processing_service
@@ -84,7 +87,11 @@ class WebhookService(WebhookProtocol):
                 event_data = json.loads(payload.decode())
             except json.JSONDecodeError as e:
                 logger.error(f"❌ Invalid JSON payload from {provider}: {e}")
-                return {"success": False, "error": "Invalid JSON payload", "provider": provider}
+                return {
+                    "success": False,
+                    "error": "Invalid JSON payload",
+                    "provider": provider,
+                }
 
             # Step 3: Create webhook event record
             event_id = await self._create_webhook_event(provider, event_data, signature)
@@ -175,7 +182,10 @@ class WebhookService(WebhookProtocol):
                 return await self._handle_payment_canceled(event)
             else:
                 logger.info(f"🔗 Unhandled payment event type: {event.event_type}")
-                return {"action": "ignored", "reason": f"Unhandled event type: {event.event_type}"}
+                return {
+                    "action": "ignored",
+                    "reason": f"Unhandled event type: {event.event_type}",
+                }
 
         except Exception as e:
             logger.error(f"❌ Payment event handling failed: {e}")
@@ -204,7 +214,10 @@ class WebhookService(WebhookProtocol):
                 return await self._handle_subscription_renewed(event)
             else:
                 logger.info(f"🔗 Unhandled subscription event type: {event.event_type}")
-                return {"action": "ignored", "reason": f"Unhandled event type: {event.event_type}"}
+                return {
+                    "action": "ignored",
+                    "reason": f"Unhandled event type: {event.event_type}",
+                }
 
         except Exception as e:
             logger.error(f"❌ Subscription event handling failed: {e}")
@@ -452,7 +465,7 @@ class WebhookService(WebhookProtocol):
         """Handle successful payment events."""
         # Update payment status if payment processing service is available
         if self.payment_processing_service:
-            payment_id = event.object_id
+            event.object_id
             # Additional processing logic here
 
         return {"action": "payment_succeeded", "object_id": event.object_id}
@@ -489,7 +502,7 @@ class WebhookService(WebhookProtocol):
         """Health check for webhook service."""
         try:
             # Test repository connection
-            test_events = await self.repository.get_webhook_events(None, 1)
+            await self.repository.get_webhook_events(None, 1)
 
             # Check webhook secret configuration
             configured_providers = list(self.webhook_secrets.keys())

@@ -150,10 +150,12 @@ class DatabaseOptimizer:
 
             # Check indexes
             try:
-                index_count = await conn.fetchval("""
+                index_count = await conn.fetchval(
+                    """
                     SELECT count(*) FROM pg_indexes
                     WHERE schemaname = 'public' AND indexname LIKE 'idx_%';
-                """)
+                """
+                )
                 verification_results["indexes_found"] = index_count
                 logger.info(
                     f"✅ Verification: SELECT count(*) FROM pg_indexes WHERE schemaname = 'public' AND indexname LIKE 'idx_%'; = {index_count}"

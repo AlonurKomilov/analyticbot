@@ -197,7 +197,17 @@ class AnalyticsBatchProcessor:
             )
             view_tasks.append(task)
 
-        return await asyncio.gather(*view_tasks, return_exceptions=True)
+        results = await asyncio.gather(*view_tasks, return_exceptions=True)
+        # Type narrowing: convert Any results to expected types
+        typed_results: list[int | None | Exception] = []
+        for result in results:
+            if isinstance(result, Exception):
+                typed_results.append(result)
+            elif isinstance(result, int):
+                typed_results.append(result)
+            else:
+                typed_results.append(None)
+        return typed_results
 
     async def _fetch_single_post_views(self, channel_id: int, message_id: int) -> int | None:
         """

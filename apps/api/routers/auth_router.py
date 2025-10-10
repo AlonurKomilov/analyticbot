@@ -163,8 +163,8 @@ async def login(
 
         # Generate tokens using centralized auth utilities
         access_token = auth_utils.create_access_token(user)
-        # Convert user.id to string for create_refresh_token
-        refresh_token = auth_utils.create_refresh_token(str(user.id), session.token)  # Update last login
+        refresh_token = auth_utils.create_refresh_token(user.id, session.token)
+        # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
 
         logger.info(f"Successful login for user: {user.username}")

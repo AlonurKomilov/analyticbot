@@ -79,7 +79,7 @@ class SecurityManager:
         """
         self.cache = cache
         self.security_events = security_events
-        self.token_generator = token_generator
+        self.token_generator: TokenGeneratorPort  # Will be initialized below
         self.security_config_port = security_config
         self.user_repository = user_repository
 
@@ -89,10 +89,12 @@ class SecurityManager:
             self._setup_memory_cache()
 
         # Initialize JWT adapter if no token generator provided
-        if not self.token_generator:
+        if token_generator is None:
             self.token_generator = JoseJWTAdapter(
                 secret_key=self.config.SECRET_KEY, algorithm=self.config.ALGORITHM
             )
+        else:
+            self.token_generator = token_generator
 
         # Initialize RBAC manager with same DI pattern
         self.rbac_manager = RBACManager(cache=self.cache, security_events=self.security_events)
@@ -209,9 +211,11 @@ class SecurityManager:
         # Token payload with comprehensive claims
         # Handle both enum and string values for role/status
         from core.security_engine.models import UserStatus, UserRole, AuthProvider
-        role_val = user.role.value if hasattr(user.role, 'value') else user.role
-        status_val = user.status.value if hasattr(user.status, 'value') else user.status
-        auth_provider_val = user.auth_provider.value if hasattr(user.auth_provider, 'value') else user.auth_provider
+
+        # Type-safe extraction of values
+        role_val = getattr(user.role, 'value', str(user.role)) if user.role is not None else 'user'
+        status_val = getattr(user.status, 'value', str(user.status)) if user.status is not None else 'active'
+        auth_provider_val = getattr(user.auth_provider, 'value', str(user.auth_provider)) if user.auth_provider is not None else 'local'
 
         # Create TokenClaims with correct parameters (matching CoreSecurityService)
         claims = TokenClaims(

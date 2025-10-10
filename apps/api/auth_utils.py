@@ -75,18 +75,18 @@ class FastAPIAuthUtils:
         """
         return self.security_manager.create_access_token(user, expires_minutes)
 
-    def create_refresh_token(self, user_id: int, session_token: str) -> str:
+    def create_refresh_token(self, user_id: str | int, session_token: str) -> str:
         """
         Create refresh token for user session
 
         Args:
-            user_id: User ID
+            user_id: User ID (string or int)
             session_token: Session token
 
         Returns:
             JWT refresh token string
         """
-        return self.security_manager.create_refresh_token(user_id, session_token)
+        return self.security_manager.create_refresh_token(str(user_id), session_token)
 
     def refresh_access_token(self, refresh_token: str) -> str:
         """

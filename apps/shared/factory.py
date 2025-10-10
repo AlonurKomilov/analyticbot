@@ -14,15 +14,26 @@ from apps.shared.protocols import (
     AnalyticsRepository,
     ChartServiceProtocol,
 )
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
+)
 
 # Import core interfaces (allowed - apps can import from core)
-from core.repositories.interfaces import AdminRepository, ChannelRepository, UserRepository
+from core.repositories.interfaces import (
+    AdminRepository,
+    ChannelRepository,
+    UserRepository,
+)
 from core.repositories.shared_reports_repository import SharedReportsRepository
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["RepositoryFactory", "DatabaseConnectionAdapter", "create_repository_factory"]
+__all__ = [
+    "RepositoryFactory",
+    "DatabaseConnectionAdapter",
+    "create_repository_factory",
+]
 
 
 class DatabaseConnectionAdapter:
@@ -101,7 +112,9 @@ class RepositoryFactory:
     async def create_channel_repository(self) -> ChannelRepository:
         """Create channel repository without direct infra import"""
         try:
-            from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+            from infra.db.repositories.channel_repository import (
+                AsyncpgChannelRepository,
+            )
 
             connection = await self._get_connection()
             return AsyncpgChannelRepository(connection)
@@ -112,7 +125,9 @@ class RepositoryFactory:
     async def create_analytics_repository(self) -> AnalyticsRepository:
         """Create analytics repository without direct infra import"""
         try:
-            from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+            from infra.db.repositories.analytics_repository import (
+                AsyncpgAnalyticsRepository,
+            )
 
             connection = await self._get_connection()
             return AsyncpgAnalyticsRepository(connection)
@@ -134,7 +149,9 @@ class RepositoryFactory:
     async def create_alert_subscription_repository(self) -> AlertSubscriptionRepository:
         """Create alert subscription repository without direct infra import"""
         try:
-            from infra.db.repositories.alert_repository import AsyncpgAlertSubscriptionRepository
+            from infra.db.repositories.alert_repository import (
+                AsyncpgAlertSubscriptionRepository,
+            )
 
             connection = await self._get_connection()
             return AsyncpgAlertSubscriptionRepository(connection)
@@ -145,7 +162,9 @@ class RepositoryFactory:
     async def create_alert_sent_repository(self) -> AlertSentRepository:
         """Create alert sent repository without direct infra import"""
         try:
-            from infra.db.repositories.alert_repository import AsyncpgAlertSentRepository
+            from infra.db.repositories.alert_repository import (
+                AsyncpgAlertSentRepository,
+            )
 
             connection = await self._get_connection()
             return AsyncpgAlertSentRepository(connection)
@@ -224,7 +243,9 @@ class RepositoryFactory:
 
         return FallbackAdminRepository()
 
-    def _create_memory_alert_subscription_repository(self) -> AlertSubscriptionRepository:
+    def _create_memory_alert_subscription_repository(
+        self,
+    ) -> AlertSubscriptionRepository:
         """Fallback memory-based alert subscription repository"""
 
         class FallbackAlertSubscriptionRepository:
@@ -371,7 +392,9 @@ class LazyRepositoryFactory:
     async def create_payment_repository(self):
         """Create payment repository without direct infra import"""
         try:
-            from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+            from infra.db.repositories.payment_repository import (
+                AsyncpgPaymentRepository,
+            )
 
             connection = await self._get_connection()
             return AsyncpgPaymentRepository(connection)

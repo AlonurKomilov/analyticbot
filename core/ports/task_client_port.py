@@ -89,5 +89,3 @@ class TaskClientProtocol(Protocol):
 
 class TaskSubmissionError(Exception):
     """Raised when task submission fails"""
-
-    pass

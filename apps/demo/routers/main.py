@@ -212,7 +212,13 @@ async def get_demo_top_posts(
 
         demo_info = {
             "data_type": "curated_samples",
-            "metrics_included": ["views", "reactions", "shares", "comments", "engagement_rate"],
+            "metrics_included": [
+                "views",
+                "reactions",
+                "shares",
+                "comments",
+                "engagement_rate",
+            ],
             "ranking_algorithm": "engagement_score_weighted",
             "note": "Real system uses ML algorithms to identify optimal content patterns",
         }
@@ -351,7 +357,10 @@ async def demonstrate_clean_architecture():
                 "admin_service": admin_service.get_service_name(),
                 "auth_service": auth_service.get_service_name(),
             },
-            "sample_data": {"admin_stats": admin_stats, "user_permissions": sample_permissions},
+            "sample_data": {
+                "admin_stats": admin_stats,
+                "user_permissions": sample_permissions,
+            },
             "benefits": [
                 "Testable business logic",
                 "Swappable implementations",

@@ -69,7 +69,7 @@ async def execute_comprehensive_analytics(
                 "execution_time_ms": result.get("execution_time_ms", 0),
             },
             results=result.get("results") if result.get("success", False) else None,
-            error_message=result.get("errors", [None])[0] if result.get("errors") else None,
+            error_message=(result.get("errors", [None])[0] if result.get("errors") else None),
             timestamp=datetime.utcnow().isoformat(),
         )
 

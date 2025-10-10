@@ -138,7 +138,8 @@ async def show_share_options(callback: CallbackQuery) -> None:
 
         if not getattr(settings, "SHARE_LINKS_ENABLED", True):
             await callback.answer(
-                "🚧 Share links feature is currently disabled. Coming soon!", show_alert=True
+                "🚧 Share links feature is currently disabled. Coming soon!",
+                show_alert=True,
             )
             return
 

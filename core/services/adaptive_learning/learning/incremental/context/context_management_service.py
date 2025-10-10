@@ -11,11 +11,11 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     IncrementalLearningConfig,
     LearningResult,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,9 @@ class ContextManagementService:
             context = LearningContext(
                 model_id=model_id,
                 previous_model_state=initial_model_state,
-                memory_buffer=initial_data[: self.config.memory_buffer_size]
-                if initial_data
-                else [],
+                memory_buffer=(
+                    initial_data[: self.config.memory_buffer_size] if initial_data else []
+                ),
                 task_boundaries=[],
                 learning_statistics={
                     "total_updates": 0,
@@ -351,7 +351,10 @@ class ContextManagementService:
             stats["learning_rate_adjustments"] += 1
 
     async def _add_adaptation_record(
-        self, context: LearningContext, result: LearningResult, task_info: dict[str, Any] | None
+        self,
+        context: LearningContext,
+        result: LearningResult,
+        task_info: dict[str, Any] | None,
     ):
         """Add adaptation record to history."""
 

@@ -74,7 +74,10 @@ class SharedAnalyticsService:
         self.max_retries = max_retries
 
         # Configure headers
-        self.headers = {"Accept": "application/json", "User-Agent": "AnalyticBot-SharedService/1.0"}
+        self.headers = {
+            "Accept": "application/json",
+            "User-Agent": "AnalyticBot-SharedService/1.0",
+        }
 
         if self.token:
             self.headers["Authorization"] = f"Bearer {self.token}"
@@ -189,4 +192,3 @@ class SharedAnalyticsService:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit"""
-        pass

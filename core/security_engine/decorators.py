@@ -38,7 +38,8 @@ logger = logging.getLogger(__name__)
 
 
 def require_permission(
-    permission: Permission | str | list[Permission | str], allow_admin_override: bool = True
+    permission: Permission | str | list[Permission | str],
+    allow_admin_override: bool = True,
 ):
     """
     Decorator to require specific permission(s) for endpoint access.

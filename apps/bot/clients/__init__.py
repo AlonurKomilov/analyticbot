@@ -5,10 +5,9 @@ Provides clean client abstractions for external service integration.
 All clients follow clean architecture principles with proper error handling.
 """
 
-from .analytics_client import (
+from .analytics_client import (  # Backward compatibility aliases
     AnalyticsClient,
     AnalyticsClientError,
-    # Backward compatibility aliases
     AnalyticsV2Client,
     AnalyticsV2ClientError,
 )

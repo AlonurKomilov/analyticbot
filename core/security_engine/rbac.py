@@ -250,7 +250,9 @@ class RBACManager:
         role_permissions.update(custom_permissions)
         permission_list = [perm.value for perm in role_permissions]
         self._cache_set(
-            cache_key, json.dumps(permission_list), int(timedelta(hours=1).total_seconds())
+            cache_key,
+            json.dumps(permission_list),
+            int(timedelta(hours=1).total_seconds()),
         )
         logger.debug(f"Retrieved {len(role_permissions)} permissions for user {user.username}")
         return role_permissions
@@ -371,7 +373,11 @@ class RBACManager:
             return True
         if resource_owner == user.id:
             return True
-        if user.role in ["admin", "moderator", "super_admin"]:  # Use string values for new system
+        if user.role in [
+            "admin",
+            "moderator",
+            "super_admin",
+        ]:  # Use string values for new system
             return True
         logger.debug(
             f"Resource permission denied: User {user.username} not owner of {resource_type}:{resource_id}"

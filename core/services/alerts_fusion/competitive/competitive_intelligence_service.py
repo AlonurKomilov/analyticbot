@@ -18,7 +18,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from core.ports.repository_ports import ChannelDailyRepository, ChannelRepository, PostRepository
+from core.ports.repository_ports import (
+    ChannelDailyRepository,
+    ChannelRepository,
+    PostRepository,
+)
 
 from ..protocols import CompetitiveIntelligenceProtocol
 
@@ -49,7 +53,12 @@ class CompetitiveIntelligenceService(CompetitiveIntelligenceProtocol):
             "analysis_depth": "standard",
             "market_analysis_days": 30,
             "similarity_threshold": 0.7,
-            "performance_metrics": ["views", "followers", "engagement", "posting_frequency"],
+            "performance_metrics": [
+                "views",
+                "followers",
+                "engagement",
+                "posting_frequency",
+            ],
         }
 
         logger.info("🏆 Competitive Intelligence Service initialized - market analysis focus")
@@ -178,8 +187,8 @@ class CompetitiveIntelligenceService(CompetitiveIntelligenceProtocol):
             now = datetime.now()
             start_dt = now - timedelta(days=30)
 
-            posts_count = await self._posts.count(channel_id, start_dt, now)
-            total_views = await self._posts.sum_views(channel_id, start_dt, now)
+            await self._posts.count(channel_id, start_dt, now)
+            await self._posts.sum_views(channel_id, start_dt, now)
             posts = await self._posts.top_by_views(channel_id, start_dt, now, 50)
 
             # Get current follower count
@@ -270,22 +279,26 @@ class CompetitiveIntelligenceService(CompetitiveIntelligenceProtocol):
                 "followers_performance": {
                     "channel_value": channel_followers,
                     "competitor_average": avg_competitor_followers,
-                    "performance_ratio": channel_followers / avg_competitor_followers
-                    if avg_competitor_followers > 0
-                    else 0,
-                    "status": "above_average"
-                    if channel_followers > avg_competitor_followers
-                    else "below_average",
+                    "performance_ratio": (
+                        channel_followers / avg_competitor_followers
+                        if avg_competitor_followers > 0
+                        else 0
+                    ),
+                    "status": (
+                        "above_average"
+                        if channel_followers > avg_competitor_followers
+                        else "below_average"
+                    ),
                 },
                 "content_performance": {
                     "channel_value": channel_posts,
                     "competitor_average": avg_competitor_posts,
-                    "performance_ratio": channel_posts / avg_competitor_posts
-                    if avg_competitor_posts > 0
-                    else 0,
-                    "status": "above_average"
-                    if channel_posts > avg_competitor_posts
-                    else "below_average",
+                    "performance_ratio": (
+                        channel_posts / avg_competitor_posts if avg_competitor_posts > 0 else 0
+                    ),
+                    "status": (
+                        "above_average" if channel_posts > avg_competitor_posts else "below_average"
+                    ),
                 },
             }
 
@@ -299,7 +312,7 @@ class CompetitiveIntelligenceService(CompetitiveIntelligenceProtocol):
         """Analyze market position"""
         try:
             # Simplified market position analysis
-            market_averages = competitor_analysis.get("market_averages", {})
+            competitor_analysis.get("market_averages", {})
 
             return {
                 "position_score": 0.7,  # Simplified score
@@ -386,7 +399,11 @@ class CompetitiveIntelligenceService(CompetitiveIntelligenceProtocol):
     def _analyze_content_profile(self, posts: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze content profile from posts"""
         if not posts:
-            return {"avg_views": 0, "content_variety": "low", "posting_consistency": "irregular"}
+            return {
+                "avg_views": 0,
+                "content_variety": "low",
+                "posting_consistency": "irregular",
+            }
 
         views = [post.get("views", 0) for post in posts]
         avg_views = sum(views) / len(views) if views else 0

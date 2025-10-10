@@ -48,7 +48,10 @@ class PaymentProcessingService(PaymentProcessingProtocol):
         logger.info("💰 PaymentProcessingService initialized")
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self,
+        user_id: int,
+        payment_data: PaymentCreate,
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         """
         Process a one-time payment transaction.
@@ -80,7 +83,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             validation_result = await self.validate_payment_data(payment_data)
             if not validation_result["is_valid"]:
                 return PaymentResult(
-                    success=False, error_message=f"Validation failed: {validation_result['errors']}"
+                    success=False,
+                    error_message=f"Validation failed: {validation_result['errors']}",
                 )
 
             # Get payment method details
@@ -161,7 +165,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 failed_payment = await self.repository.get_payment(payment_id)
                 return PaymentResult(
                     success=False,
-                    payment=PaymentResponse(**failed_payment) if failed_payment else None,
+                    payment=(PaymentResponse(**failed_payment) if failed_payment else None),
                     error_message=str(provider_error),
                     transaction_id=payment_id,
                 )
@@ -450,4 +454,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 "adapter_name": self.payment_adapter.get_adapter_name(),
             }
         except Exception as e:
-            return {"service": "PaymentProcessingService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "PaymentProcessingService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

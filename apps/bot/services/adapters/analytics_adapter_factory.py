@@ -7,7 +7,10 @@ import logging
 from enum import Enum
 from typing import Any
 
-from apps.bot.services.adapters.mock_analytics_adapter import AnalyticsAdapter, MockAnalyticsAdapter
+from apps.bot.services.adapters.mock_analytics_adapter import (
+    AnalyticsAdapter,
+    MockAnalyticsAdapter,
+)
 from apps.bot.services.adapters.telegram_analytics_adapter import (
     RateLimitConfig,
     TelegramAnalyticsAdapter,

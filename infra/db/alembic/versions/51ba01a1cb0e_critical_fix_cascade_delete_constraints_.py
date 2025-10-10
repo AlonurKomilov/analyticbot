@@ -23,76 +23,100 @@ def upgrade() -> None:
     # CRITICAL FIX: Replace CASCADE DELETE with RESTRICT to protect user data
 
     # 1. Fix channels table - prevent user deletion from destroying all channels
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE channels
         DROP CONSTRAINT IF EXISTS channels_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE channels
         ADD CONSTRAINT channels_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
     # 2. Fix scheduled_posts table - prevent channel deletion from destroying posts
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_channel_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         ADD CONSTRAINT scheduled_posts_channel_id_fkey
         FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
     # 3. Fix scheduled_posts user relationship
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         ADD CONSTRAINT scheduled_posts_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
     # 4. Fix payment_methods table - prevent user deletion from destroying payment info
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payment_methods
         DROP CONSTRAINT IF EXISTS payment_methods_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payment_methods
         ADD CONSTRAINT payment_methods_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
     # 5. Fix subscriptions table - prevent user deletion from destroying subscription history
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE subscriptions
         DROP CONSTRAINT IF EXISTS subscriptions_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE subscriptions
         ADD CONSTRAINT subscriptions_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
     # 6. Fix payments table - prevent user deletion from destroying payment records
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payments
         DROP CONSTRAINT IF EXISTS payments_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payments
         ADD CONSTRAINT payments_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT;
-    """)
+    """
+    )
 
 
 def downgrade() -> None:
@@ -102,72 +126,96 @@ def downgrade() -> None:
     # Only use in development environments
 
     # 1. Restore channels CASCADE DELETE
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE channels
         DROP CONSTRAINT IF EXISTS channels_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE channels
         ADD CONSTRAINT channels_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    """)
+    """
+    )
 
     # 2. Restore scheduled_posts CASCADE DELETE
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_channel_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         ADD CONSTRAINT scheduled_posts_channel_id_fkey
         FOREIGN KEY (channel_id) REFERENCES channels(id) ON DELETE CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         ADD CONSTRAINT scheduled_posts_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    """)
+    """
+    )
 
     # 3. Restore payment_methods CASCADE DELETE
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payment_methods
         DROP CONSTRAINT IF EXISTS payment_methods_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payment_methods
         ADD CONSTRAINT payment_methods_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    """)
+    """
+    )
 
     # 4. Restore subscriptions CASCADE DELETE
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE subscriptions
         DROP CONSTRAINT IF EXISTS subscriptions_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE subscriptions
         ADD CONSTRAINT subscriptions_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    """)
+    """
+    )
 
     # 5. Restore payments CASCADE DELETE
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payments
         DROP CONSTRAINT IF EXISTS payments_user_id_fkey CASCADE;
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE payments
         ADD CONSTRAINT payments_user_id_fkey
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
-    """)
+    """
+    )

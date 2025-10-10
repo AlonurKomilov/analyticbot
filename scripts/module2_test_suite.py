@@ -36,7 +36,12 @@ class Module2TestSuite:
             print(f"   {message}")
 
         self.results["tests"].append(
-            {"name": test_name, "status": status, "message": message, "duration": duration}
+            {
+                "name": test_name,
+                "status": status,
+                "message": message,
+                "duration": duration,
+            }
         )
 
         if passed:
@@ -84,7 +89,10 @@ class Module2TestSuite:
                 try:
                     async with session.get(f"{self.api_url}{endpoint}", timeout=10) as response:
                         duration = time.time() - start_time
-                        success = response.status in [200, 404]  # 404 is OK for some endpoints
+                        success = response.status in [
+                            200,
+                            404,
+                        ]  # 404 is OK for some endpoints
                         self.log_test(
                             f"API {description}",
                             success,

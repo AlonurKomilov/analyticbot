@@ -56,7 +56,9 @@ class MockDemoDataService(DemoDataServiceProtocol):
         channels = []
         for ch_dict in channels_dicts:
             channel_obj = Channel(
-                id=ch_dict["id"], title=ch_dict["name"], username=ch_dict.get("username")
+                id=ch_dict["id"],
+                title=ch_dict["name"],
+                username=ch_dict.get("username"),
             )
             channels.append(channel_obj)
 
@@ -138,7 +140,7 @@ class MockDemoDataService(DemoDataServiceProtocol):
             channel_obj = Channel(
                 id=i + 1,  # Simple integer ID
                 title=template["name"],
-                username=f"{template['name'].lower().replace(' ', '_')}_demo_{i+1}",
+                username=f"{template['name'].lower().replace(' ', '_')}_demo_{i + 1}",
             )
             # Convert to dict for protocol compatibility
             channel_dict = {

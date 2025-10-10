@@ -21,7 +21,7 @@ import { analyticsService } from '../services/analyticsService.js';
 
 // Configuration constants
 const DEFAULT_CONFIG = {
-    baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '',
+    baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://185.211.5.244:11400',
     timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000, // Use env var or default 30 seconds
     maxRetries: 3,
     retryDelay: 1000, // 1 second

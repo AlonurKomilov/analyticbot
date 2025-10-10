@@ -162,7 +162,12 @@ _container: Container | None = None
 
 
 def get_container() -> Container:
-    """Get global container instance"""
+    """
+    Get global container instance
+
+    NOTE: For new code, prefer using apps.shared.unified_di.get_container()
+    This function is maintained for backward compatibility.
+    """
     global _container
     if _container is None:
         # Auto-initialize with default settings from environment

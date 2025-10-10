@@ -63,9 +63,10 @@ class BotReportingAdapter:
 
     async def schedule_report(
         self,
-        schedule_time: str,
+        schedule_name: str,
         data_generator: Any,
         template: ReportTemplate,
+        schedule_time: str,
         output_format: str = "pdf",
         email_recipients: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -73,9 +74,10 @@ class BotReportingAdapter:
         Schedule a recurring report
 
         Args:
-            schedule_time: Schedule time string (e.g., "daily", "09:00")
+            schedule_name: Unique name for the scheduled report
             data_generator: Callable that generates report data
             template: Report template
+            schedule_time: Schedule time string (e.g., "daily", "09:00")
             output_format: Output format
             email_recipients: Optional email recipients
 
@@ -84,7 +86,7 @@ class BotReportingAdapter:
         """
         try:
             return await self.reporting_system.schedule_report(
-                schedule_time, data_generator, template, output_format, email_recipients
+                schedule_name, data_generator, template, schedule_time, output_format, email_recipients
             )
         except Exception as e:
             logger.error(f"Failed to schedule report: {e}")

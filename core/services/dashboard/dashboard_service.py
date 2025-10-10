@@ -17,7 +17,7 @@ import io
 import logging
 import queue
 import threading
-from typing import Any
+from typing import Any, no_type_check
 
 import numpy as np
 import pandas as pd
@@ -39,66 +39,51 @@ except ImportError:
 
 # Web Framework for Dashboard
 try:
-    import dash
-    import dash_bootstrap_components as dbc
-    from dash import Input, Output, State, dcc, html
+    import dash  # type: ignore
+    import dash_bootstrap_components as dbc  # type: ignore
+    from dash import Input, Output, State, dcc, html  # type: ignore
 
     DASH_AVAILABLE = True
 except ImportError:
     DASH_AVAILABLE = False
 
     # Create dummy classes for when Dash is not available
-    class dbc:
+    # Using type: ignore to suppress type errors for fallback classes
+    class dbc:  # type: ignore
+        Container = None
+        Row = None
+        Col = None
+        Card = None
+        CardBody = None
+        Label = None
+        Button = None
+
         @staticmethod
         def themes():
             return None
 
-    class html:
-        @staticmethod
-        def Div(*args, **kwargs):
-            return None
+    class html:  # type: ignore
+        Div = None
+        H1 = None
+        H4 = None
+        Hr = None
+        P = None
+        A = None
 
-        @staticmethod
-        def H1(*args, **kwargs):
-            return None
+    class dcc:  # type: ignore
+        Upload = None
+        Dropdown = None
+        Graph = None
+        Store = None
 
-        @staticmethod
-        def H4(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def Hr(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def P(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def A(*args, **kwargs):
-            return None
-
-    class dcc:
-        @staticmethod
-        def Upload(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def Dropdown(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def Graph(*args, **kwargs):
-            return None
-
-        @staticmethod
-        def Store(*args, **kwargs):
-            return None
-
-    class dash:
+    class dash:  # type: ignore
         @staticmethod
         def Dash(*args, **kwargs):
             return None
+
+    Input = None  # type: ignore
+    Output = None  # type: ignore
+    State = None  # type: ignore
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +123,7 @@ class VisualizationEngine:
         df: pd.DataFrame,
         x_column: str,
         y_column: str,
-        title: str = None,
+        title: str | None = None,
         theme: str = "default",
     ) -> dict[str, Any]:
         """Create interactive line chart"""
@@ -167,7 +152,7 @@ class VisualizationEngine:
         df: pd.DataFrame,
         x_column: str,
         y_column: str,
-        title: str = None,
+        title: str | None = None,
         orientation: str = "vertical",
     ) -> dict[str, Any]:
         """Create interactive bar chart"""
@@ -196,9 +181,9 @@ class VisualizationEngine:
         df: pd.DataFrame,
         x_column: str,
         y_column: str,
-        color_column: str = None,
-        size_column: str = None,
-        title: str = None,
+        color_column: str | None = None,
+        size_column: str | None = None,
+        title: str | None = None,
     ) -> dict[str, Any]:
         """Create interactive scatter plot"""
         try:
@@ -231,7 +216,7 @@ class VisualizationEngine:
             logger.error(f"Scatter plot creation failed: {e}")
             return {"error": str(e)}
 
-    async def create_heatmap(self, df: pd.DataFrame, title: str = None) -> dict[str, Any]:
+    async def create_heatmap(self, df: pd.DataFrame, title: str | None = None) -> dict[str, Any]:
         """Create correlation heatmap"""
         try:
             if not PLOTLY_AVAILABLE:
@@ -262,7 +247,7 @@ class VisualizationEngine:
             return {"error": str(e)}
 
     async def create_histogram(
-        self, df: pd.DataFrame, column: str, bins: int = 30, title: str = None
+        self, df: pd.DataFrame, column: str, bins: int = 30, title: str | None = None
     ) -> dict[str, Any]:
         """Create histogram"""
         try:
@@ -283,7 +268,7 @@ class VisualizationEngine:
             return {"error": str(e)}
 
     async def create_box_plot(
-        self, df: pd.DataFrame, y_column: str, x_column: str = None, title: str = None
+        self, df: pd.DataFrame, y_column: str, x_column: str | None = None, title: str | None = None
     ) -> dict[str, Any]:
         """Create box plot"""
         try:
@@ -323,12 +308,13 @@ class RealTimeDashboard:
             self._setup_layout()
             self._setup_callbacks()
 
+    @no_type_check
     def _setup_layout(self):
         """Setup dashboard layout"""
-        if not self.app:
+        if not self.app or not DASH_AVAILABLE:
             return
 
-        self.app.layout = dbc.Container(
+        self.app.layout = dbc.Container(  # type: ignore
             [
                 dbc.Row(
                     [
@@ -436,12 +422,13 @@ class RealTimeDashboard:
             fluid=True,
         )
 
+    @no_type_check
     def _setup_callbacks(self):
         """Setup dashboard callbacks"""
-        if not self.app:
+        if not self.app or not DASH_AVAILABLE:
             return
 
-        @self.app.callback(
+        @self.app.callback(  # type: ignore
             [
                 Output("stored-data", "data"),
                 Output("data-info", "children"),
@@ -466,27 +453,27 @@ class RealTimeDashboard:
                 columns = [{"label": col, "value": col} for col in df.columns]
 
                 # Data info
-                info = html.Div(
+                info = html.Div(  # type: ignore
                     [
-                        html.P(f"Rows: {len(df)}"),
-                        html.P(f"Columns: {len(df.columns)}"),
-                        html.P(f"Memory: {df.memory_usage(deep=True).sum() / 1024:.1f} KB"),
+                        html.P(f"Rows: {len(df)}"),  # type: ignore
+                        html.P(f"Columns: {len(df.columns)}"),  # type: ignore
+                        html.P(f"Memory: {df.memory_usage(deep=True).sum() / 1024:.1f} KB"),  # type: ignore
                     ]
                 )
 
                 return df.to_json(), info, columns, columns
 
             except Exception as e:
-                error_msg = html.Div(
+                error_msg = html.Div(  # type: ignore
                     [
-                        html.P("Error loading data:", style={"color": "red"}),
-                        html.P(str(e), style={"color": "red"}),
+                        html.P("Error loading data:", style={"color": "red"}),  # type: ignore
+                        html.P(str(e), style={"color": "red"}),  # type: ignore
                     ]
                 )
                 return None, error_msg, [], []
 
-        @self.app.callback(
-            Output("main-chart", "figure"),
+        @self.app.callback(  # type: ignore
+            Output("main-chart", "figure"),  # type: ignore
             [Input("generate-btn", "n_clicks")],
             [
                 State("stored-data", "data"),
@@ -540,7 +527,7 @@ class RealTimeDashboard:
 
             # Run in a separate thread to avoid blocking
             def run_server():
-                self.app.run_server(host="0.0.0.0", port=self.port, debug=False)
+                self.app.run_server(host="0.0.0.0", port=self.port, debug=False)  # type: ignore
 
             dashboard_thread = threading.Thread(target=run_server, daemon=True)
             dashboard_thread.start()

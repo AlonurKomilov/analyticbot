@@ -40,7 +40,7 @@ class BotDashboardAdapter:
         x_column: str,
         y_column: str,
         title: str | None = None,
-        color_column: str | None = None,
+        theme: str = "default",
     ) -> dict[str, Any]:
         """
         Create a line chart visualization
@@ -50,7 +50,7 @@ class BotDashboardAdapter:
             x_column: X-axis column name
             y_column: Y-axis column name
             title: Optional chart title
-            color_column: Optional color grouping column
+            theme: Chart theme (default, dark, light)
 
         Returns:
             Chart specification dictionary
@@ -60,7 +60,7 @@ class BotDashboardAdapter:
                 return {"success": False, "error": "Visualization engine not initialized"}
 
             return await self.visualization_engine.create_line_chart(
-                df, x_column, y_column, title, color_column
+                df, x_column, y_column, title, theme
             )
         except Exception as e:
             logger.error(f"Failed to create line chart: {e}")
@@ -72,7 +72,7 @@ class BotDashboardAdapter:
         x_column: str,
         y_column: str,
         title: str | None = None,
-        color_column: str | None = None,
+        orientation: str = "vertical",
     ) -> dict[str, Any]:
         """
         Create a bar chart visualization
@@ -82,7 +82,7 @@ class BotDashboardAdapter:
             x_column: X-axis column name
             y_column: Y-axis column name
             title: Optional chart title
-            color_column: Optional color grouping column
+            orientation: Chart orientation (vertical or horizontal)
 
         Returns:
             Chart specification dictionary
@@ -92,7 +92,7 @@ class BotDashboardAdapter:
                 return {"success": False, "error": "Visualization engine not initialized"}
 
             return await self.visualization_engine.create_bar_chart(
-                df, x_column, y_column, title, color_column
+                df, x_column, y_column, title, orientation
             )
         except Exception as e:
             logger.error(f"Failed to create bar chart: {e}")

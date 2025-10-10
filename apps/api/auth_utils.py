@@ -62,9 +62,9 @@ class FastAPIAuthUtils:
         except AuthenticationError as e:
             raise AuthError(f"Invalid token: {str(e)}")
 
-    def create_access_token(self, user: User, expires_minutes: int | None = None) -> str:
+    def create_access_token(self, user: Any, expires_minutes: int | None = None) -> str:
         """
-        Create access token for user
+        Create access token for authenticated user
 
         Args:
             user: User object
@@ -73,7 +73,9 @@ class FastAPIAuthUtils:
         Returns:
             JWT access token string
         """
-        return self.security_manager.create_access_token(user, expires_minutes)
+        from datetime import timedelta
+        expires_delta = timedelta(minutes=expires_minutes) if expires_minutes else None
+        return self.security_manager.create_access_token(user, expires_delta)
 
     def create_refresh_token(self, user_id: str | int, session_token: str) -> str:
         """
@@ -160,12 +162,14 @@ class FastAPIAuthUtils:
         try:
             user_role = UserRole(user.get("role"))
 
-            # Role hierarchy: SUPERADMIN > ADMIN > USER > GUEST
+            # Role hierarchy: ADMIN > MODERATOR > ANALYST > USER > READONLY > GUEST
             role_hierarchy = {
                 UserRole.GUEST: 0,
-                UserRole.USER: 1,
-                UserRole.ADMIN: 2,
-                UserRole.SUPERADMIN: 3,
+                UserRole.READONLY: 1,
+                UserRole.USER: 2,
+                UserRole.ANALYST: 3,
+                UserRole.MODERATOR: 4,
+                UserRole.ADMIN: 5,
             }
 
             return role_hierarchy.get(user_role, 0) >= role_hierarchy.get(required_role, 0)

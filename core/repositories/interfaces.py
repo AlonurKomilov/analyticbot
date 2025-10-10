@@ -22,6 +22,14 @@ class UserRepository(Protocol):
         """Get user by Telegram ID"""
         ...
 
+    async def get_user_by_email(self, email: str) -> dict | None:
+        """Get user by email address"""
+        ...
+
+    async def get_user_by_username(self, username: str) -> dict | None:
+        """Get user by username"""
+        ...
+
     async def create_user(self, user_data: dict) -> dict:
         """Create new user"""
         ...

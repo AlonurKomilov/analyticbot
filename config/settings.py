@@ -48,31 +48,31 @@ class Settings:
     """
 
     # Environment
-    ENVIRONMENT: str = "development"
-    DEBUG: bool = False
+    ENVIRONMENT: str = field(default_factory=lambda: os.getenv("ENVIRONMENT", "development"))
+    DEBUG: bool = field(default_factory=lambda: os.getenv("DEBUG", "false").lower() == "true")
 
     # Telegram Bot Configuration
-    BOT_TOKEN: SecretStr = field(default_factory=lambda: SecretStr("dummy_token_for_development"))
-    STORAGE_CHANNEL_ID: int = 0
-    ADMIN_IDS_STR: str | None = None  # Will be parsed to ADMIN_IDS
-    SUPPORTED_LOCALES: str | list[str] = field(default_factory=lambda: ["en", "uz"])
-    DEFAULT_LOCALE: str = "en"
-    ENFORCE_PLAN_LIMITS: bool = True
+    BOT_TOKEN: SecretStr = field(default_factory=lambda: SecretStr(os.getenv("BOT_TOKEN", "dummy_token_for_development")))
+    STORAGE_CHANNEL_ID: int = field(default_factory=lambda: int(os.getenv("STORAGE_CHANNEL_ID", "0")))
+    ADMIN_IDS_STR: str | None = field(default_factory=lambda: os.getenv("ADMIN_IDS_STR"))
+    SUPPORTED_LOCALES: str | list[str] = field(default_factory=lambda: os.getenv("SUPPORTED_LOCALES", "en,uz").split(",") if "," in os.getenv("SUPPORTED_LOCALES", "") else ["en", "uz"])
+    DEFAULT_LOCALE: str = field(default_factory=lambda: os.getenv("DEFAULT_LOCALE", "en"))
+    ENFORCE_PLAN_LIMITS: bool = field(default_factory=lambda: os.getenv("ENFORCE_PLAN_LIMITS", "true").lower() == "true")
 
     # Computed field
     _admin_ids: list[int] | None = None
 
     # Database Configuration - Environment Configurable
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 10100
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: SecretStr = field(default_factory=lambda: SecretStr("password"))
-    POSTGRES_DB: str = "analyticbot"
-    DATABASE_URL: str | None = None
-    REDIS_URL: str = "redis://localhost:10200/0"
-    DB_POOL_SIZE: int = 10
-    DB_MAX_OVERFLOW: int = 20
-    DB_POOL_TIMEOUT: int = 30
+    POSTGRES_HOST: str = field(default_factory=lambda: os.getenv("POSTGRES_HOST", "localhost"))
+    POSTGRES_PORT: int = field(default_factory=lambda: int(os.getenv("POSTGRES_PORT", "10100")))
+    POSTGRES_USER: str = field(default_factory=lambda: os.getenv("POSTGRES_USER", "postgres"))
+    POSTGRES_PASSWORD: SecretStr = field(default_factory=lambda: SecretStr(os.getenv("POSTGRES_PASSWORD", "password")))
+    POSTGRES_DB: str = field(default_factory=lambda: os.getenv("POSTGRES_DB", "analyticbot"))
+    DATABASE_URL: str | None = field(default_factory=lambda: os.getenv("DATABASE_URL"))
+    REDIS_URL: str = field(default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:10200/0"))
+    DB_POOL_SIZE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_SIZE", "10")))
+    DB_MAX_OVERFLOW: int = field(default_factory=lambda: int(os.getenv("DB_MAX_OVERFLOW", "20")))
+    DB_POOL_TIMEOUT: int = field(default_factory=lambda: int(os.getenv("DB_POOL_TIMEOUT", "30")))
 
     # Celery & Background Jobs - Environment Configurable
     CELERY_BROKER_URL: str = "redis://localhost:10200/1"  # Use different Redis DB
@@ -168,6 +168,19 @@ class Settings:
                 self._admin_ids = []
         else:
             self._admin_ids = []
+
+        # Parse CORS_ORIGINS from environment (JSON string to list)
+        cors_str = os.getenv("CORS_ORIGINS")
+        if cors_str and cors_str != "*":
+            try:
+                import json
+                parsed = json.loads(cors_str)
+                if isinstance(parsed, list):
+                    self.CORS_ORIGINS = parsed
+            except (json.JSONDecodeError, ValueError):
+                # If parsing fails, keep the default or try splitting by comma
+                if "," in cors_str:
+                    self.CORS_ORIGINS = [x.strip() for x in cors_str.split(",") if x.strip()]
 
     @property
     def ADMIN_IDS(self) -> list[int]:

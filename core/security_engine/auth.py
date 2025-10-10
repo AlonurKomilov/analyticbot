@@ -207,40 +207,45 @@ class SecurityManager:
             expire = datetime.utcnow() + timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # Token payload with comprehensive claims
-        to_encode = {
+        # Handle both enum and string values for role/status
+        from core.security_engine.models import UserStatus, UserRole, AuthProvider
+        role_val = user.role.value if hasattr(user.role, 'value') else user.role
+        status_val = user.status.value if hasattr(user.status, 'value') else user.status
+        auth_provider_val = user.auth_provider.value if hasattr(user.auth_provider, 'value') else user.auth_provider
+
+        # Create TokenClaims with correct parameters (matching CoreSecurityService)
+        claims = TokenClaims(
+            user_id=user.id,
+            email=user.email,
+            username=user.username,
+            role=role_val,
+            status=status_val,
+            session_id=session_id,
+            mfa_verified=user.is_mfa_enabled and session_id is not None,
+            auth_provider=auth_provider_val,
+            issued_at=datetime.utcnow(),
+            expires_at=expire,
+            token_id=secrets.token_urlsafe(16),
+        )
+
+        # Generate JWT token using adapter
+        encoded_jwt = self.token_generator.generate_jwt_token(claims, expires_delta)
+
+        # Cache token in Redis for fast validation (convert claims to dict)
+        token_dict = {
             "sub": user.id,
             "email": user.email,
             "username": user.username,
-            "role": user.role.value,
-            "status": user.status.value,
+            "role": role_val,
+            "status": status_val,
             "exp": expire,
             "iat": datetime.utcnow(),
-            "jti": secrets.token_urlsafe(16),  # JWT ID for token tracking
+            "jti": claims.token_id,
             "session_id": session_id,
-            "mfa_verified": user.is_mfa_enabled and session_id,
-            "auth_provider": user.auth_provider.value,
+            "mfa_verified": user.is_mfa_enabled and session_id is not None,
+            "auth_provider": auth_provider_val,
         }
-
-        # Use JWT adapter for token generation
-        claims = TokenClaims(
-            user_id=user.id,
-            session_id=session_id,
-            permissions=[user.role.value],
-            metadata={
-                "email": user.email,
-                "username": user.username,
-                "role": user.role.value,
-                "status": user.status.value,
-                "jti": to_encode["jti"],
-                "mfa_verified": to_encode["mfa_verified"],
-                "auth_provider": user.auth_provider.value,
-            },
-        )
-
-        encoded_jwt = self.token_generator.generate_jwt_token(claims, expires_delta)
-
-        # Cache token in Redis for fast validation
-        self._cache_token(encoded_jwt, to_encode, expire)
+        self._cache_token(encoded_jwt, token_dict, expire)
 
         logger.info(f"Access token created for user {user.username} (ID: {user.id})")
         return encoded_jwt

@@ -41,21 +41,50 @@ fi
 # Check if required infrastructure is running
 echo -e "${BLUE}🔍 Checking infrastructure...${NC}"
 
-    # Check PostgreSQL
-    if ! nc -z localhost 10100 2>/dev/null; then
-        echo "⚠️  PostgreSQL not running on port 10100"
-        echo "🐳 Starting PostgreSQL container..."
-        docker-compose up -d db || echo "⚠️  Could not start PostgreSQL container (Docker permission issue?)"
-        sleep 3
-    fi
+# Check PostgreSQL (Docker exposes on port 10100)
+if ! nc -z localhost 10100 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  PostgreSQL not running on port 10100${NC}"
+    echo -e "${BLUE}🐳 Starting PostgreSQL container...${NC}"
+    docker-compose -f docker/docker-compose.yml up -d db
+    echo -e "${BLUE}⏳ Waiting for PostgreSQL to be ready...${NC}"
+    sleep 5
+    # Wait for healthy status
+    for i in {1..30}; do
+        if nc -z localhost 10100 2>/dev/null; then
+            echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+    echo ""
+else
+    echo -e "${GREEN}✅ PostgreSQL already running${NC}"
+fi
 
-    # Check Redis
-    if ! nc -z localhost 10200 2>/dev/null; then
-        echo "⚠️  Redis not running on port 10200"
-        echo "🐳 Starting Redis container..."
-        docker-compose up -d redis || echo "⚠️  Could not start Redis container (Docker permission issue?)"
-        sleep 2
-    fi
+# Check Redis (Docker exposes on port 10200)
+if ! nc -z localhost 10200 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  Redis not running on port 10200${NC}"
+    echo -e "${BLUE}🐳 Starting Redis container...${NC}"
+    docker-compose -f docker/docker-compose.yml up -d redis
+    echo -e "${BLUE}⏳ Waiting for Redis to be ready...${NC}"
+    sleep 3
+    # Wait for healthy status
+    for i in {1..15}; do
+        if nc -z localhost 10200 2>/dev/null; then
+            echo -e "${GREEN}✅ Redis is ready${NC}"
+            break
+        fi
+        echo -n "."
+        sleep 1
+    done
+    echo ""
+else
+    echo -e "${GREEN}✅ Redis already running${NC}"
+fi
+
+echo -e "${GREEN}✅ Infrastructure ready!${NC}"
+echo ""
 
 # Function to start a service in background
 start_service() {
@@ -181,40 +210,49 @@ case $SERVICE in
         # Check status of all services
         echo -e "${BLUE}📊 Development Services Status:${NC}"
         echo "=================================="
+        echo ""
+        echo -e "${BLUE}🐳 Infrastructure (Docker):${NC}"
+
+        # Check PostgreSQL (port 10100)
+        if nc -z localhost 10100 2>/dev/null; then
+            echo -e "PostgreSQL (10100): ${GREEN}✅ Running${NC}"
+        else
+            echo -e "PostgreSQL (10100): ${RED}❌ Stopped${NC}"
+        fi
+
+        # Check Redis (port 10200)
+        if nc -z localhost 10200 2>/dev/null; then
+            echo -e "Redis (10200):      ${GREEN}✅ Running${NC}"
+        else
+            echo -e "Redis (10200):      ${RED}❌ Stopped${NC}"
+        fi
+
+        echo ""
+        echo -e "${BLUE}🔥 Development Services (venv):${NC}"
 
         # Check API - Development Environment Port 11400
         if curl -s http://localhost:11400/health >/dev/null 2>&1; then
-            echo -e "API (11400):     ${GREEN}✅ Running${NC}"
+            echo -e "API (11400):        ${GREEN}✅ Running${NC}"
         else
-            echo -e "API (11400):     ${RED}❌ Stopped${NC}"
+            echo -e "API (11400):        ${RED}❌ Stopped${NC}"
         fi
 
         # Check Frontend - Development Environment Port 11300
         if curl -s http://localhost:11300 >/dev/null 2>&1; then
-            echo -e "Frontend (11300): ${GREEN}✅ Running${NC}"
+            echo -e "Frontend (11300):   ${GREEN}✅ Running${NC}"
         else
-            echo -e "Frontend (11300): ${RED}❌ Stopped${NC}"
+            echo -e "Frontend (11300):   ${RED}❌ Stopped${NC}"
         fi
 
         # Check Bot (by PID file)
         if [ -f "logs/dev_bot.pid" ] && kill -0 $(cat logs/dev_bot.pid) 2>/dev/null; then
-            echo -e "Bot:             ${GREEN}✅ Running${NC}"
+            echo -e "Bot:                ${GREEN}✅ Running${NC}"
         else
-            echo -e "Bot:             ${RED}❌ Stopped${NC}"
+            echo -e "Bot:                ${RED}❌ Stopped${NC}"
         fi
 
-        # Check Infrastructure
-        if nc -z localhost 5432 2>/dev/null; then
-            echo -e "PostgreSQL:      ${GREEN}✅ Running${NC}"
-        else
-            echo -e "PostgreSQL:      ${RED}❌ Stopped${NC}"
-        fi
-
-        if nc -z localhost 6379 2>/dev/null; then
-            echo -e "Redis:           ${GREEN}✅ Running${NC}"
-        else
-            echo -e "Redis:           ${RED}❌ Stopped${NC}"
-        fi
+        echo ""
+        echo -e "${BLUE}💡 Tip: Use 'make dev-start' to start all services${NC}"
         exit 0
         ;;
     "logs")

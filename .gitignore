@@ -374,7 +374,7 @@ nltk_data/
 # Development cache files
 .ruff_cache/
 .mypy_cache/
-
+.import_linter_cache/
 # Requirements backup files
 requirements_updated.txt
 requirements_backup.txt

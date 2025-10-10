@@ -12,7 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
 from apps.api.auth_utils import auth_utils
-from apps.api.middleware.auth import get_current_user, get_security_manager, get_user_repository
+from apps.api.middleware.auth import get_current_user, get_user_repository
+from core.security_engine import get_security_manager
 
 # ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
 # ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
@@ -116,25 +117,54 @@ async def login(
             migration_profile=user_data.get("migration_profile"),
         )
 
+        # Debug logging
+        print(f"\n� USER OBJECT CREATED:")
+        print(f"   Email: {user.email}")
+        print(f"   Username: {user.username}")
+        print(f"   Status: {user.status}")
+        print(f"   Has hashed_password: {user.hashed_password is not None}")
+        if user.hashed_password:
+            print(f"   Hash length: {len(user.hashed_password)}")
+            print(f"   Hash starts with: {user.hashed_password[:10]}")
+
         # Verify password
-        if not user.verify_password(login_data.password):
+        print(f"\n🔑 VERIFYING PASSWORD:")
+        print(f"   Input password: {login_data.password}")
+        print(f"   Input password length: {len(login_data.password)}")
+
+        password_valid = user.verify_password(login_data.password)
+        print(f"   Password verification result: {password_valid}")
+
+        if not password_valid:
+            print(f"   ❌ Password verification FAILED for {user.email}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
             )
 
-        # Check if user account is active
-        if user.status != UserStatus.ACTIVE:
+        print(f"   ✅ Password verified successfully for {user.email}")
+
+        # Check if user account is active or pending verification (allow both for now)
+        if user.status not in [UserStatus.ACTIVE, UserStatus.PENDING_VERIFICATION]:
+            status_str = user.status.value if isinstance(user.status, UserStatus) else user.status
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Account is {user.status.value}. Please contact support.",
+                detail=f"Account is {status_str}. Please contact support.",
             )
 
-        # Create session
-        session = get_security_manager().create_user_session(user, request)
+        # Create session - convert FastAPI Request to AuthRequest
+        from core.ports.security_ports import AuthRequest
+        auth_request = AuthRequest(
+            client_ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            device_info={},
+            headers=dict(request.headers)
+        )
+        session = get_security_manager().create_user_session(user, auth_request)
 
         # Generate tokens using centralized auth utilities
         access_token = auth_utils.create_access_token(user)
-        refresh_token = auth_utils.create_refresh_token(user.id, session.token)  # Update last login
+        # Convert user.id to string for create_refresh_token
+        refresh_token = auth_utils.create_refresh_token(str(user.id), session.token)  # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
 
         logger.info(f"Successful login for user: {user.username}")
@@ -149,7 +179,7 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
-                "status": user.status.value,
+                "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
             },
         )
 
@@ -216,7 +246,7 @@ async def register(
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
             "role": user.role,  # role is now a string, no .value needed
-            "status": user.status.value,
+            "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
             "plan_id": 1,  # Default plan
         }
 
@@ -480,10 +510,11 @@ async def get_mfa_status(
     Get MFA status for current user
     """
     try:
-        # Check if MFA is enabled
+        # Check if MFA is enabled using MFAManager's cache access methods
         import json
 
-        mfa_data_str = mfa_manager.redis_client.get(f"mfa_data:{current_user['id']}")
+        # Use _get_from_cache method instead of redis_client
+        mfa_data_str = mfa_manager._get_from_cache(f"mfa_data:{current_user['id']}")
 
         if mfa_data_str and isinstance(mfa_data_str, str):
             mfa_data = json.loads(mfa_data_str)

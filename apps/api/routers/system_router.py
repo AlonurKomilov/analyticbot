@@ -19,7 +19,7 @@ from apps.api.deps_factory import (
     get_initial_data_service,
 )
 from apps.api.middleware.auth import get_current_user_id
-from apps.bot.models.twa import InitialDataResponse
+from apps.shared.models.twa import InitialDataResponse
 from core import DeliveryService, ScheduleService
 
 logger = logging.getLogger(__name__)

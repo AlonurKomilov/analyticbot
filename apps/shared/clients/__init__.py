@@ -1,21 +1,17 @@
 """
-Backward Compatibility Wrapper for Analytics Client
+Shared Clients - Framework-Independent HTTP/Service Clients
 
-DEPRECATED: This module is maintained for backward compatibility only.
-New code should import from apps.shared.clients instead.
+Clients in this module are framework-independent and can be used
+by both API and Bot layers. They handle external service communication.
 
-Moved to apps.shared.clients.analytics_client as part of Phase 1.5
-to break API→Bot cross-dependencies.
+Moved from apps.bot.clients as part of Phase 1.5 to break cross-dependencies.
 """
 
-# Import from shared location for backward compatibility
 from apps.shared.clients.analytics_client import (
     AnalyticsClient,
     AnalyticsClientError,
     AnalyticsOverview,
     AnalyticsResponse,
-    AnalyticsV2Client,
-    AnalyticsV2ClientError,
     GrowthData,
     GrowthResponse,
     OverviewResponse,
@@ -34,8 +30,6 @@ __all__ = [
     "AnalyticsClientError",
     "AnalyticsOverview",
     "AnalyticsResponse",
-    "AnalyticsV2Client",
-    "AnalyticsV2ClientError",
     "GrowthData",
     "GrowthResponse",
     "OverviewResponse",

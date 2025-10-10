@@ -1,14 +1,11 @@
 """
-Backward Compatibility Wrapper for Bot Models
+Shared Models - API/Bot Common Data Transfer Objects
 
-DEPRECATED: This module is maintained for backward compatibility only.
-New code should import from apps.shared.models instead.
-
-These models have been moved to apps.shared.models.twa as part of
-Phase 1.5 to break API→Bot cross-dependencies.
+Pydantic models used across both API and Bot layers.
+These models provide a shared vocabulary for data exchange
+without creating coupling between layers.
 """
 
-# Import from shared location for backward compatibility
 from apps.shared.models.twa import (
     AddChannelRequest,
     Button,

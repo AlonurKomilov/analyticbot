@@ -6,7 +6,7 @@ Production service for fetching initial application data
 import logging
 from typing import Any
 
-from apps.bot.models.twa import InitialDataResponse
+from apps.shared.models.twa import InitialDataResponse
 
 # TODO: Use proper repository protocols
 # from infra.db.repositories.user_repository import AsyncpgUserRepository

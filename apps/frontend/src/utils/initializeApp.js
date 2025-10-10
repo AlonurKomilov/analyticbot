@@ -2,7 +2,7 @@
  * Application initialization utilities
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://185.211.5.244:11400';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms';
 
 /**
  * Check if API is available and auto-configure data source

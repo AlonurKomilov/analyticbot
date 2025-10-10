@@ -7,7 +7,7 @@ import logging
 
 from fastapi import Request
 
-from apps.bot.models.twa import InitialDataResponse
+from apps.shared.models.twa import InitialDataResponse
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
             demo_data = await demo_data_service.get_initial_data(user_id, demo_context["demo_type"])
 
             # Convert demo data dict to proper InitialDataResponse model
-            from apps.bot.models.twa import Channel, User
+            from apps.shared.models.twa import Channel, User
 
             # Create demo user
             demo_user = User(id=1, username=demo_data.get("user", {}).get("username", "demo_user"))
@@ -148,7 +148,7 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
             demo_data = await demo_data_service.get_initial_data(user_id or 1, "limited")
 
             # Convert to proper model for fallback case
-            from apps.bot.models.twa import Channel, User
+            from apps.shared.models.twa import Channel, User
 
             demo_user = User(id=user_id or 1, username="demo_user_fallback")
             demo_channels = [Channel(id=1, title="Demo Channel", username="@demo")]

@@ -58,7 +58,10 @@ async def _create_asyncpg_pool(database_url: str, pool_size: int = 10) -> asyncp
     if db_url.startswith("postgresql+asyncpg://"):
         db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
 
-    return await asyncpg.create_pool(db_url, min_size=1, max_size=pool_size)
+    pool = await asyncpg.create_pool(db_url, min_size=1, max_size=pool_size)
+    if pool is None:
+        raise RuntimeError("Failed to create asyncpg pool")
+    return pool
 
 
 async def _create_sqlalchemy_engine(
@@ -154,7 +157,8 @@ async def _create_analytics_batch_processor(**kwargs):
     try:
         from core.services.analytics.analytics_batch_processor import AnalyticsBatchProcessor
 
-        return AnalyticsBatchProcessor()
+        # AnalyticsBatchProcessor doesn't require repository - it's a utility processor
+        return AnalyticsBatchProcessor()  # type: ignore
     except ImportError as e:
         logger.warning(f"Analytics batch processor not available: {e}")
         return None
@@ -163,9 +167,9 @@ async def _create_analytics_batch_processor(**kwargs):
 async def _create_reporting_service(**kwargs):
     """Create core reporting service (pure business logic)"""
     try:
-        from core.services.reporting.reporting_service import ReportingService
+        from core.services.reporting import create_reporting_system
 
-        return ReportingService()
+        return create_reporting_system()
     except ImportError as e:
         logger.warning(f"Reporting service not available: {e}")
         return None
@@ -174,9 +178,9 @@ async def _create_reporting_service(**kwargs):
 async def _create_dashboard_service(port: int = 8050, **kwargs):
     """Create core dashboard service (pure business logic)"""
     try:
-        from core.services.dashboard.dashboard_service import DashboardService
+        from core.services.dashboard import create_dashboard
 
-        return DashboardService(port=port)
+        return create_dashboard(port=port)
     except ImportError as e:
         logger.warning(f"Dashboard service not available: {e}")
         return None
@@ -188,37 +192,37 @@ async def _create_dashboard_service(port: int = 8050, **kwargs):
 
 
 async def _create_bot_analytics_adapter(
-    core_analytics_service=None, bot=None, analytics_repo=None, **kwargs
+    core_analytics_service=None, bot=None, **kwargs
 ):
     """Create bot analytics adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
 
         return BotAnalyticsAdapter(
-            batch_processor=core_analytics_service, bot=bot, analytics_repository=analytics_repo
+            batch_processor=core_analytics_service, bot=bot  # type: ignore
         )
     except ImportError as e:
         logger.warning(f"Bot analytics adapter not available: {e}")
         return None
 
 
-async def _create_bot_reporting_adapter(core_reporting_service=None, bot=None, **kwargs):
+async def _create_bot_reporting_adapter(core_reporting_service=None, **kwargs):
     """Create bot reporting adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.reporting_adapter import BotReportingAdapter
 
-        return BotReportingAdapter(reporting_service=core_reporting_service, bot=bot)
+        return BotReportingAdapter(reporting_system=core_reporting_service)  # type: ignore
     except ImportError as e:
         logger.warning(f"Bot reporting adapter not available: {e}")
         return None
 
 
-async def _create_bot_dashboard_adapter(core_dashboard_service=None, bot=None, **kwargs):
+async def _create_bot_dashboard_adapter(core_dashboard_service=None, **kwargs):
     """Create bot dashboard adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.dashboard_adapter import BotDashboardAdapter
 
-        return BotDashboardAdapter(visualization_engine=core_dashboard_service, bot=bot)
+        return BotDashboardAdapter(dashboard=core_dashboard_service)
     except ImportError as e:
         logger.warning(f"Bot dashboard adapter not available: {e}")
         return None

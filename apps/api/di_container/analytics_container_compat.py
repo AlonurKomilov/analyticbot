@@ -27,7 +27,7 @@ async def get_analytics_fusion_service():
 async def get_cache():
     """Backward compatibility wrapper - redirects to unified container"""
     container = get_container()
-    return await container.cache_adapter()
+    return container.cache_adapter  # Resource provider, not async
 
 
 async def get_repository_factory():
@@ -69,7 +69,7 @@ async def get_stats_raw_repository():
 async def get_channel_management_service():
     """Backward compatibility wrapper - redirects to unified container"""
     container = get_container()
-    return await container.channel_management_service()
+    return container.channel_management_service()  # Factory provider
 
 
 # Cleanup function

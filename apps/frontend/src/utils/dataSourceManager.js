@@ -79,7 +79,7 @@ class DataSourceManager {
         try {
             const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
                                 import.meta.env.VITE_API_URL ||
-                                'http://185.211.5.244:11400';
+                                'https://b2qz1m0n-11400.euw.devtunnels.ms';
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);

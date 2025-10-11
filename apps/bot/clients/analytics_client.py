@@ -158,7 +158,10 @@ class AnalyticsClient:
         self.max_retries = max_retries
 
         # Configure headers
-        self.headers = {"Accept": "application/json", "User-Agent": "AnalyticBot-V2Client/1.0"}
+        self.headers = {
+            "Accept": "application/json",
+            "User-Agent": "AnalyticBot-V2Client/1.0",
+        }
 
         if self.token:
             self.headers["Authorization"] = f"Bearer {self.token}"

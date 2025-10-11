@@ -108,9 +108,11 @@ async def get_user_channels_admin(
                     "username": getattr(channel, "username", None),
                     "is_active": channel.is_active,
                     "subscriber_count": channel.subscriber_count,
-                    "created_at": channel.created_at.isoformat()
-                    if channel.created_at
-                    else datetime.now().isoformat(),
+                    "created_at": (
+                        channel.created_at.isoformat()
+                        if channel.created_at
+                        else datetime.now().isoformat()
+                    ),
                     "total_posts": getattr(channel, "total_posts", 0),
                     "total_views": getattr(channel, "total_views", 0),
                 }

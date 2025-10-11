@@ -104,7 +104,11 @@ async def performance():
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
-@router.get("/initial-data", response_model=InitialDataResponse, summary="Application Startup Data")
+@router.get(
+    "/initial-data",
+    response_model=InitialDataResponse,
+    summary="Application Startup Data",
+)
 async def initial_data(request: Request, user_id: int = Depends(get_current_user_id)):
     """
     ## 🚀 Application Startup Data
@@ -128,7 +132,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
 @router.post("/schedule", response_model=dict)
 async def create_scheduled_post(
-    request: ScheduleRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: ScheduleRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 📅 Create Scheduled Post
@@ -227,9 +232,11 @@ async def get_user_scheduled_posts(
                 {
                     "id": post["id"],
                     "channel_id": post["channel_id"],
-                    "message": post["message"][:100] + "..."
-                    if len(post["message"]) > 100
-                    else post["message"],
+                    "message": (
+                        post["message"][:100] + "..."
+                        if len(post["message"]) > 100
+                        else post["message"]
+                    ),
                     "scheduled_time": post["scheduled_time"],
                     "status": post["status"],
                     "created_at": post["created_at"],
@@ -277,7 +284,9 @@ async def delete_scheduled_post(
 
 
 @router.get("/delivery/stats")
-async def get_delivery_stats(delivery_service: DeliveryService = Depends(get_delivery_service)):
+async def get_delivery_stats(
+    delivery_service: DeliveryService = Depends(get_delivery_service),
+):
     """
     ## 📊 Delivery Statistics
 
@@ -339,7 +348,7 @@ async def get_service_information():
                 },
             },
             "system_info": {
-                "environment": "production" if not settings.debug_mode else "development",
+                "environment": ("production" if not settings.debug_mode else "development"),
                 "clean_architecture": True,
                 "service_type": "core_system",
             },

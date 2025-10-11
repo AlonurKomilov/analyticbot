@@ -90,7 +90,7 @@ async def analytics_health_check():
     """
     try:
         health_results = {}
-        data_processor = await create_data_processor()
+        await create_data_processor()
         # health_results["data_processor"] = await data_processor.health_check()  # Method not available
         ml_coordinator = create_ml_coordinator()
         health_results["ml_coordinator"] = await ml_coordinator.health_check()

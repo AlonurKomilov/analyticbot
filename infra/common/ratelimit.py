@@ -179,7 +179,8 @@ class RateLimitManager:
 
         # Use a simple approach: wait for both global and account limits
         await asyncio.gather(
-            self.global_limiter.acquire_with_delay(), account_limiter.acquire_with_delay()
+            self.global_limiter.acquire_with_delay(),
+            account_limiter.acquire_with_delay(),
         )
 
     def get_all_stats(self) -> dict[str, Any]:

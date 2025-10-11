@@ -264,7 +264,10 @@ async def handle_schedule(
         if uid is not None:
             try:
                 await scheduler_service.schedule_post(
-                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt,
                 )
             except Exception:
                 pass

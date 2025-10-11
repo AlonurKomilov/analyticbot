@@ -165,9 +165,9 @@ async def get_system_health(
             health_data = await analytics_service.check_system_health()
 
             return {
-                "status": "healthy"
-                if health_data.get("all_systems_operational", False)
-                else "degraded",
+                "status": (
+                    "healthy" if health_data.get("all_systems_operational", False) else "degraded"
+                ),
                 "timestamp": datetime.now().isoformat(),
                 "components": health_data.get("components", {}),
                 "overall_score": health_data.get("health_score", 0),

@@ -88,7 +88,9 @@ def get_channel_service():
 
 
 router = APIRouter(
-    prefix="/channels", tags=["Channel Management"], responses={404: {"description": "Not found"}}
+    prefix="/channels",
+    tags=["Channel Management"],
+    responses={404: {"description": "Not found"}},
 )
 
 # === CHANNEL MODELS ===
@@ -248,7 +250,9 @@ async def update_channel(
                 raise HTTPException(status_code=400, detail="No update data provided")
 
             channel = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data=update_dict
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data=update_dict,
             )
 
             logger.info(f"Channel updated successfully: {channel_id} by user {current_user['id']}")
@@ -326,7 +330,9 @@ async def activate_channel(
 
         with performance_timer("channel_activation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": True}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": True},
             )
 
             logger.info(f"Channel activated: {channel_id} by user {current_user['id']}")
@@ -366,7 +372,9 @@ async def deactivate_channel(
 
         with performance_timer("channel_deactivation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": False}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": False},
             )
 
             logger.info(f"Channel deactivated: {channel_id} by user {current_user['id']}")

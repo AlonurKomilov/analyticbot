@@ -210,9 +210,11 @@ async def predict_churn(
             churn_probability=prediction.churn_probability,
             risk_level=prediction.risk_level.value,
             key_factors=prediction.risk_factors,
-            recommendations=[f"Apply {strategy}" for strategy in prediction.protective_factors]
-            if request.include_recommendations
-            else [],
+            recommendations=(
+                [f"Apply {strategy}" for strategy in prediction.protective_factors]
+                if request.include_recommendations
+                else []
+            ),
         )
 
     except Exception as e:
@@ -242,7 +244,8 @@ async def get_churn_predictor_stats():
 
 @router.post("/security/analyze", response_model=SecurityAnalysisResponse)
 async def analyze_security(
-    request: SecurityAnalysisRequest, current_user_id: int = Depends(get_current_user_id)
+    request: SecurityAnalysisRequest,
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """
     🔒 Analyze content and user behavior for security threats
@@ -256,7 +259,10 @@ async def analyze_security(
     try:
         # Check if this is a demo user and get appropriate demo data
         from tests.mocks.data.ai_services.mock_data import get_mock_security_analysis
-        from tests.mocks.data.auth_fixtures import get_demo_user_type_by_id, is_demo_user_by_id
+        from tests.mocks.data.auth_fixtures import (
+            get_demo_user_type_by_id,
+            is_demo_user_by_id,
+        )
 
         # Check if current user is a demo user (authenticated via JWT)
         if current_user_id and is_demo_user_by_id(str(current_user_id)):
@@ -292,7 +298,8 @@ async def analyze_security(
     except Exception as e:
         logger.error(f"AI Security Analysis error: {e}")
         raise HTTPException(
-            status_code=500, detail="AI Security Analysis service temporarily unavailable"
+            status_code=500,
+            detail="AI Security Analysis service temporarily unavailable",
         )
 
 

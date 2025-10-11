@@ -191,7 +191,9 @@ async def cleanup_db_pool():
 
 
 # Authentication dependency - implement proper JWT validation
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
     """Get current authenticated user with proper JWT validation"""
     # Import the proper auth implementation
     from apps.api.middleware.auth import get_current_user as auth_get_current_user

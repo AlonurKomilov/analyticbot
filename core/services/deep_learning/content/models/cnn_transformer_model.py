@@ -414,7 +414,7 @@ class CNNTransformerModel(nn.Module):
             confident_preds = self.predict_with_confidence(input_ids, attention_mask, mc_samples=20)
 
             # Get standard predictions
-            standard_preds = self(input_ids, attention_mask)
+            self(input_ids, attention_mask)
 
             # Process results
             analysis = {
@@ -448,17 +448,21 @@ class CNNTransformerModel(nn.Module):
             quality_score = torch.argmax(confident_preds["quality"]["prediction"], dim=-1)
 
             analysis["risk_assessment"] = {
-                "toxicity_risk": "high"
-                if toxicity_prob.mean() > 0.7
-                else "medium"
-                if toxicity_prob.mean() > 0.3
-                else "low",
-                "quality_level": "high"
-                if quality_score.float().mean() >= 4
-                else "medium"
-                if quality_score.float().mean() >= 3
-                else "low",
-                "overall_safety": "safe" if toxicity_prob.mean() < 0.3 else "review_needed",
+                "toxicity_risk": (
+                    "high"
+                    if toxicity_prob.mean() > 0.7
+                    else "medium"
+                    if toxicity_prob.mean() > 0.3
+                    else "low"
+                ),
+                "quality_level": (
+                    "high"
+                    if quality_score.float().mean() >= 4
+                    else "medium"
+                    if quality_score.float().mean() >= 3
+                    else "low"
+                ),
+                "overall_safety": ("safe" if toxicity_prob.mean() < 0.3 else "review_needed"),
             }
 
             # Generate recommendations

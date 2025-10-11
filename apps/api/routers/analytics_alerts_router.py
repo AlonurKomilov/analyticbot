@@ -286,7 +286,10 @@ async def get_alert_history(
 
         # Get alert history
         alerts = await alerting_service.get_alert_history(
-            channel_id=str(channel_id), from_date=from_date, to_date=to_date, alert_type=alert_type
+            channel_id=str(channel_id),
+            from_date=from_date,
+            to_date=to_date,
+            alert_type=alert_type,
         )
 
         # Analyze alert types

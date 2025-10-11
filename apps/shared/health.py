@@ -26,7 +26,9 @@ async def health_check() -> dict[str, Any]:
 
 
 @router.get("/db", summary="Database Health Check")
-async def database_health(container: Container = Depends(get_container)) -> dict[str, Any]:
+async def database_health(
+    container: Container = Depends(get_container),
+) -> dict[str, Any]:
     """Check database connectivity and basic operations"""
 
     health_info = {
@@ -163,7 +165,10 @@ async def di_health(container: Container = Depends(get_container)) -> dict[str, 
         for name, factory in dependencies:
             try:
                 repo = await factory()
-                di_info["dependencies"][name] = {"status": "resolved", "type": type(repo).__name__}
+                di_info["dependencies"][name] = {
+                    "status": "resolved",
+                    "type": type(repo).__name__,
+                }
             except Exception as e:
                 di_info["dependencies"][name] = {"status": "failed", "error": str(e)}
                 di_info["status"] = "degraded"

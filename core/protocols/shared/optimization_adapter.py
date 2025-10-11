@@ -36,7 +36,10 @@ class OptimizationServiceAdapter(OptimizationProtocol):
         self._optimization_service = autonomous_optimization_service
 
     async def optimize_performance(
-        self, channel_id: int, metrics: dict[str, Any], optimization_type: str = "general"
+        self,
+        channel_id: int,
+        metrics: dict[str, Any],
+        optimization_type: str = "general",
     ) -> dict[str, Any]:
         """
         Optimize performance using the underlying service.
@@ -100,7 +103,9 @@ class OptimizationServiceAdapter(OptimizationProtocol):
 
 
 # Factory function for easy creation
-def create_optimization_adapter(autonomous_optimization_service) -> OptimizationProtocol:
+def create_optimization_adapter(
+    autonomous_optimization_service,
+) -> OptimizationProtocol:
     """
     Factory function to create optimization service adapter.
 

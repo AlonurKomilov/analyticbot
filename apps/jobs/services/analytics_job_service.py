@@ -15,7 +15,6 @@ class AnalyticsJobService:
 
     def __init__(self):
         """Initialize the analytics job service."""
-        pass
 
     async def process_analytics_data(self, data: dict) -> dict[str, Any]:
         """
@@ -64,7 +63,11 @@ class AnalyticsJobService:
             # For now, simulate cleanup
             cleaned_items = 0
 
-            result = {"status": "completed", "cleaned_items": cleaned_items, "days_threshold": days}
+            result = {
+                "status": "completed",
+                "cleaned_items": cleaned_items,
+                "days_threshold": days,
+            }
 
             logger.info(f"Analytics cleanup completed: {cleaned_items} items removed")
             return result

@@ -75,7 +75,10 @@ class PatternAnalysisService(PatternAnalysisProtocol):
 
             # Content optimization insights
             optimization_patterns = self._generate_content_optimization_patterns(
-                length_patterns, engagement_patterns, timing_patterns, high_performer_patterns
+                length_patterns,
+                engagement_patterns,
+                timing_patterns,
+                high_performer_patterns,
             )
 
             content_analysis = {
@@ -292,7 +295,8 @@ class PatternAnalysisService(PatternAnalysisProtocol):
             avg_engagement = np.mean(engagement_scores)
             engagement_std = np.std(engagement_scores)
             high_engagement_threshold = np.percentile(
-                engagement_scores, self.pattern_config["engagement_percentile_threshold"]
+                engagement_scores,
+                self.pattern_config["engagement_percentile_threshold"],
             )
 
             high_performers = [
@@ -306,9 +310,9 @@ class PatternAnalysisService(PatternAnalysisProtocol):
                 "engagement_std": round(engagement_std, 3),
                 "high_engagement_threshold": round(high_engagement_threshold, 3),
                 "high_performers_count": len(high_performers),
-                "engagement_consistency": "high"
-                if engagement_std < avg_engagement * 0.5
-                else "moderate",
+                "engagement_consistency": (
+                    "high" if engagement_std < avg_engagement * 0.5 else "moderate"
+                ),
                 "status": "analyzed",
             }
 
@@ -348,7 +352,7 @@ class PatternAnalysisService(PatternAnalysisProtocol):
                 "peak_posting_hours": [
                     {"hour": hour, "posts": count} for hour, count in peak_hours
                 ],
-                "posting_pattern": "consistent" if len(set(posting_hours)) < 8 else "varied",
+                "posting_pattern": ("consistent" if len(set(posting_hours)) < 8 else "varied"),
                 "status": "analyzed",
             }
 
@@ -387,7 +391,11 @@ class PatternAnalysisService(PatternAnalysisProtocol):
             return {"status": "failed", "error": str(e)}
 
     def _generate_content_optimization_patterns(
-        self, length_patterns, engagement_patterns, timing_patterns, high_performer_patterns
+        self,
+        length_patterns,
+        engagement_patterns,
+        timing_patterns,
+        high_performer_patterns,
     ) -> dict[str, Any]:
         """Generate content optimization patterns"""
         optimizations = []

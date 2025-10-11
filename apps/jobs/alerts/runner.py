@@ -360,7 +360,10 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Analytics Alert Detection Runner")
     parser.add_argument(
-        "--interval", type=int, default=300, help="Detection interval in seconds (default: 300)"
+        "--interval",
+        type=int,
+        default=300,
+        help="Detection interval in seconds (default: 300)",
     )
     parser.add_argument("--once", action="store_true", help="Run detection once and exit")
 
@@ -368,7 +371,8 @@ async def main():
 
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     runner = AlertRunner()

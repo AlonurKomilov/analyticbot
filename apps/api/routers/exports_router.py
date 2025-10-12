@@ -216,8 +216,8 @@ async def export_growth_chart(
         if not growth_data:
             raise HTTPException(status_code=404, detail="Growth data not found")
 
-        # Render chart
-        chart_bytes = chart_service.render_growth_chart(growth_data)
+        # Render chart - convert Pydantic model to dict
+        chart_bytes = chart_service.render_growth_chart(growth_data.model_dump())
 
         filename = f"growth_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -227,9 +227,8 @@ async def export_growth_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except Exception as e:
-        logger.error(f"Chart rendering failed: {e}")
-        raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except HTTPException:
+        raise
     except aiohttp.ClientError as e:
         logger.error(f"Failed to fetch growth data: {e}")
         raise HTTPException(status_code=502, detail="Analytics service unavailable")
@@ -253,8 +252,8 @@ async def export_reach_chart(
         if not reach_data:
             raise HTTPException(status_code=404, detail="Reach data not found")
 
-        # Render chart
-        chart_bytes = chart_service.render_reach_chart(reach_data)
+        # Render chart - convert Pydantic model to dict
+        chart_bytes = chart_service.render_reach_chart(reach_data.model_dump())
 
         filename = f"reach_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -264,9 +263,8 @@ async def export_reach_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except Exception as e:
-        logger.error(f"Chart rendering failed: {e}")
-        raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except HTTPException:
+        raise
     except aiohttp.ClientError as e:
         logger.error(f"Failed to fetch reach data: {e}")
         raise HTTPException(status_code=502, detail="Analytics service unavailable")
@@ -290,8 +288,8 @@ async def export_sources_chart(
         if not sources_data:
             raise HTTPException(status_code=404, detail="Sources data not found")
 
-        # Render chart
-        chart_bytes = chart_service.render_sources_chart(sources_data)
+        # Render chart - convert Pydantic model to dict
+        chart_bytes = chart_service.render_sources_chart(sources_data.model_dump())
 
         filename = f"sources_{channel_id}_{period}d_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
 
@@ -301,9 +299,8 @@ async def export_sources_chart(
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )
 
-    except Exception as e:
-        logger.error(f"Chart rendering failed: {e}")
-        raise HTTPException(status_code=500, detail="Chart rendering failed")
+    except HTTPException:
+        raise
     except aiohttp.ClientError as e:
         logger.error(f"Failed to fetch sources data: {e}")
         raise HTTPException(status_code=502, detail="Analytics service unavailable")

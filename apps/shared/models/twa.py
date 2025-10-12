@@ -96,6 +96,7 @@ class InitialDataResponse(BaseModel):
     plan: Plan | None = None
     channels: list[Channel] = Field(default_factory=list)
     scheduled_posts: list[ScheduledPost] = Field(default_factory=list)
+    features: dict[str, bool] = Field(default_factory=dict)
 
 
 class ValidationErrorResponse(BaseModel):

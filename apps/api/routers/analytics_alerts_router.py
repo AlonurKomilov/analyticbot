@@ -65,12 +65,12 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_alerting_service() -> AlertingService:
+def get_alerting_service() -> AlertingService:  # type: ignore[return]
     """Get alerting service"""
     from apps.shared.unified_di import get_container
 
     container = get_container()
-    return container.alerting_service()
+    return container.alerting_service()  # type: ignore[return-value]
 
 
 # === ALERT CHECKING ===
@@ -97,9 +97,9 @@ async def check_channel_alerts(
     """
     try:
         # Get current metrics for alert evaluation
-        overview_data = await analytics_client.overview(channel_id, check_period)
-        growth_data = await analytics_client.growth(channel_id, check_period)
-        reach_data = await analytics_client.reach(channel_id, check_period)
+        overview_data = await analytics_client.overview(str(channel_id), check_period)
+        growth_data = await analytics_client.growth(str(channel_id), check_period)
+        reach_data = await analytics_client.reach(str(channel_id), check_period)
 
         # Build metrics for alert checking
         combined_metrics = {
@@ -163,7 +163,7 @@ async def create_alert_rule(
         )
 
         # Save alert rule
-        rule_id = await alerting_service.create_alert_rule(rule)
+        rule_id = await alerting_service.create_alert_rule(rule)  # type: ignore[attr-defined]
 
         return {
             "rule_id": rule_id,

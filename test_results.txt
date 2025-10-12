@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/perf/mtproto_performance_test.py ____________
+tests/perf/mtproto_performance_test.py:17: in <module>
+    from apps.mtproto.config import MTProtoSettings
+apps/mtproto/__init__.py:3: in <module>
+    from .config import MTProtoSettings
+apps/mtproto/config.py:5: in <module>
+    class MTProtoSettings(BaseSettings):
+apps/mtproto/config.py:160: in MTProtoSettings
+    if os.getenv("ENVIRONMENT") != "development"
+       ^^
+E   NameError: name 'os' is not defined
+=========================== short test summary info ============================
+ERROR tests/perf/mtproto_performance_test.py - NameError: name 'os' is not defined
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!

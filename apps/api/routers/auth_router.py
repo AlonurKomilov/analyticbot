@@ -12,7 +12,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
 
 from apps.api.auth_utils import auth_utils
-from apps.api.middleware.auth import get_current_user, get_security_manager, get_user_repository
+from apps.api.middleware.auth import (
+    get_current_user,
+    get_security_manager,
+    get_user_repository,
+)
 
 # ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
 # ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
@@ -35,7 +39,9 @@ from core.security_engine.mfa import MFAManager
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/auth", tags=["Authentication"], responses={404: {"description": "Not found"}}
+    prefix="/auth",
+    tags=["Authentication"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -95,7 +101,8 @@ async def login(
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Create User object for SecurityManager - Updated for new role system
@@ -119,7 +126,8 @@ async def login(
         # Verify password
         if not user.verify_password(login_data.password):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Check if user account is active
@@ -164,7 +172,8 @@ async def login(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
-    register_data: RegisterRequest, user_repo: UserRepository = Depends(get_user_repository)
+    register_data: RegisterRequest,
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
@@ -180,7 +189,8 @@ async def register(
         existing_user = await user_repo.get_user_by_email(register_data.email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
             )
 
         # Check if username already exists
@@ -235,7 +245,8 @@ async def register(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )
 
 
@@ -252,7 +263,11 @@ async def refresh_token(
         # Validate refresh token and get new access token
         new_access_token = auth_utils.refresh_access_token(refresh_token)
 
-        return {"access_token": new_access_token, "token_type": "bearer", "expires_in": 30 * 60}
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60,
+        }
 
     except Exception as e:
         logger.warning(f"Token refresh failed: {str(e)}")
@@ -286,7 +301,9 @@ async def logout(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_profile(current_user: dict[str, Any] = Depends(get_current_user)):
+async def get_current_user_profile(
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
     """
     Get current user's profile information
     """
@@ -396,7 +413,8 @@ async def reset_password(
         reset_data = get_security_manager().verify_password_reset_token(request.token)
         if not reset_data:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
             )
 
         user_email = reset_data["email"]
@@ -433,15 +451,14 @@ async def reset_password(
     except Exception as e:
         logger.error(f"Reset password error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Password reset failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset failed",
         )
 
 
 # MFA Management Models
 class MFASetupRequest(BaseModel):
     """MFA setup initiation request"""
-
-    pass
 
 
 class MFAVerifySetupRequest(BaseModel):
@@ -498,7 +515,8 @@ async def get_mfa_status(
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MFA status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MFA status",
         )
 
 
@@ -564,5 +582,6 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy",
         )

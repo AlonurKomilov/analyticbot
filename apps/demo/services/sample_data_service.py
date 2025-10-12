@@ -71,11 +71,13 @@ class SampleDataService:
             "summary": {
                 "total_views": total_views,
                 "avg_engagement": round(avg_engagement, 2),
-                "trend": "increasing"
-                if trend_factor > 1
-                else "stable"
-                if trend_factor == 1
-                else "decreasing",
+                "trend": (
+                    "increasing"
+                    if trend_factor > 1
+                    else "stable"
+                    if trend_factor == 1
+                    else "decreasing"
+                ),
                 "best_performing_time": "19:00-21:00",
                 "peak_day": "Tuesday",
                 "growth_rate": round((trend_factor - 1) * 100, 1),
@@ -132,7 +134,7 @@ class SampleDataService:
             performance_score = max(70, 98 - (i * 2) + random.randint(-5, 5))
 
             post = {
-                "id": f"post_{channel_id}_{i+1}",
+                "id": f"post_{channel_id}_{i + 1}",
                 "title": f"{sample_topics[i % len(sample_topics)]}",
                 "content": f"Detailed analysis and insights about {sample_topics[i % len(sample_topics)].lower()}. "
                 f"This post generated significant engagement with our community and sparked "
@@ -164,7 +166,15 @@ class SampleDataService:
         # Generate realistic posting recommendations
         optimal_windows = []
 
-        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        days = [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ]
         base_scores = [8.2, 9.1, 8.8, 9.4, 8.7, 7.5, 7.8]  # Realistic weekly pattern
 
         for day, base_score in zip(days, base_scores, strict=False):
@@ -172,9 +182,9 @@ class SampleDataService:
             primary_hour = random.choice([9, 12, 18, 19, 20, 21])
             secondary_hour = random.choice([8, 10, 13, 17, 22]) if random.random() > 0.3 else None
 
-            times = [f"{primary_hour:02d}:00-{primary_hour+2:02d}:00"]
+            times = [f"{primary_hour:02d}:00-{primary_hour + 2:02d}:00"]
             if secondary_hour and secondary_hour != primary_hour:
-                times.append(f"{secondary_hour:02d}:00-{secondary_hour+2:02d}:00")
+                times.append(f"{secondary_hour:02d}:00-{secondary_hour + 2:02d}:00")
 
             optimal_windows.append(
                 {
@@ -194,7 +204,12 @@ class SampleDataService:
             "optimal_posting_windows": optimal_windows,
             "peak_engagement_time": peak_time,
             "audience_activity_pattern": random.choice(
-                ["evening_focused", "business_hours_active", "mixed_schedule", "global_audience"]
+                [
+                    "evening_focused",
+                    "business_hours_active",
+                    "mixed_schedule",
+                    "global_audience",
+                ]
             ),
             "confidence_level": "high",
             "data_points_analyzed": random.randint(2000, 8000),
@@ -343,7 +358,7 @@ class SampleDataService:
 
         from apps.demo.config import demo_config
 
-        quality = demo_config.get_demo_quality_level()
+        demo_config.get_demo_quality_level()
 
         # Generate different data based on demo type
         base_data = {
@@ -392,7 +407,10 @@ class SampleDataService:
                 },
             ]
         elif demo_type == "limited":
-            base_data["user"]["features_available"] = ["Basic Analytics", "Sample Reports"]
+            base_data["user"]["features_available"] = [
+                "Basic Analytics",
+                "Sample Reports",
+            ]
             # Generate basic sample data
             base_data["channels"] = [
                 {
@@ -429,14 +447,15 @@ class SampleDataService:
         # Add recent analytics summary
         base_data["recent_analytics"] = {
             "total_views": sum(c["subscribers"] for c in base_data["channels"]) * 2,
-            "avg_engagement": sum(c["engagement"] for c in base_data["channels"])
-            / len(base_data["channels"])
-            if base_data["channels"]
-            else 0,
+            "avg_engagement": (
+                sum(c["engagement"] for c in base_data["channels"]) / len(base_data["channels"])
+                if base_data["channels"]
+                else 0
+            ),
             "growth_trend": "positive",
-            "top_performing_channel": base_data["channels"][0]["name"]
-            if base_data["channels"]
-            else "N/A",
+            "top_performing_channel": (
+                base_data["channels"][0]["name"] if base_data["channels"] else "N/A"
+            ),
         }
 
         # Add AI insights preview
@@ -455,7 +474,11 @@ class SampleDataService:
                 "message": f"You're viewing a {demo_type} demo experience",
                 "action": "Explore all features in the demo showcase",
             },
-            {"type": "success", "message": "Demo data loaded successfully", "action": None},
+            {
+                "type": "success",
+                "message": "Demo data loaded successfully",
+                "action": None,
+            },
         ]
 
         return base_data

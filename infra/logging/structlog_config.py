@@ -261,7 +261,10 @@ def performance_context(operation_name: str, logger=None):
     except Exception as e:
         duration_ms = (time.time() - start_time) * 1000
         logger.error(
-            "Operation failed", operation=operation_name, duration_ms=duration_ms, error=str(e)
+            "Operation failed",
+            operation=operation_name,
+            duration_ms=duration_ms,
+            error=str(e),
         )
         raise
     else:

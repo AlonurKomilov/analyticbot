@@ -70,7 +70,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error fetching channels: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channels"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to fetch channels",
             )
 
     async def create_channel(self, channel_data: ChannelCreate) -> ChannelResponse:
@@ -104,7 +105,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error creating channel: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create channel",
             )
 
     async def get_channel(self, channel_id: int) -> ChannelResponse:
@@ -137,7 +139,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error getting channel {channel_id}: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get channel",
             )
 
     async def delete_channel(self, channel_id: int) -> dict:
@@ -170,7 +173,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error deleting channel {channel_id}: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete channel",
             )
 
     async def get_user_channels(self, user_id: int) -> list[ChannelResponse]:
@@ -222,7 +226,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error getting all channels for admin: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get channels"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to get channels",
             )
 
     async def admin_delete_channel(self, channel_id: int) -> dict:
@@ -233,14 +238,18 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error deleting channel {channel_id}: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete channel",
             )
 
     async def suspend_channel(self, channel_id: int) -> dict:
         """Suspend a channel"""
         try:
             await self.core_service.update_channel_status(channel_id, is_active=False)
-            return {"message": "Channel suspended successfully", "channel_id": channel_id}
+            return {
+                "message": "Channel suspended successfully",
+                "channel_id": channel_id,
+            }
         except Exception as e:
             self.logger.error(f"Error suspending channel {channel_id}: {e}")
             raise HTTPException(
@@ -252,7 +261,10 @@ class ChannelManagementService:
         """Unsuspend a channel"""
         try:
             await self.core_service.update_channel_status(channel_id, is_active=True)
-            return {"message": "Channel unsuspended successfully", "channel_id": channel_id}
+            return {
+                "message": "Channel unsuspended successfully",
+                "channel_id": channel_id,
+            }
         except Exception as e:
             self.logger.error(f"Error unsuspending channel {channel_id}: {e}")
             raise HTTPException(
@@ -268,7 +280,8 @@ class ChannelManagementService:
         except Exception as e:
             self.logger.error(f"Error updating channel {channel_id}: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update channel",
             )
 
     async def get_channel_status(self, channel_id: int) -> dict:
@@ -279,7 +292,7 @@ class ChannelManagementService:
                 "channel_id": channel_id,
                 "is_active": channel.is_active,
                 "status": "active" if channel.is_active else "suspended",
-                "last_updated": channel.updated_at if hasattr(channel, "updated_at") else None,
+                "last_updated": (channel.updated_at if hasattr(channel, "updated_at") else None),
             }
         except Exception as e:
             self.logger.error(f"Error getting channel status {channel_id}: {e}")

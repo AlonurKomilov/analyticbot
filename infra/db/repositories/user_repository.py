@@ -64,7 +64,7 @@ class AsyncpgUserRepository(IUserRepository):
 
         query = f"""
             UPDATE users
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE id = ${param_count}
         """
         values.append(user_id)

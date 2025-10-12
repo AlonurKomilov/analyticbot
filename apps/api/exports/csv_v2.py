@@ -3,7 +3,7 @@ import io
 import logging
 from datetime import datetime
 
-from apps.bot.clients.analytics_client import (
+from apps.shared.clients.analytics_client import (
     GrowthResponse,
     OverviewResponse,
     ReachResponse,

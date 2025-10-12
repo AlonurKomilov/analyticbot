@@ -9,7 +9,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 
 logger = logging.getLogger(__name__)
 

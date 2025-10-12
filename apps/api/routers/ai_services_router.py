@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from apps.api.middleware.auth import get_current_user_id
-from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+from apps.shared.adapters import create_bot_ml_facade
 
 # ✅ CLEAN ARCHITECTURE: Use apps cache abstraction instead of direct infra import
 from apps.shared.cache import cache_result

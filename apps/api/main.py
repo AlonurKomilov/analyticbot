@@ -28,8 +28,8 @@ from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
-from apps.bot.api.content_protection_router import router as content_protection_router
-from apps.bot.api.payment_router import router as payment_router
+from apps.shared.api.content_protection_router import router as content_protection_router
+from apps.shared.api.payment_router import router as payment_router
 
 # ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
 from apps.shared.di import close_container, get_container

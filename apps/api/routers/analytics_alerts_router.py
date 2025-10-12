@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from apps.api.middleware.auth import get_current_user
 
 # Services
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 from apps.bot.services.alerting_service import AlertingService
 from apps.shared.models.alerts import AlertEvent, AlertRule
 
@@ -67,9 +67,9 @@ def get_analytics_client() -> AnalyticsClient:
 
 def get_alerting_service() -> AlertingService:
     """Get alerting service"""
-    from apps.bot.container import Container
+    from apps.shared.unified_di import get_container
 
-    container = Container()
+    container = get_container()
     return container.alerting_service()
 
 

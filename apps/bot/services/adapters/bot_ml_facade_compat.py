@@ -5,7 +5,7 @@ DEPRECATED: This module is maintained for backward compatibility only.
 New code should import from apps.shared.adapters instead.
 
 Moved to apps.shared.adapters.ml_facade as part of Phase 2 Option B
-to break API→Bot cross-dependencies.
+to break API→Bot cross-dependencies and enable shared access.
 """
 
 # Import from shared location for backward compatibility

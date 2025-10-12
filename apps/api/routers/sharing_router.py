@@ -17,7 +17,7 @@ from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
 )
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings

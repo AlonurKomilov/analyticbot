@@ -13,7 +13,7 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from apps.api.exports.csv_v2 import CSVExporter
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings

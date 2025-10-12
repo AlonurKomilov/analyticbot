@@ -19,7 +19,7 @@ from apps.api.middleware.auth import get_current_user
 
 # Schemas
 # Services
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 
 logger = logging.getLogger(__name__)
 

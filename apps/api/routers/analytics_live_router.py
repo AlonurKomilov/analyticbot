@@ -14,7 +14,7 @@ from apps.api.deps import get_analytics_fusion_service
 from apps.api.middleware.auth import get_current_user
 
 # Services
-from apps.bot.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import AnalyticsClient
 from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)

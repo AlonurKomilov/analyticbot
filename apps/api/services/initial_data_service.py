@@ -55,23 +55,32 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
         return InitialDataResponse(
             user=User(
                 id=user["id"],
-                telegram_id=user["telegram_id"],
                 username=user.get("username"),
-                full_name=user.get("full_name"),
-                email=user.get("email"),
             ),
-            plan=Plan(**plan) if plan else None,
+            plan=Plan(
+                name=plan.get("name", "Free"),
+                max_channels=plan.get("channels_limit", 5),
+                max_posts_per_month=plan.get("posts_limit", 100),
+            ) if plan else None,
             channels=[
                 Channel(
                     id=ch["id"],
-                    name=ch["name"],
+                    title=ch.get("name", ch.get("title", "Unknown")),
                     username=ch.get("username"),
-                    subscriber_count=ch.get("subscriber_count", 0),
-                    is_active=ch.get("is_active", True),
                 )
                 for ch in channels
             ],
-            scheduled_posts=[ScheduledPost(**post) for post in scheduled_posts],
+            scheduled_posts=[
+                ScheduledPost(
+                    id=post["id"],
+                    channel_id=post["channel_id"],
+                    scheduled_at=post["scheduled_at"],
+                    text=post.get("text"),
+                    media_id=post.get("media_id"),
+                    media_type=post.get("media_type"),
+                    buttons=post.get("buttons"),
+                ) for post in scheduled_posts
+            ],
             features=features,
         )
 

@@ -291,10 +291,10 @@ async def get_alert_history(
             channel_id=str(channel_id), from_date=from_date, to_date=to_date
         )
 
-        # Analyze alert types
+        # Analyze alert types by rule_id (AlertEvent doesn't have alert_type)
         alert_types = {}
         for alert in alerts:
-            alert_type_name = alert.alert_type
+            alert_type_name = alert.rule_id
             alert_types[alert_type_name] = alert_types.get(alert_type_name, 0) + 1
 
         return AlertHistoryResponse(

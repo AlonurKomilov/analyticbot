@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from apps.shared.models.alerts import AlertEvent
+from apps.shared.models.alerts import AlertEvent, AlertRule, AlertNotification
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +208,7 @@ class AlertingService:
         self.logger.info(f"Alert {alert_id} acknowledged by user {user_id}")
         return True
 
-    async def create_alert_rule(self, rule: "AlertRule") -> str:
+    async def create_alert_rule(self, rule: AlertRule) -> str:
         """
         Create a new alert rule
 
@@ -222,7 +222,7 @@ class AlertingService:
         self.logger.info(f"Creating alert rule for channel {rule.channel_id}")
         return rule.id
 
-    async def get_channel_alert_rules(self, channel_id: str) -> list["AlertRule"]:
+    async def get_channel_alert_rules(self, channel_id: str) -> list[AlertRule]:
         """
         Get all alert rules for a specific channel
 
@@ -311,7 +311,7 @@ class AlertingService:
             "alert_trend": "stable",
         }
 
-    async def send_alert_notification(self, notification: "AlertNotification") -> bool:
+    async def send_alert_notification(self, notification: AlertNotification) -> bool:
         """
         Send an alert notification
 

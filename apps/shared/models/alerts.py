@@ -34,3 +34,17 @@ class AlertRule(BaseModel):
     threshold: float
     enabled: bool
     description: str
+
+
+class AlertNotification(BaseModel):
+    """Alert notification model for sending alerts"""
+
+    id: str
+    rule_id: str
+    title: str
+    message: str
+    triggered_value: float
+    threshold: float
+    channel_id: str
+    timestamp: datetime
+    severity: str  # 'info', 'warning', 'error', 'success'

@@ -70,7 +70,10 @@ def get_alerting_service() -> AlertingService:
     from apps.shared.unified_di import get_container
 
     container = get_container()
-    return container.alerting_service()
+    service = container.alerting_service()
+    if service is None:
+        raise RuntimeError("AlertingService not available in DI container")
+    return service
 
 
 # === ALERT CHECKING ===
@@ -150,16 +153,15 @@ async def create_alert_rule(
     - Alert severity levels
     """
     try:
-        # Create AlertRule object
+        # Create AlertRule object with correct field names
         rule = AlertRule(
+            id=f"rule-{channel_id}-{int(datetime.utcnow().timestamp())}",
             channel_id=str(channel_id),
-            rule_name=alert_rule.rule_name,
-            metric_type=alert_rule.metric_type,
-            threshold_value=alert_rule.threshold_value,
-            comparison=alert_rule.comparison,
+            metric=alert_rule.metric_type,
+            condition=alert_rule.comparison,
+            threshold=alert_rule.threshold_value,
             enabled=alert_rule.enabled,
-            created_by=current_user["id"],
-            notification_channels=alert_rule.notification_channels,
+            description=alert_rule.rule_name,
         )
 
         # Save alert rule
@@ -212,7 +214,7 @@ async def update_alert_rule(
     """Update an existing alert rule"""
     try:
         success = await alerting_service.update_alert_rule(
-            rule_id=rule_id, channel_id=str(channel_id), updates=alert_rule.dict()
+            rule_id=rule_id, updates=alert_rule.dict()
         )
 
         if not success:
@@ -284,9 +286,9 @@ async def get_alert_history(
         from_date = datetime.utcnow() - timedelta(days=period)
         to_date = datetime.utcnow()
 
-        # Get alert history
+        # Get alert history (alert_type filter not supported yet)
         alerts = await alerting_service.get_alert_history(
-            channel_id=str(channel_id), from_date=from_date, to_date=to_date, alert_type=alert_type
+            channel_id=str(channel_id), from_date=from_date, to_date=to_date
         )
 
         # Analyze alert types
@@ -332,7 +334,7 @@ async def get_alert_statistics(
 
         # Get alert statistics
         stats = await alerting_service.get_alert_statistics(
-            channel_id=str(channel_id), from_date=from_date
+            channel_id=str(channel_id), period_days=period
         )
 
         return {
@@ -359,20 +361,24 @@ async def test_alert_notification(
 ):
     """Test alert notification delivery"""
     try:
-        # Create test alert
-        test_alert = AlertEvent(
-            channel_id=str(channel_id),
-            alert_type="test",
-            severity="info",
+        # Create test notification with correct model
+        from apps.shared.models.alerts import AlertNotification
+
+        test_notification = AlertNotification(
+            id=f"test-{int(datetime.utcnow().timestamp())}",
+            rule_id="test-rule",
+            title="Test Alert",
             message="This is a test alert notification",
-            metric_value=0,
-            threshold_value=0,
+            triggered_value=0.0,
+            threshold=0.0,
+            channel_id=str(channel_id),
             timestamp=datetime.utcnow(),
+            severity="info",
         )
 
         # Send test notification
         success = await alerting_service.send_alert_notification(
-            alert=test_alert, notification_channel=notification_channel
+            notification=test_notification
         )
 
         return {

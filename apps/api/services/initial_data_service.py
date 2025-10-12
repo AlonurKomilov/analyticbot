@@ -49,26 +49,29 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
         # Get feature flags based on user plan and configuration
         features = await _get_user_features(user_id, plan)
 
+        # Convert dicts to Pydantic models
+        from apps.shared.models.twa import User, Plan, Channel, ScheduledPost
+
         return InitialDataResponse(
-            user={
-                "id": user["id"],
-                "telegram_id": user["telegram_id"],
-                "username": user.get("username"),
-                "full_name": user.get("full_name"),
-                "email": user.get("email"),
-            },
-            plan=plan,
+            user=User(
+                id=user["id"],
+                telegram_id=user["telegram_id"],
+                username=user.get("username"),
+                full_name=user.get("full_name"),
+                email=user.get("email"),
+            ),
+            plan=Plan(**plan) if plan else None,
             channels=[
-                {
-                    "id": ch["id"],
-                    "name": ch["name"],
-                    "username": ch.get("username"),
-                    "subscriber_count": ch.get("subscriber_count", 0),
-                    "is_active": ch.get("is_active", True),
-                }
+                Channel(
+                    id=ch["id"],
+                    name=ch["name"],
+                    username=ch.get("username"),
+                    subscriber_count=ch.get("subscriber_count", 0),
+                    is_active=ch.get("is_active", True),
+                )
                 for ch in channels
             ],
-            scheduled_posts=scheduled_posts,
+            scheduled_posts=[ScheduledPost(**post) for post in scheduled_posts],
             features=features,
         )
 

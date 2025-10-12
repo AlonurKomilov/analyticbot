@@ -65,12 +65,12 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_alerting_service() -> AlertingService:  # type: ignore[return]
+def get_alerting_service() -> AlertingService:
     """Get alerting service"""
     from apps.shared.unified_di import get_container
 
     container = get_container()
-    return container.alerting_service()  # type: ignore[return-value]
+    return container.alerting_service()
 
 
 # === ALERT CHECKING ===
@@ -163,7 +163,7 @@ async def create_alert_rule(
         )
 
         # Save alert rule
-        rule_id = await alerting_service.create_alert_rule(rule)  # type: ignore[attr-defined]
+        rule_id = await alerting_service.create_alert_rule(rule)
 
         return {
             "rule_id": rule_id,

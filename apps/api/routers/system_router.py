@@ -142,18 +142,20 @@ async def create_scheduled_post(
     - Scheduled post confirmation with ID and timing
     """
     try:
-        scheduled_post = await schedule_service.schedule_post(  # type: ignore[attr-defined]
-            user_id=request.user_id,
-            channel_id=request.channel_id,
-            message=request.message,
-            scheduled_time=request.scheduled_time,
-            media_type=request.media_type,
-            media_url=request.media_url,
+        # Use correct service method: create_scheduled_post
+        scheduled_post = await schedule_service.create_scheduled_post(
+            title=f"Scheduled post for {request.channel_id}",
+            content=request.message,
+            channel_id=str(request.channel_id),
+            user_id=str(request.user_id),
+            scheduled_at=request.scheduled_time,
+            media_urls=[request.media_url] if request.media_url else [],
+            media_types=[request.media_type] if request.media_type else [],
         )
 
         return {
             "success": True,
-            "post_id": scheduled_post["id"],
+            "post_id": str(scheduled_post.id),
             "scheduled_time": request.scheduled_time.isoformat(),
             "message": "Post scheduled successfully",
             "channel_id": request.channel_id,
@@ -179,21 +181,25 @@ async def get_scheduled_post(
     - Scheduled post details and status
     """
     try:
-        post = await schedule_service.get_scheduled_post(post_id)  # type: ignore[attr-defined]
+        from uuid import UUID
+
+        # Convert int to UUID and use correct service method: get_post
+        post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(post_id)
+        post = await schedule_service.get_post(post_uuid)
 
         if not post:
             raise HTTPException(status_code=404, detail="Scheduled post not found")
 
         return {
-            "id": post["id"],
-            "user_id": post["user_id"],
-            "channel_id": post["channel_id"],
-            "message": post["message"],
-            "scheduled_time": post["scheduled_time"],
-            "status": post["status"],
-            "created_at": post["created_at"],
-            "media_type": post.get("media_type"),
-            "media_url": post.get("media_url"),
+            "id": str(post.id),
+            "user_id": post.user_id,
+            "channel_id": post.channel_id,
+            "message": post.content,
+            "scheduled_time": post.scheduled_at.isoformat(),
+            "status": post.status.value,
+            "created_at": post.created_at.isoformat() if post.created_at else None,
+            "media_type": post.media_types[0] if post.media_types else None,
+            "media_url": post.media_urls[0] if post.media_urls else None,
         }
     except HTTPException:
         raise
@@ -218,21 +224,22 @@ async def get_user_scheduled_posts(
     - List of user's scheduled posts
     """
     try:
-        posts = await schedule_service.get_user_scheduled_posts(user_id)  # type: ignore[attr-defined]
+        # Use correct service method: get_user_posts
+        posts = await schedule_service.get_user_posts(user_id=str(user_id))
 
         return {
             "user_id": user_id,
             "total_posts": len(posts),
             "posts": [
                 {
-                    "id": post["id"],
-                    "channel_id": post["channel_id"],
-                    "message": post["message"][:100] + "..."
-                    if len(post["message"]) > 100
-                    else post["message"],
-                    "scheduled_time": post["scheduled_time"],
-                    "status": post["status"],
-                    "created_at": post["created_at"],
+                    "id": str(post.id),
+                    "channel_id": post.channel_id,
+                    "message": post.content[:100] + "..."
+                    if len(post.content) > 100
+                    else post.content,
+                    "scheduled_time": post.scheduled_at.isoformat(),
+                    "status": post.status.value,
+                    "created_at": post.created_at.isoformat() if post.created_at else None,
                 }
                 for post in posts
             ],
@@ -258,7 +265,11 @@ async def delete_scheduled_post(
     - Deletion confirmation
     """
     try:
-        result = await schedule_service.delete_scheduled_post(post_id)  # type: ignore[attr-defined]
+        from uuid import UUID
+
+        # Convert int to UUID and use correct service method: delete_post
+        post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(post_id)
+        result = await schedule_service.delete_post(post_uuid)
 
         if not result:
             raise HTTPException(status_code=404, detail="Scheduled post not found")
@@ -331,12 +342,7 @@ async def get_service_information():
         return {
             "analytics_service": {
                 "name": analytics_service.get_service_name(),
-                "demo_mode_enabled": False,  # type: ignore[attr-defined]
-                "using_mock_analytics": False,  # type: ignore[attr-defined]
-                "configuration": {
-                    "strategy": "production",
-                    "mock_delay_ms": 0,
-                },
+                "service_type": "production",
             },
             "system_info": {
                 "environment": "production" if not settings.DEBUG else "development",

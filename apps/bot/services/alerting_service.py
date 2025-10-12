@@ -207,3 +207,122 @@ class AlertingService:
         # TODO: Implement alert acknowledgment logic
         self.logger.info(f"Alert {alert_id} acknowledged by user {user_id}")
         return True
+
+    async def create_alert_rule(self, rule: "AlertRule") -> str:
+        """
+        Create a new alert rule
+
+        Args:
+            rule: AlertRule object with rule configuration
+
+        Returns:
+            Rule ID of the created rule
+        """
+        # TODO: Implement persistent alert rule storage
+        self.logger.info(f"Creating alert rule for channel {rule.channel_id}")
+        return rule.id
+
+    async def get_channel_alert_rules(self, channel_id: str) -> list["AlertRule"]:
+        """
+        Get all alert rules for a specific channel
+
+        Args:
+            channel_id: ID of the channel
+
+        Returns:
+            List of AlertRule objects
+        """
+        # TODO: Implement persistent alert rule retrieval
+        self.logger.info(f"Getting alert rules for channel {channel_id}")
+        return []
+
+    async def update_alert_rule(self, rule_id: str, updates: dict[str, Any]) -> bool:
+        """
+        Update an existing alert rule
+
+        Args:
+            rule_id: ID of the rule to update
+            updates: Dictionary of fields to update
+
+        Returns:
+            True if updated successfully
+        """
+        # TODO: Implement persistent alert rule update
+        self.logger.info(f"Updating alert rule {rule_id}")
+        return True
+
+    async def delete_alert_rule(self, rule_id: str, channel_id: str) -> bool:
+        """
+        Delete an alert rule
+
+        Args:
+            rule_id: ID of the rule to delete
+            channel_id: ID of the channel
+
+        Returns:
+            True if deleted successfully
+        """
+        # TODO: Implement persistent alert rule deletion
+        self.logger.info(f"Deleting alert rule {rule_id} for channel {channel_id}")
+        return True
+
+    async def get_alert_history(
+        self,
+        channel_id: str,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+        limit: int = 100,
+    ) -> list[AlertEvent]:
+        """
+        Get alert history for a channel
+
+        Args:
+            channel_id: ID of the channel
+            from_date: Start date for history
+            to_date: End date for history
+            limit: Maximum number of alerts to return
+
+        Returns:
+            List of AlertEvent objects
+        """
+        # TODO: Implement persistent alert history retrieval
+        self.logger.info(f"Getting alert history for channel {channel_id}")
+        return []
+
+    async def get_alert_statistics(
+        self, channel_id: str, period_days: int = 30
+    ) -> dict[str, Any]:
+        """
+        Get alert statistics for a channel
+
+        Args:
+            channel_id: ID of the channel
+            period_days: Number of days to analyze
+
+        Returns:
+            Dictionary with alert statistics
+        """
+        # TODO: Implement alert statistics calculation
+        self.logger.info(f"Getting alert statistics for channel {channel_id}")
+        return {
+            "total_alerts": 0,
+            "alerts_by_severity": {"info": 0, "warning": 0, "success": 0},
+            "most_common_alert_type": None,
+            "alert_trend": "stable",
+        }
+
+    async def send_alert_notification(self, notification: "AlertNotification") -> bool:
+        """
+        Send an alert notification
+
+        Args:
+            notification: AlertNotification object
+
+        Returns:
+            True if sent successfully
+        """
+        # TODO: Implement notification sending (email, telegram, etc.)
+        self.logger.info(
+            f"Sending alert notification for channel {notification.channel_id}: {notification.title}"
+        )
+        return True

@@ -376,8 +376,37 @@ async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
     return AsyncpgStatsRawRepository(pool)  # type: ignore
 
 
+async def get_telethon_client():
+    """Get Telethon Telegram client with MTProto configuration"""
+    from infra.tg.telethon_client import TelethonTGClient
+    from apps.mtproto.config import MTProtoSettings
+
+    # Load MTProto settings from environment
+    settings = MTProtoSettings()
+
+    # Create and return Telethon client
+    client = TelethonTGClient(settings)
+
+    # Start the client if MTProto is enabled
+    if settings.MTPROTO_ENABLED:
+        await client.start()
+
+    return client
+
+
+async def get_telegram_validation_service():
+    """Get Telegram validation service with Telethon client dependency"""
+    from apps.api.services.telegram_validation_service import TelegramValidationService
+
+    # Get Telethon client
+    telethon_client = await get_telethon_client()
+
+    # Create and return validation service
+    return TelegramValidationService(telethon_client)
+
+
 async def get_channel_management_service():
-    """Get channel management service with proper dependencies"""
+    """Get channel management service with proper dependencies including Telegram validation"""
     from apps.api.services.channel_management_service import ChannelManagementService
     from core.services.channel_service import ChannelService
 
@@ -394,8 +423,17 @@ async def get_channel_management_service():
     # Create core service
     core_service = ChannelService(channel_repo)
 
-    # Create and return application service
-    return ChannelManagementService(core_service)
+    # Try to get Telegram validation service (optional dependency)
+    telegram_service = None
+    try:
+        telegram_service = await get_telegram_validation_service()
+        logger.info("Telegram validation service enabled for channel management")
+    except Exception as e:
+        logger.warning(f"Telegram validation service not available: {e}")
+        logger.info("Channel management will work without Telegram validation")
+
+    # Create and return application service with optional Telegram service
+    return ChannelManagementService(core_service, telegram_service)
 
 
 # Cleanup function

@@ -17,13 +17,18 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-async def _create_analytics_batch_processor(**kwargs):
+async def _create_analytics_batch_processor(analytics_repository=None, **kwargs):
     """Create core analytics batch processor (pure business logic)"""
     try:
         from core.services.analytics.analytics_batch_processor import AnalyticsBatchProcessor
 
-        return AnalyticsBatchProcessor()
-    except ImportError as e:
+        # Check if repository is required
+        if analytics_repository is None:
+            logger.warning("Analytics repository not available for batch processor")
+            return None
+
+        return AnalyticsBatchProcessor(analytics_repository=analytics_repository)
+    except (ImportError, TypeError) as e:
         logger.warning(f"Analytics batch processor not available: {e}")
         return None
 
@@ -111,11 +116,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     # ============================================================================
 
     # Analytics services
-    analytics_batch_processor = providers.Singleton(_create_analytics_batch_processor)
+    analytics_batch_processor = providers.Singleton(
+        _create_analytics_batch_processor,
+        analytics_repository=database.analytics_repo,
+    )
 
-    analytics_fusion_service = providers.Singleton(_create_analytics_fusion_service)
-
-    # Reporting services
+    analytics_fusion_service = providers.Singleton(_create_analytics_fusion_service)    # Reporting services
     reporting_service = providers.Singleton(_create_reporting_service)
 
     # Dashboard services

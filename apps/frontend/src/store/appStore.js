@@ -187,23 +187,83 @@ export const useAppStore = create(
             }
         },
 
-        // Yangi kanal qo'shish
+        // Validate Telegram channel
+        validateChannel: async (username) => {
+            const operation = 'validateChannel';
+            try {
+                get().setLoading(operation, true);
+                get().clearError(operation);
+
+                // Ensure username starts with @
+                const channelUsername = username.startsWith('@') ? username : `@${username}`;
+
+                console.log('🔍 Validating Telegram channel:', channelUsername);
+
+                const validationResult = await apiClient.post('/analytics/channels/validate', {
+                    username: channelUsername
+                });
+
+                get().setLoading(operation, false);
+
+                if (validationResult.is_valid) {
+                    console.log('✅ Channel validated:', validationResult.title);
+                    return {
+                        success: true,
+                        data: validationResult
+                    };
+                } else {
+                    console.warn('❌ Channel validation failed:', validationResult.error_message);
+                    return {
+                        success: false,
+                        error: validationResult.error_message || 'Channel not found'
+                    };
+                }
+            } catch (error) {
+                console.error('❌ Channel validation error:', error);
+                ErrorHandler.handleError(error, {
+                    component: 'AppStore',
+                    action: 'validateChannel',
+                    username
+                });
+                get().setError(operation, error.message);
+                get().setLoading(operation, false);
+                return {
+                    success: false,
+                    error: error.message || 'Validation failed'
+                };
+            }
+        },
+
+        // Yangi kanal qo'shish (with Telegram validation)
         addChannel: async (channelUsername) => {
             const operation = 'addChannel';
             try {
                 get().setLoading(operation, true);
                 get().clearError(operation);
 
-                // Clean username and generate a telegram_id (temporary solution)
-                // In production, this should query Telegram API for real channel info
+                // Clean username
                 const cleanUsername = channelUsername.replace('@', '');
-                const temporaryTelegramId = Math.floor(Math.random() * 1000000000); // Temporary ID
+                const usernameWithAt = `@${cleanUsername}`;
 
+                console.log('📺 Adding channel:', usernameWithAt);
+
+                // Step 1: Validate with Telegram API first
+                const validation = await get().validateChannel(usernameWithAt);
+
+                if (!validation.success) {
+                    throw new Error(validation.error || 'Channel validation failed');
+                }
+
+                console.log('✅ Channel validated, creating in database...');
+
+                // Step 2: Create channel with real Telegram data
                 const newChannel = await apiClient.post('/channels', {
-                    name: cleanUsername,
-                    telegram_id: temporaryTelegramId,
-                    description: `Channel ${cleanUsername}`
+                    name: validation.data.title || cleanUsername,
+                    telegram_id: validation.data.telegram_id,
+                    description: validation.data.description || `Channel ${validation.data.title || cleanUsername}`
                 });
+
+                console.log('✅ Channel created successfully:', newChannel);
 
                 set((state) => ({
                     channels: [...state.channels, newChannel]
@@ -212,12 +272,14 @@ export const useAppStore = create(
                 get().setLoading(operation, false);
                 return newChannel;
             } catch (error) {
+                console.error('❌ Add channel error:', error);
                 ErrorHandler.handleError(error, {
                     component: 'AppStore',
                     action: 'addChannel',
                     channelUsername
                 });
                 get().setError(operation, error.message);
+                get().setLoading(operation, false);
                 throw error;
             }
         },

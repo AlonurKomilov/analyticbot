@@ -22,6 +22,10 @@ from apps.api.services.channel_management_service import (
     ChannelManagementService,
     ChannelResponse,
 )
+from apps.api.services.telegram_validation_service import (
+    ChannelValidationResult,
+    TelegramValidationService,
+)
 
 # ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
@@ -111,7 +115,64 @@ class ChannelUpdateRequest(BaseModel):
     settings: dict[str, Any] | None = None
 
 
+class ValidateChannelRequest(BaseModel):
+    """Request model for channel validation"""
+    username: str
+
+
 # === CHANNEL ENDPOINTS ===
+
+
+@router.post("/validate", response_model=ChannelValidationResult)
+async def validate_telegram_channel(
+    request_data: ValidateChannelRequest,
+    telegram_service: TelegramValidationService = Depends(),
+):
+    """
+    ## ✅ Validate Telegram Channel
+
+    Validate a Telegram channel by username and fetch metadata before creation.
+    This endpoint checks if the channel exists and returns its information.
+
+    **Authentication Required:**
+    - Valid JWT token in Authorization header
+
+    **Request Body:**
+    ```json
+    {
+        "username": "@channelname"
+    }
+    ```
+
+    **Returns:**
+    - Channel validation result with metadata (telegram_id, subscriber_count, etc.)
+    - Error message if validation fails
+
+    **Example Response:**
+    ```json
+    {
+        "is_valid": true,
+        "telegram_id": 1234567890,
+        "username": "channelname",
+        "title": "My Channel",
+        "subscriber_count": 1000,
+        "description": "Channel description",
+        "is_verified": false,
+        "is_scam": false
+    }
+    ```
+    """
+    try:
+        logger.info(f"Validating channel: {request_data.username}")
+        result = await telegram_service.validate_channel_by_username(request_data.username)
+        return result
+
+    except Exception as e:
+        logger.error(f"Failed to validate channel: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Validation failed: {str(e)}"
+        )
 
 
 @router.get("", response_model=list[ChannelListResponse])

@@ -39,9 +39,15 @@ class ChannelResponse(BaseModel):
 class ChannelManagementService:
     """Application service adapter for HTTP/REST channel operations"""
 
-    def __init__(self, core_channel_service: ChannelService):
-        """Initialize with core service dependency"""
+    def __init__(self, core_channel_service: ChannelService, telegram_validation_service=None):
+        """Initialize with core service dependency and optional Telegram validation
+
+        Args:
+            core_channel_service: Core domain service for channel operations
+            telegram_validation_service: Optional Telegram validation service for real channel validation
+        """
         self.core_service = core_channel_service
+        self.telegram_service = telegram_validation_service
         self.logger = logging.getLogger(self.__class__.__name__)
 
     async def get_channels_with_pagination(
@@ -77,6 +83,9 @@ class ChannelManagementService:
         """
         Create a new channel (HTTP interface)
 
+        If Telegram validation service is available, validates the channel first
+        and enriches data with real Telegram information.
+
         Args:
             channel_data: Pydantic model with channel data
 
@@ -84,9 +93,40 @@ class ChannelManagementService:
             Created channel as ChannelResponse
 
         Raises:
-            HTTPException: If creation fails
+            HTTPException: If creation fails or validation fails
         """
         try:
+            # If we have telegram service and telegram_id is temporary/missing, validate
+            if self.telegram_service and (channel_data.telegram_id <= 0 or channel_data.telegram_id > 1000000000):
+                self.logger.info(f"Validating channel via Telegram: {channel_data.name}")
+
+                # Try to extract username from name or description
+                username = channel_data.name
+                if not username.startswith("@"):
+                    username = f"@{username}"
+
+                try:
+                    # Validate with Telegram API
+                    validation_result = await self.telegram_service.validate_channel_by_username(username)
+
+                    if validation_result.is_valid:
+                        self.logger.info(f"Channel validated successfully: {validation_result.title}")
+                        # Use real Telegram data
+                        channel_data.telegram_id = validation_result.telegram_id
+                        channel_data.name = validation_result.title
+                        if validation_result.description:
+                            channel_data.description = validation_result.description
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Channel validation failed: {validation_result.error_message}"
+                        )
+
+                except Exception as telegram_error:
+                    self.logger.warning(f"Telegram validation failed: {telegram_error}")
+                    # Continue without validation in case of Telegram API issues
+                    self.logger.info("Proceeding with channel creation without Telegram validation")
+
             # Convert Pydantic model to domain data
             domain_data = ChannelData(
                 name=channel_data.name,
@@ -98,6 +138,8 @@ class ChannelManagementService:
             created_channel = await self.core_service.create_channel(domain_data)
             return self._map_domain_to_response(created_channel)
 
+        except HTTPException:
+            raise
         except ValueError as e:
             self.logger.error(f"Validation error creating channel: {e}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

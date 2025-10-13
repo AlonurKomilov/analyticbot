@@ -67,6 +67,10 @@ async def _create_bot_analytics_adapter(
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
 
+        # Only create if core service is available
+        if core_analytics_service is None:
+            return None
+
         return BotAnalyticsAdapter(
             batch_processor=core_analytics_service, bot=bot
         )
@@ -79,6 +83,10 @@ async def _create_bot_reporting_adapter(core_reporting_service=None, **kwargs):
     """Create bot reporting adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.reporting_adapter import BotReportingAdapter
+
+        # Only create if core service is available
+        if core_reporting_service is None:
+            return None
 
         return BotReportingAdapter(reporting_system=core_reporting_service)
     except ImportError as e:

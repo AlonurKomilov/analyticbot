@@ -91,16 +91,15 @@ async def show_alerts_options(callback: CallbackQuery) -> None:
             [InlineKeyboardButton(text="👁️ Views Alerts", callback_data="alert_subscribe:views")],
             [
                 InlineKeyboardButton(
-                    text="💫 Engagement Alerts", callback_data="alert_subscribe:engagement"
+                    text="💫 Engagement Alerts",
+                    callback_data="alert_subscribe:engagement",
                 )
             ],
         ]
         keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
 
         text = (
-            "🔔 **Alert Management**\n\n"
-            f"Channel: {channel_id}\n\n"
-            "Manage your alert subscriptions:"
+            f"🔔 **Alert Management**\n\nChannel: {channel_id}\n\nManage your alert subscriptions:"
         )
 
         success = await _safe_edit_message(callback, text, keyboard)

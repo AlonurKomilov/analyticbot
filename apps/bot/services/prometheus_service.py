@@ -68,7 +68,9 @@ class PrometheusService:
             registry=self.registry,
         )
         self.database_connections_active = Gauge(
-            "database_connections_active", "Active database connections", registry=self.registry
+            "database_connections_active",
+            "Active database connections",
+            registry=self.registry,
         )
         self.database_query_duration_seconds = Histogram(
             "database_query_duration_seconds",
@@ -105,16 +107,25 @@ class PrometheusService:
             "posts_scheduled", "Number of scheduled posts", registry=self.registry
         )
         self.posts_sent_total = Counter(
-            "posts_sent_total", "Total posts sent", ["channel_id"], registry=self.registry
+            "posts_sent_total",
+            "Total posts sent",
+            ["channel_id"],
+            registry=self.registry,
         )
         self.post_views_updated_total = Counter(
-            "post_views_updated_total", "Total post views updated", registry=self.registry
+            "post_views_updated_total",
+            "Total post views updated",
+            registry=self.registry,
         )
         self.system_memory_usage = Gauge(
-            "system_memory_usage_percent", "System memory usage percentage", registry=self.registry
+            "system_memory_usage_percent",
+            "System memory usage percentage",
+            registry=self.registry,
         )
         self.system_cpu_usage = Gauge(
-            "system_cpu_usage_percent", "System CPU usage percentage", registry=self.registry
+            "system_cpu_usage_percent",
+            "System CPU usage percentage",
+            registry=self.registry,
         )
         self.health_check_status = Gauge(
             "health_check_status",
@@ -291,9 +302,9 @@ async def collect_system_metrics():
             from apps.bot.di import configure_bot_container
 
             container = configure_bot_container()
-            channel_repo = container.channel_repo()
-            user_repo = container.user_repo()
-            scheduler_repo = container.schedule_repo()
+            container.channel_repo()
+            container.user_repo()
+            container.schedule_repo()
             # TODO: Implement count methods using clean architecture
             # For now, use placeholder values
             channels_count = 0  # await channel_repo.count()

@@ -99,7 +99,8 @@ async def create_share_link(
     valid_types = ["overview", "growth", "reach", "top_posts", "sources", "trending"]
     if report_type not in valid_types:
         raise HTTPException(
-            status_code=400, detail=f"Invalid report type. Must be one of: {valid_types}"
+            status_code=400,
+            detail=f"Invalid report type. Must be one of: {valid_types}",
         )
 
     try:
@@ -146,7 +147,10 @@ async def create_share_link(
         logger.info(f"Created share link {share_token} for {report_type}/{channel_id}")
 
         return ShareLinkResponse(
-            share_token=share_token, share_url=share_url, expires_at=expires_at, access_count=0
+            share_token=share_token,
+            share_url=share_url,
+            expires_at=expires_at,
+            access_count=0,
         )
 
     except aiohttp.ClientError as e:
@@ -228,7 +232,8 @@ async def access_shared_report(
                 csv_content = csv_exporter.trending_to_csv(data)  # type: ignore[arg-type]
             else:
                 raise HTTPException(
-                    status_code=400, detail=f"Unsupported report type for CSV: {report_type}"
+                    status_code=400,
+                    detail=f"Unsupported report type for CSV: {report_type}",
                 )
 
             filename = csv_exporter.generate_filename(report_type, channel_id, period)
@@ -259,7 +264,8 @@ async def access_shared_report(
                     png_bytes = chart_service.render_sources_chart(data)  # type: ignore[arg-type]
                 else:
                     raise HTTPException(
-                        status_code=400, detail=f"PNG format not supported for {report_type}"
+                        status_code=400,
+                        detail=f"PNG format not supported for {report_type}",
                     )
 
                 filename = f"{report_type}_{channel_id}_{period}d_shared.png"

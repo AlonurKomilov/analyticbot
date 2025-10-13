@@ -101,7 +101,7 @@ class BotMLFacadeService:
             # Get insights from ML coordinator
             insights = await self.ml_coordinator.get_ai_insights(
                 channel_id=channel_id,
-                narrative_style="conversational" if detail_level == "summary" else "executive",
+                narrative_style=("conversational" if detail_level == "summary" else "executive"),
                 days_analyzed=7 if detail_level == "summary" else 30,
             )
 
@@ -140,7 +140,10 @@ class BotMLFacadeService:
             return self._format_bot_response({"error": str(e)}, "Channel insights analysis")
 
     async def get_engagement_predictions_for_bot(
-        self, channel_id: int, content_preview: str | None = None, prediction_days: int = 7
+        self,
+        channel_id: int,
+        content_preview: str | None = None,
+        prediction_days: int = 7,
     ) -> dict[str, Any]:
         """
         Get engagement predictions formatted for bot
@@ -153,7 +156,10 @@ class BotMLFacadeService:
             return cached
 
         try:
-            prediction_data = {"channel_id": channel_id, "prediction_horizon": prediction_days}
+            prediction_data = {
+                "channel_id": channel_id,
+                "prediction_horizon": prediction_days,
+            }
 
             if content_preview:
                 prediction_data["content_preview"] = content_preview
@@ -302,7 +308,10 @@ class BotMLFacadeService:
             )
 
             insights, engagement, optimization = await asyncio.gather(
-                insights_task, engagement_task, optimization_task, return_exceptions=True
+                insights_task,
+                engagement_task,
+                optimization_task,
+                return_exceptions=True,
             )
 
             # Combine results
@@ -364,7 +373,10 @@ class BotMLFacadeService:
 
 # Factory function
 def create_bot_ml_facade(
-    data_access_service=None, analytics_service=None, config_manager=None, cache_service=None
+    data_access_service=None,
+    analytics_service=None,
+    config_manager=None,
+    cache_service=None,
 ) -> BotMLFacadeService:
     """
     Create bot ML facade with proper dependencies

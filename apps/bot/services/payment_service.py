@@ -27,7 +27,10 @@ from apps.bot.models.payment import (
     SubscriptionResponse,
     SubscriptionStatus,
 )
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
+from apps.bot.services.adapters.payment_adapter_factory import (
+    PaymentAdapterFactory,
+    PaymentGateway,
+)
 
 
 # Define PaymentRepository protocol for typing
@@ -183,9 +186,9 @@ class StripeAdapter(PaymentGatewayAdapter):
                     now + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365)
                 ).timestamp()
             ),
-            "trial_end": int((now + timedelta(days=trial_days)).timestamp())
-            if trial_days
-            else None,
+            "trial_end": (
+                int((now + timedelta(days=trial_days)).timestamp()) if trial_days else None
+            ),
             "customer": customer_id,
             "default_payment_method": payment_method_id,
         }
@@ -449,7 +452,9 @@ class PaymentService:
     """
 
     def __init__(
-        self, payment_repository: PaymentRepository, gateway: PaymentGateway | None = None
+        self,
+        payment_repository: PaymentRepository,
+        gateway: PaymentGateway | None = None,
     ):
         self.repository = payment_repository
         # Use new adapter factory pattern
@@ -502,7 +507,10 @@ class PaymentService:
         logger.info(f"Switched to {self.payment_adapter.get_adapter_name()} adapter")
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodCreate, provider: str | None = None
+        self,
+        user_id: int,
+        payment_method_data: PaymentMethodCreate,
+        provider: str | None = None,
     ) -> PaymentMethodResponse:
         """Create payment method with specified provider"""
         provider = provider or self.default_provider
@@ -521,7 +529,9 @@ class PaymentService:
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
-                    year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
+                    year=card.get("exp_year", 2025),
+                    month=card.get("exp_month", 12),
+                    day=1,
                 )
             method_id = await self.repository.create_payment_method(
                 user_id=user_id,
@@ -540,7 +550,7 @@ class PaymentService:
             return PaymentMethodResponse(
                 id=method_id,
                 user_id=user_id,
-                provider=PaymentProvider(provider) if isinstance(provider, str) else provider,
+                provider=(PaymentProvider(provider) if isinstance(provider, str) else provider),
                 method_type=payment_method_data.method_type,
                 last_four=payment_method_data.last_four,
                 brand=payment_method_data.brand,
@@ -573,7 +583,10 @@ class PaymentService:
         ]
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentCreate, idempotency_key: str | None = None
+        self,
+        user_id: int,
+        payment_data: PaymentCreate,
+        idempotency_key: str | None = None,
     ) -> PaymentResponse:
         """Process a one-time payment"""
         idempotency_key = idempotency_key or str(uuid4())
@@ -642,7 +655,9 @@ class PaymentService:
                 # Check if payment_id exists in the current scope
                 if "payment_id" in locals() and payment_id is not None:
                     await self.repository.update_payment_status(
-                        payment_id=payment_id, status=PaymentStatus.FAILED, failure_message=str(e)
+                        payment_id=payment_id,
+                        status=PaymentStatus.FAILED,
+                        failure_message=str(e),
                     )
             except NameError:
                 # payment_id was not defined, skip status update
@@ -708,7 +723,8 @@ class PaymentService:
                             trial_days=subscription_data.trial_days,
                         )
                     await self.repository.update_subscription_status(
-                        subscription_id=subscription_id, status=SubscriptionStatus.ACTIVE
+                        subscription_id=subscription_id,
+                        status=SubscriptionStatus.ACTIVE,
                     )
                 except Exception as e:
                     logger.error(f"Provider subscription creation failed: {e}")
@@ -825,15 +841,17 @@ class PaymentService:
         await self.repository.update_subscription_status(
             subscription_id=subscription["id"],
             status=SubscriptionStatus.CANCELED,
-            canceled_at=datetime.utcnow() if immediate else subscription["current_period_end"],
+            canceled_at=(datetime.utcnow() if immediate else subscription["current_period_end"]),
         )
 
         return {
             "success": True,
             "subscription_id": subscription["id"],
-            "canceled_at": datetime.utcnow().isoformat()
-            if immediate
-            else subscription["current_period_end"].isoformat(),
+            "canceled_at": (
+                datetime.utcnow().isoformat()
+                if immediate
+                else subscription["current_period_end"].isoformat()
+            ),
         }
 
     async def get_available_plans(self) -> list[dict[str, Any]]:

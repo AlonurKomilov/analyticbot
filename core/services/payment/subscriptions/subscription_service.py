@@ -68,7 +68,8 @@ class SubscriptionService(SubscriptionProtocol):
             validation_result = await self._validate_subscription_data(subscription_data)
             if not validation_result["is_valid"]:
                 return SubscriptionResult(
-                    success=False, error_message=f"Validation failed: {validation_result['errors']}"
+                    success=False,
+                    error_message=f"Validation failed: {validation_result['errors']}",
                 )
 
             # Get plan details
@@ -557,4 +558,8 @@ class SubscriptionService(SubscriptionProtocol):
                 "adapter_name": self.payment_adapter.get_adapter_name(),
             }
         except Exception as e:
-            return {"service": "SubscriptionService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "SubscriptionService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

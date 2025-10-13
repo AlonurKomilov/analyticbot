@@ -101,7 +101,8 @@ async def get_current_user(
     except Exception as e:
         logger.error(f"Unexpected authentication error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Authentication service error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service error",
         )
 
 
@@ -153,7 +154,9 @@ async def require_channel_access(
         )
 
 
-async def get_current_user_id(current_user: dict[str, Any] = Depends(get_current_user)) -> int:
+async def get_current_user_id(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> int:
     """
     Simple dependency to get just the user ID
 
@@ -358,7 +361,8 @@ async def require_analytics_permission(
 
     if NewPermission.VIEW_ANALYTICS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Analytics access permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Analytics access permission required",
         )
     return current_user
 
@@ -375,7 +379,8 @@ async def require_user_management_permission(
 
     if NewPermission.MANAGE_USERS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="User management permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User management permission required",
         )
     return current_user
 
@@ -389,7 +394,8 @@ async def require_admin_role_new(
     user_role = current_user.get("role", "user")
     if not is_administrative_role(user_role):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Administrative access required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrative access required",
         )
     return current_user
 

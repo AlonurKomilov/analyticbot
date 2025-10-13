@@ -14,13 +14,13 @@ from typing import Any
 import torch
 import torch.nn as nn
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     BatchData,
     ImportanceWeights,
     IncrementalLearningConfig,
     ModelEvaluation,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,10 @@ class ModelOperationsService:
             )
 
     async def save_model_state(
-        self, model: torch.nn.Module, context: LearningContext, checkpoint_name: str | None = None
+        self,
+        model: torch.nn.Module,
+        context: LearningContext,
+        checkpoint_name: str | None = None,
     ) -> bool:
         """
         Save model state to learning context.
@@ -452,7 +455,7 @@ class ModelOperationsService:
 
         if context.previous_model_state:
             # Calculate importance based on parameter change magnitude
-            current_state = model.state_dict()
+            model.state_dict()
 
             for name, param in model.named_parameters():
                 if name in context.previous_model_state:
@@ -475,5 +478,5 @@ class ModelOperationsService:
             "status": "healthy",
             "evaluation_types": ["accuracy", "loss", "performance"],
             "importance_methods": ["fisher", "gradient_based", "empirical"],
-            "torch_available": torch.cuda.is_available() if hasattr(torch, "cuda") else False,
+            "torch_available": (torch.cuda.is_available() if hasattr(torch, "cuda") else False),
         }

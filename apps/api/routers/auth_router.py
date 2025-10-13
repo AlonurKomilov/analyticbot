@@ -231,7 +231,7 @@ async def register(
             username=register_data.username,
             full_name=register_data.full_name,
             role=ApplicationRole.USER.value,  # Use new role system
-            status=UserStatus.PENDING_VERIFICATION,
+            status=UserStatus.ACTIVE,  # Auto-activate users (no email verification required)
             auth_provider=AuthProvider.LOCAL,
         )
 
@@ -316,20 +316,44 @@ async def logout(
 
 
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_profile(current_user: dict[str, Any] = Depends(get_current_user)):
+async def get_current_user_profile(request: Request):
     """
     Get current user's profile information
+    Uses JWT token to identify user without database lookup
     """
-    return UserResponse(
-        id=str(current_user["id"]),
-        email=current_user["email"],
-        username=current_user["username"],
-        full_name=current_user.get("full_name"),
-        role=current_user.get("role", "user"),
-        status=current_user.get("status", "active"),
-        created_at=current_user.get("created_at", datetime.utcnow()),
-        last_login=current_user.get("last_login"),
-    )
+    try:
+        # Extract user info from JWT token
+        from apps.api.middleware.auth import get_current_user_id_from_request
+        from core.security_engine import get_security_manager
+
+        user_id = await get_current_user_id_from_request(request)
+
+        # Get token from Authorization header
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+            security_manager = get_security_manager()
+            claims = security_manager.verify_token(token)
+
+            # Extract user info from JWT claims
+            return UserResponse(
+                id=str(claims.get("sub", user_id)),
+                email=claims.get("email", f"user_{user_id}@example.com"),
+                username=claims.get("username", f"user_{user_id}"),
+                full_name=claims.get("full_name"),
+                role=claims.get("role", "user"),
+                status=claims.get("status", "active"),
+                created_at=datetime.utcnow(),
+                last_login=datetime.utcnow(),
+            )
+        else:
+            raise HTTPException(status_code=401, detail="Missing authentication token")
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting current user: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get user info: {str(e)}")
 
 
 # Helper functions for user operations
@@ -596,4 +620,50 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+        )
+
+
+@router.post("/verify-telegram")
+async def verify_telegram(
+    telegram_id: int,
+    email: EmailStr,
+    user_repo: UserRepository = Depends(get_user_repository),
+):
+    """
+    Verify user account via Telegram.
+
+    When a user connects their Telegram account, this endpoint activates their account.
+    Can be called from the Telegram bot after user authentication.
+    """
+    try:
+        # Find user by email
+        user_data = await user_repo.get_user_by_email(email)
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Update user status to active and link Telegram ID
+        await user_repo.update_user(
+            user_id=user_data["id"],
+            status="active",
+            telegram_id=telegram_id
+        )
+
+        logger.info(f"✅ User verified via Telegram: {email} (TG ID: {telegram_id})")
+
+        return {
+            "message": "Account verified successfully via Telegram",
+            "status": "active",
+            "telegram_linked": True
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Telegram verification error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify account"
         )

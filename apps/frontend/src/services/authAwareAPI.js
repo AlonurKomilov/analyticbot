@@ -20,8 +20,8 @@ class AuthAwareAPIService {
 
         try {
             // Try to get current user info from backend
-            const response = await apiClient.get('/initial-data');
-            this.userInfo = response.data;
+            const response = await apiClient.get('/system/initial-data');
+            this.userInfo = response.data || response;
             this.isInitialized = true;
         } catch (error) {
             console.warn('Could not initialize user info:', error);
@@ -85,7 +85,7 @@ class AuthAwareAPIService {
      * Analytics API methods - all go through backend
      */
     async getInitialData() {
-        return this.makeRequest('/initial-data');
+        return this.makeRequest('/system/initial-data');
     }
 
     async getAnalyticsOverview(channelId) {

@@ -87,7 +87,9 @@ const rippleAnimation = keyframes`
 /**
  * Interactive Card with Hover Effects
  */
-export const InteractiveCard = styled(Box)(({ theme, interactive = true, hoverEffect = 'lift' }) => ({
+export const InteractiveCard = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'interactive' && prop !== 'hoverEffect'
+})(({ theme, interactive = true, hoverEffect = 'lift' }) => ({
   borderRadius: DESIGN_TOKENS.layout.borderRadius.md,
   border: `1px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,

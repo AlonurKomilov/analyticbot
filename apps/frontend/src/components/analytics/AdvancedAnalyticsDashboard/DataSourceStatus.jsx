@@ -72,7 +72,7 @@ const DataSourceStatus = React.memo(({
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Chip
-          label={isUsingRealAPI ? '🔴 Real API' : '🟡 Mock Data'}
+          label={isUsingRealAPI ? '🟢 Real API' : '🟡 Mock Data'}
           color={isUsingRealAPI ? 'success' : 'warning'}
           size="small"
           onClick={() => switchDataSource(isUsingRealAPI ? 'mock' : 'api')}

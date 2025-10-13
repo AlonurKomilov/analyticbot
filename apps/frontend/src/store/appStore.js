@@ -134,9 +134,16 @@ export const useAppStore = create(
 
                 if (currentSource === 'api') {
                     try {
-                        // Try real API first - correct endpoint
-                        data = await apiClient.get('/initial-data');
-                        console.log('✅ Successfully loaded data from real API');
+                        // Get current user info from /auth/me endpoint
+                        const userData = await apiClient.get('/auth/me');
+                        console.log('✅ Successfully loaded user data from API:', userData);
+
+                        // Store user data in the app state
+                        data = {
+                            user: userData,
+                            channels: [],
+                            analytics: null
+                        };
                     } catch (apiError) {
                         console.log('⚠️ Real API unavailable');
                         console.log('API Error details:', apiError.message);
@@ -187,8 +194,15 @@ export const useAppStore = create(
                 get().setLoading(operation, true);
                 get().clearError(operation);
 
-                const newChannel = await apiClient.post('/analytics/channels', {
-                    channel_username: channelUsername
+                // Clean username and generate a telegram_id (temporary solution)
+                // In production, this should query Telegram API for real channel info
+                const cleanUsername = channelUsername.replace('@', '');
+                const temporaryTelegramId = Math.floor(Math.random() * 1000000000); // Temporary ID
+
+                const newChannel = await apiClient.post('/channels', {
+                    name: cleanUsername,
+                    telegram_id: temporaryTelegramId,
+                    description: `Channel ${cleanUsername}`
                 });
 
                 set((state) => ({

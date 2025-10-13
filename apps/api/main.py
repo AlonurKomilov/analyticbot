@@ -215,6 +215,7 @@ app.include_router(admin_system_router)  # Admin - System Management
 
 # ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
+from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
 from apps.api.routers.insights_predictive_router import router as insights_predictive_router
@@ -222,6 +223,7 @@ from apps.api.routers.statistics_core_router import router as statistics_core_ro
 from apps.api.routers.statistics_reports_router import router as statistics_reports_router
 from apps.demo.routers.main import router as demo_router
 
+app.include_router(analytics_channels_router)  # Channel list for analytics - /analytics/channels
 app.include_router(
     analytics_live_router
 )  # Real-time live analytics (4 endpoints) - /analytics/live/*

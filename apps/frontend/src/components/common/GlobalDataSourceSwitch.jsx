@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Tooltip, CircularProgress, Chip } from '@mui/material';
 import { StatusChip } from './index.js';
-import { useDataSource } from '../../hooks/useDataSource';
+import { useAppStore } from '../../store/appStore';
 
 /**
  * Global Data Source Switch Component
@@ -16,7 +16,9 @@ const GlobalDataSourceSwitch = ({
   variant = 'filled',
   sx = {}
 }) => {
-  const { isUsingRealAPI, switchDataSource, dataSource } = useDataSource();
+  const dataSource = useAppStore(state => state.dataSource);
+  const setDataSource = useAppStore(state => state.setDataSource);
+  const isUsingRealAPI = dataSource === 'api';
 
   const [switching, setSwitching] = React.useState(false);
 
@@ -25,7 +27,8 @@ const GlobalDataSourceSwitch = ({
 
     try {
       // Switch data source
-      await switchDataSource(isUsingRealAPI ? 'mock' : 'api');
+      const newSource = isUsingRealAPI ? 'mock' : 'api';
+      setDataSource(newSource);
 
       // Brief delay to show feedback
       setTimeout(() => setSwitching(false), 300);
@@ -54,7 +57,7 @@ const GlobalDataSourceSwitch = ({
       arrow
     >
       <StatusChip
-        label={showLabel ? (isUsingRealAPI ? '🔴 Real API' : '🟡 Demo Data') : (isUsingRealAPI ? '🔴' : '🟡')}
+        label={showLabel ? (isUsingRealAPI ? '🟢 Real API' : '🟡 Demo Data') : (isUsingRealAPI ? '🟢' : '🟡')}
         variant={isUsingRealAPI ? 'success' : 'warning'}
         size={size}
         onClick={handleSwitch}
@@ -77,12 +80,13 @@ const GlobalDataSourceSwitch = ({
  * Useful for showing status without switching capability
  */
 export const DataSourceBadge = ({ size = 'small', sx = {} }) => {
-  const { isUsingRealAPI } = useDataSource();
+  const dataSource = useAppStore(state => state.dataSource);
+  const isUsingRealAPI = dataSource === 'api';
 
   return (
     <Tooltip title={`Using ${isUsingRealAPI ? 'real API' : 'demo'} data`}>
       <Chip
-        label={isUsingRealAPI ? '🔴 Live' : '🟡 Demo'}
+        label={isUsingRealAPI ? '🟢 Live' : '🟡 Demo'}
         size={size}
         color={isUsingRealAPI ? 'success' : 'warning'}
         variant="outlined"

@@ -22,7 +22,7 @@ import { analyticsService } from '../services/analyticsService.js';
 // Configuration constants
 const DEFAULT_CONFIG = {
     baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms',
-    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000, // Use env var or default 30 seconds
+    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 60000, // Use env var or default 60 seconds (increased for devtunnel)
     maxRetries: 3,
     retryDelay: 1000, // 1 second
     retryMultiplier: 2
@@ -48,12 +48,14 @@ class UnifiedApiClient {
             'Content-Type': 'application/json',
         };
 
-        // Debug logging
+        // Debug logging with env var inspection
         console.log('🔧 Unified API Client Configuration:', {
             baseURL: this.config.baseURL,
             timeout: this.config.timeout,
             maxRetries: this.config.maxRetries,
-            authStrategy: this.authStrategy
+            authStrategy: this.authStrategy,
+            envTimeout: import.meta.env.VITE_API_TIMEOUT,
+            envBaseURL: import.meta.env.VITE_API_BASE_URL
         });
     }
 
@@ -76,7 +78,11 @@ class UnifiedApiClient {
 
         switch (this.authStrategy) {
             case AuthStrategies.JWT:
-                const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+                // Check all possible token storage keys
+                const token = localStorage.getItem('access_token') ||
+                             localStorage.getItem('token') ||
+                             localStorage.getItem('accessToken') ||
+                             sessionStorage.getItem('access_token');
                 if (token) {
                     headers['Authorization'] = `Bearer ${token}`;
                 }
@@ -104,7 +110,8 @@ class UnifiedApiClient {
         const dataServiceRoutes = [
             '/api/analytics/',
             '/api/v2/analytics/',
-            '/initial-data',
+            '/system/initial-data',
+            '/initial-data',  // Keep for backwards compatibility
             '/health'
         ];
         return dataServiceRoutes.some(route => url.includes(route));
@@ -112,32 +119,12 @@ class UnifiedApiClient {
 
     /**
      * Route request through data service if applicable
+     * NOTE: Data service factory not implemented yet - all requests go directly to API
      */
     async routeThroughDataService(method, url, data = null) {
-        const currentSource = dataSourceManager.getDataSource();
-        const dataService = dataServiceFactory.getService(currentSource);
-
-        // Map common API endpoints to data service methods
-        if (url.includes('/initial-data')) {
-            return await dataService.getInitialData();
-        }
-        if (url.includes('/health')) {
-            return await dataService.healthCheck();
-        }
-        if (url.includes('/analytics/overview')) {
-            const channelId = this.extractChannelId(url) || 'demo_channel';
-            return await dataService.getAnalyticsOverview(channelId);
-        }
-        if (url.includes('/analytics/growth')) {
-            const channelId = this.extractChannelId(url) || 'demo_channel';
-            return await dataService.getAnalyticsGrowth(channelId);
-        }
-        if (url.includes('/post-dynamics')) {
-            const channelId = this.extractChannelId(url) || 'demo_channel';
-            return await dataService.getPostDynamics(channelId);
-        }
-
-        return null; // Fallback to direct API
+        // For now, always return null to use direct API calls
+        // This will be implemented later when dataServiceFactory is created
+        return null;
     }
 
     /**
@@ -186,11 +173,18 @@ class UnifiedApiClient {
         }
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+        const timeoutId = setTimeout(() => {
+            console.warn(`⏱️ Request timeout after ${this.config.timeout}ms for ${endpoint}`);
+            controller.abort();
+        }, this.config.timeout);
 
         try {
             // Construct full URL
             const url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
+
+            if (import.meta.env.DEV) {
+                console.log(`🌐 API Request: ${options.method || 'GET'} ${url} (timeout: ${this.config.timeout}ms)`);
+            }
 
             // Prepare request configuration
             const requestConfig = {

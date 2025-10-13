@@ -13,7 +13,8 @@ import {
   TextField as MuiTextField,
   Typography as MuiTypography,
   Chip as MuiChip,
-  IconButton as MuiIconButton
+  IconButton as MuiIconButton,
+  Box
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS, getButtonProps, getCardProps, getStatusColor, createTransition, createElevation } from '../../theme/designTokens.js';
@@ -204,9 +205,9 @@ export const PageContainer = React.forwardRef(({
   ...props
 }, ref) => {
   return (
-    <div
+    <Box
       ref={ref}
-      style={{
+      sx={{
         maxWidth: DESIGN_TOKENS.layout.maxWidth[maxWidth],
         margin: '0 auto',
         padding: DESIGN_TOKENS.layout.container.padding.md,
@@ -220,7 +221,7 @@ export const PageContainer = React.forwardRef(({
       {...props}
     >
       {children}
-    </div>
+    </Box>
   );
 });
 
@@ -234,9 +235,9 @@ export const GridContainer = React.forwardRef(({
   const gridGap = DESIGN_TOKENS.layout.grid.gap[gap];
 
   return (
-    <div
+    <Box
       ref={ref}
-      style={{
+      sx={{
         display: 'grid',
         gap: `${gridGap * 8}px`,
         gridTemplateColumns: `repeat(${columns.xs}, 1fr)`,
@@ -253,7 +254,7 @@ export const GridContainer = React.forwardRef(({
       {...props}
     >
       {children}
-    </div>
+    </Box>
   );
 });
 

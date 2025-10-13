@@ -105,9 +105,11 @@ export const AuthProvider = ({ children }) => {
 
             const response = await apiClient.post('/auth/login', { email, password });
             console.log('Login API full response:', response); // Debug log
-            console.log('Login API response data:', response.data); // Debug log
 
-            const data = response.data;
+            // Our apiClient returns data directly (not response.data like axios)
+            const data = response.data || response; // Support both formats
+            console.log('Login API response data:', data); // Debug log
+
             const { access_token, refresh_token, user: userData } = data;
 
             // Validate required fields
@@ -136,6 +138,10 @@ export const AuthProvider = ({ children }) => {
                 localStorage.removeItem('is_demo_user');
             }
 
+            // Set data source to API mode when logged in (not demo mode)
+            localStorage.setItem('useRealAPI', 'true');
+            console.info('✅ Authenticated - using real API data');
+
             // Update state
             setToken(access_token);
             setUser(userData);
@@ -156,7 +162,8 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(true);
         console.log('🔐 AuthContext register called with:', userData);
         try {
-            const data = await apiClient.post('/auth/register', userData);
+            const response = await apiClient.post('/auth/register', userData);
+            const data = response.data || response; // Support both formats
             const { access_token, refresh_token, user: userInfo } = data;
 
             // Store auth data

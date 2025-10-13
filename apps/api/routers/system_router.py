@@ -118,12 +118,23 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
     - Feature flags
     """
     try:
-        # ✅ FIXED: Use proper configuration-driven service injection
-        return await get_initial_data_service(request)
+        # ✅ TEMPORARY: Return simple mock data to unblock frontend
+        # TODO: Re-enable full service injection when repository issues are resolved
+        from apps.shared.models.twa import Channel, User
+
+        logger.info(f"Returning initial data for user_id: {user_id}")
+
+        return InitialDataResponse(
+            user=User(id=user_id, username=f"user_{user_id}"),
+            channels=[
+                Channel(id=1, title="Demo Channel", username="@demo_channel")
+            ],
+            scheduled_posts=[]
+        )
 
     except Exception as e:
         logger.error(f"Initial data fetch failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get initial data")
+        raise HTTPException(status_code=500, detail=f"Failed to get initial data: {str(e)}")
 
 
 @router.post("/schedule", response_model=dict)

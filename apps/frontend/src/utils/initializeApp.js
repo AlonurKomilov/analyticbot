@@ -9,18 +9,29 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_A
  */
 export const initializeDataSource = async () => {
     try {
-        // API health check with reasonable timeout for devtunnel connections
+        // API health check with reasonable timeout for devtunnel connections (15s for stability)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort('Connection timeout after 5 seconds'), 5000); // 5 second timeout
+        const timeoutId = setTimeout(() => controller.abort('Connection timeout after 15 seconds'), 15000); // 15 second timeout for devtunnel
 
-        const response = await fetch(`${API_BASE_URL}/health`, {
+        const response = await fetch(`${API_BASE_URL}/health/`, {
             method: 'GET',
-            signal: controller.signal
+            signal: controller.signal,
+            redirect: 'follow' // Explicitly follow redirects
         });
 
         clearTimeout(timeoutId);
 
         if (response.ok) {
+            // Check if API is healthy or degraded
+            try {
+                const healthData = await response.json();
+                if (healthData.status === 'degraded' && import.meta.env.DEV) {
+                    console.info('⚠️ API is running in degraded mode (some services unavailable)');
+                }
+            } catch (e) {
+                // Ignore JSON parse errors, health check passed
+            }
+
             // API is available, keep current preference or default to API
             const savedPreference = localStorage.getItem('useRealAPI');
             if (savedPreference === null) {
@@ -31,13 +42,18 @@ export const initializeDataSource = async () => {
             return savedPreference === 'true' ? 'api' : 'mock';
         } else {
             // API returned error, don't auto-switch - user should sign in to demo account
-            console.info('API health check returned error - continuing with API mode for demo authentication');
+            if (import.meta.env.DEV) {
+                console.info(`API health check returned ${response.status} - continuing with API mode for demo authentication`);
+            }
             return 'api'; // Keep API mode, let backend handle demo authentication
         }
     } catch (error) {
         // API is not available (connection refused, timeout, etc.)
         if (import.meta.env.DEV) {
-            console.log('API health check failed - continuing with API mode for demo authentication:', error.name === 'AbortError' ? 'Connection timeout' : error.message);
+            const errorMsg = error.name === 'AbortError'
+                ? 'Connection timeout (15s limit)'
+                : (error.message || error.toString() || 'Unknown error');
+            console.log('API health check failed - continuing with API mode for demo authentication:', errorMsg);
         }
         // Don't auto-switch to mock - user should sign in to demo account instead
         return 'api'; // Keep API mode, let backend handle demo authentication

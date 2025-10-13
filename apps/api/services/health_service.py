@@ -460,13 +460,31 @@ async def check_database_health(connection_string: str | None = None) -> dict[st
 
 
 async def check_redis_health(
-    host: str = "localhost", port: int = 6379, db: int = 0
+    host: str = "localhost", port: int = 10200, db: int = 0
 ) -> dict[str, Any]:
-    """Redis health check using redis.asyncio"""
+    """Redis health check using redis.asyncio
+
+    Updated to use port 10200 (production Redis port) by default
+    instead of 6379 (standard Redis port).
+    """
     if not redis:
         return {"healthy": False, "error": "Redis client not available"}
 
     try:
+        # Try to get Redis URL from environment first
+        redis_url = os.getenv("REDIS_URL")
+        if redis_url:
+            # Parse URL to extract host, port, db
+            # Format: redis://host:port/db
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(redis_url)
+                host = parsed.hostname or host
+                port = parsed.port or port
+                db = int(parsed.path.lstrip('/')) if parsed.path and parsed.path != '/' else db
+            except Exception as e:
+                logger.warning(f"Failed to parse REDIS_URL, using defaults: {e}")
+
         redis_client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
         await redis_client.ping()
         await redis_client.close()

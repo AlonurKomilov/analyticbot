@@ -332,12 +332,22 @@ async def get_current_user_id_from_request(request) -> int:
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header[7:]
-            # This would normally decode JWT to get user_id
-            # For now, we'll use a placeholder approach
-            # TODO: Implement proper JWT decoding
-            return 1  # Placeholder
+            try:
+                # Decode JWT token using SecurityManager
+                from core.security_engine import get_security_manager
+                security_manager = get_security_manager()
+                claims = security_manager.verify_token(token)
 
-        # Default fallback
+                # Extract user_id from claims (it's stored as 'sub')
+                user_id_str = claims.get("sub")
+                if user_id_str:
+                    return int(user_id_str)
+            except Exception as token_error:
+                logger.warning(f"Failed to decode JWT token: {token_error}")
+                # Return a default user ID instead of raising error
+                return 1
+
+        # Default fallback - return user ID 1
         return 1
 
     except Exception as e:

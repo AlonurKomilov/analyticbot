@@ -40,7 +40,7 @@ export const API_CONFIG = {
 
     ENDPOINTS: {
         HEALTH: '/health',
-        INITIAL_DATA: '/initial-data',
+        INITIAL_DATA: '/system/initial-data',
         ANALYTICS_OVERVIEW: '/api/analytics/overview',
         ANALYTICS_GROWTH: '/api/analytics/growth',
         ANALYTICS_REACH: '/api/analytics/reach',

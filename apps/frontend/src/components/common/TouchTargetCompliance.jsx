@@ -156,8 +156,9 @@ export const TextField = styled(MuiTextField)(({ theme, size }) => ({
 /**
  * Touch Target Audit Hook
  * Development utility to identify components that don't meet touch target requirements
+ * Set enabled=false to disable verbose console logging
  */
-export const useTouchTargetAudit = (enabled = process.env.NODE_ENV === 'development') => {
+export const useTouchTargetAudit = (enabled = false) => {
     React.useEffect(() => {
         if (!enabled || !document || !document.body) return;
 

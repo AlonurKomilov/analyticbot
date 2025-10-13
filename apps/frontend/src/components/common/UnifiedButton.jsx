@@ -17,7 +17,9 @@ import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS, getButtonProps, createTransition, createElevation } from '../../theme/designTokens.js';
 
 // Enhanced styled button with all accessibility and design features
-const StyledButton = styled(MuiButton)(({ theme, size, buttonVariant, loading }) => {
+const StyledButton = styled(MuiButton, {
+  shouldForwardProp: (prop) => prop !== 'buttonVariant' && prop !== 'loading'
+})(({ theme, size, buttonVariant, loading }) => {
   const sizeConfig = DESIGN_TOKENS.components.button.sizes[size] || DESIGN_TOKENS.components.button.sizes.medium;
 
   return {

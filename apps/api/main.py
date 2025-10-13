@@ -9,7 +9,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-from apps.api.deps import cleanup_db_pool
+# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
+from apps.di import cleanup_container as cleanup_db_pool
 from apps.api.routers.admin_channels_router import router as admin_channels_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router

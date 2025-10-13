@@ -288,12 +288,13 @@ async def collect_system_metrics():
             context = ErrorContext().add("operation", "collect_database_metrics")
             ErrorHandler.log_error(e, context)
         try:
-            from apps.bot.di import configure_bot_container
+            # ✅ MIGRATED: Use new modular DI instead of legacy bot.di
+            from apps.di import get_container
 
-            container = configure_bot_container()
-            channel_repo = container.channel_repo()
-            user_repo = container.user_repo()
-            scheduler_repo = container.schedule_repo()
+            container = get_container()
+            channel_repo = await container.database.channel_repo()
+            user_repo = await container.database.user_repo()
+            scheduler_repo = await container.database.schedule_repo()
             # TODO: Implement count methods using clean architecture
             # For now, use placeholder values
             channels_count = 0  # await channel_repo.count()

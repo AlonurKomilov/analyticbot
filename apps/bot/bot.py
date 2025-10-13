@@ -10,7 +10,9 @@ from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 
 from apps.bot.config import settings
 from apps.bot.config import settings as app_settings
-from apps.bot.container import container
+
+# ✅ MIGRATED: Use new modular DI instead of legacy container
+from apps.di import get_container
 from apps.bot.handlers import admin_handlers, user_handlers
 from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
 from apps.bot.middlewares.i18n import i18n_middleware
@@ -38,7 +40,9 @@ async def main():
     """
     Botni ishga tushiruvchi asosiy funksiya.
     """
-    pool = await container.db_session()
+    # ✅ MIGRATED: Get container from new modular DI
+    container = get_container()
+    pool = await container.database.asyncpg_pool()
     try:
         storage = RedisStorage.from_url(
             str(settings.REDIS_URL),

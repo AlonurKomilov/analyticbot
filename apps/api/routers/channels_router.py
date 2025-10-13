@@ -123,10 +123,16 @@ class ValidateChannelRequest(BaseModel):
 # === CHANNEL ENDPOINTS ===
 
 
+async def get_telegram_validation_service_dep():
+    """Dependency to get telegram validation service"""
+    from apps.api.di_analytics import get_telegram_validation_service as di_get_service
+    return await di_get_service()
+
+
 @router.post("/validate", response_model=ChannelValidationResult)
 async def validate_telegram_channel(
     request_data: ValidateChannelRequest,
-    telegram_service: TelegramValidationService = Depends(),
+    telegram_service: TelegramValidationService = Depends(get_telegram_validation_service_dep),
 ):
     """
     ## ✅ Validate Telegram Channel

@@ -70,7 +70,14 @@ class TelegramValidationService:
 
             # Get entity from Telegram
             try:
-                entity = await self.client._client.get_entity(clean_username)
+                if self.client._client is None:
+                    return ChannelValidationResult(
+                        is_valid=False,
+                        username=clean_username,
+                        error_message="Telegram client not initialized",
+                    )
+
+                entity = await self.client._client.get_entity(clean_username)  # type: ignore
             except Exception as e:
                 self.logger.warning(f"Failed to get entity for @{clean_username}: {e}")
                 return ChannelValidationResult(
@@ -88,10 +95,10 @@ class TelegramValidationService:
                     error_message=f"Entity is not a channel (type: {entity_type})",
                 )
 
-            # Extract channel metadata
-            telegram_id = entity.id if hasattr(entity, "id") else None
-            title = entity.title if hasattr(entity, "title") else None
-            username_from_entity = entity.username if hasattr(entity, "username") else clean_username
+            # Extract channel metadata with type checking
+            telegram_id = getattr(entity, "id", None)
+            title = getattr(entity, "title", None)
+            username_from_entity = getattr(entity, "username", clean_username)
             is_verified = getattr(entity, "verified", False)
             is_scam = getattr(entity, "scam", False)
 
@@ -143,13 +150,16 @@ class TelegramValidationService:
             if not self.client._started:
                 await self.client.start()
 
-            entity = await self.client._client.get_entity(telegram_id)
+            if self.client._client is None:
+                return {"error": "Telegram client not initialized"}
+
+            entity = await self.client._client.get_entity(telegram_id)  # type: ignore
             full_channel = await self.client.get_full_channel(entity)
 
             metadata = {
-                "telegram_id": entity.id if hasattr(entity, "id") else telegram_id,
-                "title": entity.title if hasattr(entity, "title") else None,
-                "username": entity.username if hasattr(entity, "username") else None,
+                "telegram_id": getattr(entity, "id", telegram_id),
+                "title": getattr(entity, "title", None),
+                "username": getattr(entity, "username", None),
                 "is_verified": getattr(entity, "verified", False),
                 "is_scam": getattr(entity, "scam", False),
             }

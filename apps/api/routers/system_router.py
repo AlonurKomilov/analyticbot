@@ -12,7 +12,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from apps.api.deps import get_delivery_service, get_schedule_service
+# ✅ MIGRATED: Use new modular DI instead of legacy apps.api.deps
+from apps.di import get_delivery_service, get_schedule_service
 
 # ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
 from apps.api.deps_factory import (

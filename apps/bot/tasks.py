@@ -8,18 +8,8 @@ from apps.bot.utils.task_utils import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
 
-# Lazy container initialization to avoid circular imports
-_container = None
-
-
-def get_container():
-    """Get bot container with lazy initialization"""
-    global _container
-    if _container is None:
-        from apps.bot.di import configure_bot_container
-
-        _container = configure_bot_container()
-    return _container
+# ✅ MIGRATED: Use new modular DI instead of legacy bot.di
+from apps.di import get_container
 
 
 async def cleanup_resources():
@@ -37,8 +27,10 @@ def send_post_task(scheduler_id: int):
     async def _run():
         context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            bot = get_container().bot_client()
-            scheduler_repo_result = get_container().schedule_repo()
+            # ✅ MIGRATED: Use new modular DI container structure
+            container = get_container()
+            bot = await container.bot.bot_client()
+            scheduler_repo_result = await container.database.schedule_repo()
 
             # Handle potential coroutines
             if asyncio.iscoroutine(scheduler_repo_result):

@@ -12,7 +12,8 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
-from apps.bot.di import BotContainer
+# ✅ MIGRATED: Use new modular DI instead of legacy bot.di
+from apps.di import get_container as get_app_container, ApplicationContainer
 from core.domain.payment import (
     Money,
     PaymentData,
@@ -34,9 +35,9 @@ router = APIRouter(prefix="/payment", tags=["payment"])
 logger = logging.getLogger(__name__)
 
 
-# Dependency to get DI container
-def get_container() -> BotContainer:
-    return BotContainer()
+# ✅ MIGRATED: Updated dependency to use modular DI container
+def get_container() -> ApplicationContainer:
+    return get_app_container()
 
 
 # Payment Methods Endpoints
@@ -44,7 +45,7 @@ def get_container() -> BotContainer:
 async def create_payment_method(
     payment_method_data: Dict[str, Any],
     user_id: int,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Create a new payment method for a user"""
     try:
@@ -91,7 +92,7 @@ async def create_payment_method(
 @router.get("/methods/{user_id}")
 async def get_user_payment_methods(
     user_id: int,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Get all payment methods for a user"""
     try:
@@ -119,7 +120,7 @@ async def get_user_payment_methods(
 async def process_payment(
     payment_data: Dict[str, Any],
     user_id: int,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Process a one-time payment"""
     try:
@@ -159,7 +160,7 @@ async def process_payment(
 async def create_subscription(
     subscription_data: Dict[str, Any],
     user_id: int,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Create a new subscription"""
     try:
@@ -194,7 +195,7 @@ async def create_subscription(
 @router.get("/subscriptions/{user_id}")
 async def get_user_subscription(
     user_id: int,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Get user's active subscription"""
     try:
@@ -222,7 +223,7 @@ async def get_user_subscription(
 async def process_webhook(
     provider: str,
     request: Request,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Process incoming webhooks from payment providers"""
     try:
@@ -254,7 +255,7 @@ async def process_webhook(
 async def get_payment_stats(
     start_date: str | None = None,
     end_date: str | None = None,
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Get payment analytics and statistics"""
     try:
@@ -283,7 +284,7 @@ async def get_payment_stats(
 # Health Check
 @router.get("/health")
 async def payment_system_health(
-    container: BotContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container)
 ):
     """Get payment system health status"""
     try:

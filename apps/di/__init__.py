@@ -222,6 +222,25 @@ async def get_channel_management_service():
     return await container.api.channel_management_service()
 
 
+async def get_schedule_service():
+    """Get schedule service from container"""
+    container = get_container()
+    return await container.core_services.schedule_service()
+
+
+async def get_delivery_service():
+    """Get delivery service from container"""
+    container = get_container()
+    return await container.core_services.delivery_service()
+
+
+async def get_db_connection():
+    """Get database connection (session) from container"""
+    container = get_container()
+    # Return the database pool which can be used for sessions
+    return await container.database.asyncpg_pool()
+
+
 # ============================================================================
 # EXPORTS
 # ============================================================================
@@ -238,4 +257,7 @@ __all__ = [
     "get_cache_adapter",
     "get_analytics_fusion_service",
     "get_channel_management_service",
+    "get_schedule_service",
+    "get_delivery_service",
+    "get_db_connection",
 ]

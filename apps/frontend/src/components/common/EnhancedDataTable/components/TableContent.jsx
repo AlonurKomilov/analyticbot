@@ -12,7 +12,9 @@ import {
     Typography,
     Box
 } from '@mui/material';
+import { TableChart as TableIcon } from '@mui/icons-material';
 import { DENSITY_OPTIONS } from '../utils/tableUtils';
+import EmptyState from '../../../EmptyState';
 
 /**
  * TableContent Component
@@ -165,11 +167,12 @@ const TableContent = ({
                             <TableCell
                                 colSpan={visibleColumns.length + (enableSelection ? 1 : 0) + (rowActions?.length > 0 ? 1 : 0)}
                                 align="center"
-                                sx={{ py: 4 }}
+                                sx={{ py: 2 }}
                             >
-                                <Typography variant="body2" color="text.secondary">
-                                    No data available
-                                </Typography>
+                                <EmptyState
+                                    message="No data available"
+                                    icon={<TableIcon sx={{ fontSize: 48, color: 'text.secondary' }} />}
+                                />
                             </TableCell>
                         </TableRow>
                     )}

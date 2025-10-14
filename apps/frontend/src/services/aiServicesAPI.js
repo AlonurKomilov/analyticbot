@@ -150,9 +150,9 @@ export const AIServicesAPI = {
             const response = await apiClient.get(`${AI_SERVICES_BASE}/stats`);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch AI services stats:', error);
-            // Return centralized mock data as fallback
-            return aiServicesStatsMock;
+            console.error('❌ Failed to fetch AI services stats:', error);
+            // NEVER fallback to mock - throw error so UI can handle properly
+            throw error;
         }
     }
 };

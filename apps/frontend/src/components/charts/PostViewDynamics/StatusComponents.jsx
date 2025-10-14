@@ -6,6 +6,7 @@ import {
     Chip
 } from '@mui/material';
 import { BarChart as ChartIcon } from '@mui/icons-material';
+import EmptyState from '../../EmptyState';
 
 /**
  * LoadingState - Memoized loading indicator for chart data
@@ -22,21 +23,18 @@ export const LoadingState = React.memo(() => (
 LoadingState.displayName = 'LoadingState';
 
 /**
- * EmptyState - Memoized empty state when no chart data is available
+ * ChartEmptyState - Memoized empty state when no chart data is available
  */
-export const EmptyState = React.memo(() => (
-    <Box variant="emptyState" sx={{ height: 300, color: 'text.secondary' }}>
-        <ChartIcon variant="large" />
-        <Typography variant="h6" gutterBottom>
-            No data available
-        </Typography>
-        <Typography variant="body2">
-            No post activity data for the selected time range
-        </Typography>
+export const ChartEmptyState = React.memo(() => (
+    <Box sx={{ height: 300 }}>
+        <EmptyState
+            message="No post activity data for the selected time range"
+            icon={<ChartIcon sx={{ fontSize: 48, color: 'text.secondary' }} />}
+        />
     </Box>
 ));
 
-EmptyState.displayName = 'EmptyState';
+ChartEmptyState.displayName = 'ChartEmptyState';
 
 /**
  * StatusFooter - Memoized footer showing refresh status and indicators

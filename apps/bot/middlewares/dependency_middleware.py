@@ -62,9 +62,9 @@ class DependencyMiddleware(BaseMiddleware):
     i18n middleware ishlamagan holatga fallback shim bor.
     """
 
-    def __init__(self, container=None):
+    def __init__(self, container: Any = None):
         """Accept any container type for compatibility"""
-        self.container = container
+        self.container: Any = container
         self._fallback_core = SafeFluentRuntimeCore(path="bot/locales/{locale}")
         self._fallback_locale: str = getattr(app_settings, "DEFAULT_LOCALE", None) or "en"
 
@@ -108,8 +108,6 @@ class DependencyMiddleware(BaseMiddleware):
                 try:
                     if hasattr(self.container, "resolve"):
                         data[key] = self.container.resolve(dep)
-                except Exception:
-                    continue
                 except Exception:
                     continue
         else:

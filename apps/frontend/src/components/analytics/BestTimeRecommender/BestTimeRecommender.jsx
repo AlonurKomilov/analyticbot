@@ -6,12 +6,14 @@ import {
     Box,
     Typography
 } from '@mui/material';
+import { Schedule as ScheduleIcon } from '@mui/icons-material';
 import TimeFrameFilters from './components/TimeFrameFilters.jsx';
 import BestTimeCards from './components/BestTimeCards.jsx';
 import HeatmapVisualization from './components/HeatmapVisualization.jsx';
 import AIInsightsPanel from './components/AIInsightsPanel.jsx';
 import RecommenderFooter from './components/RecommenderFooter.jsx';
 import { useRecommenderLogic } from './hooks/useRecommenderLogic.js';
+import EmptyState from '../../EmptyState.jsx';
 
 const BestTimeRecommender = () => {
     const {
@@ -80,14 +82,10 @@ const BestTimeRecommender = () => {
 
             {/* No Data State */}
             {!loading && !recommendations && !error && (
-                <Box sx={{ textAlign: 'center', p: 4 }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        No Data Available
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Wait for data collection to get AI recommendations.
-                    </Typography>
-                </Box>
+                <EmptyState
+                    message="Wait for data collection to get AI-powered posting time recommendations"
+                    icon={<ScheduleIcon sx={{ fontSize: 48, color: 'text.secondary' }} />}
+                />
             )}
         </Paper>
     );

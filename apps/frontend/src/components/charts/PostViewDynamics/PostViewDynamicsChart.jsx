@@ -13,7 +13,7 @@ import TimeRangeControls from './TimeRangeControls.jsx';
 import MetricsSummary from './MetricsSummary.jsx';
 import ChartVisualization from './ChartVisualization.jsx';
 import ChartErrorBoundary from './ChartErrorBoundary.jsx';
-import { LoadingState, EmptyState, StatusFooter } from './StatusComponents.jsx';
+import { LoadingState, ChartEmptyState, StatusFooter } from './StatusComponents.jsx';
 
 /**
  * PostViewDynamicsChart - Main orchestrator for post view dynamics analytics
@@ -253,7 +253,7 @@ const PostViewDynamicsChart = () => {
             )}
 
             {/* Empty State */}
-            {!loading && chartData.length === 0 && <EmptyState />}
+            {!loading && chartData.length === 0 && <ChartEmptyState />}
 
             {/* Status Footer */}
             <StatusFooter

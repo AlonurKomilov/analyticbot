@@ -47,21 +47,24 @@ class TelegramAlertNotifier(AlertNotificationPort):
 
     async def send_alert(
         self,
-        channel_id: str,
-        alert: dict[str, Any],
+        notification: dict[str, Any],
     ) -> bool:
         """
         Send an alert notification via Telegram
 
         Args:
-            channel_id: Telegram channel/chat ID
-            alert: Alert event dictionary
+            notification: Notification dictionary with 'channel_id' and alert data
 
         Returns:
             True if sent successfully, False otherwise
         """
         try:
-            message = self._format_alert_message(alert)
+            channel_id = notification.get("channel_id")
+            if not channel_id:
+                self._logger.error("Missing channel_id in notification")
+                return False
+
+            message = self._format_alert_message(notification)
 
             await self._bot.send_message(
                 chat_id=channel_id,
@@ -71,44 +74,44 @@ class TelegramAlertNotifier(AlertNotificationPort):
             )
 
             self._logger.info(
-                f"Alert sent to channel {channel_id}: {alert.get('rule_name')}"
+                f"Alert sent to channel {channel_id}: {notification.get('rule_name')}"
             )
             return True
 
         except TelegramAPIError as e:
-            self._logger.error(f"Telegram API error sending alert to {channel_id}: {e}")
+            self._logger.error(f"Telegram API error sending alert: {e}")
             return False
 
         except Exception as e:
-            self._logger.error(f"Unexpected error sending alert to {channel_id}: {e}")
+            self._logger.error(f"Unexpected error sending alert: {e}")
             return False
 
     async def send_bulk_alerts(
         self,
-        channel_id: str,
-        alerts: list[dict[str, Any]],
-    ) -> int:
+        notifications: list[dict[str, Any]],
+    ) -> dict[str, bool]:
         """
-        Send multiple alerts to a channel
+        Send multiple alert notifications
 
         Args:
-            channel_id: Telegram channel/chat ID
-            alerts: List of alert event dictionaries
+            notifications: List of notification dictionaries
 
         Returns:
-            Number of alerts successfully sent
+            Dictionary mapping notification IDs to success status
         """
-        success_count = 0
+        results = {}
 
-        for alert in alerts:
-            if await self.send_alert(channel_id, alert):
-                success_count += 1
+        for notification in notifications:
+            notification_id = notification.get("id", str(id(notification)))
+            success = await self.send_alert(notification)
+            results[notification_id] = success
 
+        successful_count = sum(1 for success in results.values() if success)
         self._logger.info(
-            f"Sent {success_count}/{len(alerts)} alerts to channel {channel_id}"
+            f"Sent {successful_count}/{len(notifications)} bulk alerts"
         )
 
-        return success_count
+        return results
 
     def _format_alert_message(self, alert: dict[str, Any]) -> str:
         """

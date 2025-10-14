@@ -408,17 +408,10 @@ export const useAppStore = create(
                 let response;
 
                 if (currentSource === 'api') {
-                    try {
-                        response = await apiClient.getStorageFiles(limit, offset);
-                        console.log('✅ Storage files loaded from real API');
-                    } catch (apiError) {
-                        console.log('⚠️ API unavailable for storage files, using demo data');
-                        console.log('Storage API Error:', apiError.message);
-
-                        // Fallback to mock storage files
-                        const { storageMockService } = await import('../services/storageMockService.js');
-                        response = await storageMockService.getStorageFiles(limit, offset);
-                    }
+                    // Real API mode - NEVER fallback to mock data
+                    response = await apiClient.getStorageFiles(limit, offset);
+                    console.log('✅ Storage files loaded from real API');
+                    // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
                     // Load from mock data
                     console.log('📊 Loading storage files demo data');
@@ -604,8 +597,7 @@ export const useAppStore = create(
                         return { from: from.toISOString(), to: to.toISOString() };
                     };
 
-                    const { from, to } = getPeriodDateRange(period);
-                    response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/top-posts?from=${from}&to=${to}&sort=${sortBy}`);
+                    response = await apiClient.get(`/analytics/top-posts/${channelId}?period=${period}&sort=${sortBy}`);
                     console.log('✅ Top posts loaded from real API');
                     // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
@@ -705,8 +697,7 @@ export const useAppStore = create(
                         return { from: from.toISOString(), to: to.toISOString() };
                     };
 
-                    const { from, to } = getPeriodDateRange(period);
-                    response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?from=${from}&to=${to}`);
+                    response = await apiClient.get(`/insights/engagement/channels/${channelId}/engagement?period=${period}`);
                     console.log('✅ Engagement metrics loaded from real API');
                     // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {

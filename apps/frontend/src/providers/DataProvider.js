@@ -220,28 +220,23 @@ export class ApiDataProvider extends DataProvider {
             // apiClient returns response.data directly
             return response.data;
         } catch (error) {
-            // For demo users, provide enhanced fallback instead of failing
+            // ONLY provide fallback for explicitly marked demo users
             const isDemoUser = localStorage.getItem('is_demo_user') === 'true';
-            // Temporary: Enable demo fallback for CORS/network errors for all users
-            const hasNetworkError = error.message.includes('Failed to fetch') ||
-                                  error.message.includes('CORS') ||
-                                  error.message.includes('Network') ||
-                                  error.name === 'TypeError';
 
-            if ((isDemoUser || hasNetworkError) && (
+            if (isDemoUser && (
                 error.message.includes('API request failed') ||
                 error.message.includes('Failed to fetch') ||
                 error.message.includes('CORS') ||
                 error.message.includes('Network') ||
                 error.name === 'TypeError'
             )) {
-                console.info(`🚨 ${isDemoUser ? 'Demo user' : 'Network error'}: Providing enhanced fallback data for ${endpoint}`);
+                console.info(`🎭 Demo user: Providing fallback data for ${endpoint}`);
                 console.info(`   Error details: ${error.message}`);
-                console.info(`   Error type: ${error.name}`);
                 return await this._getDemoFallbackData(endpoint);
             }
 
-            console.error(`API request failed for ${endpoint}:`, error);
+            // For real API users: throw error, NEVER fallback to mock
+            console.error(`❌ API request failed for ${endpoint}:`, error);
             throw error;
         }
     }

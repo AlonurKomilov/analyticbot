@@ -231,14 +231,11 @@ def _create_schedule_manager(schedule_repository=None, analytics_repository=None
     try:
         from core.services.bot.scheduling import ScheduleManager
 
-        if schedule_repository is None or analytics_repository is None:
-            logger.warning("Cannot create schedule manager: missing repositories")
+        if schedule_repository is None:
+            logger.warning("Cannot create schedule manager: missing schedule repository")
             return None
 
-        return ScheduleManager(
-            schedule_repo=schedule_repository,
-            analytics_repo=analytics_repository,
-        )
+        return ScheduleManager(schedule_repository=schedule_repository)
     except ImportError as e:
         logger.warning(f"Schedule manager not available: {e}")
         return None

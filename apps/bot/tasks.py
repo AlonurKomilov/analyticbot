@@ -101,58 +101,53 @@ def send_scheduled_message():
         context = ErrorContext().add("task", "send_scheduled_message")
         stats = {"processed": 0, "sent": 0, "errors": 0}
         try:
-            # Get services from container with fallback handling
-            bot = get_container().bot_client()
-            scheduler_service = get_container().scheduler_service()
-            scheduler_repo_result = get_container().schedule_repo()
-
-            # Handle potential coroutines
-            if asyncio.iscoroutine(scheduler_repo_result):
-                scheduler_repo = await scheduler_repo_result
-            else:
-                scheduler_repo = scheduler_repo_result
+            # Get new scheduling services from container (Clean Architecture)
+            schedule_manager = get_container().bot.schedule_manager()
+            post_delivery_service = get_container().bot.post_delivery_service()
+            delivery_status_tracker = get_container().bot.delivery_status_tracker()
 
             # Safety checks for services
-            if not scheduler_service:
-                logger.error("Scheduler service not available")
-                return "scheduler-service-unavailable"
+            if not all([schedule_manager, post_delivery_service, delivery_status_tracker]):
+                logger.error("Scheduling services not available")
+                return "scheduling-services-unavailable"
 
-            if not scheduler_repo:
-                logger.error("Scheduler repository not available")
-                return "scheduler-repo-unavailable"
-
-            # TODO: Implement claim_due_posts using clean architecture - PLACEHOLDER
-            # Using safe fallback implementation that logs the request
-            logger.info("claim_due_posts called - using safe placeholder implementation")
-            due_posts = []  # Safe placeholder - no actual posts claimed
+            # Get pending posts ready to be sent
+            due_posts = await schedule_manager.get_pending_posts(limit=50)
 
             if not due_posts:
-                logger.info("No due posts to send (placeholder implementation)")
+                logger.info("No due posts to send")
                 return "no-due-posts"
+
             logger.info(f"Processing {len(due_posts)} due posts")
             stats["processed"] = len(due_posts)
+
+            # Process each post
             for post in due_posts:
                 try:
-                    if hasattr(scheduler_service, "send_post_to_channel"):
-                        result = await scheduler_service.send_post_to_channel(post)
-                    else:
-                        logger.warning("send_post_to_channel method not available")
-                        stats["errors"] += 1
-                        continue
-                    if result.get("success"):
+                    # Deliver the post using new service
+                    result = await post_delivery_service.deliver_post(post)
+
+                    # Update status based on delivery result
+                    await delivery_status_tracker.update_from_delivery_result(result)
+
+                    if result.success:
                         stats["sent"] += 1
                         logger.debug(f"Successfully sent post {post.id}")
                     else:
                         stats["errors"] += 1
-                        logger.warning(f"Failed to send post {post.id}: {result.get('error')}")
+                        logger.warning(f"Failed to send post {post.id}: {result.error_message}")
+
                 except Exception as e:
                     stats["errors"] += 1
                     post_context = context.add("post_id", str(post.id))
                     ErrorHandler.log_error(e, post_context)
+
             logger.info(
-                f"Scheduled message task completed. Processed: {stats['processed']}, Sent: {stats['sent']}, Errors: {stats['errors']}"
+                f"Scheduled message task completed. Processed: {stats['processed']}, "
+                f"Sent: {stats['sent']}, Errors: {stats['errors']}"
             )
             return f"processed-{stats['processed']}-sent-{stats['sent']}-errors-{stats['errors']}"
+
         except Exception as e:
             ErrorHandler.log_error(e, context)
             raise

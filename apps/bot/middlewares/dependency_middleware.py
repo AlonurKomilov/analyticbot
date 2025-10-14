@@ -13,8 +13,15 @@ from apps.bot.config import settings as app_settings
 from apps.bot.services import (
     AnalyticsService,
     GuardService,
-    SchedulerService,
+    SchedulerService,  # LEGACY - Will be removed after migration
     SubscriptionService,
+)
+
+# New scheduling services (Clean Architecture)
+from core.services.bot.scheduling import (
+    DeliveryStatusTracker,
+    PostDeliveryService,
+    ScheduleManager,
 )
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
 
@@ -111,25 +118,40 @@ class DependencyMiddleware(BaseMiddleware):
             data["channel_repo"] = _Null()
             data["scheduler_repo"] = _Null()
             data["analytics_repo"] = _Null()
-        if session_pool is not None:
-            for key, dep in [
-                ("subscription_service", SubscriptionService),
-                ("guard_service", GuardService),
-                ("scheduler_service", SchedulerService),
-                ("analytics_service", AnalyticsService),
-            ]:
-                try:
-                    if hasattr(self.container, "resolve"):
-                        data[key] = self.container.resolve(dep)
-                except Exception:
-                    continue
-                except Exception:
-                    continue
+        # Inject services using modern container API
+        if session_pool is not None and hasattr(self.container, "bot"):
+            try:
+                # Legacy services (will be deprecated)
+                data["subscription_service"] = self.container.bot.subscription_service()
+                data["guard_service"] = self.container.bot.guard_service()
+                data["scheduler_service"] = self.container.bot.scheduler_service()  # LEGACY
+                data["analytics_service"] = self.container.bot.analytics_service()
+
+                # New scheduling services (Clean Architecture)
+                data["schedule_manager"] = self.container.bot.schedule_manager()
+                data["post_delivery_service"] = self.container.bot.post_delivery_service()
+                data["delivery_status_tracker"] = self.container.bot.delivery_status_tracker()
+
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to inject services: {e}")
+                # Fallback to nulls
+                data["subscription_service"] = _Null()
+                data["guard_service"] = _Null()
+                data["scheduler_service"] = _Null()
+                data["analytics_service"] = _Null()
+                data["schedule_manager"] = _Null()
+                data["post_delivery_service"] = _Null()
+                data["delivery_status_tracker"] = _Null()
         else:
             data["subscription_service"] = _Null()
             data["guard_service"] = _Null()
             data["scheduler_service"] = _Null()
             data["analytics_service"] = _Null()
+            data["schedule_manager"] = _Null()
+            data["post_delivery_service"] = _Null()
+            data["delivery_status_tracker"] = _Null()
         if not data.get("i18n"):
             core = self._fallback_core
             loc = self._fallback_locale

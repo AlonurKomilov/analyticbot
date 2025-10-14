@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import shlex
 from datetime import UTC, datetime
 from typing import cast
@@ -8,10 +9,15 @@ from aiogram import Bot, Router, types
 from aiogram.filters import Command, CommandObject
 from aiogram_i18n import I18nContext
 
+logger = logging.getLogger(__name__)
+
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.guard_service import GuardService
 from apps.bot.services.prometheus_service import prometheus_service
-from apps.bot.services.scheduler_service import SchedulerService
+from apps.bot.services.scheduler_service import SchedulerService  # LEGACY - kept for backwards compatibility
+
+# New scheduling services (Clean Architecture)
+from core.services.bot.scheduling import ScheduleManager
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from core.repositories.interfaces import ChannelRepository
@@ -240,7 +246,7 @@ async def handle_schedule(
     message: types.Message,
     command: CommandObject,
     channel_repo: ChannelRepository,
-    scheduler_service: SchedulerService,
+    schedule_manager: ScheduleManager,  # NEW: Clean Architecture service
     i18n: I18nContext,
 ):
     prometheus_service.record_telegram_update("schedule_post")
@@ -263,10 +269,15 @@ async def handle_schedule(
         uid = _uid_of(message)
         if uid is not None:
             try:
-                await scheduler_service.schedule_post(
-                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
+                # Use new ScheduleManager (Clean Architecture)
+                await schedule_manager.create_scheduled_post(
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt
                 )
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Failed to schedule post: {e}")
                 pass
         await message.reply(
             i18n.get(

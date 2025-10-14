@@ -56,7 +56,7 @@ const BestTimeRecommender = () => {
                 }}>
                     <CircularProgress aria-label="Loading recommendations" />
                     <Typography variant="body2" sx={{ ml: 2 }}>
-                        AI tavsiyalar yuklanmoqda...
+                        Loading AI recommendations...
                     </Typography>
                 </Box>
             )}

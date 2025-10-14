@@ -214,7 +214,7 @@ const PostViewDynamicsChart = () => {
         return (
             <Paper variant="card">
                 <Alert severity="error" variant="spaced">
-                    Ma'lumotlarni yuklashda xatolik: {error}
+                    Error loading data: {error}
                 </Alert>
             </Paper>
         );

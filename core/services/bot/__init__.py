@@ -34,10 +34,10 @@ Usage:
 from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
 
 # Reporting services
-from core.services.bot.reporting.reporting_service import ReportingService
+from core.services.bot.reporting.reporting_service import AutomatedReportingSystem as ReportingService
 
 # Dashboard services
-from core.services.bot.dashboard.dashboard_service import DashboardService
+from core.services.bot.dashboard.dashboard_service import RealTimeDashboard as DashboardService
 
 __all__ = [
     # Analytics

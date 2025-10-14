@@ -12,7 +12,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
 # Services
-from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
+from apps.api.di_container.analytics_container import (
+    get_analytics_fusion_service,
+    get_cache,
+)
 
 # Auth
 from apps.api.middleware.auth import get_current_user
@@ -52,7 +55,11 @@ async def get_channel_overview(
     """
     try:
         # Generate cache key and ETag
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("core_overview", cache_params, last_updated)
 
@@ -107,7 +114,9 @@ async def get_channel_growth_statistics(
     from_: Annotated[datetime, Query(alias="from")],
     to_: Annotated[datetime, Query(alias="to")],
     window: str = Query(
-        default="D", regex="^(D|H|W)$", description="Time window (D=Daily, W=Weekly, H=Hourly)"
+        default="D",
+        regex="^(D|H|W)$",
+        description="Time window (D=Daily, W=Weekly, H=Hourly)",
     ),
     service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
@@ -188,7 +197,11 @@ async def get_historical_metrics(
     """
     try:
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("historical_metrics", cache_params, last_updated)
 
@@ -303,7 +316,11 @@ async def get_traffic_sources_statistics(
     """
     try:
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "from": from_.isoformat(), "to": to_.isoformat()}
+        cache_params = {
+            "channel_id": channel_id,
+            "from": from_.isoformat(),
+            "to": to_.isoformat(),
+        }
         last_updated = await service.get_last_updated_at(channel_id)
         cache_key = cache.generate_cache_key("traffic_sources_stats", cache_params, last_updated)
 

@@ -132,6 +132,12 @@ class DependencyMiddleware(BaseMiddleware):
                 data["post_delivery_service"] = self.container.bot.post_delivery_service()
                 data["delivery_status_tracker"] = self.container.bot.delivery_status_tracker()
 
+                # New alert services (Clean Architecture)
+                data["alert_condition_evaluator"] = self.container.bot.alert_condition_evaluator()
+                data["alert_rule_manager"] = self.container.bot.alert_rule_manager()
+                data["alert_event_manager"] = self.container.bot.alert_event_manager()
+                data["telegram_alert_notifier"] = self.container.bot.telegram_alert_notifier()
+
             except Exception as e:
                 import logging
                 logger = logging.getLogger(__name__)
@@ -144,6 +150,10 @@ class DependencyMiddleware(BaseMiddleware):
                 data["schedule_manager"] = _Null()
                 data["post_delivery_service"] = _Null()
                 data["delivery_status_tracker"] = _Null()
+                data["alert_condition_evaluator"] = _Null()
+                data["alert_rule_manager"] = _Null()
+                data["alert_event_manager"] = _Null()
+                data["telegram_alert_notifier"] = _Null()
         else:
             data["subscription_service"] = _Null()
             data["guard_service"] = _Null()
@@ -152,6 +162,10 @@ class DependencyMiddleware(BaseMiddleware):
             data["schedule_manager"] = _Null()
             data["post_delivery_service"] = _Null()
             data["delivery_status_tracker"] = _Null()
+            data["alert_condition_evaluator"] = _Null()
+            data["alert_rule_manager"] = _Null()
+            data["alert_event_manager"] = _Null()
+            data["telegram_alert_notifier"] = _Null()
         if not data.get("i18n"):
             core = self._fallback_core
             loc = self._fallback_locale

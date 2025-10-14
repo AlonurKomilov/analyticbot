@@ -1,18 +1,21 @@
 """
-Alert Services Module
+Alert Service Module
 
-Clean Architecture: Bot alert domain services
-Framework-agnostic business logic for alert management and notifications
+Clean Architecture: Framework-agnostic alert services
 """
 
+from core.services.bot.alerts.alert_condition_evaluator import AlertConditionEvaluator
+from core.services.bot.alerts.alert_event_manager import AlertEventManager
+from core.services.bot.alerts.alert_rule_manager import AlertRuleManager
 from core.services.bot.alerts.protocols import (
     AlertNotificationPort,
     AlertRepository,
 )
 
 __all__ = [
-    # Protocols
     "AlertRepository",
     "AlertNotificationPort",
-    # Services will be added as they're implemented
+    "AlertConditionEvaluator",
+    "AlertRuleManager",
+    "AlertEventManager",
 ]

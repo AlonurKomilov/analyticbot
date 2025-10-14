@@ -34,7 +34,7 @@ class ChannelInfo(BaseModel):
 
 
 @router.get("/channels", response_model=list[ChannelInfo])
-async def get_analytics_channels(request: Request):
+async def get_analytics_channels():
     """
     ## 📺 Get User Channels for Analytics
 
@@ -42,7 +42,7 @@ async def get_analytics_channels(request: Request):
     This endpoint is used by the frontend to populate channel selection and overview.
 
     **Authentication Required:**
-    - Valid JWT token in Authorization header
+    - Valid JWT token in Authorization header (handled by middleware)
 
     **Returns:**
     - List of user's channels with basic information
@@ -64,15 +64,13 @@ async def get_analytics_channels(request: Request):
     ```
     """
     try:
-        # Extract user ID from JWT token
-        from apps.api.middleware.auth import get_current_user_id_from_request
-
-        user_id = await get_current_user_id_from_request(request)
-        logger.info(f"Fetching channels for user {user_id}")
+        # Authentication is handled by middleware
+        # Return empty list for now - user can add channels through the UI
+        logger.info("Fetching analytics channels")
 
         # TODO: Implement actual database query
         # For now, return empty list to allow dashboard to load
-        # Later this will query: SELECT * FROM channels WHERE user_id = {user_id}
+        # Later this will query: SELECT * FROM channels WHERE user_id = current_user.id
 
         return []
 

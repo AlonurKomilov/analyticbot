@@ -93,6 +93,8 @@ async def _create_repository(factory, repo_type: str) -> Any:
             return await factory.get_edges_repository()
         elif repo_type == "stats_raw":
             return await factory.get_stats_raw_repository()
+        elif repo_type == "alert":
+            return await factory.get_alert_repository()
         else:
             logger.warning(f"Unknown repository type: {repo_type}")
             return None
@@ -229,6 +231,12 @@ class DatabaseContainer(containers.DeclarativeContainer):
         _create_repository,
         factory=repository_factory,
         repo_type="stats_raw"
+    )
+
+    alert_repo = providers.Factory(
+        _create_repository,
+        factory=repository_factory,
+        repo_type="alert"
     )
 
 

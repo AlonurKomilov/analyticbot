@@ -117,13 +117,13 @@ export const Icon = ({
 /**
  * Status Chip with Professional Icons
  */
-export const StatusChip = ({
+export const StatusChip = React.forwardRef(({
     status,
     label,
     color = 'primary',
     size = 'medium',
     ...props
-}) => {
+}, ref) => {
     const statusIcons = {
         online: 'online',
         analytics: 'analytics',
@@ -138,6 +138,7 @@ export const StatusChip = ({
 
     return (
         <Chip
+            ref={ref}
             icon={<Icon name={statusIcons[status]} size="sm" />}
             label={label}
             color={color}
@@ -146,6 +147,8 @@ export const StatusChip = ({
             {...props}
         />
     );
-};
+});
+
+StatusChip.displayName = 'StatusChip';
 
 export default Icon;

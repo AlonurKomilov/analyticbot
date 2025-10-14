@@ -23,7 +23,7 @@ const PostsTable = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { dataSource } = useAppStore();
+    const { dataSource, channels, fetchTopPosts } = useAppStore();
 
     // Load posts data
     const loadTopPosts = useCallback(async () => {
@@ -32,27 +32,36 @@ const PostsTable = () => {
             setError(null);
 
             if (dataSource === 'mock') {
-                // Use mock data
+                // Use mock data ONLY when explicitly in demo mode
                 setTimeout(() => {
                     setPosts(generateMockPosts(20));
                     setLoading(false);
                 }, 500);
             } else {
-                // For now, use mock data until we have channel selection
-                // TODO: Implement real API call when channel context is available
-                // const response = await fetch(`/analytics/top-posts/${channelId}`);
-                // const data = await response.json();
-                setPosts(generateMockPosts(20));
+                // Real API mode - NEVER use mock data
+                if (channels && channels.length > 0) {
+                    const channelId = channels[0].id;
+                    const apiPosts = await fetchTopPosts(channelId);
+                    setPosts(apiPosts || []); // Empty array if no posts, NOT mock data
+                } else {
+                    // No channels - show empty state, NOT mock data
+                    setPosts([]);
+                }
                 setLoading(false);
             }
         } catch (err) {
             console.error('Error loading posts:', err);
-            setError('Failed to load posts data');
-            // Fallback to mock data
-            setPosts(generateMockPosts(20));
+            setError(err.message || 'Failed to load posts data');
+            // In real API mode, show empty on error, NOT mock data
+            if (dataSource !== 'mock') {
+                setPosts([]);
+            } else {
+                // Only fallback to mock if in mock mode
+                setPosts(generateMockPosts(20));
+            }
             setLoading(false);
         }
-    }, [dataSource]);
+    }, [dataSource, channels, fetchTopPosts]);
 
     useEffect(() => {
         loadTopPosts();

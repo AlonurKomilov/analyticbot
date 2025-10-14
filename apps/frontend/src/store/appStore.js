@@ -547,26 +547,14 @@ export const useAppStore = create(
                 let response;
 
                 if (currentSource === 'api') {
-                    try {
-                        // Use proper analytics v2 API with date range
-                        const getPeriodDateRange = (periodDays) => {
-                            const to = new Date();
-                            const from = new Date();
-                            from.setDate(from.getDate() - parseInt(periodDays.replace('h', '')) / 24);
-                            return { from: from.toISOString(), to: to.toISOString() };
-                        };
-
-                        const { from, to } = getPeriodDateRange(period);
-                        response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/post-dynamics?from=${from}&to=${to}`);
-                        console.log('✅ Post dynamics loaded from real API');
-                    } catch (apiError) {
-                        console.log('⚠️ API unavailable for post dynamics, using demo data');
-                        console.log('Analytics API Error:', apiError.message);
-                        const { analyticsService } = await import('../services/analyticsService.js');
-                        response = await analyticsService.getPostDynamics(channelId);
-                    }
-                } else {
-                    // Load from unified analytics service
+                    // Real API mode - NEVER fallback to mock/demo data
+                    // Note: analytics/post-dynamics endpoint uses period parameter (24h, 7d, etc.)
+                    // not from/to dates
+                    response = await apiClient.get(`/analytics/post-dynamics/${channelId}?period=${period}`);
+                    console.log('✅ Post dynamics loaded from real API');
+                    // If API fails, error will be thrown and caught below - NO fallback to demo
+                } else{
+                    // Demo mode - use mock data from analytics service
                     console.log('📊 Loading post dynamics demo data');
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getPostDynamics(channelId);
@@ -606,27 +594,22 @@ export const useAppStore = create(
                 let response;
 
                 if (currentSource === 'api') {
-                    try {
-                        // Use proper analytics v2 API with date range
-                        const getPeriodDateRange = (periodDays) => {
-                            const periodMap = { 'today': 1, 'week': 7, 'month': 30 };
-                            const days = periodMap[period] || 7;
-                            const to = new Date();
-                            const from = new Date();
-                            from.setDate(from.getDate() - days);
-                            return { from: from.toISOString(), to: to.toISOString() };
-                        };
+                    // Real API mode - NEVER fallback to mock/demo data
+                    const getPeriodDateRange = (periodDays) => {
+                        const periodMap = { 'today': 1, 'week': 7, 'month': 30 };
+                        const days = periodMap[period] || 7;
+                        const to = new Date();
+                        const from = new Date();
+                        from.setDate(from.getDate() - days);
+                        return { from: from.toISOString(), to: to.toISOString() };
+                    };
 
-                        const { from, to } = getPeriodDateRange(period);
-                        response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/top-posts?from=${from}&to=${to}&sort=${sortBy}`);
-                        console.log('✅ Top posts loaded from real API');
-                    } catch (apiError) {
-                        console.log('⚠️ API unavailable for top posts, using demo data');
-                        const { analyticsService } = await import('../services/analyticsService.js');
-                        response = await analyticsService.getTopPosts(channelId, period, sortBy);
-                    }
+                    const { from, to } = getPeriodDateRange(period);
+                    response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/top-posts?from=${from}&to=${to}&sort=${sortBy}`);
+                    console.log('✅ Top posts loaded from real API');
+                    // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
-                    // Load from unified analytics service
+                    // Demo mode - use mock data from analytics service
                     console.log('📊 Loading top posts demo data');
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getTopPosts(channelId, period, sortBy);
@@ -667,17 +650,12 @@ export const useAppStore = create(
                 let response;
 
                 if (currentSource === 'api') {
-                    try {
-                        // Use proper analytics v2 API
-                        response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/best-times?timeframe=${timeframe}&content_type=${contentType}`);
-                        console.log('✅ Best time recommendations loaded from real API');
-                    } catch (apiError) {
-                        console.log('⚠️ API unavailable for best time, using demo data');
-                        const { analyticsService } = await import('../services/analyticsService.js');
-                        response = await analyticsService.getBestTime(channelId);
-                    }
+                    // Real API mode - NEVER fallback to mock/demo data
+                    response = await apiClient.get(`/insights/predictive/best-times/${channelId}?timeframe=${timeframe}&content_type=${contentType}`);
+                    console.log('✅ Best time recommendations loaded from real API');
+                    // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
-                    // Load from unified analytics service
+                    // Demo mode - use mock data from analytics service
                     console.log('📊 Loading best time demo data');
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getBestTime(channelId);
@@ -718,26 +696,21 @@ export const useAppStore = create(
                 let response;
 
                 if (currentSource === 'api') {
-                    try {
-                        // Use proper analytics v2 API with date range
-                        const getPeriodDateRange = (periodStr) => {
-                            const days = parseInt(periodStr.replace('d', '')) || 7;
-                            const to = new Date();
-                            const from = new Date();
-                            from.setDate(from.getDate() - days);
-                            return { from: from.toISOString(), to: to.toISOString() };
-                        };
+                    // Real API mode - NEVER fallback to mock/demo data
+                    const getPeriodDateRange = (periodStr) => {
+                        const days = parseInt(periodStr.replace('d', '')) || 7;
+                        const to = new Date();
+                        const from = new Date();
+                        from.setDate(from.getDate() - days);
+                        return { from: from.toISOString(), to: to.toISOString() };
+                    };
 
-                        const { from, to } = getPeriodDateRange(period);
-                        response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?from=${from}&to=${to}`);
-                        console.log('✅ Engagement metrics loaded from real API');
-                    } catch (apiError) {
-                        console.log('⚠️ API unavailable for engagement metrics, using demo data');
-                        const { analyticsService } = await import('../services/analyticsService.js');
-                        response = await analyticsService.getEngagementMetrics(channelId);
-                    }
+                    const { from, to } = getPeriodDateRange(period);
+                    response = await apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?from=${from}&to=${to}`);
+                    console.log('✅ Engagement metrics loaded from real API');
+                    // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
-                    // Load from unified analytics service
+                    // Demo mode - use mock data from analytics service
                     console.log('📊 Loading engagement metrics demo data');
                     const { analyticsService } = await import('../services/analyticsService.js');
                     response = await analyticsService.getEngagementMetrics(channelId);

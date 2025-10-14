@@ -43,14 +43,18 @@ async def add_image_watermark(
     """Add watermark to uploaded image"""
 
     # Validate file type
-    if not file.content_type.startswith("image/"):
+    if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are supported")
+
+    # Validate filename
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Filename is required")
 
     # Check user premium status and limits
     user_tier = await _get_user_tier(current_user["id"])
     limits = PremiumFeatureLimits.get_limits_for_tier(user_tier)
 
-    if file.size > limits.max_file_size_mb * 1024 * 1024:
+    if file.size and file.size > limits.max_file_size_mb * 1024 * 1024:
         raise HTTPException(
             status_code=400,
             detail=f"File size exceeds limit for {user_tier.value} tier: {limits.max_file_size_mb}MB",
@@ -72,10 +76,16 @@ async def add_image_watermark(
 
         # Create watermark config
         from apps.bot.services.content_protection import WatermarkConfig
+        from typing import Literal
+
+        # Validate position parameter
+        valid_positions = ["top-left", "top-right", "bottom-left", "bottom-right", "center"]
+        if position not in valid_positions:
+            position = "bottom-right"  # Default fallback
 
         watermark_config = WatermarkConfig(
             text=watermark_text,
-            position=position,
+            position=position,  # type: ignore[arg-type]  # Validated above
             opacity=opacity,
             font_size=font_size,
             color=color,
@@ -125,7 +135,7 @@ async def add_video_watermark(
     """Add watermark to uploaded video (requires FFmpeg)"""
 
     # Validate file type
-    if not file.content_type.startswith("video/"):
+    if not file.content_type or not file.content_type.startswith("video/"):
         raise HTTPException(status_code=400, detail="Only video files are supported")
 
     # Check user premium status and limits
@@ -137,7 +147,7 @@ async def add_video_watermark(
             status_code=403, detail="Video watermarking requires premium subscription"
         )
 
-    if file.size > limits.max_file_size_mb * 1024 * 1024:
+    if file.size and file.size > limits.max_file_size_mb * 1024 * 1024:
         raise HTTPException(
             status_code=400,
             detail=f"File size exceeds limit for {user_tier.value} tier: {limits.max_file_size_mb}MB",
@@ -158,8 +168,13 @@ async def add_video_watermark(
         # Create watermark config
         from apps.bot.services.content_protection import WatermarkConfig
 
+        # Validate position parameter
+        valid_positions = ["top-left", "top-right", "bottom-left", "bottom-right", "center"]
+        if position not in valid_positions:
+            position = "bottom-right"  # Default fallback
+
         watermark_config = WatermarkConfig(
-            text=watermark_text, position=position, opacity=opacity, font_size=font_size
+            text=watermark_text, position=position, opacity=opacity, font_size=font_size  # type: ignore[arg-type]  # Validated above
         )
 
         # Apply watermark (this may take longer for videos)

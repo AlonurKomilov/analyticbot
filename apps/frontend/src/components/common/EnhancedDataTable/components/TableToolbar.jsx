@@ -104,13 +104,15 @@ const TableToolbar = ({
                 {/* Refresh */}
                 {enableRefresh && onRefresh && (
                     <Tooltip title="Refresh Data">
-                        <IconButton
-                            onClick={onRefresh}
-                            disabled={loading}
-                            aria-label="Refresh table data"
-                        >
-                            <RefreshIcon />
-                        </IconButton>
+                        <span>
+                            <IconButton
+                                onClick={onRefresh}
+                                disabled={loading}
+                                aria-label="Refresh table data"
+                            >
+                                <RefreshIcon />
+                            </IconButton>
+                        </span>
                     </Tooltip>
                 )}
             </Box>

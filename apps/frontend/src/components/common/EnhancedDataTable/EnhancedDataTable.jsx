@@ -100,9 +100,9 @@ export const EnhancedDataTable = ({
     sx = {},
 
     // Accessibility
-    tableAriaLabel,
+    tableAriaLabel
 
-    ...otherProps
+    // Note: No spreading of otherProps to prevent DOM warnings
 }) => {
     // State management using custom hooks
     const tableState = useTableState({
@@ -254,7 +254,7 @@ export const EnhancedDataTable = ({
     }
 
     return (
-        <Paper sx={{ width: '100%', ...sx }} {...otherProps}>
+        <Paper sx={{ width: '100%', ...sx }}>
             {/* Header Toolbar */}
             <TableToolbar
                 title={title}

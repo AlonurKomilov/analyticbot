@@ -38,10 +38,11 @@ const PostsTable = () => {
                     setLoading(false);
                 }, 500);
             } else {
-                // Real API call would go here
-                const response = await fetch('/api/posts/top');
-                const data = await response.json();
-                setPosts(data);
+                // For now, use mock data until we have channel selection
+                // TODO: Implement real API call when channel context is available
+                // const response = await fetch(`/analytics/top-posts/${channelId}`);
+                // const data = await response.json();
+                setPosts(generateMockPosts(20));
                 setLoading(false);
             }
         } catch (err) {

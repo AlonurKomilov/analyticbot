@@ -9,7 +9,7 @@ Real-time analytics dashboards with:
 - Dashboard factory patterns
 """
 
-from core.services.dashboard.dashboard_service import (
+from core.services.bot.dashboard.dashboard_service import (
     DashboardFactory,
     RealTimeDashboard,
     VisualizationEngine,

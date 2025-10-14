@@ -9,7 +9,7 @@ Enterprise reporting system with:
 - Data visualization
 """
 
-from core.services.reporting.reporting_service import (
+from core.services.bot.reporting.reporting_service import (
     AutomatedReportingSystem,
     ReportTemplate,
     create_report_template,

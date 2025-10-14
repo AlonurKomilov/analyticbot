@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.api.di_container.analytics_container import get_analytics_fusion_service
+from apps.api.di_analytics import get_analytics_fusion_service
 from core.protocols import AnalyticsFusionServiceProtocol
 
 router = APIRouter(prefix="/insights/orchestration", tags=["Analytics Orchestration v2"])

@@ -24,7 +24,10 @@ import {
 import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
-const StyledCard = styled(MuiCard)(({ theme, variant, interactive, loading }) => ({
+const StyledCard = styled(MuiCard, {
+  // Filter out custom props to prevent them from being passed to the DOM
+  shouldForwardProp: (prop) => !['interactive', 'loading'].includes(prop)
+})(({ theme, variant, interactive, loading }) => ({
   borderRadius: DESIGN_TOKENS.layout.borderRadius.lg,
   transition: 'all 0.2s ease-in-out',
   border: '1px solid',

@@ -9,8 +9,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-# Services
-from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
+# Services - NEW DI
+from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 
 # Auth
 from apps.api.middleware.auth import get_current_user, require_channel_access

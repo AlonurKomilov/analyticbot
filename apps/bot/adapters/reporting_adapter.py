@@ -9,7 +9,7 @@ from typing import Any
 
 import pandas as pd
 
-from core.services.reporting import AutomatedReportingSystem, ReportTemplate
+from core.services.bot.reporting import AutomatedReportingSystem, ReportTemplate
 
 logger = logging.getLogger(__name__)
 

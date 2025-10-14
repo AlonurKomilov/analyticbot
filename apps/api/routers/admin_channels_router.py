@@ -11,10 +11,10 @@ Path: /admin/channels/*
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
-from apps.api.di_container.analytics_container import get_channel_management_service
+from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user,
     require_admin_role,

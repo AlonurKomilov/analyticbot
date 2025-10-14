@@ -8,7 +8,7 @@ from typing import Any
 
 import pandas as pd
 
-from core.services.dashboard import RealTimeDashboard, VisualizationEngine
+from core.services.bot.dashboard import RealTimeDashboard, VisualizationEngine
 
 logger = logging.getLogger(__name__)
 

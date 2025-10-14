@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 async def _create_analytics_batch_processor(analytics_repository=None, **kwargs):
     """Create core analytics batch processor (pure business logic)"""
     try:
-        from core.services.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+        from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
 
         # Check if repository is required
         if analytics_repository is None:
@@ -36,7 +36,7 @@ async def _create_analytics_batch_processor(analytics_repository=None, **kwargs)
 async def _create_reporting_service(**kwargs):
     """Create core reporting service (pure business logic)"""
     try:
-        from core.services.reporting import create_reporting_system
+        from core.services.bot.reporting import create_reporting_system
 
         return create_reporting_system()
     except ImportError as e:
@@ -47,7 +47,7 @@ async def _create_reporting_service(**kwargs):
 async def _create_dashboard_service(port: int = 8050, **kwargs):
     """Create core dashboard service (pure business logic)"""
     try:
-        from core.services.dashboard import create_dashboard
+        from core.services.bot.dashboard import create_dashboard
 
         return create_dashboard(port=port)
     except ImportError as e:

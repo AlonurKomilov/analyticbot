@@ -6,6 +6,23 @@ Centralized settings without framework dependencies
 import os
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+
+    # Find .env file in project root
+    env_file = Path(__file__).parent.parent / ".env"
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"✅ Loaded environment from: {env_file}")
+    else:
+        print(f"⚠️  No .env file found at: {env_file}")
+except ImportError:
+    print("⚠️  python-dotenv not installed, using system environment variables only")
+except Exception as e:
+    print(f"⚠️  Failed to load .env file: {e}")
 
 
 class LogLevel(str, Enum):

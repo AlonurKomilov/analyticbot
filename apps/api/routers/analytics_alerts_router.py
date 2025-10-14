@@ -66,14 +66,12 @@ def get_analytics_client() -> AnalyticsClient:
 
 
 def get_alerting_service() -> AlertingService:
-    """Get alerting service"""
-    from apps.shared.unified_di import get_container
+    """Get alerting service - Using bot AlertingService (not core alerts)"""
+    # Note: This uses the bot's AlertingService which has different API
+    # than core's AlertsManagementService. To be consolidated in Phase 3.2
+    from apps.bot.services.alerting_service import AlertingService
 
-    container = get_container()
-    service = container.alerting_service()
-    if service is None:
-        raise RuntimeError("AlertingService not available in DI container")
-    return service
+    return AlertingService()
 
 
 # === ALERT CHECKING ===

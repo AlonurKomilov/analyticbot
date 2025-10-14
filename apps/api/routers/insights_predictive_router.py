@@ -11,9 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from apps.api.deps import get_predictive_analytics_engine
-from apps.api.di_container.analytics_container import get_analytics_fusion_service, get_cache
+from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 
-# Auth
 # Auth
 from apps.api.middleware.auth import get_current_user
 

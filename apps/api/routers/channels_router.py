@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from apps.api.di_container.analytics_container import get_channel_management_service
+from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user,
     require_channel_access,

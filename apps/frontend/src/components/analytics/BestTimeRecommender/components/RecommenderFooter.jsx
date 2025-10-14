@@ -17,7 +17,7 @@ const RecommenderFooter = ({ recommendations }) => {
             borderColor: 'divider'
         }}>
             <Typography variant="caption" color="text.secondary">
-                AI tahlili: {new Date().toLocaleTimeString()} da yangilangan
+                AI analysis updated at {new Date().toLocaleTimeString()}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
                 <Chip

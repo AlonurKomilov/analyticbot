@@ -33,7 +33,7 @@ open http://localhost:11400/docs#/analytics-post-dynamics
 4. **Expected:**
    - ✅ Chart displays with data
    - ✅ Summary stats show metrics
-   - ✅ "🔄 Avtomatik yangilash" chip visible
+   - ✅ "🔄 Auto-refresh enabled" chip visible
    - ✅ Data updates every 30 seconds
 
 #### Test Scenario 2: No Channels Available

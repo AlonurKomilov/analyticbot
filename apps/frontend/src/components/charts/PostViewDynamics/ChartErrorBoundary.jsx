@@ -25,7 +25,7 @@ class ChartErrorBoundary extends React.Component {
         if (this.state.hasError) {
             return (
                 <Alert severity="error" variant="spaced">
-                    Chart ma'lumotlarini ko'rsatishda xatolik yuz berdi. Sahifani yangilang.
+                    An error occurred while displaying the chart. Please refresh the page.
                 </Alert>
             );
         }

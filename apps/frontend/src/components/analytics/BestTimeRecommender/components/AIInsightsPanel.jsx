@@ -26,10 +26,10 @@ const AIInsightsPanel = ({ aiInsights }) => {
             }}>
                 <AIIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
                 <Typography variant="h6" gutterBottom>
-                    Tavsiyalar mavjud emas
+                    No Recommendations Available
                 </Typography>
                 <Typography variant="body2">
-                    AI tavsiyalarini olish uchun ma'lumotlar yetarli emas
+                    Insufficient data to generate AI recommendations
                 </Typography>
             </Box>
         );
@@ -38,7 +38,7 @@ const AIInsightsPanel = ({ aiInsights }) => {
     return (
         <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-                🧠 AI Tavsiyalari va Ko'rsatmalar
+                🧠 AI Recommendations & Insights
             </Typography>
             <List>
                 {aiInsights.map((insight, index) => (

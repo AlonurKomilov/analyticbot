@@ -82,10 +82,10 @@ const BestTimeRecommender = () => {
             {!loading && !recommendations && !error && (
                 <Box sx={{ textAlign: 'center', p: 4 }}>
                     <Typography variant="h6" color="text.secondary" gutterBottom>
-                        Ma'lumotlar mavjud emas
+                        No Data Available
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        AI tavsiyalarini olish uchun ma'lumotlarni kuting.
+                        Wait for data collection to get AI recommendations.
                     </Typography>
                 </Box>
             )}

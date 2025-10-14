@@ -49,25 +49,34 @@ EmptyState.displayName = 'EmptyState';
 export const StatusFooter = React.memo(({
     autoRefresh = false,
     refreshInterval = 'disabled',
-    summaryStats = null
+    summaryStats = null,
+    hasChannels = true
 }) => (
     <Box variant="statusFooter">
         <Typography variant="caption" color="text.secondary">
-            So'ngi yangilash: {new Date().toLocaleTimeString()}
+            Last updated: {new Date().toLocaleTimeString()}
         </Typography>
         <Box variant="chipGroup">
-            {autoRefresh && refreshInterval !== 'disabled' && (
+            {autoRefresh && refreshInterval !== 'disabled' && hasChannels && (
                 <Chip
                     size="small"
-                    label="🔄 Avtomatik yangilash"
+                    label="🔄 Auto-refresh enabled"
                     color="primary"
+                    variant="outlined"
+                />
+            )}
+            {!hasChannels && (
+                <Chip
+                    size="small"
+                    label="⏸️ Auto-refresh disabled"
+                    color="default"
                     variant="outlined"
                 />
             )}
             {summaryStats && summaryStats.growthRate > 10 && (
                 <Chip
                     size="small"
-                    label={<><span aria-hidden="true">📈</span> Yuqori o'sish</>}
+                    label={<><span aria-hidden="true">📈</span> High Growth</>}
                     color="success"
                 />
             )}

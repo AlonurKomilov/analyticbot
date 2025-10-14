@@ -170,16 +170,20 @@ def get_container() -> Container:
     """
     global _container
     if _container is None:
-        # Auto-initialize with default settings from environment
-        import os
+        # Auto-initialize with settings from config module
+        from config import settings as app_settings
+
+        # Get database URL from config settings
+        database_url = app_settings.get_database_url()
+
+        # Convert postgresql:// to postgresql+asyncpg:// if needed for SQLAlchemy
+        if database_url.startswith("postgresql://") and "+asyncpg" not in database_url:
+            database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
 
         default_settings = Settings(
-            database_url=os.getenv(
-                "DATABASE_URL",
-                "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
-            ),
-            database_pool_size=int(os.getenv("DATABASE_POOL_SIZE", "10")),
-            database_max_overflow=int(os.getenv("DATABASE_MAX_OVERFLOW", "20")),
+            database_url=database_url,
+            database_pool_size=app_settings.DB_POOL_SIZE,
+            database_max_overflow=app_settings.DB_MAX_OVERFLOW,
         )
         _container = Container(default_settings)
     return _container

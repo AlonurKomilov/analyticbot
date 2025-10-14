@@ -1,7 +1,56 @@
 """
+⚠️ ⚠️ ⚠️ DEPRECATED - DO NOT USE ⚠️ ⚠️ ⚠️
+
+This file is DEPRECATED and will be removed in a future release.
+Please migrate to the new modular DI architecture: apps/di/
+
 Dependency injection setup for FastAPI
 Wires database connections to repositories to services using proper DI container
+
+MIGRATION GUIDE:
+---------------
+
+OLD (deprecated):
+    from apps.api.deps import get_schedule_service, get_delivery_service
+    service = Depends(get_schedule_service)
+
+NEW (modular DI):
+    from apps.di import get_schedule_service, get_delivery_service
+    service = Depends(get_schedule_service)
+
+For database connections:
+OLD:
+    from apps.api.deps import get_db_connection
+
+NEW:
+    from apps.di import get_db_connection
+
+For authentication:
+OLD:
+    from apps.api.deps import get_current_user
+
+NEW:
+    from apps.api.middleware.auth import get_current_user
+
+DEPRECATION SCHEDULE:
+- 2025-10-14: Deprecated (this warning added)
+- 2025-10-21: Will be removed (1 week grace period)
+
+See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
 """
+
+import logging
+import warnings
+
+# Emit deprecation warning when module is imported
+warnings.warn(
+    "apps.api.deps is DEPRECATED. "
+    "Please migrate to apps.di for DI services or apps.api.middleware.auth for auth. "
+    "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
+    "This module will be removed on 2025-10-21.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import logging
 from collections.abc import AsyncGenerator

@@ -1,7 +1,50 @@
 """
+⚠️ ⚠️ ⚠️ DEPRECATED - DO NOT USE ⚠️ ⚠️ ⚠️
+
+This file is DEPRECATED and will be removed in a future release.
+Please migrate to apps/api/di_analytics.py for Analytics V2 API endpoints.
+
 Analytics Dependency Injection Container
 Properly structured DI container using Repository Factory pattern for clean architecture
+
+MIGRATION GUIDE:
+---------------
+
+This container has been replaced by apps/api/di_analytics.py for Analytics V2 API.
+That file already uses the new patterns and is properly structured.
+
+OLD (deprecated):
+    from apps.api.di_container.analytics_container import get_analytics_fusion_service
+    service = Depends(get_analytics_fusion_service)
+
+NEW (already migrated in Analytics V2):
+    from apps.api.di_analytics import get_analytics_fusion_service
+    service = Depends(get_analytics_fusion_service)
+
+For other API services (not analytics):
+    from apps.di import get_container
+    container = get_container()
+    service = await container.api.some_service()
+
+DEPRECATION SCHEDULE:
+- 2025-10-14: Deprecated (this warning added)
+- 2025-10-21: Will be removed (1 week grace period)
+
+See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
 """
+
+import logging
+import warnings
+
+# Emit deprecation warning when module is imported
+warnings.warn(
+    "apps.api.di_container.analytics_container is DEPRECATED. "
+    "Please use apps.api.di_analytics for Analytics V2 API endpoints. "
+    "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
+    "This module will be removed on 2025-10-21.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import logging
 import os

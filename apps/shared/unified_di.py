@@ -1,4 +1,38 @@
 """
+⚠️ ⚠️ ⚠️ DEPRECATED - DO NOT USE ⚠️ ⚠️ ⚠️
+
+This file is DEPRECATED and will be removed in a future release.
+Please migrate to the new modular DI architecture: apps/di/
+
+MIGRATION GUIDE:
+---------------
+
+OLD (deprecated):
+    from apps.shared.unified_di import get_container
+    container = get_container()
+    service = container.analytics_service()
+
+NEW (modular DI):
+    from apps.di import get_container
+    container = get_container()
+    service = await container.bot.analytics_service()
+
+Benefits of New Architecture:
+✅ No God Objects (7 focused containers vs 1 monolith)
+✅ Single Responsibility Principle compliance
+✅ Better testability (mock individual containers)
+✅ Clearer dependencies (explicit composition)
+✅ 100% type safe
+✅ Average 175 lines per container (vs 729 here)
+
+See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
+
+DEPRECATION SCHEDULE:
+- 2025-10-14: Deprecated (this warning added)
+- 2025-10-21: Will be removed (1 week grace period)
+
+---
+
 🎯 Unified Dependency Injection Container - Phase 1.4 Consolidation
 
 Consolidates 5 DI containers into a single, clean architecture-compliant container:
@@ -18,6 +52,19 @@ Features:
 ✅ Graceful degradation (services return None if unavailable)
 ✅ No circular dependencies
 """
+
+import logging
+import warnings
+
+# Emit deprecation warning when module is imported
+warnings.warn(
+    "apps.shared.unified_di is DEPRECATED. "
+    "Please migrate to apps.di modular architecture. "
+    "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
+    "This module will be removed on 2025-10-21.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import logging
 import os

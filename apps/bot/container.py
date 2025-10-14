@@ -1,11 +1,48 @@
 """
+⚠️ ⚠️ ⚠️ DEPRECATED - DO NOT USE ⚠️ ⚠️ ⚠️
+
+This file is DEPRECATED and will be removed in a future release.
+Please migrate to the new modular DI architecture: apps/di/
+
 Bot Container - Compatibility Wrapper for Clean Architecture
 Delegates all operations to apps/bot/di.py (clean dependency-injector container)
 
 This eliminates the god container pattern while maintaining compatibility.
+
+MIGRATION GUIDE:
+---------------
+
+OLD (deprecated):
+    from apps.bot.container import container
+    bot = container.bot_client()
+
+NEW (modular DI):
+    from apps.di import get_container
+    container = get_container()
+    bot = await container.bot.bot_client()
+
+DEPRECATION SCHEDULE:
+- 2025-10-14: Deprecated (this warning added)
+- 2025-10-21: Will be removed (1 week grace period)
+
+See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
 """
 
 from __future__ import annotations
+
+import logging
+import warnings
+
+# Emit deprecation warning when module is imported
+warnings.warn(
+    "apps.bot.container is DEPRECATED. "
+    "This is just a wrapper around apps.bot.di which is also deprecated. "
+    "Please migrate to apps.di.get_container() for bot services. "
+    "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
+    "This module will be removed on 2025-10-21.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import logging
 from typing import TypeVar, cast

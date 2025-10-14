@@ -13,7 +13,7 @@ from apps.bot.config import settings as app_settings
 from apps.bot.services import (
     AnalyticsService,
     GuardService,
-    SchedulerService,  # LEGACY - Will be removed after migration
+    # SchedulerService - ARCHIVED: Replaced with ScheduleManager, PostDeliveryService, DeliveryStatusTracker
     SubscriptionService,
 )
 

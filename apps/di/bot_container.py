@@ -105,6 +105,32 @@ async def _create_bot_dashboard_adapter(core_dashboard_service=None, **kwargs):
         return None
 
 
+def _create_aiogram_message_sender(bot=None, **kwargs):
+    """Create Aiogram message sender adapter"""
+    try:
+        from apps.bot.adapters.scheduling_adapters import AiogramMessageSender
+
+        if bot is None:
+            logger.warning("Cannot create message sender: bot is None")
+            return None
+
+        return AiogramMessageSender(bot=bot)
+    except ImportError as e:
+        logger.warning(f"Message sender adapter not available: {e}")
+        return None
+
+
+def _create_aiogram_markup_builder(**kwargs):
+    """Create Aiogram markup builder adapter"""
+    try:
+        from apps.bot.adapters.scheduling_adapters import AiogramMarkupBuilder
+
+        return AiogramMarkupBuilder()
+    except ImportError as e:
+        logger.warning(f"Markup builder adapter not available: {e}")
+        return None
+
+
 # ============================================================================
 # BOT SERVICES
 # ============================================================================
@@ -180,7 +206,7 @@ def _create_payment_orchestrator(payment_repository=None, **kwargs):
 
 
 def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """Create scheduler service"""
+    """Create scheduler service (LEGACY - will be removed after migration)"""
     try:
         from apps.bot.services.scheduler_service import SchedulerService
 
@@ -192,6 +218,77 @@ def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
             **kwargs,
         )
     except ImportError:
+        return None
+
+
+# ============================================================================
+# NEW SCHEDULING SERVICES (Clean Architecture)
+# ============================================================================
+
+
+def _create_schedule_manager(schedule_repository=None, analytics_repository=None, **kwargs):
+    """Create schedule manager (core scheduling logic)"""
+    try:
+        from core.services.bot.scheduling import ScheduleManager
+
+        if schedule_repository is None or analytics_repository is None:
+            logger.warning("Cannot create schedule manager: missing repositories")
+            return None
+
+        return ScheduleManager(
+            schedule_repo=schedule_repository,
+            analytics_repo=analytics_repository,
+        )
+    except ImportError as e:
+        logger.warning(f"Schedule manager not available: {e}")
+        return None
+
+
+def _create_post_delivery_service(
+    message_sender=None,
+    markup_builder=None,
+    schedule_repository=None,
+    analytics_repository=None,
+    **kwargs
+):
+    """Create post delivery service (orchestrates message delivery)"""
+    try:
+        from core.services.bot.scheduling import PostDeliveryService
+
+        if not all([message_sender, markup_builder, schedule_repository, analytics_repository]):
+            logger.warning("Cannot create post delivery service: missing dependencies")
+            return None
+
+        return PostDeliveryService(
+            message_sender=message_sender,
+            markup_builder=markup_builder,
+            schedule_repo=schedule_repository,
+            analytics_repo=analytics_repository,
+        )
+    except ImportError as e:
+        logger.warning(f"Post delivery service not available: {e}")
+        return None
+
+
+def _create_delivery_status_tracker(
+    schedule_repository=None,
+    analytics_repository=None,
+    **kwargs
+):
+    """Create delivery status tracker (manages post lifecycle)"""
+    try:
+        from core.services.bot.scheduling import DeliveryStatusTracker
+
+        if schedule_repository is None or analytics_repository is None:
+            logger.warning("Cannot create delivery status tracker: missing repositories")
+            return None
+
+        return DeliveryStatusTracker(
+            schedule_repo=schedule_repository,
+            analytics_repo=analytics_repository,
+        )
+    except ImportError as e:
+        logger.warning(f"Delivery status tracker not available: {e}")
         return None
 
 
@@ -315,6 +412,16 @@ class BotContainer(containers.DeclarativeContainer):
         bot=bot_client,
     )
 
+    # Telegram adapters for scheduling
+    aiogram_message_sender = providers.Factory(
+        _create_aiogram_message_sender,
+        bot=bot_client,
+    )
+
+    aiogram_markup_builder = providers.Factory(
+        _create_aiogram_markup_builder,
+    )
+
     # ============================================================================
     # BOT SERVICES
     # ============================================================================
@@ -339,6 +446,27 @@ class BotContainer(containers.DeclarativeContainer):
         _create_scheduler_service,
         schedule_repository=database.schedule_repo,
         bot=bot_client,
+    )
+
+    # New scheduling services (Clean Architecture)
+    schedule_manager = providers.Factory(
+        _create_schedule_manager,
+        schedule_repository=database.schedule_repo,
+        analytics_repository=database.analytics_repo,
+    )
+
+    post_delivery_service = providers.Factory(
+        _create_post_delivery_service,
+        message_sender=aiogram_message_sender,
+        markup_builder=aiogram_markup_builder,
+        schedule_repository=database.schedule_repo,
+        analytics_repository=database.analytics_repo,
+    )
+
+    delivery_status_tracker = providers.Factory(
+        _create_delivery_status_tracker,
+        schedule_repository=database.schedule_repo,
+        analytics_repository=database.analytics_repo,
     )
 
     analytics_service = providers.Factory(

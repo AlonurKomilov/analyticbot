@@ -65,6 +65,100 @@ class ScheduleRepository(Protocol):
         """
         ...
 
+    async def get_post_by_id(self, post_id: int) -> Any | None:
+        """
+        Get a scheduled post by ID
+
+        Args:
+            post_id: Post ID to retrieve
+
+        Returns:
+            Post object or None if not found
+        """
+        ...
+
+    async def store_error_message(self, post_id: int, error_message: str) -> None:
+        """
+        Store error message for a failed post
+
+        Args:
+            post_id: Post ID
+            error_message: Error message to store
+        """
+        ...
+
+    async def store_message_id(self, post_id: int, message_id: int) -> None:
+        """
+        Store Telegram message ID for a delivered post
+
+        Args:
+            post_id: Scheduled post ID
+            message_id: Telegram message ID
+        """
+        ...
+
+    async def count_posts(
+        self, user_id: int | None = None, channel_id: int | None = None
+    ) -> int:
+        """
+        Count total posts with optional filters
+
+        Args:
+            user_id: Optional user ID filter
+            channel_id: Optional channel ID filter
+
+        Returns:
+            Total post count
+        """
+        ...
+
+    async def count_posts_by_status(
+        self,
+        status: str,
+        user_id: int | None = None,
+        channel_id: int | None = None,
+    ) -> int:
+        """
+        Count posts by status with optional filters
+
+        Args:
+            status: Post status to count
+            user_id: Optional user ID filter
+            channel_id: Optional channel ID filter
+
+        Returns:
+            Count of posts with given status
+        """
+        ...
+
+    async def get_failed_posts_with_errors(
+        self, user_id: int | None = None, limit: int = 10
+    ) -> list[tuple[int, str]]:
+        """
+        Get recently failed posts with error messages
+
+        Args:
+            user_id: Optional user ID filter
+            limit: Maximum number of posts
+
+        Returns:
+            List of (post_id, error_message) tuples
+        """
+        ...
+
+    async def delete_old_posts(self, days_old: int, statuses: list[str]) -> int:
+        """
+        Delete old posts in specified statuses
+
+        Args:
+            days_old: Delete posts older than this many days
+            statuses: List of statuses to delete
+
+        Returns:
+            Number of posts deleted
+        """
+        ...
+
 
 class AnalyticsRepository(Protocol):
     """
@@ -89,6 +183,24 @@ class AnalyticsRepository(Protocol):
         """
         ...
 
+    async def record_post_delivery(
+        self,
+        post_id: int,
+        message_id: int,
+        channel_id: int,
+        delivered_at: datetime,
+    ) -> None:
+        """
+        Record post delivery in analytics
+
+        Args:
+            post_id: Scheduled post ID
+            message_id: Telegram message ID
+            channel_id: Channel ID
+            delivered_at: Delivery timestamp
+        """
+        ...
+
 
 class MessageSenderPort(Protocol):
     """
@@ -98,13 +210,12 @@ class MessageSenderPort(Protocol):
     Adapters implement this port using actual Telegram API
     """
 
-    async def send_text(
+    async def send_text_message(
         self,
         channel_id: int,
         text: str,
         reply_markup: Any | None = None,
-        **kwargs,
-    ) -> dict[str, Any]:
+    ) -> int:
         """
         Send a text message
 
@@ -112,22 +223,20 @@ class MessageSenderPort(Protocol):
             channel_id: Target channel ID
             text: Message text
             reply_markup: Optional inline keyboard
-            **kwargs: Additional parameters
 
         Returns:
-            Dict with message_id, chat_id, success status
+            Sent message ID
         """
         ...
 
-    async def send_media(
+    async def send_media_message(
         self,
         channel_id: int,
         media_id: str,
         media_type: str,
         caption: str | None = None,
         reply_markup: Any | None = None,
-        **kwargs,
-    ) -> dict[str, Any]:
+    ) -> int:
         """
         Send a media message (photo, video, document)
 
@@ -137,10 +246,9 @@ class MessageSenderPort(Protocol):
             media_type: Type of media (photo, video, document)
             caption: Optional caption text
             reply_markup: Optional inline keyboard
-            **kwargs: Additional parameters
 
         Returns:
-            Dict with message_id, chat_id, success status
+            Sent message ID
         """
         ...
 

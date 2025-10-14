@@ -1,6 +1,7 @@
-# Phase 3 - Business Logic Migration Plan
+# Phase 3 - Business Logic Migration Plan (REVISED)
 
 **Date:** October 14, 2025
+**Revised:** October 14, 2025 - Better organization under `core/services/bot/`
 **Status:** 🔄 **READY TO START**
 **Estimated Duration:** 1-2 weeks
 
@@ -8,7 +9,9 @@
 
 ## 🎯 Objectives
 
-Complete the migration of remaining business logic from `apps/bot/services/` to `core/services/`, following the same Clean Architecture patterns established in Phase 1-2.
+Complete the migration of remaining business logic from `apps/bot/services/` to `core/services/bot/`, following the same Clean Architecture patterns established in Phase 1-2.
+
+**Key Improvement:** All bot-related services will be organized under `core/services/bot/` namespace for better clarity and organization.
 
 **Success Criteria:**
 - ✅ All business logic moved to core layer
@@ -31,6 +34,8 @@ Complete the migration of remaining business logic from `apps/bot/services/` to 
 
 **Total Migrated:** 2,246 lines (Phase 1)
 
+**⚠️ Note:** These will be reorganized under `core/services/bot/` in Phase 3.0 (see below)
+
 ### Services Still in Apps Layer 🔄
 
 **Priority Services (Need Migration):**
@@ -40,28 +45,28 @@ Complete the migration of remaining business logic from `apps/bot/services/` to 
    - **Dependencies:** Bot (Telegram API), scheduler_repo, analytics_repo
    - **Complexity:** Medium-High (mixed responsibilities)
    - **Issues:** God Service - does scheduling, sending, error handling, analytics
-   - **Target:** Split into multiple services in `core/services/scheduling/`
+   - **Target:** Split into multiple services in `core/services/bot/scheduling/`
 
 2. **AlertingService** (328 lines) - `apps/bot/services/alerting_service.py`
    - **Type:** Business logic (alert conditions, rule management)
    - **Dependencies:** None (pure business logic)
    - **Complexity:** Medium
    - **Issues:** Should be in core, not apps
-   - **Target:** Move to `core/services/alerts/` (AlertsManagementService already exists, may need consolidation)
+   - **Target:** Move to `core/services/bot/alerts/` (consolidate with existing core alerts)
 
 3. **ContentProtectionService** (350 lines) - `apps/bot/services/content_protection.py`
    - **Type:** Business logic (image processing, watermarking)
    - **Dependencies:** PIL, file system
    - **Complexity:** Medium
    - **Issues:** Business logic in apps layer
-   - **Target:** Move to `core/services/content/content_protection_service.py`
+   - **Target:** Move to `core/services/bot/content/content_protection_service.py`
 
 4. **PrometheusService** (337 lines) - `apps/bot/services/prometheus_service.py`
    - **Type:** Monitoring/Infrastructure
    - **Dependencies:** prometheus_client
    - **Complexity:** Medium
    - **Issues:** Should be in infra layer
-   - **Target:** Move to `infra/monitoring/prometheus_service.py`
+   - **Target:** Move to `infra/monitoring/prometheus_service.py` (NOT in bot namespace)
 
 **Lower Priority Services (May Stay in Apps):**
 
@@ -91,6 +96,69 @@ Complete the migration of remaining business logic from `apps/bot/services/` to 
 
 ## 🗺️ Phase 3 Execution Plan
 
+### **Sub-Phase 3.0: Reorganize Existing Services (1 day)** 🔥 **DO FIRST**
+
+**Problem:** Current services scattered in top-level core/services/
+- `core/services/analytics/analytics_batch_processor.py`
+- `core/services/reporting/reporting_service.py`
+- `core/services/dashboard/dashboard_service.py`
+
+**Solution:** Move all bot-related services under `core/services/bot/` namespace
+
+**New Organized Structure:**
+```
+core/services/bot/
+├── __init__.py
+├── analytics/
+│   ├── __init__.py
+│   └── analytics_batch_processor.py (moved from core/services/analytics/)
+├── reporting/
+│   ├── __init__.py
+│   └── reporting_service.py (moved from core/services/reporting/)
+├── dashboard/
+│   ├── __init__.py
+│   └── dashboard_service.py (moved from core/services/dashboard/)
+├── scheduling/
+│   ├── __init__.py
+│   ├── schedule_manager.py (NEW - from SchedulerService)
+│   ├── post_scheduler.py (NEW - from SchedulerService)
+│   ├── notification_scheduler.py (NEW - from SchedulerService)
+│   ├── retry_handler.py (NEW - from SchedulerService)
+│   └── protocols.py
+├── alerts/
+│   ├── __init__.py
+│   └── alert_service.py (NEW - from AlertingService + consolidation)
+├── content/
+│   ├── __init__.py
+│   ├── content_protection_service.py (NEW - from ContentProtectionService)
+│   └── watermark_config.py
+└── subscription/
+    ├── __init__.py
+    └── subscription_service.py (NEW - if business logic)
+```
+
+**Benefits:**
+- ✅ Clear namespace: All bot services in one place
+- ✅ Easy navigation: `core/services/bot/analytics/`, not scattered
+- ✅ Better IDE support: Auto-complete shows related services
+- ✅ Logical grouping: Bot domain separated from other domains
+- ✅ Scalability: Easy to add more bot services
+
+**Steps:**
+1. Create `core/services/bot/` directory structure
+2. Move existing 3 services (analytics, reporting, dashboard)
+3. Update all imports in:
+   - DI containers (`apps/di/core_services_container.py`)
+   - Bot adapters (`apps/bot/adapters/`)
+   - Test files
+4. Update `__init__.py` exports
+5. Verify all tests pass
+6. Commit changes
+
+**Estimated Time:** 1 day (careful refactoring with testing)
+
+---
+
 ### **Sub-Phase 3.1: SchedulerService Refactoring (3-4 days)** 🔥 HIGH PRIORITY
 
 **Problem:** God Service with 5+ responsibilities
@@ -104,7 +172,7 @@ Complete the migration of remaining business logic from `apps/bot/services/` to 
 
 **Target Architecture:**
 ```
-core/services/scheduling/
+core/services/bot/scheduling/
 ├── __init__.py
 ├── schedule_manager.py (Core scheduling logic)
 ├── post_scheduler.py (Post scheduling business rules)
@@ -141,11 +209,21 @@ apps/bot/adapters/
 - Core AlertsManagementService: check_real_time_alerts, setup_intelligent_alerts
 - Different APIs, overlapping responsibilities
 
-**Solution:** Consolidate into core service
+**Solution:** Consolidate into unified bot alert service
+
+**Target Architecture:**
+```
+core/services/bot/alerts/
+├── __init__.py
+├── alert_service.py (Consolidated from both sources)
+├── alert_rules.py (Rule management)
+├── alert_conditions.py (Condition checking)
+└── protocols.py
+```
 
 **Steps:**
 1. **Audit both services** (identify overlaps and unique logic)
-2. **Consolidate into core** (`core/services/alerts/alert_service.py`)
+2. **Consolidate into core** (`core/services/bot/alerts/alert_service.py`)
    - Merge condition checking logic
    - Merge rule management
    - Unified alert event generation
@@ -167,11 +245,11 @@ apps/bot/adapters/
 - Pure business logic (PIL image processing, watermarking)
 - No Telegram-specific code
 
-**Solution:** Direct migration to core
+**Solution:** Direct migration to core bot services
 
 **Target Architecture:**
 ```
-core/services/content/
+core/services/bot/content/
 ├── __init__.py
 ├── content_protection_service.py (Watermarking, image processing)
 ├── watermark_config.py (Configuration models)
@@ -182,7 +260,7 @@ apps/bot/adapters/
 ```
 
 **Steps:**
-1. Create `core/services/content/content_protection_service.py`
+1. Create `core/services/bot/content/content_protection_service.py`
 2. Move all image processing logic
 3. Create file system abstraction (Protocol)
 4. Create Telegram delivery adapter
@@ -226,14 +304,22 @@ infra/monitoring/
 ### **Sub-Phase 3.5: Service Review & Cleanup (1 day)** 🟡 LOW PRIORITY
 
 Review remaining services and decide:
-- SubscriptionService - Keep as adapter or move to core?
-- GuardService - Likely stays (Telegram-specific)
-- AuthService - Likely stays (Telegram-specific)
+- **SubscriptionService** - If business logic → `core/services/bot/subscription/`
+- **GuardService** - Likely stays as adapter (Telegram-specific access control)
+- **AuthService** - Likely stays as adapter (Telegram-specific authentication)
+
+**Potential Additional Structure:**
+```
+core/services/bot/subscription/
+├── __init__.py
+├── subscription_service.py (Business logic only)
+└── protocols.py
+```
 
 **Steps:**
 1. Audit each service
 2. Determine if business logic or adapter
-3. Migrate if needed
+3. Migrate if needed to `core/services/bot/`
 4. Document decisions
 
 **Estimated Time:** 1 day
@@ -244,41 +330,56 @@ Review remaining services and decide:
 
 ### Week 1 (Days 1-5)
 
-**Day 1-2: Planning & SchedulerService Analysis**
+**Day 1: Reorganize Existing Services (Sub-Phase 3.0)**
+- [ ] Create `core/services/bot/` directory structure
+- [ ] Move analytics, reporting, dashboard to bot namespace
+- [ ] Update all imports (DI containers, adapters, tests)
+- [ ] Update `__init__.py` exports
+- [ ] Run all tests to verify
+- [ ] Commit reorganization
+
+**Day 2-3: SchedulerService Analysis & Design**
 - [ ] Audit SchedulerService responsibilities
 - [ ] Design core scheduling services (5 services)
 - [ ] Create service protocols
-- [ ] Review with stakeholders
+- [ ] Review architecture
 
-**Day 3-5: SchedulerService Implementation**
-- [ ] Create core/services/scheduling/ (5 services)
+**Day 4-5: SchedulerService Implementation**
+- [ ] Create `core/services/bot/scheduling/` (5 services)
 - [ ] Create Telegram adapters
 - [ ] Update DI containers
 - [ ] Update handlers/tasks
 - [ ] Write tests
 - [ ] Verify no regressions
 
-### Week 2 (Days 6-10)
+### Week 2 (Days 6-11)
 
 **Day 6-7: AlertingService Consolidation**
 - [ ] Audit both alert services
-- [ ] Consolidate into core
+- [ ] Consolidate into `core/services/bot/alerts/`
 - [ ] Create Telegram adapter
 - [ ] Update router
 - [ ] Remove duplicates
 
 **Day 8-9: ContentProtectionService Migration**
-- [ ] Move to core/services/content/
+- [ ] Move to `core/services/bot/content/`
 - [ ] Create file abstractions
 - [ ] Update DI containers
 - [ ] Update routers
 - [ ] Test watermarking
 
-**Day 10: PrometheusService + Cleanup**
-- [ ] Move PrometheusService to infra/monitoring/
-- [ ] Review remaining services
-- [ ] Documentation updates
-- [ ] Final verification
+**Day 10: PrometheusService Migration**
+- [ ] Move PrometheusService to `infra/monitoring/`
+- [ ] Update DI containers
+- [ ] Update all callers
+- [ ] Test metrics collection
+
+**Day 11: Review & Final Cleanup**
+- [ ] Review remaining services (Subscription, Guard, Auth)
+- [ ] Migrate SubscriptionService if business logic
+- [ ] Update all documentation
+- [ ] Final verification of all services
+- [ ] Verify `core/services/bot/` structure is complete
 
 ---
 
@@ -373,14 +474,15 @@ New services will follow same patterns:
 
 | Sub-Phase | Days | Priority | Status |
 |-----------|------|----------|--------|
-| 3.1: SchedulerService Refactoring | 3-4 | 🔥 HIGH | 🔄 Next |
+| 3.0: Reorganize Existing Services | 1 | 🔥 **CRITICAL** | 🔄 **DO FIRST** |
+| 3.1: SchedulerService Refactoring | 3-4 | 🔥 HIGH | ⏳ Pending |
 | 3.2: AlertingService Migration | 2-3 | 🔥 MEDIUM | ⏳ Pending |
 | 3.3: ContentProtectionService | 2 | 🔥 MEDIUM | ⏳ Pending |
 | 3.4: PrometheusService | 1-2 | 🟡 LOW | ⏳ Pending |
 | 3.5: Review & Cleanup | 1 | 🟡 LOW | ⏳ Pending |
-| **Total** | **9-12 days** | | |
+| **Total** | **10-13 days** | | |
 
-**Estimated Completion:** October 28, 2025 (2 weeks at current velocity)
+**Estimated Completion:** October 29, 2025 (2 weeks at current velocity)
 
 ---
 
@@ -398,5 +500,84 @@ Start with **Sub-Phase 3.1: SchedulerService Refactoring** (highest priority, hi
 
 ---
 
+---
+
+## 🎨 **New Organization Benefits**
+
+### Before (Scattered Structure)
+```
+core/services/
+├── analytics/
+│   └── analytics_batch_processor.py
+├── reporting/
+│   └── reporting_service.py
+├── dashboard/
+│   └── dashboard_service.py
+├── ai_insights_fusion/
+├── alerts_fusion/
+├── analytics_fusion/
+└── ... (many other services)
+```
+**Problems:**
+- ❌ Hard to find bot-related services (scattered across top level)
+- ❌ Mixing different domains (bot, API, ML, analytics fusion, etc.)
+- ❌ No clear ownership (which services belong to bot?)
+- ❌ Difficult to navigate (20+ folders at top level)
+
+### After (Organized Structure)
+```
+core/services/
+├── bot/  ⭐ NEW - All bot services here!
+│   ├── analytics/
+│   │   └── analytics_batch_processor.py
+│   ├── reporting/
+│   │   └── reporting_service.py
+│   ├── dashboard/
+│   │   └── dashboard_service.py
+│   ├── scheduling/
+│   │   ├── schedule_manager.py
+│   │   ├── post_scheduler.py
+│   │   └── notification_scheduler.py
+│   ├── alerts/
+│   │   └── alert_service.py
+│   ├── content/
+│   │   └── content_protection_service.py
+│   └── subscription/
+│       └── subscription_service.py
+├── ai_insights_fusion/
+├── alerts_fusion/
+├── analytics_fusion/
+└── ... (other domain services)
+```
+**Benefits:**
+- ✅ **Clear namespace:** All bot services under `core/services/bot/`
+- ✅ **Easy discovery:** One place to find all bot business logic
+- ✅ **Logical grouping:** Related services together by domain
+- ✅ **Better IDE support:** Auto-complete shows bot services grouped
+- ✅ **Scalability:** Easy to add more bot services without cluttering
+- ✅ **Clean imports:** `from core.services.bot.analytics import ...`
+- ✅ **Domain separation:** Bot, API, ML services clearly separated
+
+### Import Examples
+
+**Before:**
+```python
+from core.services.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.reporting.reporting_service import ReportingService
+from core.services.dashboard.dashboard_service import DashboardService
+```
+
+**After (Clean & Clear):**
+```python
+from core.services.bot.analytics import AnalyticsBatchProcessor
+from core.services.bot.reporting import ReportingService
+from core.services.bot.dashboard import DashboardService
+# OR
+from core.services.bot import analytics, reporting, dashboard
+```
+
+---
+
 **Created:** October 14, 2025
+**Revised:** October 14, 2025 - Better organization under `core/services/bot/`
 **Status:** Ready for approval and execution 🚀

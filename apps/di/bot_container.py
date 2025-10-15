@@ -206,19 +206,19 @@ def _create_payment_orchestrator(payment_repository=None, **kwargs):
 
 
 def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """Create scheduler service (LEGACY - will be removed after migration)"""
-    try:
-        from apps.bot.services.scheduler_service import SchedulerService
+    """
+    DEPRECATED: Legacy scheduler service (archived in Phase 3.1)
 
-        return _create_service_with_deps(
-            SchedulerService,
-            schedule_repository=schedule_repository,
-            scheduler_repo=schedule_repository,
-            bot=bot,
-            **kwargs,
-        )
-    except ImportError:
-        return None
+    Use instead:
+    - schedule_manager() for core scheduling logic
+    - post_delivery_service() for message delivery
+    - delivery_status_tracker() for status management
+    """
+    logger.warning(
+        "SchedulerService is deprecated. Use new scheduling services: "
+        "schedule_manager, post_delivery_service, delivery_status_tracker"
+    )
+    return None
 
 
 # ============================================================================
@@ -365,15 +365,20 @@ def _create_analytics_service(analytics_repository=None, channel_repository=None
 
 
 def _create_alerting_service(bot=None, user_repository=None, **kwargs):
-    """Create alerting service"""
-    try:
-        from apps.bot.services.alerting_service import AlertingService
+    """
+    DEPRECATED: Legacy alerting service (archived in Phase 3.2)
 
-        return _create_service_with_deps(
-            AlertingService, bot=bot, user_repository=user_repository, **kwargs
-        )
-    except ImportError:
-        return None
+    Use instead:
+    - alert_condition_evaluator() for metric evaluation
+    - alert_rule_manager() for rule management
+    - alert_event_manager() for event lifecycle
+    - telegram_alert_notifier() for notifications
+    """
+    logger.warning(
+        "AlertingService is deprecated. Use new alert services: "
+        "alert_condition_evaluator, alert_rule_manager, alert_event_manager"
+    )
+    return None
 
 
 def _create_channel_management_service(channel_repository=None, bot=None, **kwargs):

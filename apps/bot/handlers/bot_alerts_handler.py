@@ -18,8 +18,6 @@ import logging
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from apps.di import get_container
-
 logger = logging.getLogger(__name__)
 
 # Create alerts microhandler router
@@ -134,7 +132,8 @@ async def handle_alert_subscribe(callback: CallbackQuery) -> None:
         # Get channel_id (simulate extraction, in real use parse from callback)
         channel_id = str(callback.from_user.id)
 
-        # Use DI to get AlertRuleManager
+        # Use DI to get AlertRuleManager (import here to avoid circular dependency)
+        from apps.di import get_container
         container = get_container()
         alert_rule_manager = container.bot.alert_rule_manager()
 
@@ -179,6 +178,8 @@ async def handle_alert_unsubscribe(callback: CallbackQuery) -> None:
             return
 
         channel_id = str(callback.from_user.id)
+        # Import here to avoid circular dependency
+        from apps.di import get_container
         container = get_container()
         alert_rule_manager = container.bot.alert_rule_manager()
         rule_name = f"{alert_type}_subscription"

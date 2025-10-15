@@ -19,9 +19,9 @@ from aiogram.types import (
 
 from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
 
-# TODO: PremiumEmojiService is not part of content protection domain
-# Consider moving to separate premium features module in future phase
-from apps.bot.services.content_protection import PremiumEmojiService
+# TODO Phase 3.5: PremiumEmojiService should be moved to dedicated premium features module
+# Currently in apps/bot/services/premium_emoji_service.py as temporary location
+from apps.bot.services.premium_emoji_service import PremiumEmojiService
 
 router = Router()
 premium_emoji_service = PremiumEmojiService()

@@ -141,7 +141,11 @@ class VisualizationEngine:
                 font_color=theme_config["text_color"],
             )
 
-            return {"chart": fig.to_json(), "chart_type": "line", "data_points": len(df)}
+            return {
+                "chart": fig.to_json(),
+                "chart_type": "line",
+                "data_points": len(df),
+            }
 
         except Exception as e:
             logger.error(f"Line chart creation failed: {e}")
@@ -268,7 +272,11 @@ class VisualizationEngine:
             return {"error": str(e)}
 
     async def create_box_plot(
-        self, df: pd.DataFrame, y_column: str, x_column: str | None = None, title: str | None = None
+        self,
+        df: pd.DataFrame,
+        y_column: str,
+        x_column: str | None = None,
+        title: str | None = None,
     ) -> dict[str, Any]:
         """Create box plot"""
         try:
@@ -277,7 +285,11 @@ class VisualizationEngine:
 
             fig = px.box(df, y=y_column, x=x_column, title=title or f"Box Plot of {y_column}")
 
-            return {"chart": fig.to_json(), "chart_type": "box", "grouping_column": x_column}
+            return {
+                "chart": fig.to_json(),
+                "chart_type": "box",
+                "grouping_column": x_column,
+            }
 
         except Exception as e:
             logger.error(f"Box plot creation failed: {e}")
@@ -320,7 +332,10 @@ class RealTimeDashboard:
                     [
                         dbc.Col(
                             [
-                                html.H1("AnalyticBot Dashboard", className="text-center mb-4"),
+                                html.H1(
+                                    "AnalyticBot Dashboard",
+                                    className="text-center mb-4",
+                                ),
                                 html.Hr(),
                             ]
                         )
@@ -373,8 +388,14 @@ class RealTimeDashboard:
                                                 dcc.Dropdown(
                                                     id="chart-type",
                                                     options=[
-                                                        {"label": "Line Chart", "value": "line"},
-                                                        {"label": "Bar Chart", "value": "bar"},
+                                                        {
+                                                            "label": "Line Chart",
+                                                            "value": "line",
+                                                        },
+                                                        {
+                                                            "label": "Bar Chart",
+                                                            "value": "bar",
+                                                        },
                                                         {
                                                             "label": "Scatter Plot",
                                                             "value": "scatter",
@@ -383,8 +404,14 @@ class RealTimeDashboard:
                                                             "label": "Histogram",
                                                             "value": "histogram",
                                                         },
-                                                        {"label": "Box Plot", "value": "box"},
-                                                        {"label": "Heatmap", "value": "heatmap"},
+                                                        {
+                                                            "label": "Box Plot",
+                                                            "value": "box",
+                                                        },
+                                                        {
+                                                            "label": "Heatmap",
+                                                            "value": "heatmap",
+                                                        },
                                                     ],
                                                     value="line",
                                                 ),
@@ -408,7 +435,14 @@ class RealTimeDashboard:
                         dbc.Col(
                             [
                                 dbc.Card(
-                                    [dbc.CardBody([html.H4("Data Info"), html.Div(id="data-info")])]
+                                    [
+                                        dbc.CardBody(
+                                            [
+                                                html.H4("Data Info"),
+                                                html.Div(id="data-info"),
+                                            ]
+                                        )
+                                    ]
                                 )
                             ],
                             width=4,
@@ -532,7 +566,11 @@ class RealTimeDashboard:
             dashboard_thread = threading.Thread(target=run_server, daemon=True)
             dashboard_thread.start()
 
-            return {"status": "started", "url": f"http://localhost:{self.port}", "port": self.port}
+            return {
+                "status": "started",
+                "url": f"http://localhost:{self.port}",
+                "port": self.port,
+            }
 
         except Exception as e:
             logger.error(f"Dashboard startup failed: {e}")

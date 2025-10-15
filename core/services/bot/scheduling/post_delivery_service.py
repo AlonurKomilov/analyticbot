@@ -88,9 +88,7 @@ class PostDeliveryService:
             # Build inline keyboard if buttons are present
             reply_markup = None
             if post.has_buttons():
-                reply_markup = self._markup_builder.build_inline_keyboard(
-                    post.inline_buttons
-                )
+                reply_markup = self._markup_builder.build_inline_keyboard(post.inline_buttons)
 
             # Deliver the message via appropriate method
             message_id = await self._send_message(post, reply_markup)
@@ -98,9 +96,7 @@ class PostDeliveryService:
             # Record analytics for successful delivery
             await self._record_analytics(post.id, message_id, post.channel_id)
 
-            logger.info(
-                f"Successfully delivered post {post.id} to channel {post.channel_id}"
-            )
+            logger.info(f"Successfully delivered post {post.id} to channel {post.channel_id}")
 
             return DeliveryResult(
                 post_id=post.id,
@@ -112,9 +108,7 @@ class PostDeliveryService:
 
         except Exception as e:
             error_msg = str(e)
-            logger.error(
-                f"Failed to deliver post {post.id}: {error_msg}", exc_info=True
-            )
+            logger.error(f"Failed to deliver post {post.id}: {error_msg}", exc_info=True)
 
             return DeliveryResult(
                 post_id=post.id,
@@ -124,9 +118,7 @@ class PostDeliveryService:
                 message_id=None,
             )
 
-    async def _send_message(
-        self, post: ScheduledPost, reply_markup: Any | None
-    ) -> int:
+    async def _send_message(self, post: ScheduledPost, reply_markup: Any | None) -> int:
         """
         Send message using the appropriate method based on content type
 
@@ -161,9 +153,7 @@ class PostDeliveryService:
         # This should never happen due to is_valid() check
         raise ValueError("Post has neither text nor media")
 
-    async def _record_analytics(
-        self, post_id: int, message_id: int, channel_id: int
-    ) -> None:
+    async def _record_analytics(self, post_id: int, message_id: int, channel_id: int) -> None:
         """
         Record post analytics for tracking
 
@@ -186,9 +176,7 @@ class PostDeliveryService:
                 exc_info=True,
             )
 
-    async def deliver_batch(
-        self, posts: list[ScheduledPost]
-    ) -> list[DeliveryResult]:
+    async def deliver_batch(self, posts: list[ScheduledPost]) -> list[DeliveryResult]:
         """
         Deliver multiple posts in batch
 

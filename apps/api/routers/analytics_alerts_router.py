@@ -12,6 +12,7 @@ Path: /analytics/alerts/*
 import logging
 from datetime import datetime, timedelta
 
+from apps.bot.services.alerting_service import AlertingService
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
@@ -19,7 +20,6 @@ from apps.api.middleware.auth import get_current_user
 
 # Services
 from apps.shared.clients.analytics_client import AnalyticsClient
-from apps.bot.services.alerting_service import AlertingService
 from apps.shared.models.alerts import AlertEvent, AlertRule
 
 logger = logging.getLogger(__name__)
@@ -375,9 +375,7 @@ async def test_alert_notification(
         )
 
         # Send test notification
-        success = await alerting_service.send_alert_notification(
-            notification=test_notification
-        )
+        success = await alerting_service.send_alert_notification(notification=test_notification)
 
         return {
             "channel_id": channel_id,

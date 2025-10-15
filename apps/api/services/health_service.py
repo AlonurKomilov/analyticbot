@@ -446,7 +446,10 @@ async def check_database_health(connection_string: str | None = None) -> dict[st
         # Use provided connection string or environment variable
         conn_str = connection_string or os.getenv("DATABASE_URL")
         if not conn_str:
-            return {"healthy": False, "error": "No database connection string configured"}
+            return {
+                "healthy": False,
+                "error": "No database connection string configured",
+            }
 
         # Test database connection
         conn = await asyncpg.connect(conn_str)
@@ -478,10 +481,11 @@ async def check_redis_health(
             # Format: redis://host:port/db
             try:
                 from urllib.parse import urlparse
+
                 parsed = urlparse(redis_url)
                 host = parsed.hostname or host
                 port = parsed.port or port
-                db = int(parsed.path.lstrip('/')) if parsed.path and parsed.path != '/' else db
+                db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else db
             except Exception as e:
                 logger.warning(f"Failed to parse REDIS_URL, using defaults: {e}")
 

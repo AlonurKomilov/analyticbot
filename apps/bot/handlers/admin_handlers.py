@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.guard_service import GuardService
-from apps.bot.services.prometheus_service import prometheus_service
-# from apps.bot.services.scheduler_service import SchedulerService  # ARCHIVED 2025-10-14
+# Metrics now via DI (Phase 3.4)
+from apps.di import get_metrics_collector_service
+from core.services.bot.metrics.models import TelegramUpdateMetric
 
 # New scheduling services (Clean Architecture)
 from core.services.bot.scheduling import ScheduleManager
@@ -89,7 +90,12 @@ async def add_channel_handler(
     channel_repo: ChannelRepository,
     i18n: I18nContext,
 ):
-    prometheus_service.record_telegram_update("add_channel")
+    # Record metrics via DI
+    metrics_collector = get_metrics_collector_service()
+    if metrics_collector:
+        metric = TelegramUpdateMetric(update_type="add_channel", status="started")
+        await metrics_collector.record_telegram_update(metric)
+
     channel_username = command.args
     if not channel_username or not channel_username.startswith("@"):
         await message.reply(i18n.get("add-channel-usage"))
@@ -249,7 +255,12 @@ async def handle_schedule(
     schedule_manager: ScheduleManager,  # NEW: Clean Architecture service
     i18n: I18nContext,
 ):
-    prometheus_service.record_telegram_update("schedule_post")
+    # Record metrics via DI
+    metrics_collector = get_metrics_collector_service()
+    if metrics_collector:
+        metric = TelegramUpdateMetric(update_type="schedule_post", status="started")
+        await metrics_collector.record_telegram_update(metric)
+
     if command.args is None:
         await message.reply(i18n.get("schedule-usage"))
         return

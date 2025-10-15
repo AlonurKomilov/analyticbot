@@ -2,7 +2,8 @@ import asyncio
 import logging
 from datetime import datetime
 
-from apps.bot.services.prometheus_service import prometheus_timer
+# Metrics now via DI (Phase 3.4)
+from apps.bot.metrics_decorators import metrics_timer
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 from apps.bot.utils.task_utils import enhanced_retry_task
 
@@ -158,7 +159,7 @@ def send_scheduled_message():
 
 
 @enhanced_retry_task
-@prometheus_timer("celery_task")
+@metrics_timer(metric_type="celery_task", metric_name="update_post_views_task")
 def update_post_views_task():
     async def _run() -> str:
         context = ErrorContext().add("task", "update_post_views_task")
@@ -286,16 +287,18 @@ def maintenance_cleanup():
 
 @enhanced_retry_task
 def update_prometheus_metrics():
-    """Periodic task to update Prometheus metrics"""
+    """Periodic task to update system metrics"""
 
     async def _run() -> str:
         context = ErrorContext().add("task", "update_prometheus_metrics")
         try:
-            from apps.bot.services.prometheus_service import collect_system_metrics
+            from apps.di import get_system_metrics_service
 
-            logger.info("Collecting Prometheus metrics")
-            await collect_system_metrics()
-            logger.info("Prometheus metrics collection completed")
+            logger.info("Collecting system metrics")
+            system_metrics_service = get_system_metrics_service()
+            if system_metrics_service:
+                await system_metrics_service.collect_and_update_system_metrics()
+            logger.info("System metrics collection completed")
             return "metrics-updated"
         except Exception as e:
             ErrorHandler.log_error(e, context)

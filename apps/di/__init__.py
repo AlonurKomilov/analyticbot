@@ -291,6 +291,31 @@ def get_theft_detector():
     return container.bot.theft_detector()
 
 
+# Metrics Services (Phase 3.4)
+def get_metrics_collector_service():
+    """Get metrics collector service from container"""
+    container = get_container()
+    return container.bot.metrics_collector_service()
+
+
+def get_business_metrics_service():
+    """Get business metrics service from container"""
+    container = get_container()
+    return container.bot.business_metrics_service()
+
+
+def get_health_check_service():
+    """Get health check service from container"""
+    container = get_container()
+    return container.bot.health_check_service()
+
+
+def get_system_metrics_service():
+    """Get system metrics service from container"""
+    container = get_container()
+    return container.bot.system_metrics_service()
+
+
 # ============================================================================
 # EXPORTS
 # ============================================================================
@@ -320,4 +345,9 @@ __all__ = [
     "get_watermark_service",
     "get_video_watermark_service",
     "get_theft_detector",
+    # Metrics services (Phase 3.4)
+    "get_metrics_collector_service",
+    "get_business_metrics_service",
+    "get_health_check_service",
+    "get_system_metrics_service",
 ]

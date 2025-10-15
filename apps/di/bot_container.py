@@ -535,6 +535,134 @@ def _create_content_protection_service(
 
 
 # ============================================================================
+# METRICS ADAPTERS (Phase 3.4)
+# ============================================================================
+
+
+def _create_prometheus_metrics_adapter(**kwargs):
+    """Create Prometheus metrics adapter"""
+    try:
+        from apps.bot.adapters.metrics import PrometheusMetricsAdapter
+        return PrometheusMetricsAdapter()
+    except ImportError as e:
+        logger.warning(f"Prometheus metrics adapter not available: {e}")
+        return None
+
+
+def _create_system_metrics_adapter(**kwargs):
+    """Create system metrics adapter (PSUtil)"""
+    try:
+        from apps.bot.adapters.metrics import PSUtilSystemMetricsAdapter
+        return PSUtilSystemMetricsAdapter()
+    except ImportError as e:
+        logger.warning(f"System metrics adapter not available: {e}")
+        return None
+
+
+# ============================================================================
+# METRICS SERVICES (Phase 3.4)
+# ============================================================================
+
+
+def _create_metrics_collector_service(
+    metrics_backend=None,
+    **kwargs
+):
+    """Create metrics collector service"""
+    try:
+        from typing import cast
+        from core.services.bot.metrics import MetricsCollectorService
+        from core.services.bot.metrics.protocols import MetricsBackendPort
+
+        if not metrics_backend:
+            logger.warning("Cannot create metrics collector service: missing backend")
+            return None
+
+        service = MetricsCollectorService(
+            metrics_backend=cast(MetricsBackendPort, metrics_backend)
+        )
+        service.initialize_metrics()
+        return service
+    except ImportError as e:
+        logger.warning(f"Metrics collector service not available: {e}")
+        return None
+
+
+def _create_business_metrics_service(
+    metrics_backend=None,
+    **kwargs
+):
+    """Create business metrics service"""
+    try:
+        from typing import cast
+        from core.services.bot.metrics import BusinessMetricsService
+        from core.services.bot.metrics.protocols import MetricsBackendPort
+
+        if not metrics_backend:
+            logger.warning("Cannot create business metrics service: missing backend")
+            return None
+
+        service = BusinessMetricsService(
+            metrics_backend=cast(MetricsBackendPort, metrics_backend)
+        )
+        service.initialize_metrics()
+        return service
+    except ImportError as e:
+        logger.warning(f"Business metrics service not available: {e}")
+        return None
+
+
+def _create_health_check_service(
+    metrics_backend=None,
+    **kwargs
+):
+    """Create health check service"""
+    try:
+        from typing import cast
+        from core.services.bot.metrics import HealthCheckService
+        from core.services.bot.metrics.protocols import MetricsBackendPort
+
+        if not metrics_backend:
+            logger.warning("Cannot create health check service: missing backend")
+            return None
+
+        service = HealthCheckService(
+            metrics_backend=cast(MetricsBackendPort, metrics_backend)
+        )
+        service.initialize_metrics()
+        return service
+    except ImportError as e:
+        logger.warning(f"Health check service not available: {e}")
+        return None
+
+
+def _create_system_metrics_service(
+    metrics_backend=None,
+    system_monitor=None,
+    **kwargs
+):
+    """Create system metrics service"""
+    try:
+        from typing import cast
+        from core.services.bot.metrics import SystemMetricsService
+        from core.services.bot.metrics.protocols import MetricsBackendPort, SystemMetricsPort
+
+        if not metrics_backend or not system_monitor:
+            logger.warning("Cannot create system metrics service: missing dependencies")
+            return None
+
+        service = SystemMetricsService(
+            metrics_backend=cast(MetricsBackendPort, metrics_backend),
+            system_monitor=cast(SystemMetricsPort, system_monitor),
+        )
+        service.initialize_metrics()
+        return service
+    except ImportError as e:
+        logger.warning(f"System metrics service not available: {e}")
+        return None
+
+
+# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
@@ -717,6 +845,32 @@ class BotContainer(containers.DeclarativeContainer):
         theft_detector=theft_detector,
         subscription_adapter=subscription_adapter,
         file_system=file_system_adapter,
+    )
+
+    # Metrics adapters (Phase 3.4)
+    prometheus_metrics_adapter = providers.Factory(_create_prometheus_metrics_adapter)
+    system_metrics_adapter = providers.Factory(_create_system_metrics_adapter)
+
+    # Metrics services (Phase 3.4)
+    metrics_collector_service = providers.Factory(
+        _create_metrics_collector_service,
+        metrics_backend=prometheus_metrics_adapter,
+    )
+
+    business_metrics_service = providers.Factory(
+        _create_business_metrics_service,
+        metrics_backend=prometheus_metrics_adapter,
+    )
+
+    health_check_service = providers.Factory(
+        _create_health_check_service,
+        metrics_backend=prometheus_metrics_adapter,
+    )
+
+    system_metrics_service = providers.Factory(
+        _create_system_metrics_service,
+        metrics_backend=prometheus_metrics_adapter,
+        system_monitor=system_metrics_adapter,
     )
 
     analytics_service = providers.Factory(

@@ -60,10 +60,19 @@ def performance_timer_decorator(operation_name: str):
 
 # Override the performance_timer to be a decorator
 performance_timer = performance_timer_decorator
-from apps.bot.services.prometheus_service import prometheus_service, prometheus_timer
+# Metrics now via DI (Phase 3.4)
+from apps.bot.metrics_decorators import metrics_timer
+# ✅ FIXED: Lazy import to avoid circular dependency
+# from apps.di import get_business_metrics_service
 from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 
 logger = logging.getLogger(__name__)
+
+
+def _get_business_metrics_service():
+    """Lazy import to avoid circular dependency during module initialization"""
+    from apps.di import get_business_metrics_service
+    return get_business_metrics_service()
 
 
 class AnalyticsService:
@@ -435,7 +444,7 @@ class AnalyticsService:
         return successful_updates
 
     @performance_timer("update_all_post_views_optimized")
-    @prometheus_timer("telegram_api_concurrent")
+    @metrics_timer(metric_type="telegram_api", metric_name="update_all_post_views")
     async def update_all_post_views(self) -> dict[str, int]:
         """
         🔥 AFTER - Optimized with concurrent processing and batching with semaphore
@@ -488,8 +497,15 @@ class AnalyticsService:
                 f"Concurrent batches: {batch_stats.get('concurrent_batches', 0)}"
             )
 
-            # Record metrics
-            prometheus_service.record_post_views_update(stats["updated"])
+            # Record metrics via DI (lazy import to avoid circular dependency)
+            try:
+                business_metrics = _get_business_metrics_service()
+                if business_metrics:
+                    for _ in range(stats["updated"]):
+                        await business_metrics.record_post_views_update()
+            except (ImportError, Exception):
+                # DI not yet initialized or error, skip metrics recording
+                pass
 
             # Cache performance stats
             await self._cache_performance_stats(stats)

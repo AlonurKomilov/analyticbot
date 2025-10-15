@@ -266,6 +266,31 @@ def get_telegram_alert_notifier():
     return container.bot.telegram_alert_notifier()
 
 
+# Content Protection Services (Phase 3.3)
+def get_content_protection_service():
+    """Get content protection orchestrator service from container"""
+    container = get_container()
+    return container.bot.content_protection_service()
+
+
+def get_watermark_service():
+    """Get watermark service from container"""
+    container = get_container()
+    return container.bot.watermark_service()
+
+
+def get_video_watermark_service():
+    """Get video watermark service from container"""
+    container = get_container()
+    return container.bot.video_watermark_service()
+
+
+def get_theft_detector():
+    """Get content theft detector service from container"""
+    container = get_container()
+    return container.bot.theft_detector()
+
+
 # ============================================================================
 # EXPORTS
 # ============================================================================
@@ -290,4 +315,9 @@ __all__ = [
     "get_alert_rule_manager",
     "get_alert_event_manager",
     "get_telegram_alert_notifier",
+    # Content protection services (Phase 3.3)
+    "get_content_protection_service",
+    "get_watermark_service",
+    "get_video_watermark_service",
+    "get_theft_detector",
 ]

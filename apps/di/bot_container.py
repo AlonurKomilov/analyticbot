@@ -407,6 +407,134 @@ def _create_channel_management_service(channel_repository=None, bot=None, **kwar
 
 
 # ============================================================================
+# CONTENT PROTECTION SERVICES (Phase 3.3)
+# ============================================================================
+
+
+def _create_image_processor(**kwargs):
+    """Create PIL image processor adapter"""
+    try:
+        from apps.bot.adapters.content import PILImageProcessor
+        return PILImageProcessor()
+    except ImportError as e:
+        logger.warning(f"PIL image processor not available: {e}")
+        return None
+
+
+def _create_video_processor(**kwargs):
+    """Create FFmpeg video processor adapter"""
+    try:
+        from apps.bot.adapters.content import FFmpegVideoProcessor
+        return FFmpegVideoProcessor()
+    except ImportError as e:
+        logger.warning(f"FFmpeg video processor not available: {e}")
+        return None
+
+
+def _create_file_system_adapter(**kwargs):
+    """Create local file system adapter"""
+    try:
+        from apps.bot.adapters.content import LocalFileSystem
+        return LocalFileSystem()
+    except ImportError as e:
+        logger.warning(f"File system adapter not available: {e}")
+        return None
+
+
+def _create_subscription_adapter(**kwargs):
+    """Create subscription service adapter (stub for now)"""
+    try:
+        from apps.bot.adapters.content import StubSubscriptionService
+        return StubSubscriptionService()
+    except ImportError as e:
+        logger.warning(f"Subscription adapter not available: {e}")
+        return None
+
+
+def _create_theft_detector(**kwargs):
+    """Create content theft detector service"""
+    try:
+        from core.services.bot.content.theft_detector import TheftDetectorService
+        return TheftDetectorService()
+    except ImportError as e:
+        logger.warning(f"Theft detector service not available: {e}")
+        return None
+
+
+def _create_watermark_service(image_processor=None, file_system=None, **kwargs):
+    """Create watermark service for images"""
+    try:
+        from typing import cast
+        from core.services.bot.content.watermark_service import WatermarkService
+        from core.services.bot.content.protocols import ImageProcessorPort, FileSystemPort
+
+        if not all([image_processor, file_system]):
+            logger.warning("Cannot create watermark service: missing dependencies")
+            return None
+
+        return WatermarkService(
+            image_processor=cast(ImageProcessorPort, image_processor),
+            file_system=cast(FileSystemPort, file_system),
+        )
+    except ImportError as e:
+        logger.warning(f"Watermark service not available: {e}")
+        return None
+
+
+def _create_video_watermark_service(video_processor=None, file_system=None, **kwargs):
+    """Create watermark service for videos"""
+    try:
+        from typing import cast
+        from core.services.bot.content.video_watermark_service import VideoWatermarkService
+        from core.services.bot.content.protocols import VideoProcessorPort, FileSystemPort
+
+        if not all([video_processor, file_system]):
+            logger.warning("Cannot create video watermark service: missing dependencies")
+            return None
+
+        return VideoWatermarkService(
+            video_processor=cast(VideoProcessorPort, video_processor),
+            file_system=cast(FileSystemPort, file_system),
+        )
+    except ImportError as e:
+        logger.warning(f"Video watermark service not available: {e}")
+        return None
+
+
+def _create_content_protection_service(
+    watermark_service=None,
+    video_watermark_service=None,
+    theft_detector=None,
+    subscription_adapter=None,
+    file_system=None,
+    **kwargs
+):
+    """Create content protection orchestrator service"""
+    try:
+        from typing import cast
+        from core.services.bot.content.content_protection_service import ContentProtectionService
+        from core.services.bot.content.watermark_service import WatermarkService
+        from core.services.bot.content.video_watermark_service import VideoWatermarkService
+        from core.services.bot.content.theft_detector import TheftDetectorService
+        from core.services.bot.content.protocols import SubscriptionPort, FileSystemPort
+
+        if not all([watermark_service, video_watermark_service, theft_detector, subscription_adapter, file_system]):
+            logger.warning("Cannot create content protection service: missing dependencies")
+            return None
+
+        return ContentProtectionService(
+            watermark_service=cast(WatermarkService, watermark_service),
+            video_watermark_service=cast(VideoWatermarkService, video_watermark_service),
+            theft_detector=cast(TheftDetectorService, theft_detector),
+            subscription_port=cast(SubscriptionPort, subscription_adapter),
+            file_system=cast(FileSystemPort, file_system),
+        )
+    except ImportError as e:
+        logger.warning(f"Content protection service not available: {e}")
+        return None
+
+
+# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
@@ -559,6 +687,36 @@ class BotContainer(containers.DeclarativeContainer):
     telegram_alert_notifier = providers.Factory(
         _create_telegram_alert_notifier,
         bot=bot_client,
+    )
+
+    # Content protection adapters (Phase 3.3)
+    image_processor = providers.Factory(_create_image_processor)
+    video_processor = providers.Factory(_create_video_processor)
+    file_system_adapter = providers.Factory(_create_file_system_adapter)
+    subscription_adapter = providers.Factory(_create_subscription_adapter)
+
+    # Content protection core services (Phase 3.3)
+    theft_detector = providers.Factory(_create_theft_detector)
+
+    watermark_service = providers.Factory(
+        _create_watermark_service,
+        image_processor=image_processor,
+        file_system=file_system_adapter,
+    )
+
+    video_watermark_service = providers.Factory(
+        _create_video_watermark_service,
+        video_processor=video_processor,
+        file_system=file_system_adapter,
+    )
+
+    content_protection_service = providers.Factory(
+        _create_content_protection_service,
+        watermark_service=watermark_service,
+        video_watermark_service=video_watermark_service,
+        theft_detector=theft_detector,
+        subscription_adapter=subscription_adapter,
+        file_system=file_system_adapter,
     )
 
     analytics_service = providers.Factory(

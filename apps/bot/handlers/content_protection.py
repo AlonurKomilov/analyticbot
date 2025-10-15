@@ -18,13 +18,12 @@ from aiogram.types import (
 )
 
 from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
-from apps.bot.services.content_protection import (
-    ContentProtectionService,
-    PremiumEmojiService,
-)
+
+# TODO: PremiumEmojiService is not part of content protection domain
+# Consider moving to separate premium features module in future phase
+from apps.bot.services.content_protection import PremiumEmojiService
 
 router = Router()
-content_protection = ContentProtectionService()
 premium_emoji_service = PremiumEmojiService()
 
 
@@ -212,12 +211,20 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
             tmp_file.write(file.read())
             tmp_path = Path(tmp_file.name)
 
-        # Create default watermark config
-        from apps.bot.services.content_protection import WatermarkConfig
+        # Get watermark service from DI
+        from apps.di import get_container
+        from core.services.bot.content.models import (
+            WatermarkConfig,
+            WatermarkPosition,
+        )
 
+        container = get_container()
+        watermark_service = container.bot.watermark_service()
+
+        # Create default watermark config
         watermark_config = WatermarkConfig(
             text=f"@{callback.bot.username or 'AnalyticBot'}",
-            position="bottom-right",
+            position=WatermarkPosition.BOTTOM_RIGHT,
             opacity=0.7,
             font_size=24,
             color="white",
@@ -225,7 +232,13 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
         )
 
         # Apply watermark
-        watermarked_path = await content_protection.add_image_watermark(tmp_path, watermark_config)
+        result = await watermark_service.add_watermark(str(tmp_path), watermark_config)
+
+        if not result.success:
+            await callback.message.edit_text(f"❌ **Watermarking failed:**\n{result.error}")
+            return
+
+        watermarked_path = Path(result.output_path)
 
         # Send watermarked image back
         with open(watermarked_path, "rb") as watermarked_file:
@@ -295,12 +308,20 @@ async def handle_custom_watermark_apply(message: Message, state: FSMContext):
             tmp_file.write(file.read())
             tmp_path = Path(tmp_file.name)
 
-        # Create custom watermark config
-        from apps.bot.services.content_protection import WatermarkConfig
+        # Get watermark service from DI
+        from apps.di import get_container
+        from core.services.bot.content.models import (
+            WatermarkConfig,
+            WatermarkPosition,
+        )
 
+        container = get_container()
+        watermark_service = container.bot.watermark_service()
+
+        # Create custom watermark config
         watermark_config = WatermarkConfig(
             text=watermark_text,
-            position="bottom-right",
+            position=WatermarkPosition.BOTTOM_RIGHT,
             opacity=0.8,
             font_size=20,
             color="white",
@@ -308,7 +329,13 @@ async def handle_custom_watermark_apply(message: Message, state: FSMContext):
         )
 
         # Apply watermark
-        watermarked_path = await content_protection.add_image_watermark(tmp_path, watermark_config)
+        result = await watermark_service.add_watermark(str(tmp_path), watermark_config)
+
+        if not result.success:
+            await message.answer(f"❌ **Watermarking failed:**\n{result.error}")
+            return
+
+        watermarked_path = Path(result.output_path)
 
         # Send watermarked image back
         with open(watermarked_path, "rb") as watermarked_file:
@@ -354,7 +381,7 @@ async def handle_custom_emoji_start(callback: CallbackQuery, state: FSMContext):
 
     # Show available emoji packs
     available_emojis = await premium_emoji_service.get_premium_emoji_pack(user_tier.value)
-    emoji_preview = " ".join(list(available_emojis.values())[:10])
+    emoji_preview = " ".join(available_emojis[:10]) if available_emojis else "🎭✨🎨"
 
     await callback.message.edit_text(
         f"🎭 **Custom Emoji Formatting**\n\n"
@@ -431,33 +458,42 @@ async def handle_theft_check_analyze(message: Message, state: FSMContext):
     await message.answer("🔄 **Analyzing content...**\nChecking for theft indicators.")
 
     try:
+        # Get theft detector service from DI
+        from apps.di import get_container
+        from core.services.bot.content.models import RiskLevel
+
+        container = get_container()
+        theft_detector = container.bot.theft_detector_service()
+
         # Analyze content
-        theft_analysis = await content_protection.detect_content_theft(message.text)
+        theft_analysis = await theft_detector.analyze_content(message.text)
 
         # Format results
-        risk_emoji = (
-            "🔴"
-            if theft_analysis["risk_score"] > 0.7
-            else "🟡"
-            if theft_analysis["risk_score"] > 0.4
-            else "🟢"
-        )
+        risk_emoji = {
+            RiskLevel.HIGH: "🔴",
+            RiskLevel.MEDIUM: "🟡",
+            RiskLevel.LOW: "�",
+        }[theft_analysis.risk_level]
 
         result_text = f"""
 🔍 **Theft Detection Results**
 
-{risk_emoji} **Risk Level:** {theft_analysis['risk_level']}
-📊 **Risk Score:** {theft_analysis['risk_score']:.2f}/1.00
+{risk_emoji} **Risk Level:** {theft_analysis.risk_level.value.upper()}
+📊 **Spam Score:** {theft_analysis.spam_score:.2f}/1.00
+🔗 **Links Found:** {theft_analysis.link_count}
 
-**Analysis Details:**
+**Suspicious Patterns:**
 """
 
-        for indicator in theft_analysis["indicators"]:
-            result_text += f"• {indicator}\n"
+        if theft_analysis.suspicious_patterns:
+            for pattern in theft_analysis.suspicious_patterns[:10]:  # Limit to 10
+                result_text += f"• {pattern}\n"
+        else:
+            result_text += "• None detected\n"
 
-        if theft_analysis["recommendations"]:
+        if theft_analysis.recommendations:
             result_text += "\n**Recommendations:**\n"
-            for rec in theft_analysis["recommendations"]:
+            for rec in theft_analysis.recommendations:
                 result_text += f"• {rec}\n"
 
         await message.answer(result_text, parse_mode="Markdown")

@@ -19,10 +19,41 @@ from apps.api.middleware.auth import get_current_user
 
 # Services
 from apps.shared.clients.analytics_client import AnalyticsClient
-from apps.bot.services.alerting_service import AlertingService
+# FIXME: AlertingService is deprecated and removed. Need to migrate to new alert services
+# from apps.bot.services.alerting_service import AlertingService
 from apps.shared.models.alerts import AlertEvent, AlertRule
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+# Temporary stub until alert services are properly migrated
+class AlertingServiceStub:
+    """Temporary stub for deprecated AlertingService"""
+
+    def __init__(self):
+        logger.warning("Using AlertingService stub - alerts functionality disabled until migration")
+
+    async def check_alerts(self, *args, **kwargs):
+        return []
+
+    async def create_rule(self, *args, **kwargs):
+        raise HTTPException(status_code=501, detail="Alert rule creation not yet migrated")
+
+    async def get_rules(self, *args, **kwargs):
+        return []
+
+    async def update_rule(self, *args, **kwargs):
+        raise HTTPException(status_code=501, detail="Alert rule update not yet migrated")
+
+    async def delete_rule(self, *args, **kwargs):
+        raise HTTPException(status_code=501, detail="Alert rule deletion not yet migrated")
+
+    async def get_history(self, *args, **kwargs):
+        return []
+
+    async def test_alert(self, *args, **kwargs):
+        raise HTTPException(status_code=501, detail="Alert testing not yet migrated")
 
 # Create alerts router
 router = APIRouter(prefix="/analytics/alerts", tags=["Analytics Alerts"])
@@ -65,13 +96,15 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_alerting_service() -> AlertingService:
-    """Get alerting service - Using bot AlertingService (not core alerts)"""
-    # Note: This uses the bot's AlertingService which has different API
-    # than core's AlertsManagementService. To be consolidated in Phase 3.2
-    from apps.bot.services.alerting_service import AlertingService
-
-    return AlertingService()
+def get_alerting_service() -> AlertingServiceStub:
+    """Get alerting service - Using temporary stub until migration is complete"""
+    # FIXME: AlertingService was deprecated and removed
+    # Need to migrate to new alert services from apps.di:
+    # - alert_condition_evaluator
+    # - alert_rule_manager
+    # - alert_event_manager
+    # - telegram_alert_notifier
+    return AlertingServiceStub()
 
 
 # === ALERT CHECKING ===
@@ -83,7 +116,7 @@ async def check_channel_alerts(
     check_period: int = Query(default=1, ge=1, le=7, description="Period to check in days"),
     current_user: dict = Depends(get_current_user),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """
     ## 🚨 Check Channel Alerts
@@ -140,7 +173,7 @@ async def create_alert_rule(
     channel_id: int,
     alert_rule: AlertRuleRequest,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """
     ## ⚙️ Create Alert Rule
@@ -183,7 +216,7 @@ async def create_alert_rule(
 async def get_alert_rules(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """Get all alert rules for a channel"""
     try:
@@ -207,7 +240,7 @@ async def update_alert_rule(
     rule_id: str,
     alert_rule: AlertRuleRequest,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """Update an existing alert rule"""
     try:
@@ -237,7 +270,7 @@ async def delete_alert_rule(
     channel_id: int,
     rule_id: str,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """Delete an alert rule"""
     try:
@@ -269,7 +302,7 @@ async def get_alert_history(
     period: int = Query(default=30, ge=1, le=365, description="Period in days"),
     alert_type: str | None = Query(default=None, description="Filter by alert type"),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """
     ## 📚 Alert History
@@ -316,7 +349,7 @@ async def get_alert_statistics(
     channel_id: int,
     period: int = Query(default=30, ge=1, le=365),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """
     ## 📊 Alert Statistics
@@ -355,7 +388,7 @@ async def test_alert_notification(
     channel_id: int,
     notification_channel: str = Query(description="Notification channel to test"),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingService = Depends(get_alerting_service),
+    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
 ):
     """Test alert notification delivery"""
     try:

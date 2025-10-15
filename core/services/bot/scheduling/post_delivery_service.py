@@ -79,8 +79,7 @@ class PostDeliveryService:
             return DeliveryResult(
                 post_id=post.id,
                 success=False,
-                error_message=error_msg,
-                delivered_at=datetime.now(),
+                error=error_msg,
                 message_id=None,
             )
 
@@ -105,8 +104,7 @@ class PostDeliveryService:
             return DeliveryResult(
                 post_id=post.id,
                 success=True,
-                error_message=None,
-                delivered_at=datetime.now(),
+                error=None,
                 message_id=message_id,
             )
 
@@ -119,8 +117,7 @@ class PostDeliveryService:
             return DeliveryResult(
                 post_id=post.id,
                 success=False,
-                error_message=error_msg,
-                delivered_at=datetime.now(),
+                error=error_msg,
                 message_id=None,
             )
 
@@ -142,6 +139,9 @@ class PostDeliveryService:
         """
         # Text-only message
         if post.has_text() and not post.has_media():
+            # Guard: post_text is required for text messages
+            if post.post_text is None:
+                raise ValueError("Post text cannot be None for text messages")
             return await self._message_sender.send_text_message(
                 channel_id=post.channel_id,
                 text=post.post_text,
@@ -150,6 +150,9 @@ class PostDeliveryService:
 
         # Media with caption
         if post.has_media():
+            # Guard: media_id and media_type are required for media messages
+            if post.media_id is None or post.media_type is None:
+                raise ValueError("Media ID and type cannot be None for media messages")
             return await self._message_sender.send_media_message(
                 channel_id=post.channel_id,
                 media_id=post.media_id,

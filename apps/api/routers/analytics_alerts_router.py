@@ -34,26 +34,37 @@ class AlertingServiceStub:
     def __init__(self):
         logger.warning("Using AlertingService stub - alerts functionality disabled until migration")
 
-    async def check_alerts(self, *args, **kwargs):
+    async def check_alert_conditions(self, *args: Any, **kwargs: Any) -> list[Any]:
+        """Stub for checking alert conditions"""
         return []
 
-    async def create_rule(self, *args, **kwargs):
+    async def create_alert_rule(self, *args: Any, **kwargs: Any) -> str:
+        """Stub for creating alert rule"""
         raise HTTPException(status_code=501, detail="Alert rule creation not yet migrated")
 
-    async def get_rules(self, *args, **kwargs):
+    async def get_channel_alert_rules(self, *args: Any, **kwargs: Any) -> list[Any]:
+        """Stub for getting channel alert rules"""
         return []
 
-    async def update_rule(self, *args, **kwargs):
+    async def update_alert_rule(self, *args: Any, **kwargs: Any) -> bool:
+        """Stub for updating alert rule"""
         raise HTTPException(status_code=501, detail="Alert rule update not yet migrated")
 
-    async def delete_rule(self, *args, **kwargs):
+    async def delete_alert_rule(self, *args: Any, **kwargs: Any) -> bool:
+        """Stub for deleting alert rule"""
         raise HTTPException(status_code=501, detail="Alert rule deletion not yet migrated")
 
-    async def get_history(self, *args, **kwargs):
+    async def get_alert_history(self, *args: Any, **kwargs: Any) -> list[Any]:
+        """Stub for getting alert history"""
         return []
 
-    async def test_alert(self, *args, **kwargs):
-        raise HTTPException(status_code=501, detail="Alert testing not yet migrated")
+    async def get_alert_statistics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Stub for getting alert statistics"""
+        return {}
+
+    async def send_alert_notification(self, *args: Any, **kwargs: Any) -> bool:
+        """Stub for sending alert notification"""
+        raise HTTPException(status_code=501, detail="Alert notification sending not yet migrated")
 
 # Create alerts router
 router = APIRouter(prefix="/analytics/alerts", tags=["Analytics Alerts"])
@@ -147,7 +158,7 @@ async def check_channel_alerts(
         }
 
         # Check alert conditions
-        alerts = alerting_service.check_alert_conditions(combined_metrics, str(channel_id))
+        alerts = await alerting_service.check_alert_conditions(combined_metrics, str(channel_id))
 
         # Calculate next check time (usually 15-30 minutes for alerts)
         next_check = datetime.utcnow() + timedelta(minutes=15)

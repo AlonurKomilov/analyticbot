@@ -250,17 +250,26 @@ def _create_post_delivery_service(
 ):
     """Create post delivery service (orchestrates message delivery)"""
     try:
+        from typing import cast
+
         from core.services.bot.scheduling import PostDeliveryService
+        from core.services.bot.scheduling.protocols import (
+            AnalyticsRepository,
+            MarkupBuilderPort,
+            MessageSenderPort,
+            ScheduleRepository,
+        )
 
         if not all([message_sender, markup_builder, schedule_repository, analytics_repository]):
             logger.warning("Cannot create post delivery service: missing dependencies")
             return None
 
+        # Type cast to satisfy type checker (DI ensures correct types at runtime)
         return PostDeliveryService(
-            message_sender=message_sender,
-            markup_builder=markup_builder,
-            schedule_repo=schedule_repository,
-            analytics_repo=analytics_repository,
+            message_sender=cast(MessageSenderPort, message_sender),
+            markup_builder=cast(MarkupBuilderPort, markup_builder),
+            schedule_repo=cast(ScheduleRepository, schedule_repository),
+            analytics_repo=cast(AnalyticsRepository, analytics_repository),
         )
     except ImportError as e:
         logger.warning(f"Post delivery service not available: {e}")

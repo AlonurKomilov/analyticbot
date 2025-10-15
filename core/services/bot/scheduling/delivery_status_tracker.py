@@ -57,10 +57,15 @@ class DeliveryStatusTracker:
         """
         new_status = "delivered" if result.success else "failed"
 
+        # Guard: result.post_id must be present
+        if result.post_id is None:
+            logger.error("Cannot update status: delivery result has no post_id")
+            return
+
         await self.update_status(
             post_id=result.post_id,
             new_status=new_status,
-            error_message=result.error_message,
+            error_message=result.error,
             message_id=result.message_id,
         )
 
@@ -176,12 +181,15 @@ class DeliveryStatusTracker:
             status="cancelled", user_id=user_id, channel_id=channel_id
         )
 
+        # Calculate total attempted (delivered + failed)
+        total_attempted = delivered_count + failed_count
+
         return DeliveryStats(
-            total_posts=total_posts,
-            delivered_count=delivered_count,
-            failed_count=failed_count,
-            pending_count=pending_count,
-            cancelled_count=cancelled_count,
+            total_attempted=total_attempted,
+            total_succeeded=delivered_count,
+            total_failed=failed_count,
+            total_duplicates=0,  # Not tracked at this level
+            total_rate_limited=0,  # Not tracked at this level
         )
 
     async def get_failed_posts(

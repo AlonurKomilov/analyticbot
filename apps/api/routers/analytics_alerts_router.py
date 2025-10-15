@@ -18,53 +18,22 @@ from pydantic import BaseModel
 from apps.api.middleware.auth import get_current_user
 
 # Services
+from apps.di import (
+    get_alert_condition_evaluator,
+    get_alert_event_manager,
+    get_alert_rule_manager,
+    get_telegram_alert_notifier,
+)
 from apps.shared.clients.analytics_client import AnalyticsClient
-# FIXME: AlertingService is deprecated and removed. Need to migrate to new alert services
-# from apps.bot.services.alerting_service import AlertingService
 from apps.shared.models.alerts import AlertEvent, AlertRule
+from core.services.bot.alerts import (
+    AlertConditionEvaluator,
+    AlertEventManager,
+    AlertRuleManager,
+)
 from typing import Any
 
 logger = logging.getLogger(__name__)
-
-
-# Temporary stub until alert services are properly migrated
-class AlertingServiceStub:
-    """Temporary stub for deprecated AlertingService"""
-
-    def __init__(self):
-        logger.warning("Using AlertingService stub - alerts functionality disabled until migration")
-
-    async def check_alert_conditions(self, *args: Any, **kwargs: Any) -> list[Any]:
-        """Stub for checking alert conditions"""
-        return []
-
-    async def create_alert_rule(self, *args: Any, **kwargs: Any) -> str:
-        """Stub for creating alert rule"""
-        raise HTTPException(status_code=501, detail="Alert rule creation not yet migrated")
-
-    async def get_channel_alert_rules(self, *args: Any, **kwargs: Any) -> list[Any]:
-        """Stub for getting channel alert rules"""
-        return []
-
-    async def update_alert_rule(self, *args: Any, **kwargs: Any) -> bool:
-        """Stub for updating alert rule"""
-        raise HTTPException(status_code=501, detail="Alert rule update not yet migrated")
-
-    async def delete_alert_rule(self, *args: Any, **kwargs: Any) -> bool:
-        """Stub for deleting alert rule"""
-        raise HTTPException(status_code=501, detail="Alert rule deletion not yet migrated")
-
-    async def get_alert_history(self, *args: Any, **kwargs: Any) -> list[Any]:
-        """Stub for getting alert history"""
-        return []
-
-    async def get_alert_statistics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        """Stub for getting alert statistics"""
-        return {}
-
-    async def send_alert_notification(self, *args: Any, **kwargs: Any) -> bool:
-        """Stub for sending alert notification"""
-        raise HTTPException(status_code=501, detail="Alert notification sending not yet migrated")
 
 # Create alerts router
 router = APIRouter(prefix="/analytics/alerts", tags=["Analytics Alerts"])
@@ -107,15 +76,22 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-def get_alerting_service() -> AlertingServiceStub:
-    """Get alerting service - Using temporary stub until migration is complete"""
-    # FIXME: AlertingService was deprecated and removed
-    # Need to migrate to new alert services from apps.di:
-    # - alert_condition_evaluator
-    # - alert_rule_manager
-    # - alert_event_manager
-    # - telegram_alert_notifier
-    return AlertingServiceStub()
+def get_alert_services() -> dict[str, Any]:
+    """
+    Get alert services from DI container
+
+    Returns dict with:
+    - condition_evaluator: AlertConditionEvaluator
+    - rule_manager: AlertRuleManager
+    - event_manager: AlertEventManager
+    - notifier: TelegramAlertNotifier
+    """
+    return {
+        "condition_evaluator": get_alert_condition_evaluator(),
+        "rule_manager": get_alert_rule_manager(),
+        "event_manager": get_alert_event_manager(),
+        "notifier": get_telegram_alert_notifier(),
+    }
 
 
 # === ALERT CHECKING ===
@@ -127,7 +103,7 @@ async def check_channel_alerts(
     check_period: int = Query(default=1, ge=1, le=7, description="Period to check in days"),
     current_user: dict = Depends(get_current_user),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """
     ## 🚨 Check Channel Alerts
@@ -141,6 +117,8 @@ async def check_channel_alerts(
     **Returns**: List of active alerts with severity and recommendations
     """
     try:
+        condition_evaluator: AlertConditionEvaluator = alert_services["condition_evaluator"]
+
         # Get current metrics for alert evaluation
         overview_data = await analytics_client.overview(str(channel_id), check_period)
         growth_data = await analytics_client.growth(str(channel_id), check_period)
@@ -157,8 +135,11 @@ async def check_channel_alerts(
             "timestamp": datetime.utcnow(),
         }
 
-        # Check alert conditions
-        alerts = await alerting_service.check_alert_conditions(combined_metrics, str(channel_id))
+        # Check alert conditions using new service
+        alerts = await condition_evaluator.check_alert_conditions(
+            channel_id=str(channel_id),
+            metrics=combined_metrics
+        )
 
         # Calculate next check time (usually 15-30 minutes for alerts)
         next_check = datetime.utcnow() + timedelta(minutes=15)
@@ -184,7 +165,7 @@ async def create_alert_rule(
     channel_id: int,
     alert_rule: AlertRuleRequest,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """
     ## ⚙️ Create Alert Rule
@@ -195,19 +176,18 @@ async def create_alert_rule(
     - Alert severity levels
     """
     try:
-        # Create AlertRule object with correct field names
-        rule = AlertRule(
-            id=f"rule-{channel_id}-{int(datetime.utcnow().timestamp())}",
+        rule_manager: AlertRuleManager = alert_services["rule_manager"]
+
+        # Create alert rule using new service
+        rule_id = await rule_manager.create_rule(
             channel_id=str(channel_id),
-            metric=alert_rule.metric_type,
+            name=alert_rule.rule_name,
+            metric_type=alert_rule.metric_type,
             condition=alert_rule.comparison,
             threshold=alert_rule.threshold_value,
+            severity="medium",  # Default severity
             enabled=alert_rule.enabled,
-            description=alert_rule.rule_name,
         )
-
-        # Save alert rule
-        rule_id = await alerting_service.create_alert_rule(rule)
 
         return {
             "rule_id": rule_id,
@@ -227,17 +207,18 @@ async def create_alert_rule(
 async def get_alert_rules(
     channel_id: int,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """Get all alert rules for a channel"""
     try:
-        rules = await alerting_service.get_channel_alert_rules(str(channel_id))
+        rule_manager: AlertRuleManager = alert_services["rule_manager"]
+        rules = await rule_manager.get_channel_rules(channel_id=str(channel_id))
 
         return {
             "channel_id": channel_id,
-            "rules": [rule.dict() for rule in rules],
+            "rules": rules,
             "total_rules": len(rules),
-            "active_rules": len([r for r in rules if r.enabled]),
+            "active_rules": len([r for r in rules if r.get("enabled", False)]),
         }
 
     except Exception as e:
@@ -251,12 +232,17 @@ async def update_alert_rule(
     rule_id: str,
     alert_rule: AlertRuleRequest,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """Update an existing alert rule"""
     try:
-        success = await alerting_service.update_alert_rule(
-            rule_id=rule_id, updates=alert_rule.dict()
+        rule_manager: AlertRuleManager = alert_services["rule_manager"]
+        success = await rule_manager.update_rule(
+            rule_id=rule_id,
+            updates={
+                "threshold": alert_rule.threshold_value,
+                "enabled": alert_rule.enabled,
+            },
         )
 
         if not success:
@@ -281,11 +267,15 @@ async def delete_alert_rule(
     channel_id: int,
     rule_id: str,
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """Delete an alert rule"""
     try:
-        success = await alerting_service.delete_alert_rule(rule_id, str(channel_id))
+        rule_manager: AlertRuleManager = alert_services["rule_manager"]
+        success = await rule_manager.delete_rule(
+            rule_id=rule_id,
+            channel_id=str(channel_id),
+        )
 
         if not success:
             raise HTTPException(status_code=404, detail="Alert rule not found")
@@ -313,7 +303,7 @@ async def get_alert_history(
     period: int = Query(default=30, ge=1, le=365, description="Period in days"),
     alert_type: str | None = Query(default=None, description="Filter by alert type"),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """
     ## 📚 Alert History
@@ -325,23 +315,38 @@ async def get_alert_history(
     - Performance impact correlation
     """
     try:
-        from_date = datetime.utcnow() - timedelta(days=period)
-        to_date = datetime.utcnow()
+        event_manager: AlertEventManager = alert_services["event_manager"]
 
-        # Get alert history (alert_type filter not supported yet)
-        alerts = await alerting_service.get_alert_history(
-            channel_id=str(channel_id), from_date=from_date, to_date=to_date
+        # Get alert history for channel
+        alerts = await event_manager.get_alert_history(
+            channel_id=str(channel_id),
+            limit=1000,
         )
 
-        # Analyze alert types by rule_id (AlertEvent doesn't have alert_type)
+        # Analyze alert types by severity
         alert_types = {}
         for alert in alerts:
-            alert_type_name = alert.rule_id
-            alert_types[alert_type_name] = alert_types.get(alert_type_name, 0) + 1
+            severity = alert.get("severity", "unknown")
+            alert_types[severity] = alert_types.get(severity, 0) + 1
+
+        # Convert dict alerts to AlertEvent objects for response
+        alert_events = [
+            AlertEvent(
+                id=a.get("id", ""),
+                rule_id=a.get("rule_id", ""),
+                triggered_at=a.get("triggered_at", datetime.utcnow()),
+                severity=a.get("severity", "medium"),
+                message=a.get("message", ""),
+                metric_value=a.get("metric_value", 0.0),
+                threshold=a.get("threshold", 0.0),
+                channel_id=str(channel_id),
+            )
+            for a in alerts[:min(len(alerts), 100)]  # Limit to 100 for response
+        ]
 
         return AlertHistoryResponse(
             channel_id=str(channel_id),
-            alerts=alerts,
+            alerts=alert_events,
             period=f"{period}d",
             total_alerts=len(alerts),
             alert_types=alert_types,
@@ -360,7 +365,7 @@ async def get_alert_statistics(
     channel_id: int,
     period: int = Query(default=30, ge=1, le=365),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """
     ## 📊 Alert Statistics
@@ -372,12 +377,10 @@ async def get_alert_statistics(
     - Alert resolution rates
     """
     try:
-        from_date = datetime.utcnow() - timedelta(days=period)
+        event_manager: AlertEventManager = alert_services["event_manager"]
 
         # Get alert statistics
-        stats = await alerting_service.get_alert_statistics(
-            channel_id=str(channel_id), period_days=period
-        )
+        stats = await event_manager.get_alert_statistics(channel_id=str(channel_id))
 
         return {
             "channel_id": channel_id,
@@ -399,34 +402,28 @@ async def test_alert_notification(
     channel_id: int,
     notification_channel: str = Query(description="Notification channel to test"),
     current_user: dict = Depends(get_current_user),
-    alerting_service: AlertingServiceStub = Depends(get_alerting_service),
+    alert_services: dict[str, Any] = Depends(get_alert_services),
 ):
     """Test alert notification delivery"""
     try:
-        # Create test notification with correct model
-        from apps.shared.models.alerts import AlertNotification
+        from apps.bot.adapters.alert_adapters import TelegramAlertNotifier
 
-        test_notification = AlertNotification(
-            id=f"test-{int(datetime.utcnow().timestamp())}",
-            rule_id="test-rule",
-            title="Test Alert",
-            message="This is a test alert notification",
-            triggered_value=0.0,
-            threshold=0.0,
-            channel_id=str(channel_id),
-            timestamp=datetime.utcnow(),
-            severity="info",
-        )
+        notifier: TelegramAlertNotifier = alert_services["notifier"]
 
-        # Send test notification
-        success = await alerting_service.send_alert_notification(
-            notification=test_notification
-        )
+        # Send test alert notification
+        test_notification = {
+            "channel_id": str(channel_id),
+            "message": "🔔 Test Alert: This is a test notification from AnalyticBot",
+            "severity": "info",
+            "metric_value": 100.0,
+            "threshold": 90.0,
+        }
+        await notifier.send_alert(notification=test_notification)
 
         return {
             "channel_id": channel_id,
             "notification_channel": notification_channel,
-            "test_status": "success" if success else "failed",
+            "test_status": "success",
             "sent_at": datetime.utcnow().isoformat(),
         }
 

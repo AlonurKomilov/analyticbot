@@ -241,6 +241,31 @@ async def get_db_connection():
     return await container.database.asyncpg_pool()
 
 
+# Alert Services (Phase 3.2)
+def get_alert_condition_evaluator():
+    """Get alert condition evaluator service from container"""
+    container = get_container()
+    return container.bot.alert_condition_evaluator()
+
+
+def get_alert_rule_manager():
+    """Get alert rule manager service from container"""
+    container = get_container()
+    return container.bot.alert_rule_manager()
+
+
+def get_alert_event_manager():
+    """Get alert event manager service from container"""
+    container = get_container()
+    return container.bot.alert_event_manager()
+
+
+def get_telegram_alert_notifier():
+    """Get telegram alert notifier adapter from container"""
+    container = get_container()
+    return container.bot.telegram_alert_notifier()
+
+
 # ============================================================================
 # EXPORTS
 # ============================================================================
@@ -260,4 +285,9 @@ __all__ = [
     "get_schedule_service",
     "get_delivery_service",
     "get_db_connection",
+    # Alert services (Phase 3.2)
+    "get_alert_condition_evaluator",
+    "get_alert_rule_manager",
+    "get_alert_event_manager",
+    "get_telegram_alert_notifier",
 ]

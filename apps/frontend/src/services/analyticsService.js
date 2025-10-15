@@ -256,7 +256,19 @@ class MockAnalyticsAdapter {
     async getAnalyticsOverview(channelId = DEFAULT_DEMO_CHANNEL_ID) {
         await this._simulateDelay();
 
-        const overview = generateAnalyticsOverview(channelId);
+        // Return basic mock overview data
+        const overview = {
+            channel_id: channelId,
+            subscribers: 12500,
+            views: 450000,
+            posts: 156,
+            engagement_rate: 8.5,
+            growth_rate: 12.3,
+            avg_views_per_post: 2885,
+            period: '30d',
+            source: 'mock'
+        };
+
         return {
             ...overview,
             source: 'mock'

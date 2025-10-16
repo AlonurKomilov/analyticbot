@@ -134,13 +134,23 @@ class AnalyticsService:
         return stats
 
     async def _process_channel_batch_optimized(
-        self, channel_id: int, posts: list[dict], batch_size: int, semaphore: asyncio.Semaphore
+        self,
+        channel_id: int,
+        posts: list[dict],
+        batch_size: int,
+        semaphore: asyncio.Semaphore,
     ) -> dict[str, int]:
         """
         Process posts for a single channel in optimized batches
         """
         async with semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "batch_count": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "batch_count": 0,
+            }
 
             # Process posts in smaller batches to avoid API limits
             for i in range(0, len(posts), batch_size):
@@ -597,7 +607,13 @@ class AnalyticsService:
     ) -> dict[str, int]:
         """⚡ High-performance channel processing with concurrency control"""
         async with self._semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "cached": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "cached": 0,
+            }
             if hasattr(performance_manager, "cache"):
                 cache_key = f"channel_problems:{channel_id}"
                 if await performance_manager.cache.get(cache_key):
@@ -686,7 +702,7 @@ class AnalyticsService:
     async def _process_post_batch(self, channel_id: int, batch: list[dict]) -> dict[str, int]:
         """Process a batch of posts from the same channel (legacy reliable method)"""
         stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
-        message_ids = [post["message_id"] for post in batch]
+        [post["message_id"] for post in batch]
         try:
             # For aiogram, we don't have direct get_messages method
             # Skip view fetching for now

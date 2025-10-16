@@ -52,7 +52,11 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
 
         logger.info(f"Created mock customer: {customer_id}")
 
-        return {"success": True, "customer_id": customer_id, "gateway_response": customer}
+        return {
+            "success": True,
+            "customer_id": customer_id,
+            "gateway_response": customer,
+        }
 
     async def create_payment_method(
         self, customer_id: str, method_data: dict[str, Any]
@@ -65,15 +69,17 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
             "type": method_data.get("type", "card"),
             "customer": customer_id,
             "created": int(time.time()),
-            "card": {
-                "brand": "visa",
-                "last4": "4242",
-                "exp_month": 12,
-                "exp_year": 2025,
-                "country": "US",
-            }
-            if method_data.get("type") == "card"
-            else None,
+            "card": (
+                {
+                    "brand": "visa",
+                    "last4": "4242",
+                    "exp_month": 12,
+                    "exp_year": 2025,
+                    "country": "US",
+                }
+                if method_data.get("type") == "card"
+                else None
+            ),
             "metadata": method_data.get("metadata", {}),
         }
 
@@ -81,7 +87,11 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
 
         logger.info(f"Created mock payment method: {method_id}")
 
-        return {"success": True, "payment_method_id": method_id, "gateway_response": payment_method}
+        return {
+            "success": True,
+            "payment_method_id": method_id,
+            "gateway_response": payment_method,
+        }
 
     async def create_payment_intent(
         self,
@@ -112,19 +122,21 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
             "created": int(time.time()),
             "client_secret": f"{intent_id}_secret_mock",
             "metadata": metadata or {},
-            "charges": {
-                "data": [
-                    {
-                        "id": f"ch_mock_{uuid.uuid4().hex[:8]}",
-                        "amount": int(amount * 100),
-                        "currency": currency.lower(),
-                        "status": "succeeded" if status == "succeeded" else "pending",
-                        "created": int(time.time()),
-                    }
-                ]
-            }
-            if status in ["succeeded", "processing"]
-            else {"data": []},
+            "charges": (
+                {
+                    "data": [
+                        {
+                            "id": f"ch_mock_{uuid.uuid4().hex[:8]}",
+                            "amount": int(amount * 100),
+                            "currency": currency.lower(),
+                            "status": ("succeeded" if status == "succeeded" else "pending"),
+                            "created": int(time.time()),
+                        }
+                    ]
+                }
+                if status in ["succeeded", "processing"]
+                else {"data": []}
+            ),
         }
 
         self.payment_intents[intent_id] = payment_intent
@@ -134,7 +146,7 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
         return {
             "success": True,
             "provider_payment_id": intent_id,
-            "status": PaymentStatus.SUCCEEDED if status == "succeeded" else PaymentStatus.PENDING,
+            "status": (PaymentStatus.SUCCEEDED if status == "succeeded" else PaymentStatus.PENDING),
             "amount": float(amount),
             "currency": currency,
             "client_secret": payment_intent["client_secret"],
@@ -218,7 +230,7 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
 
         return {
             "success": True,
-            "status": SubscriptionStatus.CANCELED if immediate else SubscriptionStatus.ACTIVE,
+            "status": (SubscriptionStatus.CANCELED if immediate else SubscriptionStatus.ACTIVE),
             "canceled_at": subscription.get("canceled_at"),
             "gateway_response": subscription,
         }
@@ -249,7 +261,12 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
             "id": event_id,
             "type": "payment_intent.succeeded",  # Mock event type
             "created": int(time.time()),
-            "data": {"object": {"id": f"pi_mock_{uuid.uuid4().hex[:8]}", "status": "succeeded"}},
+            "data": {
+                "object": {
+                    "id": f"pi_mock_{uuid.uuid4().hex[:8]}",
+                    "status": "succeeded",
+                }
+            },
         }
 
         self.webhook_events.append(event)

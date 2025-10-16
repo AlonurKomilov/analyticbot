@@ -4,12 +4,13 @@ Follows Clean Architecture: Apps layer adapter wrapping Core business logic
 """
 
 import logging
-from typing import Any
 
 from aiogram import Bot
 
 from core.ports.telegram_port import TelegramBotPort
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 from infra.adapters.analytics.aiogram_bot_adapter import AiogramBotAdapter
 
 logger = logging.getLogger(__name__)

@@ -92,7 +92,9 @@ def get_channel_service():
 
 
 router = APIRouter(
-    prefix="/channels", tags=["Channel Management"], responses={404: {"description": "Not found"}}
+    prefix="/channels",
+    tags=["Channel Management"],
+    responses={404: {"description": "Not found"}},
 )
 
 # === CHANNEL MODELS ===
@@ -117,6 +119,7 @@ class ChannelUpdateRequest(BaseModel):
 
 class ValidateChannelRequest(BaseModel):
     """Request model for channel validation"""
+
     username: str
 
 
@@ -126,6 +129,7 @@ class ValidateChannelRequest(BaseModel):
 async def get_telegram_validation_service_dep():
     """Dependency to get telegram validation service"""
     from apps.api.di_analytics import get_telegram_validation_service as di_get_service
+
     return await di_get_service()
 
 
@@ -175,10 +179,7 @@ async def validate_telegram_channel(
 
     except Exception as e:
         logger.error(f"Failed to validate channel: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 
 @router.get("", response_model=list[ChannelListResponse])
@@ -315,7 +316,9 @@ async def update_channel(
                 raise HTTPException(status_code=400, detail="No update data provided")
 
             channel = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data=update_dict
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data=update_dict,
             )
 
             logger.info(f"Channel updated successfully: {channel_id} by user {current_user['id']}")
@@ -393,7 +396,9 @@ async def activate_channel(
 
         with performance_timer("channel_activation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": True}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": True},
             )
 
             logger.info(f"Channel activated: {channel_id} by user {current_user['id']}")
@@ -433,7 +438,9 @@ async def deactivate_channel(
 
         with performance_timer("channel_deactivation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": False}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": False},
             )
 
             logger.info(f"Channel deactivated: {channel_id} by user {current_user['id']}")

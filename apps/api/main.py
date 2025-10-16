@@ -9,8 +9,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
-from apps.di import cleanup_container as cleanup_db_pool
 from apps.api.routers.admin_channels_router import router as admin_channels_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router
@@ -29,7 +27,12 @@ from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
-from apps.shared.api.content_protection_router import router as content_protection_router
+
+# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
+from apps.di import cleanup_container as cleanup_db_pool
+from apps.shared.api.content_protection_router import (
+    router as content_protection_router,
+)
 from apps.shared.api.payment_router import router as payment_router
 
 # ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
@@ -107,7 +110,10 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         "url": "https://t.me/abccontrol_bot",
         "email": "support@analyticbot.com",
     },
-    license_info={"name": "Enterprise License", "url": "https://analyticbot.com/license"},
+    license_info={
+        "name": "Enterprise License",
+        "url": "https://analyticbot.com/license",
+    },
     openapi_tags=[
         {
             "name": "Core",
@@ -183,7 +189,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 # Production performance middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"]
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"],
 )
 
 # Add CORS middleware with explicit configuration
@@ -216,12 +223,20 @@ app.include_router(admin_system_router)  # Admin - System Management
 
 # ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
-from apps.api.routers.analytics_channels_router import router as analytics_channels_router
+from apps.api.routers.analytics_channels_router import (
+    router as analytics_channels_router,
+)
 from apps.api.routers.analytics_live_router import router as analytics_live_router
-from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_predictive_router import router as insights_predictive_router
+from apps.api.routers.insights_engagement_router import (
+    router as insights_engagement_router,
+)
+from apps.api.routers.insights_predictive_router import (
+    router as insights_predictive_router,
+)
 from apps.api.routers.statistics_core_router import router as statistics_core_router
-from apps.api.routers.statistics_reports_router import router as statistics_reports_router
+from apps.api.routers.statistics_reports_router import (
+    router as statistics_reports_router,
+)
 from apps.demo.routers.main import router as demo_router
 
 app.include_router(analytics_channels_router)  # Channel list for analytics - /analytics/channels

@@ -14,13 +14,15 @@ logger = logging.getLogger(__name__)
 from apps.bot.services.analytics_service import AnalyticsService
 from apps.bot.services.guard_service import GuardService
 from apps.bot.services.prometheus_service import prometheus_service
-# from apps.bot.services.scheduler_service import SchedulerService  # ARCHIVED 2025-10-14
-
-# New scheduling services (Clean Architecture)
-from core.services.bot.scheduling import ScheduleManager
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from core.repositories.interfaces import ChannelRepository
+
+# New scheduling services (Clean Architecture)
+from core.services.bot.scheduling import ScheduleManager
+
+# from apps.bot.services.scheduler_service import SchedulerService  # ARCHIVED 2025-10-14
+
 
 router = Router()
 
@@ -274,11 +276,10 @@ async def handle_schedule(
                     user_id=uid,
                     channel_id=channel_id,
                     post_text=text,
-                    schedule_time=aware_dt
+                    schedule_time=aware_dt,
                 )
             except Exception as e:
                 logger.warning(f"Failed to schedule post: {e}")
-                pass
         await message.reply(
             i18n.get(
                 "schedule-success",

@@ -36,10 +36,7 @@ def _create_bot_client(settings: BotSettings) -> Any | None:
         from aiogram.client.default import DefaultBotProperties
         from aiogram.enums import ParseMode
 
-        return _AioBot(
-            token=token,
-            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-        )
+        return _AioBot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     except ImportError:
         return None
 
@@ -60,9 +57,7 @@ def _create_dispatcher():
 # ============================================================================
 
 
-async def _create_bot_analytics_adapter(
-    core_analytics_service=None, bot=None, **kwargs
-):
+async def _create_bot_analytics_adapter(core_analytics_service=None, bot=None, **kwargs):
     """Create bot analytics adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
@@ -71,9 +66,7 @@ async def _create_bot_analytics_adapter(
         if core_analytics_service is None:
             return None
 
-        return BotAnalyticsAdapter(
-            batch_processor=core_analytics_service, bot=bot
-        )
+        return BotAnalyticsAdapter(batch_processor=core_analytics_service, bot=bot)
     except ImportError as e:
         logger.warning(f"Bot analytics adapter not available: {e}")
         return None
@@ -246,7 +239,7 @@ def _create_post_delivery_service(
     markup_builder=None,
     schedule_repository=None,
     analytics_repository=None,
-    **kwargs
+    **kwargs,
 ):
     """Create post delivery service (orchestrates message delivery)"""
     try:
@@ -276,11 +269,7 @@ def _create_post_delivery_service(
         return None
 
 
-def _create_delivery_status_tracker(
-    schedule_repository=None,
-    analytics_repository=None,
-    **kwargs
-):
+def _create_delivery_status_tracker(schedule_repository=None, analytics_repository=None, **kwargs):
     """Create delivery status tracker (manages post lifecycle)"""
     try:
         from core.services.bot.scheduling import DeliveryStatusTracker
@@ -497,10 +486,7 @@ class BotContainer(containers.DeclarativeContainer):
     # BOT SERVICES
     # ============================================================================
 
-    guard_service = providers.Factory(
-        _create_guard_service,
-        user_repository=database.user_repo
-    )
+    guard_service = providers.Factory(_create_guard_service, user_repository=database.user_repo)
 
     subscription_service = providers.Factory(
         _create_subscription_service,
@@ -509,8 +495,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     payment_orchestrator = providers.Factory(
-        _create_payment_orchestrator,
-        payment_repository=database.payment_repo
+        _create_payment_orchestrator, payment_repository=database.payment_repo
     )
 
     scheduler_service = providers.Factory(
@@ -568,9 +553,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     alerting_service = providers.Factory(
-        _create_alerting_service,
-        bot=bot_client,
-        user_repository=database.user_repo
+        _create_alerting_service, bot=bot_client, user_repository=database.user_repo
     )
 
     channel_management_service = providers.Factory(

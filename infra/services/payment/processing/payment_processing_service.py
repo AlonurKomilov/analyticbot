@@ -14,14 +14,13 @@ from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
+from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     Money,
     Payment,
     PaymentData,
     PaymentStatus,
 )
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
-
 from core.protocols.payment.payment_protocols import (
     PaymentProcessingProtocol,
     PaymentResult,
@@ -66,7 +65,10 @@ class PaymentProcessingService(PaymentProcessingProtocol):
         )
 
     async def process_payment(
-        self, user_id: int, payment_data: PaymentData, idempotency_key: str | None = None
+        self,
+        user_id: int,
+        payment_data: PaymentData,
+        idempotency_key: str | None = None,
     ) -> PaymentResult:
         """
         Process a one-time payment transaction.
@@ -98,7 +100,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             validation_result = await self.validate_payment_data(payment_data)
             if not validation_result["is_valid"]:
                 return PaymentResult(
-                    success=False, error_message=f"Validation failed: {validation_result['errors']}"
+                    success=False,
+                    error_message=f"Validation failed: {validation_result['errors']}",
                 )
 
             # Get payment method details
@@ -179,7 +182,9 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 failed_payment = await self.repository.get_payment(payment_id)
                 return PaymentResult(
                     success=False,
-                    payment=self._create_payment_entity(failed_payment) if failed_payment else None,
+                    payment=(
+                        self._create_payment_entity(failed_payment) if failed_payment else None
+                    ),
                     error_message=str(provider_error),
                     transaction_id=payment_id,
                 )
@@ -247,7 +252,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 payment_method_id=original_payment["payment_method_id"],
                 amount=Money(
                     amount=original_payment["amount"],
-                    currency=original_payment["currency"]
+                    currency=original_payment["currency"],
                 ),
                 description=f"Retry of payment {payment_id}",
                 metadata={
@@ -362,7 +367,7 @@ class PaymentProcessingService(PaymentProcessingProtocol):
             logger.info(f"✅ Refund processed successfully: {refund_id}")
             return PaymentResult(
                 success=True,
-                payment=self._create_payment_entity(refund_payment) if refund_payment else None,
+                payment=(self._create_payment_entity(refund_payment) if refund_payment else None),
                 provider_response=provider_refund_response,
                 transaction_id=refund_id,
             )
@@ -470,4 +475,8 @@ class PaymentProcessingService(PaymentProcessingProtocol):
                 "adapter_name": self.payment_adapter.get_adapter_name(),
             }
         except Exception as e:
-            return {"service": "PaymentProcessingService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "PaymentProcessingService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

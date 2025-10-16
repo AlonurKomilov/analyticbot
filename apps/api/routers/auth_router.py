@@ -13,7 +13,6 @@ from pydantic import BaseModel, EmailStr, Field
 
 from apps.api.auth_utils import auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
-from core.security_engine import get_security_manager
 
 # ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
 # ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
@@ -28,6 +27,7 @@ from core.security_engine import (
     SecurityManager,
     User,
     UserStatus,
+    get_security_manager,
     require_analytics_access,
     require_permission,
 )
@@ -36,7 +36,9 @@ from core.security_engine.mfa import MFAManager
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/auth", tags=["Authentication"], responses={404: {"description": "Not found"}}
+    prefix="/auth",
+    tags=["Authentication"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -96,7 +98,8 @@ async def login(
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Create User object for SecurityManager - Updated for new role system
@@ -118,7 +121,7 @@ async def login(
         )
 
         # Debug logging
-        print(f"\n� USER OBJECT CREATED:")
+        print("\n� USER OBJECT CREATED:")
         print(f"   Email: {user.email}")
         print(f"   Username: {user.username}")
         print(f"   Status: {user.status}")
@@ -128,7 +131,7 @@ async def login(
             print(f"   Hash starts with: {user.hashed_password[:10]}")
 
         # Verify password
-        print(f"\n🔑 VERIFYING PASSWORD:")
+        print("\n🔑 VERIFYING PASSWORD:")
         print(f"   Input password: {login_data.password}")
         print(f"   Input password length: {len(login_data.password)}")
 
@@ -138,7 +141,8 @@ async def login(
         if not password_valid:
             print(f"   ❌ Password verification FAILED for {user.email}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         print(f"   ✅ Password verified successfully for {user.email}")
@@ -153,11 +157,12 @@ async def login(
 
         # Create session - convert FastAPI Request to AuthRequest
         from core.ports.security_ports import AuthRequest
+
         auth_request = AuthRequest(
             client_ip=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
             device_info={},
-            headers=dict(request.headers)
+            headers=dict(request.headers),
         )
         session = get_security_manager().create_user_session(user, auth_request)
 
@@ -179,7 +184,9 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
-                "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+                "status": (
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
+                ),
             },
         )
 
@@ -194,7 +201,8 @@ async def login(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
-    register_data: RegisterRequest, user_repo: UserRepository = Depends(get_user_repository)
+    register_data: RegisterRequest,
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
@@ -210,7 +218,8 @@ async def register(
         existing_user = await user_repo.get_user_by_email(register_data.email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
             )
 
         # Check if username already exists
@@ -246,7 +255,7 @@ async def register(
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
             "role": user.role,  # role is now a string, no .value needed
-            "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+            "status": (user.status.value if isinstance(user.status, UserStatus) else user.status),
             "plan_id": 1,  # Default plan
         }
 
@@ -265,7 +274,8 @@ async def register(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )
 
 
@@ -282,7 +292,11 @@ async def refresh_token(
         # Validate refresh token and get new access token
         new_access_token = auth_utils.refresh_access_token(refresh_token)
 
-        return {"access_token": new_access_token, "token_type": "bearer", "expires_in": 30 * 60}
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60,
+        }
 
     except Exception as e:
         logger.warning(f"Token refresh failed: {str(e)}")
@@ -450,7 +464,8 @@ async def reset_password(
         reset_data = get_security_manager().verify_password_reset_token(request.token)
         if not reset_data:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
             )
 
         user_email = reset_data["email"]
@@ -487,15 +502,14 @@ async def reset_password(
     except Exception as e:
         logger.error(f"Reset password error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Password reset failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset failed",
         )
 
 
 # MFA Management Models
 class MFASetupRequest(BaseModel):
     """MFA setup initiation request"""
-
-    pass
 
 
 class MFAVerifySetupRequest(BaseModel):
@@ -553,7 +567,8 @@ async def get_mfa_status(
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MFA status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MFA status",
         )
 
 
@@ -619,7 +634,8 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy",
         )
 
 
@@ -639,16 +655,11 @@ async def verify_telegram(
         # Find user by email
         user_data = await user_repo.get_user_by_email(email)
         if not user_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         # Update user status to active and link Telegram ID
         await user_repo.update_user(
-            user_id=user_data["id"],
-            status="active",
-            telegram_id=telegram_id
+            user_id=user_data["id"], status="active", telegram_id=telegram_id
         )
 
         logger.info(f"✅ User verified via Telegram: {email} (TG ID: {telegram_id})")
@@ -656,7 +667,7 @@ async def verify_telegram(
         return {
             "message": "Account verified successfully via Telegram",
             "status": "active",
-            "telegram_linked": True
+            "telegram_linked": True,
         }
 
     except HTTPException:
@@ -665,5 +676,5 @@ async def verify_telegram(
         logger.error(f"Telegram verification error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to verify account"
+            detail="Failed to verify account",
         )

@@ -10,19 +10,8 @@ from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import settings as app_settings
-from apps.bot.services import (
-    AnalyticsService,
-    GuardService,
-    # SchedulerService - ARCHIVED: Replaced with ScheduleManager, PostDeliveryService, DeliveryStatusTracker
-    SubscriptionService,
-)
 
 # New scheduling services (Clean Architecture)
-from core.services.bot.scheduling import (
-    DeliveryStatusTracker,
-    PostDeliveryService,
-    ScheduleManager,
-)
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
 
 # Use repository factory instead of direct infra imports
@@ -138,6 +127,7 @@ class DependencyMiddleware(BaseMiddleware):
 
             except Exception as e:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning(f"Failed to inject services: {e}")
                 # Fallback to nulls

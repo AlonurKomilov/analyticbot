@@ -93,7 +93,9 @@ class TelegramAnalyticsAdapter(AnalyticsAdapter):
     """
 
     def __init__(
-        self, bot_token: str | None = None, rate_limit_config: RateLimitConfig | None = None
+        self,
+        bot_token: str | None = None,
+        rate_limit_config: RateLimitConfig | None = None,
     ):
         self.bot_token = bot_token or getattr(settings, "TELEGRAM_BOT_TOKEN", "") or ""
         self.rate_limiter = RateLimiter(rate_limit_config or RateLimitConfig())
@@ -511,8 +513,16 @@ class TelegramAnalyticsAdapter(AnalyticsAdapter):
                     "can_read_all_group_messages": bot_info.get("can_read_all_group_messages"),
                 },
                 "api_features": {
-                    "available": ["basic_channel_info", "member_counts", "bot_management"],
-                    "limited": ["message_analytics", "engagement_metrics", "demographic_data"],
+                    "available": [
+                        "basic_channel_info",
+                        "member_counts",
+                        "bot_management",
+                    ],
+                    "limited": [
+                        "message_analytics",
+                        "engagement_metrics",
+                        "demographic_data",
+                    ],
                 },
                 "rate_limiting": {
                     "calls_per_second": self.rate_limiter.config.calls_per_second,

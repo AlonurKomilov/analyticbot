@@ -30,7 +30,9 @@ def _create_ml_service(service_name: str) -> Any | None:
 
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.churn_intelligence import (
+                ChurnIntelligenceOrchestratorService,
+            )
 
             try:
                 return ChurnIntelligenceOrchestratorService()
@@ -61,17 +63,8 @@ class MLContainer(containers.DeclarativeContainer):
     # ML SERVICES (All optional)
     # ============================================================================
 
-    prediction_service = providers.Factory(
-        _create_ml_service,
-        service_name="PredictiveEngine"
-    )
+    prediction_service = providers.Factory(_create_ml_service, service_name="PredictiveEngine")
 
-    engagement_analyzer = providers.Factory(
-        _create_ml_service,
-        service_name="EngagementAnalyzer"
-    )
+    engagement_analyzer = providers.Factory(_create_ml_service, service_name="EngagementAnalyzer")
 
-    churn_predictor = providers.Factory(
-        _create_ml_service,
-        service_name="ChurnPredictor"
-    )
+    churn_predictor = providers.Factory(_create_ml_service, service_name="ChurnPredictor")

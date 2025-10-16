@@ -14,7 +14,7 @@ from .mock_analytics_adapter import MockAnalyticsAdapter
 
 # MTProto guarded imports
 if TYPE_CHECKING:
-    from .tg_analytics_adapter import RateLimitConfig, TelegramAnalyticsAdapter
+    pass
 
 logger = logging.getLogger(__name__)
 

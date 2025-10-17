@@ -7,8 +7,9 @@ import * as Sentry from '@sentry/react';
 import App from './App.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import theme from './theme.js'; // Use our enhanced theme
-import { initializeApp, showDataSourceNotification } from './utils/initializeApp.js';
-y
+import { showDataSourceNotification } from './utils/initializeApp.js';
+import HealthStartupSplash from './components/HealthStartupSplash.jsx';
+
 // Suppress React DevTools suggestion in development
 if (import.meta.env.DEV) {
   // This is expected in development - no action needed
@@ -82,26 +83,40 @@ if (typeof window !== 'undefined') {
 const container = document.getElementById('root');
 const root = createRoot(container);
 
-// Initialize app and render only after completion
-initializeApp().then((result) => {
-  if (import.meta.env.DEV) {
-    console.log('🚀 App initialized:', result);
-  }
+/**
+ * Initialize app with optional comprehensive health checks
+ *
+ * Environment variables:
+ * - VITE_FULL_HEALTH_CHECK=true       Enable comprehensive health checks (default: false)
+ * - VITE_SKIP_OPTIONAL_CHECKS=false   Run optional checks too (default: true - skip them)
+ * - VITE_HEALTH_CHECK_SILENT=false    Show blocking splash (default: true - silent mode)
+ *
+ * Silent mode (default): Health checks run in background, app renders immediately.
+ *   Only shows warning banner if critical failures detected.
+ *
+ * Blocking mode: Shows splash screen until all checks complete.
+ *   Useful for admin/debugging scenarios.
+ */
+const enableFullHealthCheck = import.meta.env.VITE_FULL_HEALTH_CHECK === 'true';
+const skipOptionalChecks = import.meta.env.VITE_SKIP_OPTIONAL_CHECKS !== 'false'; // Default: true
+const silentMode = import.meta.env.VITE_HEALTH_CHECK_SILENT !== 'false'; // Default: true
 
-  // Show notification about data source
-  if (result.dataSource === 'mock' && result.error) {
-    showDataSourceNotification('mock', 'api_unavailable');
-  }
-
-  // Now render the app with proper data source initialized
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
+// Render the app wrapped by startup splash which handles initialization and health checks
+root.render(
+  <React.StrictMode>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <HealthStartupSplash
+          options={{
+            fullHealthCheck: enableFullHealthCheck,
+            skipOptional: skipOptionalChecks,
+            silent: silentMode
+          }}
+        >
           <App />
-        </ThemeProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
-});
+        </HealthStartupSplash>
+      </ThemeProvider>
+    </ErrorBoundary>
+  </React.StrictMode>
+);

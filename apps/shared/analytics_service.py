@@ -186,6 +186,68 @@ class SharedAnalyticsService:
 
         raise RuntimeError("Failed to get user analytics after all retries")
 
+    async def get_channel_overview(self, channel_id: str, days: int = 1) -> dict[str, Any]:
+        """Get channel-specific analytics overview
+
+        Args:
+            channel_id: Telegram channel ID
+            days: Number of days to query (1 for daily, 7 for weekly, etc.)
+
+        Returns:
+            Dict with channel analytics data including views, subscribers, etc.
+        """
+        if httpx is None:
+            raise RuntimeError("httpx library not available")
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            url = urljoin(self.base_url, f"/api/analytics/channels/{channel_id}/overview")
+            params = {"days": days}
+
+            for attempt in range(self.max_retries):
+                try:
+                    response = await client.get(url, headers=self.headers, params=params)
+                    response.raise_for_status()
+                    return response.json()
+
+                except Exception as e:
+                    logger.warning(f"Channel overview attempt {attempt + 1} failed: {e}")
+                    if attempt == self.max_retries - 1:
+                        raise
+                    await asyncio.sleep(2**attempt)
+
+        raise RuntimeError("Failed to get channel overview after all retries")
+
+    async def get_channel_growth(self, channel_id: str, days: int = 1) -> dict[str, Any]:
+        """Get channel growth analytics
+
+        Args:
+            channel_id: Telegram channel ID
+            days: Number of days to query
+
+        Returns:
+            Dict with growth data including subscriber changes, daily growth, etc.
+        """
+        if httpx is None:
+            raise RuntimeError("httpx library not available")
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            url = urljoin(self.base_url, f"/api/analytics/channels/{channel_id}/growth")
+            params = {"days": days}
+
+            for attempt in range(self.max_retries):
+                try:
+                    response = await client.get(url, headers=self.headers, params=params)
+                    response.raise_for_status()
+                    return response.json()
+
+                except Exception as e:
+                    logger.warning(f"Channel growth attempt {attempt + 1} failed: {e}")
+                    if attempt == self.max_retries - 1:
+                        raise
+                    await asyncio.sleep(2**attempt)
+
+        raise RuntimeError("Failed to get channel growth after all retries")
+
     async def __aenter__(self):
         """Async context manager entry"""
         return self

@@ -31,9 +31,10 @@ const PostViewDynamicsChart = () => {
     const [autoRefresh] = useState(true);
     const [refreshInterval, setRefreshInterval] = useState('30s');
 
-    // Get store methods - USE SELECTOR to prevent unnecessary re-renders!
-    // This is the ROOT CAUSE: subscribing to entire store caused infinite loop
-    const fetchPostDynamics = useAppStore((state) => state.fetchPostDynamics);
+    // Get store function WITHOUT subscribing - prevents re-renders from store updates!
+    // Using getState() directly instead of hook to avoid subscription
+    // This is CRITICAL: hook subscription causes re-renders, getState() does not
+    const fetchPostDynamics = useAppStore.getState().fetchPostDynamics;
 
     // Use refs to track state and prevent unnecessary re-renders
     const isMountedRef = useRef(true);
@@ -42,11 +43,6 @@ const PostViewDynamicsChart = () => {
     const isLoadingRef = useRef(false);
     const dataVersionRef = useRef(0);
     const fetchPostDynamicsRef = useRef(fetchPostDynamics);
-
-    // Keep fetchPostDynamics ref up to date
-    useEffect(() => {
-        fetchPostDynamicsRef.current = fetchPostDynamics;
-    }, [fetchPostDynamics]);
 
     // Stable load data function with debouncing
     const loadData = useCallback(async () => {

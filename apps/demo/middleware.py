@@ -63,7 +63,7 @@ class DemoMiddleware(BaseHTTPMiddleware):
 
     async def _detect_demo_user(self, request: Request) -> dict:
         """Detect if request is from a demo user"""
-        demo_context = {"is_demo": False, "demo_type": None, "user_id": None}
+        demo_context: dict = {"is_demo": False, "demo_type": None, "user_id": None}
 
         # Method 1: Check Authorization header for demo token
         auth_header = request.headers.get("Authorization", "")
@@ -158,6 +158,7 @@ class DemoMiddleware(BaseHTTPMiddleware):
 
                 # Parse JSON body
                 return json.loads(body.decode())
+            return None
         except Exception as e:
             logger.debug(f"Could not peek request body: {e}")
             return None

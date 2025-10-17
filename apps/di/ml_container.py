@@ -41,6 +41,9 @@ def _create_ml_service(service_name: str) -> Any | None:
         logger.warning(f"ML service {service_name} not available: {e}")
         return None
 
+    # Explicit return for unmatched service names
+    return None
+
 
 # ============================================================================
 # ML CONTAINER
@@ -61,17 +64,8 @@ class MLContainer(containers.DeclarativeContainer):
     # ML SERVICES (All optional)
     # ============================================================================
 
-    prediction_service = providers.Factory(
-        _create_ml_service,
-        service_name="PredictiveEngine"
-    )
+    prediction_service = providers.Factory(_create_ml_service, service_name="PredictiveEngine")
 
-    engagement_analyzer = providers.Factory(
-        _create_ml_service,
-        service_name="EngagementAnalyzer"
-    )
+    engagement_analyzer = providers.Factory(_create_ml_service, service_name="EngagementAnalyzer")
 
-    churn_predictor = providers.Factory(
-        _create_ml_service,
-        service_name="ChurnPredictor"
-    )
+    churn_predictor = providers.Factory(_create_ml_service, service_name="ChurnPredictor")

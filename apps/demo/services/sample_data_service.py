@@ -24,7 +24,7 @@ class SampleDataService:
         base_views = random.randint(2000, 8000)
         trend_factor = random.choice([1.05, 1.02, 0.98, 0.95])  # Growth or decline trend
 
-        dynamics = []
+        dynamics: list[dict[str, Any]] = []
         for i in range(days):
             day_multiplier = 1 + (i * 0.02 * (trend_factor - 1))
 
@@ -59,9 +59,9 @@ class SampleDataService:
             )
 
         # Calculate summary statistics
-        total_views = sum(d["views"] for d in dynamics)
+        total_views = int(sum(d["views"] for d in dynamics))
         avg_engagement = (
-            sum(d["engagement_rate"] for d in dynamics) / len(dynamics) if dynamics else 0
+            float(sum(d["engagement_rate"] for d in dynamics) / len(dynamics)) if dynamics else 0.0
         )
 
         return {
@@ -121,7 +121,7 @@ class SampleDataService:
             "Cloud Infrastructure Scaling",
         ]
 
-        posts = []
+        posts: list[dict[str, Any]] = []
         for i in range(limit):
             views = random.randint(*base_views) - (i * 200)
             reactions = random.randint(*base_reactions) - (i * 20)
@@ -162,7 +162,7 @@ class SampleDataService:
         """Generate optimal posting time recommendations"""
 
         # Generate realistic posting recommendations
-        optimal_windows = []
+        optimal_windows: list[dict[str, Any]] = []
 
         days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         base_scores = [8.2, 9.1, 8.8, 9.4, 8.7, 7.5, 7.8]  # Realistic weekly pattern
@@ -180,12 +180,12 @@ class SampleDataService:
                 {
                     "day": day,
                     "times": times,
-                    "engagement_score": round(base_score + random.uniform(-0.3, 0.3), 1),
+                    "engagement_score": float(round(base_score + random.uniform(-0.3, 0.3), 1)),
                 }
             )
 
         # Find peak engagement time
-        peak_window = max(optimal_windows, key=lambda x: x["engagement_score"])
+        peak_window = max(optimal_windows, key=lambda x: float(x["engagement_score"]))
         peak_time = f"{peak_window['day']} {peak_window['times'][0]}"
 
         recommendations = {
@@ -201,10 +201,16 @@ class SampleDataService:
         }
 
         # Extract top 3 optimal times
-        sorted_windows = sorted(optimal_windows, key=lambda x: x["engagement_score"], reverse=True)
-        optimal_times = []
+        sorted_windows = sorted(
+            optimal_windows, key=lambda x: float(x["engagement_score"]), reverse=True
+        )
+        optimal_times: list[str] = []
         for window in sorted_windows[:3]:
-            for time_slot in window["times"]:
+            tmp_times = (
+                window.get("times") if isinstance(window, dict) else getattr(window, "times", None)
+            )
+            times_list = tmp_times or []
+            for time_slot in times_list:
                 optimal_times.append(f"{window['day']} {time_slot}")
 
         return {
@@ -346,7 +352,7 @@ class SampleDataService:
         quality = demo_config.get_demo_quality_level()
 
         # Generate different data based on demo type
-        base_data = {
+        base_data: dict[str, Any] = {
             "user": {
                 "id": user_id,
                 "type": demo_type,

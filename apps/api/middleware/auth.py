@@ -99,7 +99,11 @@ async def get_current_user(
         logger.warning(f"Authentication failed: {e.detail}")
         raise e
     except Exception as e:
-        logger.error(f"Unexpected authentication error: {e}")
+        # Log the FULL exception details for debugging
+        logger.error(f"Unexpected authentication error: {e}", exc_info=True)
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Token present: {credentials is not None}")
+        logger.error(f"User repo available: {user_repo is not None}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Authentication service error"
         )

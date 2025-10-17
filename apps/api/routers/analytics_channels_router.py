@@ -92,7 +92,7 @@ class ValidateChannelRequest(BaseModel):
     username: str
 
 
-async def get_telegram_validation_service():
+async def get_telegram_validation_service() -> TelegramValidationService:
     """Dependency to get telegram validation service"""
     from apps.api.di_analytics import get_telegram_validation_service as di_get_service
 

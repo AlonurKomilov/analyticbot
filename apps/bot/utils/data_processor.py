@@ -401,7 +401,13 @@ class AdvancedDataProcessor:
 
                             if hasattr(corr_val_any, "item") and callable(corr_val_any.item):
                                 # For pandas/numpy scalars with .item() method
-                                corr_val_float = float(corr_val_any.item())
+                                # .item() returns a scalar that needs to be converted
+                                item_result = corr_val_any.item()
+                                if isinstance(item_result, (int, float)):
+                                    corr_val_float = float(item_result)
+                                else:
+                                    # Skip non-numeric scalar results
+                                    continue
                             elif isinstance(corr_val, (int, float)):
                                 # For regular numeric types
                                 corr_val_float = float(corr_val)

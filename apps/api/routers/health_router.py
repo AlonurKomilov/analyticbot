@@ -429,3 +429,63 @@ async def debug_info():
         }
 
     return debug_data
+
+
+@router.get("/startup", summary="Startup Health Report")
+async def startup_health_report(request: Request):
+    """
+    ## Startup Health Report
+
+    Returns the health check report that was executed during application startup.
+    Provides comprehensive diagnostics of system initialization and readiness.
+
+    **Features:**
+    - Complete startup validation results
+    - Component initialization status
+    - Critical failure identification
+    - Performance metrics from startup
+
+    **Use Cases:**
+    - Post-deployment validation
+    - Production readiness verification
+    - Debugging initialization issues
+    - CI/CD health gates
+
+    **Response:**
+    - `production_ready`: Whether system passed all critical checks
+    - `overall_status`: Aggregated status (passed/degraded/failed)
+    - `checks`: Individual check results with timing
+    - `duration_ms`: Total startup health check duration
+    - `critical_failures`: List of any critical failures
+    """
+    # Get startup health report from app state
+    if not hasattr(request.app.state, "startup_health_report"):
+        raise HTTPException(
+            status_code=503, detail="Startup health check not yet completed or not enabled"
+        )
+
+    report = request.app.state.startup_health_report
+
+    # Convert to serializable format
+    return {
+        "timestamp": report.start_time.isoformat(),
+        "production_ready": report.is_production_ready,
+        "overall_status": report.overall_status.value,
+        "duration_ms": report.duration_ms,
+        "checks": [
+            {
+                "name": check.name,
+                "severity": check.severity.value,
+                "status": check.status.value,
+                "duration_ms": check.duration_ms,
+                "error": check.error,
+                "details": check.details,
+                "timestamp": check.timestamp.isoformat(),
+            }
+            for check in report.checks
+        ],
+        "critical_failures": [
+            {"name": check.name, "error": check.error, "details": check.details}
+            for check in report.critical_failures
+        ],
+    }

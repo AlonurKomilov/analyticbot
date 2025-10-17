@@ -38,10 +38,10 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    current_data = await self.analytics_client.get_overview(
+                    current_data = await self.analytics_client.get_channel_overview(
                         str(channel_id), 1
                     )  # Last 24h
-                    baseline_data = await self.analytics_client.get_overview(
+                    baseline_data = await self.analytics_client.get_channel_overview(
                         str(channel_id), 7
                     )  # Last week
 
@@ -50,8 +50,18 @@ class AlertDetector:
                 return None
 
             # Calculate current and baseline metrics
-            current_views = current_data.overview.total_views
-            baseline_avg_views = baseline_data.overview.total_views / 7  # Daily average
+            # Handle dict response from API
+            current_views = (
+                current_data.get("overview", {}).get("total_views", 0)
+                if isinstance(current_data, dict)
+                else getattr(getattr(current_data, "overview", None), "total_views", 0)
+            )
+            baseline_views_total = (
+                baseline_data.get("overview", {}).get("total_views", 0)
+                if isinstance(baseline_data, dict)
+                else getattr(getattr(baseline_data, "overview", None), "total_views", 0)
+            )
+            baseline_avg_views = baseline_views_total / 7  # Daily average
 
             # Calculate percentage increase
             if baseline_avg_views > 0:
@@ -92,15 +102,28 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    current_data = await self.analytics_client.get_overview(str(channel_id), 1)
-                    baseline_data = await self.analytics_client.get_overview(str(channel_id), 7)
+                    current_data = await self.analytics_client.get_channel_overview(
+                        str(channel_id), 1
+                    )
+                    baseline_data = await self.analytics_client.get_channel_overview(
+                        str(channel_id), 7
+                    )
 
             if not current_data or not baseline_data:
                 logger.warning(f"Insufficient data for quiet detection on channel {channel_id}")
                 return None
 
-            current_views = current_data.overview.total_views
-            baseline_avg_views = baseline_data.overview.total_views / 7
+            current_views = (
+                current_data.get("overview", {}).get("total_views", 0)
+                if isinstance(current_data, dict)
+                else getattr(getattr(current_data, "overview", None), "total_views", 0)
+            )
+            baseline_views_total = (
+                baseline_data.get("overview", {}).get("total_views", 0)
+                if isinstance(baseline_data, dict)
+                else getattr(getattr(baseline_data, "overview", None), "total_views", 0)
+            )
+            baseline_avg_views = baseline_views_total / 7
 
             # Calculate percentage decrease
             if baseline_avg_views > 0:
@@ -140,15 +163,32 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    growth_data = await self.analytics_client.get_growth(str(channel_id), 1)
+                    growth_data = await self.analytics_client.get_channel_growth(str(channel_id), 1)
 
-            if not growth_data or not growth_data.growth.daily_growth:
+            if not growth_data:
                 logger.warning(f"No growth data for channel {channel_id}")
                 return None
 
+            # Normalize growth response to expected shape
+            daily_growth = (
+                growth_data.get("growth", {}).get("daily_growth")
+                if isinstance(growth_data, dict)
+                else getattr(getattr(growth_data, "growth", None), "daily_growth", None)
+            )
+
+            if not daily_growth:
+                logger.warning(f"No growth data for channel {channel_id}")
+                return None
+                return None
+
             # Get latest subscriber count
-            latest_day = growth_data.growth.daily_growth[-1]
-            current_subscribers = latest_day.get("subscribers", 0)
+            latest_day = daily_growth[-1]
+            # daily_growth items may be dicts or objects depending on API
+            current_subscribers = (
+                latest_day.get("subscribers", 0)
+                if isinstance(latest_day, dict)
+                else getattr(latest_day, "subscribers", 0)
+            )
 
             # Check if milestone reached
             # We need to track previous milestones to avoid duplicate alerts

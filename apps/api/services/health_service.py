@@ -22,7 +22,6 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from types import ModuleType
 from typing import Any
 
 # Framework-specific imports (now allowed in apps layer)
@@ -31,11 +30,10 @@ import httpx
 import psutil
 
 # Redis is optional dependency
-redis: ModuleType | None
 try:
-    import redis.asyncio as redis
+    import redis.asyncio as redis_module  # type: ignore[no-redef]
 except ImportError:
-    redis = None
+    redis_module = None  # type: ignore[assignment]
 
 # Import core domain models (these should stay in core)
 from core.common.health.models import (
@@ -470,7 +468,7 @@ async def check_redis_health(
     Updated to use port 10200 (production Redis port) by default
     instead of 6379 (standard Redis port).
     """
-    if not redis:
+    if not redis_module:
         return {"healthy": False, "error": "Redis client not available"}
 
     try:
@@ -489,7 +487,7 @@ async def check_redis_health(
             except Exception as e:
                 logger.warning(f"Failed to parse REDIS_URL, using defaults: {e}")
 
-        redis_client = redis.Redis(host=host, port=port, db=db, decode_responses=True)
+        redis_client = redis_module.Redis(host=host, port=port, db=db, decode_responses=True)
         await redis_client.ping()
         await redis_client.close()
 

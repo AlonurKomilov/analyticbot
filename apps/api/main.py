@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events - now with proper DI container management"""
+    """Application lifespan events - now with proper DI container management and health checks"""
     # Startup - Initialize database and DI container
     try:
         # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
@@ -71,6 +71,29 @@ async def lifespan(app: FastAPI):
         except Exception as cache_error:
             logger.warning(f"⚠️ Redis cache initialization failed: {cache_error}")
             logger.info("Application will continue without caching")
+
+        # ✅ PRODUCTION READINESS: Run comprehensive startup health checks
+        try:
+            from apps.api.services.startup_health_check import run_startup_health_check
+
+            # Run health checks (fail_fast=False to not block startup on non-critical failures)
+            health_report = await run_startup_health_check(
+                fail_fast=False,  # Don't block startup - log warnings instead
+                skip_optional=True,  # Skip optional checks for faster startup
+            )
+
+            # Store report globally for health endpoint
+            app.state.startup_health_report = health_report
+
+            if not health_report.is_production_ready:
+                logger.warning(
+                    "⚠️ Backend started with health check warnings - not production ready"
+                )
+            else:
+                logger.info("✅ All startup health checks passed - Backend is production ready")
+        except Exception as health_error:
+            logger.error(f"⚠️ Startup health check failed: {health_error}")
+            logger.info("Application will continue without health validation")
 
     except Exception as e:
         logger.error(f"Startup initialization failed: {e}")

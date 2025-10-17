@@ -1,12 +1,20 @@
 /**
- * Application initialization utilities
+ * Application initialization utilities with comprehensive health checks
  */
+
+import {
+    runProductionReadinessCheck,
+    quickHealthCheck,
+    formatReadinessReport
+} from './systemHealthCheck.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms';
 
 /**
  * Perform health check with single attempt (no retry to avoid long initialization)
  * Uses 30s timeout which is sufficient for most scenarios
+ *
+ * @deprecated Use quickHealthCheck() from systemHealthCheck.js instead
  */
 const checkAPIHealth = async (timeoutMs = 30000) => {
     const controller = new AbortController();
@@ -97,19 +105,80 @@ export const initializeDataSource = async () => {
 };
 
 /**
- * Initialize application with proper error handling
+ * Initialize application with comprehensive production readiness checks
+ *
+ * @param {Object} options - Initialization options
+ * @param {boolean} options.fullHealthCheck - Run full production readiness check (default: false)
+ * @param {boolean} options.skipOptional - Skip optional checks (default: true for faster startup)
+ * @param {Function} options.onProgress - Progress callback for health checks
  */
-export const initializeApp = async () => {
+export const initializeApp = async (options = {}) => {
+    const {
+        fullHealthCheck = false,
+        skipOptional = true,
+        onProgress = null
+    } = options;
+
     try {
-        // Initialize data source
+        console.log('🚀 Initializing application...');
+
+        // Initialize data source (quick check)
         const dataSource = await initializeDataSource();
+
+        // Run production readiness checks if requested
+        let healthReport = null;
+        if (fullHealthCheck) {
+            console.log('🏥 Running comprehensive production readiness checks...');
+
+            healthReport = await runProductionReadinessCheck({
+                skipOptional,
+                timeout: 10000,
+                onProgress
+            });
+
+            // Display report in console
+            console.log(formatReadinessReport(healthReport));
+
+            // Dispatch health check event
+            window.dispatchEvent(new CustomEvent('healthCheckCompleted', {
+                detail: {
+                    report: healthReport,
+                    isProductionReady: healthReport.isProductionReady(),
+                    timestamp: Date.now()
+                }
+            }));
+
+            // Log warnings for critical failures
+            if (!healthReport.isProductionReady()) {
+                console.error('❌ SYSTEM NOT PRODUCTION READY - Critical failures detected');
+                healthReport.criticalFailures.forEach(failure => {
+                    console.error(`  - ${failure.name}: ${failure.error}`);
+                });
+            } else if (healthReport.overallStatus === 'degraded') {
+                console.warn('⚠️ System running in degraded mode');
+                healthReport.warnings.forEach(warning => {
+                    console.warn(`  - ${warning.name}: ${warning.error}`);
+                });
+            } else {
+                console.log('✅ All systems operational - Production ready!');
+            }
+        }
 
         // Dispatch initialization event
         window.dispatchEvent(new CustomEvent('appInitialized', {
-            detail: { dataSource, timestamp: Date.now() }
+            detail: {
+                dataSource,
+                healthReport,
+                timestamp: Date.now()
+            }
         }));
 
-        return { success: true, dataSource };
+        return {
+            success: true,
+            dataSource,
+            healthReport,
+            isProductionReady: healthReport ? healthReport.isProductionReady() : null
+        };
     } catch (error) {
         console.error('App initialization error:', error);
 

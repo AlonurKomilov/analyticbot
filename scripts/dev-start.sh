@@ -169,6 +169,13 @@ case $SERVICE in
             exit 1
         fi
 
+        # Stop any existing CloudFlare tunnel first
+        if pgrep -f "cloudflared tunnel --url" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping existing CloudFlare Tunnel...${NC}"
+            pkill -f "cloudflared tunnel --url" || true
+            sleep 2
+        fi
+
         echo -e "${BLUE}🌐 Starting CloudFlare Tunnel...${NC}"
         nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
         local tunnel_pid=$!
@@ -206,6 +213,14 @@ case $SERVICE in
         # Start CloudFlare Tunnel for public access
         echo ""
         echo -e "${BLUE}🌐 Starting CloudFlare Tunnel for public access...${NC}"
+
+        # Stop any existing CloudFlare tunnel first
+        if pgrep -f "cloudflared tunnel --url" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping existing CloudFlare Tunnel...${NC}"
+            pkill -f "cloudflared tunnel --url" || true
+            sleep 2
+        fi
+
         if command -v cloudflared &> /dev/null; then
             nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
             tunnel_pid=$!

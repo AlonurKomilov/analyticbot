@@ -665,7 +665,7 @@ def _create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:
     """Create service with flexible dependency injection based on constructor signature"""
     import inspect
 
-    sig = inspect.signature(ServiceCls.__init__)
+    sig = inspect.signature(ServiceCls.__init__)  # type: ignore[misc]
     accepted_params = set(sig.parameters.keys()) - {"self"}
 
     # Filter to only include parameters the service accepts and that are not None

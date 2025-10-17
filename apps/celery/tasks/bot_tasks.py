@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from typing import Any
 
 # Metrics now via DI (Phase 3.4)
 from apps.bot.metrics_decorators import metrics_timer
@@ -125,7 +126,7 @@ def send_scheduled_message():
             # TODO: Implement claim_due_posts using clean architecture - PLACEHOLDER
             # Using safe fallback implementation that logs the request
             logger.info("claim_due_posts called - using safe placeholder implementation")
-            due_posts = []  # Safe placeholder - no actual posts claimed
+            due_posts: list[Any] = []  # Safe placeholder - no actual posts claimed
 
             if not due_posts:
                 logger.info("No due posts to send (placeholder implementation)")

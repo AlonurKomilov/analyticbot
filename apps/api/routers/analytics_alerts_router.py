@@ -11,6 +11,7 @@ Path: /analytics/alerts/*
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -25,13 +26,12 @@ from apps.di import (
     get_telegram_alert_notifier,
 )
 from apps.shared.clients.analytics_client import AnalyticsClient
-from apps.shared.models.alerts import AlertEvent, AlertRule
+from apps.shared.models.alerts import AlertEvent
 from core.services.bot.alerts import (
     AlertConditionEvaluator,
     AlertEventManager,
     AlertRuleManager,
 )
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +137,7 @@ async def check_channel_alerts(
 
         # Check alert conditions using new service
         alerts = await condition_evaluator.check_alert_conditions(
-            channel_id=str(channel_id),
-            metrics=combined_metrics
+            channel_id=str(channel_id), metrics=combined_metrics
         )
 
         # Calculate next check time (usually 15-30 minutes for alerts)
@@ -341,7 +340,7 @@ async def get_alert_history(
                 threshold=a.get("threshold", 0.0),
                 channel_id=str(channel_id),
             )
-            for a in alerts[:min(len(alerts), 100)]  # Limit to 100 for response
+            for a in alerts[: min(len(alerts), 100)]  # Limit to 100 for response
         ]
 
         return AlertHistoryResponse(

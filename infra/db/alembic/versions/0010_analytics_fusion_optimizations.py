@@ -60,21 +60,26 @@ def upgrade():
     )
 
     # Create materialized views for better performance on recent data
-    op.execute("""
+    op.execute(
+        """
         CREATE MATERIALIZED VIEW mv_channel_daily_recent AS
         SELECT channel_id, day, metric, value
         FROM channel_daily
         WHERE day >= CURRENT_DATE - INTERVAL '120 days'
         WITH DATA;
-    """)
+    """
+    )
 
     # Index the materialized view
     op.create_index(
-        "idx_mv_channel_daily_recent", "mv_channel_daily_recent", ["channel_id", "metric", "day"]
+        "idx_mv_channel_daily_recent",
+        "mv_channel_daily_recent",
+        ["channel_id", "metric", "day"],
     )
 
     # Create materialized view for recent post metrics
-    op.execute("""
+    op.execute(
+        """
         CREATE MATERIALIZED VIEW mv_post_metrics_recent AS
         SELECT DISTINCT ON (channel_id, msg_id)
             channel_id, msg_id, views, forwards, replies_count,
@@ -83,7 +88,8 @@ def upgrade():
         WHERE snapshot_time >= NOW() - INTERVAL '120 days'
         ORDER BY channel_id, msg_id, snapshot_time DESC
         WITH DATA;
-    """)
+    """
+    )
 
     # Index the post metrics materialized view
     op.create_index("idx_mv_post_metrics_recent", "mv_post_metrics_recent", ["channel_id", "views"])

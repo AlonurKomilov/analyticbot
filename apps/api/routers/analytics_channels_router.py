@@ -5,7 +5,7 @@ Analytics Channels Router - Channel list endpoint for analytics dashboard
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from apps.api.services.telegram_validation_service import (
@@ -18,12 +18,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/analytics",
     tags=["Analytics - Channels"],
-    responses={404: {"description": "Not found"}}
+    responses={404: {"description": "Not found"}},
 )
 
 
 class ChannelInfo(BaseModel):
     """Channel information for analytics dashboard"""
+
     id: int
     name: str
     username: str | None = None
@@ -76,27 +77,26 @@ async def get_analytics_channels():
 
     except Exception as e:
         logger.error(f"Failed to fetch analytics channels: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch channels: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch channels: {str(e)}")
 
 
 class ValidateChannelRequest(BaseModel):
     """Request model for channel validation"""
+
     username: str
 
 
 async def get_telegram_validation_service():
     """Dependency to get telegram validation service"""
     from apps.api.di_analytics import get_telegram_validation_service as di_get_service
+
     return await di_get_service()
 
 
 @router.post("/channels/validate", response_model=ChannelValidationResult)
 async def validate_telegram_channel(
     request_data: ValidateChannelRequest,
-    telegram_service: TelegramValidationService = Depends(get_telegram_validation_service)
+    telegram_service: TelegramValidationService = Depends(get_telegram_validation_service),
 ):
     """
     ## ✅ Validate Telegram Channel
@@ -139,7 +139,4 @@ async def validate_telegram_channel(
 
     except Exception as e:
         logger.error(f"Failed to validate channel: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")

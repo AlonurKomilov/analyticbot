@@ -24,6 +24,7 @@ DEPRECATION SCHEDULE:
 
 See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
 """
+
 import logging
 import warnings
 from typing import Any
@@ -35,7 +36,7 @@ warnings.warn(
     "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
     "This module will be removed on 2025-10-21.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 from dependency_injector import containers, providers
@@ -85,11 +86,15 @@ async def _create_extended_repository(repo_type: str) -> Any:
 
             return AsyncpgPlanRepository(connection)
         elif repo_type == "schedule":
-            from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+            from infra.db.repositories.schedule_repository import (
+                AsyncpgScheduleRepository,
+            )
 
             return AsyncpgScheduleRepository(connection)
         elif repo_type == "payment":
-            from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+            from infra.db.repositories.payment_repository import (
+                AsyncpgPaymentRepository,
+            )
 
             return AsyncpgPaymentRepository(connection)
         else:
@@ -149,7 +154,8 @@ def _create_guard_service(user_repository=None, **kwargs):
         redis_client = None
         try:
             from apps.shared.di import get_container
-            container = get_container()
+
+            get_container()
             # Try to get redis client if available
             # Most installations won't have Redis, so we'll use in-memory fallback
             redis_client = None  # For now, default to in-memory
@@ -301,7 +307,9 @@ def _create_ml_service(service_name: str) -> Any | None:
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":
             # Create ChurnPredictor using the new churn intelligence service
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.churn_intelligence import (
+                ChurnIntelligenceOrchestratorService,
+            )
 
             try:
                 orchestrator = ChurnIntelligenceOrchestratorService()
@@ -319,7 +327,9 @@ def _create_ml_service(service_name: str) -> Any | None:
 
                 # Only create if all dependencies are available
                 if prediction_service and content_optimizer and churn_predictor:
-                    from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+                    from apps.bot.services.adapters.bot_ml_facade import (
+                        create_bot_ml_facade,
+                    )
 
                     return create_bot_ml_facade()
                 else:
@@ -397,7 +407,9 @@ class BotContainer(containers.DeclarativeContainer):
     guard_service = providers.Factory(_create_guard_service, user_repository=user_repo)
 
     subscription_service = providers.Factory(
-        _create_subscription_service, user_repository=user_repo, plan_repository=plan_repo
+        _create_subscription_service,
+        user_repository=user_repo,
+        plan_repository=plan_repo,
     )
 
     # ✅ NEW: Payment Microservices Architecture
@@ -420,7 +432,9 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     channel_management_service = providers.Factory(
-        _create_channel_management_service, channel_repository=channel_repo, bot=bot_client
+        _create_channel_management_service,
+        channel_repository=channel_repo,
+        bot=bot_client,
     )
 
     # ML Services (optional)

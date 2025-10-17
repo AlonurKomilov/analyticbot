@@ -9,14 +9,14 @@ import React, { useEffect } from 'react';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 import { PageContainer, SectionHeader } from '../common/StandardComponents.jsx';
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
-import { useAppStore } from '../../store/appStore.js';
+import { useChannelStore } from '@/stores';
 
 const AnalyticsPage = () => {
-  const { fetchData } = useAppStore();
+  const { loadChannels } = useChannelStore();
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    loadChannels();
+  }, [loadChannels]);
 
   return (
     <TouchTargetProvider>

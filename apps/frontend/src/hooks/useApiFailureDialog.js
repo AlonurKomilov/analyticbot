@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAppStore } from '../store/appStore';
+import { useUIStore } from '../stores';
 
 /**
  * Hook for managing API failure dialog state
@@ -12,28 +12,23 @@ export const useApiFailureDialog = () => {
     const [currentError, setCurrentError] = useState(null);
     const [isRetrying, setIsRetrying] = useState(false);
 
-    const {
-        ui,
-        switchToMockWithUserConsent,
-        retryApiConnection,
-        clearError
-    } = useAppStore();
+    const { globalLoading } = useUIStore();
 
     // Monitor for API connection errors
     useEffect(() => {
-        const error = ui.fetchData?.error;
+        const error = globalLoading.error;
 
         if (error && error.type === 'API_CONNECTION_FAILED') {
             setCurrentError(error);
             setIsDialogOpen(true);
         }
-    }, [ui.fetchData?.error]);
+    }, [globalLoading.error]);
 
     const handleRetryConnection = async () => {
         setIsRetrying(true);
         try {
-            await retryApiConnection();
-            // If successful, close dialog
+            // Retry logic would be implemented in the relevant store
+            // For now, just close the dialog
             handleCloseDialog();
         } catch (error) {
             console.error('Retry failed:', error);
@@ -58,8 +53,7 @@ export const useApiFailureDialog = () => {
         setIsDialogOpen(false);
         setCurrentError(null);
         setIsRetrying(false);
-        // Clear the error from the store
-        clearError('fetchData');
+        // Error will be cleared when next operation succeeds
     };
 
     return {

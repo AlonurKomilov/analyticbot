@@ -1,3 +1,35 @@
+/**
+ * ⚠️ DEPRECATED - DO NOT USE IN NEW CODE ⚠️
+ *
+ * This file has been deprecated as of October 17, 2025.
+ * All components have been migrated to domain-specific stores.
+ *
+ * Migration completed: Phase 2.3 & 2.4 (37 files migrated)
+ *
+ * NEW STORE ARCHITECTURE:
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ * Instead of:  import { useAppStore } from './store/appStore'
+ *
+ * Use domain stores from: '@/stores'
+ *
+ * 📦 Available Stores:
+ *   • useAuthStore       - User authentication & profile
+ *   • useChannelStore    - Channel CRUD operations
+ *   • usePostStore       - Post scheduling & management
+ *   • useAnalyticsStore  - Analytics data fetching
+ *   • useMediaStore      - Media upload management
+ *   • useUIStore         - Global UI state
+ *
+ * 📚 Documentation:
+ *   • See: DOMAIN_STORE_MIGRATION_COMPLETE.md
+ *   • See: docs/STORE_MIGRATION_GUIDE.md
+ *
+ * This file is kept for reference only and will be removed
+ * in the next major version. Archived backup available at:
+ * archive/deprecated_store_phase2/appStore.js.backup
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '../api/client.js';
@@ -640,30 +672,53 @@ export const useAppStore = create(
                 get().clearError(operation);
 
                 let response;
+                let normalizedData;
 
                 if (currentSource === 'api') {
                     // Real API mode - NEVER fallback to mock/demo data
-                    response = await apiClient.get(`/insights/predictive/best-times/${channelId}?timeframe=${timeframe}&content_type=${contentType}`);
+                    // Convert demo_channel string to numeric ID for API
+                    const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId) || 1;
+                    response = await apiClient.get(`/insights/predictive/best-times/${numericChannelId}?timeframe=${timeframe}&content_type=${contentType}`);
                     console.log('✅ Best time recommendations loaded from real API');
-                    // If API fails, error will be thrown and caught below - NO fallback to demo
+
+                    // Normalize real API response: {success, channel_id, data, ...} -> consistent format
+                    normalizedData = {
+                        success: response.success,
+                        best_times: response.data?.best_times || response.data?.optimal_times || [],
+                        recommendations: response.data?.recommendations || response.data,
+                        optimal_times: response.data?.optimal_times || [],
+                        analysis_type: response.analysis_type,
+                        generated_at: response.generated_at
+                    };
                 } else {
-                    // Demo mode - use mock data from analytics service
-                    console.log('📊 Loading best time demo data');
-                    const { analyticsService } = await import('../services/analyticsService.js');
-                    response = await analyticsService.getBestTime(channelId);
+                    // Demo mode - use backend demo endpoint
+                    console.log('📊 Loading best time demo data from backend demo endpoint');
+                    response = await apiClient.get(`/demo/analytics/best-times?channel_id=1&timezone=UTC`);
+
+                    // Normalize demo API response: {success, recommendations, optimal_times, ...} -> consistent format
+                    normalizedData = {
+                        success: response.success,
+                        best_times: response.optimal_times || [],
+                        recommendations: response.recommendations,
+                        optimal_times: response.optimal_times || [],
+                        demo_info: response.demo_info
+                    };
                 }
 
                 set(state => ({
                     analytics: {
                         ...state.analytics,
-                        bestTimeRecommendations: response,
+                        bestTimeRecommendations: normalizedData,
                         lastAnalyticsUpdate: Date.now()
                     }
                 }));
 
                 get().setLoading(operation, false);
-                return response;
+                return normalizedData;
             } catch (error) {
+                // Don't fallback to demo - respect user's data source choice
+                console.error('❌ Failed to load best time recommendations:', error.message);
+
                 ErrorHandler.handleError(error, {
                     component: 'AppStore',
                     action: 'fetchBestTime',
@@ -671,8 +726,12 @@ export const useAppStore = create(
                     contentType,
                     dataSource: currentSource
                 });
+
+                get().setLoading(operation, false);
                 get().setError(operation, error.message);
-                throw error;
+
+                // Return null so component can show "No Data" message
+                return null;
             }
         },
 

@@ -24,7 +24,7 @@ import {
     TrendingUp as TrendingIcon,
     Image as ImageIcon
 } from '@mui/icons-material';
-import { formatNumber, formatDate, calculateEngagementRate } from '../../../utils/formatters';
+import { formatNumber, formatDate, calculateEngagementRate } from '@utils/formatters';
 
 // Post display components for table cells
 export const PostDisplayCell = ({ post }) => (

@@ -28,8 +28,8 @@ import { AdvancedAnalyticsDashboard } from '../../analytics/AdvancedAnalyticsDas
 import RealTimeAlertsSystem from '../../alerts/RealTimeAlerts';
 import ContentProtectionDashboard from '../../content/ContentProtectionDashboard';
 import ApiFailureDialog from '../../dialogs/ApiFailureDialog';
-import { useAppStore } from '../../../store/appStore';
-import { useApiFailureDialog } from '../../../hooks/useApiFailureDialog';
+import { useChannelStore, useUIStore, useAnalyticsStore } from '@/stores';
+import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
 
 /**
  * AnalyticsDashboard - Refactored Orchestrator Component
@@ -63,7 +63,9 @@ const AnalyticsDashboard = () => {
     const channelId = 'demo_channel'; // Default channel for analytics
 
     // Store integration
-    const { dataSource, setDataSource, fetchData, isUsingRealAPI, clearAnalyticsData } = useAppStore();
+    const { dataSource, setDataSource } = useUIStore();
+    const { loadChannels } = useChannelStore();
+    const { clearAnalytics } = useAnalyticsStore();
 
     // API failure dialog management
     const {
@@ -90,8 +92,8 @@ const AnalyticsDashboard = () => {
         setIsLoading(true);
 
         try {
-            await fetchData(newSource);
-            clearAnalyticsData();
+            await loadChannels();
+            clearAnalytics();
             setLastUpdated(new Date());
 
             // Force refresh of analytics data with new source

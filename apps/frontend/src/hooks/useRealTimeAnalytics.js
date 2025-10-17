@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAppStore } from '../store/appStore';
 import { apiClient } from '../api/client.js';
 
 /**
@@ -24,8 +23,12 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
     const retryCountRef = useRef(0);
     const mountedRef = useRef(true);
 
-    // Get store methods for fallback data
-    const { getCachedData, setCachedData } = useAppStore();
+    // Cache implementation (placeholder - could be moved to a cache store)
+    const cacheRef = useRef({});
+    const getCachedData = useCallback((key) => cacheRef.current[key], []);
+    const setCachedData = useCallback((key, value) => {
+        cacheRef.current[key] = value;
+    }, []);
 
     // Cleanup on unmount
     useEffect(() => {

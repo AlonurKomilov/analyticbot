@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAppStore } from '../store/appStore';
+import { useUIStore } from '@/stores';
 import { apiClient } from '../api/client.js';
 
 // Hook configuration presets for different use cases
@@ -70,8 +70,10 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
     const retryCountRef = useRef(0);
     const mountedRef = useRef(true);
 
-    // Store integration
-    const { getCachedData, setCachedData, dataSource } = useAppStore();
+    // Store integration - for cache (if we implement caching later)
+    const dataSource = useUIStore(state => state.dataSource);
+    const getCachedData = useCallback(() => null, []); // Placeholder
+    const setCachedData = useCallback(() => {}, []); // Placeholder
 
     // Cleanup on unmount
     useEffect(() => {

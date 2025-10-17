@@ -14,7 +14,7 @@ import {
     Notifications as NotificationsIcon,
     Circle as CircleIcon
 } from '@mui/icons-material';
-import { useNavigation } from '../../../../components/common/NavigationProvider';
+import { useNavigation } from '@components/common/NavigationProvider';
 
 /**
  * NotificationMenu Component

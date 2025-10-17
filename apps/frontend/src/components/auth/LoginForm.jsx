@@ -27,7 +27,7 @@ import {
     VisibilityOff,
     Login as LoginIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DESIGN_TOKENS } from '../../theme/designTokens';
 
 const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {

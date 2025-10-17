@@ -6,7 +6,7 @@ import {
     Typography,
     Box
 } from '@mui/material';
-import { generateId } from '../../utils/accessibility.js';
+import { generateId } from '@utils/accessibility.js';
 
 /**
  * Enhanced accessible form field component

@@ -28,7 +28,7 @@ import {
   Speed,
   Support
 } from '@mui/icons-material';
-import { paymentAPI } from '../../services/api';
+import { paymentAPI } from '@services/api';
 import PaymentForm from './PaymentForm';
 
 const formatCurrency = (amount, currency = 'USD') => {

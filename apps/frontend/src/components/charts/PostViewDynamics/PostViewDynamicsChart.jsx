@@ -6,7 +6,7 @@ import {
     Alert
 } from '@mui/material';
 import { BarChart as ChartIcon } from '@mui/icons-material';
-import { useAppStore } from '../../../store/appStore.js';
+import { useAnalyticsStore } from '@/stores';
 
 // Import extracted components
 import TimeRangeControls from './TimeRangeControls.jsx';
@@ -25,16 +25,14 @@ import { LoadingState, ChartEmptyState, StatusFooter } from './StatusComponents.
 const PostViewDynamicsChart = () => {
     // Main component state
     const [timeRange, setTimeRange] = useState('24h');
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [data, setData] = useState([]);
     const [autoRefresh] = useState(true);
     const [refreshInterval, setRefreshInterval] = useState('30s');
 
-    // Get store function WITHOUT subscribing - prevents re-renders from store updates!
-    // Using getState() directly instead of hook to avoid subscription
-    // This is CRITICAL: hook subscription causes re-renders, getState() does not
-    const fetchPostDynamics = useAppStore.getState().fetchPostDynamics;
+    // Get store function and state
+    const { fetchPostDynamics, postDynamics, isLoadingPostDynamics } = useAnalyticsStore();
+    const fetchPostDynamicsFromStore = useAnalyticsStore.getState().fetchPostDynamics;
 
     // Use refs to track state and prevent unnecessary re-renders
     const isMountedRef = useRef(true);
@@ -42,7 +40,6 @@ const PostViewDynamicsChart = () => {
     const timeRangeRef = useRef(timeRange);
     const isLoadingRef = useRef(false);
     const dataVersionRef = useRef(0);
-    const fetchPostDynamicsRef = useRef(fetchPostDynamics);
 
     // Stable load data function with debouncing
     const loadData = useCallback(async () => {
@@ -51,16 +48,15 @@ const PostViewDynamicsChart = () => {
         }
 
         isLoadingRef.current = true;
-        setLoading(true);
         setError(null);
 
         try {
             const currentTimeRange = timeRangeRef.current;
-            const result = await fetchPostDynamicsRef.current(currentTimeRange);
+            await fetchPostDynamicsFromStore(1, currentTimeRange); // Channel ID 1 as default
 
-            if (isMountedRef.current) {
-                dataRef.current = result || [];
-                setData(result || []);
+            if (isMountedRef.current && postDynamics) {
+                dataRef.current = postDynamics || {};
+                setData(postDynamics || {});
                 dataVersionRef.current += 1;
             }
         } catch (err) {
@@ -69,12 +65,9 @@ const PostViewDynamicsChart = () => {
                 setError(err.message || 'Failed to load analytics data');
             }
         } finally {
-            if (isMountedRef.current) {
-                setLoading(false);
-            }
             isLoadingRef.current = false;
         }
-    }, []); // Empty deps - using refs for stability to prevent infinite loops
+    }, [fetchPostDynamicsFromStore, postDynamics]); // Include dependencies
 
     // Handle time range changes with debouncing
     const handleTimeRangeChange = useCallback((event) => {
@@ -255,15 +248,15 @@ const PostViewDynamicsChart = () => {
             )}
 
             {/* Loading State */}
-            {loading && <LoadingState />}
+            {isLoadingPostDynamics && <LoadingState />}
 
             {/* Chart */}
-            {!loading && chartData.length > 0 && (
+            {!isLoadingPostDynamics && chartData.length > 0 && (
                 <ChartVisualization data={chartData} timeRange={timeRange} />
             )}
 
             {/* Empty State */}
-            {!loading && chartData.length === 0 && <ChartEmptyState />}
+            {!isLoadingPostDynamics && chartData.length === 0 && <ChartEmptyState />}
 
             {/* Status Footer */}
             <StatusFooter

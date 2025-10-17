@@ -31,7 +31,7 @@ import {
     Settings as SettingsIcon,
     Shield as ProtectionIcon
 } from '@mui/icons-material';
-import ModernCard, { ModernCardHeader } from '../../components/common/ModernCard.jsx';
+import ModernCard, { ModernCardHeader } from '@components/common/ModernCard.jsx';
 import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
 // Import mock data

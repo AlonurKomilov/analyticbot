@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
-import { useAppStore } from '../store/appStore.js';
+import { useChannelStore } from '@/stores';
 import UnifiedButton, { PrimaryButton } from './common/UnifiedButton.jsx';
 
 const AddChannel = () => {
-    const { addChannel, isLoading, getError } = useAppStore();
+    const { addChannel, isLoading, error } = useChannelStore();
     const [channelName, setChannelName] = useState('');
     const [status, setStatus] = useState({ success: false, message: '' });
     const [validationError, setValidationError] = useState('');
@@ -63,8 +63,7 @@ const AddChannel = () => {
         }
     };
 
-    const loading = isLoading('addChannel');
-    const error = getError('addChannel');
+    const loading = isLoading;
     const canSubmit = channelName.trim() && !validationError && !loading;
 
     return (

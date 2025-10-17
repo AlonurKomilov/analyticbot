@@ -11,7 +11,7 @@ import {
 import {
     Search as SearchIcon
 } from '@mui/icons-material';
-import GlobalSearchDialog from '../../../../components/common/GlobalSearchDialog';
+import GlobalSearchDialog from '@components/common/GlobalSearchDialog';
 
 /**
  * GlobalSearchBar Component

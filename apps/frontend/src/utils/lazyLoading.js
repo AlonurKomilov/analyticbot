@@ -81,7 +81,7 @@ export const ServiceComponents = {
     ),
 
     ContentOptimizerService: lazyWithPreload(
-        () => import('../services/ContentOptimizerService.jsx'),
+        () => import('../components/features/ai-services/ContentOptimizer'),
         { preloadAfter: 8000 }
     ),
 
@@ -96,7 +96,7 @@ export const ServiceComponents = {
     ),
 
     SecurityMonitoringService: lazyWithPreload(
-        () => import('../services/SecurityMonitoringService.jsx'),
+        () => import('../components/features/ai-services/SecurityMonitoring'),
         { preloadAfter: 15000 }
     )
 };

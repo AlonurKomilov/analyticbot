@@ -20,7 +20,7 @@ import {
   Divider
 } from '@mui/material';
 import { CreditCard, Lock, CheckCircle } from '@mui/icons-material';
-import { paymentAPI } from '../../services/api';
+import { paymentAPI } from '@services/api';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);

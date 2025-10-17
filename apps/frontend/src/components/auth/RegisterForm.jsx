@@ -38,7 +38,7 @@ import {
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DESIGN_TOKENS } from '../../theme/designTokens';
 
 const RegisterForm = ({ onToggleMode = null }) => {

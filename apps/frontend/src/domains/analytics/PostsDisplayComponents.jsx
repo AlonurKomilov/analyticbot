@@ -25,7 +25,7 @@ import {
     GetApp as DownloadIcon,
     MoreVert as MoreVertIcon
 } from '@mui/icons-material';
-import { Icon, StatusChip } from '../../components/common/IconSystem';
+import { Icon, StatusChip } from '@components/common/IconSystem';
 import { formatNumber, formatDate, calculateEngagementRate, getPerformanceScore, getPerformanceLevel } from './PostsUtils';
 
 /**

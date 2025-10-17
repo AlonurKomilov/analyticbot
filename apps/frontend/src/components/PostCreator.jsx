@@ -12,7 +12,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
-import { useAppStore } from '../store/appStore';
+import { useChannelStore, usePostStore, useMediaStore } from '@/stores';
 import { useLoadingState, useFormState } from '../hooks';
 import MediaPreview from "./MediaPreview.jsx";
 import { useResponsive, MOBILE_PATTERNS } from '../theme/responsive.js';
@@ -26,12 +26,9 @@ import PostSubmitButton from './domains/posts/PostSubmitButton.jsx';
 import { validatePostForm, canSubmitForm } from './domains/posts/PostFormValidation.js';
 
 const PostCreator = React.memo(() => {
-    const {
-        channels,
-        addPost,
-        schedulePost,
-        pendingMedia
-    } = useAppStore();
+    const { channels } = useChannelStore();
+    const { schedulePost } = usePostStore();
+    const { pendingMedia } = useMediaStore();
 
     const responsive = useResponsive();
 

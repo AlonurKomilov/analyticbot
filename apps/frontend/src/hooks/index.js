@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useAppStore } from '../store/appStore.js';
+import { useMediaStore, useUIStore } from '@/stores';
 
 // Export admin hooks
 export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
@@ -19,11 +19,11 @@ export {
  */
 export const useLoadingState = (operation, delay = 300) => {
     const [debouncedLoading, setDebouncedLoading] = useState(false);
-    const { isLoading, getError, clearError } = useAppStore();
+    const { globalLoading } = useUIStore();
     const timeoutRef = useRef();
 
-    const loading = isLoading(operation);
-    const error = getError(operation);
+    const loading = globalLoading.isLoading;
+    const error = globalLoading.error;
 
     useEffect(() => {
         if (timeoutRef.current) {
@@ -46,8 +46,9 @@ export const useLoadingState = (operation, delay = 300) => {
     }, [loading, delay]);
 
     const clearOperationError = useCallback(() => {
-        clearError(operation);
-    }, [clearError, operation]);
+        const { clearGlobalError } = useUIStore.getState();
+        clearGlobalError();
+    }, []);
 
     return {
         loading,
@@ -138,9 +139,10 @@ export const useOptimizedList = (items, keyExtractor) => {
  * Custom hook for managing media uploads (Enhanced for TWA Phase 2.1)
  */
 export const useMediaUpload = () => {
-    const { uploadMedia, uploadMediaDirect, pendingMedia, clearPendingMedia } = useAppStore();
+    const { uploadMedia, uploadMediaDirect, pendingMedia, clearPendingMedia } = useMediaStore();
     const [uploadProgress, setUploadProgress] = useState(0);
-    const { loading, error } = useLoadingState('uploadMedia');
+    const loading = useMediaStore(state => state.isUploading);
+    const error = useMediaStore(state => state.error);
 
     // Enhanced upload handler with direct upload support
     const handleUpload = useCallback(async (file, channelId = null) => {

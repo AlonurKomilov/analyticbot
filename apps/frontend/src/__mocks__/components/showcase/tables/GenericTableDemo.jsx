@@ -11,7 +11,7 @@ import {
     Analytics as AnalyticsIcon,
     People as PeopleIcon
 } from '@mui/icons-material';
-import { EnhancedDataTable } from '../../../../components/common/EnhancedDataTable';
+import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
 
 const GenericTableDemo = () => {
     // Mock generic table data

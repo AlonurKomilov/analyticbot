@@ -30,7 +30,7 @@ import {
   FullscreenExit as ExitFullscreenIcon,
   Fullscreen as FullscreenIcon
 } from '@mui/icons-material';
-import { useAppStore } from '../../store/appStore.js';
+import { useChannelStore, usePostStore, useUIStore } from '@/stores';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
@@ -61,16 +61,9 @@ import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 
 const MobileResponsiveDashboard = () => {
-  const {
-    isGlobalLoading,
-    isLoading,
-    fetchData,
-    scheduledPosts,
-    channels,
-    addChannel,
-    removeChannel,
-    dataSource
-  } = useAppStore();
+  const { channels, loadChannels, addChannel, removeChannel, isLoading: isLoadingChannels } = useChannelStore();
+  const { scheduledPosts } = usePostStore();
+  const { dataSource, globalLoading } = useUIStore();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -83,14 +76,14 @@ const MobileResponsiveDashboard = () => {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [fullScreenWidget, setFullScreenWidget] = useState(null);
 
-  const isLoadingData = isGlobalLoading() || isLoading('fetchData');
+  const isLoadingData = globalLoading.isLoading || isLoadingChannels;
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    loadChannels();
+  }, [loadChannels]);
 
   const handleRefresh = async () => {
-    await fetchData();
+    await loadChannels();
     setLastRefresh(new Date());
   };
 

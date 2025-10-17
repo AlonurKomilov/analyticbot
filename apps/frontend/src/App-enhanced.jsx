@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { Container, Box, Typography, Skeleton, Stack, Alert } from '@mui/material';
-import { useAppStore } from './store/appStore.js';
+import { useChannelStore, usePostStore, useUIStore } from './stores';
 import { withErrorBoundary } from './utils/errorHandler.js';
 import PostCreator from './components/PostCreator';
 import ScheduledPostsList from './components/ScheduledPostsList';
@@ -42,30 +42,26 @@ const ErrorAlert = React.memo(({ error, onRetry }) => (
 ErrorAlert.displayName = 'ErrorAlert';
 
 function App() {
-    const {
-        isGlobalLoading,
-        getError,
-        fetchData,
-        channels,
-        scheduledPosts
-    } = useAppStore();
+    const { channels, loadChannels } = useChannelStore();
+    const { scheduledPosts } = usePostStore();
+    const { globalLoading } = useUIStore();
 
     // Memoize computed values
-    const globalError = useMemo(() => getError('fetchData'), [getError]);
+    const globalError = useMemo(() => globalLoading.error, [globalLoading.error]);
     const hasData = useMemo(() => channels.length > 0 || scheduledPosts.length > 0, [channels, scheduledPosts]);
-    const isLoading = useMemo(() => isGlobalLoading(), [isGlobalLoading]);
+    const isLoading = useMemo(() => globalLoading.isLoading, [globalLoading.isLoading]);
 
     // Memoize callbacks
     const handleRetry = useCallback(() => {
-        fetchData();
-    }, [fetchData]);
+        loadChannels();
+    }, [loadChannels]);
 
     // Load data on mount
     React.useEffect(() => {
         if (!hasData && !isLoading && !globalError) {
-            fetchData();
+            loadChannels();
         }
-    }, [hasData, isLoading, globalError, fetchData]);
+    }, [hasData, isLoading, globalError, loadChannels]);
 
     return (
         <Container maxWidth="sm">

@@ -20,8 +20,8 @@ import {
 } from '@mui/icons-material';
 
 // Import our new services and hooks
-import { useDataSource, useAnalytics } from '../../../hooks/useDataSource';
-import { DataSourceManager } from '../../../utils/dataSourceManager';
+import { useDataSource, useAnalytics } from '@hooks/useDataSource';
+import { DataSourceManager } from '@utils/dataSourceManager';
 
 const AnalyticsAdapterDemo = () => {
   const [testing, setTesting] = useState(false);

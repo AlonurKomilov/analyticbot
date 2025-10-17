@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Box, Grid } from '@mui/material';
-import { useDataSource, useAllAnalytics } from '../../../hooks/useDataSource';
+import { useDataSource, useAllAnalytics } from '@hooks/useDataSource';
 
 // Import extracted components
 import DataSourceStatus from './DataSourceStatus';

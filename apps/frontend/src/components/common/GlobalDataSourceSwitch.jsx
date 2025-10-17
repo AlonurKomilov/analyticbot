@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Tooltip, CircularProgress, Chip } from '@mui/material';
 import { StatusChip } from './index.js';
-import { useAppStore } from '../../store/appStore';
+import { useUIStore } from '@/stores';
 
 /**
  * Global Data Source Switch Component
@@ -16,8 +16,8 @@ const GlobalDataSourceSwitch = ({
   variant = 'filled',
   sx = {}
 }) => {
-  const dataSource = useAppStore(state => state.dataSource);
-  const setDataSource = useAppStore(state => state.setDataSource);
+  const dataSource = useUIStore(state => state.dataSource);
+  const setDataSource = useUIStore(state => state.setDataSource);
   const isUsingRealAPI = dataSource === 'api';
 
   const [switching, setSwitching] = React.useState(false);
@@ -80,7 +80,7 @@ const GlobalDataSourceSwitch = ({
  * Useful for showing status without switching capability
  */
 export const DataSourceBadge = ({ size = 'small', sx = {} }) => {
-  const dataSource = useAppStore(state => state.dataSource);
+  const dataSource = useUIStore(state => state.dataSource);
   const isUsingRealAPI = dataSource === 'api';
 
   return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { EnhancedDataTable } from '../../components/common/EnhancedDataTable';
-import { useAppStore } from '../../store/appStore.js';
+import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
+import { useUIStore, useChannelStore, useAnalyticsStore } from '@/stores';
 import {
     PostDisplayCell,
     ViewsCell,
@@ -21,33 +21,29 @@ import { generateMockPosts } from './PostsUtils';
  */
 const PostsTable = () => {
     const [posts, setPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { dataSource, channels, fetchTopPosts } = useAppStore();
+    const { dataSource } = useUIStore();
+    const { channels } = useChannelStore();
+    const { fetchTopPosts, topPosts, isLoadingTopPosts } = useAnalyticsStore();
 
     // Load posts data
     const loadTopPosts = useCallback(async () => {
         try {
-            setLoading(true);
             setError(null);
 
             if (dataSource === 'mock') {
                 // Use mock data ONLY when explicitly in demo mode
-                setTimeout(() => {
-                    setPosts(generateMockPosts(20));
-                    setLoading(false);
-                }, 500);
+                setPosts(generateMockPosts(20));
             } else {
                 // Real API mode - NEVER use mock data
                 if (channels && channels.length > 0) {
                     const channelId = channels[0].id;
-                    const apiPosts = await fetchTopPosts(channelId);
-                    setPosts(apiPosts || []); // Empty array if no posts, NOT mock data
+                    await fetchTopPosts(channelId);
+                    setPosts(topPosts || []); // Use from store
                 } else {
                     // No channels - show empty state, NOT mock data
                     setPosts([]);
                 }
-                setLoading(false);
             }
         } catch (err) {
             console.error('Error loading posts:', err);
@@ -59,9 +55,8 @@ const PostsTable = () => {
                 // Only fallback to mock if in mock mode
                 setPosts(generateMockPosts(20));
             }
-            setLoading(false);
         }
-    }, [dataSource, channels, fetchTopPosts]);
+    }, [dataSource, channels, fetchTopPosts, topPosts]);
 
     useEffect(() => {
         loadTopPosts();
@@ -224,7 +219,7 @@ const PostsTable = () => {
         <EnhancedDataTable
             data={posts}
             columns={columns}
-            loading={loading}
+            loading={isLoadingTopPosts}
             error={error}
             onRefresh={loadTopPosts}
             bulkActions={(selectedRows) => (

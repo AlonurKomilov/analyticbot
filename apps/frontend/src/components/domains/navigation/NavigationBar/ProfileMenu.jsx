@@ -23,8 +23,8 @@ import {
     AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useNavigation } from '../../../../components/common/NavigationProvider';
-import { useAuth } from '../../../../contexts/AuthContext';
+import { useNavigation } from '@components/common/NavigationProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { AdminOnly } from '../../../auth/RoleGuard';
 
 /**

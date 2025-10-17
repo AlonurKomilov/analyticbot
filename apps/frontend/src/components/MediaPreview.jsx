@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useAppStore } from '../store/appStore';
+import { useMediaStore } from '@/stores';
 
 const MediaPreview = () => {
-    const { pendingMedia, clearPendingMedia } = useAppStore();
+    const { pendingMedia, clearPendingMedia } = useMediaStore();
 
     if (!pendingMedia?.previewUrl) {
         return null;

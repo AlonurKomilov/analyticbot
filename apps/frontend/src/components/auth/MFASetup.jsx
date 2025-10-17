@@ -36,7 +36,7 @@ import {
   Warning as WarningIcon,
   Download as DownloadIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MFASetup = ({ onComplete }) => {
   const { user } = useAuth();

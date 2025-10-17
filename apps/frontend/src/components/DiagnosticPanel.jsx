@@ -14,10 +14,15 @@ import {
     ExpandMore as ExpandMoreIcon,
     BugReport as BugIcon
 } from '@mui/icons-material';
-import { useAppStore } from '../store/appStore';
+import { useAuthStore, useChannelStore, usePostStore, useAnalyticsStore, useUIStore } from '../stores';
 
 const DiagnosticPanel = () => {
-    const store = useAppStore();
+    // Access all domain stores for diagnostic purposes
+    const { user } = useAuthStore();
+    const { channels } = useChannelStore();
+    const { scheduledPosts } = usePostStore();
+    const { postDynamics } = useAnalyticsStore();
+    const { dataSource } = useUIStore();
     const [consoleErrors, setConsoleErrors] = useState([]);
     const [consoleWarnings, setConsoleWarnings] = useState([]);
 
@@ -53,15 +58,16 @@ const DiagnosticPanel = () => {
         const notLoadedIcon = <><span aria-hidden="true">❌</span> Not loaded</>;
 
         return {
-            isConnected: store.isConnected,
-            dataSource: store.dataSource,
-            channelsCount: store.channels?.length || 0,
-            scheduledPostsCount: store.scheduledPosts?.length || 0,
-            user: store.user ? loadedIcon : notLoadedIcon,
-            plan: store.plan ? loadedIcon : notLoadedIcon,
-            analyticsData: store.analytics?.postDynamics ? loadedIcon : notLoadedIcon,
+            dataSource: dataSource,
+            channelsCount: channels?.length || 0,
+            scheduledPostsCount: scheduledPosts?.length || 0,
+            user: user ? loadedIcon : notLoadedIcon,
+            plan: notLoadedIcon, // Plan data not yet in domain stores
+            analyticsData: postDynamics ? loadedIcon : notLoadedIcon,
         };
-    };    const storeStatus = getStoreStatus();
+    };
+
+    const storeStatus = getStoreStatus();
 
     return (
         <Paper sx={{ p: 2, mb: 2 }}>

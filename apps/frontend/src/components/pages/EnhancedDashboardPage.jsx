@@ -23,7 +23,7 @@ import {
   TrendingUp as TrendingIcon,
   Speed as SpeedIcon
 } from '@mui/icons-material';
-import { useAppStore } from '../../store/appStore.js';
+import { useChannelStore, usePostStore, useUIStore } from '@/stores';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
@@ -58,16 +58,9 @@ import ScheduledPostsList from '../ScheduledPostsList.jsx';
 import ChannelSelector from '../ChannelSelector.jsx';
 
 const EnhancedDashboardPage = () => {
-  const {
-    isGlobalLoading,
-    isLoading,
-    fetchData,
-    scheduledPosts,
-    channels,
-    addChannel,
-    removeChannel,
-    dataSource
-  } = useAppStore();
+  const { channels, loadChannels, addChannel, removeChannel, isLoading: isLoadingChannels } = useChannelStore();
+  const { scheduledPosts } = usePostStore();
+  const { dataSource, globalLoading } = useUIStore();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -78,13 +71,13 @@ const EnhancedDashboardPage = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState(null);
-  const isLoadingData = isGlobalLoading() || isLoading('fetchData');
+  const isLoadingData = globalLoading.isLoading || isLoadingChannels;
 
   useEffect(() => {
-    fetchData();
+    loadChannels();
     // Trigger page load animation
     setTimeout(() => setPageLoaded(true), 100);
-  }, [fetchData]);
+  }, [loadChannels]);
 
   // Use mobile-responsive dashboard for mobile and tablet
   if (isMobile || isTablet) {
@@ -94,7 +87,7 @@ const EnhancedDashboardPage = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await fetchData();
+      await loadChannels();
       setLastRefresh(new Date());
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);

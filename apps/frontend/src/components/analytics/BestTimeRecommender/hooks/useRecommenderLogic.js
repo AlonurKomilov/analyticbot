@@ -1,36 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAppStore } from '../../../../store/appStore.js';
+import { useAnalyticsStore } from '@/stores';
 import { DEFAULT_DEMO_CHANNEL_ID } from '../../../../__mocks__/constants.js';
 
 export const useRecommenderLogic = () => {
     const [timeFrame, setTimeFrame] = useState('week');
     const [contentType, setContentType] = useState('all');
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [recommendations, setRecommendations] = useState(null);
     const [aiInsights, setAiInsights] = useState([]);
 
-    // Get store methods and data source
-    const { fetchBestTime } = useAppStore();
+    // Get store methods and data
+    const { fetchBestTime, bestTimeRecommendations, isLoadingBestTime } = useAnalyticsStore();
 
     // Load best time recommendations using store
     const loadRecommendations = useCallback(async () => {
         try {
-            setLoading(true);
             setError(null);
-
-            const result = await fetchBestTime(DEFAULT_DEMO_CHANNEL_ID, timeFrame, contentType);
-
-            let recommendationsData = null;
-            if (result && typeof result === 'object') {
-                recommendationsData = result;
-            }
-
-            setRecommendations(recommendationsData);
+            await fetchBestTime(DEFAULT_DEMO_CHANNEL_ID, timeFrame, contentType);
 
             // Generate AI insights based on recommendations
-            if (recommendationsData) {
-                const insights = generateAIInsights(recommendationsData);
+            if (bestTimeRecommendations) {
+                const insights = generateAIInsights(bestTimeRecommendations);
                 setAiInsights(insights);
             } else {
                 setAiInsights([]);
@@ -39,12 +28,9 @@ export const useRecommenderLogic = () => {
         } catch (err) {
             setError(err.message);
             console.error('Error loading recommendations:', err);
-            setRecommendations(null);
             setAiInsights([]);
-        } finally {
-            setLoading(false);
         }
-    }, [timeFrame, contentType, fetchBestTime]);
+    }, [timeFrame, contentType, fetchBestTime, bestTimeRecommendations]);
 
     // Generate AI insights based on recommendations
     const generateAIInsights = (data) => {
@@ -94,9 +80,9 @@ export const useRecommenderLogic = () => {
         // State
         timeFrame,
         contentType,
-        loading,
+        loading: isLoadingBestTime,
         error,
-        recommendations,
+        recommendations: bestTimeRecommendations,
         aiInsights,
 
         // Actions

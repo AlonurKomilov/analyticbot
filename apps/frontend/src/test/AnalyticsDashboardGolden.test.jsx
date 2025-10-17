@@ -15,7 +15,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { server } from '../__mocks__/api/server.js';
 import { http, HttpResponse } from 'msw';
 import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard/AnalyticsDashboard';
-import { useAppStore } from '../store/appStore';
+import { useUIStore } from '../stores';
 
 // Test utilities
 const TestWrapper = ({ children }) => (
@@ -26,7 +26,7 @@ const TestWrapper = ({ children }) => (
 
 // Helper to set store data source for tests
 const setTestDataSource = (source) => {
-  useAppStore.getState().setDataSource(source);
+  useUIStore.getState().setDataSource(source);
 };
 
 describe('AnalyticsDashboard - Golden Standard Test', () => {

@@ -21,17 +21,12 @@ import {
     Storage as StorageIcon,
     Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { useAppStore } from '../store/appStore.js';
+import { useMediaStore, useChannelStore } from '@/stores';
 import { useTelegramWebApp } from '../hooks/index.js';
 
 const EnhancedMediaUploader = () => {
-    const {
-        uploadMediaDirect,
-        pendingMedia,
-        clearPendingMedia,
-        channels,
-        isLoading
-    } = useAppStore();
+    const { uploadMediaDirect, pendingMedia, clearPendingMedia, isUploading } = useMediaStore();
+    const { channels } = useChannelStore();
 
     const { hapticFeedback } = useTelegramWebApp();
     const fileInputRef = useRef(null);
@@ -152,7 +147,6 @@ const EnhancedMediaUploader = () => {
 
     // Upload progress percentage
     const uploadProgress = pendingMedia.uploadProgress || 0;
-    const isUploading = isLoading('uploadMediaDirect');
 
     return (
         <Paper elevation={2} sx={{ p: 2, mb: 3 }}>

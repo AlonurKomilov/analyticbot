@@ -9,7 +9,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { useAppStore } from '../../store/appStore.js';
+import { useChannelStore, usePostStore, useUIStore } from '@/stores';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Import the enhanced dashboard component
@@ -39,22 +39,15 @@ const DashboardPage = () => {
 
 // Legacy implementation (preserved for backward compatibility)
 const LegacyDashboardPage = () => {
-  const {
-    isGlobalLoading,
-    isLoading,
-    fetchData,
-    scheduledPosts,
-    channels,
-    addChannel,
-    removeChannel,
-    dataSource
-  } = useAppStore();
+  const { channels, loadChannels, addChannel, removeChannel, isLoading: isLoadingChannels } = useChannelStore();
+  const { scheduledPosts } = usePostStore();
+  const { dataSource, globalLoading } = useUIStore();
 
-  const isLoadingData = isGlobalLoading() || isLoading('fetchData');
+  const isLoadingData = globalLoading.isLoading || isLoadingChannels;
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    loadChannels();
+  }, [loadChannels]);
 
   if (isLoadingData) {
     return (

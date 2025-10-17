@@ -15,8 +15,8 @@ import {
     Image as PngIcon,
     ExpandMore as ExpandIcon
 } from '@mui/icons-material';
-import { analyticsService } from '../../services/analyticsService.js';
-import { useDataSource } from '../../hooks/useDataSource.js';
+import { analyticsService } from '@services/analyticsService.js';
+import { useDataSource } from '@hooks/useDataSource.js';
 
 /**
  * Export Button Component for Analytics Data

@@ -1,12 +1,12 @@
 import React from 'react';
-import { useAppStore } from '../store/appStore.js';
+import { usePostStore } from '@/stores';
 import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
 import { IconButton } from './common/TouchTargetCompliance.jsx';
 import { StatusChip } from './common';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const ScheduledPostsList = () => {
-    const { scheduledPosts, deletePost } = useAppStore();
+    const { scheduledPosts, deletePost } = usePostStore();
 
     return (
         <Paper elevation={2} sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: '6px' }}>

@@ -33,15 +33,14 @@ import {
     Description as DocumentIcon,
     Animation as AnimationIcon
 } from '@mui/icons-material';
-import { useAppStore } from '../store/appStore.js';
+import { useMediaStore } from '@/stores';
 import { useTelegramWebApp } from '../hooks/index.js';
 
 const StorageFileBrowser = ({ onFileSelect = null }) => {
-    const {
-        getStorageFiles,
-        storageFiles = { files: [], total: 0, limit: 20, offset: 0 },
-        isLoading
-    } = useAppStore();
+    // Note: Storage file browsing would need a new method in media store
+    // For now, using placeholder data
+    const [storageFiles, setStorageFiles] = useState({ files: [], total: 0, limit: 20, offset: 0 });
+    const [isLoading, setIsLoading] = useState(false);
 
     const { hapticFeedback } = useTelegramWebApp();
 

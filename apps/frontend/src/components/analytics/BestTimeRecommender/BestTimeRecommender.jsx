@@ -40,11 +40,13 @@ const BestTimeRecommender = () => {
             {/* Error State */}
             {error && (
                 <Alert
-                    severity="error"
+                    severity="warning"
                     sx={{ mb: 2 }}
                     aria-live="polite"
                 >
-                    {error}
+                    {error.includes('Authentication')
+                        ? 'Unable to load recommendations. Please check your connection or switch to Demo mode to explore features.'
+                        : error}
                 </Alert>
             )}
 
@@ -64,7 +66,7 @@ const BestTimeRecommender = () => {
             )}
 
             {/* Main Content */}
-            {!loading && (
+            {!loading && recommendations && (
                 <>
                     {/* Best Time Cards */}
                     <BestTimeCards recommendations={recommendations} />
@@ -80,10 +82,12 @@ const BestTimeRecommender = () => {
                 </>
             )}
 
-            {/* No Data State */}
-            {!loading && !recommendations && !error && (
+            {/* No Data State - Show when not loading and no recommendations */}
+            {!loading && !recommendations && (
                 <EmptyState
-                    message="Wait for data collection to get AI-powered posting time recommendations"
+                    message={error
+                        ? "No data available. Please connect your channel or switch to Demo mode to see sample recommendations."
+                        : "Wait for data collection to get AI-powered posting time recommendations"}
                     icon={<ScheduleIcon sx={{ fontSize: 48, color: 'text.secondary' }} />}
                 />
             )}

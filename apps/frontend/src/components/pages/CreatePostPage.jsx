@@ -13,12 +13,12 @@ import PostCreator from '../PostCreator.jsx';
 import EnhancedMediaUploader from '../EnhancedMediaUploader.jsx';
 import MediaPreview from '../MediaPreview.jsx';
 import StorageFileBrowser from '../StorageFileBrowser.jsx';
-import { useAppStore } from '../../store/appStore.js';
+import { usePostStore } from '@/stores';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
 const CreatePostPage = () => {
   const [localSelectedMedia, setLocalSelectedMedia] = useState([]);
-  const { addPost, schedulePost } = useAppStore();
+  const { schedulePost } = usePostStore();
 
   const handleRemoveMedia = (index) => {
     const newMedia = [...localSelectedMedia];
@@ -44,7 +44,6 @@ const CreatePostPage = () => {
           {/* Main Content - Post Creator */}
           <Box>
             <PostCreator
-              onSubmit={addPost}
               onSchedule={schedulePost}
             />
           </Box>

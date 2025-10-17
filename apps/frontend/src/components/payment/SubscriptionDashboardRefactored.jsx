@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import { Button } from '../common/UnifiedButton.jsx';
 import { CreditCard } from '@mui/icons-material';
-import { paymentAPI } from '../../services/api';
+import { paymentAPI } from '@services/api';
 
 // Import refactored components
 import SubscriptionCard from './subscription/SubscriptionCard.jsx';

@@ -7,7 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import EnhancedUserManagementTable from '../../../../components/EnhancedUserManagementTable';
+import EnhancedUserManagementTable from '@components/EnhancedUserManagementTable';
 
 const UsersTableDemo = () => {
     const [usersLoading, setUsersLoading] = useState(false);

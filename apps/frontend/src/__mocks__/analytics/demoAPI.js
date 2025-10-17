@@ -4,7 +4,7 @@
  * Clean replacement for /analytics/demo/* endpoints
  */
 
-import { analyticsService } from '../../services/analyticsService.js';
+import { analyticsService } from '@services/analyticsService.js';
 // demoAnalyticsService functionality moved to main analyticsService
 
 /**

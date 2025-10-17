@@ -25,8 +25,8 @@ import {
     AccessTime as TimeIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import { analyticsService } from '../../services/analyticsService.js';
-import { useDataSource } from '../../hooks/useDataSource.js';
+import { analyticsService } from '@services/analyticsService.js';
+import { useDataSource } from '@hooks/useDataSource.js';
 
 /**
  * Share Button Component for Analytics Reports

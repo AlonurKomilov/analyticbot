@@ -8,7 +8,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ProtectedLayout from '../layout/ProtectedLayout';
 

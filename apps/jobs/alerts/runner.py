@@ -38,10 +38,10 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    current_data = await self.analytics_client.overview(
+                    current_data = await self.analytics_client.get_overview(
                         str(channel_id), 1
                     )  # Last 24h
-                    baseline_data = await self.analytics_client.overview(
+                    baseline_data = await self.analytics_client.get_overview(
                         str(channel_id), 7
                     )  # Last week
 
@@ -92,8 +92,8 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    current_data = await self.analytics_client.overview(str(channel_id), 1)
-                    baseline_data = await self.analytics_client.overview(str(channel_id), 7)
+                    current_data = await self.analytics_client.get_overview(str(channel_id), 1)
+                    baseline_data = await self.analytics_client.get_overview(str(channel_id), 7)
 
             if not current_data or not baseline_data:
                 logger.warning(f"Insufficient data for quiet detection on channel {channel_id}")
@@ -140,7 +140,7 @@ class AlertDetector:
             async with aiohttp.ClientSession() as session:
                 # The analytics client expects context manager usage
                 async with self.analytics_client:
-                    growth_data = await self.analytics_client.growth(str(channel_id), 1)
+                    growth_data = await self.analytics_client.get_growth(str(channel_id), 1)
 
             if not growth_data or not growth_data.growth.daily_growth:
                 logger.warning(f"No growth data for channel {channel_id}")

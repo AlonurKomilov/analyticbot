@@ -8,7 +8,7 @@ import App from './App.jsx';
 import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import theme from './theme.js'; // Use our enhanced theme
 import { initializeApp, showDataSourceNotification } from './utils/initializeApp.js';
-
+y
 // Suppress React DevTools suggestion in development
 if (import.meta.env.DEV) {
   // This is expected in development - no action needed
@@ -27,18 +27,6 @@ if (import.meta.env.VITE_SENTRY_DSN) {
     ],
   });
 }
-
-// Initialize app early
-initializeApp().then((result) => {
-  if (import.meta.env.DEV) {
-    console.log('🚀 App initialized:', result);
-  }
-
-  // Show notification about data source
-  if (result.dataSource === 'mock' && result.error) {
-    showDataSourceNotification('mock', 'api_unavailable');
-  }
-});
 
 // TWA Mock for development
 const mockTelegram = {
@@ -88,17 +76,32 @@ if (typeof window !== 'undefined') {
 // - Enhanced focus indicators
 // - Proper touch target sizes (44px minimum)
 // - Reduced motion support
-// - High contrast mode support// Render App with Error Boundary
+// - High contrast mode support
+
+// Render App with Error Boundary - DEFERRED until initialization completes
 const container = document.getElementById('root');
 const root = createRoot(container);
 
-root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </ErrorBoundary>
-  </React.StrictMode>
-);
+// Initialize app and render only after completion
+initializeApp().then((result) => {
+  if (import.meta.env.DEV) {
+    console.log('🚀 App initialized:', result);
+  }
+
+  // Show notification about data source
+  if (result.dataSource === 'mock' && result.error) {
+    showDataSourceNotification('mock', 'api_unavailable');
+  }
+
+  // Now render the app with proper data source initialized
+  root.render(
+    <React.StrictMode>
+      <ErrorBoundary>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <App />
+        </ThemeProvider>
+      </ErrorBoundary>
+    </React.StrictMode>
+  );
+});

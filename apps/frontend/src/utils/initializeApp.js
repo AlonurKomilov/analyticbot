@@ -6,6 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_A
 
 /**
  * Perform health check with single attempt (no retry to avoid long initialization)
+ * Uses 30s timeout which is sufficient for most scenarios
  */
 const checkAPIHealth = async (timeoutMs = 30000) => {
     const controller = new AbortController();
@@ -30,7 +31,18 @@ const checkAPIHealth = async (timeoutMs = 30000) => {
  */
 export const initializeDataSource = async () => {
     try {
-        // API health check with extended timeout for devtunnel connections (30s for cold starts)
+        // Skip health check for localhost (faster initialization)
+        const isLocalhost = API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1');
+
+        if (isLocalhost) {
+            if (import.meta.env.DEV) {
+                console.log('✅ Localhost detected - skipping health check');
+            }
+            const savedPreference = localStorage.getItem('useRealAPI');
+            return savedPreference === 'true' || savedPreference === null ? 'api' : 'mock';
+        }
+
+        // API health check with 30s timeout for devtunnel connections
         if (import.meta.env.DEV) {
             console.log('🔍 Checking API health...');
         }
@@ -71,16 +83,16 @@ export const initializeDataSource = async () => {
             return 'api'; // Keep API mode, let backend handle demo authentication
         }
     } catch (error) {
-        // API is not available (connection refused, timeout, etc.)
+                // API is not available (connection refused, timeout, etc.)
         if (import.meta.env.DEV) {
             const errorMsg = error.name === 'AbortError'
                 ? 'Timeout after 30s (dev tunnel may be cold-starting)'
                 : (error.message || error.toString() || 'Unknown error');
-            console.warn('⏱️ API health check timeout - continuing with API mode:', errorMsg);
-            console.log('💡 The API may still work for authentication (using longer timeout)');
+            console.info('⏱️ API health check slow - continuing anyway:', errorMsg);
+            console.info('💡 This is normal for dev tunnels. Authentication will use optimized timeout.');
         }
         // Don't auto-switch to mock - user should sign in to demo account instead
-        return 'api'; // Keep API mode, let backend handle demo authentication with longer timeout
+        return 'api'; // Keep API mode, API requests will use their own optimized timeouts
     }
 };
 

@@ -7,6 +7,68 @@ multi-format export, email delivery, and customizable templates.
 This service provides comprehensive reporting capabilities,
 including report generation, scheduling, and delivery automation.
 
+## Architecture
+
+This module follows Clean Architecture principles:
+- ✅ **Pure business logic** - No framework dependencies
+- ✅ **Single responsibility** - Report generation and delivery
+- ✅ **Well-organized** - Each format has dedicated method
+- ✅ **Testable** - Clear interfaces and dependency injection
+- ✅ **Framework-agnostic** - Can be used by Bot, API, CLI, etc.
+
+## Design Rationale
+
+**Why one large file instead of multiple modules?**
+
+This service intentionally keeps all formatters in one file because:
+1. **Cohesion**: All formatters share the same core data model (ReportTemplate)
+2. **Simplicity**: Single import instead of multiple formatter imports
+3. **Maintenance**: Easier to ensure consistency across formats
+4. **Performance**: No circular import risks
+5. **Size**: 787 lines with clear method boundaries is manageable
+
+The service uses method-level separation (not file-level) because each
+formatter is relatively small (~70-100 lines) and tightly coupled to the
+main reporting engine.
+
+**When to split further?**
+- If any single method exceeds 200 lines
+- If formatters need to be used independently
+- If file grows beyond 1000 lines
+
+## Usage
+
+```python
+# Create reporting system
+reporting = await create_reporting_system("reports")
+
+# Create template
+template = create_report_template("Sales Report")
+template.add_section("header", "Summary", "")
+template.add_section("table", "Data", dataframe)
+
+# Generate report
+result = await reporting.create_report(dataframe, template, "pdf")
+
+# Or use pre-configured templates
+template = create_analytics_template("Q4 Report", data)
+result = await reporting.create_report(data, template, "excel")
+```
+
+## Supported Formats
+
+- **PDF**: ReportLab-based professional reports
+- **Excel**: OpenPyXL with formatting and charts
+- **HTML**: Interactive web-based reports
+- **JSON**: Structured data export
+
+## Optional Dependencies
+
+- `reportlab`: PDF generation (install: pip install reportlab)
+- `openpyxl`: Excel generation (install: pip install openpyxl)
+- `jinja2`: HTML templating (install: pip install jinja2)
+- `schedule`: Report scheduling (install: pip install schedule)
+
 NOTE: This is pure business logic with no framework dependencies.
 Can be used by any interface (Bot, API, CLI, etc.)
 """
@@ -726,15 +788,91 @@ class AutomatedReportingSystem:
         }
 
 
-# Convenience functions for easy integration with bot services
-async def create_reporting_system(output_dir: str = "reports"):
-    """Factory function to create reporting system"""
+# ============================================================================
+# FACTORY FUNCTIONS - Simplified Service Creation
+# ============================================================================
+
+
+async def create_reporting_system(output_dir: str = "reports") -> AutomatedReportingSystem:
+    """
+    Factory function to create reporting system with sensible defaults
+
+    Args:
+        output_dir: Directory for report output files
+
+    Returns:
+        Configured AutomatedReportingSystem instance
+
+    Example:
+        >>> reporting = await create_reporting_system("my_reports")
+        >>> template = create_report_template("Monthly Report")
+        >>> result = await reporting.create_report(data, template, "pdf")
+    """
     return AutomatedReportingSystem(output_dir=output_dir)
 
 
-def create_report_template(name: str, template_type: str = "standard"):
-    """Factory function to create report template"""
+def create_report_template(name: str, template_type: str = "standard") -> ReportTemplate:
+    """
+    Factory function to create report template
+
+    Args:
+        name: Template name
+        template_type: Type of template (standard, analytics, executive)
+
+    Returns:
+        Configured ReportTemplate instance
+
+    Example:
+        >>> template = create_report_template("Sales Report", "analytics")
+        >>> template.add_section("header", "Summary", "")
+        >>> template.add_section("table", "Data", dataframe)
+    """
     return ReportTemplate(name=name, template_type=template_type)
+
+
+def create_analytics_template(name: str, data: pd.DataFrame) -> ReportTemplate:
+    """
+    Factory function to create pre-configured analytics report template
+
+    Args:
+        name: Report name
+        data: DataFrame with analytics data
+
+    Returns:
+        ReportTemplate with standard analytics sections
+
+    Example:
+        >>> template = create_analytics_template("Q4 Report", sales_data)
+        >>> result = await reporting.create_report(sales_data, template, "pdf")
+    """
+    template = ReportTemplate(name=name, template_type="analytics")
+    template.add_section("header", "Executive Summary", "")
+    template.add_section("text", "Overview", f"Analytics report for {name}")
+    template.add_section("summary", "Data Summary", data)
+    template.add_section("table", "Detailed Data", data)
+    return template
+
+
+def create_executive_template(name: str, summary_text: str) -> ReportTemplate:
+    """
+    Factory function to create pre-configured executive report template
+
+    Args:
+        name: Report name
+        summary_text: Executive summary text
+
+    Returns:
+        ReportTemplate with executive sections
+
+    Example:
+        >>> template = create_executive_template("Board Report", "Strong Q4 performance...")
+        >>> template.add_section("table", "Key Metrics", metrics_data)
+    """
+    template = ReportTemplate(name=name, template_type="executive")
+    template.add_section("header", "Executive Report", "")
+    template.add_section("text", "Executive Summary", summary_text)
+    template.set_styling(title_font_size=18, header_font_size=16, primary_color="#2E4053")
+    return template
 
 
 # Example usage and testing

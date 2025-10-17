@@ -12,11 +12,12 @@ PHASE 3B: Will consolidate health endpoints from all other routers
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
 # Import from our new apps layer service
 from apps.api.services.health_service import health_service
+from core.common.cache_decorator import cache_endpoint
 from core.common.health.models import HealthStatus
 
 # Use health service from apps layer (moved from core)
@@ -116,12 +117,15 @@ async def register_health_checks():
 
 
 @router.get("/", response_model=HealthResponse, summary="Basic Health Check")
-async def basic_health_check():
+@cache_endpoint(prefix="health:basic", ttl=60)  # Cache for 1 minute
+async def basic_health_check(request: Request):
     """
-    ## Basic Health Check
+    ## Basic Health Check (CACHED)
 
     Simple health check endpoint for load balancers and basic monitoring.
     Returns basic service status without detailed component checks.
+
+    **Performance:** Cached for 1 minute (60 seconds)
 
     **Use Cases:**
     - Load balancer health checks

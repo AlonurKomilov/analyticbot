@@ -319,6 +319,10 @@ async def get_current_user_id_from_request(request) -> int:
     Extract user ID from Request object
     This supports proper demo mode detection and authentication
     """
+    import time
+
+    start = time.time()
+
     try:
         # First check if it's a demo user from middleware state
         if hasattr(request.state, "demo_user_id") and request.state.demo_user_id:
@@ -326,6 +330,8 @@ async def get_current_user_id_from_request(request) -> int:
             demo_user_str = request.state.demo_user_id
             if demo_user_str.startswith("demo_"):
                 # Extract numeric part or use default
+                elapsed = (time.time() - start) * 1000
+                logger.info(f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (demo)")
                 return 1  # Demo user ID
 
         # For real users, extract from JWT token
@@ -335,23 +341,34 @@ async def get_current_user_id_from_request(request) -> int:
             try:
                 # Decode JWT token using SecurityManager
                 from core.security_engine import get_security_manager
+
                 security_manager = get_security_manager()
                 claims = security_manager.verify_token(token)
 
                 # Extract user_id from claims (it's stored as 'sub')
                 user_id_str = claims.get("sub")
                 if user_id_str:
+                    elapsed = (time.time() - start) * 1000
+                    logger.info(f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (JWT)")
                     return int(user_id_str)
             except Exception as token_error:
                 logger.warning(f"Failed to decode JWT token: {token_error}")
                 # Return a default user ID instead of raising error
+                elapsed = (time.time() - start) * 1000
+                logger.info(
+                    f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (token error)"
+                )
                 return 1
 
         # Default fallback - return user ID 1
+        elapsed = (time.time() - start) * 1000
+        logger.info(f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (fallback)")
         return 1
 
     except Exception as e:
         logger.error(f"Failed to extract user ID from request: {e}")
+        elapsed = (time.time() - start) * 1000
+        logger.info(f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (error)")
         return 1
 
 

@@ -149,7 +149,7 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
         customer_id: str,
         price_id: str,
         payment_method_id: str,
-        billing_cycle: BillingCycle,
+        billing_cycle: BillingCycle | Any,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Stripe subscription"""

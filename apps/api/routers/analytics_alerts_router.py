@@ -11,6 +11,7 @@ Path: /analytics/alerts/*
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -25,13 +26,12 @@ from apps.di import (
     get_telegram_alert_notifier,
 )
 from apps.shared.clients.analytics_client import AnalyticsClient
-from apps.shared.models.alerts import AlertEvent, AlertRule
+from apps.shared.models.alerts import AlertEvent
 from core.services.bot.alerts import (
     AlertConditionEvaluator,
     AlertEventManager,
     AlertRuleManager,
 )
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -136,20 +136,36 @@ async def check_channel_alerts(
         }
 
         # Check alert conditions using new service
-        alerts = await condition_evaluator.check_alert_conditions(
-            channel_id=str(channel_id),
-            metrics=combined_metrics
+        alert_ids = await condition_evaluator.check_alert_conditions(
+            channel_id=str(channel_id), metrics=combined_metrics
         )
+
+        # Convert alert IDs to AlertEvent objects
+        # TODO: Fetch full alert details from repository instead of creating minimal objects
+        alert_events = [
+            AlertEvent(
+                id=alert_id,
+                rule_id="",  # Will be populated from repository
+                title="Alert Triggered",
+                message=f"Alert {alert_id} was triggered",
+                severity="medium",
+                timestamp=datetime.utcnow(),
+                channel_id=str(channel_id),
+                triggered_value=0.0,  # Will be populated from repository
+                threshold=0.0,  # Will be populated from repository
+            )
+            for alert_id in alert_ids
+        ]
 
         # Calculate next check time (usually 15-30 minutes for alerts)
         next_check = datetime.utcnow() + timedelta(minutes=15)
 
         return AlertCheckResponse(
             channel_id=str(channel_id),
-            alerts=alerts,
+            alerts=alert_events,
             check_timestamp=datetime.utcnow(),
             next_check=next_check,
-            alert_count=len(alerts),
+            alert_count=len(alert_events),
         )
 
     except Exception as e:
@@ -324,7 +340,7 @@ async def get_alert_history(
         )
 
         # Analyze alert types by severity
-        alert_types = {}
+        alert_types: dict[str, int] = {}
         for alert in alerts:
             severity = alert.get("severity", "unknown")
             alert_types[severity] = alert_types.get(severity, 0) + 1
@@ -334,14 +350,15 @@ async def get_alert_history(
             AlertEvent(
                 id=a.get("id", ""),
                 rule_id=a.get("rule_id", ""),
-                triggered_at=a.get("triggered_at", datetime.utcnow()),
-                severity=a.get("severity", "medium"),
+                title=a.get("title", "Alert"),
                 message=a.get("message", ""),
-                metric_value=a.get("metric_value", 0.0),
-                threshold=a.get("threshold", 0.0),
+                severity=a.get("severity", "medium"),
+                timestamp=a.get("triggered_at", datetime.utcnow()),
                 channel_id=str(channel_id),
+                triggered_value=a.get("metric_value", 0.0),
+                threshold=a.get("threshold", 0.0),
             )
-            for a in alerts[:min(len(alerts), 100)]  # Limit to 100 for response
+            for a in alerts[: min(len(alerts), 100)]  # Limit to 100 for response
         ]
 
         return AlertHistoryResponse(

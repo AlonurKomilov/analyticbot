@@ -13,17 +13,21 @@ from apps.api.services.telegram_validation_service import (
     TelegramValidationService,
 )
 
+# ✅ PHASE 2: Redis caching for performance optimization
+from core.common.cache_decorator import cache_endpoint
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/analytics",
     tags=["Analytics - Channels"],
-    responses={404: {"description": "Not found"}}
+    responses={404: {"description": "Not found"}},
 )
 
 
 class ChannelInfo(BaseModel):
     """Channel information for analytics dashboard"""
+
     id: int
     name: str
     username: str | None = None
@@ -34,12 +38,15 @@ class ChannelInfo(BaseModel):
 
 
 @router.get("/channels", response_model=list[ChannelInfo])
-async def get_analytics_channels():
+@cache_endpoint(prefix="analytics:channels", ttl=600)  # Cache for 10 minutes
+async def get_analytics_channels(request: Request):
     """
-    ## 📺 Get User Channels for Analytics
+    ## 📺 Get User Channels for Analytics (CACHED)
 
     Retrieve all channels belonging to the current user for analytics dashboard.
     This endpoint is used by the frontend to populate channel selection and overview.
+
+    **Performance:** Cached for 10 minutes (600 seconds) per user
 
     **Authentication Required:**
     - Valid JWT token in Authorization header (handled by middleware)
@@ -76,27 +83,26 @@ async def get_analytics_channels():
 
     except Exception as e:
         logger.error(f"Failed to fetch analytics channels: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch channels: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch channels: {str(e)}")
 
 
 class ValidateChannelRequest(BaseModel):
     """Request model for channel validation"""
+
     username: str
 
 
 async def get_telegram_validation_service():
     """Dependency to get telegram validation service"""
     from apps.api.di_analytics import get_telegram_validation_service as di_get_service
+
     return await di_get_service()
 
 
 @router.post("/channels/validate", response_model=ChannelValidationResult)
 async def validate_telegram_channel(
     request_data: ValidateChannelRequest,
-    telegram_service: TelegramValidationService = Depends(get_telegram_validation_service)
+    telegram_service: TelegramValidationService = Depends(get_telegram_validation_service),
 ):
     """
     ## ✅ Validate Telegram Channel
@@ -139,7 +145,4 @@ async def validate_telegram_channel(
 
     except Exception as e:
         logger.error(f"Failed to validate channel: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")

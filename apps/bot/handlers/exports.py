@@ -4,6 +4,7 @@ Handles file exports (CSV/PNG) and sending to users in Telegram bot
 """
 
 import logging
+from io import StringIO
 
 import aiohttp
 from aiogram import F, Router
@@ -22,6 +23,14 @@ from apps.bot.keyboards.analytics import (
     get_export_type_keyboard,
 )
 from apps.bot.middlewares.throttle import rate_limit
+from apps.shared.clients.analytics_client import (
+    GrowthResponse,
+    OverviewResponse,
+    ReachResponse,
+    SourcesResponse,
+    TopPostsResponse,
+    TrendingResponse,
+)
 from apps.shared.factory import get_repository_factory
 from config import settings
 
@@ -173,6 +182,15 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
             # Note: AnalyticsClient manages session internally
+            data: (
+                OverviewResponse
+                | GrowthResponse
+                | ReachResponse
+                | TopPostsResponse
+                | SourcesResponse
+                | TrendingResponse
+            )
+            csv_content: StringIO
 
             if export_type == "overview":
                 data = await analytics_client.overview(channel_id, period)
@@ -257,6 +275,8 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
         # Fetch analytics data
         async with aiohttp.ClientSession() as session:
             # Note: AnalyticsClient manages session internally
+            data: GrowthResponse | ReachResponse | SourcesResponse
+            png_bytes: bytes
 
             if export_type == "growth":
                 data = await analytics_client.growth(channel_id, period)

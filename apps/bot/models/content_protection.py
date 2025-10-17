@@ -132,7 +132,7 @@ class ContentProtection(BaseORMModel):
 
     __tablename__ = "content_protections"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # type: ignore[assignment]  # UUID override of BaseEntity.id
     user_id = Column(Integer, nullable=False, index=True)
     content_type = Column(String(20), nullable=False)
     protection_level = Column(String(20), nullable=False)
@@ -153,7 +153,7 @@ class ContentProtection(BaseORMModel):
     theft_analysis = Column(JSON)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)  # type: ignore[assignment]  # DateTime Column type
     processed_at = Column(DateTime)
     expires_at = Column(DateTime)  # For temporary files cleanup
 
@@ -163,7 +163,7 @@ class PremiumEmojiUsage(BaseORMModel):
 
     __tablename__ = "premium_emoji_usage"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # type: ignore[assignment]  # UUID override of BaseEntity.id
     user_id = Column(Integer, nullable=False, index=True)
     emoji_id = Column(String(100), nullable=False)
 
@@ -182,7 +182,7 @@ class ContentTheftLog(BaseORMModel):
 
     __tablename__ = "content_theft_logs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # type: ignore[assignment]  # UUID override of BaseEntity.id
     user_id = Column(Integer, nullable=False, index=True)
     content_hash = Column(String(64), index=True)  # SHA256 hash of content
 
@@ -203,7 +203,7 @@ class UserPremiumFeatures(BaseORMModel):
 
     __tablename__ = "user_premium_features"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # type: ignore[assignment]  # UUID override of BaseEntity.id
     user_id = Column(Integer, nullable=False, index=True)
     user_tier = Column(String(20), nullable=False)
 
@@ -219,8 +219,8 @@ class UserPremiumFeatures(BaseORMModel):
 
     # Reset tracking
     usage_month = Column(String(7))  # YYYY-MM format
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.utcnow)  # type: ignore[assignment]  # DateTime Column type
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # type: ignore[assignment]  # DateTime Column type
 
 
 # Analytics models for premium features

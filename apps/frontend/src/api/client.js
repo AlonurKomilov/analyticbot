@@ -22,10 +22,22 @@ import { analyticsService } from '../services/analyticsService.js';
 // Configuration constants
 const DEFAULT_CONFIG = {
     baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms',
-    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 60000, // Use env var or default 60 seconds (increased for devtunnel)
+    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000, // Reduced to 30 seconds default
     maxRetries: 3,
     retryDelay: 1000, // 1 second
     retryMultiplier: 2
+};
+
+// Endpoint-specific timeouts for better performance
+const ENDPOINT_TIMEOUTS = {
+    '/health': 5000,           // 5 seconds for health checks
+    '/auth/login': 10000,      // 10 seconds for login
+    '/auth/register': 10000,   // 10 seconds for registration
+    '/auth/me': 10000,         // 10 seconds for user info (was timing out at 45s)
+    '/auth/refresh': 10000,    // 10 seconds for token refresh
+    '/analytics/': 25000,      // 25 seconds for analytics (can be slow)
+    '/api/v2/': 25000,         // 25 seconds for v2 API
+    'default': 30000           // 30 seconds for everything else
 };
 
 /**
@@ -152,6 +164,21 @@ class UnifiedApiClient {
     }
 
     /**
+     * Get appropriate timeout for endpoint
+     */
+    getTimeoutForEndpoint(endpoint) {
+        // Check for exact matches first
+        for (const [path, timeout] of Object.entries(ENDPOINT_TIMEOUTS)) {
+            if (path === 'default') continue;
+            if (endpoint.includes(path)) {
+                return timeout;
+            }
+        }
+        // Return default timeout
+        return ENDPOINT_TIMEOUTS.default;
+    }
+
+    /**
      * Core request method with retry logic and data source routing
      */
     async request(endpoint, options = {}, attempt = 1) {
@@ -173,17 +200,18 @@ class UnifiedApiClient {
         }
 
         const controller = new AbortController();
+        const requestTimeout = this.getTimeoutForEndpoint(endpoint);
         const timeoutId = setTimeout(() => {
-            console.warn(`⏱️ Request timeout after ${this.config.timeout}ms for ${endpoint}`);
+            console.warn(`⏱️ Request timeout after ${requestTimeout}ms for ${endpoint}`);
             controller.abort();
-        }, this.config.timeout);
+        }, requestTimeout);
 
         try {
             // Construct full URL
             const url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
 
             if (import.meta.env.DEV) {
-                console.log(`🌐 API Request: ${options.method || 'GET'} ${url} (timeout: ${this.config.timeout}ms)`);
+                console.log(`🌐 API Request: ${options.method || 'GET'} ${url} (timeout: ${requestTimeout}ms)`);
             }
 
             // Prepare request configuration

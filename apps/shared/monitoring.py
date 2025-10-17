@@ -197,7 +197,7 @@ class HealthMonitor:
 
     async def run_health_checks(self) -> dict[str, Any]:
         """Run all registered health checks"""
-        results = {
+        results: dict[str, Any] = {
             "overall_status": "healthy",
             "checks": {},
             "timestamp": datetime.now().isoformat(),

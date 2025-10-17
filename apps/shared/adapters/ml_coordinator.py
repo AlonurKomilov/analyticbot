@@ -144,14 +144,16 @@ class MLCoordinatorService:
         try:
             orchestrator = await self.get_predictive_orchestrator()
 
-            # Use the predictive intelligence for engagement prediction
-            predictions = await orchestrator.orchestrate_predictive_intelligence(
-                request={
-                    "data": data,
-                    "prediction_type": "engagement",
-                    "horizon_days": prediction_horizon,
-                },
-                context="engagement_analysis",
+            # Use the proper Protocol method: orchestrate_enhanced_prediction
+            prediction_request = {
+                "data": data,
+                "prediction_type": "engagement",
+                "horizon_days": prediction_horizon,
+            }
+            predictions = await orchestrator.orchestrate_enhanced_prediction(
+                prediction_request=prediction_request,
+                context_types=None,
+                include_narrative=True,
             )
 
             logger.info("📈 Engagement predictions generated")
@@ -175,9 +177,16 @@ class MLCoordinatorService:
             # For now, we'll use the predictive orchestrator's content analysis
             orchestrator = await self.get_predictive_orchestrator()
 
-            analysis = await orchestrator.orchestrate_predictive_intelligence(
-                request={"content": content, "analysis_type": analysis_type},
-                context="content_analysis",
+            # Use the proper Protocol method: orchestrate_enhanced_prediction for content
+            prediction_request = {
+                "content": content,
+                "analysis_type": analysis_type,
+                "prediction_type": "content_quality",
+            }
+            analysis = await orchestrator.orchestrate_enhanced_prediction(
+                prediction_request=prediction_request,
+                context_types=None,
+                include_narrative=True,
             )
 
             logger.info("📝 Content analysis completed")
@@ -203,13 +212,16 @@ class MLCoordinatorService:
         try:
             orchestrator = await self.get_predictive_orchestrator()
 
-            predictions = await orchestrator.orchestrate_predictive_intelligence(
-                request={
-                    "channel_id": channel_id,
-                    "prediction_type": prediction_type,
-                    "forecast_horizon": forecast_horizon,
-                },
-                context="comprehensive_prediction",
+            # Use the proper Protocol method: orchestrate_enhanced_prediction
+            prediction_request = {
+                "channel_id": channel_id,
+                "prediction_type": prediction_type,
+                "forecast_horizon": forecast_horizon,
+            }
+            predictions = await orchestrator.orchestrate_enhanced_prediction(
+                prediction_request=prediction_request,
+                context_types=None,
+                include_narrative=True,
             )
 
             logger.info(f"🔮 Comprehensive predictions generated for channel {channel_id}")
@@ -235,11 +247,17 @@ class MLCoordinatorService:
             orchestrator = await self.get_optimization_orchestrator()
 
             if auto_apply_safe:
+                # Use the proper Protocol method without channel_id parameter
                 result = await orchestrator.orchestrate_full_optimization_cycle(
                     auto_apply_safe=True
                 )
             else:
-                result = await orchestrator.orchestrate_recommendation_generation()
+                # orchestrate_recommendation_generation requires performance_data parameter
+                # First get performance analysis, then generate recommendations
+                performance_data = await orchestrator.orchestrate_performance_analysis()
+                result = await orchestrator.orchestrate_recommendation_generation(
+                    performance_data=performance_data
+                )
 
             logger.info("⚡ Performance optimization completed")
             return result
@@ -267,7 +285,7 @@ class MLCoordinatorService:
     # HEALTH CHECK
     async def health_check(self) -> dict[str, Any]:
         """Check health of all ML services"""
-        health_status = {
+        health_status: dict[str, Any] = {
             "service": "ml_coordinator",
             "status": "healthy",
             "core_services": {},

@@ -7,8 +7,9 @@ dev-help:
 	@echo "🔥 Development Commands (venv-based)"
 	@echo "===================================="
 	@echo "  dev-install    - Install dependencies in venv"
-	@echo "  dev-start      - Start development servers"
+	@echo "  dev-start      - Start development servers + CloudFlare Tunnel"
 	@echo "  dev-stop       - Stop all development services"
+	@echo "  dev-tunnel     - Start CloudFlare Tunnel only (public access)"
 	@echo "  dev-status     - Check service status"
 	@echo "  dev-logs       - Show development logs"
 	@echo "  dev-migrate    - Run database migrations"
@@ -35,6 +36,10 @@ dev-start:
 dev-stop:
 	@echo "🛑 Stopping development environment..."
 	./scripts/dev-start.sh stop
+
+dev-tunnel:
+	@echo "🌐 Starting CloudFlare Tunnel for public access..."
+	./scripts/dev-start.sh tunnel
 
 dev-status:
 	@echo "📊 Checking development status..."

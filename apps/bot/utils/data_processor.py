@@ -328,7 +328,7 @@ class AdvancedDataProcessor:
             Dictionary with detailed data quality metrics
         """
         try:
-            analysis = {
+            analysis: dict[str, Any] = {
                 "basic_info": {
                     "total_rows": len(df),
                     "total_columns": len(df.columns),
@@ -394,9 +394,14 @@ class AdvancedDataProcessor:
                         corr_val = correlation_matrix.iloc[i, j]
                         try:
                             # Handle different types of correlation values
-                            if hasattr(corr_val, "item") and callable(corr_val.item):
+                            # Type cast to Any to handle numpy/pandas scalar types properly
+                            from typing import Any as AnyType
+
+                            corr_val_any: AnyType = corr_val
+
+                            if hasattr(corr_val_any, "item") and callable(corr_val_any.item):
                                 # For pandas/numpy scalars with .item() method
-                                corr_val_float = float(corr_val.item())
+                                corr_val_float = float(corr_val_any.item())
                             elif isinstance(corr_val, (int, float)):
                                 # For regular numeric types
                                 corr_val_float = float(corr_val)

@@ -8,7 +8,8 @@ while the core layer decorators remain framework-agnostic placeholders.
 import functools
 import logging
 import time
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 # ✅ FIXED: Lazy import to avoid circular dependency
 # from apps.di import get_business_metrics_service, get_metrics_collector_service, get_system_metrics_service
@@ -21,10 +22,17 @@ from core.services.bot.metrics.models import (
 
 logger = logging.getLogger(__name__)
 
+
 def _get_di_services():
     """Lazy import to avoid circular dependency during module initialization"""
-    from apps.di import get_business_metrics_service, get_metrics_collector_service, get_system_metrics_service
+    from apps.di import (
+        get_business_metrics_service,
+        get_metrics_collector_service,
+        get_system_metrics_service,
+    )
+
     return get_business_metrics_service, get_metrics_collector_service, get_system_metrics_service
+
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -125,7 +133,9 @@ async def _record_metric(
 
         # Record based on metric type
         if metric_type == "celery_task":
-            metric = CeleryTaskMetric(
+            metric: (
+                CeleryTaskMetric | DatabaseQueryMetric | HTTPRequestMetric | TelegramAPIMetric
+            ) = CeleryTaskMetric(
                 task_name=metric_name,
                 status=status,
                 duration=duration,
@@ -162,9 +172,7 @@ async def _record_metric(
             await collector.record_telegram_api_request(metric)
 
         else:
-            logger.debug(
-                f"Function '{metric_name}' executed in {duration:.3f}s (status: {status})"
-            )
+            logger.debug(f"Function '{metric_name}' executed in {duration:.3f}s (status: {status})")
 
     except Exception as e:
         logger.error(f"Failed to record metric: {e}")
@@ -185,7 +193,9 @@ def collect_system_metrics_decorator(func: F) -> F:
     @functools.wraps(func)
     async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
-            system_metrics_service = get_system_metrics_service()
+            # Lazy import to avoid circular dependency
+            _, _, get_system_metrics_service_func = _get_di_services()
+            system_metrics_service = get_system_metrics_service_func()
             if system_metrics_service:
                 await system_metrics_service.collect_and_update_system_metrics()
         except Exception as e:
@@ -195,9 +205,7 @@ def collect_system_metrics_decorator(func: F) -> F:
 
     @functools.wraps(func)
     def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
-        logger.warning(
-            f"System metrics collection skipped for sync function '{func.__name__}'"
-        )
+        logger.warning(f"System metrics collection skipped for sync function '{func.__name__}'")
         return func(*args, **kwargs)
 
     import inspect

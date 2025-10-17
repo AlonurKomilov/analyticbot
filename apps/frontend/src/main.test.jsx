@@ -1,13 +1,22 @@
-import React from 'react';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { createRoot } from 'react-dom/client';
 
-const App = () => (
-    <div style={{padding: '40px', textAlign: 'center'}}>
-        <h1>🚀 Minimal Test</h1>
-        <p>If you see this, React is working!</p>
-    </div>
-);
+describe('Main Entry Point', () => {
+    let container;
 
-const container = document.getElementById('root');
-const root = createRoot(container);
-root.render(<App />);
+    beforeAll(() => {
+        container = document.createElement('div');
+        container.id = 'root';
+        document.body.appendChild(container);
+    });
+
+    it('should have createRoot function available', () => {
+        expect(createRoot).toBeDefined();
+        expect(typeof createRoot).toBe('function');
+    });
+
+    it('should be able to create a root', () => {
+        const root = createRoot(container);
+        expect(root).toBeDefined();
+    });
+});

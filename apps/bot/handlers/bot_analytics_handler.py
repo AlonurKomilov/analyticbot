@@ -178,6 +178,11 @@ async def analytics_command(message: Message, state: FSMContext) -> None:
 async def analytics_channel_callback(callback: CallbackQuery, state: FSMContext) -> None:
     """Handle channel selection for analytics"""
     try:
+        # Type narrowing: filter ensures callback.data is not None
+        if not callback.data:
+            await callback.answer("❌ Invalid callback data", show_alert=True)
+            return
+
         # Extract channel ID from callback data
         channel_id = callback.data.split(":", 1)[1] if ":" in callback.data else None
         if not channel_id:
@@ -194,9 +199,11 @@ async def analytics_channel_callback(callback: CallbackQuery, state: FSMContext)
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Channel selection error: {e}")
@@ -207,6 +214,11 @@ async def analytics_channel_callback(callback: CallbackQuery, state: FSMContext)
 async def analytics_period_callback(callback: CallbackQuery, state: FSMContext) -> None:
     """Handle period selection for analytics"""
     try:
+        # Type narrowing: filter ensures callback.data is not None
+        if not callback.data:
+            await callback.answer("❌ Invalid callback data", show_alert=True)
+            return
+
         # Extract period from callback data
         period = callback.data.split(":", 1)[1] if ":" in callback.data else "7"
 
@@ -233,9 +245,11 @@ async def analytics_period_callback(callback: CallbackQuery, state: FSMContext) 
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Period selection error: {e}")
@@ -274,9 +288,11 @@ async def analytics_overview_callback(callback: CallbackQuery, state: FSMContext
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Overview analytics error: {e}")
@@ -316,9 +332,11 @@ async def analytics_growth_callback(callback: CallbackQuery, state: FSMContext) 
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Growth analytics error: {e}")
@@ -359,9 +377,11 @@ async def analytics_reach_callback(callback: CallbackQuery, state: FSMContext) -
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Reach analytics error: {e}")
@@ -398,9 +418,11 @@ async def analytics_back_callback(callback: CallbackQuery, state: FSMContext) ->
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Analytics back navigation error: {e}")
@@ -428,9 +450,11 @@ async def analytics_channels_callback(callback: CallbackQuery, state: FSMContext
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message and isinstance(callback.message, Message):
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
+        else:
+            await callback.answer("✅ Selection complete", show_alert=False)
 
     except Exception as e:
         logger.error(f"Channel navigation error: {e}")

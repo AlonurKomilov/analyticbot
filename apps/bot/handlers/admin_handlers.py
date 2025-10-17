@@ -11,17 +11,19 @@ from aiogram_i18n import I18nContext
 
 logger = logging.getLogger(__name__)
 
-from apps.bot.services.analytics_service import AnalyticsService
+# ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
 from apps.bot.services.guard_service import GuardService
+
 # Metrics now via DI (Phase 3.4)
 from apps.di import get_metrics_collector_service
+from apps.shared.factory import get_repository_factory
+from apps.shared.protocols import ChartServiceProtocol
+from core.repositories.interfaces import ChannelRepository
+from core.services.bot.analytics import AnalyticsService
 from core.services.bot.metrics.models import TelegramUpdateMetric
 
 # New scheduling services (Clean Architecture)
 from core.services.bot.scheduling import ScheduleManager
-from apps.shared.factory import get_repository_factory
-from apps.shared.protocols import ChartServiceProtocol
-from core.repositories.interfaces import ChannelRepository
 
 router = Router()
 
@@ -200,7 +202,7 @@ async def list_words_handler(
     try:
         words = await guard_service.list_words(channel_id)
     except Exception:
-        words = []
+        words = set()
     if not words:
         await message.reply(i18n.get("guard-list-empty"))
         return
@@ -282,10 +284,7 @@ async def handle_schedule(
             try:
                 # Use new ScheduleManager (Clean Architecture)
                 await schedule_manager.create_scheduled_post(
-                    user_id=uid,
-                    channel_id=channel_id,
-                    post_text=text,
-                    schedule_time=aware_dt
+                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
                 )
             except Exception as e:
                 logger.warning(f"Failed to schedule post: {e}")

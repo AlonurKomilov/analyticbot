@@ -5,7 +5,9 @@ Implements ImageProcessorPort using PIL/Pillow library.
 """
 
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
+
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -64,8 +66,8 @@ class PILImageProcessor:
             output_path = self._temp_dir / output_filename
 
             # Open and convert image to RGBA for transparency support
-            image = Image.open(input_path)
-            if image.mode != "RGBA":
+            image: Any = Image.open(input_path)
+            if getattr(image, "mode", None) != "RGBA":
                 image = image.convert("RGBA")
 
             # Create transparent overlay for watermark
@@ -74,7 +76,7 @@ class PILImageProcessor:
 
             # Load font
             try:
-                font = ImageFont.truetype(
+                font: Any = ImageFont.truetype(
                     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
                     font_size,
                 )
@@ -92,8 +94,8 @@ class PILImageProcessor:
                 position_hint=position,
                 image_width=image.width,
                 image_height=image.height,
-                text_width=text_width,
-                text_height=text_height,
+                text_width=int(text_width),
+                text_height=int(text_height),
             )
 
             # Add shadow if enabled

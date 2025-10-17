@@ -109,8 +109,8 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
         from apps.api.middleware.auth import get_current_user_id_from_request
         from apps.api.services.initial_data_service import get_real_initial_data
 
-        user_id = await get_current_user_id_from_request(request)
-        return await get_real_initial_data(user_id)
+        user_id_int = await get_current_user_id_from_request(request)
+        return await get_real_initial_data(user_id_int)
 
     except Exception as e:
         # ✅ FIXED: Comprehensive error handling with auditing
@@ -118,12 +118,13 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
         from apps.demo.services.demo_service import demo_service
 
         # Extract user_id if possible
+        fallback_user_id: int | None = None
         try:
             from apps.api.middleware.auth import get_current_user_id_from_request
 
-            user_id = await get_current_user_id_from_request(request)
+            fallback_user_id = await get_current_user_id_from_request(request)
         except:
-            user_id = None
+            fallback_user_id = None
 
         # Check if this is a demo user who can have fallback
         is_demo_user = demo_service.is_demo_request(request)
@@ -134,7 +135,7 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
                 request=request,
                 error=e,
                 operation="get_initial_data",
-                user_id=user_id,
+                user_id=fallback_user_id,
                 allow_demo_fallback=is_demo_user,  # Only allow fallback for demo users
             )
         except Exception:
@@ -143,14 +144,14 @@ async def get_initial_data_service(request: Request) -> InitialDataResponse:
 
         # If we reach here, it means demo fallback is allowed
         if is_demo_user:
-            logger.info(f"✅ Demo fallback activated for demo user {user_id}")
+            logger.info(f"✅ Demo fallback activated for demo user {fallback_user_id}")
             demo_data_service = await get_demo_data_service()
-            demo_data = await demo_data_service.get_initial_data(user_id or 1, "limited")
+            demo_data = await demo_data_service.get_initial_data(fallback_user_id or 1, "limited")
 
             # Convert to proper model for fallback case
             from apps.shared.models.twa import Channel, User
 
-            demo_user = User(id=user_id or 1, username="demo_user_fallback")
+            demo_user = User(id=fallback_user_id or 1, username="demo_user_fallback")
             demo_channels = [Channel(id=1, title="Demo Channel", username="@demo")]
 
             return InitialDataResponse(user=demo_user, channels=demo_channels, scheduled_posts=[])

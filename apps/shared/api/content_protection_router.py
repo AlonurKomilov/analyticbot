@@ -1,7 +1,7 @@
 """
 Content Protection API Endpoints
-FastAPI routes for Phase 2.3: Content Protection & Premium Features
-Moved from apps/api/ to apps/bot/api/ for better architecture cohesion
+FastAPI routes for Phase 3.3: Content Protection with Clean Architecture
+Uses Protocol-based services from Phase 3.3 refactoring
 """
 
 import tempfile
@@ -14,22 +14,32 @@ from fastapi.responses import FileResponse
 # ✅ MIGRATED: Use auth middleware directly (not deps wrapper)
 from apps.api.middleware.auth import get_current_user
 from apps.bot.models.content_protection import (
-    ContentProtectionResponse,
+    ContentProtectionResponse as APIContentProtectionResponse,
+)
+from apps.bot.models.content_protection import (
     CustomEmojiRequest,
     CustomEmojiResponse,
     PremiumFeatureLimits,
     ProtectionLevel,
     UserTier,
 )
-from apps.bot.services.content_protection import (
-    ContentProtectionService,
-    PremiumEmojiService,
+from apps.bot.services.premium_emoji_service import PremiumEmojiService
+
+# ✅ Phase 3.3: Use DI container to get services
+from apps.di import get_content_protection_service
+from core.services.bot.content.content_protection_service import ContentProtectionService
+
+# ✅ Phase 3.3: Use new domain models
+from core.services.bot.content.models import (
+    ContentProtectionRequest,
+    WatermarkConfig,
+    WatermarkPosition,
 )
 
 router = APIRouter(prefix="/content", tags=["Content Protection"])
 
 
-@router.post("/watermark/image", response_model=ContentProtectionResponse)
+@router.post("/watermark/image", response_model=APIContentProtectionResponse)
 async def add_image_watermark(
     file: UploadFile = File(...),
     watermark_text: str = Form(...),
@@ -39,8 +49,9 @@ async def add_image_watermark(
     color: str = Form("white"),
     add_shadow: bool = Form(True),
     current_user: dict = Depends(get_current_user),
+    content_protection: ContentProtectionService = Depends(get_content_protection_service),
 ):
-    """Add watermark to uploaded image"""
+    """Add watermark to uploaded image (Phase 3.3 API)"""
 
     # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
@@ -63,7 +74,8 @@ async def add_image_watermark(
     # Check monthly usage limits
     await _check_feature_usage("watermarks", current_user["id"], user_tier)
 
-    content_protection = ContentProtectionService()
+    # Initialize tmp_path to None for cleanup safety
+    tmp_path: Path | None = None
 
     try:
         # Save uploaded file temporarily
@@ -74,56 +86,67 @@ async def add_image_watermark(
             tmp_file.write(content)
             tmp_path = Path(tmp_file.name)
 
-        # Create watermark config
-        from apps.bot.services.content_protection import WatermarkConfig
-        from typing import Literal
+        # Map position string to enum
+        try:
+            watermark_position = WatermarkPosition(position)
+        except ValueError:
+            watermark_position = WatermarkPosition.BOTTOM_RIGHT
 
-        # Validate position parameter
-        valid_positions = ["top-left", "top-right", "bottom-left", "bottom-right", "center"]
-        if position not in valid_positions:
-            position = "bottom-right"  # Default fallback
-
+        # Create watermark config using Phase 3.3 domain model
         watermark_config = WatermarkConfig(
             text=watermark_text,
-            position=position,  # type: ignore[arg-type]  # Validated above
+            position=watermark_position,
             opacity=opacity,
             font_size=font_size,
             color=color,
             shadow=add_shadow,
         )
 
-        # Apply watermark
-        import time
+        # Create protection request
+        protection_request = ContentProtectionRequest(
+            content_type="image",
+            file_path=str(tmp_path),
+            watermark_config=watermark_config,
+            user_id=current_user["id"],
+        )
 
-        start_time = time.time()
-
-        watermarked_path = await content_protection.add_image_watermark(tmp_path, watermark_config)
-
-        processing_time = int((time.time() - start_time) * 1000)
+        # Apply watermark using Phase 3.3 service
+        protection_response = await content_protection.protect_content(protection_request)
 
         # Update usage tracking
         await _increment_feature_usage("watermarks", current_user["id"])
 
-        return ContentProtectionResponse(
-            protection_id=f"img_{watermarked_path.stem}",
-            protected=True,
-            protection_level=ProtectionLevel.PREMIUM
-            if user_tier != UserTier.FREE
-            else ProtectionLevel.BASIC,
-            watermarked_file_url=f"/api/v1/content-protection/files/{watermarked_path.name}",
-            processing_time_ms=processing_time,
-            timestamp=datetime.utcnow(),
-        )
+        # Convert domain response to API response
+        if (
+            protection_response.watermark_result
+            and protection_response.watermark_result.output_path
+        ):
+            watermarked_path = Path(protection_response.watermark_result.output_path)
+            return APIContentProtectionResponse(
+                protection_id=f"img_{watermarked_path.stem}",
+                protected=True,
+                protection_level=ProtectionLevel.PREMIUM
+                if user_tier != UserTier.FREE
+                else ProtectionLevel.BASIC,
+                watermarked_file_url=f"/api/v1/content-protection/files/{watermarked_path.name}",
+                processing_time_ms=int(protection_response.total_processing_time_ms),
+                timestamp=datetime.utcnow(),
+            )
+        else:
+            error_msg = protection_response.error or "Watermarking failed"
+            raise HTTPException(status_code=500, detail=error_msg)
 
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid configuration: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Watermarking failed: {str(e)}")
     finally:
         # Cleanup temporary input file
-        if tmp_path.exists():
+        if tmp_path and tmp_path.exists():
             tmp_path.unlink()
 
 
-@router.post("/watermark/video", response_model=ContentProtectionResponse)
+@router.post("/watermark/video", response_model=APIContentProtectionResponse)
 async def add_video_watermark(
     file: UploadFile = File(...),
     watermark_text: str = Form(...),
@@ -131,8 +154,9 @@ async def add_video_watermark(
     opacity: float = Form(0.7),
     font_size: int = Form(24),
     current_user: dict = Depends(get_current_user),
+    content_protection: ContentProtectionService = Depends(get_content_protection_service),
 ):
-    """Add watermark to uploaded video (requires FFmpeg)"""
+    """Add watermark to uploaded video (Phase 3.3 API, requires FFmpeg)"""
 
     # Validate file type
     if not file.content_type or not file.content_type.startswith("video/"):
@@ -156,7 +180,8 @@ async def add_video_watermark(
     # Check monthly usage limits
     await _check_feature_usage("watermarks", current_user["id"], user_tier)
 
-    content_protection = ContentProtectionService()
+    # Initialize tmp_path to None for cleanup safety
+    tmp_path: Path | None = None
 
     try:
         # Save uploaded file temporarily
@@ -165,44 +190,59 @@ async def add_video_watermark(
             tmp_file.write(content)
             tmp_path = Path(tmp_file.name)
 
-        # Create watermark config
-        from apps.bot.services.content_protection import WatermarkConfig
+        # Map position string to enum
+        try:
+            watermark_position = WatermarkPosition(position)
+        except ValueError:
+            watermark_position = WatermarkPosition.BOTTOM_RIGHT
 
-        # Validate position parameter
-        valid_positions = ["top-left", "top-right", "bottom-left", "bottom-right", "center"]
-        if position not in valid_positions:
-            position = "bottom-right"  # Default fallback
-
+        # Create watermark config using Phase 3.3 domain model
         watermark_config = WatermarkConfig(
-            text=watermark_text, position=position, opacity=opacity, font_size=font_size  # type: ignore[arg-type]  # Validated above
+            text=watermark_text,
+            position=watermark_position,
+            opacity=opacity,
+            font_size=font_size,
         )
 
-        # Apply watermark (this may take longer for videos)
-        import time
+        # Create protection request
+        protection_request = ContentProtectionRequest(
+            content_type="video",
+            file_path=str(tmp_path),
+            watermark_config=watermark_config,
+            user_id=current_user["id"],
+        )
 
-        start_time = time.time()
-
-        watermarked_path = await content_protection.add_video_watermark(tmp_path, watermark_config)
-
-        processing_time = int((time.time() - start_time) * 1000)
+        # Apply watermark using Phase 3.3 service
+        protection_response = await content_protection.protect_content(protection_request)
 
         # Update usage tracking
         await _increment_feature_usage("watermarks", current_user["id"])
 
-        return ContentProtectionResponse(
-            protection_id=f"vid_{watermarked_path.stem}",
-            protected=True,
-            protection_level=ProtectionLevel.PREMIUM,
-            watermarked_file_url=f"/api/v1/content-protection/files/{watermarked_path.name}",
-            processing_time_ms=processing_time,
-            timestamp=datetime.utcnow(),
-        )
+        # Convert domain response to API response
+        if (
+            protection_response.watermark_result
+            and protection_response.watermark_result.output_path
+        ):
+            watermarked_path = Path(protection_response.watermark_result.output_path)
+            return APIContentProtectionResponse(
+                protection_id=f"vid_{watermarked_path.stem}",
+                protected=True,
+                protection_level=ProtectionLevel.PREMIUM,
+                watermarked_file_url=f"/api/v1/content-protection/files/{watermarked_path.name}",
+                processing_time_ms=int(protection_response.total_processing_time_ms),
+                timestamp=datetime.utcnow(),
+            )
+        else:
+            error_msg = protection_response.error or "Video watermarking failed"
+            raise HTTPException(status_code=500, detail=error_msg)
 
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid configuration: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Video watermarking failed: {str(e)}")
     finally:
         # Cleanup temporary input file
-        if tmp_path.exists():
+        if tmp_path and tmp_path.exists():
             tmp_path.unlink()
 
 
@@ -252,25 +292,34 @@ async def format_custom_emoji_message(
 
 @router.post("/theft-detection")
 async def detect_content_theft(
-    content: str = Form(...), current_user: dict = Depends(get_current_user)
+    content: str = Form(...),
+    current_user: dict = Depends(get_current_user),
+    content_protection: ContentProtectionService = Depends(get_content_protection_service),
 ):
-    """Analyze content for potential theft indicators"""
+    """Analyze content for potential theft indicators (Phase 3.3 API)"""
 
     user_tier = await _get_user_tier(current_user["id"])
 
     # Check monthly usage limits
     await _check_feature_usage("theft_scans", current_user["id"], user_tier)
 
-    content_protection = ContentProtectionService()
-
     try:
-        theft_analysis = await content_protection.detect_content_theft(content)
+        # Create protection request for text content theft detection
+        protection_request = ContentProtectionRequest(
+            content_type="text",
+            text_content=content,
+            user_id=current_user["id"],
+            check_theft=True,
+        )
+
+        # Analyze using Phase 3.3 service
+        protection_response = await content_protection.protect_content(protection_request)
 
         # Update usage tracking
         await _increment_feature_usage("theft_scans", current_user["id"])
 
         return {
-            "analysis": theft_analysis,
+            "analysis": protection_response.theft_analysis,
             "scanned_at": datetime.utcnow(),
             "user_tier": user_tier.value,
         }
@@ -281,10 +330,11 @@ async def detect_content_theft(
 
 @router.get("/files/{filename}")
 async def download_protected_file(filename: str, current_user: dict = Depends(get_current_user)):
-    """Download watermarked file"""
+    """Download watermarked file (Phase 3.3 compatible)"""
 
-    content_protection = ContentProtectionService()
-    file_path = content_protection.temp_dir / filename
+    # Use default temp directory (consistent with adapters)
+    temp_dir = Path("/tmp/analyticbot_media")
+    file_path = temp_dir / filename
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found or expired")

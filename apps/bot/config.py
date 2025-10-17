@@ -20,12 +20,26 @@ class BotSettings:
     def BOT_TOKEN(self):
         return _main_settings.BOT_TOKEN
 
-    @property
-    def ADMIN_IDS(self) -> list[int]:
+    @staticmethod
+    def get_admin_ids() -> list[int]:
+        """Get list of admin user IDs from environment"""
         try:
-            admin_ids_str = _main_settings.ADMIN_IDS or ""
-            if admin_ids_str:
-                return [int(id.strip()) for id in admin_ids_str.split(",") if id.strip()]
+            admin_ids = _main_settings.ADMIN_IDS
+            if not admin_ids:
+                return []
+
+            # Handle both list and string types with explicit type annotation
+            admin_ids_value: list[int] | str = admin_ids
+
+            if isinstance(admin_ids_value, list):
+                return admin_ids_value
+
+            # Handle string type (comma-separated IDs)
+            if isinstance(admin_ids_value, str):
+                # Split and filter out empty strings, then convert to int
+                parts: list[str] = admin_ids_value.split(",")
+                return [int(id_str.strip()) for id_str in parts if id_str.strip()]
+
             return []
         except (ValueError, AttributeError):
             logger.warning("Invalid ADMIN_IDS format, returning empty list")

@@ -4,7 +4,6 @@ Follows Clean Architecture: Apps layer adapter wrapping Core business logic
 """
 
 import logging
-from typing import Any
 
 from aiogram import Bot
 
@@ -36,6 +35,7 @@ class BotAnalyticsAdapter:
             telegram_port: Optional telegram port (overrides bot)
         """
         self.batch_processor = batch_processor
+        self.telegram_port: TelegramBotPort | None
 
         # Setup telegram port
         if telegram_port:

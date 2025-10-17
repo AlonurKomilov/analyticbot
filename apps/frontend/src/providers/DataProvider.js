@@ -48,6 +48,15 @@ export class DataProvider {
     }
 
     /**
+     * Get analytics overview for a channel
+     * @param {string} channelId - The channel identifier
+     * @returns {Promise<Object>} Analytics overview data
+     */
+    async getAnalyticsOverview(channelId) {
+        throw new Error('getAnalyticsOverview() must be implemented by subclass');
+    }
+
+    /**
      * Get recommendations data
      * @param {string} channelId - The channel identifier
      * @returns {Promise<Object>} Recommendations data
@@ -182,6 +191,13 @@ export class ApiDataProvider extends DataProvider {
         const numericChannelId = this._convertChannelId(channelId);
         // Use the advanced analytics recommendations endpoint
         const response = await this._makeRequest(`/api/v2/analytics/advanced/recommendations/${numericChannelId}`);
+        return response;
+    }
+
+    async getAnalyticsOverview(channelId) {
+        const numericChannelId = this._convertChannelId(channelId);
+        // Use the analytics overview endpoint
+        const response = await this._makeRequest(`/analytics/channels/${numericChannelId}/overview`);
         return response;
     }
 

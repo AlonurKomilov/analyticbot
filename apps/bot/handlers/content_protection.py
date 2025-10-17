@@ -1,11 +1,17 @@
 """
 Bot Handlers for Phase 2.3: Content Protection & Premium Features
 Telegram bot handlers for content protection features
+
+NOTE: This is LEGACY code from Phase 2. Should be migrated to use clean architecture
+services from core/services/bot/content/ in Phase 4.
+See: docs/CONTENT_PROTECTION_LEGACY_ANALYSIS.md
 """
 
 from pathlib import Path
+from typing import cast
 
-from aiogram import F, Router
+# Import Bot from aiogram main module (not from .types)
+from aiogram import Bot, F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -15,16 +21,35 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
+    User,
 )
 
 from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
 
 # TODO Phase 3.5: PremiumEmojiService should be moved to dedicated premium features module
-# Currently in apps/bot/services/premium_emoji_service.py as temporary location
+# Currently in apps/bot.services/premium_emoji_service.py as temporary location
 from apps.bot.services.premium_emoji_service import PremiumEmojiService
 
 router = Router()
 premium_emoji_service = PremiumEmojiService()
+
+
+# Type guard helpers for aiogram handlers
+def validate_callback_state(callback: CallbackQuery) -> bool:
+    """Validate callback has required attributes (message, bot, from_user)"""
+    from aiogram.types import Message as MessageType
+
+    return bool(
+        callback.message
+        and isinstance(callback.message, MessageType)
+        and callback.bot
+        and callback.from_user
+    )
+
+
+def validate_message_state(message: Message) -> bool:
+    """Validate message has required attributes (bot, from_user)"""
+    return bool(message.bot and message.from_user)
 
 
 # FSM States for content protection workflows
@@ -39,6 +64,10 @@ class ContentProtectionStates(StatesGroup):
 @router.message(Command("protect"))
 async def cmd_protect_content(message: Message, state: FSMContext):
     """Main content protection command"""
+
+    # Guard clause: Ensure user exists (required by Telegram API in message handlers)
+    if not message.from_user:
+        return
 
     user_tier = await _get_user_subscription_tier(message.from_user.id)
     limits = PremiumFeatureLimits.get_limits_for_tier(user_tier)
@@ -112,6 +141,18 @@ Choose a protection feature below:
 async def handle_image_watermark_start(callback: CallbackQuery, state: FSMContext):
     """Start image watermarking process"""
 
+    # Guard clauses for type safety
+    if not callback.from_user or not callback.message:
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing: cast after validation for Pylance
+    assert callback.message is not None
+    assert callback.bot is not None
+    assert callback.from_user is not None
+    msg = cast(Message, callback.message)
+    bot = cast(Bot, callback.bot)
+
     user_tier = await _get_user_subscription_tier(callback.from_user.id)
 
     # Check usage limits
@@ -119,7 +160,7 @@ async def handle_image_watermark_start(callback: CallbackQuery, state: FSMContex
         await callback.answer("Monthly watermark limit reached! Upgrade for more.", show_alert=True)
         return
 
-    await callback.message.edit_text(
+    await msg.edit_text(
         "🖼️ **Image Watermarking**\n\n"
         "Please send me an image file that you want to watermark.\n"
         "Supported formats: JPG, PNG, WebP",
@@ -134,6 +175,11 @@ async def handle_image_watermark_start(callback: CallbackQuery, state: FSMContex
 async def handle_watermark_image_upload(message: Message, state: FSMContext):
     """Process uploaded image for watermarking"""
 
+    # Guard clauses for type safety
+    if not message.from_user or not message.bot:
+        await message.answer("❌ Invalid message state") if message else None
+        return
+
     if not message.photo and not message.document:
         await message.answer("❌ Please send an image file.")
         return
@@ -142,18 +188,26 @@ async def handle_watermark_image_upload(message: Message, state: FSMContext):
     limits = PremiumFeatureLimits.get_limits_for_tier(user_tier)
 
     # Get file info
+    file_size: int | None = None
     if message.photo:
         file_info = await message.bot.get_file(message.photo[-1].file_id)
         file_size = message.photo[-1].file_size
     else:
+        # Type guard for document
+        if not message.document or not message.document.mime_type:
+            await message.answer("❌ Invalid document.")
+            return
         if not message.document.mime_type.startswith("image/"):
             await message.answer("❌ Please send an image file.")
+            return
+        if not message.document.file_id or not message.document.file_size:
+            await message.answer("❌ Invalid file data.")
             return
         file_info = await message.bot.get_file(message.document.file_id)
         file_size = message.document.file_size
 
-    # Check file size limit
-    if file_size > limits.max_file_size_mb * 1024 * 1024:
+    # Check file size limit (after guard, file_size is guaranteed to be int)
+    if file_size and file_size > limits.max_file_size_mb * 1024 * 1024:
         await message.answer(
             f"❌ File too large! Maximum size for {user_tier.value} tier: {limits.max_file_size_mb}MB"
         )
@@ -196,13 +250,26 @@ async def handle_watermark_image_upload(message: Message, state: FSMContext):
 async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
     """Apply default watermark"""
 
-    await callback.message.edit_text("🔄 **Processing watermark...**\nThis may take a moment.")
+    # Guard clauses for type safety
+    if not callback.message or not callback.bot:
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing: cast after validation
+    assert callback.message is not None
+    assert callback.bot is not None
+    assert callback.from_user is not None
+    msg = cast(Message, callback.message)
+    bot = cast(Bot, callback.bot)
+
+    await msg.edit_text("🔄 **Processing watermark...**\nThis may take a moment.")
 
     try:
         state_data = await state.get_data()
 
         # Download file
-        file = await callback.bot.download_file(state_data["file_path"])
+        file = await bot.download_file(state_data["file_path"])
+        assert file is not None
 
         # Create temporary file
         import tempfile
@@ -222,8 +289,9 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
         watermark_service = container.bot.watermark_service()
 
         # Create default watermark config
+        bot_info = await bot.get_me()
         watermark_config = WatermarkConfig(
-            text=f"@{callback.bot.username or 'AnalyticBot'}",
+            text=f"@{bot_info.username or 'AnalyticBot'}",
             position=WatermarkPosition.BOTTOM_RIGHT,
             opacity=0.7,
             font_size=24,
@@ -235,7 +303,7 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
         result = await watermark_service.add_watermark(str(tmp_path), watermark_config)
 
         if not result.success:
-            await callback.message.edit_text(f"❌ **Watermarking failed:**\n{result.error}")
+            await msg.edit_text(f"❌ **Watermarking failed:**\n{result.error}")
             return
 
         watermarked_path = Path(result.output_path)
@@ -261,7 +329,7 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
         watermarked_path.unlink(missing_ok=True)
 
     except Exception as e:
-        await callback.message.edit_text(f"❌ **Watermarking failed:**\n{str(e)}")
+        await msg.edit_text(f"❌ **Watermarking failed:**\n{str(e)}")
 
     finally:
         await state.clear()
@@ -274,7 +342,14 @@ async def handle_default_watermark(callback: CallbackQuery, state: FSMContext):
 async def handle_custom_watermark_text(callback: CallbackQuery, state: FSMContext):
     """Request custom watermark text"""
 
-    await callback.message.edit_text(
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
+
+    await msg.edit_text(
         "✏️ **Custom Watermark**\n\n"
         "Enter your custom watermark text:\n"
         "(Keep it short for best results)"
@@ -288,6 +363,18 @@ async def handle_custom_watermark_text(callback: CallbackQuery, state: FSMContex
 async def handle_custom_watermark_apply(message: Message, state: FSMContext):
     """Apply custom watermark text"""
 
+    if not validate_message_state(message):
+        await message.answer("❌ Invalid message state") if message else None
+        return
+
+    # Type narrowing
+    bot = cast(Bot, message.bot)
+    user = cast(User, message.from_user)
+
+    if not message.text:
+        await message.answer("❌ Please send text for watermark")
+        return
+
     watermark_text = message.text.strip()
     if len(watermark_text) > 50:
         await message.answer("❌ Watermark text too long! Please keep it under 50 characters.")
@@ -299,7 +386,8 @@ async def handle_custom_watermark_apply(message: Message, state: FSMContext):
         state_data = await state.get_data()
 
         # Download file
-        file = await message.bot.download_file(state_data["file_path"])
+        file = await bot.download_file(state_data["file_path"])
+        assert file is not None, "Failed to download file"
 
         # Create temporary file
         import tempfile
@@ -352,7 +440,7 @@ async def handle_custom_watermark_apply(message: Message, state: FSMContext):
             )
 
         # Update usage tracking
-        await _increment_feature_usage("watermarks", message.from_user.id)
+        await _increment_feature_usage("watermarks", user.id)
 
         # Cleanup
         tmp_path.unlink(missing_ok=True)
@@ -369,6 +457,13 @@ async def handle_custom_watermark_apply(message: Message, state: FSMContext):
 async def handle_custom_emoji_start(callback: CallbackQuery, state: FSMContext):
     """Start custom emoji formatting"""
 
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
+
     user_tier = await _get_user_subscription_tier(callback.from_user.id)
 
     if user_tier == UserTier.FREE:
@@ -383,7 +478,7 @@ async def handle_custom_emoji_start(callback: CallbackQuery, state: FSMContext):
     available_emojis = await premium_emoji_service.get_premium_emoji_pack(user_tier.value)
     emoji_preview = " ".join(available_emojis[:10]) if available_emojis else "🎭✨🎨"
 
-    await callback.message.edit_text(
+    await msg.edit_text(
         f"🎭 **Custom Emoji Formatting**\n\n"
         f"**Your Tier:** {user_tier.value.title()}\n"
         f"**Available Emojis:** {len(available_emojis)}\n"
@@ -400,11 +495,18 @@ async def handle_custom_emoji_start(callback: CallbackQuery, state: FSMContext):
 async def handle_custom_emoji_format(message: Message, state: FSMContext):
     """Format message with custom emojis"""
 
+    if not validate_message_state(message):
+        await message.answer("❌ Invalid message state") if message else None
+        return
+
+    # Type narrowing
+    user = cast(User, message.from_user)
+
     if not message.text:
         await message.answer("❌ Please send a text message to format.")
         return
 
-    user_tier = await _get_user_subscription_tier(message.from_user.id)
+    user_tier = await _get_user_subscription_tier(user.id)
 
     try:
         # Format message with premium emojis
@@ -417,7 +519,7 @@ async def handle_custom_emoji_format(message: Message, state: FSMContext):
         )
 
         # Update usage tracking
-        await _increment_feature_usage("custom_emojis", message.from_user.id)
+        await _increment_feature_usage("custom_emojis", user.id)
 
     except Exception as e:
         await message.answer(f"❌ **Emoji formatting failed:**\n{str(e)}")
@@ -430,13 +532,20 @@ async def handle_custom_emoji_format(message: Message, state: FSMContext):
 async def handle_theft_check_start(callback: CallbackQuery, state: FSMContext):
     """Start content theft detection"""
 
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
+
     user_tier = await _get_user_subscription_tier(callback.from_user.id)
 
     if not await _check_feature_usage_limit("theft_scans", callback.from_user.id, user_tier):
         await callback.answer("Monthly theft scan limit reached!", show_alert=True)
         return
 
-    await callback.message.edit_text(
+    await msg.edit_text(
         "🔍 **Content Theft Detection**\n\n"
         "Send me the content you want to analyze for potential theft indicators.\n"
         "This can be text from posts, comments, or messages.",
@@ -450,6 +559,13 @@ async def handle_theft_check_start(callback: CallbackQuery, state: FSMContext):
 @router.message(ContentProtectionStates.waiting_for_theft_check_content)
 async def handle_theft_check_analyze(message: Message, state: FSMContext):
     """Analyze content for theft indicators"""
+
+    if not validate_message_state(message):
+        await message.answer("❌ Invalid message state") if message else None
+        return
+
+    # Type narrowing
+    user = cast(User, message.from_user)
 
     if not message.text:
         await message.answer("❌ Please send text content to analyze.")
@@ -499,7 +615,7 @@ async def handle_theft_check_analyze(message: Message, state: FSMContext):
         await message.answer(result_text, parse_mode="Markdown")
 
         # Update usage tracking
-        await _increment_feature_usage("theft_scans", message.from_user.id)
+        await _increment_feature_usage("theft_scans", user.id)
 
     except Exception as e:
         await message.answer(f"❌ **Analysis failed:**\n{str(e)}")
@@ -511,6 +627,13 @@ async def handle_theft_check_analyze(message: Message, state: FSMContext):
 @router.callback_query(F.data == "protect_usage_stats")
 async def handle_usage_stats(callback: CallbackQuery):
     """Show user's feature usage statistics"""
+
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
 
     user_tier = await _get_user_subscription_tier(callback.from_user.id)
     limits = PremiumFeatureLimits.get_limits_for_tier(user_tier)
@@ -547,15 +670,20 @@ async def handle_usage_stats(callback: CallbackQuery):
             ]
         )
 
-    await callback.message.edit_text(
-        usage_text, reply_markup=upgrade_keyboard, parse_mode="Markdown"
-    )
+    await msg.edit_text(usage_text, reply_markup=upgrade_keyboard, parse_mode="Markdown")
     await callback.answer()
 
 
 @router.callback_query(F.data == "upgrade_premium")
 async def handle_upgrade_premium(callback: CallbackQuery):
     """Handle premium upgrade request"""
+
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
 
     # Integration with Phase 2.2 Payment System
     upgrade_keyboard = InlineKeyboardMarkup(
@@ -569,7 +697,7 @@ async def handle_upgrade_premium(callback: CallbackQuery):
         ]
     )
 
-    await callback.message.edit_text(
+    await msg.edit_text(
         "⭐ **Upgrade to Premium**\n\n"
         "Unlock advanced content protection features:\n"
         "• Unlimited watermarking\n"
@@ -588,8 +716,16 @@ async def handle_upgrade_premium(callback: CallbackQuery):
 @router.callback_query(F.data.startswith("watermark_cancel"))
 async def handle_cancel(callback: CallbackQuery, state: FSMContext):
     """Cancel current operation"""
+
+    if not validate_callback_state(callback):
+        await callback.answer("❌ Invalid callback state")
+        return
+
+    # Type narrowing
+    msg = cast(Message, callback.message)
+
     await state.clear()
-    await callback.message.edit_text("❌ **Operation cancelled.**")
+    await msg.edit_text("❌ **Operation cancelled.**")
     await callback.answer()
 
 

@@ -33,9 +33,9 @@ class BotMLFacadeService:
 
     def __init__(self, ml_coordinator: MLCoordinatorService):
         self.ml_coordinator = ml_coordinator
-        self.response_cache = {}
+        self.response_cache: dict[str, Any] = {}
         self.cache_ttl = timedelta(minutes=5)
-        self.last_requests = {}  # For rate limiting
+        self.last_requests: dict[str, datetime] = {}  # For rate limiting
 
         logger.info("🤖 Bot ML Facade initialized")
 
@@ -153,7 +153,10 @@ class BotMLFacadeService:
             return cached
 
         try:
-            prediction_data = {"channel_id": channel_id, "prediction_horizon": prediction_days}
+            prediction_data: dict[str, Any] = {
+                "channel_id": channel_id,
+                "prediction_horizon": prediction_days,
+            }
 
             if content_preview:
                 prediction_data["content_preview"] = content_preview
@@ -301,12 +304,17 @@ class BotMLFacadeService:
                 channel_id, focus_area="general"
             )
 
-            insights, engagement, optimization = await asyncio.gather(
+            results = await asyncio.gather(
                 insights_task, engagement_task, optimization_task, return_exceptions=True
             )
 
+            # Type narrowing: extract results with explicit types
+            insights: dict[str, Any] | BaseException = results[0]
+            engagement: dict[str, Any] | BaseException = results[1]
+            optimization: dict[str, Any] | BaseException = results[2]
+
             # Combine results
-            summary = {
+            summary: dict[str, Any] = {
                 "channel_id": channel_id,
                 "generated_at": datetime.utcnow().isoformat(),
                 "summary_type": "quick_overview",

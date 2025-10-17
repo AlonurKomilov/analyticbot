@@ -3,7 +3,7 @@
  * This provider should never be imported by production code
  */
 
-import { DataProvider } from '../providers/DataProvider.js';
+import { DataProvider } from '../../providers/DataProvider.js';
 
 /**
  * Mock Data Provider Implementation
@@ -72,6 +72,21 @@ export class MockDataProvider extends DataProvider {
         return {
             channelId,
             recommendations: this.mockData.bestTimeRecommendations,
+            generatedAt: new Date().toISOString()
+        };
+    }
+
+    async getAnalyticsOverview(channelId) {
+        await this._simulateDelay();
+
+        return {
+            channelId,
+            summary: {
+                totalPosts: 245,
+                totalViews: 125678,
+                avgEngagement: 4.2,
+                growthRate: 12.5
+            },
             generatedAt: new Date().toISOString()
         };
     }

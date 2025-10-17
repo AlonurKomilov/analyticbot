@@ -10,20 +10,11 @@ from asyncpg.pool import Pool as AsyncPGPool
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from apps.bot.config import settings as app_settings
-from apps.bot.services import (
-    AnalyticsService,
-    GuardService,
-    # SchedulerService - ARCHIVED: Replaced with ScheduleManager, PostDeliveryService, DeliveryStatusTracker
-    SubscriptionService,
-)
-
-# New scheduling services (Clean Architecture)
-from core.services.bot.scheduling import (
-    DeliveryStatusTracker,
-    PostDeliveryService,
-    ScheduleManager,
-)
 from apps.bot.utils.safe_i18n_core import SafeFluentRuntimeCore
+
+# ARCHIVED 2025-10-16: AnalyticsService moved to core.services.bot.analytics
+# Use AnalyticsCoordinator or specific analytics services from core layer
+# New scheduling services (Clean Architecture)
 
 # Use repository factory instead of direct infra imports
 # from infra.db.repositories import AsyncpgAnalyticsRepository as AnalyticsRepository
@@ -96,20 +87,22 @@ class DependencyMiddleware(BaseMiddleware):
         if session_pool is not None:
             data["session_pool"] = session_pool
         if session_pool is not None:
-            for key, dep in [
-                # Repositories - temporarily simplified for clean architecture
-                # TODO: Implement proper repository injection via factory
-                # ("user_repo", UserRepository),
-                # ("plan_repo", PlanRepository),
-                # ("channel_repo", ChannelRepository),
-                # ("scheduler_repo", SchedulerRepository),
-                # ("analytics_repo", AnalyticsRepository),
-            ]:
-                try:
-                    if hasattr(self.container, "resolve"):
-                        data[key] = self.container.resolve(dep)
-                except Exception:
-                    continue
+            # Repositories - temporarily simplified for clean architecture
+            # TODO: Implement proper repository injection via factory
+            # The loop is commented out as repositories are not injected via container
+            # for key, dep in [
+            #     ("user_repo", UserRepository),
+            #     ("plan_repo", PlanRepository),
+            #     ("channel_repo", ChannelRepository),
+            #     ("scheduler_repo", SchedulerRepository),
+            #     ("analytics_repo", AnalyticsRepository),
+            # ]:
+            #     try:
+            #         if hasattr(self.container, "resolve"):
+            #             data[key] = self.container.resolve(dep)
+            #     except Exception:
+            #         continue
+            pass
         else:
             data["user_repo"] = _NullUserRepository()
             data["plan_repo"] = _Null()
@@ -138,6 +131,7 @@ class DependencyMiddleware(BaseMiddleware):
 
             except Exception as e:
                 import logging
+
                 logger = logging.getLogger(__name__)
                 logger.warning(f"Failed to inject services: {e}")
                 # Fallback to nulls

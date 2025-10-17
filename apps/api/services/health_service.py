@@ -22,6 +22,7 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from types import ModuleType
 from typing import Any
 
 # Framework-specific imports (now allowed in apps layer)
@@ -29,6 +30,8 @@ import asyncpg
 import httpx
 import psutil
 
+# Redis is optional dependency
+redis: ModuleType | None
 try:
     import redis.asyncio as redis
 except ImportError:
@@ -287,7 +290,7 @@ class HealthMonitoringService:
             status=overall_status,
             timestamp=datetime.now(),
             uptime_seconds=int((datetime.now() - self.start_time).total_seconds()),
-            version=self.version,
+            version=self.version or "unknown",
             environment=self.environment,
             service_name=self.service_name,
             components=components,
@@ -393,7 +396,7 @@ class HealthMonitoringService:
         unhealthy_checks = sum(1 for h in recent_history if h.status == HealthStatus.UNHEALTHY)
 
         # Component-specific trends
-        component_stats = {}
+        component_stats: dict[str, dict[str, Any]] = {}
         for health in recent_history:
             for comp_name, component in health.components.items():
                 if comp_name not in component_stats:
@@ -478,10 +481,11 @@ async def check_redis_health(
             # Format: redis://host:port/db
             try:
                 from urllib.parse import urlparse
+
                 parsed = urlparse(redis_url)
                 host = parsed.hostname or host
                 port = parsed.port or port
-                db = int(parsed.path.lstrip('/')) if parsed.path and parsed.path != '/' else db
+                db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else db
             except Exception as e:
                 logger.warning(f"Failed to parse REDIS_URL, using defaults: {e}")
 

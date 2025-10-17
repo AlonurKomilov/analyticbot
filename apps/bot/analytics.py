@@ -38,20 +38,22 @@ RELOCATED IMPLEMENTATION: Analytics modules properly organized in bot structure
 
 from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
 from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
-from apps.bot.services.dashboard_service import (
+from apps.bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
+
+# ✅ Phase 3.5: Migrated to core services (2025-10-15)
+from core.services.bot.dashboard.dashboard_service import (
     DashboardFactory,
     RealTimeDashboard,
     VisualizationEngine,
     create_dashboard,
     create_visualization_engine,
 )
-from apps.bot.services.reporting_service import (
+from core.services.bot.reporting.reporting_service import (
     AutomatedReportingSystem,
     ReportTemplate,
     create_report_template,
     create_reporting_system,
 )
-from apps.bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
 
 __all__ = [
     "create_ml_coordinator",
@@ -96,7 +98,8 @@ async def analytics_health_check():
         health_results["ml_coordinator"] = await ml_coordinator.health_check()
         bot_ml_facade = create_bot_ml_facade()
         health_results["bot_ml_facade"] = await bot_ml_facade.get_service_status()
-        from apps.bot.services.dashboard_service import health_check as dashboard_health
+        # ✅ Phase 3.5: Updated to core service
+        from core.services.bot.dashboard.dashboard_service import health_check as dashboard_health
 
         health_results["dashboard_service"] = await dashboard_health()
         reporting_system = await create_reporting_system()

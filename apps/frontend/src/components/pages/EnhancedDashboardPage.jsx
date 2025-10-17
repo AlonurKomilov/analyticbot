@@ -105,8 +105,8 @@ const EnhancedDashboardPage = () => {
 
   const getDataSourceStatus = () => {
     return {
-      label: dataSource === 'real' ? 'Live Data' : 'Demo Mode',
-      color: dataSource === 'real' ? 'success' : 'warning'
+      label: dataSource === 'api' ? 'Real API' : 'Demo Mode',
+      color: dataSource === 'api' ? 'success' : 'warning'
     };
   };
 

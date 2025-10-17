@@ -55,6 +55,8 @@ class AnalyticsAdapterFactory:
             return cls._adapters[config_key]
 
         # Create new adapter based on provider type
+        adapter: AnalyticsAdapter
+
         if provider == AnalyticsProvider.TELEGRAM:
             # Extract Telegram-specific configuration
             bot_token = kwargs.get("bot_token") or getattr(settings, "TELEGRAM_BOT_TOKEN", None)

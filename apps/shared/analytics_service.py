@@ -11,21 +11,24 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import urljoin
 
-try:
-    import httpx
-except ImportError:
-    httpx = None
+# Optional httpx module (may not be installed in minimal environments)
+httpx: Any = None
 
+
+# BaseModel may come from pydantic or be a lightweight fallback
+BaseModel: type
 try:
     from pydantic import BaseModel as PydanticBaseModel
 
     BaseModel = PydanticBaseModel
 except ImportError:
     # Fallback BaseModel if pydantic not available
-    class BaseModel:
+    class _FallbackBaseModel:
         def __init__(self, **kwargs):
             for key, value in kwargs.items():
                 setattr(self, key, value)
+
+    BaseModel = _FallbackBaseModel
 
 
 logger = logging.getLogger(__name__)

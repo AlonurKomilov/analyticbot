@@ -87,8 +87,8 @@ class MockAnalyticsAdapter(AnalyticsAdapter):
             variation = random.uniform(-0.3, 0.3)
             daily_value = int(current_value * (1 + variation))
 
-            # Apply trend
-            current_value *= 1 + trend / 100
+            # Apply trend (keep as int)
+            current_value = int(current_value * (1 + trend / 100))
 
             # Ensure minimum values
             daily_value = max(daily_value, int(base_value * 0.1))

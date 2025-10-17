@@ -24,6 +24,7 @@ DEPRECATION SCHEDULE:
 
 See: LEGACY_VS_NEW_DI_COMPARISON.md for complete migration guide
 """
+
 import logging
 import warnings
 from typing import Any
@@ -35,7 +36,7 @@ warnings.warn(
     "See LEGACY_VS_NEW_DI_COMPARISON.md for migration guide. "
     "This module will be removed on 2025-10-21.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
 from dependency_injector import containers, providers
@@ -149,6 +150,7 @@ def _create_guard_service(user_repository=None, **kwargs):
         redis_client = None
         try:
             from apps.shared.di import get_container
+
             container = get_container()
             # Try to get redis client if available
             # Most installations won't have Redis, so we'll use in-memory fallback
@@ -228,12 +230,13 @@ def _create_payment_microservices(payment_repository=None, **kwargs):
 
 
 def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """Create scheduler service with flexible dependency resolution"""
+    """Create scheduler service with flexible dependency resolution (LEGACY - use ScheduleManager)"""
     try:
-        from apps.bot.services.scheduler_service import SchedulerService
+        # UPDATED: Use new clean architecture service
+        from core.services.bot.scheduling import ScheduleManager
 
         return _create_service_with_deps(
-            SchedulerService,
+            ScheduleManager,
             schedule_repository=schedule_repository,
             scheduler_repo=schedule_repository,
             bot=bot,
@@ -246,7 +249,8 @@ def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
 def _create_analytics_service(analytics_repository=None, channel_repository=None, **kwargs):
     """Create analytics service with flexible dependency resolution"""
     try:
-        from apps.bot.services.analytics_service import AnalyticsService
+        # ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+        from core.services.bot.analytics import AnalyticsService
 
         return _create_service_with_deps(
             AnalyticsService,
@@ -259,12 +263,13 @@ def _create_analytics_service(analytics_repository=None, channel_repository=None
 
 
 def _create_alerting_service(bot=None, user_repository=None, **kwargs):
-    """Create alerting service with flexible dependency resolution"""
+    """Create alerting service with flexible dependency resolution (LEGACY - use AlertEventManager)"""
     try:
-        from apps.bot.services.alerting_service import AlertingService
+        # UPDATED: Use new clean architecture service
+        from core.services.bot.alerts import AlertEventManager
 
         return _create_service_with_deps(
-            AlertingService, bot=bot, user_repository=user_repository, **kwargs
+            AlertEventManager, bot=bot, user_repository=user_repository, **kwargs
         )
     except ImportError:
         return None
@@ -274,7 +279,8 @@ def _create_channel_management_service(channel_repository=None, bot=None, **kwar
     """Create channel management service (using analytics service as fallback)"""
     try:
         # Try to use analytics service as channel manager
-        from apps.bot.services.analytics_service import AnalyticsService
+        # ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+        from core.services.bot.analytics import AnalyticsService
 
         return _create_service_with_deps(
             AnalyticsService,
@@ -329,6 +335,9 @@ def _create_ml_service(service_name: str) -> Any | None:
                 return None
     except (ImportError, Exception):
         return None
+
+    # Fallback for unknown service names
+    return None
 
 
 def _create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:

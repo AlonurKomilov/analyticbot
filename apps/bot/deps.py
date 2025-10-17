@@ -10,6 +10,10 @@ import asyncpg
 
 from config import settings
 from core.services import DeliveryService, ScheduleService
+from infra.db.repositories.schedule_repository import (
+    AsyncpgDeliveryRepository,
+    AsyncpgScheduleRepository,
+)
 
 
 class BotContainer:
@@ -56,10 +60,15 @@ class BotContainer:
         if self._use_sqlite:
             return self._sqlite_conn
         else:
+            if self._db_pool is None:
+                raise RuntimeError("Database pool not initialized")
             return self._db_pool.acquire()
 
-    async def get_schedule_service(self) -> ScheduleService:
-        """Get schedule service with repository dependencies"""
+    async def get_schedule_service(self) -> ScheduleService | None:
+        """Get schedule service with repository dependencies
+
+        Returns None if SQLite is used (not yet implemented for SQLite)
+        """
         if not self._schedule_service:
             if self._use_sqlite:
                 # For SQLite, we'll need to create a different repository implementation
@@ -69,14 +78,19 @@ class BotContainer:
             else:
                 # For bot, we'll use a connection per service instance
                 # In production, consider connection pooling per request
+                if self._db_pool is None:
+                    raise RuntimeError("Database pool not initialized. Call init_db_pool() first.")
                 connection = await self._db_pool.acquire()
                 schedule_repo = AsyncpgScheduleRepository(connection)
                 self._schedule_service = ScheduleService(schedule_repo)
 
         return self._schedule_service
 
-    async def get_delivery_service(self) -> DeliveryService:
-        """Get delivery service with repository dependencies"""
+    async def get_delivery_service(self) -> DeliveryService | None:
+        """Get delivery service with repository dependencies
+
+        Returns None if SQLite is used (not yet implemented for SQLite)
+        """
         if not self._delivery_service:
             if self._use_sqlite:
                 # For SQLite, we'll need to create a different repository implementation
@@ -84,6 +98,8 @@ class BotContainer:
                 print("Warning: SQLite repositories not implemented yet")
                 return None
             else:
+                if self._db_pool is None:
+                    raise RuntimeError("Database pool not initialized. Call init_db_pool() first.")
                 connection = await self._db_pool.acquire()
                 schedule_repo = AsyncpgScheduleRepository(connection)
                 delivery_repo = AsyncpgDeliveryRepository(connection)

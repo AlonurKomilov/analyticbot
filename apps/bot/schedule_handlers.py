@@ -28,6 +28,17 @@ async def handle_schedule_command(message: Message):
         # Get service via DI
         schedule_service = await bot_container.get_schedule_service()
 
+        # Validate required objects
+        if schedule_service is None:
+            await message.answer("❌ Schedule service is not available")
+            return
+        if message.from_user is None:
+            await message.answer("❌ User information is not available")
+            return
+        if message.text is None:
+            await message.answer("❌ Message text is required")
+            return
+
         # Parse simple command format: /schedule <title> | <content> | <minutes_from_now>
         args = message.text.split(" ", 1)
         if len(args) < 2:
@@ -75,7 +86,8 @@ async def handle_schedule_command(message: Message):
 
     except ValueError as e:
         await message.answer(f"❌ Error: {str(e)}")
-        logger.warning(f"Schedule error for user {message.from_user.id}: {e}")
+        user_id = message.from_user.id if message.from_user else "unknown"
+        logger.warning(f"Schedule error for user {user_id}: {e}")
     except Exception as e:
         await message.answer("❌ An error occurred while scheduling the post")
         logger.error(f"Unexpected error in schedule handler: {e}", exc_info=True)
@@ -89,6 +101,14 @@ async def handle_my_posts_command(message: Message):
     """
     try:
         schedule_service = await bot_container.get_schedule_service()
+
+        # Validate required objects
+        if schedule_service is None:
+            await message.answer("❌ Schedule service is not available")
+            return
+        if message.from_user is None:
+            await message.answer("❌ User information is not available")
+            return
 
         # Get user's posts
         posts = await schedule_service.get_user_posts(user_id=str(message.from_user.id), limit=10)
@@ -128,6 +148,14 @@ async def handle_cancel_command(message: Message):
     Cancel a scheduled post by ID
     """
     try:
+        # Validate required objects
+        if message.text is None:
+            await message.answer("❌ Message text is required")
+            return
+        if message.from_user is None:
+            await message.answer("❌ User information is not available")
+            return
+
         args = message.text.split(" ", 1)
         if len(args) < 2:
             await message.answer("Usage: /cancel <post_id>")
@@ -144,6 +172,10 @@ async def handle_cancel_command(message: Message):
             return
 
         schedule_service = await bot_container.get_schedule_service()
+
+        if schedule_service is None:
+            await message.answer("❌ Schedule service is not available")
+            return
 
         # Check if post exists and belongs to user
         post = await schedule_service.get_post(post_id)
@@ -179,6 +211,10 @@ async def handle_stats_command(message: Message):
     """
     try:
         delivery_service = await bot_container.get_delivery_service()
+
+        if delivery_service is None:
+            await message.answer("❌ Delivery service is not available")
+            return
 
         # Get stats for this chat
         stats = await delivery_service.get_delivery_stats(channel_id=str(message.chat.id))

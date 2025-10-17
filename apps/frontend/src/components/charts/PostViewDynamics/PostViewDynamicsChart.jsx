@@ -31,8 +31,9 @@ const PostViewDynamicsChart = () => {
     const [autoRefresh] = useState(true);
     const [refreshInterval, setRefreshInterval] = useState('30s');
 
-    // Get store methods
-    const { fetchPostDynamics } = useAppStore();
+    // Get store methods - USE SELECTOR to prevent unnecessary re-renders!
+    // This is the ROOT CAUSE: subscribing to entire store caused infinite loop
+    const fetchPostDynamics = useAppStore((state) => state.fetchPostDynamics);
 
     // Use refs to track state and prevent unnecessary re-renders
     const isMountedRef = useRef(true);
@@ -40,6 +41,12 @@ const PostViewDynamicsChart = () => {
     const timeRangeRef = useRef(timeRange);
     const isLoadingRef = useRef(false);
     const dataVersionRef = useRef(0);
+    const fetchPostDynamicsRef = useRef(fetchPostDynamics);
+
+    // Keep fetchPostDynamics ref up to date
+    useEffect(() => {
+        fetchPostDynamicsRef.current = fetchPostDynamics;
+    }, [fetchPostDynamics]);
 
     // Stable load data function with debouncing
     const loadData = useCallback(async () => {
@@ -53,7 +60,7 @@ const PostViewDynamicsChart = () => {
 
         try {
             const currentTimeRange = timeRangeRef.current;
-            const result = await fetchPostDynamics(currentTimeRange);
+            const result = await fetchPostDynamicsRef.current(currentTimeRange);
 
             if (isMountedRef.current) {
                 dataRef.current = result || [];
@@ -71,10 +78,11 @@ const PostViewDynamicsChart = () => {
             }
             isLoadingRef.current = false;
         }
-    }, []); // Remove dependencies to prevent infinite loops
+    }, []); // Empty deps - using refs for stability to prevent infinite loops
 
     // Handle time range changes with debouncing
-    const handleTimeRangeChange = useCallback((newTimeRange) => {
+    const handleTimeRangeChange = useCallback((event) => {
+        const newTimeRange = event.target.value;
         timeRangeRef.current = newTimeRange;
         setTimeRange(newTimeRange);
 
@@ -84,7 +92,13 @@ const PostViewDynamicsChart = () => {
                 loadData();
             }
         }, 300);
-    }, [loadData]);
+    }, []); // Removed loadData dependency - using stable callback via refs
+
+    // Handle refresh interval changes
+    const handleRefreshIntervalChange = useCallback((event) => {
+        const newInterval = event.target.value;
+        setRefreshInterval(newInterval);
+    }, []);
 
     // Initial load (only once)
     useEffect(() => {
@@ -138,7 +152,7 @@ const PostViewDynamicsChart = () => {
             }
             clearInterval(interval);
         };
-    }, [autoRefresh, refreshInterval, loadData]);
+    }, [autoRefresh, refreshInterval]); // Removed loadData from dependencies - using refs for stability
 
     // Cleanup when component unmounts
     useEffect(() => {
@@ -235,7 +249,7 @@ const PostViewDynamicsChart = () => {
                     timeRange={timeRange}
                     refreshInterval={refreshInterval}
                     onTimeRangeChange={handleTimeRangeChange}
-                    onRefreshIntervalChange={setRefreshInterval}
+                    onRefreshIntervalChange={handleRefreshIntervalChange}
                 />
             </Box>
 
@@ -265,13 +279,16 @@ const PostViewDynamicsChart = () => {
     );
 };
 
+// Memoize the component to prevent unnecessary re-renders from parent
+const MemoizedPostViewDynamicsChart = React.memo(PostViewDynamicsChart);
+
 /**
  * PostViewDynamicsChartWrapper - Error boundary wrapper component
  */
 export default function PostViewDynamicsChartWrapper() {
     return (
         <ChartErrorBoundary>
-            <PostViewDynamicsChart />
+            <MemoizedPostViewDynamicsChart />
         </ChartErrorBoundary>
     );
 }

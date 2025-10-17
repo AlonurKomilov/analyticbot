@@ -9,6 +9,12 @@ import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import theme from './theme.js'; // Use our enhanced theme
 import { initializeApp, showDataSourceNotification } from './utils/initializeApp.js';
 
+// Suppress React DevTools suggestion in development
+if (import.meta.env.DEV) {
+  // This is expected in development - no action needed
+  // React DevTools is optional and can be installed from Chrome/Firefox extension stores
+}
+
 // Initialize Sentry (only if DSN is provided)
 if (import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({

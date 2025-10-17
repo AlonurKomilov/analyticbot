@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from apps.shared.protocols import (
     AnalyticsRepository,
@@ -93,6 +93,9 @@ class RepositoryFactory:
             from infra.db.repositories.user_repository import AsyncpgUserRepository
 
             connection = await self._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_user_repository()
             return AsyncpgUserRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgUserRepository, using fallback")
@@ -104,6 +107,9 @@ class RepositoryFactory:
             from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 
             connection = await self._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_channel_repository()
             return AsyncpgChannelRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgChannelRepository, using fallback")
@@ -115,7 +121,11 @@ class RepositoryFactory:
             from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 
             connection = await self._get_connection()
-            return AsyncpgAnalyticsRepository(connection)
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_analytics_repository()
+            # Cast to AnalyticsRepository protocol for typing
+            return cast(AnalyticsRepository, AsyncpgAnalyticsRepository(connection))
         except ImportError:
             logger.warning("Failed to import AsyncpgAnalyticsRepository, using fallback")
             return self._create_memory_analytics_repository()
@@ -126,6 +136,9 @@ class RepositoryFactory:
             from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 
             connection = await self._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_admin_repository()
             return AsyncpgAdminRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgAdminRepository, using fallback")
@@ -137,6 +150,9 @@ class RepositoryFactory:
             from infra.db.repositories.alert_repository import AsyncpgAlertSubscriptionRepository
 
             connection = await self._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_alert_subscription_repository()
             return AsyncpgAlertSubscriptionRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgAlertSubscriptionRepository, using fallback")
@@ -148,12 +164,15 @@ class RepositoryFactory:
             from infra.db.repositories.alert_repository import AsyncpgAlertSentRepository
 
             connection = await self._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return self._create_memory_alert_sent_repository()
             return AsyncpgAlertSentRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgAlertSentRepository, using fallback")
             return self._create_memory_alert_sent_repository()
 
-    async def create_shared_reports_repository(self):
+    async def create_shared_reports_repository(self) -> SharedReportsRepository:
         """Create shared reports repository without direct infra import"""
         try:
             from infra.db.repositories.shared_reports_repository import (
@@ -161,68 +180,82 @@ class RepositoryFactory:
             )
 
             connection = await self._get_connection()
-            return AsyncPgSharedReportsRepository(connection)
+            if connection is None:
+                logger.warning("Database connection not available, using fallback")
+                return cast(
+                    SharedReportsRepository, self._create_memory_shared_reports_repository()
+                )
+            # AsyncPgSharedReportsRepository doesn't take connection parameter
+            return AsyncPgSharedReportsRepository()
         except ImportError:
             logger.warning("Failed to import AsyncPgSharedReportsRepository, using fallback")
-            return self._create_memory_shared_reports_repository()
+            return cast(SharedReportsRepository, self._create_memory_shared_reports_repository())
 
     def _create_memory_user_repository(self) -> UserRepository:
         """Fallback memory-based user repository"""
 
         # Create a simple fallback implementation
         class FallbackUserRepository:
-            async def get_user_by_id(self, user_id: str):
+            async def get_user_by_id(self, user_id: int) -> dict | None:
                 return None
 
-            async def get_user_by_email(self, email: str):
+            async def get_user_by_email(self, email: str) -> dict | None:
                 return None
 
-            async def create_user(self, **kwargs):
-                return None
+            async def create_user(self, user_data: dict) -> dict:
+                return {}
 
-            async def update_user(self, user_id: str, **kwargs):
-                return None
+            async def update_user(self, user_id: int, **kwargs) -> bool:
+                return False
 
-        return FallbackUserRepository()
+        return cast(UserRepository, FallbackUserRepository())
 
     def _create_memory_channel_repository(self) -> ChannelRepository:
         """Fallback memory-based channel repository"""
 
         class FallbackChannelRepository:
-            async def get_channel_by_id(self, channel_id: str):
+            async def get_channel_by_id(self, channel_id: int) -> dict | None:
                 return None
 
-            async def get_channels_by_user(self, user_id: str):
+            async def get_channels_by_user(self, user_id: int) -> list[dict]:
                 return []
 
-            async def create_channel(self, **kwargs):
+            async def create_channel(
+                self, channel_id: int, user_id: int, title: str, username: str | None = None
+            ) -> None:
                 return None
 
-            async def update_channel(self, channel_id: str, **kwargs):
+            async def update_channel(self, channel_id: int, **kwargs) -> None:
                 return None
 
-        return FallbackChannelRepository()
+        return cast(ChannelRepository, FallbackChannelRepository())
 
     def _create_memory_analytics_repository(self) -> AnalyticsRepository:
         """Fallback memory-based analytics repository"""
 
         class FallbackAnalyticsRepository:
-            async def get_analytics_data(self, **kwargs):
+            async def get_analytics_data(self, **kwargs) -> Any:
                 return {}
 
-        return FallbackAnalyticsRepository()
+        return cast(AnalyticsRepository, FallbackAnalyticsRepository())
 
     def _create_memory_admin_repository(self) -> AdminRepository:
         """Fallback memory-based admin repository"""
 
         class FallbackAdminRepository:
-            async def get_admin_by_id(self, admin_id: str):
+            async def get_admin_by_id(self, admin_id: int) -> dict | None:
                 return None
 
-            async def create_admin(self, **kwargs):
+            async def get_admin_by_username(self, username: str) -> dict | None:
                 return None
 
-        return FallbackAdminRepository()
+            async def create_admin(self, admin_data: dict) -> dict:
+                return {}
+
+            async def update_admin(self, admin_id: int, **updates) -> bool:
+                return False
+
+        return cast(AdminRepository, FallbackAdminRepository())
 
     def _create_memory_alert_subscription_repository(self) -> AlertSubscriptionRepository:
         """Fallback memory-based alert subscription repository"""
@@ -373,7 +406,11 @@ class LazyRepositoryFactory:
         try:
             from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 
-            connection = await self._get_connection()
+            factory = await self._ensure_factory()
+            connection = await factory._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available")
+                return None
             return AsyncpgPaymentRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgPaymentRepository, using fallback")
@@ -384,7 +421,11 @@ class LazyRepositoryFactory:
         try:
             from infra.db.repositories.plan_repository import AsyncpgPlanRepository
 
-            connection = await self._get_connection()
+            factory = await self._ensure_factory()
+            connection = await factory._get_connection()
+            if connection is None:
+                logger.warning("Database connection not available")
+                return None
             return AsyncpgPlanRepository(connection)
         except ImportError:
             logger.warning("Failed to import AsyncpgPlanRepository, using fallback")

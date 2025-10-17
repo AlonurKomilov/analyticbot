@@ -9,8 +9,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
-from apps.di import cleanup_container as cleanup_db_pool
 from apps.api.routers.admin_channels_router import router as admin_channels_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router
@@ -29,6 +27,9 @@ from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
+
+# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
+from apps.di import cleanup_container as cleanup_db_pool
 from apps.shared.api.content_protection_router import router as content_protection_router
 from apps.shared.api.payment_router import router as payment_router
 
@@ -58,6 +59,18 @@ async def lifespan(app: FastAPI):
         logger.info(
             f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections"
         )
+
+        # ✅ PHASE 2: Initialize Redis cache for performance optimization
+        try:
+            from core.common.cache_decorator import init_cache_redis
+
+            # Use Redis DB 1 for caching (DB 0 is for Celery)
+            redis_url = settings.REDIS_URL.replace("/0", "/1")
+            await init_cache_redis(redis_url)
+            logger.info("✅ Redis cache initialized for endpoint caching")
+        except Exception as cache_error:
+            logger.warning(f"⚠️ Redis cache initialization failed: {cache_error}")
+            logger.info("Application will continue without caching")
 
     except Exception as e:
         logger.error(f"Startup initialization failed: {e}")

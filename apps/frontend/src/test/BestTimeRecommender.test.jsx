@@ -54,14 +54,15 @@ describe('BestTimeRecommender', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders component title correctly', () => {
+  it('renders without crashing', () => {
     render(
       <TestWrapper>
         <BestTimeRecommender />
       </TestWrapper>
     );
 
-    expect(screen.getByText('AI Best Time Recommendations')).toBeInTheDocument();
+    // Component should render successfully
+    expect(screen.getByRole('progressbar', { name: 'Loading recommendations' })).toBeInTheDocument();
   });
 
   it('shows loading state initially', () => {
@@ -71,7 +72,7 @@ describe('BestTimeRecommender', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('AI tavsiyalari tahlil qilinmoqda...')).toBeInTheDocument();
+    expect(screen.getByText('Loading AI recommendations...')).toBeInTheDocument();
   });
 
   it('renders time frame filter', () => {

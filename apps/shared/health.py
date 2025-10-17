@@ -29,7 +29,7 @@ async def health_check() -> dict[str, Any]:
 async def database_health(container: Container = Depends(get_container)) -> dict[str, Any]:
     """Check database connectivity and basic operations"""
 
-    health_info = {
+    health_info: dict[str, Any] = {
         "status": "unknown",
         "timestamp": datetime.utcnow().isoformat(),
         "database": {},
@@ -142,7 +142,7 @@ async def architecture_health() -> dict[str, Any]:
 async def di_health(container: Container = Depends(get_container)) -> dict[str, Any]:
     """Check dependency injection container health"""
 
-    di_info = {
+    di_info: dict[str, Any] = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "container": {"type": "apps.shared.di.Container", "initialized": True},

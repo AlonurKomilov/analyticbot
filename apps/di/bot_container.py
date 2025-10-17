@@ -36,10 +36,7 @@ def _create_bot_client(settings: BotSettings) -> Any | None:
         from aiogram.client.default import DefaultBotProperties
         from aiogram.enums import ParseMode
 
-        return _AioBot(
-            token=token,
-            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-        )
+        return _AioBot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     except ImportError:
         return None
 
@@ -60,9 +57,7 @@ def _create_dispatcher():
 # ============================================================================
 
 
-async def _create_bot_analytics_adapter(
-    core_analytics_service=None, bot=None, **kwargs
-):
+async def _create_bot_analytics_adapter(core_analytics_service=None, bot=None, **kwargs):
     """Create bot analytics adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
@@ -71,9 +66,7 @@ async def _create_bot_analytics_adapter(
         if core_analytics_service is None:
             return None
 
-        return BotAnalyticsAdapter(
-            batch_processor=core_analytics_service, bot=bot
-        )
+        return BotAnalyticsAdapter(batch_processor=core_analytics_service, bot=bot)
     except ImportError as e:
         logger.warning(f"Bot analytics adapter not available: {e}")
         return None
@@ -246,7 +239,7 @@ def _create_post_delivery_service(
     markup_builder=None,
     schedule_repository=None,
     analytics_repository=None,
-    **kwargs
+    **kwargs,
 ):
     """Create post delivery service (orchestrates message delivery)"""
     try:
@@ -276,11 +269,7 @@ def _create_post_delivery_service(
         return None
 
 
-def _create_delivery_status_tracker(
-    schedule_repository=None,
-    analytics_repository=None,
-    **kwargs
-):
+def _create_delivery_status_tracker(schedule_repository=None, analytics_repository=None, **kwargs):
     """Create delivery status tracker (manages post lifecycle)"""
     try:
         from core.services.bot.scheduling import DeliveryStatusTracker
@@ -359,9 +348,10 @@ def _create_telegram_alert_notifier(bot=None, **kwargs):
 
 
 def _create_analytics_service(analytics_repository=None, channel_repository=None, **kwargs):
-    """Create analytics service (legacy bot service)"""
+    """Create analytics service (core service)"""
     try:
-        from apps.bot.services.analytics_service import AnalyticsService
+        # ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+        from core.services.bot.analytics import AnalyticsService
 
         return _create_service_with_deps(
             AnalyticsService,
@@ -393,7 +383,8 @@ def _create_alerting_service(bot=None, user_repository=None, **kwargs):
 def _create_channel_management_service(channel_repository=None, bot=None, **kwargs):
     """Create channel management service"""
     try:
-        from apps.bot.services.analytics_service import AnalyticsService
+        # ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+        from core.services.bot.analytics import AnalyticsService
 
         return _create_service_with_deps(
             AnalyticsService,
@@ -415,6 +406,7 @@ def _create_image_processor(**kwargs):
     """Create PIL image processor adapter"""
     try:
         from apps.bot.adapters.content import PILImageProcessor
+
         return PILImageProcessor()
     except ImportError as e:
         logger.warning(f"PIL image processor not available: {e}")
@@ -425,6 +417,7 @@ def _create_video_processor(**kwargs):
     """Create FFmpeg video processor adapter"""
     try:
         from apps.bot.adapters.content import FFmpegVideoProcessor
+
         return FFmpegVideoProcessor()
     except ImportError as e:
         logger.warning(f"FFmpeg video processor not available: {e}")
@@ -435,6 +428,7 @@ def _create_file_system_adapter(**kwargs):
     """Create local file system adapter"""
     try:
         from apps.bot.adapters.content import LocalFileSystem
+
         return LocalFileSystem()
     except ImportError as e:
         logger.warning(f"File system adapter not available: {e}")
@@ -445,6 +439,7 @@ def _create_subscription_adapter(**kwargs):
     """Create subscription service adapter (stub for now)"""
     try:
         from apps.bot.adapters.content import StubSubscriptionService
+
         return StubSubscriptionService()
     except ImportError as e:
         logger.warning(f"Subscription adapter not available: {e}")
@@ -455,6 +450,7 @@ def _create_theft_detector(**kwargs):
     """Create content theft detector service"""
     try:
         from core.services.bot.content.theft_detector import TheftDetectorService
+
         return TheftDetectorService()
     except ImportError as e:
         logger.warning(f"Theft detector service not available: {e}")
@@ -465,8 +461,9 @@ def _create_watermark_service(image_processor=None, file_system=None, **kwargs):
     """Create watermark service for images"""
     try:
         from typing import cast
+
+        from core.services.bot.content.protocols import FileSystemPort, ImageProcessorPort
         from core.services.bot.content.watermark_service import WatermarkService
-        from core.services.bot.content.protocols import ImageProcessorPort, FileSystemPort
 
         if not all([image_processor, file_system]):
             logger.warning("Cannot create watermark service: missing dependencies")
@@ -485,8 +482,9 @@ def _create_video_watermark_service(video_processor=None, file_system=None, **kw
     """Create watermark service for videos"""
     try:
         from typing import cast
+
+        from core.services.bot.content.protocols import FileSystemPort, VideoProcessorPort
         from core.services.bot.content.video_watermark_service import VideoWatermarkService
-        from core.services.bot.content.protocols import VideoProcessorPort, FileSystemPort
 
         if not all([video_processor, file_system]):
             logger.warning("Cannot create video watermark service: missing dependencies")
@@ -507,18 +505,27 @@ def _create_content_protection_service(
     theft_detector=None,
     subscription_adapter=None,
     file_system=None,
-    **kwargs
+    **kwargs,
 ):
     """Create content protection orchestrator service"""
     try:
         from typing import cast
-        from core.services.bot.content.content_protection_service import ContentProtectionService
-        from core.services.bot.content.watermark_service import WatermarkService
-        from core.services.bot.content.video_watermark_service import VideoWatermarkService
-        from core.services.bot.content.theft_detector import TheftDetectorService
-        from core.services.bot.content.protocols import SubscriptionPort, FileSystemPort
 
-        if not all([watermark_service, video_watermark_service, theft_detector, subscription_adapter, file_system]):
+        from core.services.bot.content.content_protection_service import ContentProtectionService
+        from core.services.bot.content.protocols import FileSystemPort, SubscriptionPort
+        from core.services.bot.content.theft_detector import TheftDetectorService
+        from core.services.bot.content.video_watermark_service import VideoWatermarkService
+        from core.services.bot.content.watermark_service import WatermarkService
+
+        if not all(
+            [
+                watermark_service,
+                video_watermark_service,
+                theft_detector,
+                subscription_adapter,
+                file_system,
+            ]
+        ):
             logger.warning("Cannot create content protection service: missing dependencies")
             return None
 
@@ -543,6 +550,7 @@ def _create_prometheus_metrics_adapter(**kwargs):
     """Create Prometheus metrics adapter"""
     try:
         from apps.bot.adapters.metrics import PrometheusMetricsAdapter
+
         return PrometheusMetricsAdapter()
     except ImportError as e:
         logger.warning(f"Prometheus metrics adapter not available: {e}")
@@ -553,6 +561,7 @@ def _create_system_metrics_adapter(**kwargs):
     """Create system metrics adapter (PSUtil)"""
     try:
         from apps.bot.adapters.metrics import PSUtilSystemMetricsAdapter
+
         return PSUtilSystemMetricsAdapter()
     except ImportError as e:
         logger.warning(f"System metrics adapter not available: {e}")
@@ -564,13 +573,11 @@ def _create_system_metrics_adapter(**kwargs):
 # ============================================================================
 
 
-def _create_metrics_collector_service(
-    metrics_backend=None,
-    **kwargs
-):
+def _create_metrics_collector_service(metrics_backend=None, **kwargs):
     """Create metrics collector service"""
     try:
         from typing import cast
+
         from core.services.bot.metrics import MetricsCollectorService
         from core.services.bot.metrics.protocols import MetricsBackendPort
 
@@ -578,9 +585,7 @@ def _create_metrics_collector_service(
             logger.warning("Cannot create metrics collector service: missing backend")
             return None
 
-        service = MetricsCollectorService(
-            metrics_backend=cast(MetricsBackendPort, metrics_backend)
-        )
+        service = MetricsCollectorService(metrics_backend=cast(MetricsBackendPort, metrics_backend))
         service.initialize_metrics()
         return service
     except ImportError as e:
@@ -588,13 +593,11 @@ def _create_metrics_collector_service(
         return None
 
 
-def _create_business_metrics_service(
-    metrics_backend=None,
-    **kwargs
-):
+def _create_business_metrics_service(metrics_backend=None, **kwargs):
     """Create business metrics service"""
     try:
         from typing import cast
+
         from core.services.bot.metrics import BusinessMetricsService
         from core.services.bot.metrics.protocols import MetricsBackendPort
 
@@ -602,9 +605,7 @@ def _create_business_metrics_service(
             logger.warning("Cannot create business metrics service: missing backend")
             return None
 
-        service = BusinessMetricsService(
-            metrics_backend=cast(MetricsBackendPort, metrics_backend)
-        )
+        service = BusinessMetricsService(metrics_backend=cast(MetricsBackendPort, metrics_backend))
         service.initialize_metrics()
         return service
     except ImportError as e:
@@ -612,13 +613,11 @@ def _create_business_metrics_service(
         return None
 
 
-def _create_health_check_service(
-    metrics_backend=None,
-    **kwargs
-):
+def _create_health_check_service(metrics_backend=None, **kwargs):
     """Create health check service"""
     try:
         from typing import cast
+
         from core.services.bot.metrics import HealthCheckService
         from core.services.bot.metrics.protocols import MetricsBackendPort
 
@@ -626,9 +625,7 @@ def _create_health_check_service(
             logger.warning("Cannot create health check service: missing backend")
             return None
 
-        service = HealthCheckService(
-            metrics_backend=cast(MetricsBackendPort, metrics_backend)
-        )
+        service = HealthCheckService(metrics_backend=cast(MetricsBackendPort, metrics_backend))
         service.initialize_metrics()
         return service
     except ImportError as e:
@@ -636,14 +633,11 @@ def _create_health_check_service(
         return None
 
 
-def _create_system_metrics_service(
-    metrics_backend=None,
-    system_monitor=None,
-    **kwargs
-):
+def _create_system_metrics_service(metrics_backend=None, system_monitor=None, **kwargs):
     """Create system metrics service"""
     try:
         from typing import cast
+
         from core.services.bot.metrics import SystemMetricsService
         from core.services.bot.metrics.protocols import MetricsBackendPort, SystemMetricsPort
 
@@ -753,10 +747,7 @@ class BotContainer(containers.DeclarativeContainer):
     # BOT SERVICES
     # ============================================================================
 
-    guard_service = providers.Factory(
-        _create_guard_service,
-        user_repository=database.user_repo
-    )
+    guard_service = providers.Factory(_create_guard_service, user_repository=database.user_repo)
 
     subscription_service = providers.Factory(
         _create_subscription_service,
@@ -765,8 +756,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     payment_orchestrator = providers.Factory(
-        _create_payment_orchestrator,
-        payment_repository=database.payment_repo
+        _create_payment_orchestrator, payment_repository=database.payment_repo
     )
 
     scheduler_service = providers.Factory(
@@ -880,9 +870,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     alerting_service = providers.Factory(
-        _create_alerting_service,
-        bot=bot_client,
-        user_repository=database.user_repo
+        _create_alerting_service, bot=bot_client, user_repository=database.user_repo
     )
 
     channel_management_service = providers.Factory(

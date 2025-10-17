@@ -92,7 +92,8 @@ class HealthService(HealthMonitoringService):
 
                 for i, (name, _) in enumerate(health_checks):
                     result = results[i]
-                    if isinstance(result, Exception):
+                    if isinstance(result, BaseException):
+                        # Handle any exception (Exception or BaseException)
                         components.append(
                             ComponentHealth(
                                 name=name,
@@ -102,8 +103,22 @@ class HealthService(HealthMonitoringService):
                                 last_checked=datetime.utcnow(),
                             )
                         )
-                    else:
+                    elif isinstance(result, ComponentHealth):
+                        # Successful health check result
                         components.append(result)
+                    else:
+                        # Unexpected result type
+                        logger.warning(
+                            f"Unexpected health check result type for {name}: {type(result)}"
+                        )
+                        components.append(
+                            ComponentHealth(
+                                name=name,
+                                status=HealthStatus.UNKNOWN,
+                                message=f"Unexpected result type: {type(result).__name__}",
+                                last_checked=datetime.utcnow(),
+                            )
+                        )
 
             except Exception as e:
                 logger.error(f"Error during health checks: {e}")

@@ -8,8 +8,11 @@ from unittest.mock import AsyncMock, MagicMock
 import psutil
 import pytest
 
-from apps.bot.services.analytics_service import AnalyticsService
-from apps.bot.services.scheduler_service import SchedulerService
+# ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+from core.services.bot.analytics import AnalyticsService
+
+# ✅ Phase 3 Fix: Migrated to core scheduling (2025-10-16)
+from core.services.bot.scheduling import ScheduleManager
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 
 
@@ -34,7 +37,8 @@ class TestPerformanceBenchmarks:
         )
         bot = AsyncMock()
         analytics_service = AnalyticsService(bot, analytics_repo)
-        scheduler_service = SchedulerService(bot, scheduler_repo, analytics_repo)
+        # Use new ScheduleManager instead of deprecated SchedulerService
+        scheduler_service = ScheduleManager(scheduler_repo)
         return (analytics_service, scheduler_service)
 
     @pytest.mark.benchmark

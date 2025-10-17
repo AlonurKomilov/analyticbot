@@ -29,8 +29,12 @@ async def _create_auth_dependency():
             # Basic JWT verification fallback
             try:
                 import jwt  # type: ignore[import]
+
                 from config.settings import settings
-                secret_key = getattr(settings, 'SECRET_KEY', getattr(settings, 'JWT_SECRET', 'default_secret'))
+
+                secret_key = getattr(
+                    settings, "SECRET_KEY", getattr(settings, "JWT_SECRET", "default_secret")
+                )
                 payload = jwt.decode(token, secret_key, algorithms=["HS256"])
                 return payload
             except Exception:
@@ -44,17 +48,11 @@ async def _create_auth_dependency():
         try:
             payload = await verify_token(token)
             if not payload:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Invalid or expired token"
-                )
+                raise HTTPException(status_code=401, detail="Invalid or expired token")
             return payload
         except Exception as e:
             logger.error(f"Token verification failed: {e}")
-            raise HTTPException(
-                status_code=401,
-                detail="Authentication failed"
-            )
+            raise HTTPException(status_code=401, detail="Authentication failed")
 
     return get_current_user
 
@@ -62,15 +60,16 @@ async def _create_auth_dependency():
 async def _create_channel_management_service(channel_repository=None, **kwargs):
     """Create channel management service for API"""
     try:
-        from apps.bot.services.analytics_service import AnalyticsService
+        # ✅ Phase 3.5.2: Migrated to core analytics (2025-10-15)
+        from core.services.bot.analytics import AnalyticsCoordinator
 
         if channel_repository is None:
             return None
 
-        # AnalyticsService needs bot parameter, but for API we can pass None
-        return AnalyticsService(
+        # AnalyticsCoordinator needs telegram_port, but for API we can pass None
+        return AnalyticsCoordinator(
             analytics_repository=channel_repository,
-            bot=None,  # API doesn't need bot client
+            telegram_port=None,  # API doesn't need telegram client
         )
     except (ImportError, TypeError) as e:
         logger.warning(f"Channel management service not available: {e}")

@@ -41,7 +41,7 @@ class ErrorHandler:
         """
         error_id = f"ERR_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{id(error)}"
 
-        log_data = {
+        log_data: dict[str, Any] = {
             "error_id": error_id,
             "error_type": type(error).__name__,
             "error_message": str(error),

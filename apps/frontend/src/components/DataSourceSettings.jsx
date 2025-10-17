@@ -22,7 +22,11 @@ import {
 
 const DataSourceSettings = ({ onDataSourceChange }) => {
   const [useRealAPI, setUseRealAPI] = useState(() => {
-    // Check localStorage for user preference
+    // If user has token, they're using real API
+    const token = localStorage.getItem('token');
+    if (token) return true;
+
+    // Otherwise check localStorage for user preference
     const saved = localStorage.getItem('useRealAPI');
     if (saved === null || saved === 'undefined') return false;
     try {
@@ -33,7 +37,10 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   });
 
-  const [apiStatus, setApiStatus] = useState('unknown'); // unknown, online, offline
+  const [apiStatus, setApiStatus] = useState(() => {
+    // If user has token, API is online
+    return localStorage.getItem('token') ? 'online' : 'unknown';
+  }); // unknown, online, offline
   const [lastChecked, setLastChecked] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
 
@@ -41,9 +48,18 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   const checkAPIStatus = useCallback(async () => {
     setIsChecking(true);
     try {
-      // Create abort controller for timeout
+      // If user is authenticated, API is considered online
+      const token = localStorage.getItem('token');
+      if (token) {
+        setApiStatus('online');
+        setLastChecked(new Date());
+        setIsChecking(false);
+        return;
+      }
+
+      // Otherwise, check health endpoint
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased to 5s
 
       const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':11400');
       const response = await fetch(`${apiBaseUrl}/health`, {
@@ -59,21 +75,51 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
         setApiStatus('offline');
       }
     } catch (error) {
-      // Only log API check errors in development or when API status changes
-      if (import.meta.env.DEV && apiStatus !== 'offline') {
-        console.log('API check failed:', error.message);
+      // Ignore AbortError (timeout is expected behavior)
+      if (error.name !== 'AbortError') {
+        // Only log unexpected API check errors in development
+        if (import.meta.env.DEV && apiStatus !== 'offline') {
+          console.log('API check failed:', error.message);
+        }
       }
       setApiStatus('offline');
     } finally {
       setLastChecked(new Date());
       setIsChecking(false);
     }
-  }, []);
+  }, [apiStatus]);
 
   // Initial API check
   useEffect(() => {
     checkAPIStatus();
   }, [checkAPIStatus]);
+
+  // Listen for authentication changes
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'token') {
+        // Token changed - recheck API status
+        if (e.newValue) {
+          setUseRealAPI(true);
+          setApiStatus('online');
+        } else {
+          setUseRealAPI(false);
+          checkAPIStatus();
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check on component mount
+    const token = localStorage.getItem('token');
+    if (token && apiStatus !== 'online') {
+      setApiStatus('online');
+      setUseRealAPI(true);
+    }
+
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [checkAPIStatus, apiStatus]);
 
   // Handle toggle change
   const handleToggleChange = (event) => {
@@ -89,11 +135,14 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   };
 
-  // No auto-fallback to mock - user should sign in to demo account for mock data
+  // Monitor API status changes
   useEffect(() => {
     if (useRealAPI && apiStatus === 'offline') {
-      // Show notification but don't auto-switch - user should sign in to demo account
-      console.info('API is offline - user should sign in to demo account for mock data');
+      // Only log if user is not authenticated
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.info('API is offline - user should sign in to demo account for mock data');
+      }
       // No automatic switching to preserve backend demo authentication security
     }
   }, [apiStatus, useRealAPI, onDataSourceChange]);

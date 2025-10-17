@@ -5,7 +5,6 @@ Handles post view dynamics and time-series analytics for posts
 
 import logging
 from datetime import datetime, timedelta
-from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
@@ -22,16 +21,17 @@ router = APIRouter(prefix="/analytics", tags=["analytics-post-dynamics"])
 async def get_optional_user(request: Request) -> dict | None:
     """Get current user if authenticated, None otherwise"""
     try:
-        from apps.api.middleware.auth import get_current_user
-        from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+        from fastapi.security import HTTPBearer
 
         security_scheme = HTTPBearer(auto_error=False)
         credentials = await security_scheme(request)
 
         if credentials:
             from apps.api.middleware.auth import get_user_repository
+
             user_repo = await get_user_repository()
             from apps.api.auth_utils import auth_utils
+
             user = await auth_utils.get_user_from_token(credentials, user_repo)
             return user
     except Exception as e:
@@ -42,6 +42,7 @@ async def get_optional_user(request: Request) -> dict | None:
 
 class PostDynamicsPoint(BaseModel):
     """Single data point in post dynamics time series"""
+
     timestamp: datetime
     time: str
     views: int
@@ -52,9 +53,10 @@ class PostDynamicsPoint(BaseModel):
 
 class PostDynamicsResponse(BaseModel):
     """Response model for post dynamics endpoint"""
+
     channel_id: str
     period: str
-    data: List[PostDynamicsPoint]
+    data: list[PostDynamicsPoint]
     total_points: int
     period_start: datetime
     period_end: datetime
@@ -65,12 +67,12 @@ def parse_period(period: str) -> tuple[datetime, datetime]:
     now = datetime.utcnow()
 
     period_map = {
-        '1h': timedelta(hours=1),
-        '6h': timedelta(hours=6),
-        '12h': timedelta(hours=12),
-        '24h': timedelta(hours=24),
-        '7d': timedelta(days=7),
-        '30d': timedelta(days=30),
+        "1h": timedelta(hours=1),
+        "6h": timedelta(hours=6),
+        "12h": timedelta(hours=12),
+        "24h": timedelta(hours=24),
+        "7d": timedelta(days=7),
+        "30d": timedelta(days=30),
     }
 
     delta = period_map.get(period, timedelta(hours=24))
@@ -79,7 +81,7 @@ def parse_period(period: str) -> tuple[datetime, datetime]:
     return from_date, now
 
 
-@router.get("/post-dynamics/{channel_id}", response_model=List[PostDynamicsPoint])
+@router.get("/post-dynamics/{channel_id}", response_model=list[PostDynamicsPoint])
 async def get_post_dynamics(
     channel_id: str,
     request: Request,
@@ -147,10 +149,7 @@ async def get_post_dynamics(
             channel_id_int = 0
 
         # Determine number of points based on period
-        period_hours = {
-            '1h': 1, '6h': 6, '12h': 12, '24h': 24,
-            '7d': 24 * 7, '30d': 24 * 30
-        }
+        period_hours = {"1h": 1, "6h": 6, "12h": 12, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
         total_hours = period_hours.get(period, 24)
 
         # Generate data points (one per hour for simplicity)
@@ -158,6 +157,7 @@ async def get_post_dynamics(
         interval_hours = total_hours / num_points
 
         import random
+
         base_views = 1000
         base_likes = 80
         base_shares = 30
@@ -191,10 +191,7 @@ async def get_post_dynamics(
 
     except Exception as e:
         logger.error(f"Post dynamics fetch failed for channel {channel_id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch post dynamics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch post dynamics: {str(e)}")
 
 
 @router.get("/top-posts/{channel_id}")
@@ -245,12 +242,23 @@ async def get_top_posts(
                 "likes": random.randint(50, 500),
                 "shares": random.randint(10, 100),
                 "comments": random.randint(5, 50),
-                "published_at": (datetime.utcnow() - timedelta(days=random.randint(0, 30))).isoformat(),
+                "published_at": (
+                    datetime.utcnow() - timedelta(days=random.randint(0, 30))
+                ).isoformat(),
             }
             posts.append(post)
 
-        # Sort by selected metric
-        posts.sort(key=lambda x: x[sortBy], reverse=True)
+        # Sort by selected metric - ensure key returns a comparable numeric value
+        def _sort_key(item: dict[str, object]) -> float:
+            val = item.get(sortBy, 0)
+            if isinstance(val, (int, float)):
+                return float(val)
+            try:
+                return float(val)  # type: ignore[arg-type]
+            except Exception:
+                return 0.0
+
+        posts.sort(key=_sort_key, reverse=True)
 
         response_data = {
             "posts": posts,
@@ -266,7 +274,4 @@ async def get_top_posts(
 
     except Exception as e:
         logger.error(f"Top posts fetch failed for channel {channel_id}: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch top posts: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch top posts: {str(e)}")

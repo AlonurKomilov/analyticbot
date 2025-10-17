@@ -74,35 +74,35 @@ class AnalyticsResponseMeta(BaseModel):
         default_factory=lambda: datetime.utcnow().isoformat(),
         description="When response was generated (ISO string)",
     )
-    cache_hit: bool | None = Field(None, description="Whether response came from cache")
+    cache_hit: bool | None = Field(default=None, description="Whether response came from cache")
 
 
 class OverviewResponse(BaseModel):
     """Wrapped overview response"""
 
     data: OverviewDTO
-    meta: AnalyticsResponseMeta = Field(default_factory=AnalyticsResponseMeta)
+    meta: AnalyticsResponseMeta = Field(default_factory=lambda: AnalyticsResponseMeta())
 
 
 class SeriesResponse(BaseModel):
     """Wrapped series response"""
 
     data: SeriesDTO
-    meta: AnalyticsResponseMeta = Field(default_factory=AnalyticsResponseMeta)
+    meta: AnalyticsResponseMeta = Field(default_factory=lambda: AnalyticsResponseMeta())
 
 
 class PostListResponse(BaseModel):
     """Wrapped post list response"""
 
     data: list[PostDTO]
-    meta: AnalyticsResponseMeta = Field(default_factory=AnalyticsResponseMeta)
+    meta: AnalyticsResponseMeta = Field(default_factory=lambda: AnalyticsResponseMeta())
 
 
 class EdgeListResponse(BaseModel):
     """Wrapped edge list response"""
 
     data: list[EdgeDTO]
-    meta: AnalyticsResponseMeta = Field(default_factory=AnalyticsResponseMeta)
+    meta: AnalyticsResponseMeta = Field(default_factory=lambda: AnalyticsResponseMeta())
 
 
 class TrendingQuery(BaseModel):

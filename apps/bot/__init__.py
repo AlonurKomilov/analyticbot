@@ -75,7 +75,7 @@ def create_bot() -> AnalyticBot:
     if not settings.BOT_TOKEN:
         raise ValueError("BOT_TOKEN is required")
 
-    return AnalyticBot(settings.BOT_TOKEN)
+    return AnalyticBot(settings.BOT_TOKEN.get_secret_value())
 
 
 async def run_bot():

@@ -46,13 +46,13 @@ export const getPerformanceBadge = (post) => {
     const views = post.views || 0;
 
     if (engagementRate > 10 && views > 10000) {
-        return { label: <><span aria-hidden="true">🔥</span> Viral</>, color: 'error' };
+        return { label: '🔥 Viral', color: 'error' };
     } else if (engagementRate > 5) {
-        return { label: <><span aria-hidden="true">⭐</span> High</>, color: 'warning' };
+        return { label: '⭐ High', color: 'warning' };
     } else if (engagementRate > 2) {
-        return { label: <><span aria-hidden="true">👍</span> Good</>, color: 'success' };
+        return { label: '👍 Good', color: 'success' };
     } else {
-        return { label: <><span aria-hidden="true">📊</span> Average</>, color: 'default' };
+        return { label: '📊 Average', color: 'default' };
     }
 };
 

@@ -17,7 +17,15 @@ from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
 )
-from apps.shared.clients.analytics_client import AnalyticsClient
+from apps.shared.clients.analytics_client import (
+    AnalyticsClient,
+    GrowthResponse,
+    OverviewResponse,
+    ReachResponse,
+    SourcesResponse,
+    TopPostsResponse,
+    TrendingResponse,
+)
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
@@ -107,7 +115,15 @@ async def create_share_link(
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Note: AnalyticsClient manages session internally
-            data = None  # Initialize data variable
+            data: (
+                OverviewResponse
+                | GrowthResponse
+                | ReachResponse
+                | TopPostsResponse
+                | SourcesResponse
+                | TrendingResponse
+                | None
+            ) = None
 
             if report_type == "overview":
                 data = await analytics_client.overview(channel_id, period)
@@ -193,7 +209,15 @@ async def access_shared_report(
         timeout = aiohttp.ClientTimeout(total=30, connect=10)  # 30s total, 10s connect
         async with aiohttp.ClientSession(timeout=timeout) as session:
             # Note: AnalyticsClient manages session internally
-            data = None  # Initialize data variable
+            data: (
+                OverviewResponse
+                | GrowthResponse
+                | ReachResponse
+                | TopPostsResponse
+                | SourcesResponse
+                | TrendingResponse
+                | None
+            ) = None
 
             if report_type == "overview":
                 data = await analytics_client.overview(channel_id, period)

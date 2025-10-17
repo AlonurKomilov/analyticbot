@@ -37,6 +37,21 @@ def _get_chat_id(event) -> int | None:
     return None
 
 
+def _validate_callback(callback: CallbackQuery) -> tuple[bool, str | None]:
+    """Validate callback has required data and message.
+
+    Returns:
+        (is_valid, error_message)
+    """
+    if not callback.data:
+        return (False, "❌ Invalid callback data")
+
+    if not callback.message or not isinstance(callback.message, Message):
+        return (False, "❌ Unable to edit message")
+
+    return (True, None)
+
+
 def _format_alert_subscription(sub: AlertSubscription) -> str:
     """Format alert subscription for display"""
     status = "🟢 Active" if sub.enabled else "🔴 Disabled"
@@ -138,6 +153,15 @@ async def show_channel_alerts(
 ):
     """Show alerts for specific channel"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        # Type narrowing: validation ensures callback.data and callback.message are not None
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         channel_id = int(callback.data.split(":")[2])
         chat_id = _get_chat_id(callback)
 
@@ -184,6 +208,15 @@ async def show_channel_alerts(
 async def show_alert_types(callback: CallbackQuery, i18n: I18nContext):
     """Show alert types for adding new alert"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        # Type narrowing: validation ensures callback.data and callback.message are not None
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         channel_id = callback.data.split(":")[2]
 
         await callback.message.edit_text(
@@ -216,6 +249,15 @@ async def configure_alert_type(
 ):
     """Configure specific alert type"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        # Type narrowing: validation ensures callback.data and callback.message are not None
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         parts = callback.data.split(":")
         alert_type = parts[2]
         channel_id = int(parts[3])
@@ -282,6 +324,13 @@ async def toggle_alert(
 ):
     """Toggle alert enabled/disabled"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        assert callback.data is not None  # Type narrowing after validation
+
         alert_id = int(callback.data.split(":")[2])
 
         new_status = await alert_repo.toggle_subscription(alert_id)
@@ -302,6 +351,14 @@ async def toggle_alert(
 async def delete_alert_confirmation(callback: CallbackQuery, i18n: I18nContext):
     """Show delete confirmation"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         alert_id = callback.data.split(":")[2]
 
         await callback.message.edit_text(
@@ -330,6 +387,14 @@ async def delete_alert_confirmed(
 ):
     """Delete alert after confirmation"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         alert_id = int(callback.data.split(":")[3])
 
         deleted = await alert_repo.delete_subscription(alert_id)
@@ -352,6 +417,13 @@ async def delete_alert_confirmed(
 @router.callback_query(F.data.startswith("alert:delete:cancel:"))
 async def delete_alert_cancelled(callback: CallbackQuery, i18n: I18nContext):
     """Cancel alert deletion"""
+    is_valid, error_msg = _validate_callback(callback)
+    if not is_valid:
+        await callback.answer(error_msg or "Invalid callback", show_alert=True)
+        return
+
+    assert isinstance(callback.message, Message)
+
     await callback.message.edit_text(
         "❌ **Alert Deletion Cancelled**\n\n" "The alert subscription was not deleted."
     )
@@ -366,6 +438,14 @@ async def setup_alert_preset(
 ):
     """Set up predefined alert configurations"""
     try:
+        is_valid, error_msg = _validate_callback(callback)
+        if not is_valid:
+            await callback.answer(error_msg or "Invalid callback", show_alert=True)
+            return
+
+        assert callback.data is not None
+        assert isinstance(callback.message, Message)
+
         parts = callback.data.split(":")
         preset_type = parts[2]  # "popular", "growth", "all"
         channel_id = int(parts[3])

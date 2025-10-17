@@ -13,7 +13,9 @@ from pydantic import BaseModel, EmailStr, Field
 
 from apps.api.auth_utils import auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
-from core.security_engine import get_security_manager
+
+# ✅ PHASE 2: Redis caching for performance optimization
+from core.common.cache_decorator import cache_endpoint
 
 # ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
 # ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
@@ -28,6 +30,7 @@ from core.security_engine import (
     SecurityManager,
     User,
     UserStatus,
+    get_security_manager,
     require_analytics_access,
     require_permission,
 )
@@ -118,7 +121,7 @@ async def login(
         )
 
         # Debug logging
-        print(f"\n� USER OBJECT CREATED:")
+        print("\n� USER OBJECT CREATED:")
         print(f"   Email: {user.email}")
         print(f"   Username: {user.username}")
         print(f"   Status: {user.status}")
@@ -128,7 +131,7 @@ async def login(
             print(f"   Hash starts with: {user.hashed_password[:10]}")
 
         # Verify password
-        print(f"\n🔑 VERIFYING PASSWORD:")
+        print("\n🔑 VERIFYING PASSWORD:")
         print(f"   Input password: {login_data.password}")
         print(f"   Input password length: {len(login_data.password)}")
 
@@ -153,11 +156,12 @@ async def login(
 
         # Create session - convert FastAPI Request to AuthRequest
         from core.ports.security_ports import AuthRequest
+
         auth_request = AuthRequest(
             client_ip=request.client.host if request.client else None,
             user_agent=request.headers.get("user-agent"),
             device_info={},
-            headers=dict(request.headers)
+            headers=dict(request.headers),
         )
         session = get_security_manager().create_user_session(user, auth_request)
 
@@ -316,27 +320,39 @@ async def logout(
 
 
 @router.get("/me", response_model=UserResponse)
+@cache_endpoint(prefix="auth:me", ttl=300)  # Cache for 5 minutes
 async def get_current_user_profile(request: Request):
     """
-    Get current user's profile information
+    Get current user's profile information (CACHED)
     Uses JWT token to identify user without database lookup
+
+    **Performance:** Cached for 5 minutes (300 seconds) per user
     """
+    import time
+
+    start_time = time.time()
+    logger.info("⏱️ /auth/me endpoint called")
+
     try:
         # Extract user info from JWT token
         from apps.api.middleware.auth import get_current_user_id_from_request
         from core.security_engine import get_security_manager
 
+        step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
+        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
 
         # Get token from Authorization header
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
+            step2 = time.time()
             token = auth_header[7:]
             security_manager = get_security_manager()
             claims = security_manager.verify_token(token)
+            logger.info(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
 
             # Extract user info from JWT claims
-            return UserResponse(
+            response = UserResponse(
                 id=str(claims.get("sub", user_id)),
                 email=claims.get("email", f"user_{user_id}@example.com"),
                 username=claims.get("username", f"user_{user_id}"),
@@ -346,6 +362,10 @@ async def get_current_user_profile(request: Request):
                 created_at=datetime.utcnow(),
                 last_login=datetime.utcnow(),
             )
+
+            total_time = (time.time() - start_time) * 1000
+            logger.info(f"⏱️ /auth/me TOTAL time: {total_time:.2f}ms")
+            return response
         else:
             raise HTTPException(status_code=401, detail="Missing authentication token")
 
@@ -639,16 +659,11 @@ async def verify_telegram(
         # Find user by email
         user_data = await user_repo.get_user_by_email(email)
         if not user_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         # Update user status to active and link Telegram ID
         await user_repo.update_user(
-            user_id=user_data["id"],
-            status="active",
-            telegram_id=telegram_id
+            user_id=user_data["id"], status="active", telegram_id=telegram_id
         )
 
         logger.info(f"✅ User verified via Telegram: {email} (TG ID: {telegram_id})")
@@ -656,7 +671,7 @@ async def verify_telegram(
         return {
             "message": "Account verified successfully via Telegram",
             "status": "active",
-            "telegram_linked": True
+            "telegram_linked": True,
         }
 
     except HTTPException:
@@ -664,6 +679,5 @@ async def verify_telegram(
     except Exception as e:
         logger.error(f"Telegram verification error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to verify account"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to verify account"
         )

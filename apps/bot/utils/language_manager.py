@@ -1,19 +1,41 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol
 
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
+
+# Define a Protocol for the base manager to avoid type issues
+class BaseManagerProtocol(Protocol):
+    """Protocol defining the base manager interface"""
+
+    default_locale: str | None
+
+    def __init__(self, default_locale: str | None = None) -> None: ...
+    async def get_locale(self, *args: Any, **kwargs: Any) -> str: ...
+    async def set_locale(self, *args: Any, **kwargs: Any) -> None: ...
+
+
 # aiogram-i18n 1.4: public yo'l – managers.base
 try:
-    from aiogram_i18n.managers.base import BaseManager as _BaseManager  # type: ignore
+    from aiogram_i18n.managers.base import (
+        BaseManager as _BaseManager,  # type: ignore[import-untyped]
+    )
 except Exception:
     # Fallback stub (Pylance uchun), runtime-da ishlatilmaydi
-    class _BaseManager:  # type: ignore[override]
+    class _BaseManager:  # type: ignore[no-redef]
+        """Fallback base manager for type checking when aiogram_i18n not available"""
+
         default_locale: str | None = None
 
-        async def get_locale(self, *args: Any, **kwargs: Any) -> str: ...
-        async def set_locale(self, *args: Any, **kwargs: Any) -> None: ...
+        def __init__(self, default_locale: str | None = None) -> None:
+            self.default_locale = default_locale
+
+        async def get_locale(self, *args: Any, **kwargs: Any) -> str:
+            return "en"
+
+        async def set_locale(self, *args: Any, **kwargs: Any) -> None:
+            return None
 
 
 def _extract_user_id(event: TelegramObject) -> int | None:

@@ -212,6 +212,8 @@ class AnalyticsClient:
                     )
                 else:
                     response.raise_for_status()
+                    # If raise_for_status() doesn't raise, return the JSON
+                    return response.json()
 
             except httpx.RequestError as e:
                 logger.warning(f"Request error (attempt {attempt + 1}/{self.max_retries}): {e}")
@@ -226,6 +228,9 @@ class AnalyticsClient:
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error {e.response.status_code}: {e}")
                 raise AnalyticsClientError(f"API returned error {e.response.status_code}")
+
+        # If all retries exhausted without success
+        raise AnalyticsClientError("Request failed after all retries")
 
     async def overview(self, channel_id: str, days: int = 30) -> OverviewResponse:
         """Get channel overview analytics"""

@@ -96,6 +96,10 @@ async def show_export_options(callback: CallbackQuery) -> None:
             return
 
         # Extract channel_id and period from callback data
+        if not callback.data:
+            await callback.answer("❌ Invalid export request", show_alert=True)
+            return
+
         parts = callback.data.split(":")
         if len(parts) < 4:
             await callback.answer("❌ Invalid export request", show_alert=True)
@@ -122,7 +126,8 @@ async def show_export_options(callback: CallbackQuery) -> None:
         if success:
             await callback.answer()
         else:
-            await callback.message.answer(text, reply_markup=keyboard)
+            if callback.message:
+                await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
 
     except Exception as e:
@@ -143,6 +148,10 @@ async def show_share_options(callback: CallbackQuery) -> None:
             return
 
         # Extract channel_id and period from callback data
+        if not callback.data:
+            await callback.answer("❌ Invalid share request", show_alert=True)
+            return
+
         parts = callback.data.split(":")
         if len(parts) < 4:
             await callback.answer("❌ Invalid share request", show_alert=True)

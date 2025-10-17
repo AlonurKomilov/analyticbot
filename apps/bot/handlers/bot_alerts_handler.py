@@ -78,6 +78,10 @@ async def show_alerts_options(callback: CallbackQuery) -> None:
             return
 
         # Extract channel_id from callback data
+        if not callback.data:
+            await callback.answer("❌ Invalid alerts request", show_alert=True)
+            return
+
         parts = callback.data.split(":")
         if len(parts) < 3:
             await callback.answer("❌ Invalid alerts request", show_alert=True)
@@ -106,7 +110,7 @@ async def show_alerts_options(callback: CallbackQuery) -> None:
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
             await callback.answer()
-        else:
+        elif callback.message:
             await callback.message.answer(text, reply_markup=keyboard)
             await callback.answer()
 
@@ -124,6 +128,10 @@ async def show_alerts_options(callback: CallbackQuery) -> None:
 async def handle_alert_subscribe(callback: CallbackQuery) -> None:
     """Handle alert subscription using AlertRuleManager"""
     try:
+        if not callback.data:
+            await callback.answer("❌ Invalid alert request", show_alert=True)
+            return
+
         alert_type = callback.data.split(":", 1)[1] if ":" in callback.data else None
         if not alert_type:
             await callback.answer("❌ Invalid alert type", show_alert=True)
@@ -134,6 +142,7 @@ async def handle_alert_subscribe(callback: CallbackQuery) -> None:
 
         # Use DI to get AlertRuleManager (import here to avoid circular dependency)
         from apps.di import get_container
+
         container = get_container()
         alert_rule_manager = container.bot.alert_rule_manager()
 
@@ -172,6 +181,10 @@ async def handle_alert_subscribe(callback: CallbackQuery) -> None:
 async def handle_alert_unsubscribe(callback: CallbackQuery) -> None:
     """Handle alert unsubscription using AlertRuleManager"""
     try:
+        if not callback.data:
+            await callback.answer("❌ Invalid alert request", show_alert=True)
+            return
+
         alert_type = callback.data.split(":", 1)[1] if ":" in callback.data else None
         if not alert_type:
             await callback.answer("❌ Invalid alert type", show_alert=True)
@@ -180,6 +193,7 @@ async def handle_alert_unsubscribe(callback: CallbackQuery) -> None:
         channel_id = str(callback.from_user.id)
         # Import here to avoid circular dependency
         from apps.di import get_container
+
         container = get_container()
         alert_rule_manager = container.bot.alert_rule_manager()
         rule_name = f"{alert_type}_subscription"

@@ -8,7 +8,7 @@ import time
 from collections import defaultdict
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
 from aiogram import types
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
@@ -35,11 +35,19 @@ class ThrottleMiddleware(BaseMiddleware):
     def _get_key(self, event: types.TelegramObject) -> str:
         """Get throttling key based on strategy"""
         if self.key_strategy == "user":
-            if hasattr(event, "from_user") and event.from_user:
-                return f"user:{event.from_user.id}"
+            # Check for from_user attribute with proper type narrowing
+            from_user = getattr(event, "from_user", None)
+            if from_user is not None:
+                user_id = getattr(from_user, "id", None)
+                if user_id is not None:
+                    return f"user:{user_id}"
         elif self.key_strategy == "chat":
-            if hasattr(event, "chat") and event.chat:
-                return f"chat:{event.chat.id}"
+            # Check for chat attribute with proper type narrowing
+            chat = getattr(event, "chat", None)
+            if chat is not None:
+                chat_id = getattr(chat, "id", None)
+                if chat_id is not None:
+                    return f"chat:{chat_id}"
         elif self.key_strategy == "global":
             return "global"
 
@@ -95,7 +103,7 @@ def throttle(rate: float = 2.0, key: str | None = None):
     def decorator(func: Callable) -> Callable:
         # Storage for request times
         if not hasattr(throttle, "_requests"):
-            throttle._requests = defaultdict(float)
+            cast(Any, throttle)._requests = defaultdict(float)
 
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -119,7 +127,9 @@ def throttle(rate: float = 2.0, key: str | None = None):
                     throttle_key = f"global:{func.__name__}"
 
             now = time.time()
-            last_request = throttle._requests[throttle_key]
+            # Access dynamic attribute with cast for type safety
+            throttle_requests = cast(Any, throttle)._requests
+            last_request = throttle_requests[throttle_key]
 
             # Check throttling
             if now - last_request < rate:
@@ -138,7 +148,7 @@ def throttle(rate: float = 2.0, key: str | None = None):
                 return  # Don't execute the handler
 
             # Update last request time
-            throttle._requests[throttle_key] = now
+            throttle_requests[throttle_key] = now
 
             # Execute the handler
             return await func(*args, **kwargs)
@@ -159,8 +169,9 @@ async def cleanup_throttle_entries():
             cutoff = now - 3600  # Remove entries older than 1 hour
 
             # Clean middleware requests
-            if hasattr(ThrottleMiddleware, "_instances"):
-                for instance in ThrottleMiddleware._instances:
+            middleware_class = cast(Any, ThrottleMiddleware)
+            if hasattr(middleware_class, "_instances"):
+                for instance in middleware_class._instances:
                     if hasattr(instance, "requests"):
                         keys_to_remove = [
                             key
@@ -171,12 +182,13 @@ async def cleanup_throttle_entries():
                             del instance.requests[key]
 
             # Clean decorator requests
-            if hasattr(throttle, "_requests"):
+            throttle_any = cast(Any, throttle)
+            if hasattr(throttle_any, "_requests"):
                 keys_to_remove = [
-                    key for key, timestamp in throttle._requests.items() if timestamp < cutoff
+                    key for key, timestamp in throttle_any._requests.items() if timestamp < cutoff
                 ]
                 for key in keys_to_remove:
-                    del throttle._requests[key]
+                    throttle_any._requests.pop(key, None)
 
         except Exception:
             # Continue cleanup even if there are errors
@@ -203,10 +215,10 @@ def rate_limit(key: str = "default", per_minute: int = 60, rate: float | None = 
             # In a full implementation, this would check throttling
             return await handler(*args, **kwargs)
 
-        wrapper.__throttle_key__ = key
-        wrapper.__throttle_per_minute__ = per_minute
+        cast(Any, wrapper).__throttle_key__ = key
+        cast(Any, wrapper).__throttle_per_minute__ = per_minute
         if rate is not None:
-            wrapper.__throttle_rate__ = rate
+            cast(Any, wrapper).__throttle_rate__ = rate
         return wrapper
 
     return decorator

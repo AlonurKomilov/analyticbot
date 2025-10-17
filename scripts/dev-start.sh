@@ -92,17 +92,31 @@ start_service() {
     local command=$2
     local port=$3
     local log_file="logs/dev_${service_name}.log"
+    local skip_if_running=${4:-false}  # Optional: skip restart if already running
 
     # Create logs directory
     mkdir -p logs
 
+    # Check if service is already running and healthy (optional)
+    if [ "$skip_if_running" = "true" ] && lsof -ti:${port} >/dev/null 2>&1; then
+        echo -e "${GREEN}✅ ${service_name} already running on port ${port} - skipping restart${NC}"
+        return 0
+    fi
+
     echo -e "${BLUE}🚀 Starting ${service_name} on port ${port}...${NC}"
 
-    # Kill any existing process on the port
+    # Gracefully stop any existing process on the port
     if lsof -ti:${port} >/dev/null 2>&1; then
-        echo -e "${YELLOW}🔄 Killing existing process on port ${port}${NC}"
-        kill -9 $(lsof -ti:${port}) 2>/dev/null || true
-        sleep 1
+        echo -e "${YELLOW}🔄 Stopping existing process on port ${port}${NC}"
+        # First try graceful shutdown (SIGTERM)
+        kill $(lsof -ti:${port}) 2>/dev/null || true
+        sleep 2
+        # If still running, force kill
+        if lsof -ti:${port} >/dev/null 2>&1; then
+            echo -e "${YELLOW}⚡ Force stopping process on port ${port}${NC}"
+            kill -9 $(lsof -ti:${port}) 2>/dev/null || true
+            sleep 1
+        fi
     fi
 
     # Start the service
@@ -147,6 +161,39 @@ case $SERVICE in
         start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300
         cd ../..
         ;;
+    "tunnel")
+        # Start CloudFlare Tunnel for public access (3-10x faster than DevTunnel)
+        if ! command -v cloudflared &> /dev/null; then
+            echo -e "${RED}❌ cloudflared not installed${NC}"
+            echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
+            exit 1
+        fi
+
+        echo -e "${BLUE}🌐 Starting CloudFlare Tunnel...${NC}"
+        nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
+        local tunnel_pid=$!
+        echo $tunnel_pid > "logs/dev_tunnel.pid"
+
+        echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
+        sleep 5
+
+        # Extract tunnel URL
+        if [ -f "logs/dev_tunnel.log" ]; then
+            TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+            if [ ! -z "$TUNNEL_URL" ]; then
+                echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
+                echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
+                echo -e "${BLUE}💡 Update apps/frontend/.env.local with:${NC}"
+                echo -e "   VITE_API_BASE_URL=${TUNNEL_URL}"
+                echo ""
+                echo -e "${YELLOW}📝 Run this command to update .env.local automatically:${NC}"
+                echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+            else
+                echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+            fi
+        fi
+        ;;
     "all")
         # Start all services - Development Environment Ports 11xxx
         start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
@@ -154,6 +201,38 @@ case $SERVICE in
         start_service "bot" 'python -m apps.bot.run_bot' ""
         sleep 2
         cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
+        sleep 2
+
+        # Start CloudFlare Tunnel for public access
+        echo ""
+        echo -e "${BLUE}🌐 Starting CloudFlare Tunnel for public access...${NC}"
+        if command -v cloudflared &> /dev/null; then
+            nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
+            tunnel_pid=$!
+            echo $tunnel_pid > "logs/dev_tunnel.pid"
+
+            echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
+            sleep 5
+
+            # Extract tunnel URL
+            if [ -f "logs/dev_tunnel.log" ]; then
+                TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+                if [ ! -z "$TUNNEL_URL" ]; then
+                    echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
+                    echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
+                    echo ""
+                    echo -e "${YELLOW}📝 To use this tunnel, update your frontend:${NC}"
+                    echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                    echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                    echo -e "   Then restart frontend: ./scripts/dev-start.sh stop && make dev-start"
+                else
+                    echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+                fi
+            fi
+        else
+            echo -e "${YELLOW}⚠️  cloudflared not installed - skipping tunnel${NC}"
+            echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
+        fi
         ;;
     "stop")
         # Stop all development services
@@ -202,8 +281,13 @@ case $SERVICE in
             pkill -f "apps.bot.run_bot" || true
         fi
 
+        # Check for CloudFlare Tunnel processes (NOT VS Code tunnel!)
+        if pgrep -f "cloudflared tunnel --url" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping CloudFlare Tunnel${NC}"
+            pkill -f "cloudflared tunnel --url" || true
+        fi
+
         echo -e "${GREEN}✅ All development services stopped${NC}"
-        echo -e "${BLUE}ℹ️  Note: External tunnels (devtunnels, ngrok) remain active${NC}"
         exit 0
         ;;
     "status")
@@ -252,6 +336,23 @@ case $SERVICE in
         fi
 
         echo ""
+        echo -e "${BLUE}🌐 Public Access (CloudFlare Tunnel):${NC}"
+
+        # Check CloudFlare Tunnel
+        if [ -f "logs/dev_tunnel.pid" ] && kill -0 $(cat logs/dev_tunnel.pid) 2>/dev/null; then
+            TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log 2>/dev/null | head -1)
+            if [ ! -z "$TUNNEL_URL" ]; then
+                echo -e "Tunnel:             ${GREEN}✅ Running${NC}"
+                echo -e "Public URL:         ${GREEN}${TUNNEL_URL}${NC}"
+            else
+                echo -e "Tunnel:             ${YELLOW}⚠️  Starting (no URL yet)${NC}"
+            fi
+        else
+            echo -e "Tunnel:             ${RED}❌ Stopped${NC}"
+            echo -e "${BLUE}💡 Start with: make dev-tunnel${NC}"
+        fi
+
+        echo ""
         echo -e "${BLUE}💡 Tip: Use 'make dev-start' to start all services${NC}"
         exit 0
         ;;
@@ -279,14 +380,16 @@ case $SERVICE in
         echo "  api       - Start API server with hot reload (port 11400)"
         echo "  bot       - Start Telegram bot"
         echo "  frontend  - Start frontend development server (port 11300)"
-        echo "  all       - Start all services"
+        echo "  tunnel    - Start CloudFlare Tunnel for public access (3-10x faster)"
+        echo "  all       - Start all services including tunnel"
         echo "  stop      - Stop all services"
         echo "  status    - Check service status"
         echo "  logs [service] - Show logs for a service"
         echo ""
         echo "Examples:"
         echo "  $0 api        # Start only API"
-        echo "  $0 all        # Start everything"
+        echo "  $0 tunnel     # Start CloudFlare Tunnel"
+        echo "  $0 all        # Start everything (recommended)"
         echo "  $0 status     # Check what's running"
         echo "  $0 logs api   # Show API logs"
         exit 1

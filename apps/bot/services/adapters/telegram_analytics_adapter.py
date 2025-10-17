@@ -101,7 +101,7 @@ class TelegramAnalyticsAdapter(AnalyticsAdapter):
         self.base_url = "https://api.telegram.org/bot"
 
         # Cache for API responses to reduce calls
-        self.cache = {}
+        self.cache: dict[str, Any] = {}
         self.cache_ttl = 300  # 5 minutes
 
         logger.info("TelegramAnalyticsAdapter initialized")

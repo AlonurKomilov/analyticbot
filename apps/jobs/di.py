@@ -20,7 +20,8 @@ class JobsContainer(containers.DeclarativeContainer):
         lambda factory: factory.create_channel_repository(), factory=repository_factory
     )
     analytics_repo = providers.Factory(
-        lambda factory: factory.create_analytics_repository(), factory=repository_factory
+        lambda factory: factory.create_analytics_repository(),
+        factory=repository_factory,
     )
     payment_repo = providers.Factory(
         lambda factory: factory.create_payment_repository(), factory=repository_factory

@@ -12,14 +12,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+# ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
+from apps.api.middleware.auth import get_current_user_id
+
 # ✅ MIGRATED: Use new modular DI instead of legacy apps.api.deps
 from apps.di import get_delivery_service, get_schedule_service
-
-# ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
-from apps.api.deps_factory import (
-    get_initial_data_service,
-)
-from apps.api.middleware.auth import get_current_user_id
 from apps.shared.models.twa import InitialDataResponse
 from core import DeliveryService, ScheduleService
 
@@ -105,7 +102,11 @@ async def performance():
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
-@router.get("/initial-data", response_model=InitialDataResponse, summary="Application Startup Data")
+@router.get(
+    "/initial-data",
+    response_model=InitialDataResponse,
+    summary="Application Startup Data",
+)
 async def initial_data(request: Request, user_id: int = Depends(get_current_user_id)):
     """
     ## 🚀 Application Startup Data
@@ -127,10 +128,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
         return InitialDataResponse(
             user=User(id=user_id, username=f"user_{user_id}"),
-            channels=[
-                Channel(id=1, title="Demo Channel", username="@demo_channel")
-            ],
-            scheduled_posts=[]
+            channels=[Channel(id=1, title="Demo Channel", username="@demo_channel")],
+            scheduled_posts=[],
         )
 
     except Exception as e:
@@ -140,7 +139,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
 @router.post("/schedule", response_model=dict)
 async def create_scheduled_post(
-    request: ScheduleRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: ScheduleRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 📅 Create Scheduled Post
@@ -246,12 +246,12 @@ async def get_user_scheduled_posts(
                 {
                     "id": str(post.id),
                     "channel_id": post.channel_id,
-                    "message": post.content[:100] + "..."
-                    if len(post.content) > 100
-                    else post.content,
+                    "message": (
+                        post.content[:100] + "..." if len(post.content) > 100 else post.content
+                    ),
                     "scheduled_time": post.scheduled_at.isoformat(),
                     "status": post.status.value,
-                    "created_at": post.created_at.isoformat() if post.created_at else None,
+                    "created_at": (post.created_at.isoformat() if post.created_at else None),
                 }
                 for post in posts
             ],
@@ -300,7 +300,9 @@ async def delete_scheduled_post(
 
 
 @router.get("/delivery/stats")
-async def get_delivery_stats(delivery_service: DeliveryService = Depends(get_delivery_service)):
+async def get_delivery_stats(
+    delivery_service: DeliveryService = Depends(get_delivery_service),
+):
     """
     ## 📊 Delivery Statistics
 

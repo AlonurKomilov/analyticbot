@@ -50,18 +50,22 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
         features = await _get_user_features(user_id, plan)
 
         # Convert dicts to Pydantic models
-        from apps.shared.models.twa import User, Plan, Channel, ScheduledPost
+        from apps.shared.models.twa import Channel, Plan, ScheduledPost, User
 
         return InitialDataResponse(
             user=User(
                 id=user["id"],
                 username=user.get("username"),
             ),
-            plan=Plan(
-                name=plan.get("name", "Free"),
-                max_channels=plan.get("channels_limit", 5),
-                max_posts_per_month=plan.get("posts_limit", 100),
-            ) if plan else None,
+            plan=(
+                Plan(
+                    name=plan.get("name", "Free"),
+                    max_channels=plan.get("channels_limit", 5),
+                    max_posts_per_month=plan.get("posts_limit", 100),
+                )
+                if plan
+                else None
+            ),
             channels=[
                 Channel(
                     id=ch["id"],
@@ -79,7 +83,8 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
                     media_id=post.get("media_id"),
                     media_type=post.get("media_type"),
                     buttons=post.get("buttons"),
-                ) for post in scheduled_posts
+                )
+                for post in scheduled_posts
             ],
             features=features,
         )

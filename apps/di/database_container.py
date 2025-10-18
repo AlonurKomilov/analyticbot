@@ -61,7 +61,9 @@ async def _create_sqlalchemy_engine(
     )
 
 
-async def _create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+async def _create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     """Create SQLAlchemy session factory"""
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -123,7 +125,7 @@ class DatabaseContainer(containers.DeclarativeContainer):
     database_url = providers.Callable(
         lambda: os.getenv(
             "DATABASE_URL",
-            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
         )
     )
 
@@ -133,23 +135,16 @@ class DatabaseContainer(containers.DeclarativeContainer):
 
     database_manager = providers.Resource(_create_database_manager)
 
-    asyncpg_pool = providers.Resource(
-        _create_asyncpg_pool,
-        database_url=database_url,
-        pool_size=10
-    )
+    asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
         _create_sqlalchemy_engine,
         database_url=database_url,
         pool_size=10,
-        max_overflow=20
+        max_overflow=20,
     )
 
-    session_factory = providers.Resource(
-        _create_session_factory,
-        engine=sqlalchemy_engine
-    )
+    session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)
 
     # ============================================================================
     # REPOSITORY FACTORY (Clean Architecture Pattern)
@@ -161,82 +156,50 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # REPOSITORIES (via factory pattern - no direct infra imports)
     # ============================================================================
 
-    user_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="user"
-    )
+    user_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="user")
 
     channel_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="channel"
+        _create_repository, factory=repository_factory, repo_type="channel"
     )
 
     analytics_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="analytics"
+        _create_repository, factory=repository_factory, repo_type="analytics"
     )
 
     admin_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="admin"
+        _create_repository, factory=repository_factory, repo_type="admin"
     )
 
-    plan_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="plan"
-    )
+    plan_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="plan")
 
     schedule_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="schedule"
+        _create_repository, factory=repository_factory, repo_type="schedule"
     )
 
     payment_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="payment"
+        _create_repository, factory=repository_factory, repo_type="payment"
     )
 
-    post_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="post"
-    )
+    post_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="post")
 
     metrics_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="metrics"
+        _create_repository, factory=repository_factory, repo_type="metrics"
     )
 
     channel_daily_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="channel_daily"
+        _create_repository, factory=repository_factory, repo_type="channel_daily"
     )
 
     edges_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="edges"
+        _create_repository, factory=repository_factory, repo_type="edges"
     )
 
     stats_raw_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="stats_raw"
+        _create_repository, factory=repository_factory, repo_type="stats_raw"
     )
 
     alert_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="alert"
+        _create_repository, factory=repository_factory, repo_type="alert"
     )
 
 

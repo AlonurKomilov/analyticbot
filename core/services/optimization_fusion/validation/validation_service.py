@@ -18,7 +18,10 @@ import statistics
 from datetime import datetime, timedelta
 from typing import Any
 
-from ..protocols.optimization_protocols import OptimizationRecommendation, ValidationProtocol
+from ..protocols.optimization_protocols import (
+    OptimizationRecommendation,
+    ValidationProtocol,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,10 @@ class ValidationService(ValidationProtocol):
     """
 
     def __init__(
-        self, analytics_service=None, performance_analysis_service=None, config_manager=None
+        self,
+        analytics_service=None,
+        performance_analysis_service=None,
+        config_manager=None,
     ):
         self.analytics_service = analytics_service
         self.performance_analysis = performance_analysis_service
@@ -288,7 +294,9 @@ class ValidationService(ValidationProtocol):
                             "current_value": current_value,
                             "historical_average": historical_value,
                             "improvement_percentage": improvement * 100,
-                            "improvement_direction": "positive" if improvement > 0 else "negative",
+                            "improvement_direction": (
+                                "positive" if improvement > 0 else "negative"
+                            ),
                         }
 
             # Overall impact summary

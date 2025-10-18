@@ -200,7 +200,13 @@ class ModelLoader:
                 relative_path = model_file.relative_to(self.models_base_path)
                 metadata = await self.get_model_metadata(str(relative_path))
 
-                models.append({"path": str(relative_path), "type": "pytorch", "metadata": metadata})
+                models.append(
+                    {
+                        "path": str(relative_path),
+                        "type": "pytorch",
+                        "metadata": metadata,
+                    }
+                )
 
             for model_file in self.models_base_path.rglob("*.pkl"):  # Sklearn models
                 if model_type and model_type != "sklearn":
@@ -209,7 +215,13 @@ class ModelLoader:
                 relative_path = model_file.relative_to(self.models_base_path)
                 metadata = await self.get_model_metadata(str(relative_path))
 
-                models.append({"path": str(relative_path), "type": "sklearn", "metadata": metadata})
+                models.append(
+                    {
+                        "path": str(relative_path),
+                        "type": "sklearn",
+                        "metadata": metadata,
+                    }
+                )
 
             logger.info(f"📋 Found {len(models)} available models")
             return models
@@ -219,7 +231,10 @@ class ModelLoader:
             return []
 
     async def _load_pytorch_model(
-        self, file_path: Path, model_class: type | None = None, device: torch.device | None = None
+        self,
+        file_path: Path,
+        model_class: type | None = None,
+        device: torch.device | None = None,
     ) -> nn.Module:
         """Load PyTorch model"""
         if device is None:
@@ -281,7 +296,11 @@ class ModelLoader:
             return False
 
     async def _save_model_metadata(
-        self, model_path: Path, model_type: str, model: Any, additional_metadata: dict | None = None
+        self,
+        model_path: Path,
+        model_type: str,
+        model: Any,
+        additional_metadata: dict | None = None,
     ) -> None:
         """Save model metadata to companion file"""
         try:
@@ -317,7 +336,11 @@ class ModelLoader:
 
     def _get_framework_name(self, model_type: str) -> str:
         """Get framework name from model type"""
-        framework_map = {"pytorch": "PyTorch", "sklearn": "scikit-learn", "custom": "Custom"}
+        framework_map = {
+            "pytorch": "PyTorch",
+            "sklearn": "scikit-learn",
+            "custom": "Custom",
+        }
         return framework_map.get(model_type, "Unknown")
 
     def _generate_basic_metadata(self, file_path: Path) -> dict:

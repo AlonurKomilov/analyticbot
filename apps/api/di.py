@@ -52,4 +52,3 @@ def get_analytics_fusion_service():
 def configure_services():
     """Configure all services (for backwards compatibility)"""
     # This is now handled by the container automatically
-    pass

@@ -14,15 +14,26 @@ from apps.shared.protocols import (
     AnalyticsRepository,
     ChartServiceProtocol,
 )
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
+)
 
 # Import core interfaces (allowed - apps can import from core)
-from core.repositories.interfaces import AdminRepository, ChannelRepository, UserRepository
+from core.repositories.interfaces import (
+    AdminRepository,
+    ChannelRepository,
+    UserRepository,
+)
 from core.repositories.shared_reports_repository import SharedReportsRepository
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["RepositoryFactory", "DatabaseConnectionAdapter", "create_repository_factory"]
+__all__ = [
+    "RepositoryFactory",
+    "DatabaseConnectionAdapter",
+    "create_repository_factory",
+]
 
 
 class DatabaseConnectionAdapter:
@@ -104,7 +115,9 @@ class RepositoryFactory:
     async def create_channel_repository(self) -> ChannelRepository:
         """Create channel repository without direct infra import"""
         try:
-            from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+            from infra.db.repositories.channel_repository import (
+                AsyncpgChannelRepository,
+            )
 
             connection = await self._get_connection()
             if connection is None:
@@ -118,7 +131,9 @@ class RepositoryFactory:
     async def create_analytics_repository(self) -> AnalyticsRepository:
         """Create analytics repository without direct infra import"""
         try:
-            from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+            from infra.db.repositories.analytics_repository import (
+                AsyncpgAnalyticsRepository,
+            )
 
             connection = await self._get_connection()
             if connection is None:
@@ -147,7 +162,9 @@ class RepositoryFactory:
     async def create_alert_subscription_repository(self) -> AlertSubscriptionRepository:
         """Create alert subscription repository without direct infra import"""
         try:
-            from infra.db.repositories.alert_repository import AsyncpgAlertSubscriptionRepository
+            from infra.db.repositories.alert_repository import (
+                AsyncpgAlertSubscriptionRepository,
+            )
 
             connection = await self._get_connection()
             if connection is None:
@@ -161,7 +178,9 @@ class RepositoryFactory:
     async def create_alert_sent_repository(self) -> AlertSentRepository:
         """Create alert sent repository without direct infra import"""
         try:
-            from infra.db.repositories.alert_repository import AsyncpgAlertSentRepository
+            from infra.db.repositories.alert_repository import (
+                AsyncpgAlertSentRepository,
+            )
 
             connection = await self._get_connection()
             if connection is None:
@@ -183,7 +202,8 @@ class RepositoryFactory:
             if connection is None:
                 logger.warning("Database connection not available, using fallback")
                 return cast(
-                    SharedReportsRepository, self._create_memory_shared_reports_repository()
+                    SharedReportsRepository,
+                    self._create_memory_shared_reports_repository(),
                 )
             # AsyncPgSharedReportsRepository doesn't take connection parameter
             return AsyncPgSharedReportsRepository()
@@ -221,7 +241,11 @@ class RepositoryFactory:
                 return []
 
             async def create_channel(
-                self, channel_id: int, user_id: int, title: str, username: str | None = None
+                self,
+                channel_id: int,
+                user_id: int,
+                title: str,
+                username: str | None = None,
             ) -> None:
                 return None
 
@@ -257,7 +281,9 @@ class RepositoryFactory:
 
         return cast(AdminRepository, FallbackAdminRepository())
 
-    def _create_memory_alert_subscription_repository(self) -> AlertSubscriptionRepository:
+    def _create_memory_alert_subscription_repository(
+        self,
+    ) -> AlertSubscriptionRepository:
         """Fallback memory-based alert subscription repository"""
 
         class FallbackAlertSubscriptionRepository:
@@ -404,7 +430,9 @@ class LazyRepositoryFactory:
     async def create_payment_repository(self):
         """Create payment repository without direct infra import"""
         try:
-            from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+            from infra.db.repositories.payment_repository import (
+                AsyncpgPaymentRepository,
+            )
 
             factory = await self._ensure_factory()
             connection = await factory._get_connection()

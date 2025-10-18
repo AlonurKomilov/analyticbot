@@ -50,7 +50,11 @@ class MLServicesMigrator:
 
     def log_action(self, action: str, details: str = ""):
         """Log migration action"""
-        entry = {"timestamp": datetime.now().isoformat(), "action": action, "details": details}
+        entry = {
+            "timestamp": datetime.now().isoformat(),
+            "action": action,
+            "details": details,
+        }
         self.migration_log.append(entry)
         logger.info(f"📝 {action}: {details}")
 
@@ -76,7 +80,8 @@ class MLServicesMigrator:
                 # List backed up files
                 backed_up_files = list(backup_ml_dir.rglob("*.py"))
                 self.log_action(
-                    "BACKUP_FILES_COUNT", f"{len(backed_up_files)} Python files backed up"
+                    "BACKUP_FILES_COUNT",
+                    f"{len(backed_up_files)} Python files backed up",
                 )
 
                 for file in backed_up_files:
@@ -165,7 +170,7 @@ class MLServicesMigrator:
                 coordinator = create_ml_coordinator()
                 self.log_action("COORDINATOR_CREATED", "ML Coordinator instantiated successfully")
 
-                facade = create_bot_ml_facade()
+                create_bot_ml_facade()
                 self.log_action("FACADE_CREATED", "Bot ML Facade instantiated successfully")
 
                 # Test health check
@@ -206,7 +211,8 @@ class MLServicesMigrator:
                     )
                 else:
                     self.log_action(
-                        "IMPORTS_UNCHANGED", str(file_path.relative_to(self.project_root))
+                        "IMPORTS_UNCHANGED",
+                        str(file_path.relative_to(self.project_root)),
                     )
 
             self.log_action("PHASE_3_COMPLETE", f"Updated {len(import_references)} files")
@@ -324,10 +330,11 @@ Archived Location: archive/legacy_ml_services/
 
             # Verify legacy imports fail appropriately
             try:
-                import apps.bot.services.ml.ai_insights
+                pass
 
                 self.log_action(
-                    "LEGACY_IMPORT_WARNING", "Legacy import still works - check deprecation"
+                    "LEGACY_IMPORT_WARNING",
+                    "Legacy import still works - check deprecation",
                 )
             except ImportError:
                 self.log_action("LEGACY_IMPORT_BLOCKED", "Legacy imports properly blocked")
@@ -391,7 +398,8 @@ Archived Location: archive/legacy_ml_services/
                 self.log_action("ROLLBACK_ACTION", rollback_action["description"])
             except Exception as e:
                 self.log_action(
-                    "ROLLBACK_ERROR", f"Failed to rollback {rollback_action['description']}: {e}"
+                    "ROLLBACK_ERROR",
+                    f"Failed to rollback {rollback_action['description']}: {e}",
                 )
 
         self.log_action("ROLLBACK_COMPLETE", "Migration rollback completed")

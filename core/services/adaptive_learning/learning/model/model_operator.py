@@ -37,7 +37,10 @@ class ModelOperator:
         logger.info("⚙️ Model Operator initialized")
 
     def evaluate_model_performance(
-        self, model: Any, evaluation_data: dict[str, Any], metrics: list[str] | None = None
+        self,
+        model: Any,
+        evaluation_data: dict[str, Any],
+        metrics: list[str] | None = None,
     ) -> ModelEvaluation:
         """
         Comprehensive model performance evaluation.
@@ -144,7 +147,10 @@ class ModelOperator:
         return adjusted_weights
 
     def optimize_model_parameters(
-        self, model: Any, optimization_data: dict[str, Any], optimization_strategy: str = "adaptive"
+        self,
+        model: Any,
+        optimization_data: dict[str, Any],
+        optimization_strategy: str = "adaptive",
     ) -> dict[str, Any]:
         """
         Optimize model parameters for better performance.

@@ -16,4 +16,9 @@ from infra.adapters.payment import (
 )
 
 # Re-export for backward compatibility
-__all__ = ["PaymentAdapterFactory", "PaymentGateway", "MockPaymentAdapter", "StripePaymentAdapter"]
+__all__ = [
+    "PaymentAdapterFactory",
+    "PaymentGateway",
+    "MockPaymentAdapter",
+    "StripePaymentAdapter",
+]

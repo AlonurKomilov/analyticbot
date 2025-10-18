@@ -45,7 +45,6 @@ class ScheduleService:
         Create a new scheduled post with business validation
         """
         # Business rule: cannot schedule posts in the past
-        from datetime import timezone
 
         now = datetime.now(UTC)
 
@@ -91,7 +90,6 @@ class ScheduleService:
             raise ValueError("Cannot modify published posts")
 
         # Business rule: validate rescheduling
-        from datetime import timezone
 
         now = datetime.now(UTC)
         if post.scheduled_at <= now and post.status == PostStatus.SCHEDULED:
@@ -188,7 +186,9 @@ class DeliveryService:
 
         # Create delivery record
         delivery = Delivery(
-            post_id=post.id, delivery_channel_id=post.channel_id, status=DeliveryStatus.PENDING
+            post_id=post.id,
+            delivery_channel_id=post.channel_id,
+            status=DeliveryStatus.PENDING,
         )
 
         created_delivery = await self.delivery_repo.create(delivery)
@@ -291,7 +291,10 @@ class DeliveryService:
         stats = {}
         for status in DeliveryStatus:
             status_filter = DeliveryFilter(
-                channel_id=channel_id, from_date=from_date, to_date=to_date, status=status
+                channel_id=channel_id,
+                from_date=from_date,
+                to_date=to_date,
+                status=status,
             )
             stats[status.value] = await self.delivery_repo.count(status_filter)
 

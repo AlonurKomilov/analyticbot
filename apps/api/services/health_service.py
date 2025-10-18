@@ -447,7 +447,10 @@ async def check_database_health(connection_string: str | None = None) -> dict[st
         # Use provided connection string or environment variable
         conn_str = connection_string or os.getenv("DATABASE_URL")
         if not conn_str:
-            return {"healthy": False, "error": "No database connection string configured"}
+            return {
+                "healthy": False,
+                "error": "No database connection string configured",
+            }
 
         # Test database connection
         conn = await asyncpg.connect(conn_str)

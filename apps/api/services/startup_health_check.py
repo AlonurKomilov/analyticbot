@@ -203,10 +203,10 @@ class StartupHealthChecker:
         )
 
         try:
-            from apps.shared.di import get_container
+            from apps.di import get_container
 
             container = get_container()
-            pool = await container.asyncpg_pool()
+            pool = await container.database.asyncpg_pool()
 
             # Test query
             async with pool.acquire() as conn:

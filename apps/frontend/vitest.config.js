@@ -18,8 +18,8 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src/test/',
-        '**/*.test.{js,jsx}',
-        '**/*.spec.{js,jsx}',
+        '**/*.test.{js,jsx,ts,tsx}',
+        '**/*.spec.{js,jsx,ts,tsx}',
         '**/dist/',
         'vite.config.js'
       ],
@@ -37,7 +37,7 @@ export default defineConfig({
     globals: true,
 
     // Test file patterns
-    include: ['src/**/*.{test,spec}.{js,jsx}'],
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
 
     // Mock configuration
     mockReset: true,

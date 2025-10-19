@@ -345,6 +345,32 @@ async def get_service_information():
     """
     try:
         # Import analytics service using clean architecture pattern
+        from apps.di import get_container
+        from config.settings import settings
+        from core.protocols import AnalyticsServiceProtocol
+
+        container = get_container()
+        analytics_service = await container.core_services.analytics_fusion_service()
+
+        return {
+            "analytics_service": {
+                "name": "AnalyticsFusionService",
+                "service_type": "production",
+            },
+            "system_info": {
+                "environment": "production" if not settings.DEBUG else "development",
+                "clean_architecture": True,
+                "service_type": "core_system",
+            },
+            "generated_at": datetime.now().isoformat(),
+        }
+
+    except Exception as e:
+        logger.error(f"Service info fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get service information")
+    """
+    try:
+        # Import analytics service using clean architecture pattern
         from apps.api.di import container
         from config.settings import settings
         from core.protocols import AnalyticsServiceProtocol

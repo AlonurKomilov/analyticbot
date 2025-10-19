@@ -1,7 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { Container, Box, Typography, Skeleton, Stack, Alert } from '@mui/material';
 import { useChannelStore, usePostStore, useUIStore } from './stores';
-import { withErrorBoundary } from './utils/errorHandler.js';
+import { ErrorBoundary } from './utils/errors';
+import { ErrorFallback } from './components/common/ErrorFallback';
 import PostCreator from './components/PostCreator';
 import ScheduledPostsList from './components/ScheduledPostsList';
 import MediaPreview from './components/MediaPreview';
@@ -89,4 +90,11 @@ function App() {
     );
 }
 
-export default withErrorBoundary(App);
+// Wrap App with ErrorBoundary
+const AppWithErrorBoundary = () => (
+    <ErrorBoundary fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+        <App />
+    </ErrorBoundary>
+);
+
+export default AppWithErrorBoundary;

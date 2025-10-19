@@ -21,14 +21,14 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
     This replaces demo/mock data with actual database queries
     """
     try:
-        # ✅ FIXED: Use proper DI container for repository instantiation
-        from apps.shared.di import get_container
+        # ✅ MIGRATED: Use unified DI container from apps/di
+        from apps.di import get_container
 
         container = get_container()
 
         # Get repositories with proper pool injection
-        user_repo = await container.user_repo()
-        channel_repo = await container.channel_repo()
+        user_repo = await container.database.user_repo()
+        channel_repo = await container.database.channel_repo()
 
         # Get user data
         user = await user_repo.get_user_by_id(user_id)

@@ -5,7 +5,9 @@ import {
     Slide,
     IconButton,
     Box,
-    Typography
+    Typography,
+    SlideProps,
+    AlertColor
 } from '@mui/material';
 import {
     CheckCircle as SuccessIcon,
@@ -15,23 +17,44 @@ import {
     Close as CloseIcon
 } from '@mui/icons-material';
 
-const SlideTransition = (props) => <Slide {...props} direction="up" />;
+const SlideTransition = (props: SlideProps) => <Slide {...props} direction="up" />;
 
 /**
  * Accessible toast notification component with enhanced UX
  *
- * @param {Object} props - Component props
- * @param {boolean} props.open - Whether toast is visible
- * @param {Function} props.onClose - Close handler
- * @param {string} props.message - Main message text
- * @param {string} props.title - Optional title
- * @param {string} props.severity - Type: success, error, warning, info
- * @param {number} props.autoHideDuration - Auto close time (ms)
- * @param {string} props.action - Optional action text
- * @param {Function} props.onAction - Action click handler
- * @param {boolean} props.persistent - Don't auto-hide
+ * @component
+ * @example
+ * ```tsx
+ * <ToastNotification
+ *   open={true}
+ *   message="Operation successful!"
+ *   severity="success"
+ *   onClose={() => setOpen(false)}
+ * />
+ * ```
  */
-const ToastNotification = ({
+export interface ToastNotificationProps {
+  /** Whether toast is visible */
+  open?: boolean;
+  /** Close handler */
+  onClose?: (event: React.SyntheticEvent | Event, reason?: string) => void;
+  /** Main message text */
+  message: string;
+  /** Optional title */
+  title?: string;
+  /** Notification type */
+  severity?: AlertColor;
+  /** Auto close time (ms) */
+  autoHideDuration?: number;
+  /** Optional action text */
+  action?: React.ReactNode;
+  /** Action click handler */
+  onAction?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  /** Don't auto-hide */
+  persistent?: boolean;
+}
+
+const ToastNotification: React.FC<ToastNotificationProps> = ({
     open = false,
     onClose,
     message,
@@ -48,7 +71,7 @@ const ToastNotification = ({
         setIsVisible(open);
     }, [open]);
 
-    const handleClose = (event, reason) => {
+    const handleClose = (event: React.SyntheticEvent | Event, reason?: string): void => {
         if (reason === 'clickaway' && persistent) {
             return;
         }
@@ -58,8 +81,8 @@ const ToastNotification = ({
         }
     };
 
-    const getIcon = () => {
-        const iconProps = { fontSize: 'inherit', 'aria-hidden': true };
+    const getIcon = (): React.ReactElement => {
+        const iconProps = { fontSize: 'inherit' as const, 'aria-hidden': true };
         switch (severity) {
             case 'success':
                 return <SuccessIcon {...iconProps} />;
@@ -166,11 +189,21 @@ const ToastNotification = ({
 
 /**
  * Hook for managing toast notifications
+ *
+ * @example
+ * ```tsx
+ * const { showSuccess, showError } = useToast();
+ * showSuccess('Saved successfully!');
+ * ```
  */
-export const useToast = () => {
-    const [toasts, setToasts] = useState([]);
+export interface Toast extends ToastNotificationProps {
+  id: number;
+}
 
-    const showToast = (options) => {
+export const useToast = () => {
+    const [toasts, setToasts] = useState<Toast[]>([]);
+
+    const showToast = (options: Omit<Toast, 'id' | 'open'>): number => {
         const id = Date.now() + Math.random();
         const toast = {
             id,
@@ -190,20 +223,20 @@ export const useToast = () => {
         return id;
     };
 
-    const removeToast = (id) => {
+    const removeToast = (id: number): void => {
         setToasts(prev => prev.filter(toast => toast.id !== id));
     };
 
-    const showSuccess = (message, options = {}) =>
+    const showSuccess = (message: string, options: Partial<ToastNotificationProps> = {}) =>
         showToast({ message, severity: 'success', ...options });
 
-    const showError = (message, options = {}) =>
+    const showError = (message: string, options: Partial<ToastNotificationProps> = {}) =>
         showToast({ message, severity: 'error', ...options });
 
-    const showWarning = (message, options = {}) =>
+    const showWarning = (message: string, options: Partial<ToastNotificationProps> = {}) =>
         showToast({ message, severity: 'warning', ...options });
 
-    const showInfo = (message, options = {}) =>
+    const showInfo = (message: string, options: Partial<ToastNotificationProps> = {}) =>
         showToast({ message, severity: 'info', ...options });
 
     return {

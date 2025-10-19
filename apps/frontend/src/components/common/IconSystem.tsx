@@ -1,5 +1,5 @@
 import React from 'react';
-import { Chip } from '@mui/material';
+import { Chip, SxProps, Theme } from '@mui/material';
 import {
     // Navigation Icons
     Dashboard as DashboardIcon,
@@ -36,6 +36,21 @@ import {
     Storage as DatabaseIcon,
     Api as APIIcon
 } from '@mui/icons-material';
+
+/**
+ * IconSystem - Professional icon mapping with Material-UI icons
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <Icon name="dashboard" size="lg" color="primary" />
+ * <StatusChip status="online" label="Active" color="success" />
+ * ```
+ */
+
+export type IconName = keyof typeof ICON_COMPONENTS;
+export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+export type StatusType = 'online' | 'analytics' | 'secure' | 'ai' | 'realtime' | 'success' | 'info' | 'warning' | 'error';
 
 // Professional Icon Mapping System
 export const ICON_COMPONENTS = {
@@ -89,7 +104,20 @@ export const ICON_SIZES = {
  * Professional Icon Component
  * Replaces emoji usage with consistent Material-UI icons
  */
-export const Icon = ({
+export interface IconProps {
+  /** Icon name from ICON_COMPONENTS */
+  name: IconName;
+  /** Icon size (preset or custom number) */
+  size?: IconSize | number;
+  /** Icon color */
+  color?: string;
+  /** Additional CSS class */
+  className?: string;
+  /** Additional props */
+  [key: string]: any;
+}
+
+export const Icon: React.FC<IconProps> = ({
     name,
     size = 'md',
     color = 'inherit',
@@ -117,14 +145,30 @@ export const Icon = ({
 /**
  * Status Chip with Professional Icons
  */
-export const StatusChip = React.forwardRef(({
+export interface StatusChipProps {
+  /** Status type */
+  status: StatusType;
+  /** Chip label */
+  label: string;
+  /** Chip color */
+  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+  /** Chip size */
+  size?: 'small' | 'medium';
+  /** Custom styles */
+  sx?: SxProps<Theme>;
+  /** Additional props */
+  [key: string]: any;
+}
+
+export const StatusChip = React.forwardRef<HTMLDivElement, StatusChipProps>(({
     status,
     label,
     color = 'primary',
     size = 'medium',
+    sx,
     ...props
 }, ref) => {
-    const statusIcons = {
+    const statusIcons: Record<StatusType, IconName> = {
         online: 'online',
         analytics: 'analytics',
         secure: 'secure',
@@ -136,14 +180,16 @@ export const StatusChip = React.forwardRef(({
         error: 'security'
     };
 
+    const iconName = statusIcons[status as StatusType];
+
     return (
         <Chip
             ref={ref}
-            icon={<Icon name={statusIcons[status]} size="sm" />}
+            icon={<Icon name={iconName} size="sm" />}
             label={label}
             color={color}
             size={size}
-            sx={{ fontSize: '0.9rem' }}
+            sx={{ fontSize: '0.9rem', ...sx }}
             {...props}
         />
     );

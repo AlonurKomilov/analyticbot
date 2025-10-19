@@ -24,7 +24,7 @@ import {
 import { useMediaStore, useChannelStore } from '@/stores';
 import { useTelegramWebApp } from '../hooks/index.js';
 
-const EnhancedMediaUploader = () => {
+const EnhancedMediaUploader = React.memo(() => {
     const { uploadMediaDirect, pendingMedia, clearPendingMedia, isUploading } = useMediaStore();
     const { channels } = useChannelStore();
 
@@ -351,6 +351,8 @@ const EnhancedMediaUploader = () => {
             )}
         </Paper>
     );
-};
+});
+
+EnhancedMediaUploader.displayName = 'EnhancedMediaUploader';
 
 export default EnhancedMediaUploader;

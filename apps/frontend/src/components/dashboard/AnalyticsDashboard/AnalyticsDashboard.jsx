@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container,
     Typography,
@@ -53,7 +53,7 @@ import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
  * - Better maintainability and testability
  * - Preserved all existing functionality
  */
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = React.memo(() => {
     const [activeTab, setActiveTab] = useState(0);
     const [lastUpdated, setLastUpdated] = useState(new Date());
     const [isLoading, setIsLoading] = useState(false);
@@ -255,6 +255,8 @@ const AnalyticsDashboard = () => {
             />
         </Container>
     );
-};
+});
+
+AnalyticsDashboard.displayName = 'AnalyticsDashboard';
 
 export default AnalyticsDashboard;

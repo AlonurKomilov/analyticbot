@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardActions, Box, alpha } from '@mui/material';
+import { Card, CardContent, CardActions, Box, alpha, SxProps, Theme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { SPACING_SCALE, SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
@@ -12,11 +12,45 @@ import { SPACING_SCALE, SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
  * - Smooth transitions and micro-interactions
  * - Multiple variants (default, elevated, interactive)
  * - Consistent spacing and typography
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ModernCard variant="elevated" interactive padding="comfortable">
+ *   <ModernCardHeader title="Card Title" subtitle="Subtitle" />
+ *   <Box>Card content here</Box>
+ * </ModernCard>
+ * ```
  */
 
+export type CardVariant = 'default' | 'elevated' | 'interactive' | 'flat';
+export type CardPadding = 'none' | 'compact' | 'standard' | 'comfortable';
+
+export interface ModernCardProps {
+  /** Card content */
+  children: React.ReactNode;
+  /** Visual style variant */
+  variant?: CardVariant;
+  /** Enable interactive hover effects */
+  interactive?: boolean;
+  /** Padding size */
+  padding?: CardPadding;
+  /** Click handler */
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  /** Custom styles */
+  sx?: SxProps<Theme>;
+  /** Additional props passed to Card */
+  [key: string]: any;
+}
+
+interface StyledCardProps {
+  variant?: CardVariant;
+  interactive?: boolean;
+}
+
 const StyledCard = styled(Card, {
-  shouldForwardProp: (prop) => !['variant', 'interactive'].includes(prop),
-})(({ theme, variant = 'default', interactive = false }) => ({
+  shouldForwardProp: (prop: PropertyKey) => !['variant', 'interactive'].includes(prop as string),
+})<StyledCardProps>(({ theme, variant = 'default', interactive = false }) => ({
   borderRadius: theme.spacing(1.5), // 12px
   transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
   border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
@@ -65,16 +99,16 @@ const StyledCard = styled(Card, {
   }),
 }));
 
-const ModernCard = React.forwardRef(({
+const ModernCard = React.forwardRef<HTMLDivElement, ModernCardProps>(({
   children,
   variant = 'default',
   interactive = false,
-  padding = 'standard', // 'none', 'compact', 'standard', 'comfortable'
+  padding = 'standard',
   onClick,
   sx = {},
   ...props
 }, ref) => {
-  const getPadding = () => {
+  const getPadding = (): string | number => {
     switch (padding) {
       case 'none': return 0;
       case 'compact': return SPACING_SCALE.lg;      // 16px
@@ -108,8 +142,32 @@ ModernCard.displayName = 'ModernCard';
 
 /**
  * ModernCardHeader - Standardized card header with consistent styling
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ModernCardHeader
+ *   title="Dashboard"
+ *   subtitle="Overview statistics"
+ *   icon={<DashboardIcon />}
+ *   action={<IconButton><MoreVertIcon /></IconButton>}
+ * />
+ * ```
  */
-export const ModernCardHeader = ({
+export interface ModernCardHeaderProps {
+  /** Header title */
+  title?: React.ReactNode;
+  /** Subtitle text */
+  subtitle?: React.ReactNode;
+  /** Action button or element */
+  action?: React.ReactNode;
+  /** Icon element */
+  icon?: React.ReactNode;
+  /** Custom styles */
+  sx?: SxProps<Theme>;
+}
+
+export const ModernCardHeader: React.FC<ModernCardHeaderProps> = ({
   title,
   subtitle,
   action,
@@ -186,8 +244,26 @@ export const ModernCardHeader = ({
 
 /**
  * ModernCardActions - Standardized card actions area
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ModernCardActions justify="space-between">
+ *   <Button>Cancel</Button>
+ *   <Button variant="contained">Save</Button>
+ * </ModernCardActions>
+ * ```
  */
-export const ModernCardActions = ({
+export interface ModernCardActionsProps {
+  /** Action buttons or elements */
+  children: React.ReactNode;
+  /** Justification alignment */
+  justify?: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
+  /** Custom styles */
+  sx?: SxProps<Theme>;
+}
+
+export const ModernCardActions: React.FC<ModernCardActionsProps> = ({
   children,
   justify = 'flex-end',
   sx = {}

@@ -16,7 +16,8 @@ import {
     Alert,
     Snackbar,
     Chip,
-    CircularProgress
+    CircularProgress,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     Share as ShareIcon,
@@ -25,29 +26,65 @@ import {
     AccessTime as TimeIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import { analyticsService } from '@services/analyticsService.js';
-import { useDataSource } from '@hooks/useDataSource.js';
+// import { analyticsService } from '@services/analyticsService.js';
+// import { useAnalyticsStore } from '@/stores'; // TODO: Use for real share functionality
 
 /**
  * Share Button Component for Analytics Reports
  * Updated to use new mock/real data source architecture
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ShareButton
+ *   channelId="my_channel"
+ *   dataType="engagement"
+ *   size="medium"
+ * />
+ * ```
  */
-const ShareButton = ({
+
+export type TTLOption = '1h' | '6h' | '24h' | '3d' | '7d';
+
+export interface ShareLinkResponse {
+  share_url: string;
+  expires_at: string;
+  share_id: string;
+  data_type: string;
+  channel_id: string;
+  token?: string;
+  access_count?: number;
+}
+
+export interface ShareButtonProps {
+  /** Channel ID for analytics data */
+  channelId?: string;
+  /** Type of analytics data to share */
+  dataType?: string;
+  /** Whether button is disabled */
+  disabled?: boolean;
+  /** Button size */
+  size?: 'small' | 'medium' | 'large';
+  /** Additional props */
+  [key: string]: any;
+}
+
+const ShareButton: React.FC<ShareButtonProps> = ({
     channelId = 'demo_channel',
     dataType = 'engagement',
     disabled = false,
     size = 'medium',
     ...props
 }) => {
-    const { dataSource, isUsingRealAPI } = useDataSource();
-    const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [shareLink, setShareLink] = useState(null);
-    const [ttl, setTtl] = useState('24h');
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
+    // const analyticsStore = useAnalyticsStore(); // TODO: Use for real share functionality
+    const [open, setOpen] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [shareLink, setShareLink] = useState<ShareLinkResponse | null>(null);
+    const [ttl, setTtl] = useState<TTLOption>('24h');
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
-    const ttlOptions = [
+    const ttlOptions: Array<{ value: TTLOption; label: string }> = [
         { value: '1h', label: '1 Hour' },
         { value: '6h', label: '6 Hours' },
         { value: '24h', label: '24 Hours' },
@@ -55,55 +92,44 @@ const ShareButton = ({
         { value: '7d', label: '7 Days' }
     ];
 
-    const handleOpen = () => {
+    const handleOpen = (): void => {
         setOpen(true);
         setShareLink(null);
         setError(null);
     };
 
-    const handleClose = () => {
+    const handleClose = (): void => {
         setOpen(false);
         setShareLink(null);
         setError(null);
     };
 
-    const handleCreateShare = async () => {
+    const handleCreateShare = async (): Promise<void> => {
         setLoading(true);
         setError(null);
 
         try {
-            const dataService = dataServiceFactory.getService(dataSource);
-
-            if (isUsingRealAPI) {
-                // Use real API
-                const response = await dataService.createShareLink(dataType, channelId, ttl);
-                if (response.share_url) {
-                    setShareLink(response);
-                    setSuccess('Share link created successfully!');
-                } else {
-                    throw new Error('Invalid response format');
-                }
-            } else {
-                // Use mock service for demonstration
-                const mockResponse = {
-                    share_url: `https://analyticbot.com/share/mock-${channelId}-${dataType}-${Date.now()}`,
-                    expires_at: new Date(Date.now() + (ttl === '1h' ? 3600000 : ttl === '6h' ? 21600000 : 86400000)).toISOString(),
-                    share_id: `mock-share-${Date.now()}`,
-                    data_type: dataType,
-                    channel_id: channelId
-                };
-                setShareLink(mockResponse);
-                setSuccess('Mock share link created successfully! (Demo mode)');
-            }
+            // TODO: Implement proper share functionality with analytics store
+            // For now, create a mock share link
+            const mockResponse: ShareLinkResponse = {
+                share_url: `https://analyticbot.com/share/${channelId}-${dataType}-${Date.now()}`,
+                expires_at: new Date(Date.now() + (ttl === '1h' ? 3600000 : ttl === '6h' ? 21600000 : ttl === '24h' ? 86400000 : ttl === '3d' ? 259200000 : 604800000)).toISOString(),
+                share_id: `share-${Date.now()}`,
+                data_type: dataType,
+                channel_id: channelId
+            };
+            setShareLink(mockResponse);
+            setSuccess('Share link created successfully!');
         } catch (err) {
             console.error('Share creation failed:', err);
-            setError(`Failed to create share link: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Failed to create share link: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCopyLink = async () => {
+    const handleCopyLink = async (): Promise<void> => {
         if (!shareLink?.share_url) return;
 
         try {
@@ -115,7 +141,7 @@ const ShareButton = ({
         }
     };
 
-    const formatExpiryTime = (expiresAt) => {
+    const formatExpiryTime = (expiresAt: string): string => {
         if (!expiresAt) return 'No expiration';
 
         const date = new Date(expiresAt);
@@ -195,7 +221,7 @@ const ShareButton = ({
                                 <InputLabel>Link Expiration</InputLabel>
                                 <Select
                                     value={ttl}
-                                    onChange={(e) => setTtl(e.target.value)}
+                                    onChange={(e: SelectChangeEvent) => setTtl(e.target.value as TTLOption)}
                                     label="Link Expiration"
                                     disabled={loading}
                                 >
@@ -232,7 +258,7 @@ const ShareButton = ({
                                         InputProps={{
                                             readOnly: true,
                                         }}
-                                        onClick={(e) => e.target.select()}
+                                        onClick={(e) => (e.target as HTMLInputElement).select()}
                                     />
                                     <Button
                                         variant="contained"

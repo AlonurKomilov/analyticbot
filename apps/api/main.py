@@ -28,13 +28,12 @@ from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 
-# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
-from apps.di import cleanup_container as cleanup_db_pool
+# ✅ MIGRATED: Use new modular DI system exclusively
+from apps.di import cleanup_container as cleanup_db_pool, get_container
 from apps.shared.api.content_protection_router import router as content_protection_router
 from apps.shared.api.payment_router import router as payment_router
 
-# ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
-from apps.shared.di import close_container, get_container
+# ✅ CLEAN ARCHITECTURE: Use unified DI container from apps/di
 from config import settings
 
 # ✅ PRODUCTION READY: No more direct mock imports
@@ -101,8 +100,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
-        await close_container()
-        await cleanup_db_pool()
+        await cleanup_db_pool()  # This calls cleanup_container internally
         logger.info("✅ Application shutdown completed")
     except Exception as e:
         logger.error(f"Application shutdown failed: {e}")
@@ -233,13 +231,9 @@ app.add_middleware(
 )
 
 # Add demo mode detection middleware
-import apps.api.di as api_di
 from apps.demo.middleware import DemoMiddleware
 
 app.add_middleware(DemoMiddleware)
-
-# Initialize API DI container
-api_container = api_di.configure_api_container()
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)  # Core system operations (performance, scheduling)

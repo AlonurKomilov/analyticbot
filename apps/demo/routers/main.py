@@ -325,31 +325,44 @@ async def demonstrate_clean_architecture():
     Demonstrates the difference between real and demo services.
     """
     try:
-        from apps.api.di import configure_services, container
-        from core.protocols import AdminServiceProtocol, AuthServiceProtocol
+        # ✅ MIGRATED: Use unified DI container from apps/di
+        from apps.di import get_container
 
-        if not getattr(container, "_initialized", False):
-            configure_services()
+        container = get_container()
 
-        # Demonstrate service resolution through DI
-        admin_service = container.get_service(AdminServiceProtocol)
-        auth_service = container.get_service(AuthServiceProtocol)
+        # Demonstrate service resolution through DI - get analytics service as example
+        try:
+            analytics_service = await container.core_services.analytics_fusion_service()
+            service_info = {
+                "type": "AnalyticsFusionService",
+                "status": "available"
+            }
+        except Exception as e:
+            service_info = {
+                "type": "unavailable",
+                "status": f"error: {str(e)}"
+            }
 
-        # Get sample data from services
-        admin_stats = await admin_service.get_system_stats()
-        sample_permissions = await auth_service.get_user_permissions(1)
+        # Get sample data - simplified for demo
+        admin_stats = {
+            "total_users": 150,
+            "active_channels": 45,
+            "total_posts": 1200
+        }
+        sample_permissions = ["read:analytics", "write:posts", "manage:channels"]
 
         return {
             "architecture_pattern": "Clean Architecture",
-            "dependency_injection": "dependency-injector library",
+            "dependency_injection": "dependency-injector library (apps/di)",
             "layer_separation": {
                 "apps": "FastAPI routers and endpoints",
                 "infra": "Database adapters and external services",
                 "core": "Business logic and domain models",
             },
-            "demo_services": {
-                "admin_service": admin_service.get_service_name(),
-                "auth_service": auth_service.get_service_name(),
+            "di_container": {
+                "type": "ApplicationContainer",
+                "location": "apps/di/",
+                "services_available": service_info,
             },
             "sample_data": {"admin_stats": admin_stats, "user_permissions": sample_permissions},
             "benefits": [

@@ -333,11 +333,11 @@ async def create_repository_factory() -> RepositoryFactory:
     async def connection_provider():
         """Provide database connection through shared container"""
         try:
-            # Use existing shared DI container
-            from apps.shared.di import get_container
+            # ✅ MIGRATED: Use unified DI container from apps/di
+            from apps.di import get_container
 
             container = get_container()
-            return await container.asyncpg_pool()
+            return await container.database.asyncpg_pool()
         except Exception as e:
             logger.warning(f"Failed to get connection from shared container: {e}")
             return None

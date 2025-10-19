@@ -40,11 +40,11 @@ logger = logging.getLogger(__name__)
 async def get_user_repository() -> UserRepository:
     """Get user repository dependency with proper pool injection"""
     try:
-        # ✅ FIXED: Use proper DI container instead of manual pool creation
-        from apps.shared.di import get_container
+        # ✅ MIGRATED: Use unified DI container from apps/di
+        from apps.di import get_container
 
         container = get_container()
-        return await container.user_repo()
+        return await container.database.user_repo()
     except Exception as e:
         logger.error(f"Failed to get user repository from DI container: {e}")
         raise HTTPException(
@@ -56,11 +56,11 @@ async def get_user_repository() -> UserRepository:
 async def get_channel_repository() -> ChannelRepository:
     """Get channel repository dependency with proper pool injection"""
     try:
-        # ✅ FIXED: Use proper DI container instead of manual pool creation
-        from apps.shared.di import get_container
+        # ✅ MIGRATED: Use unified DI container from apps/di
+        from apps.di import get_container
 
         container = get_container()
-        return await container.channel_repo()
+        return await container.database.channel_repo()
     except Exception as e:
         logger.error(f"Failed to get channel repository from DI container: {e}")
         raise HTTPException(

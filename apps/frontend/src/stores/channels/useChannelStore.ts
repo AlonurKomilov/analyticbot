@@ -1,62 +1,55 @@
 /**
- * Channels Store
+ * Channels Store (TypeScript)
  * Manages Telegram channels state and operations
  * Pure domain logic for channels - separated from god store
  */
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { apiClient } from '@/api/client.js';
-import { ErrorHandler } from '@/utils/errorHandler.js';
+import { apiClient } from '@/api/client';
+import { ErrorHandler } from '@/utils/errorHandler';
+import type { Channel, ValidationResult, ChannelValidationResponse } from '@/types';
 
-interface Channel {
-  id: string | number;
-  username: string;
-  title?: string;
-  description?: string;
-  members_count?: number;
-  photo_url?: string;
-  is_active?: boolean;
-}
-
-interface ValidationResult {
-  success: boolean;
-  data?: any;
-  error?: string;
-}
-
-interface ChannelsState {
+interface ChannelState {
   // State
   channels: Channel[];
+  selectedChannel: Channel | null;
   isLoading: boolean;
+  isValidating: boolean;
   error: string | null;
-  validating: boolean;
   validationError: string | null;
 
   // Actions
-  loadChannels: () => Promise<void>;
-  addChannel: (username: string) => Promise<boolean>;
-  deleteChannel: (channelId: string | number) => Promise<void>;
+  fetchChannels: () => Promise<void>;
+  addChannel: (channelData: {
+    name: string;
+    username: string;
+    description?: string;
+  }) => Promise<void>;
+  updateChannel: (channelId: string, data: Partial<Channel>) => Promise<void>;
+  deleteChannel: (channelId: string) => Promise<void>;
+  selectChannel: (channel: Channel | null) => void;
   validateChannel: (username: string) => Promise<ValidationResult>;
-  setChannels: (channels: Channel[]) => void;
   clearError: () => void;
+  clearValidationError: () => void;
 }
 
-export const useChannelStore = create<ChannelsState>()(
+export const useChannelStore = create<ChannelState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
     channels: [],
+    selectedChannel: null,
     isLoading: false,
+    isValidating: false,
     error: null,
-    validating: false,
     validationError: null,
 
-    // Load all channels
-    loadChannels: async () => {
+    // Fetch all channels
+    fetchChannels: async () => {
       set({ isLoading: true, error: null });
 
       try {
-        const channels = await apiClient.get('/analytics/channels');
+        const channels = await apiClient.get<Channel[]>('/analytics/channels');
         set({
           channels: channels || [],
           isLoading: false
@@ -75,30 +68,30 @@ export const useChannelStore = create<ChannelsState>()(
 
     // Validate Telegram channel
     validateChannel: async (username: string): Promise<ValidationResult> => {
-      set({ validating: true, validationError: null });
+      set({ isValidating: true, validationError: null });
 
       try {
         // Ensure username starts with @
         const channelUsername = username.startsWith('@') ? username : `@${username}`;
         console.log('🔍 Validating Telegram channel:', channelUsername);
 
-        const validationResult = await apiClient.post('/analytics/channels/validate', {
-          username: channelUsername
-        } as any);
+        const validationResult = await apiClient.post<ChannelValidationResponse>(
+          '/analytics/channels/validate',
+          { username: channelUsername }
+        );
 
-        set({ validating: false });
+        set({ isValidating: false });
 
-        if (validationResult.is_valid) {
-          console.log('✅ Channel validated:', validationResult.title);
+        if (validationResult.valid) {
+          console.log('✅ Channel validated:', validationResult.channelData?.title);
           return {
-            success: true,
-            data: validationResult
+            valid: true
           };
         } else {
-          console.warn('❌ Channel validation failed:', validationResult.error_message);
+          console.warn('❌ Channel validation failed:', validationResult.error);
           return {
-            success: false,
-            error: validationResult.error_message || 'Channel not found'
+            valid: false,
+            error: validationResult.error || 'Channel not found'
           };
         }
       } catch (error) {
@@ -111,60 +104,59 @@ export const useChannelStore = create<ChannelsState>()(
 
         const errorMessage = error instanceof Error ? error.message : 'Validation failed';
         set({
-          validating: false,
+          isValidating: false,
           validationError: errorMessage
         });
 
         return {
-          success: false,
+          valid: false,
           error: errorMessage
         };
       }
     },
 
     // Add new channel
-    addChannel: async (channelUsername: string): Promise<boolean> => {
+    addChannel: async (channelData) => {
       set({ isLoading: true, error: null });
 
       try {
         // Clean username
-        const cleanUsername = channelUsername.replace('@', '');
+        const cleanUsername = channelData.username.replace('@', '');
         const usernameWithAt = `@${cleanUsername}`;
         console.log('📺 Adding channel:', usernameWithAt);
 
         // Step 1: Validate with Telegram API first
         const validation = await get().validateChannel(usernameWithAt);
 
-        if (!validation.success) {
+        if (!validation.valid) {
           set({
             isLoading: false,
             error: validation.error || 'Channel validation failed'
           });
-          return false;
+          throw new Error(validation.error || 'Channel validation failed');
         }
 
         // Step 2: Add to database
         console.log('💾 Saving channel to database...');
-        const result = await apiClient.post('/analytics/channels', {
+        const newChannel = await apiClient.post<Channel>('/analytics/channels', {
+          name: channelData.name,
           username: usernameWithAt,
-          title: validation.data?.title,
-          description: validation.data?.description,
-          members_count: validation.data?.members_count
-        } as any);
+          description: channelData.description
+        });
 
-        // Step 3: Reload channels list
-        await get().loadChannels();
+        // Step 3: Add to local state
+        set(state => ({
+          channels: [...state.channels, newChannel],
+          isLoading: false
+        }));
 
-        console.log('✅ Channel added successfully:', result);
-        set({ isLoading: false });
-        return true;
-
+        console.log('✅ Channel added successfully:', newChannel);
       } catch (error) {
         console.error('❌ Add channel error:', error);
         ErrorHandler.handleError(error, {
           component: 'ChannelStore',
           action: 'addChannel',
-          username: channelUsername
+          username: channelData.username
         });
 
         const errorMessage = error instanceof Error ? error.message : 'Failed to add channel';
@@ -172,12 +164,44 @@ export const useChannelStore = create<ChannelsState>()(
           error: errorMessage,
           isLoading: false
         });
-        return false;
+        throw error;
+      }
+    },
+
+    // Update channel
+    updateChannel: async (channelId: string, data: Partial<Channel>) => {
+      set({ isLoading: true, error: null });
+
+      try {
+        const updatedChannel = await apiClient.patch<Channel>(
+          `/analytics/channels/${channelId}`,
+          data
+        );
+
+        set(state => ({
+          channels: state.channels.map(ch =>
+            ch.id === channelId ? updatedChannel : ch
+          ),
+          selectedChannel: state.selectedChannel?.id === channelId
+            ? updatedChannel
+            : state.selectedChannel,
+          isLoading: false
+        }));
+
+        console.log('✅ Channel updated successfully');
+      } catch (error) {
+        console.error('❌ Update channel error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update channel';
+        set({
+          error: errorMessage,
+          isLoading: false
+        });
+        throw error;
       }
     },
 
     // Delete channel
-    deleteChannel: async (channelId: string | number) => {
+    deleteChannel: async (channelId: string) => {
       set({ isLoading: true, error: null });
 
       try {
@@ -187,6 +211,9 @@ export const useChannelStore = create<ChannelsState>()(
         // Remove from local state
         set(state => ({
           channels: state.channels.filter(ch => ch.id !== channelId),
+          selectedChannel: state.selectedChannel?.id === channelId
+            ? null
+            : state.selectedChannel,
           isLoading: false
         }));
 
@@ -204,17 +231,23 @@ export const useChannelStore = create<ChannelsState>()(
           error: errorMessage,
           isLoading: false
         });
+        throw error;
       }
     },
 
-    // Set channels directly
-    setChannels: (channels: Channel[]) => {
-      set({ channels });
+    // Select channel
+    selectChannel: (channel: Channel | null) => {
+      set({ selectedChannel: channel });
     },
 
     // Clear error
     clearError: () => {
-      set({ error: null, validationError: null });
+      set({ error: null });
+    },
+
+    // Clear validation error
+    clearValidationError: () => {
+      set({ validationError: null });
     }
   }))
 );

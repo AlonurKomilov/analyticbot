@@ -4,8 +4,13 @@
  * Clean replacement for /analytics/demo/* endpoints
  */
 
-import { analyticsService } from '@services/analyticsService.js';
+/**
+ * Demo API Mock
+ * Functionality moved to main analyticsService
+ */
+
 // demoAnalyticsService functionality moved to main analyticsService
+// This file is kept for backwards compatibility
 
 /**
  * Demo API Client

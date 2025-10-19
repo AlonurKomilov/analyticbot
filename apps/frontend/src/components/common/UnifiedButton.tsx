@@ -12,15 +12,63 @@
  */
 
 import React from 'react';
-import { Button as MuiButton, CircularProgress } from '@mui/material';
+import { Button as MuiButton, CircularProgress, SxProps, Theme, ButtonProps as MuiButtonProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS, getButtonProps, createTransition, createElevation } from '../../theme/designTokens.js';
+
+/**
+ * Button variant types
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success';
+
+/**
+ * Button size types
+ */
+export type ButtonSize = 'small' | 'medium' | 'large';
+
+/**
+ * Props for UnifiedButton component
+ */
+export interface UnifiedButtonProps extends Omit<MuiButtonProps, 'variant' | 'size'> {
+  /** Show loading state with spinner */
+  loading?: boolean;
+  /** Text to display when loading (for screen readers) */
+  loadingText?: string;
+  /** Button content */
+  children: React.ReactNode;
+  /** Button visual variant */
+  variant?: ButtonVariant;
+  /** Button size */
+  size?: ButtonSize;
+  /** Accessible label for screen readers */
+  ariaLabel?: string;
+  /** ID of element describing the button */
+  ariaDescribedBy?: string;
+  /** Click handler */
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  /** Disabled state */
+  disabled?: boolean;
+  /** Additional MUI styles */
+  sx?: SxProps<Theme>;
+  /** Button HTML type */
+  type?: 'button' | 'submit' | 'reset';
+  /** Icon displayed before button text */
+  startIcon?: React.ReactElement;
+  /** Icon displayed after button text */
+  endIcon?: React.ReactElement;
+}
+
+interface StyledButtonProps {
+  buttonVariant?: string;
+  loading?: boolean;
+}
 
 // Enhanced styled button with all accessibility and design features
 const StyledButton = styled(MuiButton, {
   shouldForwardProp: (prop) => prop !== 'buttonVariant' && prop !== 'loading'
-})(({ theme, size, buttonVariant, loading }) => {
-  const sizeConfig = DESIGN_TOKENS.components.button.sizes[size] || DESIGN_TOKENS.components.button.sizes.medium;
+})<StyledButtonProps>(({ theme, size, loading }) => {
+  const sizeKey = (size || 'medium') as ButtonSize;
+  const sizeConfig = DESIGN_TOKENS.components.button.sizes[sizeKey] || DESIGN_TOKENS.components.button.sizes.medium;
 
   return {
     textTransform: 'none',
@@ -81,24 +129,28 @@ const StyledButton = styled(MuiButton, {
 });
 
 /**
- * Unified Button Component
+ * UnifiedButton - A comprehensive button component with loading states and accessibility
  *
- * @param {Object} props - Component props
- * @param {boolean} props.loading - Show loading state
- * @param {string} props.loadingText - Text to show when loading (for screen readers)
- * @param {ReactNode} props.children - Button content
- * @param {string} props.variant - Button variant (primary, secondary, tertiary, danger, success)
- * @param {string} props.size - Button size (small, medium, large)
- * @param {string} props.ariaLabel - Accessible label for screen readers
- * @param {string} props.ariaDescribedBy - ID of element describing the button
- * @param {Function} props.onClick - Click handler
- * @param {boolean} props.disabled - Disabled state
- * @param {Object} props.sx - Additional styles
- * @param {string} props.type - Button type (button, submit, reset)
- * @param {ReactElement} props.startIcon - Icon before button text
- * @param {ReactElement} props.endIcon - Icon after button text
+ * @component
+ * @example
+ * ```tsx
+ * // Basic button
+ * <UnifiedButton variant="primary" onClick={handleClick}>
+ *   Click Me
+ * </UnifiedButton>
+ *
+ * // Loading button
+ * <UnifiedButton loading loadingText="Saving...">
+ *   Save
+ * </UnifiedButton>
+ *
+ * // Button with icon
+ * <UnifiedButton startIcon={<SaveIcon />} variant="success">
+ *   Save Changes
+ * </UnifiedButton>
+ * ```
  */
-const UnifiedButton = React.forwardRef(({
+const UnifiedButton = React.forwardRef<HTMLButtonElement, UnifiedButtonProps>(({
   loading = false,
   loadingText = "Processing...",
   children,
@@ -113,7 +165,7 @@ const UnifiedButton = React.forwardRef(({
   startIcon,
   endIcon,
   ...props
-}, ref) => {
+}, ref: React.Ref<HTMLButtonElement>) => {
 
   // Get design token button properties
   const buttonProps = getButtonProps(size, variant);
@@ -184,37 +236,37 @@ const UnifiedButton = React.forwardRef(({
 UnifiedButton.displayName = 'UnifiedButton';
 
 // Pre-configured button variants for common use cases
-export const PrimaryButton = (props) => (
+export const PrimaryButton: React.FC<Omit<UnifiedButtonProps, 'variant'>> = (props) => (
   <UnifiedButton variant="primary" {...props} />
 );
 
-export const SecondaryButton = (props) => (
+export const SecondaryButton: React.FC<Omit<UnifiedButtonProps, 'variant'>> = (props) => (
   <UnifiedButton variant="secondary" {...props} />
 );
 
-export const TertiaryButton = (props) => (
+export const TertiaryButton: React.FC<Omit<UnifiedButtonProps, 'variant'>> = (props) => (
   <UnifiedButton variant="tertiary" {...props} />
 );
 
-export const DangerButton = (props) => (
+export const DangerButton: React.FC<Omit<UnifiedButtonProps, 'variant'>> = (props) => (
   <UnifiedButton variant="danger" {...props} />
 );
 
-export const SuccessButton = (props) => (
+export const SuccessButton: React.FC<Omit<UnifiedButtonProps, 'variant'>> = (props) => (
   <UnifiedButton variant="success" {...props} />
 );
 
 // Size variants
-export const SmallButton = (props) => (
+export const SmallButton: React.FC<Omit<UnifiedButtonProps, 'size'>> = (props) => (
   <UnifiedButton size="small" {...props} />
 );
 
-export const LargeButton = (props) => (
+export const LargeButton: React.FC<Omit<UnifiedButtonProps, 'size'>> = (props) => (
   <UnifiedButton size="large" {...props} />
 );
 
 // Loading button with common loading text
-export const LoadingButton = ({ loadingText = "Loading...", ...props }) => (
+export const LoadingButton: React.FC<UnifiedButtonProps> = ({ loadingText = "Loading...", ...props }) => (
   <UnifiedButton loadingText={loadingText} {...props} />
 );
 

@@ -6,6 +6,7 @@ import { ProtectedRoute, PublicRoute } from './components/guards';
 // Import optimized lazy loading system
 import {
     CriticalComponents,
+    PageComponents,
     AdminComponents,
     ServiceComponents,
     UtilityComponents,
@@ -13,20 +14,26 @@ import {
     initializePerformanceOptimizations
 } from './utils/lazyLoading';
 
-// Import new page components
-import DashboardPage from './components/pages/DashboardPage.jsx';
-import CreatePostPage from './components/pages/CreatePostPage.jsx';
-import AnalyticsPage from './components/pages/AnalyticsPage.jsx';
-import AuthPage from './pages/AuthPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
-import ResetPasswordForm from './components/auth/ResetPasswordForm.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
+// Import navigation system from domain structure
+import { NavigationProvider } from './components/common/NavigationProvider';
+import NavigationBar from './components/domains/navigation/NavigationBar';
+import { PageLoader } from './components/common/PageLoader';
 
 // Destructure components for cleaner code
 const {
     MainDashboard,
     AnalyticsDashboard
 } = CriticalComponents;
+
+const {
+    DashboardPage,
+    CreatePostPage,
+    AnalyticsPage,
+    AuthPage,
+    ProfilePage,
+    AdminDashboard,
+    ResetPasswordForm
+} = PageComponents;
 
 const {
     SuperAdminDashboard
@@ -47,40 +54,14 @@ const {
     ServicesOverview
 } = UtilityComponents;
 
-// Import navigation system from domain structure
-import { NavigationProvider } from './components/common/NavigationProvider';
-import NavigationBar from './components/domains/navigation/NavigationBar';
-
 /**
- * Performance-optimized loading component
+ * Performance-optimized loading component with skeleton UI
  */
-const OptimizedSuspense = ({ children, fallback }) => {
+const OptimizedSuspense = ({ children, fallback, skeletonType = 'dashboard' }) => {
     return (
         <Suspense
             fallback={
-                fallback || (
-                    <Box sx={{
-                        minHeight: '400px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: 2
-                    }}>
-                        <CircularProgress size={40} />
-                        <LinearProgress
-                            sx={{ width: '200px', borderRadius: 1 }}
-                            variant="indeterminate"
-                        />
-                        <Box sx={{
-                            fontSize: '0.875rem',
-                            color: 'text.secondary',
-                            fontWeight: 500
-                        }}>
-                            Loading component...
-                        </Box>
-                    </Box>
-                )
+                fallback || <PageLoader skeleton skeletonType={skeletonType} />
             }
         >
             {children}
@@ -129,7 +110,9 @@ const AppRouter = () => {
                                     path="/auth"
                                     element={
                                         <PublicRoute>
-                                            <AuthPage />
+                                            <OptimizedSuspense skeletonType="form">
+                                                <AuthPage />
+                                            </OptimizedSuspense>
                                         </PublicRoute>
                                     }
                                 />
@@ -139,7 +122,9 @@ const AppRouter = () => {
                                     path="/reset-password"
                                     element={
                                         <PublicRoute>
-                                            <ResetPasswordForm />
+                                            <OptimizedSuspense skeletonType="form">
+                                                <ResetPasswordForm />
+                                            </OptimizedSuspense>
                                         </PublicRoute>
                                     }
                                 />
@@ -149,7 +134,9 @@ const AppRouter = () => {
                                     path="/"
                                     element={
                                         <ProtectedRoute>
-                                            <DashboardPage />
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <DashboardPage />
+                                            </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
@@ -160,7 +147,9 @@ const AppRouter = () => {
                                     path="/create"
                                     element={
                                         <ProtectedRoute>
-                                            <CreatePostPage />
+                                            <OptimizedSuspense skeletonType="form">
+                                                <CreatePostPage />
+                                            </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
@@ -197,7 +186,9 @@ const AppRouter = () => {
                                     path="/analytics"
                                     element={
                                         <ProtectedRoute>
-                                            <AnalyticsPage />
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <AnalyticsPage />
+                                            </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
@@ -207,7 +198,9 @@ const AppRouter = () => {
                                     path="/admin"
                                     element={
                                         <ProtectedRoute requiredRole="admin">
-                                            <AdminDashboard />
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <AdminDashboard />
+                                            </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
@@ -217,7 +210,9 @@ const AppRouter = () => {
                                     path="/profile"
                                     element={
                                         <ProtectedRoute>
-                                            <ProfilePage />
+                                            <OptimizedSuspense skeletonType="form">
+                                                <ProfilePage />
+                                            </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />

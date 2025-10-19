@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
 import { useChannelStore } from '@/stores';
 import UnifiedButton, { PrimaryButton } from './common/UnifiedButton.jsx';
 
-const AddChannel = () => {
+const AddChannel = React.memo(() => {
     const { addChannel, isLoading, error } = useChannelStore();
     const [channelName, setChannelName] = useState('');
     const [status, setStatus] = useState({ success: false, message: '' });
     const [validationError, setValidationError] = useState('');
 
-    const validateChannelName = (name) => {
+    const validateChannelName = useCallback((name) => {
         if (!name.trim()) {
             setValidationError('Channel name is required');
             return false;
@@ -28,9 +28,9 @@ const AddChannel = () => {
         }
         setValidationError('');
         return true;
-    };
+    }, []);
 
-    const handleChannelNameChange = (e) => {
+    const handleChannelNameChange = useCallback((e) => {
         const value = e.target.value;
         setChannelName(value);
         setStatus({ success: false, message: '' });
@@ -40,9 +40,9 @@ const AddChannel = () => {
         } else {
             setValidationError('');
         }
-    };
+    }, [validateChannelName]);
 
-    const handleAdd = async (e) => {
+    const handleAdd = useCallback(async (e) => {
         e.preventDefault();
 
         if (!validateChannelName(channelName)) {
@@ -61,10 +61,13 @@ const AddChannel = () => {
                 message: error.message || 'Unable to add channel. Please check the channel name and try again.'
             });
         }
-    };
+    }, [channelName, validateChannelName, addChannel]);
 
     const loading = isLoading;
-    const canSubmit = channelName.trim() && !validationError && !loading;
+    const canSubmit = useMemo(
+        () => channelName.trim() && !validationError && !loading,
+        [channelName, validationError, loading]
+    );
 
     return (
         <Box
@@ -177,6 +180,8 @@ const AddChannel = () => {
             </Typography>
         </Box>
     );
-};
+});
+
+AddChannel.displayName = 'AddChannel';
 
 export default AddChannel;

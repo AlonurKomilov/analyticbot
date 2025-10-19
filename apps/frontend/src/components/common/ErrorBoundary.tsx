@@ -3,17 +3,45 @@ import { Box, Typography, Button, Alert, Card, CardContent } from '@mui/material
 import RefreshIcon from '@mui/icons-material/Refresh';
 import BugReportIcon from '@mui/icons-material/BugReport';
 
-class ErrorBoundary extends React.Component {
-    constructor(props) {
+/**
+ * ErrorBoundary - Catches JavaScript errors in child components
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ErrorBoundary>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ * ```
+ */
+
+export interface ErrorBoundaryProps {
+  /** Child components to wrap */
+  children: React.ReactNode;
+  /** Optional custom fallback component */
+  fallback?: React.ReactNode;
+}
+
+export interface ErrorBoundaryState {
+  /** Whether an error has been caught */
+  hasError: boolean;
+  /** The error object */
+  error: Error | null;
+  /** Additional error information */
+  errorInfo: React.ErrorInfo | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    constructor(props: ErrorBoundaryProps) {
         super(props);
         this.state = { hasError: false, error: null, errorInfo: null };
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(_error: Error): Partial<ErrorBoundaryState> {
         return { hasError: true };
     }
 
-    componentDidCatch(error, errorInfo) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
         this.setState({
             error: error,
             errorInfo: errorInfo
@@ -23,18 +51,18 @@ class ErrorBoundary extends React.Component {
         console.error('ErrorBoundary caught an error:', error, errorInfo);
 
         // You can also send error to error reporting service here
-        if (window.Sentry) {
-            window.Sentry.captureException(error, {
+        if ((window as any).Sentry) {
+            (window as any).Sentry.captureException(error, {
                 contexts: { errorBoundary: { componentStack: errorInfo.componentStack } }
             });
         }
     }
 
-    handleReload = () => {
+    handleReload = (): void => {
         window.location.reload();
     };
 
-    handleRetry = () => {
+    handleRetry = (): void => {
         this.setState({ hasError: false, error: null, errorInfo: null });
     };
 
@@ -156,9 +184,19 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-// Higher-order component for easier usage
-export const withErrorBoundary = (Component, fallbackComponent = null) => {
-    const WrappedComponent = (props) => (
+/**
+ * Higher-order component for wrapping components with error boundary
+ *
+ * @example
+ * ```tsx
+ * const SafeComponent = withErrorBoundary(MyComponent);
+ * ```
+ */
+export const withErrorBoundary = <P extends object>(
+    Component: React.ComponentType<P>,
+    fallbackComponent: React.ReactNode = null
+): React.FC<P> => {
+    const WrappedComponent: React.FC<P> = (props) => (
         <ErrorBoundary fallback={fallbackComponent}>
             <Component {...props} />
         </ErrorBoundary>

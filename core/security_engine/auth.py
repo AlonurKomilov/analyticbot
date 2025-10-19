@@ -104,7 +104,7 @@ class SecurityManager:
         logger.info("No cache port provided, using memory cache fallback")
         self._redis_available = False
         self.redis_client = None
-        self._memory_cache = {}
+        self._memory_cache: dict[str, Any] = {}
 
     def _cache_get(self, key: str) -> str | None:
         """Get value from cache (abstracted)"""
@@ -210,12 +210,17 @@ class SecurityManager:
 
         # Token payload with comprehensive claims
         # Handle both enum and string values for role/status
-        from core.security_engine.models import UserStatus, UserRole, AuthProvider
 
         # Type-safe extraction of values
-        role_val = getattr(user.role, 'value', str(user.role)) if user.role is not None else 'user'
-        status_val = getattr(user.status, 'value', str(user.status)) if user.status is not None else 'active'
-        auth_provider_val = getattr(user.auth_provider, 'value', str(user.auth_provider)) if user.auth_provider is not None else 'local'
+        role_val = getattr(user.role, "value", str(user.role)) if user.role is not None else "user"
+        status_val = (
+            getattr(user.status, "value", str(user.status)) if user.status is not None else "active"
+        )
+        auth_provider_val = (
+            getattr(user.auth_provider, "value", str(user.auth_provider))
+            if user.auth_provider is not None
+            else "local"
+        )
 
         # Create TokenClaims with correct parameters (matching CoreSecurityService)
         claims = TokenClaims(
@@ -322,8 +327,11 @@ class SecurityManager:
             if cached_payload and isinstance(cached_payload, str):
                 payload = json.loads(cached_payload)
 
-                # Verify expiration
-                if datetime.utcnow() > datetime.fromtimestamp(payload["exp"]):
+                # Verify expiration - convert exp to int if it's a string
+                exp_timestamp = (
+                    int(payload["exp"]) if isinstance(payload["exp"], str) else payload["exp"]
+                )
+                if datetime.utcnow() > datetime.fromtimestamp(exp_timestamp):
                     self._revoke_token(token)
                     raise AuthenticationError("Token expired", 401)
 

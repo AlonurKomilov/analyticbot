@@ -5,10 +5,10 @@ import { Box, Typography, Container, Paper } from '@mui/material';
  * AI Services Overview Component
  * Landing page for AI services section
  */
-const ServicesOverview = () => {
+const ServicesOverview: React.FC = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Paper variant="card">
+            <Paper sx={{ p: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     AI Services Overview
                 </Typography>

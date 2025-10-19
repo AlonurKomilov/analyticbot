@@ -2,6 +2,18 @@ import React from 'react';
 import { Box } from '@mui/material';
 
 /**
+ * Props for the TabPanel component
+ */
+interface TabPanelProps {
+    /** Child content to render when tab is active */
+    children?: React.ReactNode;
+    /** Current active tab value */
+    value: number;
+    /** This panel's index */
+    index: number;
+}
+
+/**
  * TabPanel Component
  *
  * Extracted from AnalyticsDashboard.jsx (Phase 3.1)
@@ -14,7 +26,7 @@ import { Box } from '@mui/material';
  * - Screen reader accessibility
  * - Consistent padding for all tab content
  */
-const TabPanel = React.memo(({ children, value, index, ...other }) => (
+const TabPanel: React.FC<TabPanelProps> = React.memo(({ children, value, index, ...other }) => (
     <section
         role="tabpanel"
         hidden={value !== index}

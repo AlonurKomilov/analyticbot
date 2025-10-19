@@ -5,10 +5,10 @@ import { Box, Typography, Container, Paper } from '@mui/material';
  * Settings Page Component
  * User preferences and account configuration
  */
-const SettingsPage = () => {
+const SettingsPage: React.FC = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Paper variant="card">
+            <Paper sx={{ p: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Settings
                 </Typography>

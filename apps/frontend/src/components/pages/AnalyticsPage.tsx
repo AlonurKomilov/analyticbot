@@ -11,16 +11,16 @@ import { PageContainer, SectionHeader } from '../common/StandardComponents.jsx';
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import { useChannelStore } from '@/stores';
 
-const AnalyticsPage = () => {
-  const { loadChannels } = useChannelStore();
+const AnalyticsPage: React.FC = () => {
+  const fetchChannels = useChannelStore((state) => state.fetchChannels);
 
   useEffect(() => {
-    loadChannels();
-  }, [loadChannels]);
+    fetchChannels();
+  }, [fetchChannels]);
 
   return (
     <TouchTargetProvider>
-      <PageContainer maxWidth="2xl">
+      <PageContainer maxWidth="xl">
         <SectionHeader level={1}>
           Advanced Analytics
         </SectionHeader>

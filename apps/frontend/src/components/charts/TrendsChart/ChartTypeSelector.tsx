@@ -2,7 +2,17 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { Button } from '../../common';
 
-const ChartTypeSelector = React.memo(({ chartType, onChartTypeChange }) => {
+/**
+ * Props for the ChartTypeSelector component
+ */
+interface ChartTypeSelectorProps {
+    /** Current chart type */
+    chartType: 'line' | 'area' | 'bar';
+    /** Callback when chart type changes */
+    onChartTypeChange: (type: 'line' | 'area' | 'bar') => void;
+}
+
+const ChartTypeSelector: React.FC<ChartTypeSelectorProps> = React.memo(({ chartType, onChartTypeChange }) => {
     return (
         <Box sx={{ display: 'flex', gap: 0.5 }}>
             <Button

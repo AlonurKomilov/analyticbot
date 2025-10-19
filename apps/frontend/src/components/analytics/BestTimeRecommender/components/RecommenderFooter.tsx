@@ -5,7 +5,17 @@ import {
     Chip
 } from '@mui/material';
 
-const RecommenderFooter = ({ recommendations }) => {
+/**
+ * Props for the RecommenderFooter component
+ */
+interface RecommenderFooterProps {
+    /** Recommendations data containing accuracy */
+    recommendations?: {
+        accuracy?: number;
+    };
+}
+
+const RecommenderFooter: React.FC<RecommenderFooterProps> = ({ recommendations }) => {
     return (
         <Box sx={{
             display: 'flex',

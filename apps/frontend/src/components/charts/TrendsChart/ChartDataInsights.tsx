@@ -2,7 +2,18 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { StatusChip } from '../../common';
 
-const ChartDataInsights = React.memo(({ data }) => {
+/**
+ * Props for the ChartDataInsights component
+ */
+interface ChartDataInsightsProps {
+    /** Chart data array */
+    data?: Array<{
+        views: number;
+        engagement: number;
+    }>;
+}
+
+const ChartDataInsights: React.FC<ChartDataInsightsProps> = React.memo(({ data }) => {
     if (!data || data.length === 0) {
         return null;
     }
@@ -16,17 +27,17 @@ const ChartDataInsights = React.memo(({ data }) => {
             <StatusChip
                 label={`${dataPointsCount} data points`}
                 size="small"
-                variant="primary"
+                status="info"
             />
             <StatusChip
                 label={`Peak: ${peakViews.toLocaleString()} views`}
                 size="small"
-                variant="success"
+                status="success"
             />
             <StatusChip
                 label={`Avg engagement: ${avgEngagement}`}
                 size="small"
-                variant="info"
+                status="info"
             />
         </Box>
     );

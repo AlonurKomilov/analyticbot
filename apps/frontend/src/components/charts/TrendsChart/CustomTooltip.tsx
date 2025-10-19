@@ -1,7 +1,23 @@
 import React from 'react';
 import { Box, Card, Typography } from '@mui/material';
 
-const CustomTooltip = ({ active, payload, label }) => {
+/**
+ * Props for the CustomTooltip component
+ */
+interface CustomTooltipProps {
+    /** Whether the tooltip is active/visible */
+    active?: boolean;
+    /** Payload data array from Recharts */
+    payload?: Array<{
+        name: string;
+        value: number | string;
+        color: string;
+    }>;
+    /** Label for the tooltip (typically X-axis value) */
+    label?: string;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
             <Card sx={{ p: 2, minWidth: 200 }}>

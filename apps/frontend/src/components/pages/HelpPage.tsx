@@ -5,10 +5,10 @@ import { Box, Typography, Container, Paper } from '@mui/material';
  * Help & Support Page Component
  * Documentation, FAQ, and support resources
  */
-const HelpPage = () => {
+const HelpPage: React.FC = () => {
     return (
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Paper variant="card">
+            <Paper sx={{ p: 3 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Help & Support
                 </Typography>

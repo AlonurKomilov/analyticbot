@@ -1,5 +1,5 @@
 // Navigation components exports
-export { default as NavigationBar } from './NavigationBar';
+export { default as NavigationBar } from './NavigationBar.tsx';
 export { default as GlobalSearchBar } from './GlobalSearchBar';
 export { default as ProfileMenu } from './ProfileMenu';
 export { default as NotificationMenu } from './NotificationMenu';
@@ -15,4 +15,4 @@ export {
 } from './breadcrumbUtils';
 
 // Default export
-export { default } from './NavigationBar';
+export { default } from './NavigationBar.tsx';

@@ -10,7 +10,7 @@ export { default as AddChannel } from './AddChannel';
 
 // Content Creation
 export { default as PostCreator } from './PostCreator';
-export { default as ButtonConstructor } from './ButtonConstructor';
+export { default as ButtonConstructor } from './ButtonConstructor.tsx';
 export { default as EnhancedMediaUploader } from './EnhancedMediaUploader';
 export { default as MediaPreview } from './MediaPreview';
 
@@ -18,7 +18,7 @@ export { default as MediaPreview } from './MediaPreview';
 export { default as ScheduledPostsList } from './ScheduledPostsList';
 
 // Admin & Diagnostic
-export { default as DiagnosticPanel } from './DiagnosticPanel';
+export { default as DiagnosticPanel } from './DiagnosticPanel.tsx';
 export { default as StorageFileBrowser } from './StorageFileBrowser';
 
 // Advanced Analytics (Week 3-4)

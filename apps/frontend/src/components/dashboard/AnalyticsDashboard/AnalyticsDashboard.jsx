@@ -26,8 +26,8 @@ import EnhancedTopPostsTable from '../../EnhancedTopPostsTable';
 import BestTimeRecommender from '../../analytics/BestTimeRecommender';
 import { AdvancedAnalyticsDashboard } from '../../analytics/AdvancedAnalyticsDashboard';
 import RealTimeAlertsSystem from '../../alerts/RealTimeAlerts';
-import ContentProtectionDashboard from '../../content/ContentProtectionDashboard';
-import ApiFailureDialog from '../../dialogs/ApiFailureDialog';
+import ContentProtectionDashboard from '../../content/ContentProtectionDashboard.tsx';
+import ApiFailureDialog from '../../dialogs/ApiFailureDialog.tsx';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@/stores';
 import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
 

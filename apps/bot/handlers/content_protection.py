@@ -1,10 +1,21 @@
 """
-Bot Handlers for Phase 2.3: Content Protection & Premium Features
-Telegram bot handlers for content protection features
+Bot Handlers for Content Protection & Premium Features
 
-NOTE: This is LEGACY code from Phase 2. Should be migrated to use clean architecture
-services from core/services/bot/content/ in Phase 4.
-See: docs/CONTENT_PROTECTION_LEGACY_ANALYSIS.md
+Telegram bot handlers for content protection features including:
+- Watermarking (text and video)
+- Theft detection
+- Content protection status management
+- Premium emoji features
+
+Architecture:
+- Uses core services from core/services/bot/content/ (Clean Architecture)
+- Provides aiogram handler implementations
+- Integrates with DI container for service resolution
+
+Migration Note:
+- Phase 2.3 implementation (2024)
+- Refactored to use clean architecture services (2025)
+- See: docs/CONTENT_PROTECTION_LEGACY_ANALYSIS.md for historical context
 """
 
 from pathlib import Path

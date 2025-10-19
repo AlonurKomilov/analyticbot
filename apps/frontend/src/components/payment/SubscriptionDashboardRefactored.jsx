@@ -31,9 +31,9 @@ import { paymentAPI } from '@services/api';
 // Import refactored components
 import SubscriptionCard from './subscription/SubscriptionCard.jsx';
 import UsageMetrics from './subscription/UsageMetrics.jsx';
-import PaymentHistory from './billing/PaymentHistory.jsx';
-import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog.jsx';
-import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog.jsx';
+import PaymentHistory from './billing/PaymentHistory.tsx';
+import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog.tsx';
+import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog.tsx';
 
 /**
  * Main Subscription Dashboard Orchestrator

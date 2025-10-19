@@ -15,7 +15,7 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
-import NavigationBar from '../domains/navigation/NavigationBar';
+import NavigationBar from '../domains/navigation/NavigationBar/NavigationBar.tsx';
 
 interface ProtectedLayoutProps {
   /** Content to render inside the protected layout */

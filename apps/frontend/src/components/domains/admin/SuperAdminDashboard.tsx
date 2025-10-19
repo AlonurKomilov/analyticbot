@@ -22,5 +22,5 @@
 export * from './SuperAdminDashboard/index.js';
 
 // Import and re-export the main component as default
-import SuperAdminDashboardComponent from './SuperAdminDashboard/SuperAdminDashboard.jsx';
+import SuperAdminDashboardComponent from './SuperAdminDashboard/SuperAdminDashboard.tsx';
 export default SuperAdminDashboardComponent;

@@ -28,7 +28,7 @@ import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
 import EnhancedDashboardLayout from '../layout/EnhancedDashboardLayout.jsx';
-import EnhancedSection from '../layout/EnhancedSection.jsx';
+import EnhancedSection from '../layout/EnhancedSection.tsx';
 import EnhancedCard from '../layout/EnhancedCard.jsx';
 
 // Micro-interaction components
@@ -52,7 +52,7 @@ import MobileResponsiveDashboard from './MobileResponsiveDashboard.jsx';
 // Existing components
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import SystemStatusWidget from '../dashboard/SystemStatusWidget.jsx';
-import AIServicesGrid from '../dashboard/AIServicesGrid.jsx';
+import AIServicesGrid from '../dashboard/AIServicesGrid.tsx';
 import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 import ChannelSelector from '../ChannelSelector.jsx';

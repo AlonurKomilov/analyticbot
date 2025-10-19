@@ -11,7 +11,7 @@ import { useAnalyticsStore } from '@/stores';
 // Import extracted components
 import TimeRangeControls from './TimeRangeControls.jsx';
 import MetricsSummary from './MetricsSummary.jsx';
-import ChartVisualization from './ChartVisualization.jsx';
+import ChartVisualization from './ChartVisualization.tsx';
 import ChartErrorBoundary from './ChartErrorBoundary.jsx';
 import { LoadingState, ChartEmptyState, StatusFooter } from './StatusComponents.jsx';
 

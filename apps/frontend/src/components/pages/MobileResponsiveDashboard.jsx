@@ -34,7 +34,7 @@ import { useChannelStore, usePostStore, useUIStore } from '@/stores';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
-import EnhancedSection from '../layout/EnhancedSection.jsx';
+import EnhancedSection from '../layout/EnhancedSection.tsx';
 import EnhancedCard from '../layout/EnhancedCard.jsx';
 
 // Mobile responsive components
@@ -56,7 +56,7 @@ import {
 // Existing components
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import SystemStatusWidget from '../dashboard/SystemStatusWidget.jsx';
-import AIServicesGrid from '../dashboard/AIServicesGrid.jsx';
+import AIServicesGrid from '../dashboard/AIServicesGrid.tsx';
 import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 

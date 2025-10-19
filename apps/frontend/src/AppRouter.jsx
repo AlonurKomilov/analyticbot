@@ -16,7 +16,7 @@ import {
 
 // Import navigation system from domain structure
 import { NavigationProvider } from './components/common/NavigationProvider';
-import NavigationBar from './components/domains/navigation/NavigationBar';
+import NavigationBar from './components/domains/navigation/NavigationBar/NavigationBar.tsx';
 import { PageLoader } from './components/common/PageLoader';
 
 // Destructure components for cleaner code

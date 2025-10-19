@@ -5,7 +5,7 @@
 import React from 'react';
 import { Box, Typography, List, ListItem, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ButtonConstructor from '../../ButtonConstructor';
+import ButtonConstructor from '../../ButtonConstructor.tsx';
 
 interface Button {
     text: string;

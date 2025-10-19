@@ -159,7 +159,7 @@ async def get_current_admin_user(
         )
 
 
-async def require_admin_role(
+async def require_admin_user(
     min_role: str = AdministrativeRole.SUPER_ADMIN.value,  # Use new role system
     current_admin: AdminUser = Depends(get_current_admin_user),
 ) -> AdminUser:
@@ -242,7 +242,7 @@ async def get_system_users(
     limit: int = Query(100, ge=1, le=1000),
     status: UserStatus | None = None,
     search: str | None = None,
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system users with filtering and pagination"""
@@ -274,7 +274,7 @@ async def suspend_user(
     suspension_request: UserSuspensionRequest,
     request: Request,
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Suspend a system user"""
@@ -291,7 +291,7 @@ async def suspend_user(
 async def reactivate_user(
     user_id: int,
     request: Request,
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Reactivate a suspended user"""
@@ -308,7 +308,7 @@ async def reactivate_user(
 @router.get("/stats", response_model=SystemStatsResponse)
 async def get_system_stats(
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get comprehensive system statistics"""
@@ -328,7 +328,7 @@ async def get_audit_logs(
     start_date: datetime | None = None,
     end_date: datetime | None = None,
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get audit logs with filtering"""
@@ -361,7 +361,7 @@ async def get_audit_logs(
 async def get_system_config(
     category: str | None = None,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
@@ -389,7 +389,7 @@ async def update_system_config(
     config_update: ConfigUpdateRequest,
     request: Request,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):

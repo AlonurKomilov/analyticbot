@@ -1,0 +1,34 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/perf/mtproto_performance_test.py ____________
+tests/perf/mtproto_performance_test.py:17: in <module>
+    from apps.mtproto.config import MTProtoSettings
+apps/mtproto/__init__.py:4: in <module>
+    from .di import configure_container, container
+apps/mtproto/di/__init__.py:14: in <module>
+    from apps.mtproto.di.external import ExternalContainer
+apps/mtproto/di/external.py:15: in <module>
+    class ExternalContainer(containers.DeclarativeContainer):
+apps/mtproto/di/external.py:24: in ExternalContainer
+    tracer = providers.Singleton(MTProtoTracer, enabled=settings.provided.enable_tracing.as_(bool))
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/dependency_injector/providers.pyx:231: in dependency_injector.providers.Provider.__call__
+    ???
+src/dependency_injector/providers.pyx:4274: in dependency_injector.providers.AttributeGetter._provide
+    ???
+src/dependency_injector/providers.pyx:231: in dependency_injector.providers.Provider.__call__
+    ???
+src/dependency_injector/providers.pyx:4274: in dependency_injector.providers.AttributeGetter._provide
+    ???
+src/dependency_injector/providers.pyx:231: in dependency_injector.providers.Provider.__call__
+    ???
+src/dependency_injector/providers.pyx:4207: in dependency_injector.providers.ProvidedInstance._provide
+    ???
+src/dependency_injector/providers.pyx:821: in dependency_injector.providers.Dependency.__call__
+    ???
+src/dependency_injector/providers.pyx:963: in dependency_injector.providers.Dependency._raise_undefined_error
+    ???
+E   dependency_injector.errors.Error: Dependency is not defined
+=========================== short test summary info ============================
+ERROR tests/perf/mtproto_performance_test.py - dependency_injector.errors.Error: Dependency is not defined
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!

@@ -70,7 +70,4 @@ class CacheContainer(containers.DeclarativeContainer):
 
     redis_client = providers.Resource(_create_redis_client)
 
-    cache_adapter = providers.Resource(
-        _create_cache_adapter,
-        redis_client=redis_client
-    )
+    cache_adapter = providers.Resource(_create_cache_adapter, redis_client=redis_client)

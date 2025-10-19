@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardPage from './components/pages/DashboardPage.jsx';
+import DashboardPage from './components/pages/DashboardPage.tsx';
 
 const MainDashboard = () => {
     return <DashboardPage />;

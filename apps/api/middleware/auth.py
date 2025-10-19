@@ -433,9 +433,3 @@ async def check_permission(user_dict: dict[str, Any], permission: NewPermission)
         migration_profile=user_dict.get("migration_profile"),
     )
     return permission in user_info.permissions
-
-
-# Legacy role dependencies (DEPRECATED - use permission-based instead)
-require_analyst_role = require_analytics_permission  # Migrate to permission-based
-require_moderator_role = require_admin_role_new  # Migrate to permission-based
-require_admin_role = require_admin_role_new  # Migrate to permission-based

@@ -21,8 +21,6 @@ from apps.api.routers.channels_router import router as channels_router
 # ✅ PHASE 1 FIX: Moved routers from apps/shared/api to apps/api/routers (circular dep fix)
 from apps.api.routers.content_protection_router import router as content_protection_router
 
-# Legacy routers (keeping for compatibility during transition)
-# DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router

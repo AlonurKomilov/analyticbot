@@ -19,13 +19,40 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from apps.shared.factory import get_repository_factory
-
 # ✅ PHASE 2 FIX: Import protocol instead of concrete implementation
 from core.protocols import DatabaseManagerProtocol
 
+# ✅ PHASE 3 FIX (Oct 19, 2025): Import repository protocols for type hints
+from core.protocols import (
+    AdminRepositoryProtocol,
+    AnalyticsRepositoryProtocol,
+    ChannelDailyRepositoryProtocol,
+    ChannelRepositoryProtocol,
+    PostMetricsRepositoryProtocol,
+    StatsRawRepositoryProtocol,
+    UserRepositoryProtocol,
+)
+
+# ✅ PHASE 3 FIX: Import concrete repository implementations
+from infra.db.repositories.admin_repository import AsyncpgAdminRepository
+from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
+from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository
+from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
+from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
+from infra.db.repositories.user_repository import AsyncpgUserRepository
+
+# Import other repositories (no protocols yet)
+from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.shared_reports_repository import SharedReportsRepository
+from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
+from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+from infra.db.repositories.plan_repository import AsyncpgPlanRepository
+from infra.db.repositories.post_repository import AsyncpgPostRepository
+from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+
 # Still need concrete implementation for instantiation
-from infra.db.connection_manager import db_manager
+from infra.db.connection_manager import DatabaseManager, db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -147,59 +174,93 @@ class DatabaseContainer(containers.DeclarativeContainer):
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)
 
     # ============================================================================
-    # REPOSITORY FACTORY (Clean Architecture Pattern)
+    # REPOSITORIES - Direct DI without Factory Anti-Pattern ✅
+    # Phase 3 Fix (Oct 19, 2025): Eliminated factory.py, using direct providers
     # ============================================================================
 
-    repository_factory = providers.Singleton(get_repository_factory)
+    # User Repository (Protocol: UserRepositoryProtocol)
+    user_repo = providers.Factory(
+        AsyncpgUserRepository,
+        pool=asyncpg_pool,
+    )
 
-    # ============================================================================
-    # REPOSITORIES (via factory pattern - no direct infra imports)
-    # ============================================================================
-
-    user_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="user")
-
+    # Channel Repository (Protocol: ChannelRepositoryProtocol)
     channel_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="channel"
+        AsyncpgChannelRepository,
+        pool=asyncpg_pool,
     )
 
+    # Analytics Repository (Protocol: AnalyticsRepositoryProtocol)
     analytics_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="analytics"
+        AsyncpgAnalyticsRepository,
+        pool=asyncpg_pool,
     )
 
+    # Admin Repository (Protocol: AdminRepositoryProtocol)
     admin_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="admin"
+        AsyncpgAdminRepository,
+        pool=asyncpg_pool,
     )
 
-    plan_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="plan")
+    # Channel Daily Repository (Protocol: ChannelDailyRepositoryProtocol)
+    channel_daily_repo = providers.Factory(
+        ChannelDailyRepository,
+        pool=asyncpg_pool,
+    )
+
+    # Post Metrics Repository (Protocol: PostMetricsRepositoryProtocol)
+    metrics_repo = providers.Factory(
+        AsyncpgPostMetricsRepository,
+        pool=asyncpg_pool,
+    )
+
+    # Stats Raw Repository (Protocol: StatsRawRepositoryProtocol)
+    stats_raw_repo = providers.Factory(
+        AsyncpgStatsRawRepository,
+        pool=asyncpg_pool,
+    )
+
+    # Other Repositories (no protocols yet)
+    plan_repo = providers.Factory(
+        AsyncpgPlanRepository,
+        pool=asyncpg_pool,
+    )
 
     schedule_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="schedule"
+        AsyncpgScheduleRepository,
+        pool=asyncpg_pool,
     )
 
     payment_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="payment"
+        AsyncpgPaymentRepository,
+        pool=asyncpg_pool,
     )
 
-    post_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="post")
-
-    metrics_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="metrics"
-    )
-
-    channel_daily_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="channel_daily"
+    post_repo = providers.Factory(
+        AsyncpgPostRepository,
+        pool=asyncpg_pool,
     )
 
     edges_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="edges"
+        AsyncpgEdgesRepository,
+        pool=asyncpg_pool,
     )
 
-    stats_raw_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="stats_raw"
+    # Alert repositories (from core)
+    alert_subscription_repo = providers.Factory(
+        AlertSubscriptionRepository,
+        pool=asyncpg_pool,
     )
 
-    alert_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="alert"
+    alert_sent_repo = providers.Factory(
+        AlertSentRepository,
+        pool=asyncpg_pool,
+    )
+
+    # Shared reports repository
+    shared_reports_repo = providers.Factory(
+        SharedReportsRepository,
+        pool=asyncpg_pool,
     )
 
 

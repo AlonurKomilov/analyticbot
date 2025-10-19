@@ -3,8 +3,17 @@ import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useMediaStore } from '@/stores';
 
-const MediaPreview = () => {
-    const { pendingMedia, clearPendingMedia } = useMediaStore();
+interface PendingMedia {
+    previewUrl?: string;
+    description?: string;
+    file_type?: string;
+}
+
+const MediaPreview: React.FC = () => {
+    const { pendingMedia, clearPendingMedia } = useMediaStore() as {
+        pendingMedia: PendingMedia | null;
+        clearPendingMedia: () => void;
+    };
 
     if (!pendingMedia?.previewUrl) {
         return null;

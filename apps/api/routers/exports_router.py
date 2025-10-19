@@ -16,7 +16,9 @@ from apps.shared.clients.analytics_client import AnalyticsClient
 
 # ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
 from apps.shared.exports.csv_v2 import CSVExporter
-from apps.shared.factory import get_repository_factory
+
+# ✅ PHASE 3 FIX (Oct 19, 2025): Use DI container instead of factory
+from apps.di import get_container
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
 
@@ -44,9 +46,15 @@ def get_csv_exporter() -> CSVExporter:
 
 
 def get_chart_service() -> ChartServiceProtocol:
-    """Get chart service instance"""
-    factory = get_repository_factory()
-    return factory.get_chart_service()
+    """
+    Get chart service instance via DI container
+    Phase 3 Fix (Oct 19, 2025): Removed factory usage
+    """
+    # Note: Chart service creation maintained for now
+    # TODO: Move to proper DI provider when chart service is refactored
+    from apps.shared.services.chart_service import create_chart_service
+
+    return create_chart_service()
 
 
 def check_export_enabled():

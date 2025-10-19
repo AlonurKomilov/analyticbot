@@ -5,10 +5,14 @@
  * including the header, navigation, and feature summary
  */
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Container, Typography, Paper, Box } from '@mui/material';
 
-const ShowcaseLayout = ({ children }) => {
+interface ShowcaseLayoutProps {
+    children: ReactNode;
+}
+
+const ShowcaseLayout: React.FC<ShowcaseLayoutProps> = ({ children }) => {
     return (
         <Container maxWidth="xl" sx={{ py: 4 }}>
             {/* Header Section */}

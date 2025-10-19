@@ -8,7 +8,20 @@ import {
   useTheme
 } from '@mui/material';
 
-const PerformanceScoreWidget = React.memo(({ metrics }) => {
+interface Metrics {
+  engagementRate?: number;
+}
+
+interface PerformanceScoreWidgetProps {
+  metrics: Metrics;
+}
+
+/**
+ * PerformanceScoreWidget - Displays circular performance score gauge
+ * 
+ * Shows performance score based on engagement rate with visual circular indicator
+ */
+const PerformanceScoreWidget: React.FC<PerformanceScoreWidgetProps> = React.memo(({ metrics }) => {
   const theme = useTheme();
 
   const performanceScore = Math.round((metrics?.engagementRate || 0) * 10);

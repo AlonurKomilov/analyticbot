@@ -4,8 +4,19 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    SelectChangeEvent
 } from '@mui/material';
+
+export type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d';
+export type RefreshInterval = '30s' | '1m' | '5m' | '10m';
+
+interface TimeRangeControlsProps {
+    timeRange?: TimeRange;
+    refreshInterval?: RefreshInterval;
+    onTimeRangeChange: (event: SelectChangeEvent<string>) => void;
+    onRefreshIntervalChange: (event: SelectChangeEvent<string>) => void;
+}
 
 /**
  * TimeRangeControls - Memoized time range and refresh interval controls
@@ -13,13 +24,13 @@ import {
  * Optimized for multi-user dashboard performance by preventing unnecessary re-renders
  * when parent component state changes.
  *
- * @param {Object} props - Component props
- * @param {string} props.timeRange - Current time range value
- * @param {string} props.refreshInterval - Current refresh interval value
- * @param {Function} props.onTimeRangeChange - Time range change handler
- * @param {Function} props.onRefreshIntervalChange - Refresh interval change handler
+ * @param props - Component props
+ * @param props.timeRange - Current time range value
+ * @param props.refreshInterval - Current refresh interval value
+ * @param props.onTimeRangeChange - Time range change handler
+ * @param props.onRefreshIntervalChange - Refresh interval change handler
  */
-const TimeRangeControls = React.memo(({
+const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
     timeRange = '24h',
     refreshInterval = '1m',
     onTimeRangeChange,

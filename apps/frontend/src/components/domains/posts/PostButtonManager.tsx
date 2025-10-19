@@ -7,7 +7,19 @@ import { Box, Typography, List, ListItem, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ButtonConstructor from '../../ButtonConstructor';
 
-const PostButtonManager = ({
+interface Button {
+    text: string;
+    url: string;
+}
+
+interface PostButtonManagerProps {
+    buttons?: Button[];
+    onAddButton: (button: Button) => void;
+    onRemoveButton: (index: number) => void;
+    disabled?: boolean;
+}
+
+const PostButtonManager: React.FC<PostButtonManagerProps> = ({
     buttons = [],
     onAddButton,
     onRemoveButton,
@@ -21,7 +33,7 @@ const PostButtonManager = ({
 
             <ButtonConstructor
                 onAddButton={onAddButton}
-                disabled={disabled}
+                {...(disabled && { disabled })}
                 aria-label="Add inline button"
             />
 

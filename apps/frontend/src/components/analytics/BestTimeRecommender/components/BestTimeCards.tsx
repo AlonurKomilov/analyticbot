@@ -10,7 +10,22 @@ import {
 } from '@mui/material';
 import { daysOfWeek, formatHour, getConfidenceColor } from '../utils/timeUtils.js';
 
-const BestTimeCards = ({ recommendations }) => {
+interface BestTime {
+    day: number;
+    hour: number;
+    confidence: number;
+    avg_engagement: number;
+}
+
+interface Recommendations {
+    best_times?: BestTime[];
+}
+
+interface BestTimeCardsProps {
+    recommendations: Recommendations;
+}
+
+const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations }) => {
     if (!recommendations?.best_times || recommendations.best_times.length === 0) {
         return null;
     }

@@ -9,10 +9,37 @@ import {
     Verified as VerifiedIcon
 } from '@mui/icons-material';
 
+interface User {
+    profile_photo_url?: string;
+    full_name?: string;
+    username?: string;
+    full_name_display: string;
+    username_display: string;
+    telegram_id: number | string;
+    email?: string;
+    email_verified?: boolean;
+    is_premium?: boolean;
+    phone?: string;
+    phone_verified?: boolean;
+}
+
+interface UserAvatarProps {
+    user: User;
+    size?: number;
+}
+
+interface UserInfoProps {
+    user: User;
+}
+
+interface UserContactProps {
+    user: User;
+}
+
 /**
  * UserAvatar - Reusable user avatar component
  */
-export const UserAvatar = ({ user, size = 40 }) => (
+export const UserAvatar: React.FC<UserAvatarProps> = ({ user, size = 40 }) => (
     <Avatar
         src={user.profile_photo_url}
         sx={{
@@ -30,7 +57,7 @@ export const UserAvatar = ({ user, size = 40 }) => (
 /**
  * UserInfo - Displays user's basic information with verification status
  */
-export const UserInfo = ({ user }) => (
+export const UserInfo: React.FC<UserInfoProps> = ({ user }) => (
     <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
             <Typography variant="body2" fontWeight="medium">
@@ -51,7 +78,7 @@ export const UserInfo = ({ user }) => (
 /**
  * UserContact - Displays user's contact information
  */
-export const UserContact = ({ user }) => (
+export const UserContact: React.FC<UserContactProps> = ({ user }) => (
     <Box>
         {user.email && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>

@@ -43,8 +43,8 @@ from dependency_injector import containers, providers
 
 from apps.bot.config import Settings as BotSettings
 
-# ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra imports
-from apps.shared.factory import get_repository_factory
+# ✅ PHASE 3 FIX (Oct 19, 2025): Use main DI container instead of factory
+from apps.di import get_container
 
 logger = logging.getLogger(__name__)
 
@@ -366,8 +366,9 @@ class BotContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
     bot_settings = providers.Singleton(BotSettings)
 
-    # ✅ CLEAN ARCHITECTURE: Repository factory (no direct DB dependencies)
-    repository_factory = providers.Singleton(get_repository_factory)
+    # ✅ PHASE 3 FIX (Oct 19, 2025): Use main container's repositories
+    # Repository access now delegates to main DI container
+    _main_container = providers.Singleton(get_container)
 
     # Bot Client
     bot_client = providers.Factory(_create_bot_client, settings=bot_settings)
@@ -375,14 +376,20 @@ class BotContainer(containers.DeclarativeContainer):
     # Dispatcher
     dispatcher = providers.Factory(_create_dispatcher)
 
-    # ✅ CLEAN ARCHITECTURE: Repository providers using factory pattern
-    user_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="user")
-    channel_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="channel"
-    )
-    analytics_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="analytics"
-    )
+    # ✅ PHASE 3 FIX: Repository providers delegate to main container
+    # Note: Bot handlers should be updated to use get_container().database directly
+    # Keeping these providers for backward compatibility during migration
+    @staticmethod
+    async def get_user_repo():
+        return await get_container().database.user_repo()
+
+    @staticmethod  
+    async def get_channel_repo():
+        return await get_container().database.channel_repo()
+
+    @staticmethod
+    async def get_analytics_repo():
+        return await get_container().database.analytics_repo()
     admin_repo = providers.Factory(
         _create_repository, factory=repository_factory, repo_type="admin"
     )

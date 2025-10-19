@@ -16,7 +16,7 @@
  */
 
 import React, { useState } from 'react';
-import { Alert, Box } from '@mui/material';
+import { Alert } from '@mui/material';
 import ShowcaseLayout from './ShowcaseLayout.jsx';
 import ShowcaseNavigation, { TabPanel } from './ShowcaseNavigation.jsx';
 import PostsTableDemo from './tables/PostsTableDemo.jsx';
@@ -30,10 +30,10 @@ import GenericTableDemo from '../../__mocks__/components/showcase/tables/Generic
  * Coordinates the showcase components while maintaining all original functionality.
  * Now focused purely on state management and component coordination.
  */
-const TablesShowcase = () => {
-    const [activeTab, setActiveTab] = useState(0);
+const TablesShowcase: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<number>(0);
 
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
     };
 

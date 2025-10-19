@@ -5,16 +5,22 @@
  * Shows login/register forms for unauthenticated users, main app for authenticated users.
  */
 
-import React, { useState } from 'react';
+import React, { useState, ReactNode } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginForm, RegisterForm } from '../components/auth';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { DESIGN_TOKENS } from '../theme/designTokens';
 
-const AuthenticationWrapper = ({ children }) => {
-    const { user, isAuthenticated, isLoading } = useAuth();
-    const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+interface AuthenticationWrapperProps {
+    children: ReactNode;
+}
+
+type AuthMode = 'login' | 'register';
+
+const AuthenticationWrapper: React.FC<AuthenticationWrapperProps> = ({ children }) => {
+    const { isAuthenticated, isLoading } = useAuth();
+    const [authMode, setAuthMode] = useState<AuthMode>('login');
 
     // Show loading spinner while checking authentication
     if (isLoading) {
@@ -39,7 +45,7 @@ const AuthenticationWrapper = ({ children }) => {
 
     // Show auth forms if not authenticated
     if (!isAuthenticated) {
-        const toggleAuthMode = () => {
+        const toggleAuthMode = (): void => {
             setAuthMode(prev => prev === 'login' ? 'register' : 'login');
         };
 
@@ -55,9 +61,9 @@ const AuthenticationWrapper = ({ children }) => {
             >
                 <Container maxWidth="sm">
                     {authMode === 'login' ? (
-                        <LoginForm onToggleMode={toggleAuthMode} />
+                        <LoginForm onToggleMode={toggleAuthMode as any} />
                     ) : (
-                        <RegisterForm onToggleMode={toggleAuthMode} />
+                        <RegisterForm onToggleMode={toggleAuthMode as any} />
                     )}
                 </Container>
             </Box>
@@ -65,7 +71,7 @@ const AuthenticationWrapper = ({ children }) => {
     }
 
     // Show authenticated app
-    return children;
+    return <>{children}</>;
 };
 
 export default AuthenticationWrapper;

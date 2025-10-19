@@ -6,7 +6,20 @@ import {
 } from '@mui/material';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 
-const PostActionMenu = ({
+interface Post {
+    id: string | number;
+    title?: string;
+}
+
+interface PostActionMenuProps {
+    post: Post;
+    anchorEl: HTMLElement | null;
+    selectedPostId: string | number | null;
+    onMenuClick: (event: React.MouseEvent<HTMLButtonElement>, postId: string | number) => void;
+    onMenuClose: () => void;
+}
+
+const PostActionMenu: React.FC<PostActionMenuProps> = ({
     post,
     anchorEl,
     selectedPostId,

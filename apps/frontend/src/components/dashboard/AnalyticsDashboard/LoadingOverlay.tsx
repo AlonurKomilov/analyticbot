@@ -8,6 +8,11 @@ import {
     Refresh as RefreshIcon
 } from '@mui/icons-material';
 
+interface LoadingOverlayProps {
+    isVisible: boolean;
+    message?: string;
+}
+
 /**
  * LoadingOverlay Component
  *
@@ -21,7 +26,7 @@ import {
  * - Proper ARIA live region for screen readers
  * - Centered loading card with professional styling
  */
-const LoadingOverlay = React.memo(({
+const LoadingOverlay: React.FC<LoadingOverlayProps> = React.memo(({
     isVisible,
     message = "Loading analytics data..."
 }) => {

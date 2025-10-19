@@ -100,13 +100,16 @@ security = HTTPBearer()
 
 
 async def get_superadmin_service():
-    """Get SuperAdmin service using repository factory pattern"""
+    """
+    Get SuperAdmin service using DI container
+    Phase 3 Fix (Oct 19, 2025): Removed factory usage
+    """
     # For now, return a basic service that meets our API needs
     # This is a temporary solution until the full port interfaces are implemented
-    from apps.shared.factory import get_repository_factory
+    from apps.di import get_container
 
-    factory = get_repository_factory()
-    admin_repo = await factory.get_admin_repository()
+    container = get_container()
+    admin_repo = await container.database.admin_repo()
 
     # Create a simple wrapper that provides the methods we need
     class SimpleAdminService:

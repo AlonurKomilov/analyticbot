@@ -73,7 +73,7 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
         handleSubmit,
         resetForm,
         isValid
-    } = useFormValidation<FormValues>({
+    } = useFormValidation({
         text: '',
         selectedChannel: '',
         scheduleTime: ''
@@ -86,14 +86,14 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
     }));
 
     const handleFormSubmit = (): void => {
-        handleSubmit(async (formData) => {
-            await onSubmit?.(formData);
+        handleSubmit(async (formData: any) => {
+            await onSubmit?.(formData as FormValues);
         });
     };
 
     const handleSchedulePost = (): void => {
-        handleSubmit(async (formData) => {
-            await onSchedule?.(formData);
+        handleSubmit(async (formData: any) => {
+            await onSchedule?.(formData as FormValues);
         });
     };
 
@@ -116,7 +116,7 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
                         placeholder="What would you like to share?"
                         multiline
                         rows={4}
-                        value={values.text}
+                        value={(values as any).text}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         errors={errors}
@@ -134,7 +134,7 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
                                 label="Select Channel"
                                 placeholder="Choose a channel..."
                                 options={channelOptions}
-                                value={values.selectedChannel}
+                                value={(values as any).selectedChannel}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 errors={errors}
@@ -149,7 +149,7 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
                                 name="scheduleTime"
                                 label="Publish Time"
                                 type="datetime-local"
-                                value={values.scheduleTime}
+                                value={(values as any).scheduleTime}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 errors={errors}
@@ -162,32 +162,33 @@ const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
                     </Grid>
                 </Grid>
 
-                <FormActions
-                    onSubmit={handleFormSubmit}
-                    onCancel={resetForm}
-                    submitLabel="Post Now"
-                    cancelLabel="Clear Form"
-                    loading={loading}
-                    disabled={!isValid}
-                    align="space-between"
-                    sx={{
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
-                        pt: 3,
-                        mt: 3
-                    }}
-                >
-                    {/* Custom schedule button */}
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={handleSchedulePost}
-                            disabled={!isValid || loading}
-                        >
-                            Schedule Post
-                        </Button>
-                    </Box>
-                </FormActions>
+                <Box sx={{
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    pt: 3,
+                    mt: 3,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleSchedulePost}
+                        disabled={!isValid || loading}
+                    >
+                        Schedule Post
+                    </Button>
+
+                    <FormActions
+                        onSubmit={handleFormSubmit}
+                        onCancel={resetForm}
+                        submitLabel="Post Now"
+                        cancelLabel="Clear Form"
+                        loading={loading}
+                        disabled={!isValid}
+                        align="right"
+                    />
+                </Box>
             </Box>
         </ModernCard>
     );

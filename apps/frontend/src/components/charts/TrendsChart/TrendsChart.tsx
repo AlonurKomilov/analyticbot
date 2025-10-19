@@ -25,7 +25,7 @@ type ChartType = 'line' | 'bar' | 'area';
 type TimeRange = '7d' | '14d' | '30d' | '90d';
 
 interface ChartDataItem {
-    name?: string;
+    name: string;
     date?: string;
     views: number;
     engagement: number;

@@ -120,7 +120,7 @@ const AIServicesGrid: React.FC = () => {
           return (
             <StandardCard
               key={service.name}
-              variant="interactive"
+              variant="elevated"
               interactive
               onClick={() => handleServiceClick(service.path)}
               sx={{

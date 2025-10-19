@@ -19,23 +19,20 @@ import { UserActions } from './UserActions';
 
 interface User {
     id?: string | number;
-    username?: string;
+    username: string;
     full_name?: string;
+    full_name_display: string;
+    username_display: string;
+    telegram_id: number | string;
     email?: string;
     phone?: string;
-    status?: string;
+    status: string;
     total_posts?: number;
     total_channels?: number;
     risk_score?: number;
     last_active?: string;
     created_at?: string;
     [key: string]: any;
-}
-
-interface BulkAction {
-    label: string;
-    color: 'warning' | 'success' | 'error';
-    action: (selectedUsers: User[]) => void;
 }
 
 interface UserManagementTableProps {
@@ -66,9 +63,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({
     loading = false,
     error = null,
     onRefresh,
-    onUserUpdate,
     onUserDelete,
-    onBulkAction,
     onUserEdit,
     onUserSuspend,
     onUserReactivate,
@@ -79,7 +74,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({
         {
             id: 'avatar',
             header: '',
-            accessor: () => '', // Not used for sorting
+            accessor: () => '' as any, // Not used for sorting
             width: 60,
             disableSorting: true,
             Cell: ({ row: user }: { row: User }) => <UserAvatar user={user} />
@@ -152,41 +147,22 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({
         {
             id: 'actions',
             header: 'Actions',
-            accessor: () => '',
+            accessor: () => '' as any,
             align: 'center' as const,
             width: 80,
             disableSorting: true,
             Cell: ({ row: user }: { row: User }) => (
                 <UserActions
-                    user={user}
-                    onEdit={onUserEdit}
-                    onSuspend={onUserSuspend}
-                    onReactivate={onUserReactivate}
-                    onDelete={onUserDelete}
-                    onMessage={onUserMessage}
+                    user={user as any}
+                    onEdit={onUserEdit as any}
+                    onSuspend={onUserSuspend as any}
+                    onReactivate={onUserReactivate as any}
+                    onDelete={onUserDelete as any}
+                    onMessage={onUserMessage as any}
                 />
             )
         }
     ], [onUserEdit, onUserSuspend, onUserReactivate, onUserDelete, onUserMessage]);
-
-    // Bulk actions configuration
-    const bulkActions: BulkAction[] = useMemo(() => [
-        {
-            label: 'Suspend Selected',
-            color: 'warning',
-            action: (selectedUsers: User[]) => onBulkAction?.('suspend', selectedUsers)
-        },
-        {
-            label: 'Activate Selected',
-            color: 'success',
-            action: (selectedUsers: User[]) => onBulkAction?.('activate', selectedUsers)
-        },
-        {
-            label: 'Delete Selected',
-            color: 'error',
-            action: (selectedUsers: User[]) => onBulkAction?.('delete', selectedUsers)
-        }
-    ], [onBulkAction]);
 
     return (
         <EnhancedDataTable
@@ -197,9 +173,7 @@ const UserManagementTable: React.FC<UserManagementTableProps> = ({
             title="User Management"
             subtitle={`${users.length} users total`}
             onRefresh={onRefresh}
-            bulkActions={bulkActions}
             enableSelection={true}
-            enableBulkActions={true}
             enableExport={true}
             exportFilename="user-management-export"
             defaultPageSize={25}

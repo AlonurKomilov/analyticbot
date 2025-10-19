@@ -13,7 +13,7 @@ import {
 
 // Import unified admin hooks (new architecture)
 import { useAdminDashboard } from '@hooks/useAdminAPI';
-import { useAdminAnalytics } from '@hooks/useSpecializedAnalytics';
+// import { useAdminAnalytics } from '@hooks/useSpecializedAnalytics';
 
 // Import modular components
 import AdminStatsCards from './components/AdminStatsCards';
@@ -56,8 +56,9 @@ const SuperAdminDashboard: React.FC = () => {
     } = useAdminDashboardState();
 
     // Admin API data
-    const { stats, users, auditLogs, loading, error: apiError, suspendUser, reactivateUser } = useAdminDashboard();
-    const { adminAnalytics } = useAdminAnalytics();
+    const { stats, users, auditLogs, isLoading, error: apiError, suspendUser, reactivateUser } = useAdminDashboard();
+    // Analytics data available but not currently used
+    // const analytics = useAdminAnalytics();
 
     // Set API errors to notification state
     useEffect(() => {
@@ -74,8 +75,9 @@ const SuperAdminDashboard: React.FC = () => {
         }
 
         try {
-            await suspendUser(suspendDialog.user.id, suspensionReason);
-            showSuccess(`User ${suspendDialog.user.username || 'Unknown'} has been suspended`);
+            const user = suspendDialog.user as any;
+            await suspendUser(user.id, suspensionReason);
+            showSuccess(`User ${user.username || 'Unknown'} has been suspended`);
             closeSuspendDialog();
         } catch (err: any) {
             showError(`Failed to suspend user: ${err.message}`);
@@ -92,7 +94,7 @@ const SuperAdminDashboard: React.FC = () => {
         }
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Container maxWidth="lg" sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
                 <CircularProgress />

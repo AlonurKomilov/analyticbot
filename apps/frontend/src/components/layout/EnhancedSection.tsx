@@ -9,7 +9,7 @@
  */
 
 import React, { ReactNode } from 'react';
-import { Box, Typography, Divider, Tooltip, SxProps, Theme } from '@mui/material';
+import { Box, Typography, Divider, Tooltip } from '@mui/material';
 import { IconButton } from '../common/TouchTargetCompliance';
 import {
   ExpandMore as ExpandIcon,

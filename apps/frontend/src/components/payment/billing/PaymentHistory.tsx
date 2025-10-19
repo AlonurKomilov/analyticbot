@@ -56,7 +56,7 @@ interface PaymentHistoryProps {
 }
 
 const PaymentHistory: React.FC<PaymentHistoryProps> = ({ paymentHistory, onRefresh }) => {
-  const getPaymentStatusIcon = (status: PaymentStatus): JSX.Element => {
+  const getPaymentStatusIcon = (status: PaymentStatus): React.ReactElement => {
     switch (status) {
       case 'succeeded':
       case 'paid':
@@ -136,7 +136,7 @@ const PaymentHistory: React.FC<PaymentHistoryProps> = ({ paymentHistory, onRefre
                   <Box display="flex" alignItems="center" gap={1}>
                     <StatusChip
                       label={payment.status.toUpperCase()}
-                      variant={getPaymentStatusColor(payment.status)}
+                      status={getPaymentStatusColor(payment.status) as 'info' | 'success' | 'warning' | 'error'}
                       size="small"
                     />
                     <Tooltip title="Download Receipt">

@@ -25,9 +25,9 @@ interface StoreStatus {
     dataSource: string;
     channelsCount: number;
     scheduledPostsCount: number;
-    user: JSX.Element;
-    plan: JSX.Element;
-    analyticsData: JSX.Element;
+    user: React.ReactElement;
+    plan: React.ReactElement;
+    analyticsData: React.ReactElement;
 }
 
 const DiagnosticPanel: React.FC = () => {

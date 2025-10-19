@@ -119,7 +119,7 @@ const NavigationBar: React.FC = () => {
                     {/* Desktop breadcrumbs */}
                     {!isMobile && (
                         <SmartBreadcrumbs
-                            sx={{ ml: 2 } as SxProps<Theme>}
+                            className=""
                             maxItems={3}
                         />
                     )}
@@ -132,10 +132,10 @@ const NavigationBar: React.FC = () => {
                         ml: 'auto'
                     }}>
                         {/* Global Search */}
-                        <GlobalSearchBar />
+                        <GlobalSearchBar {...({className: ""} as any)} />
 
                         {/* Data Source Switch */}
-                        <GlobalDataSourceSwitch showLabel={!isMobile} />
+                        <GlobalDataSourceSwitch showLabel={!isMobile} {...({className: ""} as any)} />
 
                         {/* Theme toggle */}
                         <IconButton
@@ -151,10 +151,10 @@ const NavigationBar: React.FC = () => {
                         </IconButton>
 
                         {/* Notifications */}
-                        <NotificationMenu />
+                        <NotificationMenu {...({className: ""} as any)} />
 
                         {/* Profile menu */}
-                        <ProfileMenu />
+                        <ProfileMenu {...({className: ""} as any)} />
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -163,6 +163,7 @@ const NavigationBar: React.FC = () => {
             <MobileNavigationDrawer
                 open={mobileMenuOpen}
                 onClose={handleMobileMenuClose}
+                {...({className: ""} as any)}
             />
         </>
     );

@@ -5,10 +5,6 @@ import {
     Chip,
     Tooltip
 } from '@mui/material';
-import {
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon
-} from '@mui/icons-material';
 
 // Types
 interface User {

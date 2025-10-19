@@ -17,8 +17,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  TextField,
-  CircularProgress
+  TextField
 } from '@mui/material';
 import {
   Warning,

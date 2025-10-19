@@ -10,12 +10,9 @@ import {
     Alert,
     Grid,
     Card,
-    CardContent,
-    SxProps,
-    Theme
+    CardContent
 } from '@mui/material';
 import {
-    Security as SecurityIcon,
     Image as ImageIcon,
     Search as SearchIcon,
     Shield as ShieldIcon,
@@ -47,7 +44,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const ContentProtectionDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<number>(0);
 
-    const handleTabChange = (event: React.SyntheticEvent, newValue: number): void => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
     };
 
@@ -124,7 +121,7 @@ const ContentProtectionDashboard: React.FC = () => {
                     aria-label="content protection tabs"
                     variant="fullWidth"
                     sx={{
-                        borderBottom: (theme: Theme) => `1px solid ${theme.palette.divider}`,
+                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                         '& .MuiTab-root': {
                             minHeight: 64,
                             fontSize: '1rem',

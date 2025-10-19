@@ -108,7 +108,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
     return <>{fallback}</>;
   }
 
-  const userRole = user.role || 'guest';
+  const userRole = (user as any).role || 'guest';
 
   // Check role requirement
   const hasRequiredRole = requireExact
@@ -132,7 +132,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <>{fallback}</>;
   }
 
-  const userRole = user.role || 'guest';
+  const userRole = (user as any).role || 'guest';
   const hasRequiredPermission = hasPermission(userRole, requiredPermission);
 
   return hasRequiredPermission ? <>{children}</> : <>{fallback}</>;
@@ -177,7 +177,7 @@ export const UserOrHigher: React.FC<GuardComponentProps> = ({ children, fallback
 export const useRBAC = (): RBACHook => {
   const { user } = useAuth();
 
-  const userRole: RoleType = (user?.role as RoleType) || 'guest';
+  const userRole: RoleType = ((user as any)?.role as RoleType) || 'guest';
 
   return {
     user,

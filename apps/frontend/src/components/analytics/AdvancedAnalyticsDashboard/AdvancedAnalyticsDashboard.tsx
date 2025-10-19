@@ -11,7 +11,7 @@ import { useDataSource, useAllAnalytics } from '@hooks/useDataSource';
 
 // Import extracted components (JSX - not yet migrated)
 import DataSourceStatus from './DataSourceStatus';
-import OverviewMetrics from './OverviewMetrics.tsx';
+import OverviewMetrics from './OverviewMetrics';
 import SmartAlertsPanel from './SmartAlertsPanel';
 import DashboardCharts from './DashboardCharts';
 import PerformanceScoreWidget from './PerformanceScoreWidget';

@@ -21,7 +21,7 @@ import { useResponsive, MOBILE_PATTERNS } from '../theme/responsive.js';
 import PostContentInput from './domains/posts/PostContentInput.jsx';
 import ChannelSelector from './domains/posts/ChannelSelector.jsx';
 import ScheduleTimeInput from './domains/posts/ScheduleTimeInput.jsx';
-import PostButtonManager from './domains/posts/PostButtonManager.jsx';
+import PostButtonManager from './domains/posts/PostButtonManager.tsx';
 import PostSubmitButton from './domains/posts/PostSubmitButton.jsx';
 import { validatePostForm, canSubmitForm } from './domains/posts/PostFormValidation.js';
 

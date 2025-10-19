@@ -5,18 +5,36 @@
 import React from 'react';
 import { TextField, Typography } from '@mui/material';
 
-const ScheduleTimeInput = ({
+/**
+ * Props for ScheduleTimeInput component
+ */
+interface ScheduleTimeInputProps {
+    /** Current schedule date/time value */
+    value: Date | null;
+    /** Callback when date/time changes */
+    onChange: (value: Date | null) => void;
+    /** Error message */
+    error?: string;
+    /** Disabled state */
+    disabled?: boolean;
+}
+
+/**
+ * ScheduleTimeInput Component
+ * Date and time picker for post scheduling
+ */
+const ScheduleTimeInput: React.FC<ScheduleTimeInputProps> = ({
     value,
     onChange,
     error,
     disabled = false
 }) => {
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value ? new Date(e.target.value) : null;
         onChange(newValue);
     };
 
-    const formatDateForInput = (date) => {
+    const formatDateForInput = (date: Date | null): string => {
         if (!date) return '';
         return new Date(date).toISOString().slice(0, 16);
     };

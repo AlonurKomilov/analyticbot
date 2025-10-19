@@ -48,10 +48,8 @@ async def get_predictive_analytics_engine():
 
     return MockPredictiveEngine()
 
-
-# Analytics Client Dependency
-def get_analytics_client() -> AnalyticsClient:
-    from config.settings import settings
+    # ✅ FIXED Oct 19, 2025: Removed duplicate get_analytics_client() function
+    # The function is already defined above (line 29)
 
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 

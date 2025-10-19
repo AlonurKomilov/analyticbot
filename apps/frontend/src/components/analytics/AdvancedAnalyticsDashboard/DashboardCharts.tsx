@@ -16,7 +16,28 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-const DashboardCharts = React.memo(({ trends }) => {
+/**
+ * Trend data point interface
+ */
+interface TrendData {
+  name: string;
+  views: number;
+  engagement: number;
+}
+
+/**
+ * Props for DashboardCharts component
+ */
+interface DashboardChartsProps {
+  /** Weekly trend data for charts */
+  trends: TrendData[];
+}
+
+/**
+ * DashboardCharts Component
+ * Displays performance trend charts for analytics dashboard
+ */
+const DashboardCharts: React.FC<DashboardChartsProps> = React.memo(({ trends }) => {
   const theme = useTheme();
 
   return (

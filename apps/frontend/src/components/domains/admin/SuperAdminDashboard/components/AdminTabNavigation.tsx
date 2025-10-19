@@ -12,13 +12,23 @@ import {
 } from '@mui/icons-material';
 
 /**
+ * Props for AdminTabNavigation component
+ */
+interface AdminTabNavigationProps {
+    /** Currently active tab index */
+    activeTab: number;
+    /** Callback when tab changes */
+    onTabChange: (newValue: number) => void;
+}
+
+/**
  * AdminTabNavigation Component
  * Navigation tabs for admin dashboard sections
  */
-const AdminTabNavigation = ({ activeTab, onTabChange }) => {
+const AdminTabNavigation: React.FC<AdminTabNavigationProps> = ({ activeTab, onTabChange }) => {
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-            <Tabs value={activeTab} onChange={(e, newValue) => onTabChange(newValue)}>
+            <Tabs value={activeTab} onChange={(_e, newValue) => onTabChange(newValue)}>
                 <Tab
                     icon={<DashboardIcon />}
                     label="Overview"

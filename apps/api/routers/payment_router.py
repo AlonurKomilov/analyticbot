@@ -7,28 +7,21 @@ Provides HTTP API for payment methods, processing, subscriptions, and webhooks.
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
+from apps.di import ApplicationContainer
+
 # ✅ MIGRATED: Use new modular DI instead of legacy bot.di
-from apps.di import get_container as get_app_container, ApplicationContainer
+from apps.di import get_container as get_app_container
 from core.domain.payment import (
     Money,
     PaymentData,
     PaymentMethodData,
     PaymentProvider,
     SubscriptionData,
-)
-from core.protocols.payment.payment_protocols import (
-    PaymentAnalyticsProtocol,
-    PaymentGatewayManagerProtocol,
-    PaymentMethodProtocol,
-    PaymentOrchestratorProtocol,
-    PaymentProcessingProtocol,
-    SubscriptionProtocol,
-    WebhookProtocol,
 )
 
 router = APIRouter(prefix="/payment", tags=["payment"])
@@ -43,9 +36,9 @@ def get_container() -> ApplicationContainer:
 # Payment Methods Endpoints
 @router.post("/methods")
 async def create_payment_method(
-    payment_method_data: Dict[str, Any],
+    payment_method_data: dict[str, Any],
     user_id: int,
-    container: ApplicationContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container),
 ):
     """Create a new payment method for a user"""
     try:
@@ -54,7 +47,7 @@ async def create_payment_method(
         if not orchestrator:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Payment orchestrator service not available"
+                detail="Payment orchestrator service not available",
             )
 
         # Convert to domain model
@@ -63,7 +56,7 @@ async def create_payment_method(
             provider=PaymentProvider(payment_method_data.get("provider", "stripe")),
             last_four=payment_method_data.get("last_four"),
             brand=payment_method_data.get("brand"),
-            metadata=payment_method_data.get("metadata", {})
+            metadata=payment_method_data.get("metadata", {}),
         )
 
         # Process through orchestrator (this would need to be implemented)
@@ -76,23 +69,22 @@ async def create_payment_method(
                 "data": {
                     "user_id": user_id,
                     "method_type": method_data.method_type,
-                    "provider": method_data.provider
-                }
-            }
+                    "provider": method_data.provider,
+                },
+            },
         )
 
     except Exception as e:
         logger.error(f"Failed to create payment method: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create payment method: {str(e)}"
+            detail=f"Failed to create payment method: {str(e)}",
         )
 
 
 @router.get("/methods/{user_id}")
 async def get_user_payment_methods(
-    user_id: int,
-    container: ApplicationContainer = Depends(get_container)
+    user_id: int, container: ApplicationContainer = Depends(get_container)
 ):
     """Get all payment methods for a user"""
     try:
@@ -102,8 +94,8 @@ async def get_user_payment_methods(
                 "message": "Payment methods retrieval endpoint ready",
                 "data": {
                     "user_id": user_id,
-                    "methods": []  # Would be populated from actual service
-                }
+                    "methods": [],  # Would be populated from actual service
+                },
             }
         )
 
@@ -111,16 +103,16 @@ async def get_user_payment_methods(
         logger.error(f"Failed to get payment methods: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get payment methods: {str(e)}"
+            detail=f"Failed to get payment methods: {str(e)}",
         )
 
 
 # Payment Processing Endpoints
 @router.post("/process")
 async def process_payment(
-    payment_data: Dict[str, Any],
+    payment_data: dict[str, Any],
     user_id: int,
-    container: ApplicationContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container),
 ):
     """Process a one-time payment"""
     try:
@@ -128,10 +120,9 @@ async def process_payment(
         payment = PaymentData(
             payment_method_id=payment_data["payment_method_id"],
             amount=Money(
-                amount=payment_data["amount"],
-                currency=payment_data.get("currency", "USD")
+                amount=payment_data["amount"], currency=payment_data.get("currency", "USD")
             ),
-            description=payment_data.get("description")
+            description=payment_data.get("description"),
         )
 
         return JSONResponse(
@@ -142,25 +133,25 @@ async def process_payment(
                 "data": {
                     "user_id": user_id,
                     "amount": payment.amount.amount,
-                    "currency": payment.amount.currency
-                }
-            }
+                    "currency": payment.amount.currency,
+                },
+            },
         )
 
     except Exception as e:
         logger.error(f"Failed to process payment: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process payment: {str(e)}"
+            detail=f"Failed to process payment: {str(e)}",
         )
 
 
 # Subscription Endpoints
 @router.post("/subscriptions")
 async def create_subscription(
-    subscription_data: Dict[str, Any],
+    subscription_data: dict[str, Any],
     user_id: int,
-    container: ApplicationContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container),
 ):
     """Create a new subscription"""
     try:
@@ -168,7 +159,7 @@ async def create_subscription(
         subscription = SubscriptionData(
             plan_id=subscription_data["plan_id"],
             payment_method_id=subscription_data["payment_method_id"],
-            billing_cycle=subscription_data["billing_cycle"]
+            billing_cycle=subscription_data["billing_cycle"],
         )
 
         return JSONResponse(
@@ -179,23 +170,22 @@ async def create_subscription(
                 "data": {
                     "user_id": user_id,
                     "plan_id": subscription.plan_id,
-                    "billing_cycle": subscription.billing_cycle
-                }
-            }
+                    "billing_cycle": subscription.billing_cycle,
+                },
+            },
         )
 
     except Exception as e:
         logger.error(f"Failed to create subscription: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create subscription: {str(e)}"
+            detail=f"Failed to create subscription: {str(e)}",
         )
 
 
 @router.get("/subscriptions/{user_id}")
 async def get_user_subscription(
-    user_id: int,
-    container: ApplicationContainer = Depends(get_container)
+    user_id: int, container: ApplicationContainer = Depends(get_container)
 ):
     """Get user's active subscription"""
     try:
@@ -205,8 +195,8 @@ async def get_user_subscription(
                 "message": "Subscription retrieval endpoint ready",
                 "data": {
                     "user_id": user_id,
-                    "subscription": None  # Would be populated from actual service
-                }
+                    "subscription": None,  # Would be populated from actual service
+                },
             }
         )
 
@@ -214,16 +204,14 @@ async def get_user_subscription(
         logger.error(f"Failed to get subscription: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get subscription: {str(e)}"
+            detail=f"Failed to get subscription: {str(e)}",
         )
 
 
 # Webhook Endpoints
 @router.post("/webhooks/{provider}")
 async def process_webhook(
-    provider: str,
-    request: Request,
-    container: ApplicationContainer = Depends(get_container)
+    provider: str, request: Request, container: ApplicationContainer = Depends(get_container)
 ):
     """Process incoming webhooks from payment providers"""
     try:
@@ -235,10 +223,7 @@ async def process_webhook(
             content={
                 "success": True,
                 "message": "Webhook processing endpoint ready",
-                "data": {
-                    "provider": provider,
-                    "received": True
-                }
+                "data": {"provider": provider, "received": True},
             }
         )
 
@@ -246,7 +231,7 @@ async def process_webhook(
         logger.error(f"Failed to process webhook: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process webhook: {str(e)}"
+            detail=f"Failed to process webhook: {str(e)}",
         )
 
 
@@ -255,7 +240,7 @@ async def process_webhook(
 async def get_payment_stats(
     start_date: str | None = None,
     end_date: str | None = None,
-    container: ApplicationContainer = Depends(get_container)
+    container: ApplicationContainer = Depends(get_container),
 ):
     """Get payment analytics and statistics"""
     try:
@@ -267,9 +252,9 @@ async def get_payment_stats(
                     "stats": {
                         "total_payments": 0,
                         "total_revenue": 0,
-                        "period": f"{start_date} to {end_date}"
+                        "period": f"{start_date} to {end_date}",
                     }
-                }
+                },
             }
         )
 
@@ -277,15 +262,13 @@ async def get_payment_stats(
         logger.error(f"Failed to get payment stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get payment stats: {str(e)}"
+            detail=f"Failed to get payment stats: {str(e)}",
         )
 
 
 # Health Check
 @router.get("/health")
-async def payment_system_health(
-    container: ApplicationContainer = Depends(get_container)
-):
+async def payment_system_health(container: ApplicationContainer = Depends(get_container)):
     """Get payment system health status"""
     try:
         return JSONResponse(
@@ -300,9 +283,9 @@ async def payment_system_health(
                         "subscriptions": "ready",
                         "webhooks": "ready",
                         "analytics": "ready",
-                        "orchestrator": "ready"
-                    }
-                }
+                        "orchestrator": "ready",
+                    },
+                },
             }
         )
 
@@ -310,5 +293,5 @@ async def payment_system_health(
         logger.error(f"Payment system health check failed: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Payment system unhealthy: {str(e)}"
+            detail=f"Payment system unhealthy: {str(e)}",
         )

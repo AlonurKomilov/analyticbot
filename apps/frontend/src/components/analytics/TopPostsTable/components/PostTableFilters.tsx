@@ -5,10 +5,52 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Typography
+    Typography,
+    SelectChangeEvent
 } from '@mui/material';
 
-const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
+/**
+ * Time filter options
+ */
+export type TimeFilter = 'today' | 'yesterday' | 'week' | 'month';
+
+/**
+ * Sort by options
+ */
+export type SortBy = 'views' | 'likes' | 'shares' | 'comments' | 'engagement';
+
+/**
+ * Props for PostTableFilters component
+ */
+interface PostTableFiltersProps {
+    /** Selected time filter */
+    timeFilter: TimeFilter;
+    /** Callback to update time filter */
+    setTimeFilter: (filter: TimeFilter) => void;
+    /** Selected sort option */
+    sortBy: SortBy;
+    /** Callback to update sort option */
+    setSortBy: (sort: SortBy) => void;
+}
+
+/**
+ * PostTableFilters Component
+ * Filter controls for top posts table
+ */
+const PostTableFilters: React.FC<PostTableFiltersProps> = ({
+    timeFilter,
+    setTimeFilter,
+    sortBy,
+    setSortBy
+}) => {
+    const handleTimeFilterChange = (event: SelectChangeEvent) => {
+        setTimeFilter(event.target.value as TimeFilter);
+    };
+
+    const handleSortByChange = (event: SelectChangeEvent) => {
+        setSortBy(event.target.value as SortBy);
+    };
+
     return (
         <Box
             sx={{
@@ -30,7 +72,7 @@ const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
                     id="time-filter"
                     value={timeFilter}
                     label="Time Period"
-                    onChange={(e) => setTimeFilter(e.target.value)}
+                    onChange={handleTimeFilterChange}
                 >
                     <MenuItem value="today">Today</MenuItem>
                     <MenuItem value="yesterday">Yesterday</MenuItem>
@@ -46,7 +88,7 @@ const PostTableFilters = ({ timeFilter, setTimeFilter, sortBy, setSortBy }) => {
                     id="sort-by"
                     value={sortBy}
                     label="Sort By"
-                    onChange={(e) => setSortBy(e.target.value)}
+                    onChange={handleSortByChange}
                 >
                     <MenuItem value="views">Views</MenuItem>
                     <MenuItem value="likes">Likes</MenuItem>

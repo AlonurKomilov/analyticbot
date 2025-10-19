@@ -3,6 +3,7 @@ Database & Repository DI Container
 
 Single Responsibility: Database connectivity and repository factory
 Clean Architecture compliant - uses repository factory pattern
+Phase 2 Fix (Oct 19, 2025): Updated to use protocols instead of concrete implementations
 """
 
 import logging
@@ -19,7 +20,12 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from apps.shared.factory import get_repository_factory
-from infra.db.connection_manager import DatabaseManager, db_manager
+
+# ✅ PHASE 2 FIX: Import protocol instead of concrete implementation
+from core.protocols import DatabaseManagerProtocol
+
+# Still need concrete implementation for instantiation
+from infra.db.connection_manager import db_manager
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +35,11 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-async def _create_database_manager() -> DatabaseManager:
-    """Create or get optimized database manager"""
+async def _create_database_manager() -> DatabaseManagerProtocol:
+    """Create or get optimized database manager (returns protocol interface)"""
     if not db_manager._pool:
         await db_manager.initialize()
-    return db_manager
+    return db_manager  # Returns concrete type but typed as protocol
 
 
 async def _create_asyncpg_pool(database_url: str, pool_size: int = 10) -> asyncpg.Pool:
@@ -122,8 +128,7 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Database URL from environment or configuration
     database_url = providers.Callable(
         lambda: os.getenv(
-            "DATABASE_URL",
-            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
         )
     )
 
@@ -133,23 +138,13 @@ class DatabaseContainer(containers.DeclarativeContainer):
 
     database_manager = providers.Resource(_create_database_manager)
 
-    asyncpg_pool = providers.Resource(
-        _create_asyncpg_pool,
-        database_url=database_url,
-        pool_size=10
-    )
+    asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
-        _create_sqlalchemy_engine,
-        database_url=database_url,
-        pool_size=10,
-        max_overflow=20
+        _create_sqlalchemy_engine, database_url=database_url, pool_size=10, max_overflow=20
     )
 
-    session_factory = providers.Resource(
-        _create_session_factory,
-        engine=sqlalchemy_engine
-    )
+    session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)
 
     # ============================================================================
     # REPOSITORY FACTORY (Clean Architecture Pattern)
@@ -161,82 +156,50 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # REPOSITORIES (via factory pattern - no direct infra imports)
     # ============================================================================
 
-    user_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="user"
-    )
+    user_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="user")
 
     channel_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="channel"
+        _create_repository, factory=repository_factory, repo_type="channel"
     )
 
     analytics_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="analytics"
+        _create_repository, factory=repository_factory, repo_type="analytics"
     )
 
     admin_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="admin"
+        _create_repository, factory=repository_factory, repo_type="admin"
     )
 
-    plan_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="plan"
-    )
+    plan_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="plan")
 
     schedule_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="schedule"
+        _create_repository, factory=repository_factory, repo_type="schedule"
     )
 
     payment_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="payment"
+        _create_repository, factory=repository_factory, repo_type="payment"
     )
 
-    post_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="post"
-    )
+    post_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="post")
 
     metrics_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="metrics"
+        _create_repository, factory=repository_factory, repo_type="metrics"
     )
 
     channel_daily_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="channel_daily"
+        _create_repository, factory=repository_factory, repo_type="channel_daily"
     )
 
     edges_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="edges"
+        _create_repository, factory=repository_factory, repo_type="edges"
     )
 
     stats_raw_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="stats_raw"
+        _create_repository, factory=repository_factory, repo_type="stats_raw"
     )
 
     alert_repo = providers.Factory(
-        _create_repository,
-        factory=repository_factory,
-        repo_type="alert"
+        _create_repository, factory=repository_factory, repo_type="alert"
     )
 
 

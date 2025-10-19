@@ -312,8 +312,8 @@ __all__ = [
     "ApplicationContainer",
     "configure_container",
     "get_container",
-    "get_bot_container",
-    "get_api_container",
+    # "get_bot_container",  # REMOVED Oct 19, 2025: Function doesn't exist
+    # "get_api_container",  # REMOVED Oct 19, 2025: Function doesn't exist
     "get_unified_container",
     "cleanup_container",
     "get_database_pool",

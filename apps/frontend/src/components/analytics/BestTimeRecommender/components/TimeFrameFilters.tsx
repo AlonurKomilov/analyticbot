@@ -5,11 +5,53 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Typography
+    Typography,
+    SelectChangeEvent
 } from '@mui/material';
 import { Psychology as AIIcon } from '@mui/icons-material';
 
-const TimeFrameFilters = ({ timeFrame, setTimeFrame, contentType, setContentType }) => {
+/**
+ * Time frame options
+ */
+export type TimeFrame = 'week' | 'month' | 'year';
+
+/**
+ * Content type options
+ */
+export type ContentType = 'all' | 'text' | 'image' | 'video' | 'poll';
+
+/**
+ * Props for TimeFrameFilters component
+ */
+interface TimeFrameFiltersProps {
+    /** Selected time frame */
+    timeFrame: TimeFrame;
+    /** Callback to update time frame */
+    setTimeFrame: (timeFrame: TimeFrame) => void;
+    /** Selected content type */
+    contentType: ContentType;
+    /** Callback to update content type */
+    setContentType: (contentType: ContentType) => void;
+}
+
+/**
+ * TimeFrameFilters Component
+ * Filter controls for AI posting time recommendations
+ */
+const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
+    timeFrame,
+    setTimeFrame,
+    contentType,
+    setContentType
+}) => {
+    const handleTimeFrameChange = (event: SelectChangeEvent) => {
+        setTimeFrame(event.target.value as TimeFrame);
+    };
+
+    const handleContentTypeChange = (event: SelectChangeEvent) => {
+        setContentType(event.target.value as ContentType);
+    };
+
     return (
         <Box sx={{ mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -26,7 +68,7 @@ const TimeFrameFilters = ({ timeFrame, setTimeFrame, contentType, setContentType
                         labelId="timeframe-label"
                         value={timeFrame}
                         label="Vaqt oralig'i"
-                        onChange={(e) => setTimeFrame(e.target.value)}
+                        onChange={handleTimeFrameChange}
                     >
                         <MenuItem value="week">Hafta</MenuItem>
                         <MenuItem value="month">Oy</MenuItem>
@@ -40,7 +82,7 @@ const TimeFrameFilters = ({ timeFrame, setTimeFrame, contentType, setContentType
                         labelId="content-type-label"
                         value={contentType}
                         label="Kontent turi"
-                        onChange={(e) => setContentType(e.target.value)}
+                        onChange={handleContentTypeChange}
                     >
                         <MenuItem value="all">Barcha</MenuItem>
                         <MenuItem value="text">Matn</MenuItem>

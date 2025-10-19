@@ -5,7 +5,25 @@
 import React from 'react';
 import { Button, CircularProgress, Typography } from '@mui/material';
 
-const PostSubmitButton = ({
+/**
+ * Props for PostSubmitButton component
+ */
+interface PostSubmitButtonProps {
+    /** Callback when submit button is clicked */
+    onSubmit: () => void;
+    /** Loading state indicator */
+    loading?: boolean;
+    /** Disabled state */
+    disabled?: boolean;
+    /** Whether form can be submitted (validation passed) */
+    canSubmit?: boolean;
+}
+
+/**
+ * PostSubmitButton Component
+ * Submit button with loading state and validation feedback
+ */
+const PostSubmitButton: React.FC<PostSubmitButtonProps> = ({
     onSubmit,
     loading = false,
     disabled = false,

@@ -5,7 +5,27 @@
 import React from 'react';
 import { TextField, Typography } from '@mui/material';
 
-const PostContentInput = ({
+/**
+ * Props for PostContentInput component
+ */
+interface PostContentInputProps {
+    /** Current text value */
+    value: string;
+    /** Callback when content changes */
+    onChange: (value: string) => void;
+    /** Error state */
+    error?: boolean;
+    /** Helper/error text message */
+    helperText?: string;
+    /** Disabled state */
+    disabled?: boolean;
+}
+
+/**
+ * PostContentInput Component
+ * Multi-line text input for post content with character count
+ */
+const PostContentInput: React.FC<PostContentInputProps> = ({
     value,
     onChange,
     error,

@@ -16,7 +16,6 @@ from aiogram.types import (
     Message,
 )
 
-from apps.api.exports.csv_v2 import CSVExporter
 from apps.bot.keyboards.analytics import (
     get_export_format_keyboard,
     get_export_type_keyboard,
@@ -31,6 +30,9 @@ from apps.shared.clients.analytics_client import (
     TopPostsResponse,
     TrendingResponse,
 )
+
+# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.shared.exports.csv_v2 import CSVExporter
 from apps.shared.factory import get_repository_factory
 from config import settings
 

@@ -2,12 +2,16 @@
 Cache Services DI Container
 
 Single Responsibility: Redis and cache adapter management
+Phase 2 Fix (Oct 19, 2025): Updated to use protocols instead of concrete implementations
 """
 
 import logging
 import os
 
 from dependency_injector import containers, providers
+
+# ✅ PHASE 2 FIX: Import protocol instead of only concrete implementation
+from core.protocols import CacheProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +42,10 @@ async def _create_redis_client():
         return None
 
 
-async def _create_cache_adapter(redis_client=None):
-    """Create cache adapter using factory"""
+async def _create_cache_adapter(redis_client=None) -> CacheProtocol | None:
+    """Create cache adapter using factory (returns protocol interface)"""
     try:
+        # Still need concrete factory for instantiation
         from infra.factories.repository_factory import CacheFactory
 
         return CacheFactory.create_cache_adapter(redis_client)
@@ -70,7 +75,4 @@ class CacheContainer(containers.DeclarativeContainer):
 
     redis_client = providers.Resource(_create_redis_client)
 
-    cache_adapter = providers.Resource(
-        _create_cache_adapter,
-        redis_client=redis_client
-    )
+    cache_adapter = providers.Resource(_create_cache_adapter, redis_client=redis_client)

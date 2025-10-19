@@ -7,7 +7,7 @@ This module provides shared test fixtures and configuration for all apps tests.
 
 import asyncio
 import os
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
@@ -83,14 +83,12 @@ async def test_engine():
 async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
     """
     Create a fresh database session for each test.
-    
+
     This fixture provides a clean database session that is rolled back
     after each test to ensure test isolation.
     """
     # Create session factory
-    async_session_maker = sessionmaker(
-        test_engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session_maker = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session_maker() as session:
         # Start a transaction
@@ -109,7 +107,7 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 async def test_container():
     """
     Provide a test DI container with all dependencies.
-    
+
     This fixture initializes the application's DI container
     with test configuration.
     """
@@ -143,7 +141,7 @@ async def test_db_pool(test_container):
 async def api_client() -> AsyncGenerator[AsyncClient, None]:
     """
     Provide an async HTTP client for API testing.
-    
+
     This client can be used to make requests to the FastAPI application
     without starting the actual server.
     """
@@ -159,11 +157,11 @@ async def authenticated_client(
 ) -> AsyncGenerator[AsyncClient, None]:
     """
     Provide an authenticated HTTP client.
-    
+
     This client includes valid JWT authentication headers.
     """
     # Create a test user and get auth token
-    from apps.shared.auth import create_access_token
+    from core.security_engine import create_access_token  # Fixed Oct 19, 2025: Updated import path
 
     test_user_id = 123456789  # Test user ID
     token = create_access_token({"user_id": test_user_id})
@@ -271,7 +269,7 @@ def mock_update():
 def cleanup_test_data():
     """
     Fixture to track and cleanup test data.
-    
+
     Usage:
         def test_something(cleanup_test_data):
             user_id = create_test_user()

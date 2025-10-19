@@ -302,9 +302,11 @@ def _create_ml_service(service_name: str) -> Any | None:
 
             return create_ml_coordinator()
         elif service_name == "EngagementAnalyzer":
-            from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
-
-            return create_bot_ml_facade()
+            # REMOVED: bot_ml_facade module doesn't exist (Oct 19, 2025)
+            # from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+            # return create_bot_ml_facade()
+            logger.warning("EngagementAnalyzer not available - bot_ml_facade module missing")
+            return None
         elif service_name == "ChurnPredictor":
             # Create ChurnPredictor using the new churn intelligence service
             from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
@@ -318,18 +320,10 @@ def _create_ml_service(service_name: str) -> Any | None:
                 return None
         elif service_name == "ContentOptimizer":
             try:
-                # Create dependent services first
-                prediction_service = _create_ml_service("PredictiveEngine")
-                content_optimizer = None  # ContentOptimizer is not yet implemented
-                churn_predictor = None  # ChurnPredictor is not yet implemented
-
-                # Only create if all dependencies are available
-                if prediction_service and content_optimizer and churn_predictor:
-                    from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
-
-                    return create_bot_ml_facade()
-                else:
-                    return None
+                # REMOVED: bot_ml_facade module doesn't exist (Oct 19, 2025)
+                # ContentOptimizer depends on ML services that are not yet implemented
+                logger.warning("ContentOptimizer not available - ML dependencies missing")
+                return None
             except (TypeError, ImportError, Exception):
                 # ML services not available
                 return None

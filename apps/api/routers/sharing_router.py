@@ -12,7 +12,6 @@ import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from apps.api.exports.csv_v2 import CSVExporter
 from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
@@ -26,6 +25,9 @@ from apps.shared.clients.analytics_client import (
     TopPostsResponse,
     TrendingResponse,
 )
+
+# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.shared.exports.csv_v2 import CSVExporter
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings

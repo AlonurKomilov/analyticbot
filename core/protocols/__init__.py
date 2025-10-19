@@ -7,6 +7,19 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Protocol
 
+# ✅ PHASE 2 FIX: Import infrastructure protocols (Oct 19, 2025)
+from core.protocols.infrastructure_protocols import (
+    AdminRepositoryProtocol,
+    AnalyticsRepositoryProtocol,
+    CacheProtocol,
+    ChannelDailyRepositoryProtocol,
+    DatabaseManagerProtocol,
+    PostMetricsRepositoryProtocol,
+    StatsRawRepositoryProtocol,
+    TelegramClientProtocol,
+    UserRepositoryProtocol,
+)
+
 
 class ServiceProtocol(Protocol):
     """Base protocol for all services"""
@@ -486,3 +499,31 @@ class DeepLearningServiceProtocol(ServiceProtocol):
 # Service registry type hints
 ServiceType = type[ServiceProtocol]
 ServiceInstance = ServiceProtocol
+
+
+# ✅ PHASE 2 FIX: Export all protocols (Oct 19, 2025)
+__all__ = [
+    # Base protocols
+    "ServiceProtocol",
+    "ServiceType",
+    "ServiceInstance",
+    # Service protocols
+    "AnalyticsServiceProtocol",
+    "AnalyticsFusionServiceProtocol",
+    # "DemoServiceProtocol",  # REMOVED Oct 19, 2025: Protocol doesn't exist
+    "DeepLearningServiceProtocol",
+    # Repository protocols (existing)
+    "PostsRepositoryProtocol",
+    "DailyRepositoryProtocol",
+    "ChannelRepositoryProtocol",
+    # Infrastructure protocols (Phase 2 - NEW)
+    "UserRepositoryProtocol",
+    "AdminRepositoryProtocol",
+    "AnalyticsRepositoryProtocol",
+    "ChannelDailyRepositoryProtocol",
+    "PostMetricsRepositoryProtocol",
+    "StatsRawRepositoryProtocol",
+    "CacheProtocol",
+    "DatabaseManagerProtocol",
+    "TelegramClientProtocol",
+]

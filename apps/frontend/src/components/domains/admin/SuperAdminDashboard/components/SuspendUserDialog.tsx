@@ -10,10 +10,36 @@ import {
 } from '@mui/material';
 
 /**
+ * User type for suspension dialog
+ */
+interface SuspendUser {
+    username?: string;
+    full_name?: string;
+}
+
+/**
+ * Props for SuspendUserDialog component
+ */
+interface SuspendUserDialogProps {
+    /** Dialog open state */
+    open: boolean;
+    /** User to suspend */
+    user: SuspendUser | null;
+    /** Current suspension reason text */
+    suspensionReason: string;
+    /** Callback when reason changes */
+    onReasonChange: (reason: string) => void;
+    /** Callback when suspension is confirmed */
+    onConfirm: () => void;
+    /** Callback when dialog is cancelled */
+    onCancel: () => void;
+}
+
+/**
  * SuspendUserDialog Component
  * Modal dialog for user suspension with reason input
  */
-const SuspendUserDialog = ({
+const SuspendUserDialog: React.FC<SuspendUserDialogProps> = ({
     open,
     user,
     suspensionReason,

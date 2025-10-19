@@ -12,8 +12,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
-from apps.api.exports.csv_v2 import CSVExporter
 from apps.shared.clients.analytics_client import AnalyticsClient
+
+# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.shared.exports.csv_v2 import CSVExporter
 from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings

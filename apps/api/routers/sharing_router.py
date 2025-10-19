@@ -27,8 +27,8 @@ from apps.shared.clients.analytics_client import (
 )
 
 # ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.di import get_container
 from apps.shared.exports.csv_v2 import CSVExporter
-from apps.shared.factory import get_repository_factory
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository

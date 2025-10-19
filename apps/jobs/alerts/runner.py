@@ -223,9 +223,9 @@ class AlertRunner:
         self.running = False
 
     async def _ensure_dependencies(self):
-        """Ensure dependencies are available using factory pattern"""
+        """Ensure dependencies are available using DI container"""
         if self.analytics_client is None or self.alert_repository is None:
-            from apps.shared.factory import get_repository_factory
+            from apps.di import get_container
 
             # Get settings
             try:
@@ -239,10 +239,10 @@ class AlertRunner:
             if self.analytics_client is None:
                 self.analytics_client = SharedAnalyticsService(analytics_api_url)
 
-            # Get alert repository from factory
+            # Get alert repository from DI container
             if self.alert_repository is None:
-                factory = get_repository_factory()
-                self.alert_repository = await factory.get_alert_subscription_repository()
+                container = get_container()
+                self.alert_repository = await container.database.alert_subscription_repo()
 
         # Create detector if not exists
         if self.detector is None:

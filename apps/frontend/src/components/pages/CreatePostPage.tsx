@@ -11,16 +11,22 @@ import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 import { PageContainer, SectionHeader } from '../common/StandardComponents.jsx';
 import PostCreator from '../PostCreator.jsx';
 import EnhancedMediaUploader from '../EnhancedMediaUploader.jsx';
-import MediaPreview from '../MediaPreview.jsx';
+import MediaPreview from '../MediaPreview';
 import StorageFileBrowser from '../StorageFileBrowser.jsx';
 import { usePostStore } from '@/stores';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
-const CreatePostPage = () => {
-  const [localSelectedMedia, setLocalSelectedMedia] = useState([]);
+interface MediaItem {
+    id: string;
+    url: string;
+    type: string;
+}
+
+const CreatePostPage: React.FC = () => {
+  const [localSelectedMedia, setLocalSelectedMedia] = useState<MediaItem[]>([]);
   const { schedulePost } = usePostStore();
 
-  const handleRemoveMedia = (index) => {
+  const handleRemoveMedia = (index: number): void => {
     const newMedia = [...localSelectedMedia];
     newMedia.splice(index, 1);
     setLocalSelectedMedia(newMedia);
@@ -44,7 +50,7 @@ const CreatePostPage = () => {
           {/* Main Content - Post Creator */}
           <Box>
             <PostCreator
-              onSchedule={schedulePost}
+              {...{ onSchedule: schedulePost } as any}
             />
           </Box>
 
@@ -53,24 +59,21 @@ const CreatePostPage = () => {
             <Box>
               <SectionHeader level={3}>Media Upload</SectionHeader>
               <EnhancedMediaUploader
-                onMediaSelect={setLocalSelectedMedia}
+                {...{ onMediaSelect: setLocalSelectedMedia } as any}
               />
             </Box>
 
             {localSelectedMedia.length > 0 && (
               <Box>
                 <SectionHeader level={3}>Selected Media</SectionHeader>
-                <MediaPreview
-                  media={localSelectedMedia}
-                  onRemove={handleRemoveMedia}
-                />
+                <MediaPreview {...{ media: localSelectedMedia, onRemove: handleRemoveMedia } as any} />
               </Box>
             )}
 
             <Box>
               <SectionHeader level={3}>File Browser</SectionHeader>
               <StorageFileBrowser
-                onFileSelect={setLocalSelectedMedia}
+                {...{ onFileSelect: setLocalSelectedMedia } as any}
               />
             </Box>
           </Stack>

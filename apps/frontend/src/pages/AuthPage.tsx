@@ -13,7 +13,9 @@ import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import { useAuth } from '../contexts/AuthContext';
 import { DESIGN_TOKENS } from '../theme/designTokens';
 
-const AuthPage = () => {
+type AuthMode = 'login' | 'register' | 'forgot-password';
+
+const AuthPage: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -21,12 +23,12 @@ const AuthPage = () => {
 
     // Get mode from URL params, default to 'login'
     const mode = searchParams.get('mode') || 'login';
-    const [authMode, setAuthMode] = useState(mode);
+    const [authMode, setAuthMode] = useState<AuthMode>(mode as AuthMode);
 
     // Redirect authenticated users to dashboard
     useEffect(() => {
         if (isAuthenticated) {
-            const from = location.state?.from?.pathname || '/';
+            const from = (location.state as any)?.from?.pathname || '/';
             navigate(from, { replace: true });
         }
     }, [isAuthenticated, navigate, location.state]);
@@ -37,18 +39,18 @@ const AuthPage = () => {
     }, [authMode, setSearchParams]);
 
     // Handle mode toggle
-    const toggleAuthMode = () => {
-        const newMode = authMode === 'login' ? 'register' : 'login';
+    const toggleAuthMode = (): void => {
+        const newMode: AuthMode = authMode === 'login' ? 'register' : 'login';
         setAuthMode(newMode);
     };
 
     // Handle forgot password
-    const handleForgotPassword = () => {
+    const handleForgotPassword = (): void => {
         setAuthMode('forgot-password');
     };
 
     // Handle back to login
-    const handleBackToLogin = () => {
+    const handleBackToLogin = (): void => {
         setAuthMode('login');
     };
 
@@ -65,17 +67,17 @@ const AuthPage = () => {
             <Container maxWidth="sm">
                 {authMode === 'login' ? (
                     <LoginForm
-                        onToggleMode={toggleAuthMode}
-                        onForgotPassword={handleForgotPassword}
+                        onToggleMode={toggleAuthMode as any}
+                        onForgotPassword={handleForgotPassword as any}
                     />
                 ) : authMode === 'register' ? (
-                    <RegisterForm onToggleMode={toggleAuthMode} />
+                    <RegisterForm onToggleMode={toggleAuthMode as any} />
                 ) : authMode === 'forgot-password' ? (
-                    <ForgotPasswordForm onBackToLogin={handleBackToLogin} />
+                    <ForgotPasswordForm onBackToLogin={handleBackToLogin as any} />
                 ) : (
                     <LoginForm
-                        onToggleMode={toggleAuthMode}
-                        onForgotPassword={handleForgotPassword}
+                        onToggleMode={toggleAuthMode as any}
+                        onForgotPassword={handleForgotPassword as any}
                     />
                 )}
             </Container>

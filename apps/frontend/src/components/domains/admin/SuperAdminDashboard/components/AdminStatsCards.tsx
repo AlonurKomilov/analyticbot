@@ -12,11 +12,26 @@ import {
     Security as SecurityIcon
 } from '@mui/icons-material';
 
+interface Stats {
+    users: {
+        total: number;
+        active: number;
+        suspended: number;
+    };
+    activity: {
+        admin_logins_24h: number;
+    };
+}
+
+interface AdminStatsCardsProps {
+    stats: Stats | null;
+}
+
 /**
  * AdminStatsCards Component
  * Displays system statistics in card format
  */
-const AdminStatsCards = ({ stats }) => {
+const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
     if (!stats) return null;
 
     return (

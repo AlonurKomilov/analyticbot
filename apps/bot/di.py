@@ -44,7 +44,7 @@ from dependency_injector import containers, providers
 from apps.bot.config import Settings as BotSettings
 
 # ✅ PHASE 3 FIX (Oct 19, 2025): Use main DI container instead of factory
-from apps.di import get_container
+from apps.di import get_container  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +356,50 @@ def _create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:
             return None
 
 
+# ✅ PHASE 3 FIX: Repository delegation helpers
+# These async callables delegate to main container for repository access
+async def _get_user_repo():
+    """Get user repository from main container"""
+    container = get_container()
+    return await container.database.user_repo()  # type: ignore[attr-defined]
+
+
+async def _get_channel_repo():
+    """Get channel repository from main container"""
+    container = get_container()
+    return await container.database.channel_repo()  # type: ignore[attr-defined]
+
+
+async def _get_analytics_repo():
+    """Get analytics repository from main container"""
+    container = get_container()
+    return await container.database.analytics_repo()  # type: ignore[attr-defined]
+
+
+async def _get_admin_repo():
+    """Get admin repository from main container"""
+    container = get_container()
+    return await container.database.admin_repo()  # type: ignore[attr-defined]
+
+
+async def _get_plan_repo():
+    """Get plan repository from main container"""
+    container = get_container()
+    return await container.database.plan_repo()  # type: ignore[attr-defined]
+
+
+async def _get_schedule_repo():
+    """Get schedule repository from main container"""
+    container = get_container()
+    return await container.database.schedule_repo()  # type: ignore[attr-defined]
+
+
+async def _get_payment_repo():
+    """Get payment repository from main container"""
+    container = get_container()
+    return await container.database.payment_repo()  # type: ignore[attr-defined]
+
+
 class BotContainer(containers.DeclarativeContainer):
     """Clean Architecture Bot Container - replaces god container."""
 
@@ -377,31 +421,17 @@ class BotContainer(containers.DeclarativeContainer):
     dispatcher = providers.Factory(_create_dispatcher)
 
     # ✅ PHASE 3 FIX: Repository providers delegate to main container
-    # Note: Bot handlers should be updated to use get_container().database directly
-    # Keeping these providers for backward compatibility during migration
-    @staticmethod
-    async def get_user_repo():
-        return await get_container().database.user_repo()
-
-    @staticmethod  
-    async def get_channel_repo():
-        return await get_container().database.channel_repo()
-
-    @staticmethod
-    async def get_analytics_repo():
-        return await get_container().database.analytics_repo()
-    admin_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="admin"
-    )
-
-    # Additional repositories for backward compatibility
-    plan_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="plan")
-    schedule_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="schedule"
-    )
-    payment_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="payment"
-    )
+    # Note: These are kept for backward compatibility during migration
+    # Bot handlers should eventually use get_container().database directly
+    
+    # Repository providers using Callable pattern
+    user_repo = providers.Callable(_get_user_repo)
+    channel_repo = providers.Callable(_get_channel_repo)
+    analytics_repo = providers.Callable(_get_analytics_repo)
+    admin_repo = providers.Callable(_get_admin_repo)
+    plan_repo = providers.Callable(_get_plan_repo)
+    schedule_repo = providers.Callable(_get_schedule_repo)
+    payment_repo = providers.Callable(_get_payment_repo)
 
     # Bot Services
     guard_service = providers.Factory(_create_guard_service, user_repository=user_repo)

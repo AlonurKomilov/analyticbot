@@ -5,7 +5,23 @@ import {
     Chip
 } from '@mui/material';
 
-const PerformanceInsights = React.memo(({ metrics }) => {
+interface Insight {
+    label: string;
+    color: string;
+}
+
+interface Metrics {
+    totalViews?: number;
+    growthRate?: number;
+    engagementRate?: number;
+    performanceScore?: number;
+}
+
+interface PerformanceInsightsProps {
+    metrics: Metrics;
+}
+
+const PerformanceInsights: React.FC<PerformanceInsightsProps> = React.memo(({ metrics }) => {
     const {
         totalViews = 0,
         growthRate = 0,
@@ -13,7 +29,7 @@ const PerformanceInsights = React.memo(({ metrics }) => {
         performanceScore = 0
     } = metrics;
 
-    const insights = [];
+    const insights: Insight[] = [];
 
     // Generate insights based on thresholds
     if (growthRate > 10) {

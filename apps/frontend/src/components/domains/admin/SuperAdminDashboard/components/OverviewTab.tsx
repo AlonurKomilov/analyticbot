@@ -18,11 +18,23 @@ import {
 } from '@mui/icons-material';
 import { formatDate } from '../utils/adminUtils';
 
+interface AuditLog {
+    id: string | number;
+    admin_username: string;
+    action: string;
+    created_at: string;
+    success: boolean;
+}
+
+interface OverviewTabProps {
+    auditLogs?: AuditLog[];
+}
+
 /**
  * OverviewTab Component
  * System overview with recent activity and health status
  */
-const OverviewTab = ({ auditLogs = [] }) => {
+const OverviewTab: React.FC<OverviewTabProps> = ({ auditLogs = [] }) => {
     return (
         <>
             <Typography variant="h6" gutterBottom>System Overview</Typography>

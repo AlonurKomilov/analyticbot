@@ -3,9 +3,28 @@
  */
 
 import React, { useMemo } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, Typography, SelectChangeEvent } from '@mui/material';
 
-const ChannelSelector = ({
+interface Channel {
+    id: string | number;
+    title?: string;
+    username?: string;
+}
+
+interface ChannelOption {
+    value: string | number;
+    label: string;
+}
+
+interface ChannelSelectorProps {
+    channels?: Channel[];
+    selectedChannel: string | number | null;
+    onChange: (value: string | number) => void;
+    error?: string;
+    disabled?: boolean;
+}
+
+const ChannelSelector: React.FC<ChannelSelectorProps> = ({
     channels = [],
     selectedChannel,
     onChange,
@@ -13,13 +32,17 @@ const ChannelSelector = ({
     disabled = false
 }) => {
     // Memoized channel options
-    const channelOptions = useMemo(() =>
+    const channelOptions = useMemo<ChannelOption[]>(() =>
         channels.map(channel => ({
             value: channel.id,
             label: channel.title || channel.username || 'Unknown Channel'
         })),
         [channels]
     );
+
+    const handleChange = (e: SelectChangeEvent<string | number>): void => {
+        onChange(e.target.value as string | number);
+    };
 
     return (
         <FormControl fullWidth error={!!error} disabled={disabled}>
@@ -33,7 +56,7 @@ const ChannelSelector = ({
             <Select
                 labelId="channel-select-label"
                 value={selectedChannel || ''}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={handleChange}
                 label="Select Channel"
                 aria-describedby={error ? "channel-error" : "channel-help"}
                 id="channel-select"

@@ -10,9 +10,20 @@ import {
 import {
     Speed as SpeedIcon
 } from '@mui/icons-material';
-import { formatMetricValue } from './metricsUtils.jsx';
+import { formatMetricValue } from './metricsUtils';
 
-const MetricsDetails = React.memo(({ metrics, expanded }) => {
+interface Metrics {
+    reachScore?: number;
+    activeUsers?: number;
+    performanceScore?: number;
+}
+
+interface MetricsDetailsProps {
+    metrics: Metrics;
+    expanded: boolean;
+}
+
+const MetricsDetails: React.FC<MetricsDetailsProps> = React.memo(({ metrics, expanded }) => {
     const {
         reachScore = 0,
         activeUsers = 0,

@@ -62,8 +62,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 logger = logging.getLogger(__name__)
 
+from apps.di import get_container
 from apps.shared.di import Settings as DISettings
-from apps.shared.factory import get_repository_factory
 from config import settings
 from core.services import DeliveryService, ScheduleService
 
@@ -102,15 +102,15 @@ async def get_asyncpg_pool() -> asyncpg.Pool:
 
 
 async def get_user_repository():
-    """Get user repository using factory pattern"""
-    factory = get_repository_factory()
-    return await factory.get_user_repository()
+    """Get user repository from DI container"""
+    container = get_container()
+    return await container.database.user_repo()
 
 
 async def get_channel_repository():
-    """Get channel repository using factory pattern"""
-    factory = get_repository_factory()
-    return await factory.get_channel_repository()
+    """Get channel repository from DI container"""
+    container = get_container()
+    return await container.database.channel_repo()
 
 
 async def get_analytics_fusion_service():

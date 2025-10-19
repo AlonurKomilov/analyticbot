@@ -6,16 +6,34 @@ import {
 } from '@mui/material';
 import { formatHour, getHeatmapColor, generateHourlyPerformance } from '../utils/timeUtils.js';
 
-const HeatmapVisualization = ({ recommendations }) => {
+interface HourlyPerformance {
+    [hour: number]: number;
+}
+
+interface Recommendations {
+    hourly_performance?: HourlyPerformance;
+}
+
+interface HeatmapVisualizationProps {
+    recommendations: Recommendations;
+}
+
+interface HeatmapDataItem {
+    hour: number;
+    value: number;
+    color: string;
+}
+
+const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = ({ recommendations }) => {
     // Generate heatmap data
-    const heatmapData = useMemo(() => {
+    const heatmapData = useMemo<HeatmapDataItem[]>(() => {
         const hourlyPerformance = recommendations?.hourly_performance || generateHourlyPerformance();
-        const maxValue = Math.max(...Object.values(hourlyPerformance));
+        const maxValue = Math.max(...Object.values(hourlyPerformance).map(Number));
 
         return Array.from({ length: 24 }, (_, hour) => ({
             hour,
-            value: hourlyPerformance[hour] || 0,
-            color: getHeatmapColor(hourlyPerformance[hour] || 0, maxValue)
+            value: (hourlyPerformance as any)[hour] || 0,
+            color: getHeatmapColor((hourlyPerformance as any)[hour] || 0, maxValue)
         }));
     }, [recommendations]);
 

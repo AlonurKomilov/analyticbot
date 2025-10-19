@@ -6,6 +6,17 @@ import {
     Typography
 } from '@mui/material';
 
+interface Stats {
+    totalPosts: string;
+    averageViews: string;
+    engagementRate: string;
+    peakViews: string;
+}
+
+interface SummaryStatsGridProps {
+    stats?: Stats;
+}
+
 /**
  * SummaryStatsGrid Component
  *
@@ -18,7 +29,7 @@ import {
  * - Consistent card styling and colors
  * - Centered text alignment for readability
  */
-const SummaryStatsGrid = React.memo(({
+const SummaryStatsGrid: React.FC<SummaryStatsGridProps> = React.memo(({
     stats = {
         totalPosts: '248',
         averageViews: '12.4K',

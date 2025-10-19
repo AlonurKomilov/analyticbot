@@ -333,22 +333,12 @@ async def demonstrate_clean_architecture():
         # Demonstrate service resolution through DI - get analytics service as example
         try:
             analytics_service = await container.core_services.analytics_fusion_service()
-            service_info = {
-                "type": "AnalyticsFusionService",
-                "status": "available"
-            }
+            service_info = {"type": "AnalyticsFusionService", "status": "available"}
         except Exception as e:
-            service_info = {
-                "type": "unavailable",
-                "status": f"error: {str(e)}"
-            }
+            service_info = {"type": "unavailable", "status": f"error: {str(e)}"}
 
         # Get sample data - simplified for demo
-        admin_stats = {
-            "total_users": 150,
-            "active_channels": 45,
-            "total_posts": 1200
-        }
+        admin_stats = {"total_users": 150, "active_channels": 45, "total_posts": 1200}
         sample_permissions = ["read:analytics", "write:posts", "manage:channels"]
 
         return {

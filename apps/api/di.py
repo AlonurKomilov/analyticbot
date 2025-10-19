@@ -1,10 +1,40 @@
 # apps/api/di.py
 """
-API Application Composition Root
-Implements clean architecture by providing all dependencies needed by the API layer.
+⚠️ ⚠️ ⚠️ DEPRECATED - DO NOT USE ⚠️ ⚠️ ⚠️
+
+This file is DEPRECATED and will be removed in a future release.
+Please use the unified DI system: apps/di/
+
+MIGRATION GUIDE:
+---------------
+
+OLD (deprecated):
+    from apps.api.di import ApiContainer, configure_api_container
+    container = configure_api_container()
+
+NEW (unified DI):
+    from apps.di import get_container
+    container = get_container()
+    # Access API services via: container.api.X()
+
+DEPRECATION SCHEDULE:
+- 2025-10-19: Deprecated (all files migrated to apps/di)
+- 2025-10-26: Will be removed (1 week grace period)
+
+STATUS: All 12 dependent files have been successfully migrated to apps/di/
+See: DI_MIGRATION_COMPLETE.md for full migration report
 """
 
+import warnings
 from dependency_injector import containers, providers
+
+# Emit deprecation warning
+warnings.warn(
+    "apps/api/di is deprecated. Use apps/di/ instead. "
+    "This module will be removed on 2025-10-26.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class ApiContainer(containers.DeclarativeContainer):

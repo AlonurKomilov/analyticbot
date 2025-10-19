@@ -6,7 +6,7 @@ System health monitoring for Clean Architecture components
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from apps.di import get_container
 
@@ -40,7 +40,7 @@ async def database_health() -> dict[str, Any]:
     try:
         # ✅ MIGRATED: Use unified DI container
         container = get_container()
-        
+
         # Test optimized database manager
         db_mgr = await container.database.database_manager()
         health_check = await db_mgr.health_check()
@@ -155,7 +155,7 @@ async def di_health() -> dict[str, Any]:
     try:
         # ✅ MIGRATED: Use unified DI container
         container = get_container()
-        
+
         # Test repository dependencies
         dependencies = [
             ("user_repo", container.database.user_repo),

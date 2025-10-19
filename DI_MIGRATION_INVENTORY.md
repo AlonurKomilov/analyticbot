@@ -1,6 +1,6 @@
 # DI Migration Inventory
 
-**Generated:** October 19, 2025  
+**Generated:** October 19, 2025
 **Purpose:** Track all files that need DI migration
 
 ---
@@ -154,5 +154,5 @@ After each migration:
 
 ---
 
-**Status:** 🚧 IN PROGRESS  
+**Status:** 🚧 IN PROGRESS
 **Next Action:** Start Phase 1 - migrate auth.py

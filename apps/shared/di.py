@@ -1,9 +1,50 @@
 """
+⚠️ ⚠️ ⚠️ NOTICE - MIGRATION IN PROGRESS ⚠️ ⚠️ ⚠️
+
+This file is being phased out in favor of the unified DI system: apps/di/
+
+MIGRATION STATUS: All critical files have been migrated (12/12 complete)
+
+MIGRATION GUIDE:
+---------------
+
+OLD (this file):
+    from apps.shared.di import get_container, Container
+    container = get_container()
+    user_repo = await container.user_repo()
+
+NEW (unified DI):
+    from apps.di import get_container
+    container = get_container()
+    user_repo = await container.database.user_repo()
+
+KEY CHANGES:
+1. Import from apps.di instead of apps.shared.di
+2. Use namespaced access: container.database.X() instead of container.X()
+3. All providers are now properly organized by domain
+
+DEPRECATION SCHEDULE:
+- 2025-10-19: Migration complete (all files updated)
+- 2025-10-26: Evaluate for removal or conversion to forwarding shim
+
+See: DI_MIGRATION_COMPLETE.md for full migration report
+
+---
+
 Dependency Injection Container
 Minimal, practical skeleton for Clean Architecture
 """
 
+import warnings
 from dataclasses import dataclass
+
+# Emit migration notice
+warnings.warn(
+    "apps/shared/di is being phased out. Use apps/di/ instead. "
+    "See DI_MIGRATION_COMPLETE.md for migration guide.",
+    FutureWarning,
+    stacklevel=2
+)
 
 import asyncpg
 from sqlalchemy.ext.asyncio import (

@@ -29,7 +29,8 @@ from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 
 # ✅ MIGRATED: Use new modular DI system exclusively
-from apps.di import cleanup_container as cleanup_db_pool, get_container
+from apps.di import cleanup_container as cleanup_db_pool
+from apps.di import get_container
 from apps.shared.api.content_protection_router import router as content_protection_router
 from apps.shared.api.payment_router import router as payment_router
 

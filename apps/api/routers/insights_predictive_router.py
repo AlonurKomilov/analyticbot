@@ -38,6 +38,7 @@ async def get_predictive_analytics_engine():
     """
     Get predictive analytics engine - inline replacement for deprecated deps function
     """
+
     class MockPredictiveEngine:
         async def predict_growth(self, **kwargs):
             return {"predictions": [], "confidence": 0.85}

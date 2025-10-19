@@ -1,7 +1,7 @@
 # Apps Folder Refactoring - Action Plan
 
-**Start Date:** October 19, 2025  
-**Target Completion:** November 16, 2025 (4 weeks)  
+**Start Date:** October 19, 2025
+**Target Completion:** November 16, 2025 (4 weeks)
 **Status:** 🚧 IN PROGRESS
 
 ---
@@ -17,8 +17,8 @@ This plan addresses the top 10 critical issues identified in the apps folder arc
 **Goal:** Stabilize the architecture foundation - fix breaking issues
 
 ### Task 1.1: Consolidate DI System ✅ STARTED
-**Issue:** Multiple competing DI containers (#1)  
-**Time:** 2 days  
+**Issue:** Multiple competing DI containers (#1)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -45,8 +45,8 @@ This plan addresses the top 10 critical issues identified in the apps folder arc
 ---
 
 ### Task 1.2: Fix Critical Circular Dependencies
-**Issue:** Apps importing from infra (#2)  
-**Time:** 2 days  
+**Issue:** Apps importing from infra (#2)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -59,7 +59,7 @@ This plan addresses the top 10 critical issues identified in the apps folder arc
 **Critical Files:**
 ```
 apps/shared/di.py          → imports infra.db.connection_manager
-apps/di/database_container.py → imports infra.db.connection_manager  
+apps/di/database_container.py → imports infra.db.connection_manager
 apps/api/di_analytics.py   → imports multiple infra.db.repositories
 apps/bot/di.py            → imports infra.cache, infra.services
 ```
@@ -72,8 +72,8 @@ apps/bot/di.py            → imports infra.cache, infra.services
 ---
 
 ### Task 1.3: Break Apps Internal Circular Dependencies
-**Issue:** apps/shared ↔ apps/api/bot cycles (#2)  
-**Time:** 1 day  
+**Issue:** apps/shared ↔ apps/api/bot cycles (#2)
+**Time:** 1 day
 **Owner:** Dev Team
 
 **Actions:**
@@ -97,8 +97,8 @@ apps/shared/models/twa.py → core/domain/models/ (if truly shared)
 **Goal:** Enable safe refactoring and reduce technical debt
 
 ### Task 2.1: Add Critical Test Coverage
-**Issue:** Zero tests in apps folder (#4)  
-**Time:** 3 days  
+**Issue:** Zero tests in apps folder (#4)
+**Time:** 3 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -142,8 +142,8 @@ apps/
 ---
 
 ### Task 2.2: Remove All Deprecated Code
-**Issue:** 150+ TODOs/DEPRECATEDs (#3)  
-**Time:** 2 days  
+**Issue:** 150+ TODOs/DEPRECATEDs (#3)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -192,8 +192,8 @@ apps/bot/handlers/bot_microhandlers.py → Clean up legacy includes
 ---
 
 ### Task 2.3: Resolve All TODOs
-**Issue:** 40+ TODO comments (#3)  
-**Time:** 2 days  
+**Issue:** 40+ TODO comments (#3)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Strategy:**
@@ -231,8 +231,8 @@ channel_id = "@demo_channel"  # TODO: Get from user settings
 **Goal:** Simplify and clarify architecture
 
 ### Task 3.1: Simplify DI Containers
-**Issue:** Over-engineered DI (#6)  
-**Time:** 2 days  
+**Issue:** Over-engineered DI (#6)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -264,8 +264,8 @@ def create_bot(...):
 ---
 
 ### Task 3.2: Remove Duplicate Code
-**Issue:** Multiple implementations (#5)  
-**Time:** 2 days  
+**Issue:** Multiple implementations (#5)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -293,8 +293,8 @@ Router Organization:
 ---
 
 ### Task 3.3: Standardize Error Handling
-**Issue:** Inconsistent error handling (#7)  
-**Time:** 2 days  
+**Issue:** Inconsistent error handling (#7)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Actions:**
@@ -333,8 +333,8 @@ except ServiceUnavailableError as e:
 ---
 
 ### Task 3.4: Clarify apps/shared Responsibilities
-**Issue:** Unclear module responsibilities (#8)  
-**Time:** 1 day  
+**Issue:** Unclear module responsibilities (#8)
+**Time:** 1 day
 **Owner:** Dev Team
 
 **Actions:**
@@ -370,8 +370,8 @@ apps/shared/di.py → Delete or merge into apps/di/
 **Goal:** Make codebase maintainable and onboardable
 
 ### Task 4.1: Centralize Configuration
-**Issue:** Hardcoded configuration (#9)  
-**Time:** 1 day  
+**Issue:** Hardcoded configuration (#9)
+**Time:** 1 day
 **Owner:** Dev Team
 
 **Actions:**
@@ -389,24 +389,24 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     DATABASE_POOL_MIN: int = 10
     DATABASE_POOL_MAX: int = 20
-    
+
     # Redis
     REDIS_URL: str
     REDIS_CACHE_DB: int = 1  # ✅ No more hardcoded .replace("/0", "/1")
     REDIS_CELERY_DB: int = 0
-    
+
     # Bot
     BOT_TOKEN: SecretStr
     BOT_WEBHOOK_URL: HttpUrl | None = None
-    
+
     # Features
     ENABLE_DEMO_MODE: bool = False
     ENABLE_PAYMENT_FEATURES: bool = True
-    
+
     # Retry Configuration
     CELERY_TASK_MAX_RETRIES: int = 3
     CELERY_TASK_RETRY_DELAY: int = 60
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = True
@@ -415,8 +415,8 @@ class Settings(BaseSettings):
 ---
 
 ### Task 4.2: Write Architecture Documentation
-**Issue:** Missing documentation (#10)  
-**Time:** 2 days  
+**Issue:** Missing documentation (#10)
+**Time:** 2 days
 **Owner:** Dev Team
 
 **Documents to Create:**
@@ -454,8 +454,8 @@ class Settings(BaseSettings):
 ---
 
 ### Task 4.3: Add Code Quality Checks
-**Issue:** Prevention of future violations  
-**Time:** 1 day  
+**Issue:** Prevention of future violations
+**Time:** 1 day
 **Owner:** Dev Team
 
 **Actions:**

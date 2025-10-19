@@ -1,7 +1,7 @@
 # DI System Migration Guide
 
-**Version:** 1.0  
-**Date:** October 19, 2025  
+**Version:** 1.0
+**Date:** October 19, 2025
 **Status:** Official Guide
 
 ---
@@ -61,9 +61,9 @@ async def lifespan(app: FastAPI):
     container = get_container()
     db_manager = await container.database.database_manager()
     await db_manager.initialize()
-    
+
     yield
-    
+
     # Shutdown
     await db_manager.cleanup()
 
@@ -78,15 +78,15 @@ from apps.di import get_container
 
 async def main():
     container = get_container()
-    
+
     # Get bot and dependencies
     bot = await container.bot.bot_client()
     pool = await container.database.asyncpg_pool()
-    
+
     # Setup dispatcher with middleware
     dp = Dispatcher(storage=storage)
     dp.update.outer_middleware(DependencyMiddleware(container))
-    
+
     await dp.start_polling(bot)
 ```
 
@@ -100,7 +100,7 @@ from apps.di import get_container
 async def train_model(channel_id: int):
     container = get_container()
     ml_service = await container.ml.ml_coordinator()
-    
+
     result = await ml_service.train_model(channel_id)
     return result
 ```
@@ -305,16 +305,16 @@ from apps.di import get_container
 
 async def test_with_mock_repo():
     container = get_container()
-    
+
     # Override a provider with a mock
     mock_repo = AsyncMock()
     mock_repo.get_by_id.return_value = {"id": 1, "name": "Test"}
-    
+
     container.database.user_repo.override(mock_repo)
-    
+
     # Test code that uses user_repo
     result = await some_service(container)
-    
+
     assert mock_repo.get_by_id.called
     container.database.user_repo.reset_override()
 ```
@@ -325,7 +325,7 @@ async def test_with_mock_repo():
 
 ### Issue: "Cannot import get_container"
 
-**Cause:** Old import path  
+**Cause:** Old import path
 **Solution:**
 ```python
 # ❌ OLD
@@ -337,7 +337,7 @@ from apps.di import get_container
 
 ### Issue: "AttributeError: 'ApplicationContainer' has no attribute 'user_repo'"
 
-**Cause:** Using old flat structure  
+**Cause:** Using old flat structure
 **Solution:**
 ```python
 # ❌ OLD
@@ -349,7 +349,7 @@ container.database.user_repo()
 
 ### Issue: "RuntimeError: coroutine never awaited"
 
-**Cause:** Forgot to await async provider  
+**Cause:** Forgot to await async provider
 **Solution:**
 ```python
 # ❌ OLD
@@ -361,7 +361,7 @@ bot = await container.bot.bot_client()
 
 ### Issue: "Provider not found"
 
-**Cause:** Service not registered in container  
+**Cause:** Service not registered in container
 **Solution:** Add the provider to appropriate container in `apps/di/`
 
 ---
@@ -434,23 +434,23 @@ for i in range(10):
 
 ## FAQ
 
-**Q: Why can't I use the old apps/bot/di.py anymore?**  
+**Q: Why can't I use the old apps/bot/di.py anymore?**
 A: It's deprecated to consolidate on one DI system. Use `apps/di/` instead.
 
-**Q: What about apps/jobs/di.py and apps/celery/di_celery.py?**  
+**Q: What about apps/jobs/di.py and apps/celery/di_celery.py?**
 A: These are specialized containers for those subsystems. They should eventually use `apps/di/` as a foundation but can remain separate.
 
-**Q: Do I need to update my code immediately?**  
+**Q: Do I need to update my code immediately?**
 A: Yes for new code. Old code will continue to work until removal date (Oct 21, 2025).
 
-**Q: How do I add a new service to the container?**  
+**Q: How do I add a new service to the container?**
 A: Add it to the appropriate domain container in `apps/di/`:
 - Database concerns → `database_container.py`
 - Bot concerns → `bot_container.py`
 - API concerns → `api_container.py`
 - Business logic → `core_services_container.py`
 
-**Q: Can I access infra layer from apps/?**  
+**Q: Can I access infra layer from apps/?**
 A: No. Only DI containers can import from infra. Apps code should get dependencies via injection.
 
 ---
@@ -464,5 +464,5 @@ A: No. Only DI containers can import from infra. Apps code should get dependenci
 
 ---
 
-**Last Updated:** October 19, 2025  
+**Last Updated:** October 19, 2025
 **Next Review:** November 19, 2025

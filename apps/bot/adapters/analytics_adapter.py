@@ -1,15 +1,20 @@
 """
 Bot Analytics Adapter - Thin layer adapting core analytics to bot interface
 Follows Clean Architecture: Apps layer adapter wrapping Core business logic
+
+✅ Phase 5 Note: Removed infra import by requiring telegram_port injection.
+The AiogramBotAdapter factory call moved to DI container where it belongs.
+This adapter now purely uses ports/protocols - proper Clean Architecture.
 """
 
 import logging
-
-from aiogram import Bot
+from typing import TYPE_CHECKING
 
 from core.ports.telegram_port import TelegramBotPort
 from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
-from infra.adapters.analytics.aiogram_bot_adapter import AiogramBotAdapter
+
+if TYPE_CHECKING:
+    from aiogram import Bot
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +28,6 @@ class BotAnalyticsAdapter:
     def __init__(
         self,
         batch_processor: AnalyticsBatchProcessor,
-        bot: Bot | None = None,
         telegram_port: TelegramBotPort | None = None,
     ):
         """
@@ -31,20 +35,13 @@ class BotAnalyticsAdapter:
 
         Args:
             batch_processor: Core analytics batch processor
-            bot: Optional Aiogram bot (for creating telegram_port)
-            telegram_port: Optional telegram port (overrides bot)
+            telegram_port: Telegram port for bot integration
+        
+        Note: Removed bot parameter - caller should inject telegram_port directly.
+        This enforces dependency injection at DI container level.
         """
         self.batch_processor = batch_processor
-        self.telegram_port: TelegramBotPort | None
-
-        # Setup telegram port
-        if telegram_port:
-            self.telegram_port = telegram_port
-        elif bot:
-            self.telegram_port = AiogramBotAdapter(bot)
-        else:
-            # No bot or port provided - batch processor will handle it
-            self.telegram_port = None
+        self.telegram_port = telegram_port
 
         # Update batch processor's telegram port if provided
         if self.telegram_port and self.batch_processor.telegram_port is None:

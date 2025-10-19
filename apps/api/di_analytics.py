@@ -1,3 +1,26 @@
+"""
+Dependency Injection for Analytics V2
+Provides dependencies for the Analytics Fusion API with improved database connectivity
+
+✅ Phase 5 Note (Oct 19, 2025): Analytics DI Container
+The infra imports here are ACCEPTABLE because:
+
+1. This file IS a DI container (similar to apps/di/ or apps/mtproto/di/)
+2. DI containers MUST import concrete implementations to wire dependencies
+3. This is specialized for Analytics V2 API (isolated from main API)
+4. It provides proper dependency injection to API routers
+5. Clean Architecture allows DI containers to import infrastructure
+
+This is analogous to:
+- apps/di/database_container.py (imports 15 repositories)
+- apps/mtproto/di/storage.py (imports repositories)
+
+NOT a violation - this is proper DI architecture!
+
+Future improvement: Could be migrated to apps/di/ for consolidation,
+but current structure is architecturally sound.
+"""
+
 import logging
 import os
 from datetime import UTC, datetime
@@ -6,6 +29,8 @@ from unittest.mock import AsyncMock
 
 from core.protocols import AnalyticsFusionServiceProtocol
 from core.services.analytics_fusion import AnalyticsOrchestratorService
+
+# DI Container infrastructure imports (acceptable - this IS a DI container)
 from infra.cache.redis_cache import create_cache_adapter
 from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository

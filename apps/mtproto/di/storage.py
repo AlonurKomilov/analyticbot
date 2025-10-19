@@ -1,63 +1,65 @@
 """
 MTProto Storage Container
 Focused on database repositories and storage services
-Phase 2 Fix (Oct 19, 2025): Updated imports to use protocols where possible
-Note: Full protocol compliance requires repository interface alignment (Phase 3)
+✅ Phase 4 Fix (Oct 19, 2025): Migrated to DI container delegation
+No more direct infra imports - uses main container via protocol-based delegation
 """
 
 from typing import Any
 
 from dependency_injector import containers, providers
 
+from apps.di import get_container
 from apps.mtproto.config import MTProtoSettings
 
-# ✅ PHASE 2 PROGRESS: Import protocols for type awareness
-# Note: Concrete implementations don't fully match protocols yet (requires Phase 3 work)
-# Concrete implementations (temporary until Phase 3 aligns interfaces)
-from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
-from infra.db.repositories.channel_repository import ChannelRepository
-from infra.db.repositories.post_metrics_repository import PostMetricsRepository
-from infra.db.repositories.post_repository import PostRepository
-from infra.db.repositories.stats_raw_repository import StatsRawRepository
+
+# ✅ PHASE 4 FIX: Repository delegation helpers
+# These async callables delegate to main container for repository access
+async def _get_channel_daily_repo():
+    """Get channel daily repository from main container"""
+    container = get_container()
+    return await container.database.channel_daily_repo()  # type: ignore[attr-defined]
 
 
-class RepositoryContainer:
-    """Container for all repository instances"""
+async def _get_channel_repo():
+    """Get channel repository from main container"""
+    container = get_container()
+    return await container.database.channel_repo()  # type: ignore[attr-defined]
 
-    def __init__(self):
-        # Note: Repositories instantiated without pool - will be injected at runtime
-        # Protocol types added for future compliance (Phase 3)
-        self.channel_daily: Any = None  # Will be: ChannelDailyRepositoryProtocol
-        self.channel: Any = None  # Will be: ChannelRepositoryProtocol
-        self.post_metrics: Any = None  # Will be: PostMetricsRepositoryProtocol
-        self.post: Any = None  # Will be: PostsRepositoryProtocol
-        self.stats_raw: Any = None  # Will be: StatsRawRepositoryProtocol
 
-    def initialize(self, pool):
-        """Initialize repositories with database pool"""
-        self.channel_daily = ChannelDailyRepository(pool)
-        self.channel = ChannelRepository(pool)
-        self.post_metrics = PostMetricsRepository(pool)
-        self.post = PostRepository(pool)
-        self.stats_raw = StatsRawRepository(pool)
+async def _get_post_metrics_repo():
+    """Get post metrics repository from main container"""
+    container = get_container()
+    return await container.database.metrics_repo()  # type: ignore[attr-defined]
+
+
+async def _get_post_repo():
+    """Get post repository from main container"""
+    container = get_container()
+    return await container.database.post_repo()  # type: ignore[attr-defined]
+
+
+async def _get_stats_raw_repo():
+    """Get stats raw repository from main container"""
+    container = get_container()
+    return await container.database.stats_raw_repo()  # type: ignore[attr-defined]
 
 
 class StorageContainer(containers.DeclarativeContainer):
-    """Container for storage and repository services"""
+    """
+    Container for storage and repository services
+    
+    ✅ Phase 4 Fix (Oct 19, 2025): Uses DI delegation pattern
+    All repositories now delegate to main container via Callable providers
+    """
 
     # Configuration
     settings = providers.Dependency(instance_of=MTProtoSettings)
 
-    # Repository container
-    repositories = providers.Singleton(RepositoryContainer)
-
-    # Individual repositories
-    channel_daily_repo = providers.Factory(lambda repos: repos.channel_daily, repos=repositories)
-
-    channel_repo = providers.Factory(lambda repos: repos.channel, repos=repositories)
-
-    post_metrics_repo = providers.Factory(lambda repos: repos.post_metrics, repos=repositories)
-
-    post_repo = providers.Factory(lambda repos: repos.post, repos=repositories)
-
-    stats_raw_repo = providers.Factory(lambda repos: repos.stats_raw, repos=repositories)
+    # ✅ PHASE 4 FIX: Repository providers delegate to main container
+    # Uses Callable pattern for async repository access
+    channel_daily_repo = providers.Callable(_get_channel_daily_repo)
+    channel_repo = providers.Callable(_get_channel_repo)
+    post_metrics_repo = providers.Callable(_get_post_metrics_repo)
+    post_repo = providers.Callable(_get_post_repo)
+    stats_raw_repo = providers.Callable(_get_stats_raw_repo)

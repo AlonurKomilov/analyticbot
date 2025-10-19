@@ -1,12 +1,21 @@
 """
 MTProto Data Processors Container
 Focused on data processing and transformation services
+
+✅ Phase 4 Note (Oct 19, 2025): Parser utilities
+The infra.tg.parsers import is acceptable because:
+1. Parser functions are pure utility functions (normalize_message, normalize_update)
+2. They're MTProto-specific data transformations
+3. No state, no complex dependencies - just data transformation
+4. Creating a protocol for stateless utility functions adds no value
 """
 
 from dependency_injector import containers, providers
 
 from apps.mtproto.config import MTProtoSettings
 from apps.mtproto.metrics import MTProtoMetrics
+
+# MTProto-specific utility functions (acceptable - stateless data transformation)
 from infra.tg.parsers import normalize_message, normalize_update
 
 

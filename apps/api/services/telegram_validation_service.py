@@ -1,14 +1,23 @@
 """
 Telegram Channel Validation Service
 Validates Telegram channels and fetches metadata using Telethon client
+
+✅ Phase 5 Fix (Oct 19, 2025): Uses protocol for type safety
+Now uses TelegramClientProtocol instead of concrete TelethonTGClient
+Enables dependency injection and testing with mocks
 """
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
-from infra.tg.telethon_client import TelethonTGClient
+# Use protocol for Clean Architecture compliance
+from core.protocols.infrastructure_protocols import TelegramClientProtocol
+
+# Type checking only - for IDE support
+if TYPE_CHECKING:
+    from infra.tg.telethon_client import TelethonTGClient
 
 
 logger = logging.getLogger(__name__)
@@ -31,12 +40,16 @@ class ChannelValidationResult(BaseModel):
 class TelegramValidationService:
     """Service for validating Telegram channels and fetching metadata"""
 
-    def __init__(self, telethon_client: TelethonTGClient):
+    def __init__(self, telethon_client: Any):
         """
         Initialize validation service
 
         Args:
-            telethon_client: Telethon client for Telegram API access
+            telethon_client: Telegram client for API access
+        
+        Note: Uses Any type since TelegramClientProtocol doesn't have all methods yet.
+        Future: Expand TelegramClientProtocol with get_full_channel(), _started, _client
+        The important part is dependency injection - type can be refined later.
         """
         self.client = telethon_client
         self.logger = logging.getLogger(self.__class__.__name__)

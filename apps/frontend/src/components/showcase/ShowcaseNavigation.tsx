@@ -5,7 +5,7 @@
  * and tab panel rendering with proper accessibility
  */
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import {
     Analytics as AnalyticsIcon,
@@ -13,8 +13,14 @@ import {
     TableChart as TableIcon
 } from '@mui/icons-material';
 
+interface TabPanelProps {
+    children: ReactNode;
+    value: number;
+    index: number;
+}
+
 // Accessible TabPanel component
-export const TabPanel = ({ children, value, index, ...other }) => (
+export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => (
     <div
         role="tabpanel"
         hidden={value !== index}
@@ -30,8 +36,14 @@ export const TabPanel = ({ children, value, index, ...other }) => (
     </div>
 );
 
+interface TabConfigItem {
+    label: string;
+    icon: React.ReactElement;
+    ariaLabel: string;
+}
+
 // Tab navigation configuration
-const tabConfig = [
+const tabConfig: TabConfigItem[] = [
     {
         label: 'Top Posts Analytics',
         icon: <AnalyticsIcon />,
@@ -49,7 +61,12 @@ const tabConfig = [
     }
 ];
 
-const ShowcaseNavigation = ({ activeTab, onTabChange }) => {
+interface ShowcaseNavigationProps {
+    activeTab: number;
+    onTabChange: (event: React.SyntheticEvent, newValue: number) => void;
+}
+
+const ShowcaseNavigation: React.FC<ShowcaseNavigationProps> = ({ activeTab, onTabChange }) => {
     return (
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
             <Tabs

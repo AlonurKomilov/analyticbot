@@ -5,6 +5,7 @@ Orchestrates core analytics services for background processing.
 """
 
 import logging
+from datetime import UTC
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -34,10 +35,12 @@ class AnalyticsJobService:
             # For now, simulate processing
             processed_items = len(data)
 
+            from datetime import datetime
+
             result = {
                 "status": "completed",
                 "processed_items": processed_items,
-                "timestamp": "now",  # TODO: Use proper timestamp
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
             logger.info(f"Analytics processing completed: {processed_items} items")

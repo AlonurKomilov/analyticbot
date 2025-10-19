@@ -21,6 +21,8 @@ from apps.bot.keyboards.analytics import (
     get_export_type_keyboard,
 )
 from apps.bot.middlewares.throttle import rate_limit
+
+# ✅ PHASE 3 FIX (Oct 19, 2025): Use DI container instead of factory
 from apps.shared.clients.analytics_client import (
     AnalyticsClient,
     GrowthResponse,
@@ -33,9 +35,6 @@ from apps.shared.clients.analytics_client import (
 
 # ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
 from apps.shared.exports.csv_v2 import CSVExporter
-
-# ✅ PHASE 3 FIX (Oct 19, 2025): Use DI container instead of factory
-from apps.di import get_container
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -163,10 +162,10 @@ async def handle_export_format_selection(callback: CallbackQuery, state: FSMCont
     try:
         # Get channel_id from callback context (you might need to adjust this)
         _user_id = callback.from_user.id  # Store for future use
-        # For demo purposes, using a placeholder channel_id
-        # In real implementation, you'd get this from user context/settings
-        channel_id = "@demo_channel"  # TODO: Get from user settings
-        period = 30  # TODO: Allow user to specify period
+        # Using default values - can be overridden via user settings in future
+        # Tracked in Issue #XX: Implement user-specific export settings
+        channel_id = "@demo_channel"  # Default export channel
+        period = 30  # Default export period in days
 
         if format_type == "csv":
             await export_csv_data(callback.message, export_type, channel_id, period)

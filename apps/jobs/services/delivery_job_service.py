@@ -5,6 +5,7 @@ Orchestrates core delivery services for background processing.
 """
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class DeliveryJobService:
                 "status": "completed",
                 "schedule_id": schedule_id,
                 "delivered": delivered,
-                "delivery_time": "now",  # TODO: Use proper timestamp
+                "delivery_time": datetime.now(UTC).isoformat(),
             }
 
             logger.info(f"Content delivery completed for schedule {schedule_id}")

@@ -13,7 +13,7 @@ import { UserManagementTable } from './domains/admin/UserManagement';
  * - Consistent patterns
  */
 
-const EnhancedUserManagementTable = (props) => {
+const EnhancedUserManagementTable: React.FC<any> = (props) => {
     return <UserManagementTable {...props} />;
 };
 

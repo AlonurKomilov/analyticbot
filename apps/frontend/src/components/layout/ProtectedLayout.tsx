@@ -3,13 +3,26 @@
  *
  * Layout wrapper for authenticated routes that includes navigation bar
  * and proper spacing for protected content.
+ *
+ * @component
+ * @example
+ * ```tsx
+ * <ProtectedLayout>
+ *   <DashboardPage />
+ * </ProtectedLayout>
+ * ```
  */
 
 import React from 'react';
 import { Box } from '@mui/material';
 import NavigationBar from '../domains/navigation/NavigationBar';
 
-const ProtectedLayout = ({ children }) => {
+interface ProtectedLayoutProps {
+  /** Content to render inside the protected layout */
+  children: React.ReactNode;
+}
+
+const ProtectedLayout: React.FC<ProtectedLayoutProps> = ({ children }) => {
     return (
         <>
             {/* Global Navigation Bar */}

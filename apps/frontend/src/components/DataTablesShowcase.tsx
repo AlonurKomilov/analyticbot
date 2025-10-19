@@ -21,8 +21,10 @@ import TablesShowcase from './showcase/TablesShowcase.jsx';
  *
  * Maintains the same export for existing imports while using
  * the new refactored component structure underneath.
+ *
+ * @component
  */
-const DataTablesShowcase = () => {
+const DataTablesShowcase: React.FC = () => {
     return <TablesShowcase />;
 };
 

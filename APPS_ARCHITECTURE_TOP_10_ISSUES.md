@@ -154,10 +154,47 @@ user_repo = await container.database.user_repo()
 8. ✅ apps/api/routers/insights_predictive_router.py
 9. ✅ apps/api/main.py
 
-**Scheduled for Deletion:**
+**Scheduled for Deletion (1,024 lines total):**
 - `apps/bot/di.py` (470 lines) - Oct 21, 2025
 - `apps/api/deps.py` (253 lines) - Oct 21, 2025
 - `apps/api/di.py` (56 lines) - Oct 26, 2025
+- `apps/shared/di.py` (245 lines) - Oct 27, 2025 🆕
+
+**Legitimate Systems - KEEP (179 lines total):**
+- `apps/jobs/di.py` (43 lines) - Used by `apps/jobs/worker.py` for APScheduler jobs
+- `apps/celery/di_celery.py` (136 lines) - Singleton pattern for Celery workers
+
+**Detailed Evaluation (Oct 19, 2025):**
+
+After comprehensive analysis, the 3 remaining DI systems serve distinct purposes:
+
+1. **apps/jobs/di.py** - ✅ LEGITIMATE
+   - Purpose: Isolated DI for APScheduler background jobs
+   - Usage: `apps/jobs/worker.py` (active in production)
+   - Rationale: Jobs run independently, need separate lifecycle management
+   - Architecture: Clean - uses RepositoryFactory pattern
+   - **Decision: KEEP**
+
+2. **apps/celery/di_celery.py** - ✅ LEGITIMATE
+   - Purpose: Singleton DI for Celery worker tasks
+   - Usage: Ready for Celery tasks (infrastructure prepared)
+   - Rationale: Workers need cached singletons for performance
+   - Architecture: Manages deep learning service lifecycle correctly
+   - **Decision: KEEP**
+
+3. **apps/shared/di.py** - ⏳ DEPRECATED
+   - Purpose: Legacy shared container
+   - Usage: Only used by deprecated files being deleted Oct 21
+   - Impact: Zero production usage after Oct 21
+   - **Decision: DELETE OCT 27**
+
+**Final DI Architecture:**
+- **Main Application**: `apps/di/` - Unified container (API + Bot)
+- **Background Jobs**: `apps/jobs/di.py` - APScheduler jobs
+- **Celery Workers**: `apps/celery/di_celery.py` - Celery tasks
+- **Total**: 3 DI systems with clear separation of concerns ✅
+
+This is **correct microservices-style architecture** - one DI per deployment context!
 
 **Documentation Created:**
 - DI_MIGRATION_GUIDE.md

@@ -7,8 +7,11 @@ import {
 /**
  * SystemConfigTab Component
  * System configuration management interface
+ *
+ * @component
+ * @todo Implement system configuration management UI
  */
-const SystemConfigTab = () => {
+const SystemConfigTab: React.FC = () => {
     return (
         <>
             <Typography variant="h6" gutterBottom>System Configuration</Typography>

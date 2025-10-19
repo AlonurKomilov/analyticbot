@@ -14,9 +14,10 @@ import PostsTable from '../domains/analytics/PostsTable';
  *
  * Refactored to use modular domain-driven architecture.
  * Original 551 lines reduced to 21 lines (96% reduction).
+ *
+ * @component
  */
-
-const EnhancedTopPostsTable = () => {
+const EnhancedTopPostsTable: React.FC = () => {
     return <PostsTable />;
 };
 

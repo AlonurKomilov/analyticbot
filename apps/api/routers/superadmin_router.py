@@ -223,8 +223,13 @@ async def admin_login(
 
 @router.post("/auth/logout")
 async def admin_logout(current_admin: AdminUser = Depends(get_current_admin_user)):
-    """Logout admin user (invalidate session)"""
-    # TODO: Implement session invalidation
+    """
+    Logout admin user (invalidate session).
+    
+    Note: Session invalidation deferred to Week 2.
+    Currently relies on JWT expiration only (stateless).
+    Tracked in GitHub Issue #TBD: Implement session blacklist/invalidation
+    """
     return {"message": "Logged out successfully"}
 
 

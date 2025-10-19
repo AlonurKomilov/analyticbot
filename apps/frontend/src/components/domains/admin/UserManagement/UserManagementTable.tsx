@@ -17,6 +17,41 @@ import {
 } from './UserUtils';
 import { UserActions } from './UserActions';
 
+interface User {
+    id?: string | number;
+    username?: string;
+    full_name?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    total_posts?: number;
+    total_channels?: number;
+    risk_score?: number;
+    last_active?: string;
+    created_at?: string;
+    [key: string]: any;
+}
+
+interface BulkAction {
+    label: string;
+    color: 'warning' | 'success' | 'error';
+    action: (selectedUsers: User[]) => void;
+}
+
+interface UserManagementTableProps {
+    users?: User[];
+    loading?: boolean;
+    error?: string | null;
+    onRefresh?: () => void;
+    onUserUpdate?: (user: User) => void;
+    onUserDelete?: (user: User) => void;
+    onBulkAction?: (action: string, selectedUsers: User[]) => void;
+    onUserEdit?: (user: User) => void;
+    onUserSuspend?: (user: User, reason: string) => void;
+    onUserReactivate?: (user: User) => void;
+    onUserMessage?: (user: User) => void;
+}
+
 /**
  * UserManagementTable - Optimized and modular user management component
  *
@@ -26,7 +61,7 @@ import { UserActions } from './UserActions';
  * - Using composition over large inline components
  * - Leveraging existing EnhancedDataTable infrastructure
  */
-const UserManagementTable = ({
+const UserManagementTable: React.FC<UserManagementTableProps> = ({
     users = [],
     loading = false,
     error = null,
@@ -47,32 +82,32 @@ const UserManagementTable = ({
             accessor: () => '', // Not used for sorting
             width: 60,
             disableSorting: true,
-            Cell: ({ row: user }) => <UserAvatar user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserAvatar user={user} />
         },
         {
             id: 'user_info',
             header: 'User Information',
-            accessor: (row) => row.full_name || row.username,
+            accessor: (row: User) => row.full_name || row.username,
             minWidth: 250,
-            Cell: ({ row: user }) => <UserInfo user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserInfo user={user} />
         },
         {
             id: 'contact',
             header: 'Contact',
-            accessor: (row) => row.email || row.phone,
+            accessor: (row: User) => row.email || row.phone,
             width: 200,
-            Cell: ({ row: user }) => <UserContact user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserContact user={user} />
         },
         {
             id: 'status',
             header: 'Status',
-            accessor: (row) => row.status,
-            align: 'center',
+            accessor: (row: User) => row.status,
+            align: 'center' as const,
             width: 120,
-            Cell: ({ row: user }) => (
+            Cell: ({ row: user }: { row: User }) => (
                 <Chip
                     label={user.status}
-                    color={getStatusColor(user.status)}
+                    color={getStatusColor(user.status || '')}
                     size="small"
                     variant="filled"
                 />
@@ -81,34 +116,34 @@ const UserManagementTable = ({
         {
             id: 'activity',
             header: 'Activity',
-            accessor: (row) => row.total_posts + row.total_channels,
-            align: 'center',
+            accessor: (row: User) => (row.total_posts || 0) + (row.total_channels || 0),
+            align: 'center' as const,
             width: 140,
-            Cell: ({ row: user }) => <UserActivity user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserActivity user={user} />
         },
         {
             id: 'risk_score',
             header: 'Risk Score',
-            accessor: (row) => row.risk_score || 0,
-            align: 'center',
+            accessor: (row: User) => row.risk_score || 0,
+            align: 'center' as const,
             width: 120,
-            Cell: ({ row: user }) => <UserRiskScore user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserRiskScore user={user} />
         },
         {
             id: 'last_active',
             header: 'Last Active',
-            accessor: (row) => row.last_active,
-            align: 'center',
+            accessor: (row: User) => row.last_active,
+            align: 'center' as const,
             width: 140,
-            Cell: ({ row: user }) => <UserLastActive user={user} />
+            Cell: ({ row: user }: { row: User }) => <UserLastActive user={user} />
         },
         {
             id: 'created_at',
             header: 'Member Since',
-            accessor: (row) => row.created_at,
-            align: 'center',
+            accessor: (row: User) => row.created_at,
+            align: 'center' as const,
             width: 120,
-            Cell: ({ value }) => (
+            Cell: ({ value }: { value?: string }) => (
                 <div style={{ fontSize: '0.75rem', textAlign: 'center' }}>
                     {formatDate(value).split(' ')[0]}
                 </div>
@@ -118,10 +153,10 @@ const UserManagementTable = ({
             id: 'actions',
             header: 'Actions',
             accessor: () => '',
-            align: 'center',
+            align: 'center' as const,
             width: 80,
             disableSorting: true,
-            Cell: ({ row: user }) => (
+            Cell: ({ row: user }: { row: User }) => (
                 <UserActions
                     user={user}
                     onEdit={onUserEdit}
@@ -135,21 +170,21 @@ const UserManagementTable = ({
     ], [onUserEdit, onUserSuspend, onUserReactivate, onUserDelete, onUserMessage]);
 
     // Bulk actions configuration
-    const bulkActions = useMemo(() => [
+    const bulkActions: BulkAction[] = useMemo(() => [
         {
             label: 'Suspend Selected',
             color: 'warning',
-            action: (selectedUsers) => onBulkAction?.('suspend', selectedUsers)
+            action: (selectedUsers: User[]) => onBulkAction?.('suspend', selectedUsers)
         },
         {
             label: 'Activate Selected',
             color: 'success',
-            action: (selectedUsers) => onBulkAction?.('activate', selectedUsers)
+            action: (selectedUsers: User[]) => onBulkAction?.('activate', selectedUsers)
         },
         {
             label: 'Delete Selected',
             color: 'error',
-            action: (selectedUsers) => onBulkAction?.('delete', selectedUsers)
+            action: (selectedUsers: User[]) => onBulkAction?.('delete', selectedUsers)
         }
     ], [onBulkAction]);
 

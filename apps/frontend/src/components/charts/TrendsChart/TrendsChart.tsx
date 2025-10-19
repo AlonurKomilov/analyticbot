@@ -1,4 +1,4 @@
-import React, { useState, useMemo, ReactNode } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Card,
     CardContent,
@@ -27,8 +27,8 @@ type TimeRange = '7d' | '14d' | '30d' | '90d';
 interface ChartDataItem {
     name?: string;
     date?: string;
-    views?: number;
-    engagement?: number;
+    views: number;
+    engagement: number;
     reach?: number;
     growth?: number;
     [key: string]: any;
@@ -70,13 +70,13 @@ const TrendsChart: React.FC<TrendsChartProps> = React.memo(({
         }
 
         return data.map((item, index) => ({
+            ...item,
             name: item.name || `Point ${index + 1}`,
             date: item.date || new Date().toLocaleDateString(),
             views: item.views || 0,
             engagement: item.engagement || 0,
             reach: item.reach || 0,
-            growth: item.growth || 0,
-            ...item
+            growth: item.growth || 0
         }));
     }, [data]);
 
@@ -91,8 +91,8 @@ const TrendsChart: React.FC<TrendsChartProps> = React.memo(({
         setChartType(newChartType);
     };
 
-    const handleTimeRangeChange = (newTimeRange: TimeRange): void => {
-        setTimeRange(newTimeRange);
+    const handleTimeRangeChange = (value: string): void => {
+        setTimeRange(value as TimeRange);
     };
 
     const handleBrushToggle = (): void => {

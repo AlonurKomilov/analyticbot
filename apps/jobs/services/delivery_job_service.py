@@ -31,8 +31,8 @@ class DeliveryJobService:
         try:
             logger.info(f"Starting delivery for schedule ID: {schedule_id}")
 
-            # TODO: Once core delivery services are defined, use them here
-            # For now, simulate delivery
+            # Simulated delivery - integration with core delivery services pending
+            # Tracked in GitHub Issue #TBD: Implement actual delivery via core services
             delivered = True
 
             result = {

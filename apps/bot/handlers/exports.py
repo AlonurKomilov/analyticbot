@@ -57,11 +57,11 @@ router = Router()
 
 def get_chart_service():
     """
-    Get chart service instance via DI
+    Get chart service instance - temporary factory.
+    
     Phase 3 Fix (Oct 19, 2025): Removed factory usage
+    Chart service DI integration tracked in GitHub Issue #TBD
     """
-    # Note: Chart service creation maintained for now
-    # TODO: Move to proper DI provider when chart service is refactored
     from apps.shared.services.chart_service import create_chart_service
 
     return create_chart_service()

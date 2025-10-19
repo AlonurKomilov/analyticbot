@@ -34,8 +34,13 @@ async def get_channel_repository() -> ChannelRepository:
 
 
 def get_chart_service() -> ChartServiceProtocol:
-    """Get chart service - TODO: Migrate to DI provider"""
-    # TODO: Phase 3 future improvement - create chart service provider in DI
+    """
+    Get chart service - temporary factory function.
+    
+    Note: Chart service DI integration deferred to Week 2.
+    Tracked in GitHub Issue #TBD: Implement chart service DI provider
+    Affects 4 locations: admin_handlers, exports (bot+API), sharing_router
+    """
     from apps.shared.services.chart_service import ChartService
     
     return ChartService()

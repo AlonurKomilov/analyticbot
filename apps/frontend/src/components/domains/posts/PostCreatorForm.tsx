@@ -9,13 +9,32 @@ import {
 } from '../../common/forms';
 import { useFormValidation } from '../../common/forms';
 
+interface Channel {
+    id: string | number;
+    title: string;
+    username: string;
+}
+
+interface FormValues {
+    text: string;
+    selectedChannel: string;
+    scheduleTime: string;
+}
+
+interface PostCreatorFormProps {
+    channels?: Channel[];
+    onSubmit?: (formData: FormValues) => Promise<void> | void;
+    onSchedule?: (formData: FormValues) => Promise<void> | void;
+    loading?: boolean;
+}
+
 /**
  * PostCreatorForm - Modernized post creation form
  *
  * Demonstrates the new form components and validation system.
  * Reduced complexity by using reusable form patterns.
  */
-const PostCreatorForm = ({
+const PostCreatorForm: React.FC<PostCreatorFormProps> = ({
     channels = [],
     onSubmit,
     onSchedule,
@@ -36,7 +55,7 @@ const PostCreatorForm = ({
         scheduleTime: {
             required: true,
             requiredMessage: 'Please select when to publish this post',
-            custom: (value) => {
+            custom: (value: string) => {
                 if (value && new Date(value) <= new Date()) {
                     return 'Please choose a time in the future';
                 }
@@ -54,7 +73,7 @@ const PostCreatorForm = ({
         handleSubmit,
         resetForm,
         isValid
-    } = useFormValidation({
+    } = useFormValidation<FormValues>({
         text: '',
         selectedChannel: '',
         scheduleTime: ''
@@ -62,17 +81,17 @@ const PostCreatorForm = ({
 
     // Channel options for select
     const channelOptions = channels.map(channel => ({
-        value: channel.id,
+        value: channel.id.toString(),
         label: `${channel.title} (@${channel.username})`
     }));
 
-    const handleFormSubmit = () => {
+    const handleFormSubmit = (): void => {
         handleSubmit(async (formData) => {
             await onSubmit?.(formData);
         });
     };
 
-    const handleSchedulePost = () => {
+    const handleSchedulePost = (): void => {
         handleSubmit(async (formData) => {
             await onSchedule?.(formData);
         });

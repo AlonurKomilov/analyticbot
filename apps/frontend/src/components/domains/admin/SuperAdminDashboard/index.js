@@ -24,7 +24,7 @@
  */
 
 // Main component export
-export { default as SuperAdminDashboard } from './SuperAdminDashboard.jsx';
+export { default as SuperAdminDashboard } from './SuperAdminDashboard.tsx';
 
 // Tab component exports
 export { default as OverviewTab } from './components/OverviewTab.jsx';
@@ -45,4 +45,4 @@ export { useAdminDashboardState } from './hooks/useAdminDashboardState.js';
 export * from './utils/adminUtils.js';
 
 // Default export for backward compatibility
-export { default } from './SuperAdminDashboard.jsx';
+export { default } from './SuperAdminDashboard.tsx';

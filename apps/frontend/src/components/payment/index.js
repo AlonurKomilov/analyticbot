@@ -13,9 +13,9 @@ export { default as SubscriptionDashboard } from './SubscriptionDashboardRefacto
 // Individual refactored components (can be used independently)
 export { default as SubscriptionCard } from './subscription/SubscriptionCard.jsx';
 export { default as UsageMetrics } from './subscription/UsageMetrics.jsx';
-export { default as PaymentHistory } from './billing/PaymentHistory.jsx';
-export { default as CancelSubscriptionDialog } from './dialogs/CancelSubscriptionDialog.jsx';
-export { default as PaymentHistoryDialog } from './dialogs/PaymentHistoryDialog.jsx';
+export { default as PaymentHistory } from './billing/PaymentHistory.tsx';
+export { default as CancelSubscriptionDialog } from './dialogs/CancelSubscriptionDialog.tsx';
+export { default as PaymentHistoryDialog } from './dialogs/PaymentHistoryDialog.tsx';
 
 // Utilities
 export * from './utils/paymentUtils.js';

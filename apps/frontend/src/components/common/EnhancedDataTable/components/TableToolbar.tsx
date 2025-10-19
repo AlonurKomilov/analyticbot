@@ -9,24 +9,67 @@ import {
 import {
     Refresh as RefreshIcon
 } from '@mui/icons-material';
-import TableSearch from './TableSearch.jsx';
-import TableExport from './TableExport.jsx';
-import TableColumns from './TableColumns.jsx';
-import TableDensity from './TableDensity.jsx';
+import TableSearch from './TableSearch';
+import TableExport from './TableExport';
+import TableColumns from './TableColumns';
+import TableDensity from './TableDensity';
+
+interface Column {
+    id: string;
+    header?: string;
+    [key: string]: any;
+}
+
+interface ColumnVisibility {
+    [key: string]: boolean;
+}
+
+interface TableToolbarProps {
+    // Content
+    title?: string;
+    subtitle?: string;
+
+    // Search props
+    enableSearch?: boolean;
+    searchQuery?: string;
+    setSearchQuery?: (query: string) => void;
+    searchPlaceholder?: string;
+
+    // Export props
+    enableExport?: boolean;
+    onExport?: (format: string) => void;
+    exportFilename?: string;
+
+    // Column management props
+    enableColumnVisibility?: boolean;
+    columns?: Column[];
+    columnVisibility?: ColumnVisibility;
+    setColumnVisibility?: (visibility: ColumnVisibility) => void;
+
+    // Density props
+    enableDensityToggle?: boolean;
+    density?: string;
+    setDensity?: (density: string) => void;
+
+    // Refresh props
+    enableRefresh?: boolean;
+    onRefresh?: () => void;
+    loading?: boolean;
+}
 
 /**
  * TableToolbar Component
  * Renders the main toolbar with title, subtitle, and action controls
  */
-const TableToolbar = ({
+const TableToolbar: React.FC<TableToolbarProps> = ({
     // Content
     title,
     subtitle,
 
     // Search props
     enableSearch,
-    searchQuery,
-    setSearchQuery,
+    searchQuery = '',
+    setSearchQuery = () => {},
     searchPlaceholder,
 
     // Export props
@@ -36,14 +79,14 @@ const TableToolbar = ({
 
     // Column management props
     enableColumnVisibility,
-    columns,
-    columnVisibility,
-    setColumnVisibility,
+    columns = [],
+    columnVisibility = {},
+    setColumnVisibility = () => {},
 
     // Density props
     enableDensityToggle,
-    density,
-    setDensity,
+    density = 'standard',
+    setDensity = () => {},
 
     // Refresh props
     enableRefresh,

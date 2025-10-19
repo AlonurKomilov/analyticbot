@@ -4,11 +4,20 @@ import {
 } from '@mui/material';
 import { PAGE_SIZE_OPTIONS } from '../utils/tableUtils';
 
+interface TablePaginationControlsProps {
+    totalItems: number;
+    page: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: number) => void;
+    enablePagination?: boolean;
+}
+
 /**
  * TablePaginationControls Component
  * Renders pagination controls with page size selection
  */
-const TablePaginationControls = ({
+const TablePaginationControls: React.FC<TablePaginationControlsProps> = ({
     totalItems,
     page,
     pageSize,
@@ -20,11 +29,11 @@ const TablePaginationControls = ({
         return null;
     }
 
-    const handleChangePage = (event, newPage) => {
+    const handleChangePage = (_event: unknown, newPage: number) => {
         onPageChange(newPage);
     };
 
-    const handleChangeRowsPerPage = (event) => {
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
         const newPageSize = parseInt(event.target.value, 10);
         onPageSizeChange(newPageSize);
         onPageChange(0); // Reset to first page

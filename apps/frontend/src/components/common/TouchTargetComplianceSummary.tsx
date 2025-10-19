@@ -15,12 +15,19 @@ import {
     Accessibility as AccessibilityIcon
 } from '@mui/icons-material';
 
+interface Improvement {
+    component: string;
+    before: string;
+    after: string;
+    status: string;
+}
+
 /**
  * Touch Target Compliance Summary Component
  * Displays the improvements made for touch target accessibility
  */
-const TouchTargetComplianceSummary = () => {
-    const improvements = [
+const TouchTargetComplianceSummary: React.FC = () => {
+    const improvements: Improvement[] = [
         {
             component: 'IconButton',
             before: '< 44px (varies)',

@@ -17,22 +17,32 @@ import {
 } from '@mui/icons-material';
 import { EXPORT_FORMATS } from '../utils/exportUtils';
 
+interface ExportFormat {
+    key: string;
+    label: string;
+}
+
+interface TableExportProps {
+    onExport?: (format: string) => void;
+    exportFilename?: string; // Available for future use
+}
+
 /**
  * TableExport Component
  * Renders export functionality with format selection menu
  */
-const TableExport = ({
+const TableExport: React.FC<TableExportProps> = ({
     onExport,
-    exportFilename = 'data-export'
+    exportFilename: _exportFilename = 'data-export' // Available for future use
 }) => {
-    const [exportMenuAnchor, setExportMenuAnchor] = useState(null);
+    const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null);
 
-    const handleExportClick = (format) => {
+    const handleExportClick = (format: string) => {
         onExport?.(format);
         setExportMenuAnchor(null);
     };
 
-    const getFormatIcon = (format) => {
+    const getFormatIcon = (format: ExportFormat) => {
         switch (format.key) {
             case 'csv':
                 return <CsvIcon fontSize="small" />;

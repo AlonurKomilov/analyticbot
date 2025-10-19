@@ -1,7 +1,18 @@
 import React from 'react';
-import { Box, Tooltip, CircularProgress, Chip } from '@mui/material';
-import { StatusChip } from './index.js';
+import { Tooltip, Chip, SxProps, Theme } from '@mui/material';
 import { useUIStore } from '@/stores';
+import type { DataSource } from '@/types';
+
+interface GlobalDataSourceSwitchProps {
+  size?: 'small' | 'medium';
+  showLabel?: boolean;
+  sx?: SxProps<Theme>;
+}
+
+interface DataSourceBadgeProps {
+  size?: 'small' | 'medium';
+  sx?: SxProps<Theme>;
+}
 
 /**
  * Global Data Source Switch Component
@@ -10,10 +21,9 @@ import { useUIStore } from '@/stores';
  * Can be placed in navigation headers, component headers, or anywhere users need
  * to see and control the current data source.
  */
-const GlobalDataSourceSwitch = ({
+const GlobalDataSourceSwitch: React.FC<GlobalDataSourceSwitchProps> = ({
   size = 'small',
   showLabel = true,
-  variant = 'filled',
   sx = {}
 }) => {
   const dataSource = useUIStore(state => state.dataSource);
@@ -27,7 +37,7 @@ const GlobalDataSourceSwitch = ({
 
     try {
       // Switch data source
-      const newSource = isUsingRealAPI ? 'mock' : 'api';
+      const newSource: DataSource = isUsingRealAPI ? 'mock' : 'api';
       setDataSource(newSource);
 
       // Brief delay to show feedback
@@ -41,11 +51,10 @@ const GlobalDataSourceSwitch = ({
 
   if (switching) {
     return (
-      <StatusChip
-        icon={<CircularProgress size={14} />}
+      <Chip
         label="Switching..."
         size={size}
-        variant="info"
+        color="info"
         sx={{ ...sx, cursor: 'wait' }}
       />
     );
@@ -56,9 +65,9 @@ const GlobalDataSourceSwitch = ({
       title={`Currently using ${isUsingRealAPI ? 'real API data from your channels' : 'professional demo data'}. Click to switch to ${isUsingRealAPI ? 'demo' : 'real API'} data.`}
       arrow
     >
-      <StatusChip
+      <Chip
         label={showLabel ? (isUsingRealAPI ? '🟢 Real API' : '🟡 Demo Data') : (isUsingRealAPI ? '🟢' : '🟡')}
-        variant={isUsingRealAPI ? 'success' : 'warning'}
+        color={isUsingRealAPI ? 'success' : 'warning'}
         size={size}
         onClick={handleSwitch}
         sx={{
@@ -79,7 +88,7 @@ const GlobalDataSourceSwitch = ({
  * Compact data source indicator (no click functionality)
  * Useful for showing status without switching capability
  */
-export const DataSourceBadge = ({ size = 'small', sx = {} }) => {
+export const DataSourceBadge: React.FC<DataSourceBadgeProps> = ({ size = 'small', sx = {} }) => {
   const dataSource = useUIStore(state => state.dataSource);
   const isUsingRealAPI = dataSource === 'api';
 

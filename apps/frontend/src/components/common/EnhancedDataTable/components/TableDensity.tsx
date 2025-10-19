@@ -12,17 +12,22 @@ import {
 } from '@mui/icons-material';
 import { DENSITY_OPTIONS } from '../utils/tableUtils';
 
+interface TableDensityProps {
+    density: string;
+    setDensity: (density: string) => void;
+}
+
 /**
  * TableDensity Component
  * Renders table density (padding) selection menu
  */
-const TableDensity = ({
+const TableDensity: React.FC<TableDensityProps> = ({
     density,
     setDensity
 }) => {
-    const [densityMenuAnchor, setDensityMenuAnchor] = useState(null);
+    const [densityMenuAnchor, setDensityMenuAnchor] = useState<null | HTMLElement>(null);
 
-    const handleDensityChange = (densityKey) => {
+    const handleDensityChange = (densityKey: string) => {
         setDensity(densityKey);
         setDensityMenuAnchor(null);
     };

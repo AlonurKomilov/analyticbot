@@ -13,33 +13,48 @@ import {
 } from '@mui/material';
 import {
     ViewColumn as ColumnsIcon,
-    SelectAll as SelectAllIcon,
     Visibility,
     VisibilityOff
 } from '@mui/icons-material';
+
+interface Column {
+    id: string;
+    header?: string;
+    [key: string]: any;
+}
+
+interface ColumnVisibility {
+    [key: string]: boolean;
+}
+
+interface TableColumnsProps {
+    columns: Column[];
+    columnVisibility: ColumnVisibility;
+    setColumnVisibility: (visibility: ColumnVisibility) => void;
+}
 
 /**
  * TableColumns Component
  * Renders column visibility management menu
  */
-const TableColumns = ({
+const TableColumns: React.FC<TableColumnsProps> = ({
     columns,
     columnVisibility,
     setColumnVisibility
 }) => {
-    const [columnsMenuAnchor, setColumnsMenuAnchor] = useState(null);
+    const [columnsMenuAnchor, setColumnsMenuAnchor] = useState<null | HTMLElement>(null);
 
     const handleShowAll = () => {
-        const allVisible = columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {});
+        const allVisible = columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {} as ColumnVisibility);
         setColumnVisibility(allVisible);
     };
 
     const handleHideAll = () => {
-        const allHidden = columns.reduce((acc, col) => ({ ...acc, [col.id]: false }), {});
+        const allHidden = columns.reduce((acc, col) => ({ ...acc, [col.id]: false }), {} as ColumnVisibility);
         setColumnVisibility(allHidden);
     };
 
-    const handleToggleColumn = (columnId, checked) => {
+    const handleToggleColumn = (columnId: string, checked: boolean) => {
         setColumnVisibility({
             ...columnVisibility,
             [columnId]: checked

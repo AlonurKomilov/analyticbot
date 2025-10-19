@@ -8,11 +8,17 @@ import {
     Clear as ClearIcon
 } from '@mui/icons-material';
 
+interface TableSearchProps {
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    searchPlaceholder?: string;
+}
+
 /**
  * TableSearch Component
  * Renders search input with clear functionality
  */
-const TableSearch = ({
+const TableSearch: React.FC<TableSearchProps> = ({
     searchQuery,
     setSearchQuery,
     searchPlaceholder = 'Search all columns...'

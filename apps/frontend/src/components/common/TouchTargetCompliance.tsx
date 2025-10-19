@@ -5,7 +5,13 @@ import {
     Chip as MuiChip,
     FormControl as MuiFormControl,
     Select as MuiSelect,
-    TextField as MuiTextField
+    TextField as MuiTextField,
+    IconButtonProps as MuiIconButtonProps,
+    ButtonProps as MuiButtonProps,
+    ChipProps as MuiChipProps,
+    FormControlProps as MuiFormControlProps,
+    SelectProps as MuiSelectProps,
+    TextFieldProps as MuiTextFieldProps
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
@@ -15,7 +21,7 @@ import { styled } from '@mui/material/styles';
  */
 
 // Enhanced IconButton with guaranteed 44px minimum
-export const IconButton = styled(MuiIconButton)(({ theme, size }) => ({
+export const IconButton = styled(MuiIconButton)<MuiIconButtonProps>(({ theme, size }) => ({
     minWidth: size === 'small' ? '36px' : '44px',
     minHeight: size === 'small' ? '36px' : '44px',
     padding: size === 'small' ? '6px' : '10px',
@@ -40,7 +46,7 @@ export const IconButton = styled(MuiIconButton)(({ theme, size }) => ({
 }));
 
 // Enhanced Button with consistent touch targets
-export const Button = styled(MuiButton)(({ theme, size }) => ({
+export const Button = styled(MuiButton)<MuiButtonProps>(({ theme, size }) => ({
     minHeight: size === 'small' ? '36px' : '44px',
     padding: size === 'small' ? '6px 12px' : '8px 16px',
     textTransform: 'none',
@@ -78,7 +84,7 @@ export const Button = styled(MuiButton)(({ theme, size }) => ({
 }));
 
 // Enhanced Chip with better touch targets
-export const Chip = styled(MuiChip)(({ theme, size, onClick, onDelete }) => ({
+export const Chip = styled(MuiChip)<MuiChipProps>(({ theme, size, onClick, onDelete }) => ({
     minHeight: size === 'small' ? '28px' : '32px',
 
     // If clickable or deletable, ensure minimum touch target
@@ -106,7 +112,7 @@ export const Chip = styled(MuiChip)(({ theme, size, onClick, onDelete }) => ({
 }));
 
 // Enhanced FormControl with proper sizing
-export const FormControl = styled(MuiFormControl)(({ theme, size }) => ({
+export const FormControl = styled(MuiFormControl)<MuiFormControlProps>(({ size }) => ({
     minWidth: size === 'small' ? '100px' : '120px',
 
     '& .MuiSelect-select': {
@@ -124,7 +130,7 @@ export const FormControl = styled(MuiFormControl)(({ theme, size }) => ({
 }));
 
 // Enhanced Select with touch optimization
-export const Select = styled(MuiSelect)(({ theme, size }) => ({
+export const Select = styled(MuiSelect)<MuiSelectProps>(({ theme, size }) => ({
     minHeight: size === 'small' ? '36px' : '44px',
 
     '@media (hover: none)': {
@@ -138,7 +144,7 @@ export const Select = styled(MuiSelect)(({ theme, size }) => ({
 }));
 
 // Enhanced TextField with proper touch targets
-export const TextField = styled(MuiTextField)(({ theme, size }) => ({
+export const TextField = styled(MuiTextField)<MuiTextFieldProps>(({ theme, size }) => ({
     '& .MuiOutlinedInput-root': {
         minHeight: size === 'small' ? '36px' : '44px',
 
@@ -153,12 +159,20 @@ export const TextField = styled(MuiTextField)(({ theme, size }) => ({
     }
 }));
 
+interface TouchTargetViolation {
+    element: Element;
+    size: { width: number; height: number };
+    tagName: string;
+    className: string;
+    id: string;
+}
+
 /**
  * Touch Target Audit Hook
  * Development utility to identify components that don't meet touch target requirements
  * Set enabled=false to disable verbose console logging
  */
-export const useTouchTargetAudit = (enabled = false) => {
+export const useTouchTargetAudit = (enabled = false): void => {
     React.useEffect(() => {
         if (!enabled || !document || !document.body) return;
 
@@ -168,41 +182,41 @@ export const useTouchTargetAudit = (enabled = false) => {
                     'button, [role="button"], input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
                 );
 
-            const violations = [];
+                const violations: TouchTargetViolation[] = [];
 
-            interactiveElements.forEach((element) => {
-                const rect = element.getBoundingClientRect();
-                const minSize = 44;
+                interactiveElements.forEach((element) => {
+                    const rect = element.getBoundingClientRect();
+                    const minSize = 44;
 
-                if (rect.width > 0 && rect.height > 0) {
-                    if (rect.width < minSize || rect.height < minSize) {
-                        violations.push({
-                            element,
-                            size: { width: rect.width, height: rect.height },
-                            tagName: element.tagName,
-                            className: element.className,
-                            id: element.id
+                    if (rect.width > 0 && rect.height > 0) {
+                        if (rect.width < minSize || rect.height < minSize) {
+                            violations.push({
+                                element,
+                                size: { width: rect.width, height: rect.height },
+                                tagName: element.tagName,
+                                className: element.className,
+                                id: element.id
+                            });
+                        }
+                    }
+                });
+
+                if (process.env.NODE_ENV === 'development') {
+                    if (violations.length > 0) {
+                        console.group('🎯 Touch Target Compliance Violations');
+                        violations.forEach((violation, index) => {
+                            console.warn(`${index + 1}. ${violation.tagName}`, {
+                                size: violation.size,
+                                className: violation.className,
+                                id: violation.id,
+                                element: violation.element
+                            });
                         });
+                        console.groupEnd();
+                    } else {
+                        console.log('✅ All interactive elements meet touch target requirements');
                     }
                 }
-            });
-
-            if (process.env.NODE_ENV === 'development') {
-                if (violations.length > 0) {
-                    console.group('🎯 Touch Target Compliance Violations');
-                    violations.forEach((violation, index) => {
-                        console.warn(`${index + 1}. ${violation.tagName}`, {
-                            size: violation.size,
-                            className: violation.className,
-                            id: violation.id,
-                            element: violation.element
-                        });
-                    });
-                    console.groupEnd();
-                } else {
-                    console.log('✅ All interactive elements meet touch target requirements');
-                }
-            }
             } catch (error) {
                 console.warn('Touch target audit failed:', error);
             }
@@ -215,11 +229,15 @@ export const useTouchTargetAudit = (enabled = false) => {
     }, [enabled]);
 };
 
+interface TouchTargetProviderProps {
+    children: React.ReactNode;
+}
+
 /**
  * Touch Target Provider
  * Wraps components to ensure touch target compliance
  */
-export const TouchTargetProvider = ({ children }) => {
+export const TouchTargetProvider: React.FC<TouchTargetProviderProps> = ({ children }) => {
     useTouchTargetAudit();
 
     return <>{children}</>;

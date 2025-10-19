@@ -4,27 +4,53 @@ import {
     FormControl,
     FormHelperText,
     Typography,
-    Box
+    Box,
+    TextFieldProps,
+    SxProps,
+    Theme
 } from '@mui/material';
 import { generateId } from '@utils/accessibility.js';
 
+interface ValidationRules {
+    [key: string]: any;
+}
+
+interface AccessibleFormFieldProps extends Omit<TextFieldProps, 'error'> {
+    label: string;
+    value?: string;
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    error?: string;
+    helperText?: string;
+    required?: boolean;
+    type?: string;
+    autoComplete?: string;
+    validation?: ValidationRules;
+    maxLength?: number;
+    placeholder?: string;
+    multiline?: boolean;
+    rows?: number;
+    size?: 'small' | 'medium';
+    disabled?: boolean;
+    sx?: SxProps<Theme>;
+}
+
+interface FormFieldsetProps {
+    legend: string;
+    children: React.ReactNode;
+    description?: string;
+    required?: boolean;
+    [key: string]: any;
+}
+
+interface FormValidationSummaryProps {
+    errors?: Record<string, string>;
+    title?: string;
+}
+
 /**
  * Enhanced accessible form field component
- *
- * @param {Object} props - Component props
- * @param {string} props.label - Field label
- * @param {string} props.value - Field value
- * @param {Function} props.onChange - Change handler
- * @param {string} props.error - Error message
- * @param {string} props.helperText - Helper text
- * @param {boolean} props.required - Whether field is required
- * @param {string} props.type - Input type
- * @param {string} props.autoComplete - Autocomplete hint
- * @param {Object} props.validation - Validation rules
- * @param {number} props.maxLength - Maximum character length
- * @param {string} props.placeholder - Placeholder text
  */
-const AccessibleFormField = React.forwardRef(({
+const AccessibleFormField = React.forwardRef<HTMLDivElement, AccessibleFormFieldProps>(({
     label,
     value = '',
     onChange,
@@ -53,7 +79,7 @@ const AccessibleFormField = React.forwardRef(({
 
     // Helper text with character count
     const enhancedHelperText = React.useMemo(() => {
-        const parts = [];
+        const parts: string[] = [];
         if (helperText) parts.push(helperText);
         if (characterCount) parts.push(characterCount);
         return parts.join(' • ');
@@ -140,7 +166,7 @@ AccessibleFormField.displayName = 'AccessibleFormField';
 /**
  * Form fieldset component for grouping related fields
  */
-export const FormFieldset = ({
+export const FormFieldset: React.FC<FormFieldsetProps> = ({
     legend,
     children,
     description,
@@ -194,7 +220,7 @@ export const FormFieldset = ({
 /**
  * Form validation summary component
  */
-export const FormValidationSummary = ({
+export const FormValidationSummary: React.FC<FormValidationSummaryProps> = ({
     errors = {},
     title = "Please fix the following errors:"
 }) => {

@@ -36,7 +36,7 @@ RELOCATED IMPLEMENTATION: Analytics modules properly organized in bot structure
 - Web Services: bot/services/
 """
 
-from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+from apps.shared.adapters.ml_facade import create_bot_ml_facade
 from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
 from apps.bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
 

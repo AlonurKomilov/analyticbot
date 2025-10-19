@@ -26,7 +26,7 @@ def _create_ml_service(service_name: str) -> Any | None:
 
             return create_ml_coordinator()
         elif service_name == "EngagementAnalyzer":
-            from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+            from apps.shared.adapters.ml_facade import create_bot_ml_facade
 
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":

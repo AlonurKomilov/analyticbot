@@ -9,18 +9,62 @@ import {
     TableSortLabel,
     Checkbox,
     LinearProgress,
-    Typography,
     Box
 } from '@mui/material';
 import { TableChart as TableIcon } from '@mui/icons-material';
 import { DENSITY_OPTIONS } from '../utils/tableUtils';
 import EmptyState from '../../../EmptyState';
 
+interface Column {
+    id: string;
+    header?: string;
+    align?: 'left' | 'center' | 'right';
+    sortable?: boolean;
+    accessor?: (row: any) => any;
+    render?: (row: any, rowIndex: number) => React.ReactNode;
+    Cell?: React.ComponentType<{ value: any; row: any; rowIndex: number }>;
+}
+
+interface RowAction {
+    component: React.ComponentType<any>;
+    props?: any;
+}
+
+interface TableContentProps {
+    // Data
+    visibleColumns: Column[];
+    paginatedData: any[];
+    loading?: boolean;
+
+    // Sorting
+    sortBy?: string;
+    sortDirection?: 'asc' | 'desc';
+    onSort?: (columnId: string, direction: 'asc' | 'desc') => void;
+    enableSorting?: boolean;
+
+    // Selection
+    enableSelection?: boolean;
+    selectedRows: Set<number>;
+    isAllSelected?: boolean;
+    isIndeterminate?: boolean;
+    onToggleAllSelection?: () => void;
+    onToggleRowSelection?: (rowIndex: number) => void;
+
+    // Styling
+    density?: string;
+    tableAriaLabel?: string;
+    title?: string;
+
+    // Row actions
+    onRowClick?: (row: any, index: number) => void;
+    rowActions?: RowAction[];
+}
+
 /**
  * TableContent Component
  * Renders the main table with headers, body, and sorting
  */
-const TableContent = ({
+const TableContent: React.FC<TableContentProps> = ({
     // Data
     visibleColumns,
     paginatedData,
@@ -51,10 +95,10 @@ const TableContent = ({
 }) => {
     const currentDensity = DENSITY_OPTIONS.find(opt => opt.key === density);
 
-    const handleSortClick = (columnId) => {
+    const handleSortClick = (columnId: string) => {
         if (!enableSorting) return;
 
-        let newDirection = 'asc';
+        let newDirection: 'asc' | 'desc' = 'asc';
         if (sortBy === columnId && sortDirection === 'asc') {
             newDirection = 'desc';
         }
@@ -62,13 +106,13 @@ const TableContent = ({
         onSort?.(columnId, newDirection);
     };
 
-    const handleRowClick = (row, index) => {
+    const handleRowClick = (row: any, index: number) => {
         if (onRowClick) {
             onRowClick(row, index);
         }
     };
 
-    const renderCellContent = (column, row, rowIndex) => {
+    const renderCellContent = (column: Column, row: any, rowIndex: number): React.ReactNode => {
         // Support both 'render' and 'Cell' properties for flexibility
         if (column.render) {
             return column.render(row, rowIndex);
@@ -126,7 +170,7 @@ const TableContent = ({
                                 sortDirection={sortBy === column.id ? sortDirection : false}
                                 sx={{
                                     fontWeight: 'bold',
-                                    py: currentDensity?.padding / 8 || 1.5
+                                    py: (currentDensity?.padding ?? 12) / 8
                                 }}
                             >
                                 {enableSorting && column.sortable !== false ? (
@@ -154,7 +198,7 @@ const TableContent = ({
                     {loading && (
                         <TableRow>
                             <TableCell
-                                colSpan={visibleColumns.length + (enableSelection ? 1 : 0) + (rowActions?.length > 0 ? 1 : 0)}
+                                colSpan={visibleColumns.length + (enableSelection ? 1 : 0) + ((rowActions?.length ?? 0) > 0 ? 1 : 0)}
                                 sx={{ p: 0 }}
                             >
                                 <LinearProgress />
@@ -165,13 +209,13 @@ const TableContent = ({
                     {!loading && paginatedData.length === 0 && (
                         <TableRow>
                             <TableCell
-                                colSpan={visibleColumns.length + (enableSelection ? 1 : 0) + (rowActions?.length > 0 ? 1 : 0)}
+                                colSpan={visibleColumns.length + (enableSelection ? 1 : 0) + ((rowActions?.length ?? 0) > 0 ? 1 : 0)}
                                 align="center"
                                 sx={{ py: 2 }}
                             >
                                 <EmptyState
                                     message="No data available"
-                                    icon={<TableIcon sx={{ fontSize: 48, color: 'text.secondary' }} />}
+                                    icon={<TableIcon sx={{ fontSize: 48, color: 'text.secondary' }} /> as any}
                                 />
                             </TableCell>
                         </TableRow>
@@ -193,7 +237,7 @@ const TableContent = ({
                                 <TableCell padding="checkbox">
                                     <Checkbox
                                         checked={selectedRows.has(rowIndex)}
-                                        onChange={() => onToggleRowSelection(rowIndex)}
+                                        onChange={() => onToggleRowSelection?.(rowIndex)}
                                         inputProps={{ 'aria-label': `Select row ${rowIndex + 1}` }}
                                     />
                                 </TableCell>
@@ -205,7 +249,7 @@ const TableContent = ({
                                     key={column.id}
                                     align={column.align || 'left'}
                                     sx={{
-                                        py: currentDensity?.padding / 8 || 1.5
+                                        py: (currentDensity?.padding ?? 12) / 8
                                     }}
                                 >
                                     {renderCellContent(column, row, rowIndex)}

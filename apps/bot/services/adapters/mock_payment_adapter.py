@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Any
 
 from apps.bot.models.payment import BillingCycle, PaymentStatus, SubscriptionStatus
-from apps.bot.services.adapters.base_adapter import PaymentGatewayAdapter
+from core.adapters.payment import PaymentGatewayAdapter
 
 logger = logging.getLogger(__name__)
 

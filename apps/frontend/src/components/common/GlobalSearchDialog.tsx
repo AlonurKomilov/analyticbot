@@ -29,10 +29,59 @@ import {
     Help as HelpIcon,
     History as HistoryIcon,
     Bookmark as BookmarkIcon,
-    Launch as LaunchIcon
+    Launch as LaunchIcon,
+    SvgIconComponent
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from './NavigationProvider';
+
+/**
+ * Type definitions
+ */
+export interface SearchRoute {
+    id: string;
+    title: string;
+    path: string;
+    icon: SvgIconComponent;
+    description: string;
+    keywords: string[];
+}
+
+export interface RecentPage {
+    title: string;
+    path: string;
+    timestamp?: number;
+}
+
+export interface SearchHistoryItem {
+    query: string;
+    timestamp?: number;
+}
+
+export interface Bookmark {
+    title: string;
+    path: string;
+    timestamp?: number;
+}
+
+export interface FilteredResults {
+    routes: SearchRoute[];
+    recent: RecentPage[];
+    bookmarks: Bookmark[];
+    history: SearchHistoryItem[];
+}
+
+export interface GlobalSearchDialogProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+interface ResultSectionProps {
+    title: string;
+    items: any[];
+    icon: SvgIconComponent;
+    type: 'routes' | 'recent' | 'bookmarks' | 'history';
+}
 
 /**
  * Global Search Dialog Component
@@ -43,7 +92,7 @@ import { useNavigation } from './NavigationProvider';
  * - Bookmarks
  * - Quick actions
  */
-const GlobalSearchDialog = ({ open, onClose }) => {
+const GlobalSearchDialog: React.FC<GlobalSearchDialogProps> = ({ open, onClose }) => {
     const navigate = useNavigate();
     const {
         recentPages,
@@ -53,10 +102,10 @@ const GlobalSearchDialog = ({ open, onClose }) => {
         addBookmark
     } = useNavigation();
 
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useState<string>('');
 
     // Define all searchable routes and actions
-    const allRoutes = [
+    const allRoutes: SearchRoute[] = [
         {
             id: 'dashboard',
             title: 'Dashboard',
@@ -148,7 +197,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
     ];
 
     // Filter results based on query
-    const filteredResults = useMemo(() => {
+    const filteredResults = useMemo((): FilteredResults => {
         if (!query.trim()) {
             return {
                 routes: allRoutes.slice(0, 5),
@@ -186,16 +235,16 @@ const GlobalSearchDialog = ({ open, onClose }) => {
             bookmarks: matchingBookmarks,
             history: matchingHistory
         };
-    }, [query, recentPages, bookmarks, searchHistory]);
+    }, [query, recentPages, bookmarks, searchHistory, allRoutes]);
 
-    const handleSelect = (item) => {
+    const handleSelect = (item: SearchRoute | RecentPage | Bookmark | SearchHistoryItem) => {
         if (addSearchHistory && query.trim()) {
             addSearchHistory(query);
         }
 
-        if (item.path) {
+        if ('path' in item && item.path) {
             navigate(item.path);
-        } else if (item.query) {
+        } else if ('query' in item && item.query) {
             setQuery(item.query);
             return; // Don't close dialog for history items
         }
@@ -204,7 +253,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
         setQuery('');
     };
 
-    const handleBookmarkToggle = (item, event) => {
+    const handleBookmarkToggle = (item: SearchRoute, event: React.MouseEvent) => {
         event.stopPropagation();
         addBookmark({
             title: item.title,
@@ -213,7 +262,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
         });
     };
 
-    const ResultSection = ({ title, items, icon: SectionIcon, type }) => {
+    const ResultSection: React.FC<ResultSectionProps> = ({ title, items, icon: SectionIcon, type }) => {
         if (items.length === 0) return null;
 
         return (
@@ -276,7 +325,7 @@ const GlobalSearchDialog = ({ open, onClose }) => {
                                                     color: 'text.secondary',
                                                     '&:hover': { color: 'primary.main' }
                                                 }}
-                                                onClick={(e) => handleBookmarkToggle(item, e)}
+                                                onClick={(e) => handleBookmarkToggle(item as SearchRoute, e)}
                                             />
                                         </Box>
                                     )}

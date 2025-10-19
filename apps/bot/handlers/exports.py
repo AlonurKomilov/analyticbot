@@ -17,13 +17,13 @@ from aiogram.types import (
 )
 
 from apps.api.exports.csv_v2 import CSVExporter
-from apps.bot.clients.analytics_client import AnalyticsClient
 from apps.bot.keyboards.analytics import (
     get_export_format_keyboard,
     get_export_type_keyboard,
 )
 from apps.bot.middlewares.throttle import rate_limit
 from apps.shared.clients.analytics_client import (
+    AnalyticsClient,
     GrowthResponse,
     OverviewResponse,
     ReachResponse,
@@ -152,7 +152,7 @@ async def handle_export_format_selection(callback: CallbackQuery, state: FSMCont
 
     try:
         # Get channel_id from callback context (you might need to adjust this)
-        callback.from_user.id
+        _user_id = callback.from_user.id  # Store for future use
         # For demo purposes, using a placeholder channel_id
         # In real implementation, you'd get this from user context/settings
         channel_id = "@demo_channel"  # TODO: Get from user settings
@@ -180,38 +180,37 @@ async def export_csv_data(message: Message, export_type: str, channel_id: str, p
         csv_exporter = get_csv_exporter()
 
         # Fetch analytics data
-        async with aiohttp.ClientSession() as session:
-            # Note: AnalyticsClient manages session internally
-            data: (
-                OverviewResponse
-                | GrowthResponse
-                | ReachResponse
-                | TopPostsResponse
-                | SourcesResponse
-                | TrendingResponse
-            )
-            csv_content: StringIO
+        # Note: AnalyticsClient manages session internally
+        data: (
+            OverviewResponse
+            | GrowthResponse
+            | ReachResponse
+            | TopPostsResponse
+            | SourcesResponse
+            | TrendingResponse
+        )
+        csv_content: StringIO
 
-            if export_type == "overview":
-                data = await analytics_client.overview(channel_id, period)
-                csv_content = csv_exporter.overview_to_csv(data)
-            elif export_type == "growth":
-                data = await analytics_client.growth(channel_id, period)
-                csv_content = csv_exporter.growth_to_csv(data)
-            elif export_type == "reach":
-                data = await analytics_client.reach(channel_id, period)
-                csv_content = csv_exporter.reach_to_csv(data)
-            elif export_type == "top_posts":
-                data = await analytics_client.top_posts(channel_id, period)
-                csv_content = csv_exporter.top_posts_to_csv(data)
-            elif export_type == "sources":
-                data = await analytics_client.sources(channel_id, period)
-                csv_content = csv_exporter.sources_to_csv(data)
-            elif export_type == "trending":
-                data = await analytics_client.trending(channel_id, period)
-                csv_content = csv_exporter.trending_to_csv(data)
-            else:
-                raise ValueError(f"Unsupported export type: {export_type}")
+        if export_type == "overview":
+            data = await analytics_client.overview(channel_id, period)
+            csv_content = csv_exporter.overview_to_csv(data)
+        elif export_type == "growth":
+            data = await analytics_client.growth(channel_id, period)
+            csv_content = csv_exporter.growth_to_csv(data)
+        elif export_type == "reach":
+            data = await analytics_client.reach(channel_id, period)
+            csv_content = csv_exporter.reach_to_csv(data)
+        elif export_type == "top_posts":
+            data = await analytics_client.top_posts(channel_id, period)
+            csv_content = csv_exporter.top_posts_to_csv(data)
+        elif export_type == "sources":
+            data = await analytics_client.sources(channel_id, period)
+            csv_content = csv_exporter.sources_to_csv(data)
+        elif export_type == "trending":
+            data = await analytics_client.trending(channel_id, period)
+            csv_content = csv_exporter.trending_to_csv(data)
+        else:
+            raise ValueError(f"Unsupported export type: {export_type}")
 
         if not data:
             await message.edit_text(
@@ -273,34 +272,33 @@ async def export_png_chart(message: Message, export_type: str, channel_id: str, 
         analytics_client = get_analytics_client()
 
         # Fetch analytics data
-        async with aiohttp.ClientSession() as session:
-            # Note: AnalyticsClient manages session internally
-            data: GrowthResponse | ReachResponse | SourcesResponse
-            png_bytes: bytes
+        # Note: AnalyticsClient manages session internally
+        data: GrowthResponse | ReachResponse | SourcesResponse
+        png_bytes: bytes
 
-            if export_type == "growth":
-                data = await analytics_client.growth(channel_id, period)
-                png_bytes = chart_service.render_growth_chart(
-                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
-                )
-            elif export_type == "reach":
-                data = await analytics_client.reach(channel_id, period)
-                png_bytes = chart_service.render_reach_chart(
-                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
-                )
-            elif export_type == "sources":
-                data = await analytics_client.sources(channel_id, period)
-                png_bytes = chart_service.render_sources_chart(
-                    data.model_dump() if hasattr(data, "model_dump") else data.__dict__
-                )
-            else:
-                await message.edit_text(
-                    f"❌ <b>PNG Export Not Supported</b>\n\n"
-                    f"PNG charts are not available for {export_type} data.\n"
-                    "Try CSV export instead.",
-                    parse_mode="HTML",
-                )
-                return
+        if export_type == "growth":
+            data = await analytics_client.growth(channel_id, period)
+            png_bytes = chart_service.render_growth_chart(
+                data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+            )
+        elif export_type == "reach":
+            data = await analytics_client.reach(channel_id, period)
+            png_bytes = chart_service.render_reach_chart(
+                data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+            )
+        elif export_type == "sources":
+            data = await analytics_client.sources(channel_id, period)
+            png_bytes = chart_service.render_sources_chart(
+                data.model_dump() if hasattr(data, "model_dump") else data.__dict__
+            )
+        else:
+            await message.edit_text(
+                f"❌ <b>PNG Export Not Supported</b>\n\n"
+                f"PNG charts are not available for {export_type} data.\n"
+                "Try CSV export instead.",
+                parse_mode="HTML",
+            )
+            return
 
         if not data:
             await message.edit_text(

@@ -5,7 +5,7 @@
  * Shows production readiness status with detailed component checks
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -34,9 +34,60 @@ import {
 } from '@mui/icons-material';
 
 /**
+ * Type definitions
+ */
+export type CheckStatus = 'passed' | 'failed' | 'degraded' | 'timeout' | 'pending';
+export type CheckCategory = 'critical' | 'important' | 'optional';
+export type OverallStatus = 'passed' | 'degraded' | 'failed';
+
+export interface HealthCheck {
+  name: string;
+  category: CheckCategory;
+  description: string;
+  status: CheckStatus;
+  duration: number;
+  details?: Record<string, any>;
+  error?: string;
+}
+
+export interface HealthCheckReport {
+  overallStatus: OverallStatus;
+  checks: HealthCheck[];
+  criticalFailures: HealthCheck[];
+  warnings: HealthCheck[];
+  recommendations: string[];
+  getDuration: () => number;
+  getStatusEmoji: () => string;
+  isProductionReady: () => boolean;
+}
+
+export interface HealthCheckProgress {
+  current: number;
+  total: number;
+  check?: HealthCheck;
+}
+
+export interface SystemHealthCheckProps {
+  report?: HealthCheckReport;
+  loading?: boolean;
+  progress?: HealthCheckProgress | null;
+}
+
+interface HealthCheckItemProps {
+  check: HealthCheck;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+interface CheckStatusIconResult {
+  icon: React.ReactElement;
+  color: 'success' | 'error' | 'warning' | 'default';
+}
+
+/**
  * Get icon and color for check status
  */
-const getCheckStatusIcon = (status) => {
+const getCheckStatusIcon = (status: CheckStatus): CheckStatusIconResult => {
   switch (status) {
     case 'passed':
       return { icon: <CheckCircleIcon />, color: 'success' };
@@ -54,7 +105,7 @@ const getCheckStatusIcon = (status) => {
 /**
  * Get icon for check category
  */
-const getCategoryIcon = (category) => {
+const getCategoryIcon = (category: CheckCategory): React.ReactElement => {
   switch (category) {
     case 'critical':
       return <SecurityIcon />;
@@ -70,10 +121,10 @@ const getCategoryIcon = (category) => {
 /**
  * Individual health check item
  */
-const HealthCheckItem = ({ check, expanded, onToggle }) => {
+const HealthCheckItem: React.FC<HealthCheckItemProps> = ({ check, expanded, onToggle }) => {
   const { icon, color } = getCheckStatusIcon(check.status);
   const hasDetails = check.details && Object.keys(check.details).length > 0;
-  const hasError = check.error;
+  const hasError = Boolean(check.error);
 
   return (
     <>
@@ -139,7 +190,7 @@ const HealthCheckItem = ({ check, expanded, onToggle }) => {
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <Box sx={{ ml: 4, mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
           {hasError && (
-            <Alert severity={color} sx={{ mb: 1 }}>
+            <Alert severity={color === 'default' ? 'info' : color} sx={{ mb: 1 }}>
               {check.error}
             </Alert>
           )}
@@ -162,10 +213,14 @@ const HealthCheckItem = ({ check, expanded, onToggle }) => {
 /**
  * Main system health check display
  */
-export const SystemHealthCheck = ({ report, loading = false, progress = null }) => {
-  const [expandedChecks, setExpandedChecks] = useState(new Set());
+export const SystemHealthCheck: React.FC<SystemHealthCheckProps> = ({
+  report,
+  loading = false,
+  progress = null
+}) => {
+  const [expandedChecks, setExpandedChecks] = useState<Set<string>>(new Set());
 
-  const toggleCheck = (checkName) => {
+  const toggleCheck = (checkName: string) => {
     setExpandedChecks(prev => {
       const next = new Set(prev);
       if (next.has(checkName)) {
@@ -219,7 +274,7 @@ export const SystemHealthCheck = ({ report, loading = false, progress = null }) 
   }
 
   // Group checks by category
-  const checksByCategory = {
+  const checksByCategory: Record<CheckCategory, HealthCheck[]> = {
     critical: [],
     important: [],
     optional: []
@@ -231,7 +286,7 @@ export const SystemHealthCheck = ({ report, loading = false, progress = null }) 
     }
   });
 
-  const overallColor =
+  const overallColor: 'success' | 'warning' | 'error' =
     report.overallStatus === 'passed' ? 'success' :
     report.overallStatus === 'degraded' ? 'warning' : 'error';
 
@@ -319,7 +374,7 @@ export const SystemHealthCheck = ({ report, loading = false, progress = null }) 
       )}
 
       {/* Checks by Category */}
-      {Object.entries(checksByCategory).map(([category, checks]) => {
+      {(Object.entries(checksByCategory) as [CheckCategory, HealthCheck[]][]).map(([category, checks]) => {
         if (checks.length === 0) return null;
 
         return (

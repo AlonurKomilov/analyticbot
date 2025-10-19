@@ -149,20 +149,8 @@ def get_container() -> ApplicationContainer:
 
 
 # ============================================================================
-# BACKWARD COMPATIBILITY ALIASES
+# Public API
 # ============================================================================
-
-
-def get_bot_container() -> ApplicationContainer:
-    """Alias for backward compatibility - returns full container"""
-    return get_container()
-
-
-def get_api_container() -> ApplicationContainer:
-    """Alias for backward compatibility - returns full container"""
-    return get_container()
-
-
 def get_unified_container() -> ApplicationContainer:
     """Alias for transition from unified_di.py"""
     return get_container()

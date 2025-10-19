@@ -3,7 +3,9 @@ import {
     Paper,
     Alert,
     Typography,
-    Button
+    Button,
+    SxProps,
+    Theme
 } from '@mui/material';
 import {
     Refresh as RefreshIcon
@@ -11,8 +13,8 @@ import {
 
 // Import modular components
 import TableToolbar from './components/TableToolbar.jsx';
-import TableContent from './components/TableContent.jsx';
-import TablePaginationControls from './components/TablePaginationControls.jsx';
+import TableContent from './components/TableContent';
+import TablePaginationControls from './components/TablePaginationControls';
 
 // Import custom hooks
 import { useTableState } from './hooks/useTableState.js';
@@ -20,7 +22,102 @@ import { useTableData } from './hooks/useTableData.js';
 import { useTableSelection } from './hooks/useTableSelection.js';
 
 // Import utilities
-import { EXPORT_FORMATS, exportToCsv, exportToExcel, exportToPdf } from './utils/exportUtils.js';
+import { exportToCsv, exportToExcel, exportToPdf } from './utils/exportUtils.js';
+
+/**
+ * Type definitions
+ */
+export type SortDirection = 'asc' | 'desc';
+export type Density = 'compact' | 'standard' | 'comfortable';
+export type ExportFormat = 'csv' | 'excel' | 'pdf';
+
+export interface Column<T = any> {
+    id: string;
+    header?: string;
+    accessor?: (row: T) => any;
+    sortable?: boolean;
+    filterable?: boolean;
+    width?: string | number;
+    align?: 'left' | 'center' | 'right';
+    Cell?: React.ComponentType<{ value: any; row: T }>;
+    [key: string]: any;
+}
+
+export interface BulkAction {
+    label: string;
+    icon?: React.ReactNode;
+    onClick: (selectedRows: Set<number>) => void;
+    disabled?: boolean;
+}
+
+export interface RowAction<T = any> {
+    label: string;
+    icon?: React.ReactNode;
+    onClick: (row: T, index: number) => void;
+    disabled?: (row: T) => boolean;
+    show?: (row: T) => boolean;
+}
+
+export interface EnhancedDataTableProps<T = any> {
+    // Data props
+    data?: T[];
+    columns?: Column<T>[];
+    loading?: boolean;
+    error?: string | null;
+
+    // Table configuration
+    title?: string;
+    subtitle?: string;
+
+    // Pagination
+    enablePagination?: boolean;
+    defaultPageSize?: number;
+
+    // Sorting
+    enableSorting?: boolean;
+    defaultSortBy?: string | null;
+    defaultSortDirection?: SortDirection;
+
+    // Searching & Filtering
+    enableSearch?: boolean;
+    searchPlaceholder?: string;
+
+    // Column management
+    enableColumnVisibility?: boolean;
+
+    // Selection
+    enableSelection?: boolean;
+
+    // Export
+    enableExport?: boolean;
+    exportFilename?: string;
+
+    // Refresh
+    enableRefresh?: boolean;
+    onRefresh?: () => void;
+
+    // Density
+    enableDensityToggle?: boolean;
+    defaultDensity?: Density;
+
+    // Custom actions
+    rowActions?: RowAction<T>[];
+
+    // Event handlers
+    onRowClick?: (row: T, index: number) => void;
+    onSelectionChange?: (selectedRows: Set<number>) => void;
+    onSort?: (columnId: string, direction: SortDirection) => void;
+
+    // Advanced features
+    enableRealTimeUpdates?: boolean;
+    refreshInterval?: number;
+
+    // Styling
+    sx?: SxProps<Theme>;
+
+    // Accessibility
+    tableAriaLabel?: string;
+}
 
 /**
  * Enhanced Data Table Component - Refactored Modular Version
@@ -37,7 +134,7 @@ import { EXPORT_FORMATS, exportToCsv, exportToExcel, exportToPdf } from './utils
  * - Professional loading and error states
  * - Full accessibility compliance
  */
-export const EnhancedDataTable = ({
+export const EnhancedDataTable = <T extends Record<string, any> = any>({
     // Data props
     data = [],
     columns = [],
@@ -59,60 +156,51 @@ export const EnhancedDataTable = ({
 
     // Searching & Filtering
     enableSearch = true,
-    enableFiltering = true,
     searchPlaceholder = 'Search all columns...',
 
     // Column management
     enableColumnVisibility = true,
-    enableColumnReordering = false,
 
     // Selection
     enableSelection = true,
-    enableBulkActions = true,
 
     // Export
     enableExport = true,
     exportFilename = 'data-export',
 
     // Refresh
-    enableRefresh = true,
-    onRefresh,
+    enableRefresh = false,
 
     // Density
     enableDensityToggle = true,
     defaultDensity = 'standard',
 
     // Custom actions
-    bulkActions = [],
     rowActions = [],
 
     // Event handlers
     onRowClick,
     onSelectionChange,
     onSort,
-    onFilter,
 
     // Advanced features
-    enableRealTimeUpdates = false,
-    refreshInterval = 30000,
+    onRefresh,
 
     // Styling
     sx = {},
 
     // Accessibility
     tableAriaLabel
-
-    // Note: No spreading of otherProps to prevent DOM warnings
-}) => {
+}: EnhancedDataTableProps<T>) => {
     // State management using custom hooks
     const tableState = useTableState({
-        data,
-        columns,
+        data: data as any,
+        columns: columns as any,
         defaultPageSize,
-        defaultSortBy,
+        defaultSortBy: (defaultSortBy || null) as any,
         defaultSortDirection,
         defaultDensity
-    });
+    }) as any;
 
     const {
         page,
@@ -125,10 +213,6 @@ export const EnhancedDataTable = ({
         setSortDirection,
         searchQuery,
         setSearchQuery,
-        columnFilters,
-        setColumnFilters,
-        expandedFilters,
-        setExpandedFilters,
         density,
         setDensity,
         columnVisibility,
@@ -143,7 +227,7 @@ export const EnhancedDataTable = ({
         data,
         columns,
         searchQuery,
-        columnFilters,
+        columnFilters: {},
         sortBy,
         sortDirection,
         page,
@@ -155,9 +239,8 @@ export const EnhancedDataTable = ({
         visibleColumns,
         processedData,
         paginatedData,
-        totalItems,
-        totalPages
-    } = tableData;
+        totalItems
+    } = tableData as any;
 
     // Selection management using custom hook
     const tableSelection = useTableSelection({
@@ -165,41 +248,40 @@ export const EnhancedDataTable = ({
         selectedRows,
         setSelectedRows,
         onSelectionChange
-    });
+    }) as any;
 
     const {
         toggleRowSelection,
         toggleAllSelection,
-        clearSelection,
         isAllSelected,
-        isIndeterminate,
-        selectedCount,
-        hasSelection
+        isIndeterminate
     } = tableSelection;
 
     // Auto-refresh functionality
-    const refreshIntervalRef = useRef(null);
+    const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        if (enableRealTimeUpdates && onRefresh && refreshInterval > 0) {
-            refreshIntervalRef.current = setInterval(onRefresh, refreshInterval);
+        if (enableRefresh && onRefresh) {
+            refreshIntervalRef.current = setInterval(() => {
+                onRefresh();
+            }, 30000); // 30 second refresh interval
+
             return () => {
                 if (refreshIntervalRef.current) {
                     clearInterval(refreshIntervalRef.current);
                 }
             };
         }
-    }, [enableRealTimeUpdates, onRefresh, refreshInterval]);
-
-    // Export functionality
-    const handleExport = useCallback((format) => {
-        const headers = visibleColumns.map(col => col.header || col.id);
+        return undefined;
+    }, [enableRefresh, onRefresh]);    // Export functionality
+    const handleExport = useCallback((format: string) => {
+        const headers = visibleColumns.map((col: Column<T>) => col.header || col.id);
         const exportData = selectedRows.size > 0
-            ? Array.from(selectedRows).map(index => paginatedData[index])
+            ? Array.from(selectedRows).map(index => paginatedData[index as number])
             : processedData;
 
-        const rows = exportData.map(row =>
-            visibleColumns.map(col => {
+        const rows = exportData.map((row: T) =>
+            visibleColumns.map((col: Column<T>) => {
                 const value = col.accessor ? col.accessor(row) : row[col.id];
                 return value;
             })
@@ -215,19 +297,21 @@ export const EnhancedDataTable = ({
             case 'pdf':
                 exportToPdf(headers, rows, exportFilename, title);
                 break;
+            default:
+                break;
         }
     }, [processedData, selectedRows, visibleColumns, paginatedData, exportFilename, title]);
 
     // Sorting handler
-    const handleSort = useCallback((columnId, direction) => {
-        setSortBy(columnId);
-        setSortDirection(direction);
+    const handleSort = useCallback((columnId: string, direction: string) => {
+        setSortBy(columnId as any);
+        setSortDirection(direction as any);
         resetPage();
-        onSort?.(columnId, direction);
+        onSort?.(columnId, direction as SortDirection);
     }, [setSortBy, setSortDirection, resetPage, onSort]);
 
     // Search handler with page reset
-    const handleSearchChange = useCallback((query) => {
+    const handleSearchChange = useCallback((query: string) => {
         setSearchQuery(query);
         resetPage();
     }, [setSearchQuery, resetPage]);
@@ -264,7 +348,7 @@ export const EnhancedDataTable = ({
                 setSearchQuery={handleSearchChange}
                 searchPlaceholder={searchPlaceholder}
                 enableExport={enableExport}
-                onExport={handleExport}
+                onExport={handleExport as any}
                 exportFilename={exportFilename}
                 enableColumnVisibility={enableColumnVisibility}
                 columns={columns}
@@ -283,8 +367,8 @@ export const EnhancedDataTable = ({
                 visibleColumns={visibleColumns}
                 paginatedData={paginatedData}
                 loading={loading}
-                sortBy={sortBy}
-                sortDirection={sortDirection}
+                sortBy={sortBy || undefined}
+                sortDirection={sortDirection as 'asc' | 'desc' | undefined}
                 onSort={handleSort}
                 enableSorting={enableSorting}
                 enableSelection={enableSelection}
@@ -297,7 +381,7 @@ export const EnhancedDataTable = ({
                 tableAriaLabel={tableAriaLabel}
                 title={title}
                 onRowClick={onRowClick}
-                rowActions={rowActions}
+                rowActions={rowActions as any}
             />
 
             {/* Pagination */}

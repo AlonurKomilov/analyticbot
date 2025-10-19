@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useLocation, useNavigate, NavigateOptions } from 'react-router-dom';
 
 /**
  * Navigation Context Provider
@@ -12,15 +12,113 @@ import { useLocation, useNavigate } from 'react-router-dom';
  * - Quick action configurations
  */
 
-const NavigationContext = createContext({});
+/**
+ * Type definitions
+ */
+export interface PageView {
+    id: number;
+    path: string;
+    title: string;
+    timestamp: number;
+    duration: number;
+}
+
+export interface RecentPage {
+    path: string;
+    title: string;
+    timestamp: number;
+}
+
+export interface Bookmark {
+    path: string;
+    title: string;
+    timestamp: number;
+}
+
+export interface SearchHistoryItem {
+    query: string;
+    timestamp: number;
+}
+
+export interface Notification {
+    id?: number;
+    title: string;
+    message: string;
+    type?: 'info' | 'success' | 'warning' | 'error';
+    persistent?: boolean;
+    timestamp?: number;
+    read?: boolean;
+}
+
+export interface UserPreferences {
+    theme: 'light' | 'dark';
+    sidebarCollapsed: boolean;
+    quickActions: any[];
+    recentPages: RecentPage[];
+    bookmarks: Bookmark[];
+    searchHistory: SearchHistoryItem[];
+}
+
+export interface NavigationPerformance {
+    [path: string]: {
+        duration: number;
+        timestamp: number;
+    };
+}
+
+export interface RouteInfo {
+    path: string;
+    title: string;
+    level: number;
+}
+
+export interface NavigateWithTrackingOptions extends NavigateOptions {
+    title?: string;
+}
+
+export interface NavigationContextValue {
+    currentPath: string;
+    pageTitle: string;
+    setPageTitle: (title: string) => void;
+    isDarkMode: boolean;
+    toggleTheme: () => void;
+    preferences: UserPreferences;
+    updatePreferences: (updates: Partial<UserPreferences>) => void;
+    navigate: (path: string, options?: NavigateWithTrackingOptions) => void;
+    recentPages: RecentPage[];
+    bookmarks: Bookmark[];
+    addBookmark: (bookmark: Bookmark) => void;
+    removeBookmark: (path: string) => void;
+    isBookmarked: (path: string) => boolean;
+    searchHistory: SearchHistoryItem[];
+    addSearchHistory: (query: string) => void;
+    clearSearchHistory: () => void;
+    notifications: Notification[];
+    unreadCount: number;
+    addNotification: (notification: Notification) => void;
+    markAsRead: (id: number) => void;
+    removeNotification: (id: number) => void;
+    clearAllNotifications: () => void;
+    pageViews: PageView[];
+    navigationPerformance: NavigationPerformance;
+    trackNavigationTiming: (path: string, startTime: number) => void;
+    formatPath: (path: string) => string;
+    getRouteInfo: (path: string) => RouteInfo;
+}
+
+export interface NavigationProviderProps {
+    children: ReactNode;
+}
+
+const NavigationContext = createContext<NavigationContextValue | undefined>(undefined);
 
 // Navigation analytics and tracking
 const useNavigationAnalytics = () => {
-    const [pageViews, setPageViews] = useState([]);
+    const [pageViews, setPageViews] = useState<PageView[]>([]);
     const [sessionStart] = useState(Date.now());
 
-    const trackPageView = useCallback((path, title) => {
-        const view = {
+    const trackPageView = useCallback((path: string, title: string) => {
+        const view: PageView = {
             id: Date.now(),
             path,
             title,
@@ -58,11 +156,11 @@ const useNavigationAnalytics = () => {
 
 // User preferences management
 const useUserPreferences = () => {
-    const [preferences, setPreferences] = useState(() => {
+    const [preferences, setPreferences] = useState<UserPreferences>(() => {
         try {
             const saved = localStorage.getItem('navigationPreferences');
             return saved ? JSON.parse(saved) : {
-                theme: 'light',
+                theme: 'light' as const,
                 sidebarCollapsed: false,
                 quickActions: [],
                 recentPages: [],
@@ -71,7 +169,7 @@ const useUserPreferences = () => {
             };
         } catch {
             return {
-                theme: 'light',
+                theme: 'light' as const,
                 sidebarCollapsed: false,
                 quickActions: [],
                 recentPages: [],
@@ -81,9 +179,10 @@ const useUserPreferences = () => {
         }
     });
 
-    const updatePreferences = useCallback((updates) => {
+    const updatePreferences = useCallback((updates: Partial<UserPreferences> | ((prev: UserPreferences) => Partial<UserPreferences>)) => {
         setPreferences(prev => {
-            const updated = { ...prev, ...updates };
+            const updateValues = typeof updates === 'function' ? updates(prev) : updates;
+            const updated = { ...prev, ...updateValues };
             try {
                 localStorage.setItem('navigationPreferences', JSON.stringify(updated));
             } catch (error) {
@@ -104,16 +203,7 @@ const useNavigationHistoryInternal = () => {
     const location = useLocation();
     const { preferences, updatePreferences } = useUserPreferences();
 
-    const addToRecentPages = useCallback((page) => {
-        updatePreferences(prev => {
-            const recent = prev.recentPages || [];
-            const filtered = recent.filter(p => p.path !== page.path);
-            const updated = [page, ...filtered].slice(0, 10); // Keep last 10
-            return { recentPages: updated };
-        });
-    }, [updatePreferences]);
-
-    const addBookmark = useCallback((bookmark) => {
+    const addBookmark = useCallback((bookmark: Bookmark) => {
         updatePreferences(prev => {
             const bookmarks = prev.bookmarks || [];
             const exists = bookmarks.find(b => b.path === bookmark.path);
@@ -126,7 +216,7 @@ const useNavigationHistoryInternal = () => {
         });
     }, [updatePreferences]);
 
-    const removeBookmark = useCallback((path) => {
+    const removeBookmark = useCallback((path: string) => {
         updatePreferences(prev => {
             const bookmarks = prev.bookmarks || [];
             const updated = bookmarks.filter(b => b.path !== path);
@@ -134,7 +224,7 @@ const useNavigationHistoryInternal = () => {
         });
     }, [updatePreferences]);
 
-    const isBookmarked = useCallback((path) => {
+    const isBookmarked = useCallback((path: string): boolean => {
         const bookmarks = preferences.bookmarks || [];
         return bookmarks.some(b => b.path === path);
     }, [preferences]);
@@ -149,7 +239,7 @@ const useNavigationHistoryInternal = () => {
                 .join(' ')
             : 'Dashboard';
 
-        const page = {
+        const page: RecentPage = {
             path: location.pathname,
             title,
             timestamp: Date.now()
@@ -177,13 +267,13 @@ const useNavigationHistoryInternal = () => {
 const useNavigationSearchInternal = () => {
     const { preferences, updatePreferences } = useUserPreferences();
 
-    const addSearchHistory = useCallback((query) => {
+    const addSearchHistory = useCallback((query: string) => {
         if (!query.trim()) return;
 
         updatePreferences(prev => {
             const history = prev.searchHistory || [];
             const filtered = history.filter(h => h.query !== query);
-            const updated = [
+            const updated: SearchHistoryItem[] = [
                 { query, timestamp: Date.now() },
                 ...filtered
             ].slice(0, 20); // Keep last 20 searches
@@ -204,11 +294,11 @@ const useNavigationSearchInternal = () => {
 
 // Notification management
 const useNotificationsInternal = () => {
-    const [notifications, setNotifications] = useState([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
-    const addNotification = useCallback((notification) => {
+    const addNotification = useCallback((notification: Notification) => {
         const id = Date.now();
-        const newNotification = {
+        const newNotification: Notification = {
             id,
             timestamp: Date.now(),
             read: false,
@@ -225,13 +315,13 @@ const useNotificationsInternal = () => {
         }
     }, []);
 
-    const markAsRead = useCallback((id) => {
+    const markAsRead = useCallback((id: number) => {
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
         );
     }, []);
 
-    const removeNotification = useCallback((id) => {
+    const removeNotification = useCallback((id: number) => {
         setNotifications(prev => prev.filter(n => n.id !== id));
     }, []);
 
@@ -252,7 +342,7 @@ const useNotificationsInternal = () => {
 };
 
 // Main Navigation Provider
-export const NavigationProvider = ({ children }) => {
+export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -272,7 +362,7 @@ export const NavigationProvider = ({ children }) => {
     }, [preferences.theme, updatePreferences]);
 
     // Navigation helpers
-    const navigateWithTracking = useCallback((path, options = {}) => {
+    const navigateWithTracking = useCallback((path: string, options: NavigateWithTrackingOptions = {}) => {
         navigate(path, options);
 
         // Track navigation
@@ -282,7 +372,7 @@ export const NavigationProvider = ({ children }) => {
     }, [navigate, trackPageView]);
 
     // Page title management
-    const [pageTitle, setPageTitle] = useState('Dashboard');
+    const [pageTitle, setPageTitle] = useState<string>('Dashboard');
 
     useEffect(() => {
         // Update page title based on current route
@@ -300,9 +390,9 @@ export const NavigationProvider = ({ children }) => {
     }, [location.pathname, trackPageView]);
 
     // Performance monitoring
-    const [navigationPerformance, setNavigationPerformance] = useState({});
+    const [navigationPerformance, setNavigationPerformance] = useState<NavigationPerformance>({});
 
-    const trackNavigationTiming = useCallback((path, startTime) => {
+    const trackNavigationTiming = useCallback((path: string, startTime: number) => {
         const endTime = performance.now();
         const duration = endTime - startTime;
 
@@ -316,7 +406,7 @@ export const NavigationProvider = ({ children }) => {
     }, []);
 
     // Context value
-    const contextValue = {
+    const contextValue: NavigationContextValue = {
         // Current state
         currentPath: location.pathname,
         pageTitle,
@@ -346,11 +436,11 @@ export const NavigationProvider = ({ children }) => {
         trackNavigationTiming,
 
         // Utility functions
-        formatPath: (path) => {
+        formatPath: (path: string) => {
             return path.split('/').filter(Boolean).join(' > ') || 'Dashboard';
         },
 
-        getRouteInfo: (path) => {
+        getRouteInfo: (path: string): RouteInfo => {
             // Route metadata could be enhanced here
             return {
                 path,
@@ -368,7 +458,7 @@ export const NavigationProvider = ({ children }) => {
 };
 
 // Hook to use navigation context
-export const useNavigation = () => {
+export const useNavigation = (): NavigationContextValue => {
     const context = useContext(NavigationContext);
 
     if (context === undefined) {

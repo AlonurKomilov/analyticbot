@@ -10,7 +10,9 @@ import {
     Alert,
     Grid,
     Card,
-    CardContent
+    CardContent,
+    SxProps,
+    Theme
 } from '@mui/material';
 import {
     Security as SecurityIcon,
@@ -24,7 +26,13 @@ import WatermarkTool from './WatermarkTool';
 import TheftDetection from './TheftDetection';
 
 // Tab Panel Component
-const TabPanel = ({ children, value, index, ...other }) => (
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => (
     <div
         role="tabpanel"
         hidden={value !== index}
@@ -36,10 +44,10 @@ const TabPanel = ({ children, value, index, ...other }) => (
     </div>
 );
 
-const ContentProtectionDashboard = () => {
-    const [activeTab, setActiveTab] = useState(0);
+const ContentProtectionDashboard: React.FC = () => {
+    const [activeTab, setActiveTab] = useState<number>(0);
 
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
     };
 
@@ -116,7 +124,7 @@ const ContentProtectionDashboard = () => {
                     aria-label="content protection tabs"
                     variant="fullWidth"
                     sx={{
-                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                        borderBottom: (theme: Theme) => `1px solid ${theme.palette.divider}`,
                         '& .MuiTab-root': {
                             minHeight: 64,
                             fontSize: '1rem',

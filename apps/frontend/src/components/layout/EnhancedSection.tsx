@@ -8,17 +8,31 @@
  * - Visual separators and emphasis
  */
 
-import React from 'react';
-import { Box, Typography, Divider, Tooltip } from '@mui/material';
-import { IconButton } from '../common/TouchTargetCompliance.jsx';
+import React, { ReactNode } from 'react';
+import { Box, Typography, Divider, Tooltip, SxProps, Theme } from '@mui/material';
+import { IconButton } from '../common/TouchTargetCompliance';
 import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon,
   Info as InfoIcon
 } from '@mui/icons-material';
-import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
-const EnhancedSection = ({
+interface EnhancedSectionProps {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  level?: 1 | 2 | 3;
+  collapsible?: boolean;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+  actions?: ReactNode;
+  info?: string;
+  emphasis?: boolean;
+  children: ReactNode;
+  [key: string]: any;
+}
+
+const EnhancedSection: React.FC<EnhancedSectionProps> = ({
   title,
   subtitle,
   description,
@@ -32,7 +46,7 @@ const EnhancedSection = ({
   children,
   ...props
 }) => {
-  const getTitleVariant = (level) => {
+  const getTitleVariant = (level: number): "h4" | "h5" | "h6" => {
     switch (level) {
       case 1: return 'h4';
       case 2: return 'h5';
@@ -41,7 +55,7 @@ const EnhancedSection = ({
     }
   };
 
-  const getTitleColor = (level, emphasis) => {
+  const getTitleColor = (level: number, emphasis: boolean): string => {
     if (emphasis) return 'primary.main';
     return level === 1 ? 'text.primary' : 'text.primary';
   };

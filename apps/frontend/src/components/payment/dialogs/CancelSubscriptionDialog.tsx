@@ -25,30 +25,61 @@ import {
   Cancel
 } from '@mui/icons-material';
 import { Button } from '../../common';
-import { formatDate } from '../utils/paymentUtils.js';
+import { formatDate } from '../utils/paymentUtils';
 
-const CancelSubscriptionDialog = ({
+interface Subscription {
+  current_period_end?: string;
+}
+
+interface CancellationData {
+  reason: string;
+  feedback: string;
+}
+
+interface CancelSubscriptionDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: (immediate: boolean, data: CancellationData) => void;
+  subscription?: Subscription;
+  canceling?: boolean;
+}
+
+type CancelType = 'end_of_period' | 'immediate';
+
+const CancelSubscriptionDialog: React.FC<CancelSubscriptionDialogProps> = ({
   open,
   onClose,
   onConfirm,
   subscription,
   canceling = false
 }) => {
-  const [cancelType, setCancelType] = useState('end_of_period');
-  const [reason, setReason] = useState('');
-  const [feedback, setFeedback] = useState('');
+  const [cancelType, setCancelType] = useState<CancelType>('end_of_period');
+  const [reason, setReason] = useState<string>('');
+  const [feedback, setFeedback] = useState<string>('');
 
-  const handleConfirm = () => {
+  const handleConfirm = (): void => {
     onConfirm(cancelType === 'immediate', { reason, feedback });
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     if (!canceling) {
       setCancelType('end_of_period');
       setReason('');
       setFeedback('');
       onClose();
     }
+  };
+
+  const handleCancelTypeChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setCancelType(event.target.value as CancelType);
+  };
+
+  const handleReasonChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setReason(event.target.value);
+  };
+
+  const handleFeedbackChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+    setFeedback(event.target.value);
   };
 
   return (
@@ -73,7 +104,7 @@ const CancelSubscriptionDialog = ({
           </Typography>
           <RadioGroup
             value={cancelType}
-            onChange={(e) => setCancelType(e.target.value)}
+            onChange={handleCancelTypeChange}
           >
             <FormControlLabel
               value="end_of_period"
@@ -115,7 +146,7 @@ const CancelSubscriptionDialog = ({
           </Typography>
           <RadioGroup
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={handleReasonChange}
           >
             <FormControlLabel value="too_expensive" control={<Radio />} label="Too expensive" />
             <FormControlLabel value="not_using" control={<Radio />} label="Not using enough" />
@@ -131,7 +162,7 @@ const CancelSubscriptionDialog = ({
           rows={3}
           placeholder="Additional feedback (optional)"
           value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
+          onChange={handleFeedbackChange}
           variant="outlined"
         />
       </DialogContent>

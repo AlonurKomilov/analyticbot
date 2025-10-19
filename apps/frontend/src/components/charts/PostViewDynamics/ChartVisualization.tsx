@@ -9,12 +9,44 @@ import {
     Tooltip,
     Legend
 } from 'recharts';
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme, Theme } from '@mui/material';
+
+// Types
+interface ChartDataItem {
+    timestamp: string;
+    views: number;
+}
+
+interface ProcessedDataItem extends ChartDataItem {
+    formattedTime: string;
+}
+
+interface CustomTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        name: string;
+        value: number | string;
+        color: string;
+    }>;
+    label?: string;
+}
+
+interface ChartConfig {
+    strokeColor: string;
+    gridColor: string;
+    textColor: string;
+    tickFormatter: (value: string) => string;
+}
+
+interface ChartVisualizationProps {
+    data: ChartDataItem[];
+    timeRange: string;
+}
 
 /**
  * CustomTooltip - Chart tooltip component with formatted display
  */
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
 
     return (
@@ -37,7 +69,7 @@ const CustomTooltip = ({ active, payload, label }) => {
                     variant="body2"
                     sx={{ color: entry.color }}
                 >
-                    {entry.name}: {entry.value?.toLocaleString() || 0}
+                    {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value || 0}
                 </Typography>
             ))}
         </Box>
@@ -55,18 +87,18 @@ const CustomTooltip = ({ active, payload, label }) => {
  * @param {Array} props.data - Chart data array with timestamp and views
  * @param {string} props.timeRange - Current time range for chart formatting
  */
-const ChartVisualization = React.memo(({ data, timeRange }) => {
-    const theme = useTheme();
+const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, timeRange }) => {
+    const theme = useTheme<Theme>();
 
     // Memoized chart configuration based on time range and theme
-    const chartConfig = useMemo(() => {
+    const chartConfig: ChartConfig = useMemo(() => {
         const isDark = theme.palette.mode === 'dark';
 
         return {
             strokeColor: theme.palette.primary.main,
             gridColor: isDark ? '#333' : '#f0f0f0',
             textColor: theme.palette.text.secondary,
-            tickFormatter: (value) => {
+            tickFormatter: (value: string): string => {
                 const date = new Date(value);
                 switch (timeRange) {
                     case '1h':
@@ -98,10 +130,10 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
     }, [theme, timeRange]);
 
     // Memoized processed data
-    const processedData = useMemo(() => {
+    const processedData: ProcessedDataItem[] = useMemo(() => {
         if (!data || !Array.isArray(data)) return [];
 
-        return data.map(item => ({
+        return data.map((item: ChartDataItem) => ({
             timestamp: item.timestamp,
             views: Number(item.views) || 0,
             // Format timestamp for display
@@ -138,11 +170,11 @@ const ChartVisualization = React.memo(({ data, timeRange }) => {
                     <YAxis
                         stroke={chartConfig.textColor}
                         fontSize={12}
-                        tickFormatter={(value) => value.toLocaleString()}
+                        tickFormatter={(value: number) => value.toLocaleString()}
                     />
                     <Tooltip
                         content={<CustomTooltip />}
-                        labelFormatter={(value) => chartConfig.tickFormatter(value)}
+                        labelFormatter={(value: string) => chartConfig.tickFormatter(value)}
                     />
                     <Legend />
                     <Line

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import {
   Box,
   Button,
@@ -11,19 +11,23 @@ import {
 } from '@mui/material';
 import { Email as EmailIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 
-const ForgotPasswordForm = ({ onBackToLogin }) => {
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+interface ForgotPasswordFormProps {
+  onBackToLogin: () => void;
+}
 
-  const validateEmail = (email) => {
+const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToLogin }) => {
+  const [email, setEmail] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+
+  const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!email) {
@@ -62,6 +66,10 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setEmail(e.target.value);
   };
 
   if (isSubmitted) {
@@ -115,7 +123,7 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
           label="Email Address"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           margin="normal"
           required
           disabled={isLoading}
@@ -150,6 +158,7 @@ const ForgotPasswordForm = ({ onBackToLogin }) => {
           variant="body2"
           onClick={onBackToLogin}
           sx={{ textDecoration: 'none' }}
+          type="button"
         >
           <ArrowBackIcon sx={{ fontSize: 16, mr: 0.5 }} />
           Back to Login

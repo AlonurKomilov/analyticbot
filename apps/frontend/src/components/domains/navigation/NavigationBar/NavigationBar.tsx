@@ -6,7 +6,9 @@ import {
     Box,
     IconButton,
     useMediaQuery,
-    useTheme
+    useTheme,
+    SxProps,
+    Theme
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -37,7 +39,7 @@ import GlobalDataSourceSwitch from '@components/common/GlobalDataSourceSwitch';
  *
  * Reduced from 833 lines to ~200 lines while maintaining full functionality
  */
-const NavigationBar = () => {
+const NavigationBar: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
@@ -46,7 +48,19 @@ const NavigationBar = () => {
     const { isDarkMode, toggleTheme } = useNavigation();
 
     // Mobile drawer state
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
+    const handleMobileMenuToggle = (): void => {
+        setMobileMenuOpen(true);
+    };
+
+    const handleMobileMenuClose = (): void => {
+        setMobileMenuOpen(false);
+    };
+
+    const handleLogoClick = (): void => {
+        navigate('/');
+    };
 
     return (
         <>
@@ -55,7 +69,7 @@ const NavigationBar = () => {
                 position="fixed"
                 elevation={1}
                 sx={{
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    zIndex: (theme: Theme) => theme.zIndex.drawer + 1,
                     backgroundColor: 'background.paper',
                     color: 'text.primary',
                     borderBottom: '1px solid',
@@ -67,7 +81,7 @@ const NavigationBar = () => {
                     {isMobile && (
                         <IconButton
                             edge="start"
-                            onClick={() => setMobileMenuOpen(true)}
+                            onClick={handleMobileMenuToggle}
                             sx={{ mr: 2 }}
                             aria-label="Open navigation menu"
                         >
@@ -83,12 +97,12 @@ const NavigationBar = () => {
                             cursor: 'pointer',
                             mr: 3
                         }}
-                        onClick={() => navigate('/')}
+                        onClick={handleLogoClick}
                     >
                         <Icon
                             name="analytics"
                             size="lg"
-                            sx={{ mr: 1, color: 'primary.main' }}
+                            sx={{ mr: 1, color: 'primary.main' } as SxProps<Theme>}
                         />
                         <Typography
                             variant="h6"
@@ -105,7 +119,7 @@ const NavigationBar = () => {
                     {/* Desktop breadcrumbs */}
                     {!isMobile && (
                         <SmartBreadcrumbs
-                            sx={{ ml: 2 }}
+                            sx={{ ml: 2 } as SxProps<Theme>}
                             maxItems={3}
                         />
                     )}
@@ -148,7 +162,7 @@ const NavigationBar = () => {
             {/* Mobile Navigation Drawer */}
             <MobileNavigationDrawer
                 open={mobileMenuOpen}
-                onClose={() => setMobileMenuOpen(false)}
+                onClose={handleMobileMenuClose}
             />
         </>
     );

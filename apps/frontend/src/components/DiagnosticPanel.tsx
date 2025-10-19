@@ -16,22 +16,36 @@ import {
 } from '@mui/icons-material';
 import { useAuthStore, useChannelStore, usePostStore, useAnalyticsStore, useUIStore } from '../stores';
 
-const DiagnosticPanel = () => {
+interface ConsoleMessage {
+    message: string;
+    timestamp: string;
+}
+
+interface StoreStatus {
+    dataSource: string;
+    channelsCount: number;
+    scheduledPostsCount: number;
+    user: JSX.Element;
+    plan: JSX.Element;
+    analyticsData: JSX.Element;
+}
+
+const DiagnosticPanel: React.FC = () => {
     // Access all domain stores for diagnostic purposes
     const { user } = useAuthStore();
     const { channels } = useChannelStore();
     const { scheduledPosts } = usePostStore();
     const { postDynamics } = useAnalyticsStore();
     const { dataSource } = useUIStore();
-    const [consoleErrors, setConsoleErrors] = useState([]);
-    const [consoleWarnings, setConsoleWarnings] = useState([]);
+    const [consoleErrors, setConsoleErrors] = useState<ConsoleMessage[]>([]);
+    const [consoleWarnings, setConsoleWarnings] = useState<ConsoleMessage[]>([]);
 
     // Capture console errors and warnings
     useEffect(() => {
         const originalError = console.error;
         const originalWarn = console.warn;
 
-        console.error = (...args) => {
+        console.error = (...args: any[]): void => {
             setConsoleErrors(prev => [...prev.slice(-4), {
                 message: args.join(' '),
                 timestamp: new Date().toLocaleTimeString()
@@ -39,7 +53,7 @@ const DiagnosticPanel = () => {
             originalError(...args);
         };
 
-        console.warn = (...args) => {
+        console.warn = (...args: any[]): void => {
             setConsoleWarnings(prev => [...prev.slice(-4), {
                 message: args.join(' '),
                 timestamp: new Date().toLocaleTimeString()
@@ -53,7 +67,7 @@ const DiagnosticPanel = () => {
         };
     }, []);
 
-    const getStoreStatus = () => {
+    const getStoreStatus = (): StoreStatus => {
         const loadedIcon = <><span aria-hidden="true">✅</span> Loaded</>;
         const notLoadedIcon = <><span aria-hidden="true">❌</span> Not loaded</>;
 
@@ -98,9 +112,12 @@ const DiagnosticPanel = () => {
                             <Chip label={`Posts: ${storeStatus.scheduledPostsCount}`} size="small" />
                         </Box>
                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Chip label={`User: ${storeStatus.user}`} size="small" />
-                            <Chip label={`Plan: ${storeStatus.plan}`} size="small" />
-                            <Chip label={`Analytics: ${storeStatus.analyticsData}`} size="small" />
+                            <Chip label="User:" size="small" />
+                            {storeStatus.user}
+                            <Chip label="Plan:" size="small" />
+                            {storeStatus.plan}
+                            <Chip label="Analytics:" size="small" />
+                            {storeStatus.analyticsData}
                         </Box>
                     </Stack>
                 </AccordionDetails>
@@ -114,7 +131,7 @@ const DiagnosticPanel = () => {
                     <AccordionDetails>
                         <Stack spacing={1}>
                             {consoleErrors.slice(-3).map((error, index) => (
-                                <Alert key={index} severity="error" size="small">
+                                <Alert key={index} severity="error" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
                                     <Typography variant="caption" color="text.secondary">
                                         {error.timestamp}
                                     </Typography>
@@ -136,7 +153,7 @@ const DiagnosticPanel = () => {
                     <AccordionDetails>
                         <Stack spacing={1}>
                             {consoleWarnings.slice(-3).map((warning, index) => (
-                                <Alert key={index} severity="warning" size="small">
+                                <Alert key={index} severity="warning" sx={{ '& .MuiAlert-message': { width: '100%' } }}>
                                     <Typography variant="caption" color="text.secondary">
                                         {warning.timestamp}
                                     </Typography>

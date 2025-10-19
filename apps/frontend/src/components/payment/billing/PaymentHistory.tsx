@@ -19,7 +19,7 @@ import {
   Tooltip,
   Divider
 } from '@mui/material';
-import { IconButton } from '../../common/TouchTargetCompliance.jsx';
+import { IconButton } from '../../common/TouchTargetCompliance';
 import { StatusChip } from '../../common';
 import {
   Receipt,
@@ -29,10 +29,34 @@ import {
   Schedule,
   Refresh
 } from '@mui/icons-material';
-import { formatCurrency, formatDate } from '../utils/paymentUtils.js';
+import { formatCurrency, formatDate } from '../utils/paymentUtils';
 
-const PaymentHistory = ({ paymentHistory, onRefresh }) => {
-  const getPaymentStatusIcon = (status) => {
+// Types
+type PaymentStatus = 'succeeded' | 'paid' | 'failed' | 'pending' | string;
+type StatusColor = 'success' | 'error' | 'warning' | 'default';
+
+interface PaymentMethod {
+  last4?: string;
+  brand?: string;
+}
+
+interface Payment {
+  id?: string;
+  status: PaymentStatus;
+  amount: number;
+  currency: string;
+  description?: string;
+  created: string;
+  payment_method?: PaymentMethod;
+}
+
+interface PaymentHistoryProps {
+  paymentHistory?: Payment[];
+  onRefresh: () => void;
+}
+
+const PaymentHistory: React.FC<PaymentHistoryProps> = ({ paymentHistory, onRefresh }) => {
+  const getPaymentStatusIcon = (status: PaymentStatus): JSX.Element => {
     switch (status) {
       case 'succeeded':
       case 'paid':
@@ -46,7 +70,7 @@ const PaymentHistory = ({ paymentHistory, onRefresh }) => {
     }
   };
 
-  const getPaymentStatusColor = (status) => {
+  const getPaymentStatusColor = (status: PaymentStatus): StatusColor => {
     switch (status) {
       case 'succeeded':
       case 'paid':

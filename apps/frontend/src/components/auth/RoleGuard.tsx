@@ -5,11 +5,57 @@
  * Integrates with AuthContext to provide RBAC functionality.
  */
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Types
+export type RoleType = 'guest' | 'readonly' | 'user' | 'analyst' | 'moderator' | 'admin' | 'superadmin';
+export type PermissionType = string;
+
+interface RoleHierarchy {
+  [key: string]: number;
+}
+
+interface RolePermissions {
+  [key: string]: PermissionType[];
+}
+
+interface RoleGuardProps {
+  children: ReactNode;
+  requiredRole: RoleType;
+  fallback?: ReactNode;
+  requireExact?: boolean;
+}
+
+interface PermissionGuardProps {
+  children: ReactNode;
+  requiredPermission: PermissionType;
+  fallback?: ReactNode;
+}
+
+interface GuardComponentProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface RBACHook {
+  user: any;
+  userRole: RoleType;
+  hasRole: (requiredRole: RoleType, requireExact?: boolean) => boolean;
+  hasPermission: (permission: PermissionType) => boolean;
+  isAdmin: boolean;
+  isAnalyst: boolean;
+  isModerator: boolean;
+  isUser: boolean;
+  canRead: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canExport: boolean;
+}
+
 // Role hierarchy for permission checks
-const ROLE_HIERARCHY = {
+const ROLE_HIERARCHY: RoleHierarchy = {
   'guest': 0,
   'readonly': 1,
   'user': 2,
@@ -20,7 +66,7 @@ const ROLE_HIERARCHY = {
 };
 
 // Permission mappings by role
-const ROLE_PERMISSIONS = {
+const ROLE_PERMISSIONS: RolePermissions = {
   'guest': ['analytics:read', 'report:read'],
   'readonly': ['analytics:read', 'report:read', 'user:read', 'settings:read'],
   'user': ['analytics:read', 'analytics:create', 'report:read', 'report:create', 'user:read', 'settings:read'],
@@ -33,8 +79,8 @@ const ROLE_PERMISSIONS = {
 /**
  * Check if user has required role or higher
  */
-export const hasRole = (userRole, requiredRole) => {
-  const userLevel = ROLE_HIERARCHY[userRole?.toLowerCase()] || 0;
+export const hasRole = (userRole: string | undefined | null, requiredRole: RoleType): boolean => {
+  const userLevel = ROLE_HIERARCHY[userRole?.toLowerCase() ?? ''] || 0;
   const requiredLevel = ROLE_HIERARCHY[requiredRole?.toLowerCase()] || 0;
   return userLevel >= requiredLevel;
 };
@@ -42,15 +88,15 @@ export const hasRole = (userRole, requiredRole) => {
 /**
  * Check if user has specific permission
  */
-export const hasPermission = (userRole, permission) => {
-  const permissions = ROLE_PERMISSIONS[userRole?.toLowerCase()] || [];
+export const hasPermission = (userRole: string | undefined | null, permission: PermissionType): boolean => {
+  const permissions = ROLE_PERMISSIONS[userRole?.toLowerCase() ?? ''] || [];
   return permissions.includes('*') || permissions.includes(permission);
 };
 
 /**
  * RoleGuard Component - Shows content only if user has required role
  */
-export const RoleGuard = ({
+export const RoleGuard: React.FC<RoleGuardProps> = ({
   children,
   requiredRole,
   fallback = null,
@@ -59,7 +105,7 @@ export const RoleGuard = ({
   const { user } = useAuth();
 
   if (!user) {
-    return fallback;
+    return <>{fallback}</>;
   }
 
   const userRole = user.role || 'guest';
@@ -69,13 +115,13 @@ export const RoleGuard = ({
     ? userRole.toLowerCase() === requiredRole.toLowerCase()
     : hasRole(userRole, requiredRole);
 
-  return hasRequiredRole ? children : fallback;
+  return hasRequiredRole ? <>{children}</> : <>{fallback}</>;
 };
 
 /**
  * PermissionGuard Component - Shows content only if user has required permission
  */
-export const PermissionGuard = ({
+export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   children,
   requiredPermission,
   fallback = null
@@ -83,19 +129,19 @@ export const PermissionGuard = ({
   const { user } = useAuth();
 
   if (!user) {
-    return fallback;
+    return <>{fallback}</>;
   }
 
   const userRole = user.role || 'guest';
   const hasRequiredPermission = hasPermission(userRole, requiredPermission);
 
-  return hasRequiredPermission ? children : fallback;
+  return hasRequiredPermission ? <>{children}</> : <>{fallback}</>;
 };
 
 /**
  * AdminOnly Component - Shows content only for admin users
  */
-export const AdminOnly = ({ children, fallback = null }) => {
+export const AdminOnly: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
   return (
     <RoleGuard requiredRole="admin" fallback={fallback}>
       {children}
@@ -106,7 +152,7 @@ export const AdminOnly = ({ children, fallback = null }) => {
 /**
  * AnalystOrHigher Component - Shows content for analyst role and above
  */
-export const AnalystOrHigher = ({ children, fallback = null }) => {
+export const AnalystOrHigher: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
   return (
     <RoleGuard requiredRole="analyst" fallback={fallback}>
       {children}
@@ -117,7 +163,7 @@ export const AnalystOrHigher = ({ children, fallback = null }) => {
 /**
  * UserOrHigher Component - Shows content for user role and above (excludes guests)
  */
-export const UserOrHigher = ({ children, fallback = null }) => {
+export const UserOrHigher: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
   return (
     <RoleGuard requiredRole="user" fallback={fallback}>
       {children}
@@ -128,20 +174,20 @@ export const UserOrHigher = ({ children, fallback = null }) => {
 /**
  * Hook for role-based logic in components
  */
-export const useRBAC = () => {
+export const useRBAC = (): RBACHook => {
   const { user } = useAuth();
 
-  const userRole = user?.role || 'guest';
+  const userRole: RoleType = (user?.role as RoleType) || 'guest';
 
   return {
     user,
     userRole,
-    hasRole: (requiredRole, requireExact = false) => {
+    hasRole: (requiredRole: RoleType, requireExact: boolean = false): boolean => {
       return requireExact
         ? userRole.toLowerCase() === requiredRole.toLowerCase()
         : hasRole(userRole, requiredRole);
     },
-    hasPermission: (permission) => hasPermission(userRole, permission),
+    hasPermission: (permission: PermissionType): boolean => hasPermission(userRole, permission),
     isAdmin: hasRole(userRole, 'admin'),
     isAnalyst: hasRole(userRole, 'analyst'),
     isModerator: hasRole(userRole, 'moderator'),

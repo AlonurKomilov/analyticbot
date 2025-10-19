@@ -211,27 +211,3 @@ class RepositoryProvider(ABC):
     async def get_analytics_repository(self) -> AnalyticsRepository:
         """Get analytics repository"""
         ...
-
-
-class ServiceLocator:
-    """
-    Simple service locator for backward compatibility.
-    Used only during migration - prefer constructor injection.
-    """
-
-    _services: dict[str, Any] = {}
-
-    @classmethod
-    def register(cls, name: str, service: Any) -> None:
-        """Register a service"""
-        cls._services[name] = service
-
-    @classmethod
-    def get(cls, name: str, default=None) -> Any:
-        """Get a service"""
-        return cls._services.get(name, default)
-
-    @classmethod
-    def clear(cls) -> None:
-        """Clear all services (for testing)"""
-        cls._services.clear()

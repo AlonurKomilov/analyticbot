@@ -132,7 +132,3 @@ class DemoConfig(BaseSettings):
 
 # Global demo configuration instance
 demo_config = DemoConfig()
-
-# Backward compatibility - maintain old import path for transition period
-DemoModeConfig = DemoConfig  # Allow old class name
-DemoModeStrategy = DemoStrategy  # Allow old enum name

@@ -243,7 +243,3 @@ async def close_container():
     if _container:
         await _container.close()
         _container = None
-
-
-# Create container alias for backward compatibility
-container = get_container

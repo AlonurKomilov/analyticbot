@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
     TextField,
     FormControl,
@@ -6,24 +6,98 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Checkbox,
-    FormControlLabel,
-    RadioGroup,
-    Radio,
     Chip,
     Box,
     Typography,
-    Button
+    Button,
+    TextFieldProps,
+    SxProps,
+    Theme
 } from '@mui/material';
 
 /**
  * Enhanced form field components with built-in validation and consistent styling
  */
 
+interface ValidationRules {
+    [key: string]: any;
+}
+
+interface FormErrors {
+    [key: string]: string;
+}
+
+interface ValidatedTextFieldProps extends Omit<TextFieldProps, 'error' | 'helperText'> {
+    name: string;
+    value?: string;
+    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    validation?: ValidationRules;
+    errors?: FormErrors;
+    required?: boolean;
+    label?: string;
+    placeholder?: string;
+    multiline?: boolean;
+    rows?: number;
+    type?: string;
+    fullWidth?: boolean;
+    variant?: 'outlined' | 'filled' | 'standard';
+    size?: 'small' | 'medium';
+    helperText?: string;
+    showCharacterCount?: boolean;
+    maxLength?: number;
+    sx?: SxProps<Theme>;
+}
+
+interface SelectOption {
+    value: string | number;
+    label: string;
+    disabled?: boolean;
+}
+
+interface ValidatedSelectProps {
+    name: string;
+    value?: string | number | string[] | number[];
+    onChange?: (event: any) => void;
+    options?: SelectOption[];
+    errors?: FormErrors;
+    required?: boolean;
+    label?: string;
+    placeholder?: string;
+    fullWidth?: boolean;
+    variant?: 'outlined' | 'filled' | 'standard';
+    size?: 'small' | 'medium';
+    helperText?: string;
+    multiple?: boolean;
+    sx?: SxProps<Theme>;
+    [key: string]: any;
+}
+
+interface FormSectionProps {
+    title?: string;
+    subtitle?: string;
+    children: React.ReactNode;
+    required?: boolean;
+    sx?: SxProps<Theme>;
+}
+
+interface FormActionsProps {
+    onSubmit?: () => void;
+    onCancel?: () => void;
+    onReset?: () => void;
+    submitLabel?: string;
+    cancelLabel?: string;
+    resetLabel?: string;
+    loading?: boolean;
+    disabled?: boolean;
+    submitColor?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+    align?: 'left' | 'center' | 'right' | 'space-between';
+    sx?: SxProps<Theme>;
+}
+
 /**
  * ValidatedTextField - TextField with built-in validation
  */
-export const ValidatedTextField = React.forwardRef(({
+export const ValidatedTextField = React.forwardRef<HTMLDivElement, ValidatedTextFieldProps>(({
     name,
     value,
     onChange,
@@ -47,7 +121,7 @@ export const ValidatedTextField = React.forwardRef(({
     const error = errors[name];
     const characterCount = value?.length || 0;
 
-    const handleChange = useCallback((event) => {
+    const handleChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = event.target.value;
 
         // Apply maxLength if specified
@@ -58,7 +132,7 @@ export const ValidatedTextField = React.forwardRef(({
         onChange?.(event);
     }, [onChange, maxLength]);
 
-    const getHelperText = () => {
+    const getHelperText = (): string | undefined => {
         if (error) return error;
         if (showCharacterCount && maxLength) {
             return `${characterCount}/${maxLength} characters${helperText ? ` • ${helperText}` : ''}`;
@@ -107,7 +181,7 @@ ValidatedTextField.displayName = 'ValidatedTextField';
 /**
  * ValidatedSelect - Select with built-in validation
  */
-export const ValidatedSelect = ({
+export const ValidatedSelect: React.FC<ValidatedSelectProps> = ({
     name,
     value,
     onChange,
@@ -142,11 +216,11 @@ export const ValidatedSelect = ({
                 label={required ? `${label} *` : label}
                 multiple={multiple}
                 displayEmpty
-                renderValue={multiple ? (selected) => {
-                    if (selected.length === 0) return <em>{placeholder}</em>;
+                renderValue={multiple ? (selected: any) => {
+                    if ((selected as any[]).length === 0) return <em>{placeholder}</em>;
                     return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((val) => (
+                            {(selected as any[]).map((val: any) => (
                                 <Chip key={val} label={val} size="small" />
                             ))}
                         </Box>
@@ -179,7 +253,7 @@ export const ValidatedSelect = ({
 /**
  * FormSection - Reusable form section with consistent styling
  */
-export const FormSection = ({
+export const FormSection: React.FC<FormSectionProps> = ({
     title,
     subtitle,
     children,
@@ -214,7 +288,7 @@ export const FormSection = ({
 /**
  * FormActions - Standardized form action buttons
  */
-export const FormActions = ({
+export const FormActions: React.FC<FormActionsProps> = ({
     onSubmit,
     onCancel,
     onReset,

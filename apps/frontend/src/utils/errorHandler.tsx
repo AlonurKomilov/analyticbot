@@ -1,10 +1,41 @@
+/**
+ * Error Handler Utility
+ *
+ * Centralized error handling for the application with Sentry integration,
+ * user-friendly error messages, and retry logic.
+ */
+
 import * as Sentry from "@sentry/react";
+
+interface ErrorContext {
+    component?: string;
+    action?: string;
+    [key: string]: any;
+}
+
+interface ApiErrorResponse {
+    response?: {
+        status?: number;
+        statusText?: string;
+        data?: {
+            detail?: string;
+        };
+    };
+    message?: string;
+}
+
+interface StructuredError {
+    type: string;
+    message: string;
+    status?: number;
+    canRetry: boolean;
+}
 
 export class ErrorHandler {
     /**
      * Centralized error handling for the application
      */
-    static handleError(error, context = {}) {
+    static handleError(error: Error, context: ErrorContext = {}) {
         // Log to console for development
         console.error('Application Error:', {
             message: error.message,
@@ -23,14 +54,14 @@ export class ErrorHandler {
         });
 
         // Show user-friendly error message
-        this.showUserError(error, context);
+        this.showUserError(error);
     }
 
     /**
      * Handle API errors specifically
      */
-    static handleApiError(error, endpoint, context = {}) {
-        const apiContext = {
+    static handleApiError(error: ApiErrorResponse, endpoint: string, context: ErrorContext = {}): StructuredError {
+        const apiContext: ErrorContext = {
             ...context,
             endpoint,
             errorType: 'api_error',
@@ -38,7 +69,7 @@ export class ErrorHandler {
             statusText: error.response?.statusText
         };
 
-        this.handleError(error, apiContext);
+        this.handleError(error as Error, apiContext);
 
         // Return structured error for UI handling
         return {
@@ -52,7 +83,7 @@ export class ErrorHandler {
     /**
      * Show user-friendly error notifications
      */
-    static showUserError(error) {
+    static showUserError(error: ApiErrorResponse) {
         const message = this.getErrorMessage(error);
 
         // Use browser notification API if available
@@ -70,7 +101,7 @@ export class ErrorHandler {
     /**
      * Get user-friendly error message
      */
-    static getErrorMessage(error) {
+    static getErrorMessage(error: ApiErrorResponse): string {
         if (error.response?.data?.detail) {
             return error.response.data.detail;
         }
@@ -85,25 +116,25 @@ export class ErrorHandler {
     /**
      * Determine if operation can be retried
      */
-    static canRetry(error) {
+    static canRetry(error: ApiErrorResponse): boolean {
         const retryableStatuses = [408, 429, 500, 502, 503, 504];
-        return retryableStatuses.includes(error.response?.status);
+        return retryableStatuses.includes(error.response?.status || 0);
     }
 }
 
 /**
  * Higher-order component for error boundary
  */
-export const withErrorBoundary = (Component, fallbackComponent = null) => {
+export const withErrorBoundary = (Component: React.ComponentType<any>) => {
     return Sentry.withErrorBoundary(Component, {
-        fallback: fallbackComponent || (({ error, resetError }) => (
+        fallback: ({ error, resetError }: any) => (
             <div style={{ padding: '20px', textAlign: 'center' }}>
                 <h2>Something went wrong</h2>
                 <p>{error.message}</p>
                 <button onClick={resetError}>Try again</button>
             </div>
-        )),
-        beforeCapture: (scope) => {
+        ),
+        beforeCapture: (scope: any) => {
             scope.setTag('errorBoundary', true);
         }
     });
@@ -113,12 +144,12 @@ export const withErrorBoundary = (Component, fallbackComponent = null) => {
  * Hook for handling async operations with error handling
  */
 export const useErrorHandler = () => {
-    const handleAsyncError = (asyncFn, context = {}) => {
-        return async (...args) => {
+    const handleAsyncError = (asyncFn: Function, context: ErrorContext = {}) => {
+        return async (...args: any[]) => {
             try {
                 return await asyncFn(...args);
             } catch (error) {
-                ErrorHandler.handleError(error, context);
+                ErrorHandler.handleError(error as Error, context);
                 throw error; // Re-throw for component handling
             }
         };

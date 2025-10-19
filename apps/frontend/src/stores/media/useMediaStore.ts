@@ -135,7 +135,7 @@ export const useMediaStore = create<MediaState>()(
 
       } catch (error) {
         console.error('❌ Media upload error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'MediaStore',
           action: 'uploadMedia',
           fileType: file.type,

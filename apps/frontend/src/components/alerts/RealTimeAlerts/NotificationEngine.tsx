@@ -1,24 +1,47 @@
 import React, { useEffect, useRef } from 'react';
 
+interface AlertRule {
+  id: string;
+  enabled: boolean;
+  type: 'growth' | 'engagement' | 'subscribers' | 'views';
+  condition: 'greater_than' | 'less_than' | 'milestone' | 'surge';
+  threshold: number;
+  name: string;
+  color?: string;
+  icon?: string;
+}
+
+interface Alert {
+  id: string;
+  ruleId: string;
+  title: string;
+  message: string;
+  type?: string;
+  timestamp: string;
+  icon?: string;
+  read: boolean;
+}
+
+interface NotificationEngineProps {
+  alertRules?: AlertRule[];
+  onNewAlerts?: (alerts: Alert[]) => void;
+  existingAlerts?: Alert[];
+  checkInterval?: number;
+}
+
 /**
  * NotificationEngine - Handles real-time alert processing and WebSocket connections
  *
  * Optimized for high-frequency updates and memory management in multi-user scenarios.
  * Manages alert checking intervals, data simulation, and notification generation.
- *
- * @param {Object} props - Component props
- * @param {Array} props.alertRules - Array of alert rule configurations
- * @param {Function} props.onNewAlerts - Callback when new alerts are generated
- * @param {Array} props.existingAlerts - Current alerts to prevent duplicates
- * @param {number} props.checkInterval - Interval for checking alerts in ms (default: 30000)
  */
-const NotificationEngine = React.memo(({
+const NotificationEngine: React.FC<NotificationEngineProps> = React.memo(({
   alertRules = [],
   onNewAlerts,
   existingAlerts = [],
   checkInterval = 30000
 }) => {
-  const intervalRef = useRef(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Alert checking logic
   const checkAlerts = React.useCallback(async () => {
@@ -32,7 +55,7 @@ const NotificationEngine = React.memo(({
         views: 5000 + Math.floor(Math.random() * 3000), // 5000-8000
       };
 
-      const newAlerts = [];
+      const newAlerts: Alert[] = [];
       const currentTime = new Date();
 
       alertRules.forEach(rule => {
@@ -78,7 +101,7 @@ const NotificationEngine = React.memo(({
           // Check if we haven't already shown this alert recently (prevent spam)
           const recentAlert = existingAlerts.find(alert =>
             alert.ruleId === rule.id &&
-            (currentTime - new Date(alert.timestamp)) < 300000 // 5 minutes
+            (currentTime.getTime() - new Date(alert.timestamp).getTime()) < 300000 // 5 minutes
           );
 
           if (!recentAlert) {

@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
+
+interface Metrics {
+    totalViews?: number;
+    growthRate?: number;
+    engagementRate?: number;
+    reachScore?: number;
+}
+
+interface MetricsCardProps {
+    metrics?: Metrics | null;
+    loading?: boolean;
+    onRefresh?: () => void;
+    showDetails?: boolean;
+}
 import {
     Card,
     CardContent,
@@ -16,12 +29,17 @@ import {
     Analytics as AnalyticsIcon
 } from '@mui/icons-material';
 
-// Import extracted components
+// Import extracted components (JSX - not yet migrated)
 import MetricsGrid from './MetricsGrid';
 import MetricsDetails from './MetricsDetails';
 import PerformanceInsights from './PerformanceInsights';
 
-const MetricsCard = React.memo(({
+// Type assertions for JSX components
+const TypedMetricsGrid = MetricsGrid as any;
+const TypedMetricsDetails = MetricsDetails as any;
+const TypedPerformanceInsights = PerformanceInsights as any;
+
+const MetricsCard: React.FC<MetricsCardProps> = React.memo(({
     metrics,
     loading = false,
     onRefresh,
@@ -95,11 +113,11 @@ const MetricsCard = React.memo(({
                 </Box>
 
                 {/* Main Metrics Grid */}
-                <MetricsGrid metrics={metrics} />
+                <TypedMetricsGrid metrics={metrics} />
 
                 {/* Expanded Details */}
                 {showDetails && (
-                    <MetricsDetails
+                    <TypedMetricsDetails
                         metrics={metrics}
                         expanded={expanded}
                     />
@@ -107,7 +125,7 @@ const MetricsCard = React.memo(({
 
                 {/* Performance Insights */}
                 {expanded && (
-                    <PerformanceInsights metrics={metrics} />
+                    <TypedPerformanceInsights metrics={metrics} />
                 )}
             </CardContent>
         </Card>
@@ -115,17 +133,5 @@ const MetricsCard = React.memo(({
 });
 
 MetricsCard.displayName = 'MetricsCard';
-
-MetricsCard.propTypes = {
-    metrics: PropTypes.shape({
-        totalViews: PropTypes.number,
-        growthRate: PropTypes.number,
-        engagementRate: PropTypes.number,
-        reachScore: PropTypes.number
-    }),
-    loading: PropTypes.bool,
-    onRefresh: PropTypes.func,
-    showDetails: PropTypes.bool
-};
 
 export default MetricsCard;

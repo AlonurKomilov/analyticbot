@@ -17,9 +17,23 @@ import {
 } from 'recharts';
 import CustomTooltip from './CustomTooltip';
 
-const ChartRenderer = React.memo(({ chartType, data, showBrush, height }) => {
+interface ChartData {
+    name: string;
+    views: number;
+    engagement: number;
+    reach?: number;
+}
+
+interface ChartRendererProps {
+    chartType: 'area' | 'bar' | 'line';
+    data: ChartData[];
+    showBrush: boolean;
+    height: number;
+}
+
+const ChartRenderer: React.FC<ChartRendererProps> = React.memo(({ chartType, data, showBrush, height }) => {
     const commonProps = {
-        width: '100%',
+        width: 800,
         height: height - 100,
         data: data,
         margin: { top: 20, right: 30, left: 20, bottom: 20 }

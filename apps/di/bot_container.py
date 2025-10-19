@@ -61,12 +61,18 @@ async def _create_bot_analytics_adapter(core_analytics_service=None, bot=None, *
     """Create bot analytics adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
+        from infra.adapters.analytics.aiogram_bot_adapter import AiogramBotAdapter
 
         # Only create if core service is available
         if core_analytics_service is None:
             return None
 
-        return BotAnalyticsAdapter(batch_processor=core_analytics_service, bot=bot)
+        # Create telegram port from bot (factory pattern in DI container)
+        telegram_port = AiogramBotAdapter(bot) if bot else None
+
+        return BotAnalyticsAdapter(
+            batch_processor=core_analytics_service, telegram_port=telegram_port
+        )
     except ImportError as e:
         logger.warning(f"Bot analytics adapter not available: {e}")
         return None

@@ -96,7 +96,7 @@ export const useChannelStore = create<ChannelState>()(
         }
       } catch (error) {
         console.error('❌ Channel validation error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'validateChannel',
           username
@@ -153,7 +153,7 @@ export const useChannelStore = create<ChannelState>()(
         console.log('✅ Channel added successfully:', newChannel);
       } catch (error) {
         console.error('❌ Add channel error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'addChannel',
           username: channelData.username
@@ -220,7 +220,7 @@ export const useChannelStore = create<ChannelState>()(
         console.log('✅ Channel deleted successfully');
       } catch (error) {
         console.error('❌ Delete channel error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'deleteChannel',
           channelId

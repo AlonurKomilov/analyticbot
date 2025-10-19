@@ -121,6 +121,7 @@ dev = [
 
 [tool.importlinter]
 root_packages = ["apps", "core", "infra"]
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "Clean Architecture Layers Contract"
@@ -170,12 +171,20 @@ forbidden_modules = [
 ]
 
 [[tool.importlinter.contracts]]
-name = "Repository Factory Pattern"
+name = "Apps Clean Architecture (Phase 5 Complete)"
 type = "forbidden"
-source_modules = ["apps"]
-forbidden_modules = [
-    "infra.repositories"
+source_modules = [
+    "apps.api.routers",
+    "apps.api.services",
+    "apps.bot.handlers",
+    "apps.bot.services",
+    "apps.bot.adapters"
 ]
-ignore_imports = [
-    "apps.shared.factory -> infra.repositories"
-]
+forbidden_modules = ["infra"]
+
+# Note: apps.di.*, apps.api.di_analytics, and apps.mtproto.* intentionally allowed
+# - apps.di.* are DI containers (composition roots) - MUST import concrete implementations
+# - apps.api.di_analytics is a specialized DI container for Analytics V2
+# - apps.mtproto.* is an infrastructure adapter layer
+# - apps.bot.utils, apps.shared.* contain optional utilities
+# These are NOT in source_modules above, so they can freely import infra

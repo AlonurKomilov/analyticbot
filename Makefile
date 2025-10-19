@@ -13,7 +13,7 @@ endif
 # Include development commands
 include Makefile.dev
 
-.PHONY: help up down logs ps migrate lint typecheck test test-all export-reqs
+.PHONY: help up down logs ps migrate lint lint-imports typecheck test test-all export-reqs
 
 help:
 	@echo "🚀 AnalyticBot - Hybrid Development Environment"
@@ -58,7 +58,9 @@ help:
 	@echo ""
 	@echo "🔄 SYNC & DEPLOY:"
 	@echo "  sync        - Sync dev changes to Docker"
+		@echo "🔬 CODE QUALITY:"
 	@echo "  lint        - Run code linting"
+	@echo "  lint-imports - Validate Clean Architecture (Phase 6)"
 	@echo "  typecheck   - Run type checking"
 	@echo ""
 	@echo "💡 Workflow: dev-start → code → test → ssl-dev → prod-proxy"
@@ -96,6 +98,10 @@ sync:
 lint:
 	@echo "🔍 Running linter..."
 	ruff check .
+
+lint-imports:
+	@echo "🔒 Validating Clean Architecture boundaries (Phase 6)..."
+	lint-imports
 
 typecheck:
 	@echo "🏷️ Running type checker..."

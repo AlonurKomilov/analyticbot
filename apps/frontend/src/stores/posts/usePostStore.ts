@@ -105,7 +105,7 @@ export const usePostStore = create<PostState>()(
         console.log('✅ Post created successfully:', newPost);
       } catch (error) {
         console.error('❌ Create post error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'createPost',
           postData
@@ -137,7 +137,7 @@ export const usePostStore = create<PostState>()(
         console.log('✅ Post scheduled successfully:', scheduledPost);
       } catch (error) {
         console.error('❌ Schedule post error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'schedulePost',
           postData
@@ -173,7 +173,7 @@ export const usePostStore = create<PostState>()(
         console.log('✅ Post updated successfully');
       } catch (error) {
         console.error('❌ Update post error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'updatePost',
           postId,
@@ -208,7 +208,7 @@ export const usePostStore = create<PostState>()(
         console.log('✅ Post deleted successfully');
       } catch (error) {
         console.error('❌ Delete post error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'deletePost',
           postId

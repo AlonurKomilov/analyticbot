@@ -6,6 +6,29 @@
  */
 
 import React from 'react';
+
+interface SubscriptionLimits {
+    users?: number;
+    storage?: number;
+    api_calls?: number;
+    reports?: number;
+}
+
+interface Subscription {
+    limits?: SubscriptionLimits;
+}
+
+interface Usage {
+    active_users?: number;
+    storage_used?: number;
+    api_calls?: number;
+    reports_generated?: number;
+}
+
+interface UsageMetricsProps {
+    subscription: Subscription;
+    usage: Usage | null;
+}
 import {
   Card,
   CardContent,
@@ -23,7 +46,7 @@ import {
   BarChart
 } from '@mui/icons-material';
 
-const UsageMetrics = ({ subscription, usage }) => {
+const UsageMetrics: React.FC<UsageMetricsProps> = ({ subscription, usage }) => {
   if (!usage) return null;
 
   const metrics = [
@@ -58,11 +81,11 @@ const UsageMetrics = ({ subscription, usage }) => {
     }
   ];
 
-  const getUsagePercentage = (current, limit) => {
+  const getUsagePercentage = (current: number, limit: number): number => {
     return limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
   };
 
-  const getProgressColor = (percentage) => {
+  const getProgressColor = (percentage: number): 'error' | 'warning' | 'primary' => {
     if (percentage >= 90) return 'error';
     if (percentage >= 75) return 'warning';
     return 'primary';

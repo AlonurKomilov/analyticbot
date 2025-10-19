@@ -9,11 +9,19 @@
  * - Reduced cognitive load
  */
 
-import React from 'react';
-import { Box, Grid, useTheme, useMediaQuery } from '@mui/material';
-import { DESIGN_TOKENS } from '../../theme/designTokens.js';
+import React, { ReactNode } from 'react';
+import { Box, Grid } from '@mui/material';
 
-const EnhancedDashboardLayout = ({
+interface EnhancedDashboardLayoutProps {
+  header?: ReactNode;
+  primaryContent?: ReactNode;
+  secondaryContent?: ReactNode;
+  quickActions?: ReactNode;
+  systemStatus?: ReactNode;
+  children?: ReactNode;
+}
+
+const EnhancedDashboardLayout: React.FC<EnhancedDashboardLayoutProps> = ({
   header,
   primaryContent,
   secondaryContent,
@@ -21,9 +29,6 @@ const EnhancedDashboardLayout = ({
   systemStatus,
   children
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
   return (
     <Box

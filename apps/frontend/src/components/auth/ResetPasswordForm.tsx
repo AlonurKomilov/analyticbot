@@ -19,25 +19,44 @@ import {
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 
-const ResetPasswordForm = () => {
+// Type definitions
+interface FormData {
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface PasswordChecks {
+  length: boolean;
+  lowercase: boolean;
+  uppercase: boolean;
+  numbers: boolean;
+  special: boolean;
+}
+
+interface PasswordStrength {
+  strength: number;
+  checks: PasswordChecks;
+}
+
+const ResetPasswordForm: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     newPassword: '',
     confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<boolean>(false);
 
   // Password strength calculation
-  const calculatePasswordStrength = (password) => {
+  const calculatePasswordStrength = (password: string): PasswordStrength => {
     let strength = 0;
-    const checks = {
+    const checks: PasswordChecks = {
       length: password.length >= 8,
       lowercase: /[a-z]/.test(password),
       uppercase: /[A-Z]/.test(password),
@@ -51,13 +70,13 @@ const ResetPasswordForm = () => {
 
   const { strength, checks } = calculatePasswordStrength(formData.newPassword);
 
-  const getStrengthColor = () => {
+  const getStrengthColor = (): 'error' | 'warning' | 'success' => {
     if (strength <= 2) return 'error';
     if (strength <= 3) return 'warning';
     return 'success';
   };
 
-  const getStrengthText = () => {
+  const getStrengthText = (): string => {
     if (strength <= 2) return 'Weak';
     if (strength <= 3) return 'Medium';
     return 'Strong';
@@ -69,7 +88,7 @@ const ResetPasswordForm = () => {
     }
   }, [token, navigate]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -78,7 +97,7 @@ const ResetPasswordForm = () => {
     setError('');
   };
 
-  const validateForm = () => {
+  const validateForm = (): string | null => {
     if (!formData.newPassword) {
       return 'New password is required';
     }
@@ -98,7 +117,7 @@ const ResetPasswordForm = () => {
     return null;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     const validationError = validateForm();
@@ -270,7 +289,7 @@ const ResetPasswordForm = () => {
           margin="normal"
           required
           disabled={isLoading}
-          error={formData.confirmPassword && formData.newPassword !== formData.confirmPassword}
+          error={!!(formData.confirmPassword && formData.newPassword !== formData.confirmPassword)}
           helperText={
             formData.confirmPassword && formData.newPassword !== formData.confirmPassword
               ? 'Passwords do not match'

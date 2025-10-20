@@ -5,7 +5,7 @@
  * backup codes, and verification workflow.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -33,19 +33,29 @@ import {
   QrCode as QrCodeIcon,
   FileCopy as CopyIcon,
   CheckCircle as CheckIcon,
-  Warning as WarningIcon,
   Download as DownloadIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 
-const MFASetup = ({ onComplete }) => {
+// Type definitions
+interface MFASetupProps {
+  onComplete?: () => void;
+}
+
+interface SetupData {
+  qr_code: string;
+  secret: string;
+  backup_codes: string[];
+}
+
+const MFASetup: React.FC<MFASetupProps> = ({ onComplete }) => {
   const { user } = useAuth();
-  const [activeStep, setActiveStep] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [setupData, setSetupData] = useState(null);
-  const [verificationToken, setVerificationToken] = useState('');
-  const [error, setError] = useState('');
-  const [backupCodesDialog, setBackupCodesDialog] = useState(false);
+  const [activeStep, setActiveStep] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [setupData, setSetupData] = useState<SetupData | null>(null);
+  const [verificationToken, setVerificationToken] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [backupCodesDialog, setBackupCodesDialog] = useState<boolean>(false);
 
   const steps = [
     'Setup MFA',
@@ -55,7 +65,7 @@ const MFASetup = ({ onComplete }) => {
   ];
 
   // Start MFA setup
-  const initiateSetup = async () => {
+  const initiateSetup = async (): Promise<void> => {
     setLoading(true);
     setError('');
 
@@ -85,7 +95,7 @@ const MFASetup = ({ onComplete }) => {
   };
 
   // Verify setup token
-  const verifySetup = async () => {
+  const verifySetup = async (): Promise<void> => {
     if (!verificationToken || verificationToken.length !== 6) {
       setError('Please enter a 6-digit code');
       return;
@@ -121,12 +131,12 @@ const MFASetup = ({ onComplete }) => {
   };
 
   // Copy to clipboard
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text: string): void => {
     navigator.clipboard.writeText(text);
   };
 
   // Download backup codes
-  const downloadBackupCodes = () => {
+  const downloadBackupCodes = (): void => {
     if (!setupData?.backup_codes) return;
 
     const content = [
@@ -151,7 +161,7 @@ const MFASetup = ({ onComplete }) => {
   };
 
   // Complete setup
-  const completeSetup = () => {
+  const completeSetup = (): void => {
     setBackupCodesDialog(false);
     if (onComplete) {
       onComplete();
@@ -364,7 +374,7 @@ const MFASetup = ({ onComplete }) => {
               </Button>
               <Button
                 startIcon={<CopyIcon />}
-                onClick={() => copyToClipboard(setupData?.backup_codes?.join('\n'))}
+                onClick={() => copyToClipboard(setupData?.backup_codes?.join('\n') || '')}
                 variant="outlined"
               >
                 Copy All Codes

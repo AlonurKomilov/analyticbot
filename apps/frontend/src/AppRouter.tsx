@@ -6,6 +6,7 @@ import { ProtectedRoute, PublicRoute } from './components/guards';
 // Import optimized lazy loading system
 import {
     PageComponents,
+    AdminComponents,
     ServiceComponents,
     UtilityComponents,
     preloadByRoute,
@@ -26,7 +27,9 @@ const {
     ResetPasswordForm
 } = PageComponents;
 
-// SuperAdminDashboard imported but not used in routes (available for future use)
+const {
+    SuperAdminDashboard
+} = AdminComponents;
 
 const {
     ServicesLayout,
@@ -199,6 +202,18 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute requiredRole="admin">
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <AdminDashboard />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* SuperAdmin Dashboard - Highest level access */}
+                                <Route
+                                    path="/superadmin"
+                                    element={
+                                        <ProtectedRoute requiredRole="superadmin">
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <SuperAdminDashboard />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

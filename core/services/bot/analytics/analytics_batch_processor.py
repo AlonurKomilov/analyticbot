@@ -80,9 +80,7 @@ class AnalyticsBatchProcessor:
 
         for channel_id, channel_posts in channel_groups.items():
             task = asyncio.create_task(
-                self._process_channel_batch(
-                    channel_id, channel_posts, batch_size, semaphore
-                )
+                self._process_channel_batch(channel_id, channel_posts, batch_size, semaphore)
             )
             tasks.append(task)
 
@@ -110,13 +108,23 @@ class AnalyticsBatchProcessor:
         return dict(channel_groups)
 
     async def _process_channel_batch(
-        self, channel_id: int, posts: list[dict], batch_size: int, semaphore: asyncio.Semaphore
+        self,
+        channel_id: int,
+        posts: list[dict],
+        batch_size: int,
+        semaphore: asyncio.Semaphore,
     ) -> dict[str, int]:
         """
         Process posts for a single channel in optimized batches
         """
         async with semaphore:
-            stats = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0, "batch_count": 0}
+            stats = {
+                "processed": 0,
+                "updated": 0,
+                "errors": 0,
+                "skipped": 0,
+                "batch_count": 0,
+            }
 
             # Process posts in smaller batches to avoid API limits
             for i in range(0, len(posts), batch_size):
@@ -134,9 +142,7 @@ class AnalyticsBatchProcessor:
 
             return stats
 
-    async def _process_post_batch(
-        self, channel_id: int, batch: list[dict]
-    ) -> dict[str, int]:
+    async def _process_post_batch(self, channel_id: int, batch: list[dict]) -> dict[str, int]:
         """
         Optimized batch processing with concurrent view fetching and bulk database updates
         """
@@ -321,9 +327,7 @@ class AnalyticsBatchProcessor:
 
             # Fetch posts in batches using repository
             async for post_batch in self._fetch_posts_in_batches():
-                batch_stats = await self._process_memory_optimized_batch(
-                    post_batch, semaphore
-                )
+                batch_stats = await self._process_memory_optimized_batch(post_batch, semaphore)
 
                 # Update statistics
                 stats["total_processed"] += batch_stats.get("processed", 0)

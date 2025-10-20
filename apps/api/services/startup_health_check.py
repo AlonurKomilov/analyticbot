@@ -102,7 +102,10 @@ class StartupHealthChecker:
     """Backend startup health check orchestrator"""
 
     def __init__(
-        self, fail_fast: bool = False, skip_optional: bool = True, timeout_seconds: float = 10.0
+        self,
+        fail_fast: bool = False,
+        skip_optional: bool = True,
+        timeout_seconds: float = 10.0,
     ):
         """
         Initialize health checker
@@ -152,7 +155,7 @@ class StartupHealthChecker:
                     else "❌"
                 )
                 logger.info(
-                    f"{emoji} {result.name}: {result.status.value} " f"({result.duration_ms:.0f}ms)"
+                    f"{emoji} {result.name}: {result.status.value} ({result.duration_ms:.0f}ms)"
                 )
 
                 # Fail fast on critical failure
@@ -267,7 +270,9 @@ class StartupHealthChecker:
         start = time.time()
 
         result = HealthCheckResult(
-            name="Configuration Validation", severity=severity, status=CheckStatus.PASSED
+            name="Configuration Validation",
+            severity=severity,
+            status=CheckStatus.PASSED,
         )
 
         try:

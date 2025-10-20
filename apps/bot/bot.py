@@ -5,24 +5,28 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.base import DefaultKeyBuilder
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 
 from apps.bot.config import settings
 from apps.bot.config import settings as app_settings
-
-# ✅ MIGRATED: Use new modular DI instead of legacy container
-from apps.di import get_container
 from apps.bot.handlers import admin_handlers, user_handlers
 from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
 from apps.bot.middlewares.i18n import i18n_middleware
+
+# ✅ MIGRATED: Use new modular DI instead of legacy container
+from apps.di import get_container
 
 if app_settings.LOG_FORMAT == "json":
 
     class _JsonFormatter(logging.Formatter):
         def format(self, record: logging.LogRecord) -> str:
-            base = {"level": record.levelname, "name": record.name, "message": record.getMessage()}
+            base = {
+                "level": record.levelname,
+                "name": record.name,
+                "message": record.getMessage(),
+            }
             if record.exc_info:
                 base["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(base, ensure_ascii=False)

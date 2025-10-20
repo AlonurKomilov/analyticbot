@@ -11,15 +11,14 @@
 
 import React, { useState, useEffect, ReactNode } from 'react';
 import {
+  Box,
   CardContent,
   CardHeader,
-  Box,
   Collapse,
   IconButton,
   Typography,
   Fade,
   Grow,
-  useTheme,
   CardProps
 } from '@mui/material';
 import {
@@ -88,7 +87,6 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   loading = false,
   interactive = true,
   hoverEffect = 'lift',
-  elevation = 1,
   onClick,
   onHover,
   entrance = 'fade',
@@ -194,7 +192,6 @@ export const ExpandableCard: React.FC<ExpandableCardProps> = ({
     <AnimatedCard
       interactive={false}
       loading={loading}
-      {...props}
     >
       <CardHeader
         title={title}
@@ -374,8 +371,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   empty = false,
   emptyMessage = 'No data available',
   refreshable = false,
-  onRefresh,
-  ...props
+  onRefresh
 }) => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 

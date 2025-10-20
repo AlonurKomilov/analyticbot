@@ -4,11 +4,86 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useUIStore } from '@/stores';
 import { apiClient } from '../api/client.js';
 
+/**
+ * Analytics preset type
+ */
+export type AnalyticsPresetType = 'DASHBOARD' | 'ADMIN' | 'MOBILE' | 'PERFORMANCE';
+
+/**
+ * Analytics configuration
+ */
+export interface AnalyticsConfig {
+    realTime?: boolean;
+    interval?: number;
+    includeMetrics?: string[];
+    caching?: boolean;
+    retries?: number;
+}
+
+/**
+ * Analytics preset configurations
+ */
+export interface AnalyticsPresets {
+    DASHBOARD: AnalyticsConfig;
+    ADMIN: AnalyticsConfig;
+    MOBILE: AnalyticsConfig;
+    PERFORMANCE: AnalyticsConfig;
+}
+
+/**
+ * Connection status type
+ */
+export type ConnectionStatus = 'connecting' | 'fetching' | 'connected' | 'partial' | 'error' | 'paused' | 'cached';
+
+/**
+ * Analytics data structure
+ */
+export interface AnalyticsData {
+    overview: any | null;
+    growth: any | null;
+    engagement: any | null;
+    performance: any | null;
+    trends: any | null;
+    alerts: any | null;
+    users: any | null;
+    system: any | null;
+    quick: any | null;
+}
+
+/**
+ * Analytics errors
+ */
+export interface AnalyticsErrors {
+    [key: string]: string;
+}
+
+/**
+ * Unified analytics hook return type
+ */
+export interface UseUnifiedAnalyticsReturn {
+    data: AnalyticsData;
+    loading: boolean;
+    errors: AnalyticsErrors;
+    lastUpdated: Date | null;
+    connectionStatus: ConnectionStatus;
+    refresh: (specificMetrics?: string[] | null) => void;
+    pause: () => void;
+    resume: () => void;
+    getMetric: (metricName: string, fallback?: any) => any;
+    hasError: (metricName?: string | null) => boolean;
+    isConnected: boolean;
+    isPartiallyConnected: boolean;
+    isPaused: boolean;
+    isOffline: boolean;
+    canRetry: boolean;
+    currentPreset: AnalyticsPresetType | string;
+    currentConfig: AnalyticsConfig;
+}
+
 // Hook configuration presets for different use cases
-export const ANALYTICS_PRESETS = {
+export const ANALYTICS_PRESETS: AnalyticsPresets = {
     DASHBOARD: {
         realTime: true,
         interval: 30000,
@@ -43,12 +118,19 @@ export const ANALYTICS_PRESETS = {
  * Unified Analytics Hook
  * Single hook to handle all analytics needs across the application
  */
-export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfig = {}) => {
+export const useUnifiedAnalytics = (
+    channelId: string,
+    preset: AnalyticsPresetType | string = 'DASHBOARD',
+    customConfig: Partial<AnalyticsConfig> = {}
+): UseUnifiedAnalyticsReturn => {
     // Merge preset with custom configuration
-    const config = { ...ANALYTICS_PRESETS[preset], ...customConfig };
+    const config: AnalyticsConfig = {
+        ...ANALYTICS_PRESETS[preset as AnalyticsPresetType],
+        ...customConfig
+    };
 
     // State management
-    const [data, setData] = useState({
+    const [data, setData] = useState<AnalyticsData>({
         overview: null,
         growth: null,
         engagement: null,
@@ -60,20 +142,19 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         quick: null
     });
 
-    const [loading, setLoading] = useState(true);
-    const [errors, setErrors] = useState({});
-    const [lastUpdated, setLastUpdated] = useState(null);
-    const [connectionStatus, setConnectionStatus] = useState('connecting');
+    const [loading, setLoading] = useState<boolean>(true);
+    const [errors, setErrors] = useState<AnalyticsErrors>({});
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
 
     // Refs for cleanup and retry logic
-    const intervalRef = useRef(null);
-    const retryCountRef = useRef(0);
-    const mountedRef = useRef(true);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const retryCountRef = useRef<number>(0);
+    const mountedRef = useRef<boolean>(true);
 
     // Store integration - for cache (if we implement caching later)
-    const dataSource = useUIStore(state => state.dataSource);
-    const getCachedData = useCallback(() => null, []); // Placeholder
-    const setCachedData = useCallback(() => {}, []); // Placeholder
+    const getCachedData = useCallback((_key: string): any => null, []); // Placeholder
+    const setCachedData = useCallback((_key: string, _value: any): void => {}, []); // Placeholder
 
     // Cleanup on unmount
     useEffect(() => {
@@ -88,7 +169,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
     /**
      * Core data fetching function with error handling and retry logic
      */
-    const fetchAnalyticsData = useCallback(async (metrics = config.includeMetrics, isRetry = false) => {
+    const fetchAnalyticsData = useCallback(async (metrics: string[] = config.includeMetrics || [], isRetry: boolean = false) => {
         if (!mountedRef.current || !channelId) return;
 
         try {
@@ -98,8 +179,8 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             }
 
             // Prepare API calls based on requested metrics
-            const apiCalls = [];
-            const metricKeys = [];
+            const apiCalls: Promise<any>[] = [];
+            const metricKeys: string[] = [];
 
             if (metrics.includes('overview')) {
                 apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/overview?period=30`));
@@ -155,11 +236,11 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             if (!mountedRef.current) return;
 
             // Process results and update state
-            const newData = { ...data };
-            const newErrors = {};
+            const newData: AnalyticsData = { ...data };
+            const newErrors: AnalyticsErrors = {};
 
             results.forEach((result, index) => {
-                const metricKey = metricKeys[index];
+                const metricKey = metricKeys[index] as keyof AnalyticsData;
 
                 if (result.status === 'fulfilled') {
                     newData[metricKey] = result.value;
@@ -201,7 +282,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
             setConnectionStatus('error');
 
             // Auto-retry logic with exponential backoff
-            if (retryCountRef.current <= config.retries) {
+            if (retryCountRef.current <= (config.retries || 0)) {
                 setTimeout(() => {
                     if (mountedRef.current) {
                         fetchAnalyticsData(metrics, true);
@@ -211,7 +292,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
                 setLoading(false);
                 setErrors(prev => ({
                     ...prev,
-                    system: error.message || 'Failed to fetch analytics data'
+                    system: (error as Error).message || 'Failed to fetch analytics data'
                 }));
             }
         }
@@ -220,9 +301,9 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
     /**
      * Manual refresh function
      */
-    const refresh = useCallback((specificMetrics = null) => {
+    const refresh = useCallback((specificMetrics: string[] | null = null) => {
         retryCountRef.current = 0;
-        fetchAnalyticsData(specificMetrics || config.includeMetrics);
+        fetchAnalyticsData(specificMetrics || config.includeMetrics || []);
     }, [fetchAnalyticsData, config.includeMetrics]);
 
     /**
@@ -240,7 +321,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
      * Resume real-time updates
      */
     const resume = useCallback(() => {
-        if (!intervalRef.current && config.realTime && config.interval > 0) {
+        if (!intervalRef.current && config.realTime && (config.interval || 0) > 0) {
             fetchAnalyticsData();
             intervalRef.current = setInterval(() => fetchAnalyticsData(), config.interval);
             setConnectionStatus('connecting');
@@ -250,14 +331,14 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
     /**
      * Get specific metric with fallback
      */
-    const getMetric = useCallback((metricName, fallback = null) => {
-        return data[metricName] || fallback;
+    const getMetric = useCallback((metricName: string, fallback: any = null): any => {
+        return data[metricName as keyof AnalyticsData] || fallback;
     }, [data]);
 
     /**
      * Check if specific metric has error
      */
-    const hasError = useCallback((metricName = null) => {
+    const hasError = useCallback((metricName: string | null = null): boolean => {
         if (metricName) {
             return !!errors[metricName];
         }
@@ -272,8 +353,9 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         fetchAnalyticsData();
 
         // Set up real-time interval if enabled
-        if (config.realTime && config.interval > 0) {
-            intervalRef.current = setInterval(() => fetchAnalyticsData(), config.interval);
+        const intervalMs = config.interval ?? 0;
+        if (config.realTime && intervalMs > 0) {
+            intervalRef.current = setInterval(() => fetchAnalyticsData(), intervalMs);
         }
 
         return () => {
@@ -307,7 +389,7 @@ export const useUnifiedAnalytics = (channelId, preset = 'DASHBOARD', customConfi
         isPartiallyConnected: connectionStatus === 'partial',
         isPaused: connectionStatus === 'paused',
         isOffline: connectionStatus === 'cached',
-        canRetry: retryCountRef.current <= config.retries,
+        canRetry: retryCountRef.current <= (config.retries ?? 0),
 
         // Configuration
         currentPreset: preset,

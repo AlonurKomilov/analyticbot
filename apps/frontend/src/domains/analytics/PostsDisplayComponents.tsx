@@ -28,10 +28,36 @@ import {
 import { Icon, StatusChip } from '@components/common/IconSystem';
 import { formatNumber, formatDate, calculateEngagementRate, getPerformanceScore, getPerformanceLevel } from './PostsUtils';
 
+interface PostRow {
+    id?: string | number;
+    title?: string;
+    content?: string;
+    thumbnail?: string;
+    type?: string;
+    views?: number;
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    date?: string;
+    status?: 'trending' | 'published';
+}
+
+interface PostDisplayCellProps {
+    row: PostRow;
+}
+
+interface MetricCellProps {
+    value: number;
+}
+
+interface DateCellProps {
+    value: string;
+}
+
 /**
  * Post title and content display with thumbnail
  */
-export const PostDisplayCell = ({ row }) => (
+export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ row }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         {row.thumbnail && (
             <Avatar
@@ -69,7 +95,7 @@ export const PostDisplayCell = ({ row }) => (
 /**
  * Views metric display with icon
  */
-export const ViewsCell = ({ value }) => (
+export const ViewsCell: React.FC<MetricCellProps> = ({ value }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         <ViewsIcon fontSize="small" color="primary" />
         <Typography variant="body2" fontWeight="medium">
@@ -81,7 +107,7 @@ export const ViewsCell = ({ value }) => (
 /**
  * Likes metric display with icon
  */
-export const LikesCell = ({ value }) => (
+export const LikesCell: React.FC<MetricCellProps> = ({ value }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         <LikeIcon fontSize="small" color="error" />
         <Typography variant="body2" fontWeight="medium">
@@ -93,7 +119,7 @@ export const LikesCell = ({ value }) => (
 /**
  * Shares metric display with icon
  */
-export const SharesCell = ({ value }) => (
+export const SharesCell: React.FC<MetricCellProps> = ({ value }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         <ShareIcon fontSize="small" color="success" />
         <Typography variant="body2" fontWeight="medium">
@@ -105,7 +131,7 @@ export const SharesCell = ({ value }) => (
 /**
  * Comments metric display with icon
  */
-export const CommentsCell = ({ value }) => (
+export const CommentsCell: React.FC<MetricCellProps> = ({ value }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         <CommentIcon fontSize="small" color="info" />
         <Typography variant="body2" fontWeight="medium">
@@ -117,7 +143,7 @@ export const CommentsCell = ({ value }) => (
 /**
  * Engagement rate display with progress indicator
  */
-export const EngagementCell = ({ row }) => {
+export const EngagementCell: React.FC<PostDisplayCellProps> = ({ row }) => {
     const rate = calculateEngagementRate(row);
     const rateNum = parseFloat(rate);
 
@@ -151,7 +177,7 @@ export const EngagementCell = ({ row }) => {
 /**
  * Performance score with color-coded chip
  */
-export const PerformanceCell = ({ row }) => {
+export const PerformanceCell: React.FC<PostDisplayCellProps> = ({ row }) => {
     const score = getPerformanceScore(row);
     const { level, color } = getPerformanceLevel(score);
 
@@ -171,7 +197,7 @@ export const PerformanceCell = ({ row }) => {
 /**
  * Date display with relative time
  */
-export const DateCell = ({ value }) => (
+export const DateCell: React.FC<DateCellProps> = ({ value }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         <CalendarIcon fontSize="small" color="action" />
         <Typography variant="body2" color="text.secondary">
@@ -183,7 +209,7 @@ export const DateCell = ({ value }) => (
 /**
  * Status indicator with trending icon
  */
-export const StatusCell = ({ row }) => (
+export const StatusCell: React.FC<PostDisplayCellProps> = ({ row }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
         {row.status === 'trending' && (
             <Tooltip title="Trending Post">

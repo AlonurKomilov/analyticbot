@@ -7,10 +7,35 @@ import { useUnifiedAnalytics } from './useUnifiedAnalytics';
 import { useMemo } from 'react';
 
 /**
+ * Dashboard analytics options
+ */
+interface DashboardAnalyticsOptions {
+    enableRealTime?: boolean;
+    refreshInterval?: number;
+    [key: string]: any;
+}
+
+/**
+ * Dashboard data structure
+ */
+interface DashboardData {
+    totalViews: number;
+    totalPosts: number;
+    averageEngagement: number;
+    growthRate: number;
+    viewsChart: any[];
+    growthChart: any[];
+    engagementChart: any[];
+    isGrowing: boolean;
+    hasGoodEngagement: boolean;
+    raw: any;
+}
+
+/**
  * Dashboard Analytics Hook
  * Optimized for main dashboard with real-time updates
  */
-export const useDashboardAnalytics = (channelId, options = {}) => {
+export const useDashboardAnalytics = (channelId: string, options: DashboardAnalyticsOptions = {}) => {
     const {
         enableRealTime = true,
         refreshInterval = 30000,
@@ -24,7 +49,7 @@ export const useDashboardAnalytics = (channelId, options = {}) => {
     });
 
     // Computed dashboard metrics
-    const dashboardData = useMemo(() => {
+    const dashboardData: DashboardData = useMemo(() => {
         const { data } = analytics;
 
         return {
@@ -58,14 +83,30 @@ export const useDashboardAnalytics = (channelId, options = {}) => {
 };
 
 /**
+ * Admin data structure
+ */
+interface AdminData {
+    activeUsers: number;
+    totalUsers: number;
+    systemLoad: number;
+    memoryUsage: number;
+    apiResponseTime: number;
+    errorRate: number;
+    uptime: number;
+    systemHealthy: boolean;
+    needsScaling: boolean;
+    raw: any;
+}
+
+/**
  * Admin Analytics Hook
  * Optimized for admin dashboard with system metrics
  */
-export const useAdminAnalytics = (options = {}) => {
+export const useAdminAnalytics = (options: Record<string, any> = {}) => {
     const analytics = useUnifiedAnalytics('system', 'ADMIN', options);
 
     // Computed admin metrics
-    const adminData = useMemo(() => {
+    const adminData: AdminData = useMemo(() => {
         const { data } = analytics;
 
         return {
@@ -99,10 +140,30 @@ export const useAdminAnalytics = (options = {}) => {
 };
 
 /**
+ * Mobile analytics options
+ */
+interface MobileAnalyticsOptions {
+    updateInterval?: number;
+    [key: string]: any;
+}
+
+/**
+ * Mobile data structure
+ */
+interface MobileData {
+    views: number;
+    posts: number;
+    engagement: number;
+    trend: string;
+    miniChart: any[];
+    isOnline: boolean;
+}
+
+/**
  * Mobile Analytics Hook
  * Lightweight hook optimized for mobile performance
  */
-export const useMobileAnalytics = (channelId, options = {}) => {
+export const useMobileAnalytics = (channelId: string, options: MobileAnalyticsOptions = {}) => {
     const {
         updateInterval = 60000, // Less frequent updates on mobile
         ...customConfig
@@ -114,7 +175,7 @@ export const useMobileAnalytics = (channelId, options = {}) => {
     });
 
     // Simplified mobile data
-    const mobileData = useMemo(() => {
+    const mobileData: MobileData = useMemo(() => {
         const { data } = analytics;
 
         return {
@@ -144,19 +205,44 @@ export const useMobileAnalytics = (channelId, options = {}) => {
 };
 
 /**
+ * Alert structure
+ */
+interface Alert {
+    severity: 'critical' | 'warning' | 'info';
+    message: string;
+    timestamp: string;
+}
+
+/**
+ * Performance data structure
+ */
+interface PerformanceData {
+    score: number;
+    grade: 'A' | 'B' | 'C' | 'D';
+    responseTime: number;
+    errorRate: number;
+    throughput: number;
+    trends: any[];
+    trendDirection: 'up' | 'down' | 'stable';
+    activeAlerts: Alert[];
+    criticalAlerts: Alert[];
+    raw: any;
+}
+
+/**
  * Performance Analytics Hook
  * Specialized for performance monitoring and alerts
  */
-export const usePerformanceAnalytics = (channelId, options = {}) => {
+export const usePerformanceAnalytics = (channelId: string, options: Record<string, any> = {}) => {
     const analytics = useUnifiedAnalytics(channelId, 'PERFORMANCE', options);
 
     // Performance-focused metrics
-    const performanceData = useMemo(() => {
+    const performanceData: PerformanceData = useMemo(() => {
         const { data } = analytics;
 
         const performanceScore = data.performance?.score || 0;
         const trends = data.trends?.performance_trends || [];
-        const alerts = data.alerts?.active || [];
+        const alerts: Alert[] = data.alerts?.active || [];
 
         return {
             // Performance scoring
@@ -195,10 +281,31 @@ export const usePerformanceAnalytics = (channelId, options = {}) => {
 };
 
 /**
+ * Real-time analytics options
+ */
+interface RealTimeAnalyticsOptions {
+    interval?: number;
+    metrics?: string[];
+    [key: string]: any;
+}
+
+/**
+ * Real-time data structure
+ */
+interface RealTimeData {
+    liveViews: number;
+    liveEngagement: number;
+    dataAge: number;
+    isFresh: boolean;
+    connectionQuality: 'excellent' | 'good' | 'poor' | 'offline';
+    raw: any;
+}
+
+/**
  * Real-time Analytics Hook
  * High-frequency updates for live monitoring
  */
-export const useRealTimeAnalytics = (channelId, options = {}) => {
+export const useRealTimeAnalytics = (channelId: string, options: RealTimeAnalyticsOptions = {}) => {
     const {
         interval = 10000, // 10 second updates for real-time
         metrics = ['overview', 'engagement'],
@@ -214,7 +321,7 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
     });
 
     // Real-time specific data processing
-    const realTimeData = useMemo(() => {
+    const realTimeData: RealTimeData = useMemo(() => {
         const { data, lastUpdated } = analytics;
 
         return {

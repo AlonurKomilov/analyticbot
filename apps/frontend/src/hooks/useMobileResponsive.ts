@@ -8,10 +8,39 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme, useMediaQuery } from '@mui/material';
 
 /**
+ * Device type
+ */
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
+/**
+ * Responsive configuration for getValue
+ */
+interface ResponsiveConfig<T> {
+  mobile?: T;
+  tablet?: T;
+  desktop?: T;
+  default?: T;
+}
+
+/**
+ * Enhanced Responsive Hook return type
+ */
+interface UseEnhancedResponsiveReturn {
+  isMobile: boolean;
+  isTablet: boolean;
+  isDesktop: boolean;
+  isLandscape: boolean;
+  isPortrait: boolean;
+  isTouchDevice: boolean;
+  deviceType: DeviceType;
+  getValue: <T>(config: T | ResponsiveConfig<T>) => T;
+}
+
+/**
  * Enhanced Responsive Hook
  * Provides detailed device and orientation information
  */
-export const useEnhancedResponsive = () => {
+export const useEnhancedResponsive = (): UseEnhancedResponsiveReturn => {
   const theme = useTheme();
 
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -21,7 +50,7 @@ export const useEnhancedResponsive = () => {
   const isPortrait = useMediaQuery('(orientation: portrait)');
 
   // Device type detection
-  const deviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
+  const deviceType: DeviceType = isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop';
 
   // Touch capability detection
   const isTouchDevice = useMediaQuery('(hover: none)');
@@ -36,23 +65,53 @@ export const useEnhancedResponsive = () => {
     deviceType,
 
     // Responsive values
-    getValue: (config) => {
-      if (typeof config === 'object') {
-        if (isMobile && config.mobile !== undefined) return config.mobile;
-        if (isTablet && config.tablet !== undefined) return config.tablet;
-        if (isDesktop && config.desktop !== undefined) return config.desktop;
-        return config.default || config.mobile || config.tablet || config.desktop;
+    getValue: <T,>(config: T | ResponsiveConfig<T>): T => {
+      if (typeof config === 'object' && config !== null && !Array.isArray(config)) {
+        const responsiveConfig = config as ResponsiveConfig<T>;
+        if (isMobile && responsiveConfig.mobile !== undefined) return responsiveConfig.mobile;
+        if (isTablet && responsiveConfig.tablet !== undefined) return responsiveConfig.tablet;
+        if (isDesktop && responsiveConfig.desktop !== undefined) return responsiveConfig.desktop;
+        return responsiveConfig.default || responsiveConfig.mobile || responsiveConfig.tablet || responsiveConfig.desktop as T;
       }
-      return config;
+      return config as T;
     }
   };
 };
 
 /**
+ * Touch coordinates
+ */
+interface TouchCoordinates {
+  x: number;
+  y: number;
+}
+
+/**
+ * Swipe gesture options
+ */
+interface SwipeGestureOptions {
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
+  threshold?: number;
+  preventDefault?: boolean;
+}
+
+/**
+ * Swipe gesture handlers
+ */
+interface SwipeGestureHandlers {
+  onTouchStart: (e: React.TouchEvent) => void;
+  onTouchMove: (e: React.TouchEvent) => void;
+  onTouchEnd: (e: React.TouchEvent) => void;
+}
+
+/**
  * Swipe Gesture Hook
  * Detects swipe gestures for mobile interactions
  */
-export const useSwipeGesture = (options = {}) => {
+export const useSwipeGesture = (options: SwipeGestureOptions = {}): SwipeGestureHandlers => {
   const {
     onSwipeLeft,
     onSwipeRight,
@@ -62,10 +121,10 @@ export const useSwipeGesture = (options = {}) => {
     preventDefault = false
   } = options;
 
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
+  const [touchStart, setTouchStart] = useState<TouchCoordinates | null>(null);
+  const [touchEnd, setTouchEnd] = useState<TouchCoordinates | null>(null);
 
-  const handleTouchStart = useCallback((e) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (preventDefault) e.preventDefault();
     setTouchEnd(null);
     setTouchStart({
@@ -74,7 +133,7 @@ export const useSwipeGesture = (options = {}) => {
     });
   }, [preventDefault]);
 
-  const handleTouchMove = useCallback((e) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (preventDefault) e.preventDefault();
     setTouchEnd({
       x: e.targetTouches[0].clientX,
@@ -82,7 +141,7 @@ export const useSwipeGesture = (options = {}) => {
     });
   }, [preventDefault]);
 
-  const handleTouchEnd = useCallback((e) => {
+  const handleTouchEnd = useCallback((_e: React.TouchEvent) => {
     if (!touchStart || !touchEnd) return;
 
     const deltaX = touchStart.x - touchEnd.x;
@@ -158,7 +217,7 @@ export const useMobileDrawer = (initialOpen = false) => {
  * Touch-friendly Button Hook
  * Provides enhanced touch target configuration
  */
-export const useTouchFriendlyButton = (baseProps = {}) => {
+export const useTouchFriendlyButton = (baseProps: Record<string, any> = {}) => {
   const { isMobile, isTablet, isTouchDevice } = useEnhancedResponsive();
 
   const enhancedProps = {
@@ -175,13 +234,31 @@ export const useTouchFriendlyButton = (baseProps = {}) => {
 };
 
 /**
+ * Grid configuration
+ */
+interface GridConfig {
+  columns: number;
+  spacing: number;
+  direction: string;
+}
+
+/**
+ * Responsive grid config by device
+ */
+interface ResponsiveGridConfig {
+  mobile?: Partial<GridConfig>;
+  tablet?: Partial<GridConfig>;
+  desktop?: Partial<GridConfig>;
+}
+
+/**
  * Responsive Grid Hook
  * Provides adaptive grid configurations
  */
-export const useResponsiveGrid = (config = {}) => {
+export const useResponsiveGrid = (config: ResponsiveGridConfig = {}) => {
   const { deviceType, isPortrait } = useEnhancedResponsive();
 
-  const defaultConfigs = {
+  const defaultConfigs: Record<DeviceType, GridConfig> = {
     mobile: {
       columns: 1,
       spacing: 2,
@@ -211,13 +288,25 @@ export const useResponsiveGrid = (config = {}) => {
 };
 
 /**
+ * Spacing configuration
+ */
+interface SpacingConfig {
+  xs?: number;
+  sm?: number;
+  md?: number;
+  mobile?: number;
+  tablet?: number;
+  desktop?: number;
+}
+
+/**
  * Mobile-First Spacing Hook
  * Provides responsive spacing values
  */
 export const useMobileSpacing = () => {
   const { getValue } = useEnhancedResponsive();
 
-  const getSpacing = useCallback((config) => {
+  const getSpacing = useCallback((config: number | SpacingConfig): number => {
     if (typeof config === 'number') return config;
 
     return getValue({
@@ -231,14 +320,19 @@ export const useMobileSpacing = () => {
 };
 
 /**
+ * Typography variant type
+ */
+type TypographyVariant = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'subtitle1';
+
+/**
  * Adaptive Typography Hook
  * Provides responsive typography scaling
  */
 export const useAdaptiveTypography = () => {
   const { deviceType } = useEnhancedResponsive();
 
-  const getVariant = useCallback((baseVariant) => {
-    const variants = {
+  const getVariant = useCallback((baseVariant: string): string => {
+    const variants: Record<DeviceType, Record<string, TypographyVariant>> = {
       mobile: {
         h1: 'h2',
         h2: 'h3',
@@ -272,12 +366,23 @@ export const useAdaptiveTypography = () => {
 };
 
 /**
+ * Orientation info
+ */
+interface OrientationInfo {
+  isLandscape: boolean;
+  isPortrait: boolean;
+}
+
+/**
  * Orientation Change Hook
  * Handles orientation changes with debouncing
  */
-export const useOrientationChange = (callback, delay = 300) => {
+export const useOrientationChange = (
+  callback: (info: OrientationInfo) => void,
+  delay: number = 300
+): OrientationInfo => {
   const { isLandscape, isPortrait } = useEnhancedResponsive();
-  const timeoutRef = useRef(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (timeoutRef.current) {

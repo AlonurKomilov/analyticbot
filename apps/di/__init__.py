@@ -148,6 +148,26 @@ def get_container() -> ApplicationContainer:
     return configure_container()
 
 
+async def initialize_container() -> ApplicationContainer:
+    """
+    Initialize the application container.
+
+    This function ensures the container is properly configured and wired.
+    Safe to call multiple times (idempotent).
+
+    Usage:
+        await initialize_container()
+        container = get_container()
+
+    Returns:
+        The initialized ApplicationContainer
+    """
+    global _container
+    if _container is None:
+        _container = configure_container()
+    return _container
+
+
 # ============================================================================
 # Public API
 # ============================================================================
@@ -312,6 +332,7 @@ __all__ = [
     "ApplicationContainer",
     "configure_container",
     "get_container",
+    "initialize_container",
     # "get_bot_container",  # REMOVED Oct 19, 2025: Function doesn't exist
     # "get_api_container",  # REMOVED Oct 19, 2025: Function doesn't exist
     "get_unified_container",

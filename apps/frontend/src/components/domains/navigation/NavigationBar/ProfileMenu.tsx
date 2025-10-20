@@ -27,6 +27,19 @@ import { useNavigation } from '@components/common/NavigationProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import { AdminOnly } from '../../../auth/RoleGuard.tsx';
 
+interface User {
+    id?: string | number;
+    username?: string;
+    full_name?: string;
+    email?: string;
+    role?: string;
+}
+
+interface ProfileMenuProps {
+    className?: string;
+    [key: string]: any;
+}
+
 /**
  * ProfileMenu Component
  *
@@ -38,13 +51,13 @@ import { AdminOnly } from '../../../auth/RoleGuard.tsx';
  * - Help & support
  * - Logout functionality
  */
-const ProfileMenu = ({ className, ...props }) => {
+const ProfileMenu: React.FC<ProfileMenuProps> = ({ className, ...props }) => {
     const navigate = useNavigate();
     const { isDarkMode, toggleTheme } = useNavigation();
     const { user, logout, isAuthenticated } = useAuth();
 
     // Menu anchor state
-    const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+    const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
 
     // Don't render if not authenticated
     if (!isAuthenticated) {
@@ -52,7 +65,7 @@ const ProfileMenu = ({ className, ...props }) => {
     }
 
     // Menu open/close handlers
-    const handleMenuOpen = (event) => {
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setProfileMenuAnchor(event.currentTarget);
     };
 

@@ -3,13 +3,18 @@ import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/materi
 import { useChannelStore } from '@/stores';
 import UnifiedButton, { PrimaryButton } from './common/UnifiedButton.jsx';
 
-const AddChannel = React.memo(() => {
-    const { addChannel, isLoading, error } = useChannelStore();
-    const [channelName, setChannelName] = useState('');
-    const [status, setStatus] = useState({ success: false, message: '' });
-    const [validationError, setValidationError] = useState('');
+interface Status {
+    success: boolean;
+    message: string;
+}
 
-    const validateChannelName = useCallback((name) => {
+const AddChannel: React.FC = React.memo(() => {
+    const { addChannel, isLoading, error } = useChannelStore();
+    const [channelName, setChannelName] = useState<string>('');
+    const [status, setStatus] = useState<Status>({ success: false, message: '' });
+    const [validationError, setValidationError] = useState<string>('');
+
+    const validateChannelName = useCallback((name: string): boolean => {
         if (!name.trim()) {
             setValidationError('Channel name is required');
             return false;
@@ -30,7 +35,7 @@ const AddChannel = React.memo(() => {
         return true;
     }, []);
 
-    const handleChannelNameChange = useCallback((e) => {
+    const handleChannelNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setChannelName(value);
         setStatus({ success: false, message: '' });
@@ -42,7 +47,7 @@ const AddChannel = React.memo(() => {
         }
     }, [validateChannelName]);
 
-    const handleAdd = useCallback(async (e) => {
+    const handleAdd = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!validateChannelName(channelName)) {
@@ -55,7 +60,7 @@ const AddChannel = React.memo(() => {
             setChannelName('');
             setValidationError('');
             setStatus({ success: true, message: 'Channel added successfully!' });
-        } catch (error) {
+        } catch (error: any) {
             setStatus({
                 success: false,
                 message: error.message || 'Unable to add channel. Please check the channel name and try again.'

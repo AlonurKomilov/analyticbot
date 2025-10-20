@@ -2,16 +2,90 @@
  * Clean Data Source Hook - Production Code
  * Uses dependency injection to avoid mixed mock/production logic
  * Now supports optional AuthContext integration for JWT authentication
+ *
+ * @module useDataSource
+ * @example
+ * ```tsx
+ * const { isAvailable, getAnalytics } = useDataSource();
+ * const analytics = await getAnalytics('my_channel');
+ * ```
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { productionDataProvider } from '../providers/DataProvider.js';
+import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+import type {
+    AnalyticsOverview,
+    Post,
+    EngagementMetrics
+} from '@/types';
+
+/**
+ * Data Provider interface
+ */
+export interface DataProvider {
+    getProviderName: () => string;
+    isAvailable: () => Promise<boolean>;
+    getAnalytics: (channelId: string) => Promise<AnalyticsOverview>;
+    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<Post[]>;
+    getEngagementMetrics: (channelId: string, options?: Record<string, any>) => Promise<EngagementMetrics>;
+    getRecommendations: (channelId: string) => Promise<any>;
+}
+
+/**
+ * useDataSource hook options
+ */
+export interface UseDataSourceOptions {
+    /** Callback when provider changes */
+    onProviderChange?: ((info: { provider: string; timestamp: string }) => void) | null;
+    /** Enable automatic status polling */
+    enableStatusPolling?: boolean;
+    /** Polling interval in milliseconds */
+    pollingInterval?: number;
+    /** Auto-check availability on mount */
+    autoCheckAvailability?: boolean;
+}
+
+/**
+ * useDataSource hook return type
+ */
+export interface UseDataSourceReturn {
+    /** Provider availability status */
+    isAvailable: boolean | null;
+    /** Loading state */
+    isLoading: boolean;
+    /** Error message if any */
+    error: string | null;
+    /** Timestamp of last availability check */
+    lastCheck: number | null;
+    /** Provider name */
+    providerName: string;
+    /** Fetch analytics data */
+    getAnalytics: (channelId: string) => Promise<AnalyticsOverview>;
+    /** Fetch top posts */
+    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<Post[]>;
+    /** Fetch engagement metrics */
+    getEngagementMetrics: (channelId: string, options?: Record<string, any>) => Promise<EngagementMetrics>;
+    /** Fetch recommendations */
+    getRecommendations: (channelId: string) => Promise<any>;
+    /** Check provider availability */
+    checkAvailability: (force?: boolean) => Promise<boolean>;
+    /** Whether provider is online */
+    isOnline: boolean;
+    /** Whether provider is offline */
+    isOffline: boolean;
+    /** Clear error state */
+    clearError: () => void;
+}
 
 /**
  * Clean hook for data management using dependency injection
  * NO mock switching logic - uses provider pattern instead
  */
-export const useDataSource = (dataProvider = productionDataProvider, options = {}) => {
+export const useDataSource = (
+    dataProvider: DataProvider = productionDataProvider,
+    options: UseDataSourceOptions = {}
+): UseDataSourceReturn => {
     const {
         onProviderChange = null,
         enableStatusPolling = false,
@@ -19,13 +93,13 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
         autoCheckAvailability = true
     } = options;
 
-    const [isAvailable, setIsAvailable] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [lastCheck, setLastCheck] = useState(null);
+    const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastCheck, setLastCheck] = useState<number | null>(null);
 
-    const pollingRef = useRef(null);
-    const providerRef = useRef(dataProvider);
+    const pollingRef = useRef<NodeJS.Timeout | null>(null);
+    const providerRef = useRef<DataProvider>(dataProvider);
 
     // Update provider reference when it changes
     useEffect(() => {
@@ -40,10 +114,10 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
     }, [dataProvider, onProviderChange]);
 
     // Check provider availability
-    const checkAvailability = useCallback(async (force = false) => {
+    const checkAvailability = useCallback(async (force: boolean = false): Promise<boolean> => {
         // Don't check too frequently unless forced
         if (!force && lastCheck && (Date.now() - lastCheck) < 10000) {
-            return isAvailable;
+            return isAvailable || false;
         }
 
         setIsLoading(true);
@@ -55,7 +129,8 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             setLastCheck(Date.now());
             return available;
         } catch (err) {
-            setError(`Availability check failed: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Availability check failed: ${errorMessage}`);
             setIsAvailable(false);
             console.error('Provider availability check failed:', err);
             return false;
@@ -65,7 +140,7 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
     }, [isAvailable, lastCheck]);
 
     // Get analytics data
-    const getAnalytics = useCallback(async (channelId) => {
+    const getAnalytics = useCallback(async (channelId: string): Promise<AnalyticsOverview> => {
         setIsLoading(true);
         setError(null);
 
@@ -73,7 +148,8 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             const data = await providerRef.current.getAnalytics(channelId);
             return data;
         } catch (err) {
-            setError(`Failed to get analytics: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Failed to get analytics: ${errorMessage}`);
             console.error('Analytics fetch failed:', err);
             throw err;
         } finally {
@@ -82,7 +158,7 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
     }, []);
 
     // Get top posts
-    const getTopPosts = useCallback(async (channelId, options = {}) => {
+    const getTopPosts = useCallback(async (channelId: string, options: Record<string, any> = {}): Promise<Post[]> => {
         setIsLoading(true);
         setError(null);
 
@@ -90,7 +166,8 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             const data = await providerRef.current.getTopPosts(channelId, options);
             return data;
         } catch (err) {
-            setError(`Failed to get top posts: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Failed to get top posts: ${errorMessage}`);
             console.error('Top posts fetch failed:', err);
             throw err;
         } finally {
@@ -99,7 +176,7 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
     }, []);
 
     // Get engagement metrics
-    const getEngagementMetrics = useCallback(async (channelId, options = {}) => {
+    const getEngagementMetrics = useCallback(async (channelId: string, options: Record<string, any> = {}): Promise<EngagementMetrics> => {
         setIsLoading(true);
         setError(null);
 
@@ -107,7 +184,8 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             const data = await providerRef.current.getEngagementMetrics(channelId, options);
             return data;
         } catch (err) {
-            setError(`Failed to get engagement metrics: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Failed to get engagement metrics: ${errorMessage}`);
             console.error('Engagement metrics fetch failed:', err);
             throw err;
         } finally {
@@ -116,7 +194,7 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
     }, []);
 
     // Get recommendations
-    const getRecommendations = useCallback(async (channelId) => {
+    const getRecommendations = useCallback(async (channelId: string): Promise<any> => {
         setIsLoading(true);
         setError(null);
 
@@ -124,7 +202,8 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
             const data = await providerRef.current.getRecommendations(channelId);
             return data;
         } catch (err) {
-            setError(`Failed to get recommendations: ${err.message}`);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Failed to get recommendations: ${errorMessage}`);
             console.error('Recommendations fetch failed:', err);
             throw err;
         } finally {
@@ -181,14 +260,23 @@ export const useDataSource = (dataProvider = productionDataProvider, options = {
 /**
  * Clean analytics hook using data provider
  */
-import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+export interface UseAnalyticsReturn {
+    data: AnalyticsOverview | null;
+    isLoading: boolean;
+    error: string | null;
+    refetch: (forceRefresh?: boolean) => Promise<AnalyticsOverview | null>;
+    clearError: () => void;
+}
 
-export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+export const useAnalytics = (
+    channelId: string = DEFAULT_CHANNEL_ID,
+    dataProvider: DataProvider = productionDataProvider
+): UseAnalyticsReturn => {
+    const [data, setData] = useState<AnalyticsOverview | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const fetchAnalytics = useCallback(async (forceRefresh = false) => {
+    const fetchAnalytics = useCallback(async (forceRefresh: boolean = false): Promise<AnalyticsOverview | null> => {
         if (!forceRefresh && data) return data;
 
         setIsLoading(true);
@@ -199,7 +287,8 @@ export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = prod
             setData(analyticsData);
             return analyticsData;
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
             console.error('Analytics fetch failed:', err);
             return null;
         } finally {
@@ -224,12 +313,24 @@ export const useAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = prod
 /**
  * Clean top posts hook using data provider
  */
-export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataProvider = productionDataProvider) => {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+export interface UseTopPostsReturn {
+    data: Post[] | null;
+    isLoading: boolean;
+    error: string | null;
+    refetch: (forceRefresh?: boolean) => Promise<Post[] | null>;
+    clearError: () => void;
+}
 
-    const fetchTopPosts = useCallback(async (forceRefresh = false) => {
+export const useTopPosts = (
+    channelId: string = DEFAULT_CHANNEL_ID,
+    options: Record<string, any> = {},
+    dataProvider: DataProvider = productionDataProvider
+): UseTopPostsReturn => {
+    const [data, setData] = useState<Post[] | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchTopPosts = useCallback(async (forceRefresh: boolean = false): Promise<Post[] | null> => {
         if (!forceRefresh && data) return data;
 
         setIsLoading(true);
@@ -240,7 +341,8 @@ export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataPr
             setData(postsData);
             return postsData;
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
             console.error('Top posts fetch failed:', err);
             return null;
         } finally {
@@ -264,12 +366,24 @@ export const useTopPosts = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataPr
 /**
  * Clean engagement metrics hook using data provider
  */
-export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {}, dataProvider = productionDataProvider) => {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+export interface UseEngagementMetricsReturn {
+    data: EngagementMetrics | null;
+    isLoading: boolean;
+    error: string | null;
+    refetch: (forceRefresh?: boolean) => Promise<EngagementMetrics | null>;
+    clearError: () => void;
+}
 
-    const fetchEngagementMetrics = useCallback(async (forceRefresh = false) => {
+export const useEngagementMetrics = (
+    channelId: string = DEFAULT_CHANNEL_ID,
+    options: Record<string, any> = {},
+    dataProvider: DataProvider = productionDataProvider
+): UseEngagementMetricsReturn => {
+    const [data, setData] = useState<EngagementMetrics | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchEngagementMetrics = useCallback(async (forceRefresh: boolean = false): Promise<EngagementMetrics | null> => {
         if (!forceRefresh && data) return data;
 
         setIsLoading(true);
@@ -280,7 +394,8 @@ export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {
             setData(metricsData);
             return metricsData;
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
             console.error('Engagement metrics fetch failed:', err);
             return null;
         } finally {
@@ -304,12 +419,23 @@ export const useEngagementMetrics = (channelId = DEFAULT_CHANNEL_ID, options = {
 /**
  * Clean recommendations hook using data provider
  */
-export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
-    const [data, setData] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+export interface UseRecommendationsReturn {
+    data: any | null;
+    isLoading: boolean;
+    error: string | null;
+    refetch: (forceRefresh?: boolean) => Promise<any | null>;
+    clearError: () => void;
+}
 
-    const fetchRecommendations = useCallback(async (forceRefresh = false) => {
+export const useRecommendations = (
+    channelId: string = DEFAULT_CHANNEL_ID,
+    dataProvider: DataProvider = productionDataProvider
+): UseRecommendationsReturn => {
+    const [data, setData] = useState<any | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchRecommendations = useCallback(async (forceRefresh: boolean = false): Promise<any | null> => {
         if (!forceRefresh && data) return data;
 
         setIsLoading(true);
@@ -320,7 +446,8 @@ export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider 
             setData(recommendationsData);
             return recommendationsData;
         } catch (err) {
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
             console.error('Recommendations fetch failed:', err);
             return null;
         } finally {
@@ -344,7 +471,29 @@ export const useRecommendations = (channelId = DEFAULT_CHANNEL_ID, dataProvider 
 /**
  * Composite hook for all analytics data using dependency injection
  */
-export const useAllAnalytics = (channelId = DEFAULT_CHANNEL_ID, dataProvider = productionDataProvider) => {
+export interface UseAllAnalyticsReturn {
+    analytics: AnalyticsOverview | null;
+    topPosts: Post[] | null;
+    engagementMetrics: EngagementMetrics | null;
+    recommendations: any | null;
+    isLoading: boolean;
+    hasError: string | null | false;
+    errors: {
+        analytics: string | null;
+        topPosts: string | null;
+        engagementMetrics: string | null;
+        recommendations: string | null;
+    };
+    actions: {
+        refetchAll: () => void;
+        clearAllErrors: () => void;
+    };
+}
+
+export const useAllAnalytics = (
+    channelId: string = DEFAULT_CHANNEL_ID,
+    dataProvider: DataProvider = productionDataProvider
+): UseAllAnalyticsReturn => {
     const analytics = useAnalytics(channelId, dataProvider);
     const topPosts = useTopPosts(channelId, {}, dataProvider);
     const engagementMetrics = useEngagementMetrics(channelId, {}, dataProvider);

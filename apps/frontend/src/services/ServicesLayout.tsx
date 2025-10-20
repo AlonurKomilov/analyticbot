@@ -18,18 +18,28 @@ import {
     Security as SecurityIcon,
     Dashboard as OverviewIcon
 } from '@mui/icons-material';
+import { SvgIconComponent } from '@mui/icons-material';
 
 const DRAWER_WIDTH = 280;
+
+interface Service {
+    id: string;
+    name: string;
+    path: string;
+    icon: SvgIconComponent;
+    status: 'active' | 'beta' | 'maintenance';
+    description: string;
+}
 
 /**
  * Professional Services Layout
  * Provides navigation sidebar and content area for AI services
  */
-const ServicesLayout = () => {
+const ServicesLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const services = [
+    const services: Service[] = [
         {
             id: 'overview',
             name: 'Services Overview',
@@ -76,7 +86,7 @@ const ServicesLayout = () => {
         location.pathname.includes(service.id)
     );
 
-    const getStatusColor = (status) => {
+    const getStatusColor = (status: 'active' | 'beta' | 'maintenance'): 'success' | 'warning' | 'error' | 'default' => {
         switch (status) {
             case 'active': return 'success';
             case 'beta': return 'warning';

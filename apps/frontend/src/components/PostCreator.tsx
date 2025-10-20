@@ -25,7 +25,26 @@ import PostButtonManager from './domains/posts/PostButtonManager.tsx';
 import PostSubmitButton from './domains/posts/PostSubmitButton.jsx';
 import { validatePostForm, canSubmitForm } from './domains/posts/PostFormValidation.js';
 
-const PostCreator = React.memo(() => {
+interface Button {
+    text: string;
+    url: string;
+}
+
+interface FormState {
+    text: string;
+    selectedChannel: string;
+    scheduleTime: string | null;
+    hasMedia: boolean;
+}
+
+interface FormErrors {
+    text?: string;
+    selectedChannel?: string;
+    scheduleTime?: string;
+    [key: string]: string | undefined;
+}
+
+const PostCreator: React.FC = React.memo(() => {
     const { channels } = useChannelStore();
     const { schedulePost } = usePostStore();
     const { pendingMedia } = useMediaStore();
@@ -33,14 +52,14 @@ const PostCreator = React.memo(() => {
     const responsive = useResponsive();
 
     // Enhanced form state management
-    const { state: formState, updateField, resetForm, errors: formErrors, setErrors: setFormErrors } = useFormState({
+    const { state: formState, updateField, resetForm, errors: formErrors, setErrors: setFormErrors } = useFormState<FormState>({
         text: '',
         selectedChannel: '',
         scheduleTime: null,
         hasMedia: false
     });
 
-    const [buttons, setButtons] = useState([]);
+    const [buttons, setButtons] = useState<Button[]>([]);
     const { loading, error, executeWithLoading } = useLoadingState('schedulePost');
 
     // Update hasMedia when pendingMedia changes
@@ -53,11 +72,11 @@ const PostCreator = React.memo(() => {
     }, [pendingMedia.file_id, updateField]);
 
     // Optimized button handlers
-    const handleAddButton = useCallback((newButton) => {
+    const handleAddButton = useCallback((newButton: Button) => {
         setButtons(prev => [...prev, newButton]);
     }, []);
 
-    const handleRemoveButton = useCallback((index) => {
+    const handleRemoveButton = useCallback((index: number) => {
         setButtons(prev => prev.filter((_, i) => i !== index));
     }, []);
 
@@ -139,7 +158,7 @@ const PostCreator = React.memo(() => {
                 <legend className="sr-only">Post Content</legend>
                 <PostContentInput
                     value={formState.text}
-                    onChange={(value) => updateField('text', value)}
+                    onChange={(value: string) => updateField('text', value)}
                     error={formErrors.text}
                     helperText={formErrors.text}
                     disabled={loading}
@@ -159,7 +178,7 @@ const PostCreator = React.memo(() => {
                 <ChannelSelector
                     channels={channels}
                     selectedChannel={formState.selectedChannel}
-                    onChange={(value) => updateField('selectedChannel', value)}
+                    onChange={(value: string) => updateField('selectedChannel', value)}
                     error={formErrors.selectedChannel}
                     disabled={loading}
                 />
@@ -170,7 +189,7 @@ const PostCreator = React.memo(() => {
                 <legend className="sr-only">Schedule Settings</legend>
                 <ScheduleTimeInput
                     value={formState.scheduleTime}
-                    onChange={(value) => updateField('scheduleTime', value)}
+                    onChange={(value: string | null) => updateField('scheduleTime', value)}
                     error={formErrors.scheduleTime}
                     disabled={loading}
                 />

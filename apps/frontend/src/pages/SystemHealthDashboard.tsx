@@ -26,14 +26,35 @@ import {
 import { SystemHealthCheck } from '../components/common/SystemHealthCheck';
 import { runProductionReadinessCheck, formatReadinessReport } from '../utils/systemHealthCheck';
 
+interface ProgressData {
+  current?: number;
+  total?: number;
+  status?: string;
+  [key: string]: any;
+}
+
+interface HealthCheckOptions {
+  skipOptional: boolean;
+  timeout: number;
+  onProgress?: (progress: ProgressData) => void;
+}
+
+interface HealthReport {
+  passed?: boolean;
+  critical?: number;
+  important?: number;
+  optional?: number;
+  [key: string]: any;
+}
+
 /**
  * System Health Dashboard Page
  */
-const SystemHealthDashboard = () => {
-  const [loading, setLoading] = useState(false);
-  const [report, setReport] = useState(null);
-  const [progress, setProgress] = useState(null);
-  const [skipOptional, setSkipOptional] = useState(true);
+const SystemHealthDashboard: React.FC = () => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [report, setReport] = useState<HealthReport | null>(null);
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [skipOptional, setSkipOptional] = useState<boolean>(true);
 
   const runHealthCheck = async () => {
     setLoading(true);
@@ -44,7 +65,7 @@ const SystemHealthDashboard = () => {
       const result = await runProductionReadinessCheck({
         skipOptional,
         timeout: 10000,
-        onProgress: (progressData) => {
+        onProgress: (progressData: ProgressData) => {
           setProgress(progressData);
         }
       });

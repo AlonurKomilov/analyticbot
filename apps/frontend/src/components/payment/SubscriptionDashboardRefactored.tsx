@@ -35,21 +35,56 @@ import PaymentHistory from './billing/PaymentHistory.tsx';
 import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog.tsx';
 import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog.tsx';
 
+interface Subscription {
+  id: string | number;
+  plan_name?: string;
+  status?: string;
+  current_period_end?: string;
+  cancel_at_period_end?: boolean;
+  [key: string]: any;
+}
+
+interface Payment {
+  id: string | number;
+  amount?: number;
+  status?: string;
+  date?: string;
+  [key: string]: any;
+}
+
+interface Usage {
+  posts_used?: number;
+  posts_limit?: number;
+  storage_used?: number;
+  storage_limit?: number;
+  [key: string]: any;
+}
+
+interface SubscriptionDashboardProps {
+  userId: string | number;
+}
+
+interface CancelFeedback {
+  reason?: string;
+  feedback?: string;
+  [key: string]: any;
+}
+
 /**
  * Main Subscription Dashboard Orchestrator
  *
  * Coordinates subscription-related components while maintaining all original functionality.
  * Now focused purely on state management and component coordination.
  */
-const SubscriptionDashboard = ({ userId }) => {
-  const [subscription, setSubscription] = useState(null);
-  const [paymentHistory, setPaymentHistory] = useState([]);
-  const [usage, setUsage] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [canceling, setCanceling] = useState(false);
-  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId }) => {
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+  const [usage, setUsage] = useState<Usage | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState<boolean>(false);
+  const [canceling, setCanceling] = useState<boolean>(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     loadSubscriptionData();
@@ -77,14 +112,14 @@ const SubscriptionDashboard = ({ userId }) => {
         console.log('Usage data not available:', usageError);
       }
 
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Failed to load subscription data');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelSubscription = async (immediate = false, feedback = {}) => {
+  const handleCancelSubscription = async (immediate: boolean = false, feedback: CancelFeedback = {}) => {
     try {
       setCanceling(true);
       await paymentAPI.cancelSubscription({
@@ -97,7 +132,7 @@ const SubscriptionDashboard = ({ userId }) => {
       await loadSubscriptionData();
       setCancelDialogOpen(false);
 
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || 'Failed to cancel subscription');
     } finally {
       setCanceling(false);

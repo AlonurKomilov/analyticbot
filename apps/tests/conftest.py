@@ -11,9 +11,8 @@ from collections.abc import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Set test environment
 os.environ["TESTING"] = "1"
@@ -60,11 +59,13 @@ async def test_engine():
     """Create a test database engine."""
     from config.settings import settings
 
-    # Use test database URL
-    test_db_url = os.getenv(
-        "TEST_DATABASE_URL",
-        settings.DATABASE_URL.replace("/analyticbot", "/analyticbot_test"),
+    # Use test database URL with proper null handling
+    default_url = (
+        settings.DATABASE_URL.replace("/analyticbot", "/analyticbot_test")
+        if settings.DATABASE_URL
+        else "postgresql+asyncpg://localhost/analyticbot_test"
     )
+    test_db_url = os.getenv("TEST_DATABASE_URL", default_url)
 
     engine = create_async_engine(
         test_db_url,
@@ -88,9 +89,11 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
     after each test to ensure test isolation.
     """
     # Create session factory
-    async_session_maker = sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
+    async_session_factory = async_sessionmaker(
+        test_engine, class_=AsyncSession, expire_on_commit=False
+    )
 
-    async with async_session_maker() as session:
+    async with async_session_factory() as session:
         # Start a transaction
         async with session.begin():
             yield session
@@ -147,7 +150,7 @@ async def api_client() -> AsyncGenerator[AsyncClient, None]:
     """
     from apps.api.main import app
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
 
 

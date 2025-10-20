@@ -2,10 +2,56 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiClient } from '../api/client.js';
 
 /**
+ * Real-time analytics options
+ */
+export interface RealTimeAnalyticsOptions {
+    interval?: number;
+    enableRealTime?: boolean;
+    maxRetries?: number;
+    fallbackToCache?: boolean;
+}
+
+/**
+ * Real-time data error
+ */
+export interface RealTimeError {
+    message: string;
+    retryCount: number;
+    timestamp: Date;
+    canRetry: boolean;
+}
+
+/**
+ * Connection status type
+ */
+export type ConnectionStatus = 'connecting' | 'fetching' | 'connected' | 'error' | 'paused' | 'cached';
+
+/**
+ * Real-time analytics return type
+ */
+export interface UseRealTimeAnalyticsReturn {
+    data: any | null;
+    loading: boolean;
+    error: RealTimeError | null;
+    lastUpdated: Date | null;
+    connectionStatus: ConnectionStatus;
+    refresh: () => void;
+    pauseRealTime: () => void;
+    resumeRealTime: () => void;
+    isConnected: boolean;
+    isOffline: boolean;
+    hasError: boolean;
+    canRetry: boolean;
+}
+
+/**
  * Custom hook for real-time analytics data
  * Provides live data updates with configurable intervals and error handling
  */
-export const useRealTimeAnalytics = (channelId, options = {}) => {
+export const useRealTimeAnalytics = (
+    channelId: string,
+    options: RealTimeAnalyticsOptions = {}
+): UseRealTimeAnalyticsReturn => {
     const {
         interval = 30000,        // 30 seconds default
         enableRealTime = true,   // Enable real-time updates
@@ -13,20 +59,20 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
         fallbackToCache = true, // Use cached data on error
     } = options;
 
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [lastUpdated, setLastUpdated] = useState(null);
-    const [connectionStatus, setConnectionStatus] = useState('connecting');
+    const [data, setData] = useState<any | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<RealTimeError | null>(null);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
 
-    const intervalRef = useRef(null);
-    const retryCountRef = useRef(0);
-    const mountedRef = useRef(true);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const retryCountRef = useRef<number>(0);
+    const mountedRef = useRef<boolean>(true);
 
     // Cache implementation (placeholder - could be moved to a cache store)
-    const cacheRef = useRef({});
-    const getCachedData = useCallback((key) => cacheRef.current[key], []);
-    const setCachedData = useCallback((key, value) => {
+    const cacheRef = useRef<Record<string, any>>({});
+    const getCachedData = useCallback((key: string): any => cacheRef.current[key], []);
+    const setCachedData = useCallback((key: string, value: any): void => {
         cacheRef.current[key] = value;
     }, []);
 
@@ -41,7 +87,7 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
     }, []);
 
     // Fetch real-time analytics data
-    const fetchRealTimeData = useCallback(async (isRetry = false) => {
+    const fetchRealTimeData = useCallback(async (isRetry: boolean = false) => {
         if (!mountedRef.current) return;
 
         try {
@@ -63,7 +109,7 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
 
             // Process and set the data
             const processedData = {
-                ...response,
+                ...(typeof response === 'object' && response !== null ? response : {}),
                 timestamp: new Date().toISOString(),
                 realTime: true,
                 connectionStatus: 'connected'
@@ -104,8 +150,9 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
             }
 
             // Set error state
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch real-time data';
             setError({
-                message: err.message || 'Failed to fetch real-time data',
+                message: errorMessage,
                 retryCount: retryCountRef.current,
                 timestamp: new Date(),
                 canRetry: retryCountRef.current < maxRetries
@@ -188,13 +235,26 @@ export const useRealTimeAnalytics = (channelId, options = {}) => {
 };
 
 /**
+ * Quick analytics return type
+ */
+export interface UseQuickAnalyticsReturn {
+    data: any | null;
+    loading: boolean;
+    error: string | null;
+    refresh: () => void;
+}
+
+/**
  * Custom hook for mobile-optimized quick analytics
  * Provides fast, lightweight data for mobile widgets
  */
-export const useQuickAnalytics = (channelId, widgetType = 'dashboard') => {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+export const useQuickAnalytics = (
+    channelId: string,
+    widgetType: string = 'dashboard'
+): UseQuickAnalyticsReturn => {
+    const [data, setData] = useState<any | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchQuickData = useCallback(async () => {
         try {
@@ -207,11 +267,12 @@ export const useQuickAnalytics = (channelId, widgetType = 'dashboard') => {
                 include_real_time: true
             });
 
-            setData(response);
+            setData(response as any);
             setLoading(false);
         } catch (err) {
             console.error('Quick analytics fetch failed:', err);
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch quick analytics';
+            setError(errorMessage);
             setLoading(false);
         }
     }, [channelId, widgetType]);
@@ -231,15 +292,33 @@ export const useQuickAnalytics = (channelId, widgetType = 'dashboard') => {
 };
 
 /**
+ * Performance metrics return type
+ */
+export interface UsePerformanceMetricsReturn {
+    metrics: any | null;
+    trends: any[];
+    score: number;
+    loading: boolean;
+    error: string | null;
+    refresh: () => void;
+    isGoodPerformance: boolean;
+    isExcellentPerformance: boolean;
+    needsAttention: boolean;
+}
+
+/**
  * Custom hook for performance metrics with real-time updates
  * Focuses on key performance indicators
  */
-export const usePerformanceMetrics = (channelId, period = 30) => {
-    const [metrics, setMetrics] = useState(null);
-    const [trends, setTrends] = useState([]);
-    const [score, setScore] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+export const usePerformanceMetrics = (
+    channelId: string,
+    period: number = 30
+): UsePerformanceMetricsReturn => {
+    const [metrics, setMetrics] = useState<any | null>(null);
+    const [trends, setTrends] = useState<any[]>([]);
+    const [score, setScore] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchPerformanceData = useCallback(async () => {
         try {
@@ -254,13 +333,17 @@ export const usePerformanceMetrics = (channelId, period = 30) => {
                 apiClient.get('/api/v2/analytics/trends/top-posts')
             ]);
 
-            setMetrics(metricsData);
-            setTrends(trendsData.trends || []);
-            setScore(metricsData.performance_score || 0);
+            const metrics = metricsData as any;
+            const trends = trendsData as any;
+
+            setMetrics(metrics);
+            setTrends(trends.trends || []);
+            setScore(metrics.performance_score || 0);
             setLoading(false);
         } catch (err) {
             console.error('Performance metrics fetch failed:', err);
-            setError(err.message);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch performance metrics';
+            setError(errorMessage);
             setLoading(false);
         }
     }, [channelId, period]);
@@ -273,6 +356,8 @@ export const usePerformanceMetrics = (channelId, period = 30) => {
             const interval = setInterval(fetchPerformanceData, 60000);
             return () => clearInterval(interval);
         }
+
+        return undefined;
     }, [channelId, fetchPerformanceData]);
 
     return {

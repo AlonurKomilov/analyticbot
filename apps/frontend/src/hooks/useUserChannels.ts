@@ -10,23 +10,60 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAuthenticatedDataProvider } from './useAuthenticatedDataSource';
 
 /**
- * Hook to fetch and manage user's channels
- * @param {Object} options - Hook options
- * @returns {Object} User channels data and management functions
+ * Channel interface
  */
-export const useUserChannels = (options = {}) => {
+export interface Channel {
+    id: number | string;
+    name?: string;
+    title?: string;
+    username?: string;
+    type?: string;
+    [key: string]: any;
+}
+
+/**
+ * User channels hook options
+ */
+export interface UseUserChannelsOptions {
+    autoFetch?: boolean;
+    onChannelChange?: ((channel: Channel | null) => void) | null;
+}
+
+/**
+ * User channels return type
+ */
+export interface UseUserChannelsReturn {
+    channels: Channel[];
+    selectedChannel: Channel | null;
+    loading: boolean;
+    error: string | null;
+    lastFetch: string | null;
+    fetchChannels: () => Promise<void>;
+    createChannel: (channelData: Partial<Channel>) => Promise<Channel>;
+    selectChannel: (channel: Channel | null) => void;
+    getChannel: (channelId: number | string) => Promise<Channel>;
+    user: any;
+    isAuthenticated: boolean;
+}
+
+/**
+ * Hook to fetch and manage user's channels
+ * @param options - Hook options
+ * @returns User channels data and management functions
+ */
+export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserChannelsReturn => {
     const { autoFetch = true, onChannelChange = null } = options;
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
 
-    const [channels, setChannels] = useState([]);
-    const [selectedChannel, setSelectedChannel] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [lastFetch, setLastFetch] = useState(null);
+    const [channels, setChannels] = useState<Channel[]>([]);
+    const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastFetch, setLastFetch] = useState<string | null>(null);
 
     // Fetch user's channels
-    const fetchChannels = useCallback(async () => {
+    const fetchChannels = useCallback(async (): Promise<void> => {
         if (!isAuthenticated) {
             setError('Authentication required');
             return;
@@ -36,7 +73,7 @@ export const useUserChannels = (options = {}) => {
         setError(null);
 
         try {
-            const response = await dataProvider._makeRequest('/analytics/channels');
+            const response = (await (dataProvider as any)._makeRequest('/analytics/channels')) as Channel[];
             setChannels(response || []);
             setLastFetch(new Date().toISOString());
 
@@ -48,14 +85,15 @@ export const useUserChannels = (options = {}) => {
             }
         } catch (err) {
             console.error('Failed to fetch user channels:', err);
-            setError(err.message || 'Failed to fetch channels');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch channels';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
     }, [dataProvider, isAuthenticated, selectedChannel, onChannelChange]);
 
     // Create a new channel
-    const createChannel = useCallback(async (channelData) => {
+    const createChannel = useCallback(async (channelData: Partial<Channel>): Promise<Channel> => {
         if (!isAuthenticated) {
             throw new Error('Authentication required');
         }
@@ -64,10 +102,10 @@ export const useUserChannels = (options = {}) => {
         setError(null);
 
         try {
-            const newChannel = await dataProvider._makeRequest('/analytics/channels', {
+            const newChannel = (await (dataProvider as any)._makeRequest('/analytics/channels', {
                 method: 'POST',
                 body: JSON.stringify(channelData)
-            });
+            })) as Channel;
 
             // Add new channel to local state
             setChannels(prev => [...prev, newChannel]);
@@ -79,7 +117,8 @@ export const useUserChannels = (options = {}) => {
             return newChannel;
         } catch (err) {
             console.error('Failed to create channel:', err);
-            setError(err.message || 'Failed to create channel');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to create channel';
+            setError(errorMessage);
             throw err;
         } finally {
             setLoading(false);
@@ -87,7 +126,7 @@ export const useUserChannels = (options = {}) => {
     }, [dataProvider, isAuthenticated, onChannelChange]);
 
     // Select a channel
-    const selectChannel = useCallback((channel) => {
+    const selectChannel = useCallback((channel: Channel | null): void => {
         setSelectedChannel(channel);
         onChannelChange?.(channel);
 
@@ -100,13 +139,13 @@ export const useUserChannels = (options = {}) => {
     }, [onChannelChange]);
 
     // Get channel by ID
-    const getChannel = useCallback(async (channelId) => {
+    const getChannel = useCallback(async (channelId: number | string): Promise<Channel> => {
         if (!isAuthenticated) {
             throw new Error('Authentication required');
         }
 
         try {
-            const channel = await dataProvider._makeRequest(`/analytics/channels/${channelId}`);
+            const channel = (await (dataProvider as any)._makeRequest(`/analytics/channels/${channelId}`)) as Channel;
             return channel;
         } catch (err) {
             console.error(`Failed to fetch channel ${channelId}:`, err);
@@ -165,10 +204,21 @@ export const useUserChannels = (options = {}) => {
 };
 
 /**
- * Simple hook to get the current selected channel
- * @returns {Object} Selected channel info
+ * Selected channel return type
  */
-export const useSelectedChannel = () => {
+export interface UseSelectedChannelReturn {
+    channel: Channel | null;
+    channelId: number | string | undefined;
+    channelName: string | undefined;
+    selectChannel: (channel: Channel | null) => void;
+    hasChannels: boolean;
+}
+
+/**
+ * Simple hook to get the current selected channel
+ * @returns Selected channel info
+ */
+export const useSelectedChannel = (): UseSelectedChannelReturn => {
     const { selectedChannel, selectChannel, channels } = useUserChannels();
 
     return {
@@ -181,14 +231,23 @@ export const useSelectedChannel = () => {
 };
 
 /**
- * Hook to validate if user has access to a specific channel
- * @param {number|string} channelId - Channel ID to validate
- * @returns {Object} Access validation result
+ * Channel access return type
  */
-export const useChannelAccess = (channelId) => {
+export interface UseChannelAccessReturn {
+    hasAccess: boolean;
+    checking: boolean;
+    isAuthenticated: boolean;
+}
+
+/**
+ * Hook to validate if user has access to a specific channel
+ * @param channelId - Channel ID to validate
+ * @returns Access validation result
+ */
+export const useChannelAccess = (channelId: number | string | undefined): UseChannelAccessReturn => {
     const { channels, isAuthenticated } = useUserChannels();
-    const [hasAccess, setHasAccess] = useState(false);
-    const [checking, setChecking] = useState(true);
+    const [hasAccess, setHasAccess] = useState<boolean>(false);
+    const [checking, setChecking] = useState<boolean>(true);
 
     useEffect(() => {
         if (!isAuthenticated) {

@@ -1,26 +1,113 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useMediaStore, useUIStore } from '@/stores';
 
-// Export admin hooks
+// Export all major hooks with their types
 export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
+export type {
+    UseAdminAPIReturn,
+    UseAdminDashboardReturn,
+    AdminStats,
+    AdminUser,
+    AuditLog
+} from './useAdminAPI';
 
-// Export unified analytics system
 export { useUnifiedAnalytics, ANALYTICS_PRESETS } from './useUnifiedAnalytics';
+export type {
+    UseUnifiedAnalyticsReturn,
+    AnalyticsPresetType,
+    AnalyticsConfig,
+    ConnectionStatus,
+    AnalyticsData
+} from './useUnifiedAnalytics';
+
 export {
     useDashboardAnalytics,
     useAdminAnalytics,
     useMobileAnalytics,
     usePerformanceAnalytics,
-    useHighFrequencyAnalytics
+    useHighFrequencyAnalytics,
+    useRealTimeAnalytics
 } from './useSpecializedAnalytics';
+export type {
+    DashboardData,
+    AdminData,
+    MobileData,
+    PerformanceData,
+    RealTimeData
+} from './useSpecializedAnalytics';
+
+export { useRealTimeAnalytics as useRealTimeAnalyticsHook, useQuickAnalytics, usePerformanceMetrics } from './useRealTimeAnalytics';
+export type {
+    UseRealTimeAnalyticsReturn,
+    UseQuickAnalyticsReturn,
+    UsePerformanceMetricsReturn,
+    RealTimeAnalyticsOptions
+} from './useRealTimeAnalytics';
+
+export { useUserChannels, useSelectedChannel, useChannelAccess } from './useUserChannels';
+export type {
+    UseUserChannelsReturn,
+    UseSelectedChannelReturn,
+    UseChannelAccessReturn,
+    Channel
+} from './useUserChannels';
+
+export { useDataSource, useAnalytics, useTopPosts, useEngagementMetrics, useRecommendations, useAllAnalytics } from './useDataSource';
+export type {
+    UseDataSourceReturn,
+    UseAnalyticsReturn,
+    DataProvider
+} from './useDataSource';
+
+export {
+    useAuthenticatedDataProvider,
+    useAuthenticatedAnalytics,
+    useAuthenticatedTopPosts,
+    useAuthenticatedEngagementMetrics,
+    useAuthenticatedRecommendations,
+    useAuthenticatedDataSourceStatus,
+    useAuthenticatedDataSource
+} from './useAuthenticatedDataSource';
+
+export {
+    useEnhancedResponsive,
+    useSwipeGesture,
+    useMobileDrawer,
+    useTouchFriendlyButton,
+    useResponsiveGrid,
+    useMobileSpacing,
+    useAdaptiveTypography,
+    useOrientationChange
+} from './useMobileResponsive';
+export type {
+    DeviceType,
+    ResponsiveConfig,
+    SwipeGestureOptions
+} from './useMobileResponsive';
+
+export { useApiFailureDialog } from './useApiFailureDialog';
+export type {
+    UseApiFailureDialogReturn,
+    APIError
+} from './useApiFailureDialog';
+
+/**
+ * Loading state return type
+ */
+export interface UseLoadingStateReturn {
+    loading: boolean;
+    debouncedLoading: boolean;
+    error: string | null;
+    clearError: () => void;
+}
 
 /**
  * Custom hook for managing loading states with debouncing
  */
-export const useLoadingState = (operation, delay = 300) => {
-    const [debouncedLoading, setDebouncedLoading] = useState(false);
+export const useLoadingState = (operation?: string, delay: number = 300): UseLoadingStateReturn => {
+    const [debouncedLoading, setDebouncedLoading] = useState<boolean>(false);
     const { globalLoading } = useUIStore();
-    const timeoutRef = useRef();
+    const timeoutRef = useRef<NodeJS.Timeout>();
 
     const loading = globalLoading.isLoading;
     const error = globalLoading.error;
@@ -59,27 +146,43 @@ export const useLoadingState = (operation, delay = 300) => {
 };
 
 /**
+ * Form state return type
+ */
+export interface UseFormStateReturn<T> {
+    state: T;
+    errors: Record<string, string | undefined>;
+    touched: Record<string, boolean>;
+    updateField: (field: keyof T, value: any) => void;
+    validateForm: () => boolean;
+    resetForm: () => void;
+    isValid: boolean;
+}
+
+/**
  * Custom hook for form handling with validation
  */
-export const useFormState = (initialState, validator) => {
-    const [state, setState] = useState(initialState);
-    const [errors, setErrors] = useState({});
-    const [touched, setTouched] = useState({});
+export const useFormState = <T extends Record<string, any>>(
+    initialState: T,
+    validator?: (state: T) => Record<string, string | undefined>
+): UseFormStateReturn<T> => {
+    const [state, setState] = useState<T>(initialState);
+    const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+    const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-    const updateField = useCallback((field, value) => {
+    const updateField = useCallback((field: keyof T, value: any): void => {
         setState(prev => ({ ...prev, [field]: value }));
-        setTouched(prev => ({ ...prev, [field]: true }));
+        setTouched(prev => ({ ...prev, [field as string]: true }));
 
         if (validator) {
             setErrors(prev => {
                 const newState = { ...state, [field]: value };
                 const fieldErrors = validator(newState);
-                return { ...prev, [field]: fieldErrors[field] };
+                return { ...prev, [field as string]: fieldErrors[field as string] };
             });
         }
-    }, [validator]);
+    }, [state, validator]);
 
-    const validateForm = useCallback(() => {
+    const validateForm = useCallback((): boolean => {
         if (!validator) return true;
 
         const formErrors = validator(state);
@@ -88,7 +191,7 @@ export const useFormState = (initialState, validator) => {
         return Object.keys(formErrors).length === 0;
     }, [state, validator]);
 
-    const resetForm = useCallback(() => {
+    const resetForm = useCallback((): void => {
         setState(initialState);
         setErrors({});
         setTouched({});
@@ -106,17 +209,31 @@ export const useFormState = (initialState, validator) => {
 };
 
 /**
+ * Optimized list return type
+ */
+export interface UseOptimizedListReturn<T> {
+    items: T[];
+    itemsMap: Record<string, T>;
+    sortedItems: T[];
+    getItem: (key: string) => T | undefined;
+    count: number;
+}
+
+/**
  * Custom hook for optimized list operations
  */
-export const useOptimizedList = (items, keyExtractor) => {
+export const useOptimizedList = <T>(
+    items: T[],
+    keyExtractor: (item: T) => string
+): UseOptimizedListReturn<T> => {
     const itemsMap = useMemo(() => {
         return items.reduce((map, item) => {
             map[keyExtractor(item)] = item;
             return map;
-        }, {});
+        }, {} as Record<string, T>);
     }, [items, keyExtractor]);
 
-    const getItem = useCallback((key) => itemsMap[key], [itemsMap]);
+    const getItem = useCallback((key: string): T | undefined => itemsMap[key], [itemsMap]);
 
     const sortedItems = useMemo(() => {
         return [...items].sort((a, b) => {
@@ -136,16 +253,32 @@ export const useOptimizedList = (items, keyExtractor) => {
 };
 
 /**
+ * Media upload return type
+ */
+export interface UseMediaUploadReturn {
+    handleUpload: (file: File, channelId?: string | null) => Promise<any>;
+    handleUploadWithProgress: (file: File, channelId?: string | null, onProgress?: ((progress: number) => void) | null) => Promise<any>;
+    uploadProgress: number;
+    pendingMedia: any;
+    clearPendingMedia: () => void;
+    loading: boolean;
+    error: string | null;
+    uploadSpeed: number;
+    uploadType: string;
+    metadata: Record<string, any>;
+}
+
+/**
  * Custom hook for managing media uploads (Enhanced for TWA Phase 2.1)
  */
-export const useMediaUpload = () => {
+export const useMediaUpload = (): UseMediaUploadReturn => {
     const { uploadMedia, uploadMediaDirect, pendingMedia, clearPendingMedia } = useMediaStore();
-    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadProgress, setUploadProgress] = useState<number>(0);
     const loading = useMediaStore(state => state.isUploading);
     const error = useMediaStore(state => state.error);
 
     // Enhanced upload handler with direct upload support
-    const handleUpload = useCallback(async (file, channelId = null) => {
+    const handleUpload = useCallback(async (file: File, channelId: string | null = null): Promise<any> => {
         if (!file) return;
 
         // Validate file
@@ -175,7 +308,11 @@ export const useMediaUpload = () => {
     }, [uploadMedia, uploadMediaDirect]);
 
     // Enhanced upload with progress tracking
-    const handleUploadWithProgress = useCallback(async (file, channelId = null, onProgress = null) => {
+    const handleUploadWithProgress = useCallback(async (
+        file: File,
+        channelId: string | null = null,
+        onProgress: ((progress: number) => void) | null = null
+    ): Promise<any> => {
         if (!file) return;
 
         try {
@@ -214,14 +351,45 @@ export const useMediaUpload = () => {
 };
 
 /**
+ * Telegram WebApp type
+ */
+export interface TelegramWebApp {
+    ready: () => void;
+    expand: () => void;
+    showAlert: (message: string) => void;
+    showConfirm: (message: string, callback: (result: boolean) => void) => void;
+    HapticFeedback?: {
+        impactOccurred: (style: 'light' | 'medium' | 'heavy') => void;
+        notificationOccurred: (type: 'error' | 'success' | 'warning') => void;
+    };
+    initDataUnsafe?: {
+        user?: any;
+    };
+    colorScheme?: 'light' | 'dark';
+}
+
+/**
+ * Telegram WebApp return type
+ */
+export interface UseTelegramWebAppReturn {
+    webApp: TelegramWebApp | null;
+    isReady: boolean;
+    showAlert: (message: string) => void;
+    showConfirm: (message: string) => Promise<boolean>;
+    hapticFeedback: (type?: 'light' | 'medium' | 'heavy' | 'success' | 'error') => void;
+    user: any;
+    theme: 'light' | 'dark';
+}
+
+/**
  * Custom hook for Telegram Web App integration
  */
-export const useTelegramWebApp = () => {
-    const [webApp, setWebApp] = useState(null);
-    const [isReady, setIsReady] = useState(false);
+export const useTelegramWebApp = (): UseTelegramWebAppReturn => {
+    const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
+    const [isReady, setIsReady] = useState<boolean>(false);
 
     useEffect(() => {
-        const tg = window.Telegram?.WebApp;
+        const tg = (window as any).Telegram?.WebApp as TelegramWebApp | undefined;
 
         if (tg) {
             // Initialize Telegram Web App
@@ -240,7 +408,7 @@ export const useTelegramWebApp = () => {
         }
     }, []);
 
-    const showAlert = useCallback((message) => {
+    const showAlert = useCallback((message: string): void => {
         if (webApp) {
             webApp.showAlert(message);
         } else {
@@ -248,7 +416,7 @@ export const useTelegramWebApp = () => {
         }
     }, [webApp]);
 
-    const showConfirm = useCallback((message) => {
+    const showConfirm = useCallback((message: string): Promise<boolean> => {
         return new Promise((resolve) => {
             if (webApp) {
                 webApp.showConfirm(message, resolve);
@@ -258,7 +426,7 @@ export const useTelegramWebApp = () => {
         });
     }, [webApp]);
 
-    const hapticFeedback = useCallback((type = 'impact') => {
+    const hapticFeedback = useCallback((type: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'medium'): void => {
         if (webApp?.HapticFeedback) {
             switch (type) {
                 case 'light':

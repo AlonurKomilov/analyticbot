@@ -16,6 +16,26 @@ import {
 } from '@mui/icons-material';
 import { useNavigation } from '@components/common/NavigationProvider';
 
+interface NotificationAction {
+    type: 'navigate' | 'action';
+    target?: string;
+}
+
+interface Notification {
+    id?: string | number;
+    title: string;
+    message: string;
+    timestamp?: string;
+    read?: boolean;
+    priority?: 'high' | 'medium' | 'low';
+    action?: NotificationAction;
+}
+
+interface NotificationMenuProps {
+    className?: string;
+    [key: string]: any;
+}
+
 /**
  * NotificationMenu Component
  *
@@ -26,14 +46,14 @@ import { useNavigation } from '@components/common/NavigationProvider';
  * - Mark as read functionality
  * - Empty state handling
  */
-const NotificationMenu = ({ className, ...props }) => {
+const NotificationMenu: React.FC<NotificationMenuProps> = ({ className, ...props }) => {
     const { notifications = [], unreadCount = 0, markAsRead } = useNavigation();
 
     // Menu anchor state
-    const [notificationsAnchor, setNotificationsAnchor] = useState(null);
+    const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
 
     // Menu open/close handlers
-    const handleMenuOpen = (event) => {
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
         setNotificationsAnchor(event.currentTarget);
     };
 
@@ -42,7 +62,7 @@ const NotificationMenu = ({ className, ...props }) => {
     };
 
     // Notification click handler
-    const handleNotificationClick = (notification, index) => {
+    const handleNotificationClick = (notification: Notification, index: number) => {
         // Mark as read if not already read
         if (markAsRead && !notification.read) {
             markAsRead(index);
@@ -58,7 +78,7 @@ const NotificationMenu = ({ className, ...props }) => {
     };
 
     // Get priority color for notification
-    const getPriorityColor = (priority) => {
+    const getPriorityColor = (priority?: 'high' | 'medium' | 'low'): 'error' | 'warning' | 'info' | 'default' => {
         switch (priority) {
             case 'high':
                 return 'error';
@@ -124,7 +144,7 @@ const NotificationMenu = ({ className, ...props }) => {
                     </MenuItem>
                 ) : (
                     /* Notification List */
-                    notifications.map((notification, index) => (
+                    notifications.map((notification: Notification, index: number) => (
                         <MenuItem
                             key={notification.id || index}
                             onClick={() => handleNotificationClick(notification, index)}

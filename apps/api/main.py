@@ -29,16 +29,9 @@ from apps.api.routers.payment_router import router as payment_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
-
-# ✅ MIGRATED: Use new modular DI system exclusively
 from apps.di import cleanup_container as cleanup_db_pool
 from apps.di import get_container
-
-# ✅ CLEAN ARCHITECTURE: Use unified DI container from apps/di
 from config import settings
-
-# ✅ PRODUCTION READY: No more direct mock imports
-# Demo services now injected via DI container based on configuration
 
 logger = logging.getLogger(__name__)
 

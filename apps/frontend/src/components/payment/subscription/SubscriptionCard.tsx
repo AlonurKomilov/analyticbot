@@ -91,9 +91,9 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                   {subscription.plan_name || 'Subscription Plan'}
                 </Typography>
                 <StatusChip
-                  icon={getStatusIcon(subscription.status)}
+                  icon={getStatusIcon(subscription.status) as any}
                   label={subscription.status.toUpperCase()}
-                  variant={getStatusColor(subscription.status)}
+                  variant={getStatusColor(subscription.status) as any}
                   size="small"
                 />
               </Box>

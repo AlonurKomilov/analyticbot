@@ -21,7 +21,8 @@ import {
     FormControlLabel,
     Card,
     CardContent,
-    CircularProgress
+    CircularProgress,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     PersonRemove as ChurnIcon,
@@ -32,29 +33,63 @@ import {
     Settings as SettingsIcon,
     Shield as ProtectionIcon
 } from '@mui/icons-material';
-import ModernCard, { ModernCardHeader } from '../components/common/ModernCard.jsx';
-import { SEMANTIC_SPACING } from '../theme/spacingSystem.js';
-import { apiClient } from '../api/client.js';
+import ModernCard from '../components/common/ModernCard';
+import { SEMANTIC_SPACING } from '../theme/spacingSystem';
+import { apiClient } from '../api/client';
+
+interface ChurnStats {
+    churnRate?: string;
+    highRiskUsers?: number;
+    savedCustomers?: number;
+}
+
+interface RiskUser {
+    userId?: string;
+    id?: string;
+    username: string;
+    lastActive: string;
+    engagementDrop: string;
+    riskLevel: 'high' | 'medium' | 'low';
+    riskScore: number;
+    factors?: string[];
+}
+
+interface RetentionStrategy {
+    strategy: string;
+    effectiveness: string;
+    targetGroup: string;
+    description: string;
+}
+
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
+
+type RiskLevel = 'high' | 'medium' | 'low';
+type RiskThreshold = 'low' | 'medium' | 'high';
 
 /**
  * Churn Predictor Service Page
  * Advanced customer retention analysis and risk assessment
  */
-const ChurnPredictorService = () => {
-    const [currentTab, setCurrentTab] = useState(0);
-    const [riskThreshold, setRiskThreshold] = useState('medium');
-    const [autoRefresh, setAutoRefresh] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+const ChurnPredictorService: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<number>(0);
+    const [riskThreshold, setRiskThreshold] = useState<RiskThreshold>('medium');
+    const [autoMonitoring, setAutoMonitoring] = useState<boolean>(true);
+    const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Real data state
-    const [stats, setStats] = useState(null);
-    const [riskUsers, setRiskUsers] = useState([]);
-    const [strategies, setStrategies] = useState([]);
+    const [stats, setStats] = useState<ChurnStats | null>(null);
+    const [riskUsers, setRiskUsers] = useState<RiskUser[]>([]);
+    const [strategies, setStrategies] = useState<RetentionStrategy[]>([]);
 
     // Load real churn prediction data
     useEffect(() => {
-        const loadChurnData = async () => {
+        const loadChurnData = async (): Promise<void> => {
             setLoading(true);
             setError(null);
 
@@ -66,9 +101,9 @@ const ChurnPredictorService = () => {
                     apiClient.get('/ai/churn/strategies')
                 ]);
 
-                setStats(statsResponse.data);
-                setRiskUsers(usersResponse.data);
-                setStrategies(strategiesResponse.data);
+                setStats((statsResponse as any).data);
+                setRiskUsers((usersResponse as any).data);
+                setStrategies((strategiesResponse as any).data);
             } catch (err) {
                 setError('Failed to load churn prediction data');
                 console.error('Churn data loading error:', err);
@@ -80,7 +115,7 @@ const ChurnPredictorService = () => {
         loadChurnData();
     }, []);
 
-    const getRiskColor = (level) => {
+    const getRiskColor = (level: RiskLevel): 'error' | 'warning' | 'success' | 'default' => {
         switch (level) {
             case 'high': return 'error';
             case 'medium': return 'warning';
@@ -89,7 +124,7 @@ const ChurnPredictorService = () => {
         }
     };
 
-    const getRiskIcon = (level) => {
+    const getRiskIcon = (level: RiskLevel): React.ReactNode => {
         switch (level) {
             case 'high': return <HighRiskIcon color="error" />;
             case 'medium': return <WarningIcon color="warning" />;
@@ -98,12 +133,12 @@ const ChurnPredictorService = () => {
         }
     };
 
-    const handleAnalyze = () => {
+    const handleAnalyze = (): void => {
         setIsAnalyzing(true);
         setTimeout(() => setIsAnalyzing(false), 5000);
     };
 
-    const TabPanel = ({ children, value, index }) => (
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
         <div hidden={value !== index}>
             {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
         </div>
@@ -221,7 +256,7 @@ const ChurnPredictorService = () => {
             <ModernCard variant="elevated">
                 <Tabs
                     value={currentTab}
-                    onChange={(e, newValue) => setCurrentTab(newValue)}
+                    onChange={(_e, newValue: number) => setCurrentTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: 'divider' }}
                 >
                     <Tab label="Risk Dashboard" icon={<WarningIcon />} />
@@ -241,7 +276,7 @@ const ChurnPredictorService = () => {
                                 <Select
                                     value={riskThreshold}
                                     label="Risk Threshold"
-                                    onChange={(e) => setRiskThreshold(e.target.value)}
+                                    onChange={(e: SelectChangeEvent) => setRiskThreshold(e.target.value as RiskThreshold)}
                                 >
                                     <MenuItem value="low">Low Risk (30+)</MenuItem>
                                     <MenuItem value="medium">Medium Risk (50+)</MenuItem>

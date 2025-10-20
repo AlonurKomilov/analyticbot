@@ -4,7 +4,6 @@ import {
     Typography,
     Card,
     CardContent,
-    Button,
     Grid,
     Chip,
     Alert,
@@ -32,35 +31,64 @@ import {
     Error as CriticalIcon,
     Shield as ShieldIcon,
     Settings as SettingsIcon,
-    Notifications as NotificationsIcon,
-    Block as BlockedIcon
+    Notifications as NotificationsIcon
 } from '@mui/icons-material';
 
 // Import centralized mock data
 import {
     securityStats,
     mockSecurityAlerts,
-    securityMetrics,
-    threatCategories,
-    riskAssessment
-} from '../__mocks__/aiServices/securityMonitor.js';
+    securityMetrics
+} from '../__mocks__/aiServices/securityMonitor';
+
+interface SecurityAlert {
+    id: number | string;
+    type: string;
+    severity: 'critical' | 'high' | 'medium' | 'low';
+    timestamp: string;
+    source: string;
+    action?: string;
+    description: string;
+}
+
+interface SecurityMetric {
+    metric: string;
+    score?: number;
+    value?: string;
+    status: 'excellent' | 'good' | 'needs-attention' | 'poor';
+}
+
+interface ActiveMonitor {
+    name: string;
+    status: 'active' | 'maintenance' | 'offline';
+    lastUpdate: string;
+}
+
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
+
+type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
+type MonitorStatus = 'active' | 'maintenance' | 'offline';
+type ScoreStatus = 'excellent' | 'good' | 'needs-attention' | 'poor';
 
 /**
  * Security Monitoring Service Page
  * Real-time security analysis and threat detection
  */
-const SecurityMonitoringService = () => {
-    const [currentTab, setCurrentTab] = useState(0);
-    const [realTimeMonitoring, setRealTimeMonitoring] = useState(true);
-    const [threats, setThreats] = useState([]);
-    const [securityScore, setSecurityScore] = useState(securityStats.securityScore);
+const SecurityMonitoringService: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<number>(0);
+    const [realTimeMonitoring, setRealTimeMonitoring] = useState<boolean>(true);
+    const [threats, setThreats] = useState<SecurityAlert[]>([]);
 
     // Use centralized mock data
     const serviceStats = securityStats;
-    const alerts = mockSecurityAlerts;
-    const metrics = securityMetrics;
+    const alerts: SecurityAlert[] = mockSecurityAlerts as any;
+    const metrics: SecurityMetric[] = securityMetrics as any;
 
-    const activeMonitors = [
+    const activeMonitors: ActiveMonitor[] = [
         { name: 'Brute Force Detection', status: 'active', lastUpdate: '30s ago' },
         { name: 'SQL Injection Scanner', status: 'active', lastUpdate: '45s ago' },
         { name: 'DDoS Protection', status: 'active', lastUpdate: '1m ago' },
@@ -73,7 +101,7 @@ const SecurityMonitoringService = () => {
         // Simulate real-time threat updates
         const interval = setInterval(() => {
             if (realTimeMonitoring && Math.random() > 0.8) {
-                const newThreat = {
+                const newThreat: SecurityAlert = {
                     id: Date.now(),
                     type: 'System Scan',
                     severity: 'low',
@@ -89,7 +117,7 @@ const SecurityMonitoringService = () => {
         return () => clearInterval(interval);
     }, [realTimeMonitoring]);
 
-    const getSeverityColor = (severity) => {
+    const getSeverityColor = (severity: SeverityLevel): 'error' | 'warning' | 'info' | 'success' | 'default' => {
         switch (severity) {
             case 'critical': return 'error';
             case 'high': return 'warning';
@@ -99,7 +127,7 @@ const SecurityMonitoringService = () => {
         }
     };
 
-    const getSeverityIcon = (severity) => {
+    const getSeverityIcon = (severity: SeverityLevel): React.ReactNode => {
         switch (severity) {
             case 'critical': return <CriticalIcon color="error" />;
             case 'high': return <WarningIcon color="warning" />;
@@ -109,7 +137,7 @@ const SecurityMonitoringService = () => {
         }
     };
 
-    const getScoreColor = (status) => {
+    const getScoreColor = (status: ScoreStatus): string => {
         switch (status) {
             case 'excellent': return 'success.main';
             case 'good': return 'info.main';
@@ -119,7 +147,7 @@ const SecurityMonitoringService = () => {
         }
     };
 
-    const getMonitorIcon = (status) => {
+    const getMonitorIcon = (status: MonitorStatus): React.ReactNode => {
         switch (status) {
             case 'active': return <SafeIcon color="success" />;
             case 'maintenance': return <WarningIcon color="warning" />;
@@ -128,7 +156,7 @@ const SecurityMonitoringService = () => {
         }
     };
 
-    const TabPanel = ({ children, value, index }) => (
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
         <div hidden={value !== index}>
             {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
         </div>
@@ -179,7 +207,7 @@ const SecurityMonitoringService = () => {
                     <Grid item xs={12} sm={6} md={3}>
                         <Card sx={{ textAlign: 'center', p: 2 }}>
                             <Typography variant="h4" color="info.main" fontWeight={600}>
-                                {serviceStats.activeMonitors}
+                                {activeMonitors.filter(m => m.status === 'active').length}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 Active Monitors
@@ -224,7 +252,7 @@ const SecurityMonitoringService = () => {
             <Card>
                 <Tabs
                     value={currentTab}
-                    onChange={(e, newValue) => setCurrentTab(newValue)}
+                    onChange={(_e, newValue: number) => setCurrentTab(newValue)}
                     sx={{ borderBottom: 1, borderColor: 'divider' }}
                 >
                     <Tab
@@ -279,11 +307,13 @@ const SecurityMonitoringService = () => {
                                                         color={getSeverityColor(alert.severity)}
                                                         size="small"
                                                     />
-                                                    <Chip
-                                                        label={alert.action}
-                                                        variant="outlined"
-                                                        size="small"
-                                                    />
+                                                    {alert.action && (
+                                                        <Chip
+                                                            label={alert.action}
+                                                            variant="outlined"
+                                                            size="small"
+                                                        />
+                                                    )}
                                                 </Box>
                                             }
                                             secondary={
@@ -321,7 +351,7 @@ const SecurityMonitoringService = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {securityMetrics.map((metric, index) => (
+                                    {metrics.map((metric, index) => (
                                         <TableRow key={index}>
                                             <TableCell>{metric.metric}</TableCell>
                                             <TableCell>
@@ -329,7 +359,7 @@ const SecurityMonitoringService = () => {
                                                     variant="h6"
                                                     sx={{ color: getScoreColor(metric.status) }}
                                                 >
-                                                    {metric.score}%
+                                                    {metric.score || metric.value || 'N/A'}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>

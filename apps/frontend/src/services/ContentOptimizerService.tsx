@@ -9,10 +9,6 @@ import {
     Chip,
     LinearProgress,
     Alert,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Switch,
     FormControlLabel,
     Tabs,
@@ -24,8 +20,7 @@ import {
     TrendingUp as AnalyticsIcon,
     Schedule as ScheduleIcon,
     Settings as SettingsIcon,
-    CheckCircle as SuccessIcon,
-    Error as ErrorIcon
+    CheckCircle as SuccessIcon
 } from '@mui/icons-material';
 
 import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
@@ -33,31 +28,48 @@ import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
 // Import centralized mock data
 import {
     contentOptimizerStats,
-    recentOptimizations,
-    optimizationSettings,
-    mockContentAnalysis,
-    optimizationMetrics,
-    trendInsights
-} from '../__mocks__/aiServices/contentOptimizer.js';
+    recentOptimizations
+} from '../__mocks__/aiServices/contentOptimizer';
+
+interface ServiceStats {
+    totalOptimized: number;
+    todayOptimized: number;
+    avgImprovement: string;
+    status: string;
+}
+
+interface Optimization {
+    id: number;
+    content: string;
+    improvement: string;
+    timestamp: string;
+    status: string;
+}
+
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
 
 /**
  * Content Optimizer Service Page
  * Professional AI service dashboard with real-time status and controls
  */
-const ContentOptimizerService = () => {
-    const [currentTab, setCurrentTab] = useState(0);
-    const [autoOptimization, setAutoOptimization] = useState(true);
-    const [isOptimizing, setIsOptimizing] = useState(false);
-    const [serviceStats, setServiceStats] = useState(contentOptimizerStats);
-    const [optimizations, setOptimizations] = useState(recentOptimizations);
-    const [error, setError] = useState(null);
+const ContentOptimizerService: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<number>(0);
+    const [autoOptimization, setAutoOptimization] = useState<boolean>(true);
+    const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+    const [serviceStats, setServiceStats] = useState<ServiceStats>(contentOptimizerStats);
+    const [optimizations, setOptimizations] = useState<Optimization[]>(recentOptimizations);
+    const [_error, _setError] = useState<string | null>(null);
 
     // Load real service data
     useEffect(() => {
         loadServiceData();
     }, []);
 
-    const loadServiceData = async () => {
+    const loadServiceData = async (): Promise<void> => {
         try {
             const stats = await AIServicesAPI.getAllStats();
             setServiceStats({
@@ -66,14 +78,14 @@ const ContentOptimizerService = () => {
                 avgImprovement: stats.content_optimizer.avg_improvement,
                 status: stats.content_optimizer.status
             });
-            setError(null);
+            _setError(null);
         } catch (err) {
             console.error('Failed to load service data:', err);
-            setError('Failed to load real-time data. Using cached results.');
+            _setError('Failed to load real-time data. Using cached results.');
         }
     };
 
-    const handleOptimize = async () => {
+    const handleOptimize = async (): Promise<void> => {
         setIsOptimizing(true);
         try {
             // Demo content optimization
@@ -83,7 +95,7 @@ const ContentOptimizerService = () => {
             );
 
             // Add to recent optimizations
-            const newOptimization = {
+            const newOptimization: Optimization = {
                 id: optimizations.length + 1,
                 content: 'Demo Content',
                 improvement: `+${Math.round(result.score_improvement)}%`,
@@ -94,12 +106,12 @@ const ContentOptimizerService = () => {
 
         } catch (err) {
             console.error('Optimization failed:', err);
-            setError('Content optimization failed. Please try again.');
+            _setError('Content optimization failed. Please try again.');
         }
         setIsOptimizing(false);
     };
 
-    const TabPanel = ({ children, value, index }) => (
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
         <div hidden={value !== index}>
             {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
         </div>
@@ -308,7 +320,7 @@ const ContentOptimizerService = () => {
                 }}>
                     <Tabs
                         value={currentTab}
-                        onChange={(e, newValue) => setCurrentTab(newValue)}
+                        onChange={(_e, newValue: number) => setCurrentTab(newValue)}
                         sx={{
                             '& .MuiTabs-indicator': {
                                 backgroundColor: 'primary.main',

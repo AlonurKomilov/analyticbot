@@ -16,9 +16,11 @@ class TestAPIStartup:
 
     @pytest.mark.asyncio
     async def test_api_app_can_be_created(self, api_client: AsyncClient):
-        """Test that the FastAPI app can be created."""
+        """Test that the FastAPI app can be created and responds."""
         assert api_client is not None
-        assert api_client.app is not None
+        # Test that the app is functional by making a request
+        response = await api_client.get("/health")
+        assert response.status_code in [200, 404]  # App is running
 
     @pytest.mark.asyncio
     async def test_health_endpoint_returns_200(self, api_client: AsyncClient):

@@ -12,6 +12,19 @@ import {
     Security as SecurityIcon
 } from '@mui/icons-material';
 
+interface TabConfigItem {
+    icon: React.ReactElement;
+    label: string;
+    id: string;
+    controls: string;
+    specialColor?: string;
+}
+
+interface DashboardTabsProps {
+    activeTab: number;
+    onTabChange: (event: React.SyntheticEvent, newValue: number) => void;
+}
+
 /**
  * DashboardTabs Component
  *
@@ -25,11 +38,11 @@ import {
  * - Full-width responsive layout
  * - Icon and text labels for each tab
  */
-const DashboardTabs = React.memo(({
+const DashboardTabs: React.FC<DashboardTabsProps> = React.memo(({
     activeTab,
     onTabChange
 }) => {
-    const tabConfig = [
+    const tabConfig: TabConfigItem[] = [
         {
             icon: <TrendingIcon />,
             label: "Post Dynamics",

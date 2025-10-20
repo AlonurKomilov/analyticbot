@@ -10,9 +10,20 @@ import {
     ThumbUp as EngagementIcon,
     Star as StarIcon
 } from '@mui/icons-material';
-import { getTrendIcon, formatMetricValue } from './metricsUtils.jsx';
+import { getTrendIcon, formatMetricValue } from './metricsUtils';
 
-const MetricsGrid = React.memo(({ metrics }) => {
+interface Metrics {
+    totalViews?: number;
+    growthRate?: number;
+    engagementRate?: number;
+    performanceScore?: number;
+}
+
+interface MetricsGridProps {
+    metrics: Metrics;
+}
+
+const MetricsGrid: React.FC<MetricsGridProps> = React.memo(({ metrics }) => {
     const {
         totalViews = 0,
         growthRate = 0,

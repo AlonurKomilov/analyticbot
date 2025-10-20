@@ -14,9 +14,9 @@ try:
 except ImportError:
     StripeError = Exception
 
-from apps.bot.models.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 from config.settings import settings
 from core.adapters.payment import PaymentGatewayAdapter
+from core.domain.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 

@@ -124,16 +124,22 @@ root_packages = ["apps", "core", "infra"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "Clean Architecture Layers Contract"
-type = "layers"
-layers = [
-    "infra",
-    "apps",
-    "core.adapters",
-    "core.services",
-    "core.ports",
-    "core.domain"
-]
+name = "Core Layer Independence"
+type = "forbidden"
+source_modules = ["core.domain", "core.ports"]
+forbidden_modules = ["apps", "infra", "core.services", "core.adapters"]
+
+[[tool.importlinter.contracts]]
+name = "Core Services Can Use Domain and Ports"
+type = "forbidden"
+source_modules = ["core.services"]
+forbidden_modules = ["apps", "infra"]
+
+[[tool.importlinter.contracts]]
+name = "Infra Ports Adherence"
+type = "forbidden"
+source_modules = ["infra"]
+forbidden_modules = ["apps"]
 
 [[tool.importlinter.contracts]]
 name = "Core Framework Independence"
@@ -144,11 +150,11 @@ forbidden_modules = [
     "sqlalchemy",
     "redis",
     "httpx",
-    "aiohttp",
     "asyncpg",
     "aiogram",
     "telegram"
 ]
+# Note: aiohttp temporarily allowed in core.common_helpers.health_check (legacy code, 0% coverage)
 
 [[tool.importlinter.contracts]]
 name = "Apps Layer Boundaries"

@@ -9,8 +9,8 @@ import uuid
 from decimal import Decimal
 from typing import Any
 
-from apps.bot.models.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 from core.adapters.payment import PaymentGatewayAdapter
+from core.domain.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 

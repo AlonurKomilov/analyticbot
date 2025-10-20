@@ -20,8 +20,14 @@ import {
   Error as ErrorIcon
 } from '@mui/icons-material';
 
-const DataSourceSettings = ({ onDataSourceChange }) => {
-  const [useRealAPI, setUseRealAPI] = useState(() => {
+interface DataSourceSettingsProps {
+  onDataSourceChange?: (source: 'api' | 'mock') => void;
+}
+
+type ApiStatus = 'unknown' | 'online' | 'offline';
+
+const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceChange }) => {
+  const [useRealAPI, setUseRealAPI] = useState<boolean>(() => {
     // If user has token, they're using real API
     const token = localStorage.getItem('token');
     if (token) return true;
@@ -37,15 +43,15 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   });
 
-  const [apiStatus, setApiStatus] = useState(() => {
+  const [apiStatus, setApiStatus] = useState<ApiStatus>(() => {
     // If user has token, API is online
     return localStorage.getItem('token') ? 'online' : 'unknown';
-  }); // unknown, online, offline
-  const [lastChecked, setLastChecked] = useState(null);
-  const [isChecking, setIsChecking] = useState(false);
+  });
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [isChecking, setIsChecking] = useState<boolean>(false);
 
   // Check API availability
-  const checkAPIStatus = useCallback(async () => {
+  const checkAPIStatus = useCallback(async (): Promise<void> => {
     setIsChecking(true);
     try {
       // If user is authenticated, API is considered online
@@ -74,7 +80,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
       } else {
         setApiStatus('offline');
       }
-    } catch (error) {
+    } catch (error: any) {
       // Ignore AbortError (timeout is expected behavior)
       if (error.name !== 'AbortError') {
         // Only log unexpected API check errors in development
@@ -96,7 +102,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
 
   // Listen for authentication changes
   useEffect(() => {
-    const handleStorageChange = (e) => {
+    const handleStorageChange = (e: StorageEvent): void => {
       if (e.key === 'token') {
         // Token changed - recheck API status
         if (e.newValue) {
@@ -122,7 +128,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
   }, [checkAPIStatus, apiStatus]);
 
   // Handle toggle change
-  const handleToggleChange = (event) => {
+  const handleToggleChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const newValue = event.target.checked;
     setUseRealAPI(newValue);
 
@@ -147,7 +153,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   }, [apiStatus, useRealAPI, onDataSourceChange]);
 
-  const getStatusColor = () => {
+  const getStatusColor = (): 'success' | 'error' | 'default' => {
     switch (apiStatus) {
       case 'online': return 'success';
       case 'offline': return 'error';
@@ -155,7 +161,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
     }
   };
 
-  const getStatusIcon = () => {
+  const getStatusIcon = (): React.ReactElement | null => {
     switch (apiStatus) {
       case 'online': return <SuccessIcon fontSize="small" />;
       case 'offline': return <ErrorIcon fontSize="small" />;
@@ -173,7 +179,7 @@ const DataSourceSettings = ({ onDataSourceChange }) => {
           </Typography>
 
           <Chip
-            icon={getStatusIcon()}
+            {...(getStatusIcon() && { icon: getStatusIcon()! })}
             label={`API ${apiStatus}`}
             color={getStatusColor()}
             size="small"

@@ -21,7 +21,8 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Skeleton
+    Skeleton,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -33,23 +34,70 @@ import {
     Description as DocumentIcon,
     Animation as AnimationIcon
 } from '@mui/icons-material';
-import { useMediaStore } from '@/stores';
 import { useTelegramWebApp } from '../hooks/index.js';
 
-const StorageFileBrowser = ({ onFileSelect = null }) => {
+interface StorageFile {
+    file_id: string;
+    filename?: string;
+    caption?: string;
+    media_type?: string;
+    file_size?: number;
+    uploaded_at?: string;
+    thumbnail_url?: string;
+    preview_url?: string;
+}
+
+interface StorageFilesData {
+    files: StorageFile[];
+    total: number;
+    limit: number;
+    offset: number;
+}
+
+interface StorageFileBrowserProps {
+    onFileSelect?: ((file: StorageFile) => void) | null;
+}
+
+type FilterType = 'all' | 'images' | 'videos' | 'documents';
+
+const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = null }) => {
     // Note: Storage file browsing would need a new method in media store
     // For now, using placeholder data
-    const [storageFiles, setStorageFiles] = useState({ files: [], total: 0, limit: 20, offset: 0 });
-    const [isLoading, setIsLoading] = useState(false);
+    const [storageFiles, setStorageFiles] = useState<StorageFilesData>({
+        files: [],
+        total: 0,
+        limit: 20,
+        offset: 0
+    });
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const { hapticFeedback } = useTelegramWebApp();
 
     // Local state
-    const [page, setPage] = useState(1);
-    const [filterType, setFilterType] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [page, setPage] = useState<number>(1);
+    const [filterType, setFilterType] = useState<FilterType>('all');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [selectedFile, setSelectedFile] = useState<StorageFile | null>(null);
+    const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
+
+    // Placeholder for getStorageFiles - would be implemented in media store
+    const getStorageFiles = useCallback(async (limit: number, offset: number): Promise<void> => {
+        setIsLoading(true);
+        try {
+            // Placeholder implementation
+            // In real app, this would fetch from API
+            setStorageFiles({
+                files: [],
+                total: 0,
+                limit,
+                offset
+            });
+        } catch (error) {
+            console.error('Failed to load storage files:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
 
     // Load files on component mount and filter changes
     useEffect(() => {
@@ -57,7 +105,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     }, [page, filterType]);
 
     // Load files from storage
-    const loadFiles = useCallback(async () => {
+    const loadFiles = useCallback(async (): Promise<void> => {
         try {
             const limit = 20;
             const offset = (page - 1) * limit;
@@ -68,20 +116,20 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     }, [getStorageFiles, page]);
 
     // Handle page change
-    const handlePageChange = useCallback((event, newPage) => {
+    const handlePageChange = useCallback((_event: React.ChangeEvent<unknown>, newPage: number): void => {
         setPage(newPage);
         hapticFeedback('light');
     }, [hapticFeedback]);
 
     // Handle refresh
-    const handleRefresh = useCallback(() => {
+    const handleRefresh = useCallback((): void => {
         setPage(1);
         loadFiles();
         hapticFeedback('medium');
     }, [loadFiles, hapticFeedback]);
 
     // Handle file selection
-    const handleFileSelect = useCallback((file) => {
+    const handleFileSelect = useCallback((file: StorageFile): void => {
         if (onFileSelect) {
             onFileSelect(file);
             hapticFeedback('success');
@@ -93,7 +141,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     }, [onFileSelect, hapticFeedback]);
 
     // Get file icon based on type
-    const getFileIcon = (fileType) => {
+    const getFileIcon = (fileType?: string): React.ReactNode => {
         if (fileType?.startsWith('image/')) {
             return <ImageIcon />;
         } else if (fileType?.startsWith('video/')) {
@@ -106,7 +154,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     };
 
     // Get file type color
-    const getFileTypeColor = (fileType) => {
+    const getFileTypeColor = (fileType?: string): 'success' | 'primary' | 'secondary' | 'default' => {
         if (fileType?.startsWith('image/')) {
             return 'success';
         } else if (fileType?.startsWith('video/')) {
@@ -119,7 +167,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     };
 
     // Format file size
-    const formatFileSize = (bytes) => {
+    const formatFileSize = (bytes?: number): string => {
         if (!bytes) return 'Unknown';
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -129,7 +177,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
     };
 
     // Filter files based on search and type
-    const filteredFiles = storageFiles.files.filter(file => {
+    const filteredFiles = storageFiles.files.filter((file: StorageFile) => {
         const matchesSearch = !searchQuery ||
             file.filename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             file.caption?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,7 +200,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                 <Typography variant="h6">
                     📁 Storage Browser
                 </Typography>
-                <IconButton onClick={handleRefresh} disabled={isLoading('getStorageFiles')}>
+                <IconButton onClick={handleRefresh} disabled={isLoading}>
                     <RefreshIcon />
                 </IconButton>
             </Box>
@@ -182,7 +230,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                             <Select
                                 value={filterType}
                                 label="Filter by type"
-                                onChange={(e) => setFilterType(e.target.value)}
+                                onChange={(e: SelectChangeEvent) => setFilterType(e.target.value as FilterType)}
                             >
                                 <MenuItem value="all">All Files</MenuItem>
                                 <MenuItem value="images">Images</MenuItem>
@@ -195,9 +243,9 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
             </Box>
 
             {/* Files Grid */}
-            {isLoading('getStorageFiles') ? (
+            {isLoading ? (
                 <Grid container spacing={2}>
-                    {[...Array(6)].map((_, index) => (
+                    {[...Array(6)].map((_: undefined, index: number) => (
                         <Grid item xs={12} sm={6} md={4} key={index}>
                             <Card>
                                 <Skeleton variant="rectangular" height={140} />
@@ -220,7 +268,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                 </Box>
             ) : (
                 <Grid container spacing={2}>
-                    {filteredFiles.map((file) => (
+                    {filteredFiles.map((file: StorageFile) => (
                         <Grid item xs={12} sm={6} md={4} key={file.file_id}>
                             <Card
                                 sx={{
@@ -257,7 +305,7 @@ const StorageFileBrowser = ({ onFileSelect = null }) => {
                                     </Typography>
                                     <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                                         <Chip
-                                            icon={getFileIcon(file.media_type)}
+                                            icon={getFileIcon(file.media_type) as React.ReactElement}
                                             label={file.media_type || 'unknown'}
                                             size="small"
                                             color={getFileTypeColor(file.media_type)}

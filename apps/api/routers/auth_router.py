@@ -620,7 +620,8 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
         from core.security_engine.role_hierarchy import role_hierarchy_service
 
         hierarchy = role_hierarchy_service.get_role_hierarchy_display()
-        available_roles = role_hierarchy_service.get_available_roles(include_deprecated=True)
+        # Removed include_deprecated=True - only show active roles
+        available_roles = role_hierarchy_service.get_available_roles()
 
         return {
             "current_user": current_user.get("username"),

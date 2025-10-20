@@ -12,33 +12,41 @@ import {
     MenuItem,
     Switch,
     FormControlLabel,
-    Grid
+    Grid,
+    IconButton,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     CloudUpload as UploadIcon,
     Delete as DeleteIcon,
     Speed as SpeedIcon,
-    Storage as StorageIcon,
-    Refresh as RefreshIcon
+    Storage as StorageIcon
 } from '@mui/icons-material';
 import { useMediaStore, useChannelStore } from '@/stores';
-import { useTelegramWebApp } from '../hooks/index.js';
+import { useTelegramWebApp } from '../hooks/index';
 
-const EnhancedMediaUploader = React.memo(() => {
-    const { uploadMediaDirect, pendingMedia, clearPendingMedia, isUploading } = useMediaStore();
+interface UploadStats {
+    duration: number;
+    speed: number;
+    fileSize: number;
+    uploadType: 'direct_channel' | 'storage';
+}
+
+const EnhancedMediaUploader: React.FC = React.memo(() => {
+    const { uploadMedia, pendingMedia, clearPendingMedia, isUploading } = useMediaStore();
     const { channels } = useChannelStore();
 
     const { hapticFeedback } = useTelegramWebApp();
-    const fileInputRef = useRef(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Enhanced state management
-    const [dragActive, setDragActive] = useState(false);
-    const [selectedChannelId, setSelectedChannelId] = useState('');
-    const [directToChannel, setDirectToChannel] = useState(false);
-    const [uploadStats, setUploadStats] = useState(null);
+    const [dragActive, setDragActive] = useState<boolean>(false);
+    const [selectedChannelId, setSelectedChannelId] = useState<string>('');
+    const [directToChannel, setDirectToChannel] = useState<boolean>(false);
+    const [uploadStats, setUploadStats] = useState<UploadStats | null>(null);
 
     // File validation
-    const validateFile = useCallback((file) => {
+    const validateFile = useCallback((file: File): boolean => {
         const maxSize = 50 * 1024 * 1024; // 50MB
         const allowedTypes = [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
@@ -58,7 +66,7 @@ const EnhancedMediaUploader = React.memo(() => {
     }, []);
 
     // Handle file upload
-    const handleUpload = useCallback(async (file) => {
+    const handleUpload = useCallback(async (file: File): Promise<void> => {
         if (!file) return;
 
         try {
@@ -68,14 +76,15 @@ const EnhancedMediaUploader = React.memo(() => {
             const targetChannelId = directToChannel ? selectedChannelId : null;
             const startTime = Date.now();
 
-            const response = await uploadMediaDirect(file, targetChannelId);
+            const metadata = targetChannelId ? { channelId: targetChannelId } : {};
+            const response = await uploadMedia(file, metadata);
 
             // Set upload statistics
             setUploadStats({
-                duration: response.upload_duration || (Date.now() - startTime),
-                speed: response.upload_speed || (file.size / ((Date.now() - startTime) / 1000)),
+                duration: (response as any).upload_duration || (Date.now() - startTime),
+                speed: (response as any).upload_speed || (file.size / ((Date.now() - startTime) / 1000)),
                 fileSize: file.size,
-                uploadType: response.upload_type || (targetChannelId ? 'direct_channel' : 'storage')
+                uploadType: (response as any).upload_type || (targetChannelId ? 'direct_channel' : 'storage')
             });
 
             hapticFeedback('success');
@@ -83,10 +92,10 @@ const EnhancedMediaUploader = React.memo(() => {
             console.error('Upload failed:', error);
             hapticFeedback('error');
         }
-    }, [uploadMediaDirect, validateFile, directToChannel, selectedChannelId, hapticFeedback]);
+    }, [uploadMedia, validateFile, directToChannel, selectedChannelId, hapticFeedback]);
 
     // Handle file selection
-    const handleFileSelect = useCallback((event) => {
+    const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
         const file = event.target.files?.[0];
         if (file) {
             handleUpload(file);
@@ -98,7 +107,7 @@ const EnhancedMediaUploader = React.memo(() => {
     }, [handleUpload]);
 
     // Drag and drop handlers
-    const handleDrag = useCallback((e) => {
+    const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>): void => {
         e.preventDefault();
         e.stopPropagation();
         if (e.type === "dragenter" || e.type === "dragover") {
@@ -108,7 +117,7 @@ const EnhancedMediaUploader = React.memo(() => {
         }
     }, []);
 
-    const handleDrop = useCallback((e) => {
+    const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>): void => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
@@ -119,7 +128,7 @@ const EnhancedMediaUploader = React.memo(() => {
     }, [handleUpload]);
 
     // Format file size
-    const formatFileSize = (bytes) => {
+    const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -128,25 +137,25 @@ const EnhancedMediaUploader = React.memo(() => {
     };
 
     // Format upload speed
-    const formatSpeed = (bytesPerSecond) => {
+    const formatSpeed = (bytesPerSecond: number): string => {
         return formatFileSize(bytesPerSecond) + '/s';
     };
 
     // Clear upload and stats
-    const handleClear = useCallback(() => {
+    const handleClear = useCallback((): void => {
         clearPendingMedia();
         setUploadStats(null);
         hapticFeedback('light');
     }, [clearPendingMedia, hapticFeedback]);
 
     // Channel options
-    const channelOptions = channels.map((channel) => ({
+    const channelOptions = channels.map((channel: any) => ({
         value: channel.id,
         label: `${channel.title} (@${channel.username})`
     }));
 
     // Upload progress percentage
-    const uploadProgress = pendingMedia.uploadProgress || 0;
+    const uploadProgress = (pendingMedia as any).uploadProgress || 0;
 
     return (
         <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
@@ -173,7 +182,7 @@ const EnhancedMediaUploader = React.memo(() => {
                         <Select
                             value={selectedChannelId}
                             label="Select Channel"
-                            onChange={(e) => setSelectedChannelId(e.target.value)}
+                            onChange={(e: SelectChangeEvent) => setSelectedChannelId(e.target.value)}
                         >
                             {channelOptions.map((option) => (
                                 <MenuItem key={option.value} value={option.value}>
@@ -232,10 +241,10 @@ const EnhancedMediaUploader = React.memo(() => {
                         <Typography variant="body2" sx={{ flex: 1 }}>
                             Uploading... {uploadProgress.toFixed(1)}%
                         </Typography>
-                        {pendingMedia.uploadSpeed > 0 && (
+                        {(pendingMedia as any).uploadSpeed > 0 && (
                             <Chip
                                 icon={<SpeedIcon />}
-                                label={formatSpeed(pendingMedia.uploadSpeed)}
+                                label={formatSpeed((pendingMedia as any).uploadSpeed)}
                                 size="small"
                                 color="primary"
                             />
@@ -246,16 +255,16 @@ const EnhancedMediaUploader = React.memo(() => {
                         value={uploadProgress}
                         sx={{ height: 8, borderRadius: 4 }}
                     />
-                    {pendingMedia.bytesLoaded && pendingMedia.bytesTotal && (
+                    {(pendingMedia as any).bytesLoaded && (pendingMedia as any).bytesTotal && (
                         <Typography variant="caption" color="text.secondary">
-                            {formatFileSize(pendingMedia.bytesLoaded)} / {formatFileSize(pendingMedia.bytesTotal)}
+                            {formatFileSize((pendingMedia as any).bytesLoaded)} / {formatFileSize((pendingMedia as any).bytesTotal)}
                         </Typography>
                     )}
                 </Box>
             )}
 
             {/* Upload Success & Stats */}
-            {pendingMedia.file_id && !isUploading && (
+            {(pendingMedia as any).file_id && !isUploading && (
                 <Alert
                     severity="success"
                     sx={{ mt: 2 }}
@@ -314,13 +323,13 @@ const EnhancedMediaUploader = React.memo(() => {
             )}
 
             {/* Media Preview */}
-            {pendingMedia.previewUrl && (
+            {(pendingMedia as any).previewUrl && (
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>Preview:</Typography>
-                    {pendingMedia.file_type?.startsWith('image/') ||
-                     pendingMedia.metadata?.content_type?.startsWith('image/') ? (
+                    {(pendingMedia as any).file_type?.startsWith('image/') ||
+                     (pendingMedia as any).metadata?.content_type?.startsWith('image/') ? (
                         <img
-                            src={pendingMedia.previewUrl}
+                            src={(pendingMedia as any).previewUrl}
                             alt="Preview"
                             style={{
                                 maxWidth: '100%',
@@ -329,10 +338,10 @@ const EnhancedMediaUploader = React.memo(() => {
                                 objectFit: 'contain'
                             }}
                         />
-                    ) : pendingMedia.file_type?.startsWith('video/') ||
-                              pendingMedia.metadata?.content_type?.startsWith('video/') ? (
+                    ) : (pendingMedia as any).file_type?.startsWith('video/') ||
+                              (pendingMedia as any).metadata?.content_type?.startsWith('video/') ? (
                         <video
-                            src={pendingMedia.previewUrl}
+                            src={(pendingMedia as any).previewUrl}
                             controls
                             style={{
                                 maxWidth: '100%',

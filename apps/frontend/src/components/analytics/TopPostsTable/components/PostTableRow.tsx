@@ -7,11 +7,35 @@ import {
     Box,
     Tooltip
 } from '@mui/material';
-import PostMetricBadge from './PostMetricBadge.jsx';
-import PostActionMenu from './PostActionMenu.jsx';
-import { formatNumber, formatDate, calculateEngagementRate } from '../utils/postTableUtils.js';
+import PostMetricBadge from './PostMetricBadge';
+import PostActionMenu from './PostActionMenu';
+import { formatNumber, formatDate, calculateEngagementRate } from '../utils/postTableUtils';
 
-const PostTableRow = ({
+interface Post {
+    id: string | number;
+    title?: string;
+    thumbnail?: string;
+    type?: string;
+    views?: number;
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    created_at: string | Date;
+    engagement?: number;
+    reach?: number;
+    [key: string]: any;
+}
+
+interface PostTableRowProps {
+    post: Post;
+    index: number;
+    anchorEl: HTMLElement | null;
+    selectedPostId: string | number | null;
+    onMenuClick: (event: React.MouseEvent<HTMLElement>, postId: string | number) => void;
+    onMenuClose: () => void;
+}
+
+const PostTableRow: React.FC<PostTableRowProps> = ({
     post,
     index,
     anchorEl,
@@ -112,7 +136,7 @@ const PostTableRow = ({
             </TableCell>
 
             <TableCell align="center">
-                <PostMetricBadge post={post} />
+                <PostMetricBadge post={post as any} />
             </TableCell>
 
             <TableCell align="center">
@@ -125,7 +149,7 @@ const PostTableRow = ({
 
             <TableCell align="center">
                 <PostActionMenu
-                    post={post}
+                    post={post as any}
                     anchorEl={anchorEl}
                     selectedPostId={selectedPostId}
                     onMenuClick={onMenuClick}

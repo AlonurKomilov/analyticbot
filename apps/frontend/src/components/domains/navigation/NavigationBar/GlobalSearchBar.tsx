@@ -6,12 +6,17 @@ import {
     Chip,
     Typography,
     useMediaQuery,
-    useTheme
+    useTheme,
+    BoxProps
 } from '@mui/material';
 import {
     Search as SearchIcon
 } from '@mui/icons-material';
 import GlobalSearchDialog from '@components/common/GlobalSearchDialog';
+
+interface GlobalSearchBarProps extends Omit<BoxProps, 'onClick'> {
+    className?: string;
+}
 
 /**
  * GlobalSearchBar Component
@@ -24,12 +29,12 @@ import GlobalSearchDialog from '@components/common/GlobalSearchDialog';
  * - Quick actions integration
  * - Keyboard shortcuts (Ctrl+K)
  */
-const GlobalSearchBar = ({ className, ...props }) => {
+const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({ className, ...props }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     // Local state for search dialog
-    const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+    const [searchDialogOpen, setSearchDialogOpen] = useState<boolean>(false);
 
     // Handle search dialog open/close
     const handleSearchOpen = useCallback(() => {
@@ -41,7 +46,7 @@ const GlobalSearchBar = ({ className, ...props }) => {
     }, []);
 
     // Keyboard shortcut handler
-    const handleKeyDown = useCallback((event) => {
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
         // Open search with Ctrl+K or Cmd+K
         if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
             event.preventDefault();
@@ -117,7 +122,6 @@ const GlobalSearchBar = ({ className, ...props }) => {
                         onClick={handleSearchOpen}
                         aria-label="Search"
                         className={className}
-                        {...props}
                     >
                         <SearchIcon />
                     </IconButton>

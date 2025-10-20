@@ -5,13 +5,20 @@ import {
     Typography,
     Box,
     useMediaQuery,
-    useTheme
+    useTheme,
+    BreadcrumbsProps
 } from '@mui/material';
 import {
     NavigateNext as NavigateNextIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useBreadcrumbs, shouldShowBreadcrumbs } from './breadcrumbUtils';
+
+interface SmartBreadcrumbsProps extends Omit<BreadcrumbsProps, 'separator' | 'maxItems'> {
+    className?: string;
+    maxItems?: number;
+    showOnMobile?: boolean;
+}
 
 /**
  * SmartBreadcrumbs Component
@@ -23,7 +30,7 @@ import { useBreadcrumbs, shouldShowBreadcrumbs } from './breadcrumbUtils';
  * - Responsive behavior (desktop vs mobile)
  * - Semantic HTML structure for accessibility
  */
-const SmartBreadcrumbs = ({
+const SmartBreadcrumbs: React.FC<SmartBreadcrumbsProps> = ({
     className,
     maxItems = 3,
     showOnMobile = false,
@@ -50,7 +57,7 @@ const SmartBreadcrumbs = ({
         return null;
     }
 
-    const handleBreadcrumbClick = (event, path) => {
+    const handleBreadcrumbClick = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
         event.preventDefault();
         navigate(path);
     };

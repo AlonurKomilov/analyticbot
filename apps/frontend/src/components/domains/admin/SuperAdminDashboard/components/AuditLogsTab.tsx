@@ -12,11 +12,25 @@ import {
 } from '@mui/material';
 import { formatDate } from '../utils/adminUtils';
 
+interface AuditLog {
+    id: string | number;
+    created_at: string | Date;
+    admin_username: string;
+    action: string;
+    resource_type: string;
+    ip_address: string;
+    success: boolean;
+}
+
+interface AuditLogsTabProps {
+    auditLogs?: AuditLog[];
+}
+
 /**
  * AuditLogsTab Component
  * Administrative audit trail with action logs
  */
-const AuditLogsTab = ({ auditLogs = [] }) => {
+const AuditLogsTab: React.FC<AuditLogsTabProps> = ({ auditLogs = [] }) => {
     return (
         <>
             <Typography variant="h6" gutterBottom>Administrative Audit Trail</Typography>
@@ -36,7 +50,7 @@ const AuditLogsTab = ({ auditLogs = [] }) => {
                         {auditLogs.map((log) => (
                             <TableRow key={log.id}>
                                 <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                                    {formatDate(log.created_at)}
+                                    {formatDate(log.created_at as string)}
                                 </TableCell>
                                 <TableCell>{log.admin_username}</TableCell>
                                 <TableCell>{log.action}</TableCell>

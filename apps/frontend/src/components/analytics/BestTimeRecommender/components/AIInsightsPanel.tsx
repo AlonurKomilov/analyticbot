@@ -9,9 +9,19 @@ import {
     Avatar
 } from '@mui/material';
 import { Psychology as AIIcon } from '@mui/icons-material';
-import { getAIInsightIcon } from '../utils/timeUtils.js';
+import { getAIInsightIcon } from '../utils/timeUtils';
 
-const AIInsightsPanel = ({ aiInsights }) => {
+interface AIInsight {
+    title: string;
+    description: string;
+    [key: string]: any;
+}
+
+interface AIInsightsPanelProps {
+    aiInsights?: AIInsight[];
+}
+
+const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ aiInsights }) => {
     if (!aiInsights || aiInsights.length === 0) {
         return (
             <Box sx={{

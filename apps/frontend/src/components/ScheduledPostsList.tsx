@@ -1,14 +1,22 @@
 import React, { useCallback } from 'react';
 import { usePostStore } from '@/stores';
 import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
-import { IconButton } from './common/TouchTargetCompliance.jsx';
+import { IconButton } from './common/TouchTargetCompliance';
 import { StatusChip } from './common';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const ScheduledPostsList = React.memo(() => {
-    const { scheduledPosts, deletePost } = usePostStore();
+interface ScheduledPost {
+    id: string | number;
+    file_type?: string;
+    channel_name: string;
+    text?: string;
+    schedule_time: string | Date;
+}
 
-    const handleDelete = useCallback((postId) => {
+const ScheduledPostsList: React.FC = React.memo(() => {
+    const { scheduledPosts, deletePost } = usePostStore() as any;
+
+    const handleDelete = useCallback((postId: string | number) => {
         deletePost(postId);
     }, [deletePost]);
 
@@ -21,7 +29,7 @@ const ScheduledPostsList = React.memo(() => {
                 </Typography>
             ) : (
                 <List dense>
-                    {scheduledPosts.map((post) => (
+                    {scheduledPosts.map((post: ScheduledPost) => (
                         <ListItem
                             key={post.id}
                             secondaryAction={
@@ -34,7 +42,7 @@ const ScheduledPostsList = React.memo(() => {
                             <ListItemText
                                 primary={
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                        {post.file_type && <StatusChip label={post.file_type.toUpperCase()} size="small" variant="info" />}
+                                        {post.file_type && <StatusChip label={post.file_type.toUpperCase()} size="small" variant={'info' as any} />}
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                                             To: {post.channel_name}
                                         </Typography>

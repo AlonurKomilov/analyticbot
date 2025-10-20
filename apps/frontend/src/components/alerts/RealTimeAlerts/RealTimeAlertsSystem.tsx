@@ -26,6 +26,37 @@ import RuleManager from './RuleManager.jsx';
 import NewRuleDialog from './NewRuleDialog.jsx';
 import NotificationEngine from './NotificationEngine.jsx';
 
+// Type definitions
+interface RealTimeAlertsSystemProps {
+  channelId?: string;
+}
+
+interface Alert {
+  id: string;
+  read?: boolean;
+  [key: string]: any;
+}
+
+interface AlertRule {
+  id: string;
+  name: string;
+  type: string;
+  condition: string;
+  threshold: number;
+  enabled: boolean;
+  description: string;
+  icon: any;
+  color: string;
+}
+
+interface NewRuleFormData {
+  name: string;
+  type: string;
+  condition: string;
+  threshold: number;
+  enabled: boolean;
+}
+
 /**
  * RealTimeAlertsSystem - Main orchestrator for real-time alert management
  *
@@ -33,20 +64,19 @@ import NotificationEngine from './NotificationEngine.jsx';
  * Manages state coordination, API calls, and coordinates between extracted components.
  * Reduced from 486 lines to ~150 lines (69% reduction).
  *
- * @param {Object} props - Component props
- * @param {string} props.channelId - Channel ID for alert monitoring
+ * @param props - Component props
+ * @param props.channelId - Channel ID for alert monitoring
  */
-const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
+const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId: _channelId = 'demo_channel' }) => {
   // Main component state
-  const [alerts, setAlerts] = useState([]);
-  const [alertRules, setAlertRules] = useState([]);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [newRuleDialog, setNewRuleDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const [newRuleDialog, setNewRuleDialog] = useState<boolean>(false);
 
   // Default alert rules configuration
-  const defaultRules = React.useMemo(() => [
+  const defaultRules = React.useMemo<AlertRule[]>(() => [
     {
       id: 'growth-spike',
       name: 'Growth Spike Alert',
@@ -93,7 +123,7 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
     },
   ], []);
 
-  const [newRule, setNewRule] = useState({
+  const [newRule, setNewRule] = useState<NewRuleFormData>({
     name: '',
     type: 'growth',
     condition: 'greater_than',
@@ -109,17 +139,17 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
   }, [defaultRules, alertRules.length]);
 
   // Handle new alerts from NotificationEngine
-  const handleNewAlerts = useCallback((newAlerts) => {
+  const handleNewAlerts = useCallback((newAlerts: Alert[]): void => {
     setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
   }, []);
 
   // Delete alert handler
-  const handleDeleteAlert = useCallback((alertId) => {
+  const handleDeleteAlert = useCallback((alertId: string): void => {
     setAlerts(prev => prev.filter(alert => alert.id !== alertId));
   }, []);
 
   // Toggle rule enabled state
-  const handleToggleRule = useCallback((ruleId) => {
+  const handleToggleRule = useCallback((ruleId: string): void => {
     setAlertRules(prev => prev.map(rule =>
       rule.id === ruleId
         ? { ...rule, enabled: !rule.enabled }
@@ -128,10 +158,10 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
   }, []);
 
   // Add new rule
-  const handleAddNewRule = useCallback(() => {
+  const handleAddNewRule = useCallback((): void => {
     if (!newRule.name.trim()) return;
 
-    const rule = {
+    const rule: AlertRule = {
       ...newRule,
       id: `custom-${Date.now()}`,
       description: `Custom ${newRule.type} alert`,
@@ -170,7 +200,7 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
             <StatusChip
               label={`${alertRules.filter(rule => rule.enabled).length} rules active`}
               size="small"
-              variant="primary"
+              variant="filled"
             />
           </Box>
 
@@ -186,34 +216,34 @@ const RealTimeAlertsSystem = ({ channelId = 'demo_channel' }) => {
 
         {/* Alerts List */}
         <AlertsList
-          alerts={alerts}
+          alerts={alerts as any}
           isExpanded={isExpanded}
           onDeleteAlert={handleDeleteAlert}
         />
 
         {/* Rule Manager Dialog */}
-        <RuleManager
-          alertRules={alertRules}
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
-          onToggleRule={handleToggleRule}
-          onAddRule={() => setNewRuleDialog(true)}
-        />
+        {React.createElement(RuleManager as any, {
+          rules: alertRules,
+          open: settingsOpen,
+          onClose: () => setSettingsOpen(false),
+          onToggleRule: handleToggleRule,
+          onAddRule: () => setNewRuleDialog(true)
+        })}
 
         {/* New Rule Dialog */}
         <NewRuleDialog
           open={newRuleDialog}
           onClose={() => setNewRuleDialog(false)}
           onSubmit={handleAddNewRule}
-          newRule={newRule}
-          onRuleChange={setNewRule}
+          newRule={newRule as any}
+          onRuleChange={setNewRule as any}
         />
 
         {/* Notification Engine */}
         <NotificationEngine
-          alertRules={alertRules}
-          onNewAlerts={handleNewAlerts}
-          existingAlerts={alerts}
+          alertRules={alertRules as any}
+          onNewAlerts={handleNewAlerts as any}
+          existingAlerts={alerts as any}
         />
       </CardContent>
     </Card>

@@ -47,13 +47,6 @@ interface HealthReport {
   getDuration: () => number;
 }
 
-interface InitResult {
-  success: boolean;
-  healthReport?: any; // Use any for compatibility with initializeApp
-  dataSource?: string;
-  error?: string;
-}
-
 /**
  * Silent health check wrapper
  *
@@ -81,11 +74,14 @@ const HealthStartupSplash: React.FC<HealthStartupSplashProps> = ({ children, opt
     setError(null);
 
     try {
-      const result: any = await initializeApp({
+      const initOptions: any = {
         fullHealthCheck: options.fullHealthCheck ?? (import.meta.env.VITE_FULL_HEALTH_CHECK === 'true'),
         skipOptional: options.skipOptional ?? (import.meta.env.VITE_SKIP_OPTIONAL_CHECKS !== 'false'),
-        onProgress: silentMode ? undefined : ((p: ProgressInfo) => setProgress(p)) // No progress updates in silent mode
-      });
+        // Only add onProgress if not silent mode
+        ...(silentMode ? {} : { onProgress: (p: ProgressInfo) => setProgress(p) })
+      };
+
+      const result: any = await initializeApp(initOptions);
 
       setReport(result.healthReport || null);
 

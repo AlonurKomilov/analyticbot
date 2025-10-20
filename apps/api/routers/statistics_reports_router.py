@@ -14,8 +14,6 @@ from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 
 # Auth
 from apps.api.middleware.auth import get_current_user
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
 from core.protocols import AnalyticsFusionServiceProtocol
 

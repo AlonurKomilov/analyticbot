@@ -20,8 +20,6 @@ from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
 
 # Updated import to use new microservices

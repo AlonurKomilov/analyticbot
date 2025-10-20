@@ -13,12 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from apps.api.auth_utils import auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
-
-# ✅ PHASE 2: Redis caching for performance optimization
 from core.common.cache_decorator import cache_endpoint
-
-# ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra import
-# ✅ CLEAN ARCHITECTURE: Use core interface instead of infra implementation
 from core.repositories.interfaces import UserRepository
 
 # Import new role system with backwards compatibility

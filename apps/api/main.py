@@ -41,7 +41,6 @@ async def lifespan(app: FastAPI):
     """Application lifespan events - now with proper DI container management and health checks"""
     # Startup - Initialize database and DI container
     try:
-        # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
         container = get_container()
         db_manager = await container.database_manager()
         await db_manager.initialize()
@@ -321,11 +320,5 @@ app.include_router(ai_services_router)
 # - /health, /performance, /initial-data → system_router.py
 # - /schedule → system_router.py
 # - /delivery/stats → system_router.py
-#
-# ✅ CLEAN ARCHITECTURE BENEFITS ACHIEVED:
-# - Single Responsibility Principle: Each router has one focused domain
-# - Domain Separation: Clear boundaries between business domains
-# - Maintainability: Easy to understand, modify, and test each domain
-# - Scalability: New features can be added to appropriate domains
 
 # API DI Container initialized above in main.py

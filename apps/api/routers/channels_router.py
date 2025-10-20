@@ -26,8 +26,6 @@ from apps.api.services.telegram_validation_service import (
     ChannelValidationResult,
     TelegramValidationService,
 )
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)

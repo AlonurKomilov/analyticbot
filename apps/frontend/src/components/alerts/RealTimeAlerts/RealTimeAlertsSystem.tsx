@@ -67,7 +67,7 @@ interface NewRuleFormData {
  * @param props - Component props
  * @param props.channelId - Channel ID for alert monitoring
  */
-const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId: _channelId = 'demo_channel' }) => {
+const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId = 'demo_channel' }) => {
   // Main component state
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertRules, setAlertRules] = useState<AlertRule[]>([]);
@@ -241,6 +241,7 @@ const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId: 
 
         {/* Notification Engine */}
         <NotificationEngine
+          channelId={channelId}
           alertRules={alertRules as any}
           onNewAlerts={handleNewAlerts as any}
           existingAlerts={alerts as any}

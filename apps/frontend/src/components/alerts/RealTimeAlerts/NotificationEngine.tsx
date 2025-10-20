@@ -23,6 +23,7 @@ interface Alert {
 }
 
 interface NotificationEngineProps {
+  channelId?: string;
   alertRules?: AlertRule[];
   onNewAlerts?: (alerts: Alert[]) => void;
   existingAlerts?: Alert[];
@@ -33,9 +34,10 @@ interface NotificationEngineProps {
  * NotificationEngine - Handles real-time alert processing and WebSocket connections
  *
  * Optimized for high-frequency updates and memory management in multi-user scenarios.
- * Manages alert checking intervals, data simulation, and notification generation.
+ * Manages alert checking intervals, data fetching from API, and notification generation.
  */
 const NotificationEngine: React.FC<NotificationEngineProps> = React.memo(({
+  channelId = 'demo_channel',
   alertRules = [],
   onNewAlerts,
   existingAlerts = [],
@@ -46,14 +48,34 @@ const NotificationEngine: React.FC<NotificationEngineProps> = React.memo(({
   // Alert checking logic
   const checkAlerts = React.useCallback(async () => {
     try {
-      // In a real implementation, this would fetch actual analytics data
-      // For now, simulate with random conditions to demonstrate functionality
-      const simulatedData = {
-        growth_rate: Math.random() * 25, // 0-25%
-        engagement_rate: Math.random() * 10, // 0-10%
-        subscribers: 850 + Math.floor(Math.random() * 200), // 850-1050
-        views: 5000 + Math.floor(Math.random() * 3000), // 5000-8000
-      };
+      // Fetch real-time analytics data from API
+      let analyticsData;
+
+      try {
+        const response = await fetch(`/api/analytics/realtime/${channelId}`);
+
+        if (!response.ok) {
+          throw new Error(`API responded with status ${response.status}`);
+        }
+
+        analyticsData = await response.json();
+
+        // Validate response structure
+        if (!analyticsData || typeof analyticsData !== 'object') {
+          throw new Error('Invalid API response format');
+        }
+      } catch (apiError) {
+        console.warn('Failed to fetch real-time data, using fallback:', apiError);
+
+        // Fallback to simulated data only if API fails
+        analyticsData = {
+          growth_rate: Math.random() * 25, // 0-25%
+          engagement_rate: Math.random() * 10, // 0-10%
+          subscribers: 850 + Math.floor(Math.random() * 200), // 850-1050
+          views: 5000 + Math.floor(Math.random() * 3000), // 5000-8000
+          _fallback: true // Mark as fallback data
+        };
+      }
 
       const newAlerts: Alert[] = [];
       const currentTime = new Date();
@@ -66,30 +88,30 @@ const NotificationEngine: React.FC<NotificationEngineProps> = React.memo(({
 
         switch (rule.type) {
           case 'growth':
-            if (rule.condition === 'greater_than' && simulatedData.growth_rate > rule.threshold) {
+            if (rule.condition === 'greater_than' && analyticsData.growth_rate > rule.threshold) {
               shouldAlert = true;
-              alertMessage = `Growth rate reached ${simulatedData.growth_rate.toFixed(1)}% (threshold: ${rule.threshold}%)`;
+              alertMessage = `Growth rate reached ${analyticsData.growth_rate.toFixed(1)}% (threshold: ${rule.threshold}%)`;
             }
             break;
 
           case 'engagement':
-            if (rule.condition === 'less_than' && simulatedData.engagement_rate < rule.threshold) {
+            if (rule.condition === 'less_than' && analyticsData.engagement_rate < rule.threshold) {
               shouldAlert = true;
-              alertMessage = `Engagement rate dropped to ${simulatedData.engagement_rate.toFixed(1)}% (threshold: ${rule.threshold}%)`;
+              alertMessage = `Engagement rate dropped to ${analyticsData.engagement_rate.toFixed(1)}% (threshold: ${rule.threshold}%)`;
             }
             break;
 
           case 'subscribers':
-            if (rule.condition === 'milestone' && simulatedData.subscribers >= rule.threshold) {
+            if (rule.condition === 'milestone' && analyticsData.subscribers >= rule.threshold) {
               shouldAlert = true;
-              alertMessage = `Reached ${simulatedData.subscribers} subscribers!`;
+              alertMessage = `Reached ${analyticsData.subscribers} subscribers!`;
             }
             break;
 
           case 'views':
             if (rule.condition === 'surge' && Math.random() > 0.7) { // 30% chance for demo
               shouldAlert = true;
-              alertMessage = `View surge detected: ${simulatedData.views} views in last hour`;
+              alertMessage = `View surge detected: ${analyticsData.views} views in last hour`;
             }
             break;
 

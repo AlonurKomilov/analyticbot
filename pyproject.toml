@@ -127,12 +127,12 @@ include_external_packages = true
 name = "Clean Architecture Layers Contract"
 type = "layers"
 layers = [
-    "core.domain",
-    "core.ports",
-    "core.services",
-    "core.adapters",
+    "infra",
     "apps",
-    "infra"
+    "core.adapters",
+    "core.services",
+    "core.ports",
+    "core.domain"
 ]
 
 [[tool.importlinter.contracts]]

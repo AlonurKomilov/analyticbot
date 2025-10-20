@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 
 console.log('React imported successfully');
 
-const App = () => {
+const App: React.FC = () => {
     console.log('App component rendering');
     return React.createElement('div', {
         style: { padding: '40px', textAlign: 'center' }

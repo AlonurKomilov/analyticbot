@@ -9,7 +9,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import EnhancedTopPostsTable from '../../EnhancedTopPostsTable';
 
-const PostsTableDemo = () => {
+const PostsTableDemo: React.FC = () => {
     return (
         <>
             <Box sx={{ mb: 2 }}>

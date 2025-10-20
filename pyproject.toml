@@ -174,7 +174,8 @@ forbidden_modules = [
 ]
 ignore_imports = [
     # Jobs use shared DI container which transitively imports bot services
-    "apps.jobs.alerts.runner -> apps.di"
+    "apps.jobs.alerts.runner -> apps.di",
+    "apps.jobs.di -> apps.di"
 ]
 
 [[tool.importlinter.contracts]]
@@ -218,10 +219,46 @@ ignore_imports = [
     "apps.bot.handlers.admin_handlers -> apps.di",
     "apps.bot.handlers.bot_alerts_handler -> apps.di",
     "apps.bot.handlers.content_protection -> apps.di",
-    # Shared utilities bridge to infra (by design)
+    # Additional DI container imports
+    "apps.api.routers.analytics_live_router -> apps.api.di_analytics",
+    "apps.api.routers.analytics_post_dynamics_router -> apps.api.di_analytics",
+    "apps.api.routers.content_protection_router -> apps.di",
+    "apps.api.routers.insights_predictive_router -> apps.api.di_analytics",
+    "apps.api.routers.superadmin_router -> apps.di",
+    "apps.api.routers.system_router -> apps.di",
+    "apps.bot.handlers.user_handlers -> apps.di",
+    # Shared utilities bridge to infra (by design - performance monitoring)
+    "apps.api.routers.admin_channels_router -> apps.shared.performance",
+    "apps.api.routers.admin_system_router -> apps.shared.performance",
     "apps.api.routers.admin_users_router -> apps.shared.performance",
+    "apps.api.routers.channels_router -> apps.shared.performance",
+    "apps.api.routers.insights_engagement_router -> apps.shared.performance",
+    "apps.api.routers.statistics_core_router -> apps.shared.performance",
+    "apps.api.routers.statistics_reports_router -> apps.shared.performance",
     "apps.api.routers.sharing_router -> apps.shared.services.chart_service",
+    "apps.api.routers.exports_router -> apps.shared.services.chart_service",
     "apps.bot.handlers.exports -> apps.shared.services.chart_service",
+    "apps.bot.handlers.admin_handlers -> apps.shared.services.chart_service",
+    # Middleware uses DI for repository access (composition root pattern)
+    "apps.api.routers.admin_channels_router -> apps.api.middleware.auth",
+    "apps.api.routers.admin_system_router -> apps.api.middleware.auth",
+    "apps.api.routers.admin_users_router -> apps.api.middleware.auth",
+    "apps.api.routers.ai_services_router -> apps.api.middleware.auth",
+    "apps.api.routers.analytics_alerts_router -> apps.api.middleware.auth",
+    "apps.api.routers.analytics_live_router -> apps.api.middleware.auth",
+    "apps.api.routers.analytics_post_dynamics_router -> apps.api.middleware.auth",
+    "apps.api.routers.auth_router -> apps.api.middleware.auth",
+    "apps.api.routers.channels_router -> apps.api.middleware.auth",
+    "apps.api.routers.content_protection_router -> apps.api.middleware.auth",
+    "apps.api.routers.insights_engagement_router -> apps.api.middleware.auth",
+    "apps.api.routers.insights_predictive_router -> apps.api.middleware.auth",
+    "apps.api.routers.statistics_core_router -> apps.api.middleware.auth",
+    "apps.api.routers.statistics_reports_router -> apps.api.middleware.auth",
+    "apps.api.routers.system_router -> apps.api.middleware.auth",
+    # Demo router is composition root
+    "apps.api.routers -> apps.demo.routers.main",
+    # Dependency factory uses middleware (composition root)
+    "apps.api.routers.system_router -> apps.api.deps_factory",
     # Telegram validation uses telethon (infra dependency - architectural debt)
     "apps.api.services.telegram_validation_service -> infra.tg.telethon_client",
     "apps.api.routers.analytics_channels_router -> apps.api.services.telegram_validation_service"

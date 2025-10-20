@@ -1,13 +1,11 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Box, CircularProgress, LinearProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { ProtectedRoute, PublicRoute } from './components/guards';
 
 // Import optimized lazy loading system
 import {
-    CriticalComponents,
     PageComponents,
-    AdminComponents,
     ServiceComponents,
     UtilityComponents,
     preloadByRoute,
@@ -16,14 +14,7 @@ import {
 
 // Import navigation system from domain structure
 import { NavigationProvider } from './components/common/NavigationProvider';
-import NavigationBar from './components/domains/navigation/NavigationBar/NavigationBar.tsx';
 import { PageLoader } from './components/common/PageLoader';
-
-// Destructure components for cleaner code
-const {
-    MainDashboard,
-    AnalyticsDashboard
-} = CriticalComponents;
 
 const {
     DashboardPage,
@@ -35,9 +26,7 @@ const {
     ResetPasswordForm
 } = PageComponents;
 
-const {
-    SuperAdminDashboard
-} = AdminComponents;
+// SuperAdminDashboard imported but not used in routes (available for future use)
 
 const {
     ServicesLayout,
@@ -54,10 +43,20 @@ const {
     ServicesOverview
 } = UtilityComponents;
 
+interface OptimizedSuspenseProps {
+    children: ReactNode;
+    fallback?: ReactNode;
+    skeletonType?: 'dashboard' | 'form' | 'list' | 'content';
+}
+
 /**
  * Performance-optimized loading component with skeleton UI
  */
-const OptimizedSuspense = ({ children, fallback, skeletonType = 'dashboard' }) => {
+const OptimizedSuspense: React.FC<OptimizedSuspenseProps> = ({
+    children,
+    fallback,
+    skeletonType = 'dashboard'
+}) => {
     return (
         <Suspense
             fallback={
@@ -72,7 +71,7 @@ const OptimizedSuspense = ({ children, fallback, skeletonType = 'dashboard' }) =
 /**
  * Route-aware preloading component
  */
-const RoutePreloader = () => {
+const RoutePreloader: React.FC = () => {
     const location = useLocation();
 
     useEffect(() => {
@@ -87,7 +86,7 @@ const RoutePreloader = () => {
  * Professional App Router with Performance Optimizations
  * Implements multi-page architecture with enterprise-grade navigation and smart preloading
  */
-const AppRouter = () => {
+const AppRouter: React.FC = () => {
     useEffect(() => {
         // Initialize performance optimizations on app start
         initializePerformanceOptimizations();

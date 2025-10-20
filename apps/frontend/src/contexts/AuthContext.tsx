@@ -5,20 +5,53 @@
  * Integrates with the backend JWT authentication system.
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-toastify';
-import { authAwareAPI } from '../services/authAwareAPI.js';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { apiClient } from '../api/client.js';
-import { useNavigate } from 'react-router-dom';
+
+// Type definitions
+interface User {
+    id: string | number;
+    email: string;
+    username?: string;
+    is_demo?: boolean;
+    [key: string]: any;
+}
+
+interface LoginResponse {
+    success: boolean;
+    error?: string;
+}
+
+interface RegisterResponse {
+    success: boolean;
+    error?: string;
+}
+
+interface AuthContextValue {
+    user: User | null;
+    token: string | null;
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    login: (email: string, password: string) => Promise<LoginResponse>;
+    register: (userData: Record<string, any>) => Promise<RegisterResponse>;
+    logout: () => Promise<void>;
+    refreshToken: () => Promise<boolean>;
+    updateUser: (userData: User) => void;
+}
+
+interface AuthProviderProps {
+    children: ReactNode;
+}
 
 // Authentication context interface
-const AuthContext = createContext({
+const AuthContext = createContext<AuthContextValue>({
     user: null,
     token: null,
     isAuthenticated: false,
     isLoading: true,
-    login: async () => false,
-    logout: () => {},
+    login: async () => ({ success: false }),
+    register: async () => ({ success: false }),
+    logout: async () => {},
     refreshToken: async () => false,
     updateUser: () => {}
 });
@@ -37,9 +70,9 @@ const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'auth_user';
 
-const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
-const getStoredRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
-const getStoredUser = () => {
+const getStoredToken = (): string | null => localStorage.getItem(TOKEN_KEY);
+const getStoredRefreshToken = (): string | null => localStorage.getItem(REFRESH_TOKEN_KEY);
+const getStoredUser = (): User | null => {
     try {
         const user = localStorage.getItem(USER_KEY);
         return user ? JSON.parse(user) : null;
@@ -48,23 +81,23 @@ const getStoredUser = () => {
     }
 };
 
-const setStoredAuth = (token, refreshToken, user) => {
+const setStoredAuth = (token: string, refreshToken: string, user: User): void => {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
-const clearStoredAuth = () => {
+const clearStoredAuth = (): void => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
 };
 
 // Authentication Provider Component
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     // Initialize auth state from localStorage
     useEffect(() => {
@@ -78,10 +111,10 @@ export const AuthProvider = ({ children }) => {
                     try {
                         const userData = await apiClient.get('/auth/me');
                         setToken(storedToken);
-                        setUser(userData);
+                        setUser(userData as User);
                     } catch (error) {
                         // Token invalid, try refresh
-                        const refreshSuccess = await refreshToken();
+                        const refreshSuccess = await refreshTokenFn();
                         if (!refreshSuccess) {
                             clearStoredAuth();
                         }
@@ -99,7 +132,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Login function
-    const login = useCallback(async (email, password) => {
+    const login = useCallback(async (email: string, password: string): Promise<LoginResponse> => {
         try {
             setIsLoading(true);
 
@@ -107,7 +140,7 @@ export const AuthProvider = ({ children }) => {
             console.log('Login API full response:', response); // Debug log
 
             // Our apiClient returns data directly (not response.data like axios)
-            const data = response.data || response; // Support both formats
+            const data = (response as any).data || response; // Support both formats
             console.log('Login API response data:', data); // Debug log
 
             const { access_token, refresh_token, user: userData } = data;
@@ -148,7 +181,7 @@ export const AuthProvider = ({ children }) => {
 
             console.log('Login successful:', userData?.username || userData?.email || 'user');
             return { success: true };
-        } catch (error) {
+        } catch (error: any) {
             console.error('Login error:', error);
             return {
                 success: false,
@@ -157,13 +190,15 @@ export const AuthProvider = ({ children }) => {
         } finally {
             setIsLoading(false);
         }
-    }, []);    // Register function
-    const register = useCallback(async (userData) => {
+    }, []);
+
+    // Register function
+    const register = useCallback(async (userData: Record<string, any>): Promise<RegisterResponse> => {
         setIsLoading(true);
         console.log('🔐 AuthContext register called with:', userData);
         try {
             const response = await apiClient.post('/auth/register', userData);
-            const data = response.data || response; // Support both formats
+            const data = (response as any).data || response; // Support both formats
             const { access_token, refresh_token, user: userInfo } = data;
 
             // Store auth data
@@ -172,7 +207,7 @@ export const AuthProvider = ({ children }) => {
             setUser(userInfo);
 
             return { success: true };
-        } catch (error) {
+        } catch (error: any) {
             console.error('Registration error:', error);
             return {
                 success: false,
@@ -184,7 +219,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Logout function
-    const logout = useCallback(async () => {
+    const logout = useCallback(async (): Promise<void> => {
         try {
             // Call logout endpoint if we have a token
             if (token) {
@@ -204,7 +239,7 @@ export const AuthProvider = ({ children }) => {
     }, [token]);
 
     // Refresh token function
-    const refreshToken = useCallback(async () => {
+    const refreshTokenFn = useCallback(async (): Promise<boolean> => {
         try {
             const storedRefreshToken = getStoredRefreshToken();
             if (!storedRefreshToken) {
@@ -212,7 +247,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             const data = await apiClient.post('/auth/refresh', { refresh_token: storedRefreshToken });
-            const newToken = data.access_token;
+            const newToken = (data as any).access_token;
 
             // Update stored token
             localStorage.setItem(TOKEN_KEY, newToken);
@@ -226,7 +261,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Update user profile
-    const updateUser = useCallback((userData) => {
+    const updateUser = useCallback((userData: User): void => {
         setUser(userData);
         localStorage.setItem(USER_KEY, JSON.stringify(userData));
     }, []);
@@ -237,16 +272,16 @@ export const AuthProvider = ({ children }) => {
 
         // Set up token refresh interval (every 25 minutes for 30-minute tokens)
         const refreshInterval = setInterval(async () => {
-            const success = await refreshToken();
+            const success = await refreshTokenFn();
             if (!success) {
                 logout();
             }
         }, 25 * 60 * 1000); // 25 minutes
 
         return () => clearInterval(refreshInterval);
-    }, [token, refreshToken, logout]);
+    }, [token, refreshTokenFn, logout]);
 
-    const value = {
+    const value: AuthContextValue = {
         user,
         token,
         isAuthenticated: !!token && !!user,
@@ -254,7 +289,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        refreshToken,
+        refreshToken: refreshTokenFn,
         updateUser
     };
 

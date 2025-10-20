@@ -19,7 +19,10 @@ from core.security_engine import (
 )
 from core.security_engine.models import User
 from core.security_engine.permissions import Permission as NewPermission
-from core.security_engine.rbac import Permission, RBACManagerlogger = logging.getLogger(__name__)
+from core.security_engine.rbac import Permission, RBACManager
+from core.security_engine.role_hierarchy import role_hierarchy_service
+
+logger = logging.getLogger(__name__)
 
 # Security dependencies - now using centralized container
 # HTTPBearer scheme is now imported from auth_utils to avoid duplication

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    Box,
     Typography,
     Breadcrumbs,
     Link,
@@ -11,15 +10,13 @@ import {
     Home as HomeIcon,
     Analytics as AnalyticsIcon,
     NavigateNext as NavigateNextIcon,
-    ExpandMore as ExpandMoreIcon,
-    ExpandLess as ExpandLessIcon,
     Security as SecurityIcon
 } from '@mui/icons-material';
 import DataSourceSettings from '../../DataSourceSettings';
 
 interface DashboardHeaderProps {
     showSettings: boolean;
-    onToggleSettings: () => void;
+    onToggleSettings?: () => void;
     onDataSourceChange: (source: string) => void;
 }
 
@@ -36,7 +33,6 @@ interface DashboardHeaderProps {
  */
 const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(({
     showSettings,
-    onToggleSettings,
     onDataSourceChange
 }) => {
     return (

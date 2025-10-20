@@ -9,11 +9,18 @@ import {
     ListItemIcon,
     ListItemText,
     Divider,
-    Typography
+    Typography,
+    DrawerProps
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NAVIGATION_CONFIG } from './navigationConfig';
 import SmartBreadcrumbs from './SmartBreadcrumbs';
+
+interface MobileNavigationDrawerProps extends Omit<DrawerProps, 'open'> {
+    open: boolean;
+    onClose: () => void;
+    className?: string;
+}
 
 /**
  * MobileNavigationDrawer Component
@@ -25,7 +32,7 @@ import SmartBreadcrumbs from './SmartBreadcrumbs';
  * - Active route highlighting
  * - Auto-close on navigation
  */
-const MobileNavigationDrawer = ({
+const MobileNavigationDrawer: React.FC<MobileNavigationDrawerProps> = ({
     open,
     onClose,
     className,
@@ -34,7 +41,7 @@ const MobileNavigationDrawer = ({
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleNavigate = (path) => {
+    const handleNavigate = (path: string): void => {
         navigate(path);
         onClose(); // Close drawer after navigation
     };

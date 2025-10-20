@@ -18,16 +18,56 @@ import {
   Box,
   Typography,
   Chip,
-  IconButton,
-  Skeleton
+  Skeleton,
+  CardProps
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
+interface StyledCardProps {
+  variant?: 'elevated' | 'outlined' | 'filled';
+  interactive?: boolean;
+  loading?: boolean;
+}
+
+interface StatusConfig {
+  label: string;
+  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
+}
+
+interface BadgeConfig {
+  text: string;
+  color?: string;
+}
+
+interface EnhancedCardHeaderProps {
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  status?: StatusConfig;
+  badge?: BadgeConfig;
+  actions?: React.ReactNode;
+  loading?: boolean;
+  [key: string]: any;
+}
+
+interface EnhancedCardProps extends Omit<CardProps, 'variant' | 'title'> {
+  variant?: 'elevated' | 'outlined' | 'filled';
+  interactive?: boolean;
+  loading?: boolean;
+  title?: React.ReactNode;
+  subtitle?: React.ReactNode;
+  status?: StatusConfig;
+  badge?: BadgeConfig;
+  headerActions?: React.ReactNode;
+  children?: React.ReactNode;
+  footerActions?: React.ReactNode;
+  onClick?: () => void;
+}
+
 const StyledCard = styled(MuiCard, {
   // Filter out custom props to prevent them from being passed to the DOM
-  shouldForwardProp: (prop) => !['interactive', 'loading'].includes(prop)
-})(({ theme, variant, interactive, loading }) => ({
+  shouldForwardProp: (prop) => !['interactive', 'loading', 'variant'].includes(prop as string)
+})<StyledCardProps>(({ theme, variant = 'elevated', interactive, loading }) => ({
   borderRadius: DESIGN_TOKENS.layout.borderRadius.lg,
   transition: 'all 0.2s ease-in-out',
   border: '1px solid',
@@ -68,7 +108,7 @@ const StyledCard = styled(MuiCard, {
   })
 }));
 
-const EnhancedCardHeader = ({
+const EnhancedCardHeader: React.FC<EnhancedCardHeaderProps> = ({
   title,
   subtitle,
   status,
@@ -149,7 +189,7 @@ const EnhancedCardHeader = ({
   );
 };
 
-const EnhancedCard = ({
+const EnhancedCard: React.FC<EnhancedCardProps> = ({
   variant = 'elevated',
   interactive = false,
   loading = false,
@@ -168,7 +208,7 @@ const EnhancedCard = ({
 
   return (
     <StyledCard
-      variant={variant}
+      variant={variant as any}
       interactive={interactive}
       loading={loading}
       onClick={interactive ? onClick : undefined}
@@ -208,19 +248,19 @@ const EnhancedCard = ({
 };
 
 // Pre-configured variants
-export const PrimaryCard = (props) => (
+export const PrimaryCard: React.FC<EnhancedCardProps> = (props) => (
   <EnhancedCard variant="elevated" {...props} />
 );
 
-export const SecondaryCard = (props) => (
+export const SecondaryCard: React.FC<EnhancedCardProps> = (props) => (
   <EnhancedCard variant="outlined" {...props} />
 );
 
-export const InteractiveCard = (props) => (
+export const InteractiveCard: React.FC<EnhancedCardProps> = (props) => (
   <EnhancedCard variant="elevated" interactive {...props} />
 );
 
-export const StatusCard = ({ status, ...props }) => (
+export const StatusCard: React.FC<EnhancedCardProps> = ({ status, ...props }) => (
   <EnhancedCard
     variant="filled"
     status={status}

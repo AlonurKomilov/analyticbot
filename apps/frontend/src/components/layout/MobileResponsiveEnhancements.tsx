@@ -8,7 +8,7 @@
  * - Better mobile content organization
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, ReactNode } from 'react';
 import {
   Box,
   Drawer,
@@ -24,7 +24,6 @@ import {
   Chip
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Close as CloseIcon,
   Dashboard as DashboardIcon,
   Analytics as AnalyticsIcon,
@@ -33,11 +32,53 @@ import {
 } from '@mui/icons-material';
 import { DESIGN_TOKENS } from '../../theme/designTokens.js';
 
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon: ReactNode;
+  badge?: string | null;
+}
+
+interface MobileNavigationDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  navigationItems?: NavigationItem[];
+  currentPath?: string;
+  showChannelStatus?: boolean;
+  channelCount?: number;
+}
+
+interface Tab {
+  label: string;
+  badge?: string | number;
+}
+
+interface SwipeableTabNavigationProps {
+  tabs?: Tab[];
+  activeTab?: number;
+  onTabChange: (index: number) => void;
+  children: ReactNode;
+  enableSwipe?: boolean;
+}
+
+interface MobileCardStackProps {
+  children: ReactNode;
+  spacing?: 'sm' | 'md' | 'lg';
+}
+
+interface ResponsiveGridProps {
+  children: ReactNode;
+  mobileColumns?: number;
+  tabletColumns?: number;
+  desktopColumns?: number;
+  spacing?: 'sm' | 'md' | 'lg';
+}
+
 /**
  * Enhanced Mobile Navigation Drawer
  * Better mobile navigation with improved touch targets and organization
  */
-export const MobileNavigationDrawer = ({
+export const MobileNavigationDrawer: React.FC<MobileNavigationDrawerProps> = ({
   open,
   onClose,
   navigationItems = [],
@@ -48,7 +89,7 @@ export const MobileNavigationDrawer = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const defaultNavItems = [
+  const defaultNavItems: NavigationItem[] = [
     {
       label: 'Dashboard',
       path: '/dashboard',
@@ -186,21 +227,21 @@ export const MobileNavigationDrawer = ({
  * Swipeable Tab Navigation
  * Enhanced tab navigation with swipe gestures for mobile
  */
-export const SwipeableTabNavigation = ({
+export const SwipeableTabNavigation: React.FC<SwipeableTabNavigationProps> = ({
   tabs = [],
   activeTab = 0,
   onTabChange,
   children,
   enableSwipe = true
 }) => {
-  const [startX, setStartX] = useState(null);
-  const [startY, setStartY] = useState(null);
-  const containerRef = useRef(null);
+  const [startX, setStartX] = useState<number | null>(null);
+  const [startY, setStartY] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Touch handlers for swipe gestures
-  const handleTouchStart = (e) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>): void => {
     if (!enableSwipe || !isMobile) return;
 
     const touch = e.touches[0];
@@ -208,7 +249,7 @@ export const SwipeableTabNavigation = ({
     setStartY(touch.clientY);
   };
 
-  const handleTouchEnd = (e) => {
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>): void => {
     if (!enableSwipe || !isMobile || startX === null || startY === null) return;
 
     const touch = e.changedTouches[0];
@@ -336,11 +377,11 @@ export const SwipeableTabNavigation = ({
  * Mobile-Optimized Card Stack
  * Stacked cards with better spacing for mobile
  */
-export const MobileCardStack = ({ children, spacing = 'md' }) => {
+export const MobileCardStack: React.FC<MobileCardStackProps> = ({ children, spacing = 'md' }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const spacingMap = { sm: 2, md: 3, lg: 4 };
+  const spacingMap: Record<'sm' | 'md' | 'lg', number> = { sm: 2, md: 3, lg: 4 };
   const spacingValue = spacingMap[spacing] || 3;
 
   return (
@@ -361,7 +402,7 @@ export const MobileCardStack = ({ children, spacing = 'md' }) => {
 /**
  * Responsive Grid with Mobile Optimization
  */
-export const ResponsiveGrid = ({
+export const ResponsiveGrid: React.FC<ResponsiveGridProps> = ({
   children,
   mobileColumns = 1,
   tabletColumns = 2,
@@ -373,7 +414,7 @@ export const ResponsiveGrid = ({
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
   const columns = isMobile ? mobileColumns : isTablet ? tabletColumns : desktopColumns;
-  const spacingMap = { sm: 2, md: 3, lg: 4 };
+  const spacingMap: Record<'sm' | 'md' | 'lg', number> = { sm: 2, md: 3, lg: 4 };
   const spacingValue = spacingMap[spacing] || 3;
 
   return (

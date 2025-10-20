@@ -26,7 +26,6 @@ def send_post_task(scheduler_id: int):
     async def _run():
         context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            # ✅ MIGRATED: Use new modular DI container structure
             container = get_container()
             bot = await container.bot.bot_client()
             scheduler_repo_result = await container.database.schedule_repo()

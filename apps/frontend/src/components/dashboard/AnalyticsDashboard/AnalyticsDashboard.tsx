@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, SyntheticEvent } from 'react';
 import {
     Container,
     Typography,
@@ -26,8 +26,8 @@ import EnhancedTopPostsTable from '../../EnhancedTopPostsTable';
 import BestTimeRecommender from '../../analytics/BestTimeRecommender';
 import { AdvancedAnalyticsDashboard } from '../../analytics/AdvancedAnalyticsDashboard';
 import RealTimeAlertsSystem from '../../alerts/RealTimeAlerts';
-import ContentProtectionDashboard from '../../content/ContentProtectionDashboard.tsx';
-import ApiFailureDialog from '../../dialogs/ApiFailureDialog.tsx';
+import ContentProtectionDashboard from '../../content/ContentProtectionDashboard';
+import ApiFailureDialog from '../../dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@/stores';
 import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
 
@@ -53,18 +53,17 @@ import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
  * - Better maintainability and testability
  * - Preserved all existing functionality
  */
-const AnalyticsDashboard = React.memo(() => {
-    const [activeTab, setActiveTab] = useState(0);
-    const [lastUpdated, setLastUpdated] = useState(new Date());
-    const [isLoading, setIsLoading] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
+const AnalyticsDashboard: React.FC = React.memo(() => {
+    const [activeTab, setActiveTab] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [showSettings, setShowSettings] = useState<boolean>(false);
 
     // Channel configuration
     const channelId = 'demo_channel'; // Default channel for analytics
 
     // Store integration
-    const { dataSource, setDataSource } = useUIStore();
-    const { loadChannels } = useChannelStore();
+    const { setDataSource } = useUIStore();
+    const { loadChannels } = useChannelStore() as any;
     const { clearAnalytics } = useAnalyticsStore();
 
     // API failure dialog management
@@ -87,7 +86,7 @@ const AnalyticsDashboard = React.memo(() => {
     }, []);
 
     // Handle data source change
-    const handleDataSourceChange = async (newSource) => {
+    const handleDataSourceChange = async (newSource: string): Promise<void> => {
         setDataSource(newSource);
         setIsLoading(true);
 
@@ -109,11 +108,11 @@ const AnalyticsDashboard = React.memo(() => {
         }
     };
 
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = (event: SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
     };
 
-    const handleRefresh = async () => {
+    const handleRefresh = async (): Promise<void> => {
         setIsLoading(true);
         // Simulate refresh delay
         setTimeout(() => {
@@ -122,7 +121,7 @@ const AnalyticsDashboard = React.memo(() => {
         }, 1000);
     };
 
-    const handleToggleSettings = () => {
+    const handleToggleSettings = (): void => {
         setShowSettings(!showSettings);
     };
 

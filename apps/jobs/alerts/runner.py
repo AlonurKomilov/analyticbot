@@ -1,6 +1,8 @@
 """
 Alert Detection Job Runner
 Background job for detecting analytics alerts and sending notifications
+
+Updated: 2025-10-20 - Added Telegram delivery integration
 """
 
 import asyncio
@@ -11,7 +13,10 @@ from typing import Any
 import aiohttp
 
 from apps.shared.analytics_service import SharedAnalyticsService
-from core.repositories.alert_repository import AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSent,
+    AlertSubscriptionRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -216,16 +221,29 @@ class AlertDetector:
 class AlertRunner:
     """Main alert detection and notification runner"""
 
-    def __init__(self, analytics_client=None, alert_repository=None):
+    def __init__(
+        self,
+        analytics_client=None,
+        alert_repository=None,
+        alert_sent_repository=None,
+        telegram_delivery_service=None,
+    ):
         self.analytics_client = analytics_client
         self.alert_repository = alert_repository
+        self.alert_sent_repository = alert_sent_repository
+        self.telegram_delivery = telegram_delivery_service
         self.detector: AlertDetector | None = None
         self.running = False
 
     async def _ensure_dependencies(self):
-        """Ensure dependencies are available using DI container"""
-        if self.analytics_client is None or self.alert_repository is None:
-            from apps.di import get_container
+        """Ensure dependencies are available using factory pattern"""
+        if (
+            self.analytics_client is None
+            or self.alert_repository is None
+            or self.alert_sent_repository is None
+            or self.telegram_delivery is None
+        ):
+            from apps.shared.factory import get_repository_factory
 
             # Get settings
             try:
@@ -239,14 +257,45 @@ class AlertRunner:
             if self.analytics_client is None:
                 self.analytics_client = SharedAnalyticsService(analytics_api_url)
 
-            # Get alert repository from DI container
+            # Get repositories from factory
+            factory = get_repository_factory()
+
             if self.alert_repository is None:
-                container = get_container()
-                self.alert_repository = await container.database.alert_subscription_repo()
+                self.alert_repository = await factory.get_alert_subscription_repository()
+
+            if self.alert_sent_repository is None:
+                self.alert_sent_repository = await factory.get_alert_sent_repository()
+
+            # Create Telegram delivery service
+            if self.telegram_delivery is None:
+                self.telegram_delivery = await self._create_telegram_delivery_service()
 
         # Create detector if not exists
         if self.detector is None:
             self.detector = AlertDetector(self.analytics_client, self.alert_repository)
+
+    async def _create_telegram_delivery_service(self):
+        """Create Telegram delivery service with bot client"""
+        try:
+            from apps.di import get_container
+
+            container = get_container()
+
+            # Get bot client from DI container
+            bot_client = container.bot.bot_client()
+
+            if bot_client is None:
+                logger.warning("Bot client not available, alert delivery will be logged only")
+                return None
+
+            # Create delivery service
+            from infra.adapters.telegram_alert_delivery import TelegramAlertDeliveryService
+
+            return TelegramAlertDeliveryService(bot_client)
+
+        except Exception as e:
+            logger.warning(f"Failed to create Telegram delivery service: {e}")
+            return None
 
     async def process_alert(self, alert_config: dict[str, Any]) -> None:
         """Process a single alert configuration"""
@@ -256,6 +305,7 @@ class AlertRunner:
         # Type guard - after _ensure_dependencies, these should not be None
         assert self.detector is not None
         assert self.alert_repository is not None
+        assert self.alert_sent_repository is not None
 
         alert_type = alert_config["alert_type"]
         user_id = alert_config["user_id"]
@@ -278,35 +328,119 @@ class AlertRunner:
                 return
 
             if alert_result:
-                # For now, skip recent alert check since the interface doesn't match
-                # TODO: Implement proper alert sent tracking with AlertSentRepository
+                # Generate unique key for this alert instance
+                alert_key = self._generate_alert_key(alert_result)
 
-                # Send alert notification
-                await self.send_alert_notification(user_id, alert_result)
+                # Check if alert was already sent (deduplication)
+                already_sent = await self.alert_sent_repository.is_alert_sent(
+                    chat_id=user_id,
+                    channel_id=channel_id,
+                    kind=alert_type,
+                    key=alert_key,
+                )
 
-                logger.info(f"Alert sent for {alert_type} on channel {channel_id}")
+                if already_sent:
+                    logger.debug(
+                        f"Alert already sent for {alert_type} on channel {channel_id}, skipping"
+                    )
+                    return
+
+                # Send alert notification via Telegram
+                delivery_result = await self.send_alert_notification(user_id, alert_result)
+
+                # Mark alert as sent if delivery was successful
+                if delivery_result.get("status") == "sent":
+                    alert_sent = AlertSent(
+                        chat_id=user_id,
+                        channel_id=channel_id,
+                        kind=alert_type,
+                        key=alert_key,
+                        sent_at=datetime.utcnow(),
+                    )
+
+                    await self.alert_sent_repository.mark_alert_sent(alert_sent)
+
+                    logger.info(
+                        f"Alert sent successfully for {alert_type} on channel {channel_id} "
+                        f"(message_id: {delivery_result.get('message_id')})"
+                    )
+                else:
+                    logger.error(
+                        f"Failed to send alert for {alert_type} on channel {channel_id}: "
+                        f"{delivery_result.get('error')}"
+                    )
             else:
                 logger.debug(f"No {alert_type} alert triggered for channel {channel_id}")
 
         except Exception as e:
             logger.error(f"Error processing alert {alert_config}: {e}")
 
-    async def send_alert_notification(self, user_id: int, alert_data: dict[str, Any]) -> None:
-        """Send alert notification to user"""
-        # In a real implementation, this would send a message via the bot
-        # For now, we'll log the alert
-        message = alert_data.get("message", "Alert triggered!")
+    def _generate_alert_key(self, alert_data: dict[str, Any]) -> str:
+        """
+        Generate unique key for alert instance
 
-        logger.info(f"ALERT for user {user_id}: {message}")
+        Args:
+            alert_data: Alert information
 
-        # TODO: Integrate with bot to actually send Telegram messages
-        # This would require access to the bot instance or a message queue
-        # Example implementation:
-        # await bot.send_message(
-        #     chat_id=user_id,
-        #     text=message,
-        #     parse_mode="Markdown"
-        # )
+        Returns:
+            Unique alert key (e.g., "spike_2025-10-20_1000")
+        """
+        alert_type = alert_data.get("alert_type", "unknown")
+        timestamp = alert_data.get("timestamp", datetime.utcnow())
+
+        if isinstance(timestamp, str):
+            time_str = timestamp
+        else:
+            # Use hour precision for grouping similar alerts
+            time_str = timestamp.strftime("%Y-%m-%d_%H00")
+
+        # Include metric value for additional uniqueness
+        value = alert_data.get("current_value", "")
+
+        return f"{alert_type}_{time_str}_{value}"
+
+    async def send_alert_notification(
+        self, user_id: int, alert_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Send alert notification to user via Telegram
+
+        Args:
+            user_id: Telegram user/chat ID
+            alert_data: Alert information dictionary
+
+        Returns:
+            Delivery result with status, message_id, error
+        """
+        # Check if Telegram delivery service is available
+        if self.telegram_delivery is None:
+            logger.warning("Telegram delivery service not available, logging alert only")
+            message = alert_data.get("message", "Alert triggered!")
+            logger.info(f"ALERT for user {user_id}: {message}")
+
+            return {
+                "status": "logged",
+                "error": "Telegram delivery not configured",
+                "chat_id": user_id,
+            }
+
+        # Send via Telegram with retry logic
+        try:
+            result = await self.telegram_delivery.send_alert(
+                chat_id=user_id,
+                alert_data=alert_data,
+                max_retries=3,
+            )
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Failed to send alert notification to user {user_id}: {e}")
+            return {
+                "status": "failed",
+                "error": str(e),
+                "chat_id": user_id,
+            }
 
     async def run_detection_cycle(self) -> None:
         """Run one cycle of alert detection"""

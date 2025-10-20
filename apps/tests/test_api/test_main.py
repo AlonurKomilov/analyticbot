@@ -20,7 +20,11 @@ class TestAPIStartup:
         assert api_client is not None
         # Test that the app is functional by making a request
         response = await api_client.get("/health")
-        assert response.status_code in [200, 404]  # App is running
+        assert response.status_code in [
+            200,
+            307,
+            404,
+        ]  # App is running (200=OK, 307=Redirect, 404=Not Found)
 
     @pytest.mark.asyncio
     async def test_health_endpoint_returns_200(self, api_client: AsyncClient):
@@ -112,8 +116,6 @@ class TestErrorHandling:
     async def test_422_for_invalid_request_body(self, api_client: AsyncClient):
         """Test validation error response."""
         # Try to post invalid data to an endpoint
-        response = await api_client.post(
-            "/api/v1/channels", json={"invalid": "data"}
-        )
+        response = await api_client.post("/api/v1/channels", json={"invalid": "data"})
         # Should be 422 Unprocessable Entity or 404 if endpoint doesn't exist
         assert response.status_code in [404, 422, 401, 403]

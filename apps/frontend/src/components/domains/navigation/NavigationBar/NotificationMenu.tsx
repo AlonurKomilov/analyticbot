@@ -144,7 +144,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({ className, ...props
                     </MenuItem>
                 ) : (
                     /* Notification List */
-                    notifications.map((notification: Notification, index: number) => (
+                    (notifications as any).map((notification: Notification, index: number) => (
                         <MenuItem
                             key={notification.id || index}
                             onClick={() => handleNotificationClick(notification, index)}

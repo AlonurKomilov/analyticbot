@@ -38,6 +38,8 @@ interface Service {
 const ServicesLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+
+    const services: Service[] = [
         {
             id: 'overview',
             name: 'Services Overview',

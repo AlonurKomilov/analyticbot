@@ -56,13 +56,13 @@ const PostCreator: React.FC = React.memo(() => {
     const { loading, error } = useLoadingState('schedulePost');
 
     // Update hasMedia when pendingMedia changes
-    const prevMediaFileId = React.useRef(pendingMedia?.file_id);
+    const prevMediaFile = React.useRef(pendingMedia?.file);
     useEffect(() => {
-        if (prevMediaFileId.current !== pendingMedia?.file_id) {
-            updateField('hasMedia', !!pendingMedia?.file_id);
-            prevMediaFileId.current = pendingMedia?.file_id;
+        if (prevMediaFile.current !== pendingMedia?.file) {
+            updateField('hasMedia', !!pendingMedia);
+            prevMediaFile.current = pendingMedia?.file;
         }
-    }, [pendingMedia?.file_id, updateField]);
+    }, [pendingMedia, updateField]);
 
     // Optimized button handlers
     const handleAddButton = useCallback((newButton: Button) => {
@@ -89,7 +89,7 @@ const PostCreator: React.FC = React.memo(() => {
                 selectedChannel: formState.selectedChannel,
                 scheduleTime: formState.scheduleTime || '',
                 inline_buttons,
-                media: pendingMedia?.file_id ? pendingMedia : undefined
+                media: pendingMedia ? pendingMedia : undefined
             } as any);
 
             // Reset form on success
@@ -162,9 +162,9 @@ const PostCreator: React.FC = React.memo(() => {
             </fieldset>
 
             {/* Media Preview Section */}
-            {pendingMedia?.file_id && (
+            {pendingMedia && (
                 <Box sx={{ mb: 3 }}>
-                    <MediaPreview media={[pendingMedia] as any} />
+                    <MediaPreview />
                 </Box>
             )}
 

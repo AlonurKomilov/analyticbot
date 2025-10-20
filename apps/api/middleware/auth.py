@@ -17,18 +17,9 @@ from core.security_engine import LegacyUserRole as UserRole
 from core.security_engine import (
     get_rbac_manager,
 )
-
-# Import new role system with backwards compatibility
 from core.security_engine.models import User
-
-# Import new permission system
 from core.security_engine.permissions import Permission as NewPermission
-from core.security_engine.rbac import Permission, RBACManager
-from core.security_engine.role_hierarchy import role_hierarchy_service
-
-# ✅ FIXED: Removed direct repository imports - now using DI container
-
-logger = logging.getLogger(__name__)
+from core.security_engine.rbac import Permission, RBACManagerlogger = logging.getLogger(__name__)
 
 # Security dependencies - now using centralized container
 # HTTPBearer scheme is now imported from auth_utils to avoid duplication
@@ -40,7 +31,6 @@ logger = logging.getLogger(__name__)
 async def get_user_repository() -> UserRepository:
     """Get user repository dependency with proper pool injection"""
     try:
-        # ✅ MIGRATED: Use unified DI container from apps/di
         from apps.di import get_container
 
         container = get_container()
@@ -56,7 +46,6 @@ async def get_user_repository() -> UserRepository:
 async def get_channel_repository() -> ChannelRepository:
     """Get channel repository dependency with proper pool injection"""
     try:
-        # ✅ MIGRATED: Use unified DI container from apps/di
         from apps.di import get_container
 
         container = get_container()

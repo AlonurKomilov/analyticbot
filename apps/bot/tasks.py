@@ -8,8 +8,6 @@ from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 from apps.bot.utils.task_utils import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
-
-# ✅ MIGRATED: Use new modular DI instead of legacy bot.di
 from apps.di import get_container
 
 

@@ -13,8 +13,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
 from apps.di import ApplicationContainer
-
-# ✅ MIGRATED: Use new modular DI instead of legacy bot.di
 from apps.di import get_container as get_app_container
 from core.domain.payment import (
     Money,
@@ -28,7 +26,6 @@ router = APIRouter(prefix="/payment", tags=["payment"])
 logger = logging.getLogger(__name__)
 
 
-# ✅ MIGRATED: Updated dependency to use modular DI container
 def get_container() -> ApplicationContainer:
     return get_app_container()
 

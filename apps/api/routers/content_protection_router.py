@@ -10,8 +10,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
-
-# ✅ MIGRATED: Use auth middleware directly (not deps wrapper)
 from apps.api.middleware.auth import get_current_user
 from apps.bot.models.content_protection import (
     ContentProtectionResponse as APIContentProtectionResponse,

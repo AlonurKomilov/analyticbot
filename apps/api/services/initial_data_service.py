@@ -21,7 +21,6 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
     This replaces demo/mock data with actual database queries
     """
     try:
-        # ✅ MIGRATED: Use unified DI container from apps/di
         from apps.di import get_container
 
         container = get_container()

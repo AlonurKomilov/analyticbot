@@ -9,16 +9,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-
-# ✅ MIGRATED: Removed deprecated deps import
-# Predictive engine is now created inline as needed
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
-
-# Auth
 from apps.api.middleware.auth import get_current_user
-
-# Schemas
-# Services
 from apps.shared.clients.analytics_client import AnalyticsClient
 
 logger = logging.getLogger(__name__)

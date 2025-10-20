@@ -11,12 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# ✅ MIGRATED: Use new modular DI instead of legacy apps.api.deps
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
-
-# Import new role system with backwards compatibility
 from core.security_engine import User as AdminUser
 from core.services.superadmin_service import SuperAdminService
 

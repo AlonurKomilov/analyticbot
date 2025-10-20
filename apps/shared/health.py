@@ -38,7 +38,6 @@ async def database_health() -> dict[str, Any]:
     }
 
     try:
-        # ✅ MIGRATED: Use unified DI container
         container = get_container()
 
         # Test optimized database manager

@@ -325,7 +325,6 @@ async def demonstrate_clean_architecture():
     Demonstrates the difference between real and demo services.
     """
     try:
-        # ✅ MIGRATED: Use unified DI container from apps/di
         from apps.di import get_container
 
         container = get_container()

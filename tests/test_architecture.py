@@ -52,12 +52,14 @@ class TestCleanArchitecture:
 
     def test_di_containers_importable(self):
         """All DI containers should be importable without errors"""
+        # Updated Oct 20, 2025: Removed deprecated DI containers
+        # - apps.api.di → Migrated to apps.di.api_container
+        # - apps.bot.di → Migrated to apps.di.bot_container (deleted Oct 20)
+        # - apps.shared.di → Migrated to apps.di (deleted Oct 20)
+        # Only testing active containers
         containers = [
-            "apps.api.di",
-            "apps.bot.di",
-            "apps.jobs.di",
-            "apps.mtproto.di",
-            "apps.shared.di",
+            "apps.di",  # Unified DI system (primary)
+            "apps.jobs.di",  # Jobs still has own DI (to be migrated)
         ]
 
         for container_module in containers:

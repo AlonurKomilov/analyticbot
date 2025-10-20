@@ -20,11 +20,8 @@ class TestAPIStartup:
         assert api_client is not None
         # Test that the app is functional by making a request
         response = await api_client.get("/health")
-        assert response.status_code in [
-            200,
-            307,
-            404,
-        ]  # App is running (200=OK, 307=Redirect, 404=Not Found)
+        # App is running (200=OK, 307=Redirect, 404=Not Found)
+        assert response.status_code in [200, 307, 404]
 
     @pytest.mark.asyncio
     async def test_health_endpoint_returns_200(self, api_client: AsyncClient):

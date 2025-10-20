@@ -76,7 +76,7 @@ const PostCreator: React.FC = React.memo(() => {
     // Main form submission handler
     const handleSchedulePost = useCallback(async () => {
         const errors = validatePostForm(formState);
-        
+
         if (Object.keys(errors).length > 0) return;
 
         try {

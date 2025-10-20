@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, MouseEvent } from 'react';
 import {
     IconButton,
     Menu,
@@ -17,23 +17,30 @@ import {
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
 
+type PostAction = 'view' | 'analytics' | 'edit' | 'share' | 'download' | 'delete';
+
+interface PostActionsProps {
+    row: any;
+    onAction?: (action: PostAction, row: any) => void;
+}
+
 /**
  * Row actions menu for posts
  */
-export const PostActions = ({ row, onAction }) => {
-    const [anchorEl, setAnchorEl] = useState(null);
+export const PostActions: React.FC<PostActionsProps> = ({ row, onAction }) => {
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
 
-    const handleClick = (event) => {
+    const handleClick = (event: MouseEvent<HTMLElement>): void => {
         event.stopPropagation();
         setAnchorEl(event.currentTarget);
     };
 
-    const handleClose = () => {
+    const handleClose = (): void => {
         setAnchorEl(null);
     };
 
-    const handleAction = (action) => {
+    const handleAction = (action: PostAction): void => {
         handleClose();
         onAction?.(action, row);
     };
@@ -101,11 +108,16 @@ export const PostActions = ({ row, onAction }) => {
     );
 };
 
+interface PostBulkActionsProps {
+    selectedRows: any[];
+    onBulkAction?: (action: PostAction, selectedRows: any[]) => void;
+}
+
 /**
  * Bulk actions for selected posts
  */
-export const PostBulkActions = ({ selectedRows, onBulkAction }) => {
-    const handleBulkAction = (action) => {
+export const PostBulkActions: React.FC<PostBulkActionsProps> = ({ selectedRows, onBulkAction }) => {
+    const handleBulkAction = (action: PostAction): void => {
         onBulkAction?.(action, selectedRows);
     };
 

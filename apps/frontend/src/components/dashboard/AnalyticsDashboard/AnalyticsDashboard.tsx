@@ -55,6 +55,7 @@ import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
  */
 const AnalyticsDashboard: React.FC = React.memo(() => {
     const [activeTab, setActiveTab] = useState<number>(0);
+    const [_lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showSettings, setShowSettings] = useState<boolean>(false);
 
@@ -87,7 +88,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
 
     // Handle data source change
     const handleDataSourceChange = async (newSource: string): Promise<void> => {
-        setDataSource(newSource);
+        setDataSource(newSource as any);
         setIsLoading(true);
 
         try {
@@ -108,7 +109,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
         }
     };
 
-    const handleTabChange = (event: SyntheticEvent, newValue: number): void => {
+    const handleTabChange = (_event: SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
     };
 
@@ -249,7 +250,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
                 onClose={closeApiFailureDialog}
                 onRetry={handleRetryConnection}
                 onSwitchToMock={handleSwitchToMock}
-                error={apiError}
+                error={apiError as any}
                 isRetrying={isRetrying}
             />
         </Container>

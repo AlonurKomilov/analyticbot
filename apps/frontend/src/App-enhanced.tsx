@@ -8,7 +8,7 @@ import ScheduledPostsList from './components/ScheduledPostsList';
 import MediaPreview from './components/MediaPreview';
 import AddChannel from './components/AddChannel';
 
-const AppSkeleton = React.memo(() => (
+const AppSkeleton: React.FC = React.memo(() => (
     <Stack spacing={3} sx={{ mt: 2 }}>
         <Skeleton variant="rounded" width="100%" height={110} />
         <Skeleton variant="rounded" width="100%" height={280} />
@@ -18,7 +18,12 @@ const AppSkeleton = React.memo(() => (
 
 AppSkeleton.displayName = 'AppSkeleton';
 
-const ErrorAlert = React.memo(({ error, onRetry }) => (
+interface ErrorAlertProps {
+    error: string;
+    onRetry?: () => void;
+}
+
+const ErrorAlert: React.FC<ErrorAlertProps> = React.memo(({ error, onRetry }) => (
     <Alert
         severity="error"
         sx={{ mb: 2 }}
@@ -42,10 +47,10 @@ const ErrorAlert = React.memo(({ error, onRetry }) => (
 
 ErrorAlert.displayName = 'ErrorAlert';
 
-function App() {
-    const { channels, loadChannels } = useChannelStore();
+function App(): React.ReactElement {
+    const { channels, loadChannels } = useChannelStore() as any;
     const { scheduledPosts } = usePostStore();
-    const { globalLoading } = useUIStore();
+    const { globalLoading } = useUIStore() as any;
 
     // Memoize computed values
     const globalError = useMemo(() => globalLoading.error, [globalLoading.error]);
@@ -91,7 +96,7 @@ function App() {
 }
 
 // Wrap App with ErrorBoundary
-const AppWithErrorBoundary = () => (
+const AppWithErrorBoundary: React.FC = () => (
     <ErrorBoundary fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
         <App />
     </ErrorBoundary>

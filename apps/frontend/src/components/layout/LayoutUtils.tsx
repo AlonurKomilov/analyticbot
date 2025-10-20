@@ -5,8 +5,24 @@
  */
 
 import React from 'react';
-import { Box, alpha, useTheme } from '@mui/material';
-import { DESIGN_TOKENS } from '../../theme/designTokens.js';
+import { Box, alpha, useTheme, Theme, BoxProps } from '@mui/material';
+import { DESIGN_TOKENS } from '../../theme/designTokens';
+
+type EmphasisLevel = 'primary' | 'secondary' | 'default';
+
+interface EmphasisStyles {
+  bgcolor: string;
+  border: string;
+  borderRadius: number | string;
+}
+
+type HierarchyLevel = 1 | 2 | 3;
+type SpacingLevel = 'sm' | 'md' | 'lg';
+
+interface HierarchySpacing {
+  mb: number;
+  mt: number;
+}
 
 /**
  * Visual Hierarchy Utility Functions
@@ -15,8 +31,8 @@ export const LayoutUtils = {
   /**
    * Get emphasis styles for different content levels
    */
-  getEmphasisStyles: (level = 'default', theme) => {
-    const styles = {
+  getEmphasisStyles: (level: EmphasisLevel = 'default', theme: Theme): EmphasisStyles => {
+    const styles: Record<EmphasisLevel, EmphasisStyles> = {
       primary: {
         bgcolor: alpha(theme.palette.primary.main, 0.02),
         border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
@@ -53,8 +69,8 @@ export const LayoutUtils = {
   /**
    * Get visual hierarchy spacing
    */
-  getHierarchySpacing: (level) => {
-    const spacing = {
+  getHierarchySpacing: (level: HierarchyLevel | 'default'): HierarchySpacing => {
+    const spacing: Record<HierarchyLevel | 'default', HierarchySpacing> = {
       1: { mb: 4, mt: 2 },
       2: { mb: 3, mt: 2 },
       3: { mb: 2, mt: 1 },
@@ -65,10 +81,16 @@ export const LayoutUtils = {
   }
 };
 
+interface HierarchyContainerProps extends BoxProps {
+  children: React.ReactNode;
+  level?: EmphasisLevel;
+  emphasis?: boolean;
+}
+
 /**
  * Enhanced Container with visual hierarchy support
  */
-export const HierarchyContainer = ({
+export const HierarchyContainer: React.FC<HierarchyContainerProps> = ({
   children,
   level = 'default',
   emphasis = false,
@@ -94,10 +116,19 @@ export const HierarchyContainer = ({
   );
 };
 
+interface ResponsiveWrapperProps extends BoxProps {
+  children: React.ReactNode;
+  maxWidth?: string;
+}
+
 /**
  * Responsive Content Wrapper
  */
-export const ResponsiveWrapper = ({ children, maxWidth = 'xl', ...props }) => (
+export const ResponsiveWrapper: React.FC<ResponsiveWrapperProps> = ({ 
+  children, 
+  maxWidth = 'xl', 
+  ...props 
+}) => (
   <Box
     sx={{
       maxWidth: { xs: '100%', sm: '100%', md: maxWidth },
@@ -111,14 +142,22 @@ export const ResponsiveWrapper = ({ children, maxWidth = 'xl', ...props }) => (
   </Box>
 );
 
+interface HierarchyDividerProps {
+  level?: HierarchyLevel;
+  spacing?: SpacingLevel;
+}
+
 /**
  * Visual Divider with hierarchy support
  */
-export const HierarchyDivider = ({ level = 1, spacing = 'md' }) => {
+export const HierarchyDivider: React.FC<HierarchyDividerProps> = ({ 
+  level = 1, 
+  spacing = 'md' 
+}) => {
   const theme = useTheme();
   const spacingValue = DESIGN_TOKENS.spacing.section.gap[spacing];
 
-  const styles = {
+  const styles: Record<HierarchyLevel, any> = {
     1: {
       height: 2,
       bgcolor: theme.palette.primary.main,
@@ -147,10 +186,14 @@ export const HierarchyDivider = ({ level = 1, spacing = 'md' }) => {
   );
 };
 
+interface FocusRingProps extends BoxProps {
+  children: React.ReactNode;
+}
+
 /**
  * Focus Ring for accessibility
  */
-export const FocusRing = ({ children, ...props }) => (
+export const FocusRing: React.FC<FocusRingProps> = ({ children, ...props }) => (
   <Box
     sx={{
       '&:focus-within': {

@@ -165,9 +165,19 @@ async def authenticated_client(
     """
     # Create a test user and get auth token
     from core.security_engine import create_access_token  # Fixed Oct 19, 2025: Updated import path
+    from core.security_engine.models import User, UserRole, UserStatus, AuthProvider
 
-    test_user_id = 123456789  # Test user ID
-    token = create_access_token({"user_id": test_user_id})
+    # Create a mock User object for testing
+    test_user = User(
+        id="test_user_123456789",
+        email="test@example.com",
+        username="testuser",
+        role=UserRole.USER,
+        status=UserStatus.ACTIVE,
+        auth_provider=AuthProvider.LOCAL,
+    )
+
+    token = create_access_token(test_user)
 
     # Add auth header
     api_client.headers["Authorization"] = f"Bearer {token}"

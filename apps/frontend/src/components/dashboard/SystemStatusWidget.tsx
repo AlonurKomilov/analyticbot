@@ -7,12 +7,21 @@
 
 import React from 'react';
 import { Box, Stack } from '@mui/material';
-import { StandardCard, SectionHeader, StandardStatusChip } from '../common/StandardComponents.jsx';
-import GlobalDataSourceSwitch from '../common/GlobalDataSourceSwitch.jsx';
-import { DESIGN_TOKENS } from '../../theme/designTokens.js';
+import { StandardCard, SectionHeader, StandardStatusChip } from '../common/StandardComponents';
+import GlobalDataSourceSwitch from '../common/GlobalDataSourceSwitch';
+import { DESIGN_TOKENS } from '../../theme/designTokens';
 
-const SystemStatusWidget = ({ dataSource }) => {
-  const statusItems = [
+interface StatusItem {
+  label: string;
+  status: 'success' | 'info' | 'warning' | 'error';
+}
+
+interface SystemStatusWidgetProps {
+  dataSource?: string;
+}
+
+const SystemStatusWidget: React.FC<SystemStatusWidgetProps> = () => {
+  const statusItems: StatusItem[] = [
     { label: 'Analytics Active', status: 'success' },
     { label: 'AI Services Running', status: 'success' },
     { label: 'Real-time Monitoring', status: 'info' },

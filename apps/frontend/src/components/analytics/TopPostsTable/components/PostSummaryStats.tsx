@@ -9,9 +9,18 @@ import {
     Visibility as ViewsIcon,
     TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
-import { formatNumber } from '../utils/postTableUtils.js';
+import { formatNumber } from '../utils/postTableUtils';
 
-const PostSummaryStats = ({ summaryStats }) => {
+interface SummaryStats {
+    totalViews: number;
+    avgEngagement: number;
+}
+
+interface PostSummaryStatsProps {
+    summaryStats: SummaryStats | null;
+}
+
+const PostSummaryStats: React.FC<PostSummaryStatsProps> = ({ summaryStats }) => {
     if (!summaryStats) return null;
 
     return (

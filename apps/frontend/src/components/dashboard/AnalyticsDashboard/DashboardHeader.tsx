@@ -17,6 +17,12 @@ import {
 } from '@mui/icons-material';
 import DataSourceSettings from '../../DataSourceSettings';
 
+interface DashboardHeaderProps {
+    showSettings: boolean;
+    onToggleSettings: () => void;
+    onDataSourceChange: (source: string) => void;
+}
+
 /**
  * DashboardHeader Component
  *
@@ -28,7 +34,7 @@ import DataSourceSettings from '../../DataSourceSettings';
  * - Collapsible data source settings
  * - Status alert messages
  */
-const DashboardHeader = React.memo(({
+const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(({
     showSettings,
     onToggleSettings,
     onDataSourceChange

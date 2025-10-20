@@ -12,6 +12,20 @@ import {
     Settings as SettingsIcon
 } from '@mui/icons-material';
 
+interface DashboardSpeedDialProps {
+    onRefresh: () => void;
+    onExport?: () => void;
+    onShare?: () => void;
+    onPrint?: () => void;
+    onSettings: () => void;
+}
+
+interface SpeedDialActionItem {
+    icon: React.ReactElement;
+    name: string;
+    action: () => void;
+}
+
 /**
  * DashboardSpeedDial Component
  *
@@ -25,14 +39,14 @@ import {
  * - Hover tooltips for each action
  * - Customizable action handlers
  */
-const DashboardSpeedDial = React.memo(({
+const DashboardSpeedDial: React.FC<DashboardSpeedDialProps> = React.memo(({
     onRefresh,
     onExport = () => {}, // TODO: Implement export functionality
     onShare = () => {}, // TODO: Implement share functionality
     onPrint = () => {}, // TODO: Implement print functionality
     onSettings
 }) => {
-    const speedDialActions = [
+    const speedDialActions: SpeedDialActionItem[] = [
         { icon: <RefreshIcon />, name: 'Refresh', action: onRefresh },
         { icon: <DownloadIcon />, name: 'Export', action: onExport },
         { icon: <ShareIcon />, name: 'Share', action: onShare },

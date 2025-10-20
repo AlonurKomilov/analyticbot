@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
 import { useChannelStore } from '@/stores';
-import UnifiedButton, { PrimaryButton } from './common/UnifiedButton.jsx';
+import UnifiedButton from './common/UnifiedButton.jsx';
 
 interface Status {
     success: boolean;
@@ -56,7 +56,10 @@ const AddChannel: React.FC = React.memo(() => {
 
         try {
             setStatus({ success: false, message: '' });
-            await addChannel(channelName.trim());
+            await addChannel({
+                name: channelName.trim(),
+                username: channelName.trim()
+            });
             setChannelName('');
             setValidationError('');
             setStatus({ success: true, message: 'Channel added successfully!' });
@@ -113,10 +116,9 @@ const AddChannel: React.FC = React.memo(() => {
                         'aria-required': 'true',
                         maxLength: 50
                     }}
-                />
+                </TextField>
                 <UnifiedButton
                     type="submit"
-                    variant="contained"
                     disabled={!canSubmit}
                     sx={{
                         minWidth: '100px',

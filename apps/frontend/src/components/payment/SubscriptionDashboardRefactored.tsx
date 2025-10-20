@@ -24,16 +24,16 @@ import {
   LinearProgress,
   Typography
 } from '@mui/material';
-import { Button } from '../common/UnifiedButton.jsx';
+import UnifiedButton from '../common/UnifiedButton.jsx';
 import { CreditCard } from '@mui/icons-material';
 import { paymentAPI } from '@services/api';
 
 // Import refactored components
 import SubscriptionCard from './subscription/SubscriptionCard.jsx';
 import UsageMetrics from './subscription/UsageMetrics.jsx';
-import PaymentHistory from './billing/PaymentHistory.tsx';
-import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog.tsx';
-import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog.tsx';
+import PaymentHistory from './billing/PaymentHistory';
+import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog';
+import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog';
 
 interface Subscription {
   id: string | number;
@@ -105,7 +105,7 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
 
       // Load usage data (if available)
       try {
-        const usageResponse = await paymentAPI.getUsageData(userId);
+        const usageResponse = await (paymentAPI as any).getUsageData(userId);
         setUsage(usageResponse.usage);
       } catch (usageError) {
         // Usage data might not be available - not critical
@@ -164,14 +164,13 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
         {error}
-        <Button
+        <UnifiedButton
           size="small"
-          variant="primary"
           onClick={loadSubscriptionData}
           sx={{ ml: 2 }}
         >
           Retry
-        </Button>
+        </UnifiedButton>
       </Alert>
     );
   }
@@ -188,9 +187,9 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
           <Typography variant="body2" color="text.secondary" mb={3}>
             You don't have an active subscription. Choose a plan to get started.
           </Typography>
-          <Button variant="primary">
+          <UnifiedButton>
             View Plans
-          </Button>
+          </UnifiedButton>
         </CardContent>
       </Card>
     );
@@ -200,20 +199,20 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
     <Box>
       {/* Subscription Details */}
       <SubscriptionCard
-        subscription={subscription}
+        subscription={subscription as any}
         onHistoryClick={() => setHistoryDialogOpen(true)}
         onSettingsClick={() => setCancelDialogOpen(true)}
       />
 
       {/* Usage Metrics */}
       <UsageMetrics
-        subscription={subscription}
-        usage={usage}
+        subscription={subscription as any}
+        usage={usage as any}
       />
 
       {/* Payment History */}
       <PaymentHistory
-        paymentHistory={paymentHistory.slice(0, 5)} // Show only recent 5
+        paymentHistory={paymentHistory.slice(0, 5) as any} // Show only recent 5
         onRefresh={handleHistoryRefresh}
       />
 
@@ -222,7 +221,7 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
         onConfirm={handleCancelSubscription}
-        subscription={subscription}
+        subscription={subscription as any}
         canceling={canceling}
       />
 
@@ -230,7 +229,7 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
       <PaymentHistoryDialog
         open={historyDialogOpen}
         onClose={() => setHistoryDialogOpen(false)}
-        paymentHistory={paymentHistory}
+        paymentHistory={paymentHistory as any}
       />
     </Box>
   );

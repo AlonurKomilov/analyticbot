@@ -33,12 +33,6 @@ interface ProgressData {
   [key: string]: any;
 }
 
-interface HealthCheckOptions {
-  skipOptional: boolean;
-  timeout: number;
-  onProgress?: (progress: ProgressData) => void;
-}
-
 interface HealthReport {
   passed?: boolean;
   critical?: number;
@@ -151,9 +145,9 @@ const SystemHealthDashboard: React.FC = () => {
       {/* Results */}
       {loading || report ? (
         <SystemHealthCheck
-          report={report}
+          report={report as any}
           loading={loading}
-          progress={progress}
+          progress={progress as any}
         />
       ) : (
         <Paper sx={{ p: 6, textAlign: 'center' }}>

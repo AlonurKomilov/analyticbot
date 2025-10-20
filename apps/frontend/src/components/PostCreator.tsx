@@ -15,13 +15,13 @@ import { Box, Typography, Alert } from '@mui/material';
 import { useChannelStore, usePostStore, useMediaStore } from '@/stores';
 import { useLoadingState, useFormState } from '../hooks';
 import MediaPreview from "./MediaPreview.jsx";
-import { useResponsive, MOBILE_PATTERNS } from '../theme/responsive.js';
+import { useResponsive } from '../theme/responsive.js';
 
 // Import decomposed sub-components
 import PostContentInput from './domains/posts/PostContentInput.jsx';
 import ChannelSelector from './domains/posts/ChannelSelector.jsx';
 import ScheduleTimeInput from './domains/posts/ScheduleTimeInput.jsx';
-import PostButtonManager from './domains/posts/PostButtonManager.tsx';
+import PostButtonManager from './domains/posts/PostButtonManager';
 import PostSubmitButton from './domains/posts/PostSubmitButton.jsx';
 import { validatePostForm, canSubmitForm } from './domains/posts/PostFormValidation.js';
 
@@ -37,13 +37,6 @@ interface FormState {
     hasMedia: boolean;
 }
 
-interface FormErrors {
-    text?: string;
-    selectedChannel?: string;
-    scheduleTime?: string;
-    [key: string]: string | undefined;
-}
-
 const PostCreator: React.FC = React.memo(() => {
     const { channels } = useChannelStore();
     const { schedulePost } = usePostStore();
@@ -52,7 +45,7 @@ const PostCreator: React.FC = React.memo(() => {
     const responsive = useResponsive();
 
     // Enhanced form state management
-    const { state: formState, updateField, resetForm, errors: formErrors, setErrors: setFormErrors } = useFormState<FormState>({
+    const { state: formState, updateField, resetForm, errors: formErrors } = useFormState<FormState>({
         text: '',
         selectedChannel: '',
         scheduleTime: null,
@@ -60,16 +53,16 @@ const PostCreator: React.FC = React.memo(() => {
     });
 
     const [buttons, setButtons] = useState<Button[]>([]);
-    const { loading, error, executeWithLoading } = useLoadingState('schedulePost');
+    const { loading, error } = useLoadingState('schedulePost');
 
     // Update hasMedia when pendingMedia changes
-    const prevMediaFileId = React.useRef(pendingMedia.file_id);
+    const prevMediaFileId = React.useRef(pendingMedia?.file_id);
     useEffect(() => {
-        if (prevMediaFileId.current !== pendingMedia.file_id) {
-            updateField('hasMedia', !!pendingMedia.file_id);
-            prevMediaFileId.current = pendingMedia.file_id;
+        if (prevMediaFileId.current !== pendingMedia?.file_id) {
+            updateField('hasMedia', !!pendingMedia?.file_id);
+            prevMediaFileId.current = pendingMedia?.file_id;
         }
-    }, [pendingMedia.file_id, updateField]);
+    }, [pendingMedia?.file_id, updateField]);
 
     // Optimized button handlers
     const handleAddButton = useCallback((newButton: Button) => {
@@ -83,26 +76,29 @@ const PostCreator: React.FC = React.memo(() => {
     // Main form submission handler
     const handleSchedulePost = useCallback(async () => {
         const errors = validatePostForm(formState);
-        setFormErrors(errors);
-
+        
         if (Object.keys(errors).length > 0) return;
 
-        await executeWithLoading(async () => {
+        try {
             const inline_buttons = buttons.length > 0
                 ? buttons.map(btn => [{ text: btn.text, url: btn.url }])
-                : null;
+                : undefined;
 
             await schedulePost({
-                ...formState,
+                text: formState.text,
+                selectedChannel: formState.selectedChannel,
+                scheduleTime: formState.scheduleTime || '',
                 inline_buttons,
-                media: pendingMedia.file_id ? pendingMedia : null
-            });
+                media: pendingMedia?.file_id ? pendingMedia : undefined
+            } as any);
 
             // Reset form on success
             resetForm();
             setButtons([]);
-        });
-    }, [formState, buttons, pendingMedia, executeWithLoading, schedulePost, resetForm, setFormErrors]);
+        } catch (err) {
+            console.error('Failed to schedule post:', err);
+        }
+    }, [formState, buttons, pendingMedia, schedulePost, resetForm]);
 
     // Determine if form can be submitted
     const canSubmit = useMemo(() =>
@@ -159,16 +155,16 @@ const PostCreator: React.FC = React.memo(() => {
                 <PostContentInput
                     value={formState.text}
                     onChange={(value: string) => updateField('text', value)}
-                    error={formErrors.text}
+                    error={!!formErrors.text}
                     helperText={formErrors.text}
                     disabled={loading}
                 />
             </fieldset>
 
             {/* Media Preview Section */}
-            {pendingMedia.file_id && (
+            {pendingMedia?.file_id && (
                 <Box sx={{ mb: 3 }}>
-                    <MediaPreview media={[pendingMedia]} />
+                    <MediaPreview media={[pendingMedia] as any} />
                 </Box>
             )}
 
@@ -178,7 +174,7 @@ const PostCreator: React.FC = React.memo(() => {
                 <ChannelSelector
                     channels={channels}
                     selectedChannel={formState.selectedChannel}
-                    onChange={(value: string) => updateField('selectedChannel', value)}
+                    onChange={(value: string | number) => updateField('selectedChannel', String(value))}
                     error={formErrors.selectedChannel}
                     disabled={loading}
                 />
@@ -188,8 +184,8 @@ const PostCreator: React.FC = React.memo(() => {
             <fieldset style={{ border: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
                 <legend className="sr-only">Schedule Settings</legend>
                 <ScheduleTimeInput
-                    value={formState.scheduleTime}
-                    onChange={(value: string | null) => updateField('scheduleTime', value)}
+                    value={formState.scheduleTime ? new Date(formState.scheduleTime) : null}
+                    onChange={(value: Date | null) => updateField('scheduleTime', value ? value.toISOString() : null)}
                     error={formErrors.scheduleTime}
                     disabled={loading}
                 />

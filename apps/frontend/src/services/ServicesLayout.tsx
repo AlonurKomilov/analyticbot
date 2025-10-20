@@ -38,8 +38,6 @@ interface Service {
 const ServicesLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-
-    const services: Service[] = [
         {
             id: 'overview',
             name: 'Services Overview',
@@ -82,10 +80,6 @@ const ServicesLayout: React.FC = () => {
         }
     ];
 
-    const currentService = services.find(service =>
-        location.pathname.includes(service.id)
-    );
-
     const getStatusColor = (status: 'active' | 'beta' | 'maintenance'): 'success' | 'warning' | 'error' | 'default' => {
         switch (status) {
             case 'active': return 'success';
@@ -96,7 +90,7 @@ const ServicesLayout: React.FC = () => {
     };
 
     return (
-        <Box variant="mainLayout">
+        <Box sx={{ display: 'flex' }}>
             {/* Services Navigation Drawer */}
             <Drawer
                 variant="permanent"
@@ -114,7 +108,7 @@ const ServicesLayout: React.FC = () => {
                     }
                 }}
             >
-                <Box variant="drawerContent">
+                <Box sx={{ p: 2 }}>
                     <Typography
                         variant="h6"
                         sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}
@@ -131,19 +125,18 @@ const ServicesLayout: React.FC = () => {
                                 <ListItem
                                     key={service.id}
                                     disablePadding
-                                    variant="navigation"
                                 >
                                     <ListItemButton
                                         onClick={() => navigate(service.path)}
                                         selected={isActive}
-                                        variant="navigation"
                                         sx={{
+                                            borderRadius: 1,
                                             '&:hover': {
                                                 backgroundColor: isActive ? 'primary.dark' : 'action.hover'
                                             }
                                         }}
                                     >
-                                        <ListItemIcon variant="compact">
+                                        <ListItemIcon sx={{ minWidth: 40 }}>
                                             <IconComponent />
                                         </ListItemIcon>
                                         <ListItemText
@@ -179,7 +172,7 @@ const ServicesLayout: React.FC = () => {
             {/* Main Content Area */}
             <Box
                 component="main"
-                variant="mainContent"
+                sx={{ flexGrow: 1, p: 3 }}
             >
                 <Outlet />
             </Box>

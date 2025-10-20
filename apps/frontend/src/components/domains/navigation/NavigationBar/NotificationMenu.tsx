@@ -203,7 +203,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({ className, ...props
                                 }
                             />
                         </MenuItem>
-                    ))
+                    )) as any
                 )}
             </Menu>
         </>

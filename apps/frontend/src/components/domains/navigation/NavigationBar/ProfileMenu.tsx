@@ -25,15 +25,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useNavigation } from '@components/common/NavigationProvider';
 import { useAuth } from '@/contexts/AuthContext';
-import { AdminOnly } from '../../../auth/RoleGuard.tsx';
-
-interface User {
-    id?: string | number;
-    username?: string;
-    full_name?: string;
-    email?: string;
-    role?: string;
-}
+import { AdminOnly } from '../../../auth/RoleGuard';
 
 interface ProfileMenuProps {
     className?: string;
@@ -54,7 +46,10 @@ interface ProfileMenuProps {
 const ProfileMenu: React.FC<ProfileMenuProps> = ({ className, ...props }) => {
     const navigate = useNavigate();
     const { isDarkMode, toggleTheme } = useNavigation();
-    const { user, logout, isAuthenticated } = useAuth();
+    const { user: authUser, logout, isAuthenticated } = useAuth();
+    
+    // Type assertion for user since AuthContext is still JSX
+    const user = authUser as any;
 
     // Menu anchor state
     const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);

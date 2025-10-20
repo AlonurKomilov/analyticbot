@@ -4,28 +4,17 @@ import {
     Avatar,
     Chip,
     Typography,
-    Tooltip,
-    IconButton,
-    Menu,
-    MenuItem,
-    ListItemIcon,
-    ListItemText
+    Tooltip
 } from '@mui/material';
 import {
-    Star as StarIcon,
     TrendingUp as TrendingUpIcon,
     Favorite as LikeIcon,
     Share as ShareIcon,
     Comment as CommentIcon,
     Visibility as ViewsIcon,
-    CalendarToday as CalendarIcon,
-    Analytics as AnalyticsIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    GetApp as DownloadIcon,
-    MoreVert as MoreVertIcon
+    CalendarToday as CalendarIcon
 } from '@mui/icons-material';
-import { Icon, StatusChip } from '@components/common/IconSystem';
+import { StatusChip } from '@components/common/IconSystem';
 import { formatNumber, formatDate, calculateEngagementRate, getPerformanceScore, getPerformanceLevel } from './PostsUtils';
 
 interface PostRow {

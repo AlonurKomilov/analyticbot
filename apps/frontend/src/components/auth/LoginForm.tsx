@@ -30,20 +30,36 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { DESIGN_TOKENS } from '../../theme/designTokens';
 
-const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
+// Type definitions
+interface LoginFormProps {
+    onToggleMode?: (() => void) | null;
+    onForgotPassword?: (() => void) | null;
+}
+
+interface FormData {
+    email: string;
+    password: string;
+}
+
+interface FormErrors {
+    email?: string;
+    password?: string;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPassword = null }) => {
     const { login, isLoading } = useAuth();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         email: '',
         password: ''
     });
-    const [showPassword, setShowPassword] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [loginError, setLoginError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [loginError, setLoginError] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
     // Form validation
-    const validateForm = () => {
-        const newErrors = {};
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
 
         // Email validation
         if (!formData.email) {
@@ -64,7 +80,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
     };
 
     // Handle input changes
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -72,7 +88,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
         }));
 
         // Clear field error when user starts typing
-        if (errors[name]) {
+        if (errors[name as keyof FormErrors]) {
             setErrors(prev => ({
                 ...prev,
                 [name]: ''
@@ -86,7 +102,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
     };
 
     // Handle form submission
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
 
         if (!validateForm()) {
@@ -110,7 +126,7 @@ const LoginForm = ({ onToggleMode = null, onForgotPassword = null }) => {
         }
     };
 
-    const togglePasswordVisibility = () => {
+    const togglePasswordVisibility = (): void => {
         setShowPassword(!showPassword);
     };
 

@@ -41,26 +41,60 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { DESIGN_TOKENS } from '../../theme/designTokens';
 
-const RegisterForm = ({ onToggleMode = null }) => {
+// Type definitions
+interface RegisterFormProps {
+    onToggleMode?: (() => void) | null;
+}
+
+interface FormData {
+    email: string;
+    password: string;
+    confirmPassword: string;
+    username: string;
+    fullName: string;
+}
+
+interface FormErrors {
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    username?: string;
+    fullName?: string;
+}
+
+interface PasswordRequirements {
+    length: boolean;
+    lowercase: boolean;
+    uppercase: boolean;
+    number: boolean;
+    special: boolean;
+}
+
+interface PasswordStrength {
+    score: number;
+    requirements: PasswordRequirements;
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = ({ onToggleMode = null }) => {
     const { register, isLoading } = useAuth();
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         email: '',
         password: '',
         confirmPassword: '',
         username: '',
         fullName: ''
     });
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [errors, setErrors] = useState({});
-    const [registerError, setRegisterError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [registerError, setRegisterError] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [showPasswordRequirements, setShowPasswordRequirements] = useState<boolean>(false);
 
     // Password strength calculation
-    const calculatePasswordStrength = (password) => {
+    const calculatePasswordStrength = (password: string): PasswordStrength => {
         let score = 0;
-        const requirements = {
+        const requirements: PasswordRequirements = {
             length: password.length >= 8,
             lowercase: /[a-z]/.test(password),
             uppercase: /[A-Z]/.test(password),
@@ -77,21 +111,21 @@ const RegisterForm = ({ onToggleMode = null }) => {
 
     const { score: passwordScore, requirements: passwordRequirements } = calculatePasswordStrength(formData.password);
 
-    const getPasswordStrengthColor = (score) => {
+    const getPasswordStrengthColor = (score: number): 'error' | 'warning' | 'success' => {
         if (score < 40) return 'error';
         if (score < 80) return 'warning';
         return 'success';
     };
 
-    const getPasswordStrengthLabel = (score) => {
+    const getPasswordStrengthLabel = (score: number): string => {
         if (score < 40) return 'Weak';
         if (score < 80) return 'Good';
         return 'Strong';
     };
 
     // Form validation
-    const validateForm = () => {
-        const newErrors = {};
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
 
         // Username validation
         if (!formData.username.trim()) {
@@ -133,7 +167,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
     };
 
     // Handle input changes
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -141,7 +175,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
         }));
 
         // Clear field error when user starts typing
-        if (errors[name]) {
+        if (errors[name as keyof FormErrors]) {
             setErrors(prev => ({
                 ...prev,
                 [name]: ''
@@ -160,7 +194,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
     };
 
     // Handle form submission
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
 
         if (!validateForm()) {
@@ -192,11 +226,11 @@ const RegisterForm = ({ onToggleMode = null }) => {
         }
     };
 
-    const togglePasswordVisibility = () => {
+    const togglePasswordVisibility = (): void => {
         setShowPassword(!showPassword);
     };
 
-    const toggleConfirmPasswordVisibility = () => {
+    const toggleConfirmPasswordVisibility = (): void => {
         setShowConfirmPassword(!showConfirmPassword);
     };
 
@@ -376,7 +410,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
                                             }).map(([key, text]) => (
                                                 <ListItem key={key} sx={{ py: 0, px: 1 }}>
                                                     <ListItemIcon sx={{ minWidth: 20 }}>
-                                                        {passwordRequirements[key] ? (
+                                                        {passwordRequirements[key as keyof PasswordRequirements] ? (
                                                             <CheckIcon sx={{ fontSize: 16, color: 'success.main' }} />
                                                         ) : (
                                                             <CloseIcon sx={{ fontSize: 16, color: 'error.main' }} />
@@ -386,7 +420,7 @@ const RegisterForm = ({ onToggleMode = null }) => {
                                                         primary={text}
                                                         primaryTypographyProps={{
                                                             variant: 'caption',
-                                                            color: passwordRequirements[key] ? 'success.main' : 'text.secondary'
+                                                            color: passwordRequirements[key as keyof PasswordRequirements] ? 'success.main' : 'text.secondary'
                                                         }}
                                                     />
                                                 </ListItem>

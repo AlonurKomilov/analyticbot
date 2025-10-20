@@ -146,11 +146,15 @@ class MockPaymentAdapter(PaymentGatewayAdapter):
         customer_id: str,
         price_id: str,
         payment_method_id: str,
-        billing_cycle: BillingCycle,
+        billing_cycle: BillingCycle | str,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create mock subscription"""
         sub_id = f"sub_mock_{uuid.uuid4().hex[:12]}"
+
+        # Normalize billing_cycle to enum if it's a string
+        if isinstance(billing_cycle, str):
+            billing_cycle = BillingCycle(billing_cycle.lower())
 
         current_time = int(time.time())
         # Calculate period end based on billing cycle

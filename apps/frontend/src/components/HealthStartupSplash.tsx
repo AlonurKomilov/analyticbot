@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React, { useEffect, useState, useCallback, ReactNode } from 'react';
 import {
   Box,
   Paper,
@@ -19,6 +18,42 @@ import {
 
 import { initializeApp, showDataSourceNotification } from '../utils/initializeApp.js';
 
+// Type definitions
+interface HealthStartupSplashProps {
+  children: ReactNode;
+  options?: {
+    fullHealthCheck?: boolean;
+    skipOptional?: boolean;
+    silent?: boolean;
+  };
+}
+
+interface ProgressInfo {
+  current: number;
+  total: number;
+  check?: {
+    name: string;
+  };
+}
+
+interface HealthReport {
+  criticalFailures?: Array<{
+    name: string;
+    error: string;
+  }>;
+  overallStatus: string;
+  isProductionReady: () => boolean;
+  getStatusEmoji: () => string;
+  getDuration: () => number;
+}
+
+interface InitResult {
+  success: boolean;
+  healthReport?: any; // Use any for compatibility with initializeApp
+  dataSource?: string;
+  error?: string;
+}
+
 /**
  * Silent health check wrapper
  *
@@ -29,34 +64,34 @@ import { initializeApp, showDataSourceNotification } from '../utils/initializeAp
  * - silent (default): Checks run in background, app renders immediately
  * - blocking: Shows splash until checks complete (for admin/debug)
  */
-const HealthStartupSplash = ({ children, options = {} }) => {
-  const [initializing, setInitializing] = useState(true);
-  const [progress, setProgress] = useState(null);
-  const [report, setReport] = useState(null);
-  const [error, setError] = useState(null);
-  const [overrideReady, setOverrideReady] = useState(false);
+const HealthStartupSplash: React.FC<HealthStartupSplashProps> = ({ children, options = {} }) => {
+  const [initializing, setInitializing] = useState<boolean>(true);
+  const [progress, setProgress] = useState<ProgressInfo | null>(null);
+  const [report, setReport] = useState<HealthReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [overrideReady, setOverrideReady] = useState<boolean>(false);
 
   // Silent mode: run checks but don't block app render
   const silentMode = options.silent ?? (import.meta.env.VITE_HEALTH_CHECK_SILENT !== 'false');
 
-  const runInit = useCallback(async () => {
+  const runInit = useCallback(async (): Promise<void> => {
     setInitializing(true);
     setProgress(null);
     setReport(null);
     setError(null);
 
     try {
-      const result = await initializeApp({
+      const result: any = await initializeApp({
         fullHealthCheck: options.fullHealthCheck ?? (import.meta.env.VITE_FULL_HEALTH_CHECK === 'true'),
         skipOptional: options.skipOptional ?? (import.meta.env.VITE_SKIP_OPTIONAL_CHECKS !== 'false'),
-        onProgress: silentMode ? null : ((p) => setProgress(p)) // No progress updates in silent mode
+        onProgress: silentMode ? undefined : ((p: ProgressInfo) => setProgress(p)) // No progress updates in silent mode
       });
 
       setReport(result.healthReport || null);
 
       // Store health report globally for SystemHealthDashboard
       if (result.healthReport) {
-        window.__APP_HEALTH_REPORT__ = result.healthReport;
+        (window as any).__APP_HEALTH_REPORT__ = result.healthReport;
         window.dispatchEvent(new CustomEvent('healthReportAvailable', {
           detail: result.healthReport
         }));
@@ -64,7 +99,7 @@ const HealthStartupSplash = ({ children, options = {} }) => {
 
       // Show data source notification if applicable
       if (result.dataSource === 'mock') {
-        showDataSourceNotification('mock', result.error ? 'api_unavailable' : null);
+        showDataSourceNotification('mock', result.error ? 'api_unavailable' as any : null);
       }
 
       // If initialization returned an error, mark it
@@ -73,11 +108,11 @@ const HealthStartupSplash = ({ children, options = {} }) => {
       }
 
       // In silent mode, log warnings but don't block
-      if (silentMode && result.healthReport && !result.isProductionReady) {
+      if (silentMode && result.healthReport && !result.healthReport.isProductionReady()) {
         console.warn('⚠️ Background health check detected issues (not blocking user)');
         console.warn('Open System Health Dashboard for details');
       }
-    } catch (e) {
+    } catch (e: any) {
       setError(e?.message || String(e));
       if (silentMode) {
         console.error('Health check error (silent mode):', e);
@@ -212,11 +247,6 @@ const HealthStartupSplash = ({ children, options = {} }) => {
       </Paper>
     </Box>
   );
-};
-
-HealthStartupSplash.propTypes = {
-  children: PropTypes.node,
-  options: PropTypes.object
 };
 
 export default HealthStartupSplash;

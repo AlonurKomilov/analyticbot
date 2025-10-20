@@ -13,7 +13,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActions,
   Button,
   Chip,
   Table,
@@ -45,20 +44,47 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
-const AdminDashboard = () => {
+interface Channel {
+  id: string;
+  name: string;
+  user_id: number;
+  total_subscribers?: number;
+  created_at: string;
+}
+
+interface SystemStats {
+  total_channels?: number;
+  total_users?: string;
+  total_metrics_collected?: string;
+  system_health?: string;
+}
+
+interface DeleteDialogState {
+  open: boolean;
+  channelId: string | null;
+}
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+}
+
+const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(0);
-  const [allChannels, setAllChannels] = useState([]);
-  const [systemStats, setSystemStats] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, channelId: null });
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [allChannels, setAllChannels] = useState<Channel[]>([]);
+  const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({ open: false, channelId: null });
 
   // Load admin data
   useEffect(() => {
     loadAdminData();
   }, []);
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (): Promise<void> => {
     setLoading(true);
     try {
       // Load system statistics
@@ -69,7 +95,7 @@ const AdminDashboard = () => {
       });
 
       if (statsResponse.ok) {
-        const stats = await statsResponse.json();
+        const stats: SystemStats = await statsResponse.json();
         setSystemStats(stats);
       }
 
@@ -81,7 +107,7 @@ const AdminDashboard = () => {
       });
 
       if (channelsResponse.ok) {
-        const channels = await channelsResponse.json();
+        const channels: Channel[] = await channelsResponse.json();
         setAllChannels(channels);
       }
     } catch (error) {
@@ -91,7 +117,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteChannel = async (channelId) => {
+  const handleDeleteChannel = async (channelId: string): Promise<void> => {
     try {
       const response = await fetch(`/api/analytics/admin/channels/${channelId}`, {
         method: 'DELETE',
@@ -110,7 +136,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const StatCard = ({ title, value, icon, color = 'primary' }) => (
+  const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color = 'primary' }) => (
     <Card>
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -191,7 +217,7 @@ const AdminDashboard = () => {
 
       {/* Admin Tabs */}
       <Paper sx={{ mt: 3 }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+        <Tabs value={activeTab} onChange={(_e, newValue: number) => setActiveTab(newValue)}>
           <Tab label="All Channels" icon={<AnalyticsIcon />} />
           <Tab label="User Management" icon={<PeopleIcon />} />
           <Tab label="System Settings" icon={<SettingsIcon />} />
@@ -302,7 +328,7 @@ const AdminDashboard = () => {
             Cancel
           </Button>
           <Button
-            onClick={() => handleDeleteChannel(deleteDialog.channelId)}
+            onClick={() => deleteDialog.channelId && handleDeleteChannel(deleteDialog.channelId)}
             color="error"
             variant="contained"
           >

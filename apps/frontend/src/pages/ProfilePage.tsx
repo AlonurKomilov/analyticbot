@@ -16,14 +16,8 @@ import {
     Avatar,
     Chip,
     Grid,
-    Divider,
     Alert,
     CircularProgress,
-    Card,
-    CardContent,
-    CardActions,
-    IconButton,
-    Tooltip,
     Tab,
     Tabs
 } from '@mui/material';
@@ -36,45 +30,67 @@ import {
     Email as EmailIcon,
     Badge as BadgeIcon,
     Security as SecurityIcon,
-    Notifications as NotificationsIcon,
-    Delete as DeleteIcon
+    Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { DESIGN_TOKENS } from '../theme/designTokens';
 
-const ProfilePage = () => {
+interface ProfileData {
+    username: string;
+    fullName: string;
+    email: string;
+}
+
+interface PasswordData {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+}
+
+interface PasswordErrors {
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+}
+
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
+
+const ProfilePage: React.FC = () => {
     const { user, updateUser } = useAuth();
-    const [activeTab, setActiveTab] = useState(0);
-    const [editMode, setEditMode] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState('');
-    const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState<number>(0);
+    const [editMode, setEditMode] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [success, setSuccess] = useState<string>('');
+    const [error, setError] = useState<string>('');
 
     // Profile form data
-    const [profileData, setProfileData] = useState({
+    const [profileData, setProfileData] = useState<ProfileData>({
         username: user?.username || '',
         fullName: user?.full_name || '',
         email: user?.email || ''
     });
 
     // Password change data
-    const [passwordData, setPasswordData] = useState({
+    const [passwordData, setPasswordData] = useState<PasswordData>({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
     });
 
-    const [passwordErrors, setPasswordErrors] = useState({});
+    const [passwordErrors, setPasswordErrors] = useState<PasswordErrors>({});
 
     // Handle tab change
-    const handleTabChange = (event, newValue) => {
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);
         setError('');
         setSuccess('');
     };
 
     // Handle profile input changes
-    const handleProfileChange = (field) => (event) => {
+    const handleProfileChange = (field: keyof ProfileData) => (event: React.ChangeEvent<HTMLInputElement>): void => {
         setProfileData(prev => ({
             ...prev,
             [field]: event.target.value
@@ -82,7 +98,7 @@ const ProfilePage = () => {
     };
 
     // Handle password input changes
-    const handlePasswordChange = (field) => (event) => {
+    const handlePasswordChange = (field: keyof PasswordData) => (event: React.ChangeEvent<HTMLInputElement>): void => {
         setPasswordData(prev => ({
             ...prev,
             [field]: event.target.value
@@ -98,8 +114,8 @@ const ProfilePage = () => {
     };
 
     // Validate password form
-    const validatePasswordForm = () => {
-        const errors = {};
+    const validatePasswordForm = (): boolean => {
+        const errors: PasswordErrors = {};
 
         if (!passwordData.currentPassword) {
             errors.currentPassword = 'Current password is required';
@@ -122,7 +138,7 @@ const ProfilePage = () => {
     };
 
     // Save profile changes
-    const handleSaveProfile = async () => {
+    const handleSaveProfile = async (): Promise<void> => {
         setLoading(true);
         setError('');
         setSuccess('');
@@ -132,12 +148,14 @@ const ProfilePage = () => {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Update user context
-            updateUser({
-                ...user,
-                username: profileData.username,
-                full_name: profileData.fullName,
-                email: profileData.email
-            });
+            if (user?.id) {
+                updateUser({
+                    ...user,
+                    username: profileData.username,
+                    full_name: profileData.fullName,
+                    email: profileData.email
+                });
+            }
 
             setSuccess('Profile updated successfully!');
             setEditMode(false);
@@ -149,7 +167,7 @@ const ProfilePage = () => {
     };
 
     // Change password
-    const handleChangePassword = async () => {
+    const handleChangePassword = async (): Promise<void> => {
         if (!validatePasswordForm()) {
             return;
         }
@@ -176,7 +194,7 @@ const ProfilePage = () => {
     };
 
     // Cancel edit mode
-    const handleCancelEdit = () => {
+    const handleCancelEdit = (): void => {
         setProfileData({
             username: user?.username || '',
             fullName: user?.full_name || '',
@@ -187,13 +205,12 @@ const ProfilePage = () => {
         setSuccess('');
     };
 
-    const TabPanel = ({ children, value, index, ...other }) => (
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
         <div
             role="tabpanel"
             hidden={value !== index}
             id={`profile-tabpanel-${index}`}
             aria-labelledby={`profile-tab-${index}`}
-            {...other}
         >
             {value === index && (
                 <Box sx={{ pt: 3 }}>
@@ -263,7 +280,7 @@ const ProfilePage = () => {
                 {/* Profile Information Tab */}
                 <TabPanel value={activeTab} index={0}>
                     <Box sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'center', mb: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                             <Typography variant="h6">
                                 Profile Information
                             </Typography>

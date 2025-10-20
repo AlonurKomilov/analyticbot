@@ -24,19 +24,33 @@ import {
     Alert,
     CircularProgress,
     Tooltip,
-    InputAdornment
+    InputAdornment,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     Add as AddIcon,
     Search as SearchIcon,
     Tv as ChannelIcon,
-    Refresh as RefreshIcon,
-    Settings as SettingsIcon
+    Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { useUserChannels } from '../hooks/useUserChannels.js';
-import { DESIGN_TOKENS } from '../theme/designTokens.js';
+import { useUserChannels } from '../hooks/useUserChannels';
 
-const ChannelSelector = ({
+interface ChannelSelectorProps {
+    onChannelChange?: ((channel: any) => void) | null;
+    showCreateButton?: boolean;
+    showRefreshButton?: boolean;
+    size?: 'small' | 'medium';
+    variant?: 'outlined' | 'filled' | 'standard';
+    fullWidth?: boolean;
+}
+
+interface NewChannelData {
+    name: string;
+    description: string;
+    telegram_channel_id: string;
+}
+
+const ChannelSelector: React.FC<ChannelSelectorProps> = ({
     onChannelChange = null,
     showCreateButton = true,
     showRefreshButton = true,
@@ -57,15 +71,15 @@ const ChannelSelector = ({
         onChannelChange
     });
 
-    const [createDialogOpen, setCreateDialogOpen] = useState(false);
-    const [newChannelData, setNewChannelData] = useState({
+    const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
+    const [newChannelData, setNewChannelData] = useState<NewChannelData>({
         name: '',
         description: '',
         telegram_channel_id: ''
     });
-    const [createError, setCreateError] = useState('');
-    const [creating, setCreating] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
+    const [createError, setCreateError] = useState<string>('');
+    const [creating, setCreating] = useState<boolean>(false);
+    const [searchTerm, setSearchTerm] = useState<string>('');
 
     // Filter channels based on search term
     const filteredChannels = channels.filter(channel =>
@@ -75,16 +89,16 @@ const ChannelSelector = ({
     );
 
     // Handle channel selection
-    const handleChannelSelect = (event) => {
+    const handleChannelSelect = (event: SelectChangeEvent<string>): void => {
         const channelId = event.target.value;
-        const channel = channels.find(ch => ch.id === channelId);
+        const channel = channels.find(ch => String(ch.id) === channelId);
         if (channel) {
             selectChannel(channel);
         }
     };
 
     // Handle create channel dialog
-    const handleCreateChannel = async () => {
+    const handleCreateChannel = async (): Promise<void> => {
         if (!newChannelData.name.trim()) {
             setCreateError('Channel name is required');
             return;
@@ -107,7 +121,7 @@ const ChannelSelector = ({
                 telegram_channel_id: ''
             });
             setCreateDialogOpen(false);
-        } catch (err) {
+        } catch (err: any) {
             setCreateError(err.message || 'Failed to create channel');
         } finally {
             setCreating(false);
@@ -115,7 +129,7 @@ const ChannelSelector = ({
     };
 
     // Handle create dialog input changes
-    const handleCreateInputChange = (field) => (event) => {
+    const handleCreateInputChange = (field: keyof NewChannelData) => (event: React.ChangeEvent<HTMLInputElement>): void => {
         setNewChannelData(prev => ({
             ...prev,
             [field]: event.target.value
@@ -164,11 +178,11 @@ const ChannelSelector = ({
                     </InputLabel>
                     <Select
                         labelId="channel-selector-label"
-                        value={selectedChannel?.id || ''}
+                        value={selectedChannel?.id ? String(selectedChannel.id) : ''}
                         onChange={handleChannelSelect}
                         label="Channel"
                         renderValue={(selected) => {
-                            const channel = channels.find(ch => ch.id === selected);
+                            const channel = channels.find(ch => String(ch.id) === selected);
                             return channel ? (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Typography variant="body2">
@@ -220,7 +234,7 @@ const ChannelSelector = ({
                             </MenuItem>
                         ) : (
                             filteredChannels.map((channel) => (
-                                <MenuItem key={channel.id} value={channel.id}>
+                                <MenuItem key={channel.id} value={String(channel.id)}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
                                         <Typography variant="body2" fontWeight="medium">
                                             {channel.name}

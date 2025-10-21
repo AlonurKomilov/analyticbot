@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, FormEvent } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -22,8 +22,42 @@ import {
 import { CreditCard, Lock, CheckCircle } from '@mui/icons-material';
 import { paymentAPI } from '@services/api';
 
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+interface SubscriptionResponse {
+  status: 'active' | 'trialing' | 'incomplete' | 'past_due' | 'canceled';
+  client_secret?: string;
+  subscription_id?: string;
+  [key: string]: any;
+}
+
+interface PaymentFormContentProps {
+  planId: string;
+  userId: number | string;
+  onSuccess?: (response: SubscriptionResponse) => void;
+  onError?: (error: Error) => void;
+  trialDays?: number | null;
+}
+
+export interface PaymentFormProps extends PaymentFormContentProps {}
+
+interface CardChangeEvent {
+  complete: boolean;
+  error?: {
+    message: string;
+    type?: string;
+    code?: string;
+  };
+}
+
+// ============================================================================
+// Constants
+// ============================================================================
+
 // Initialize Stripe
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '');
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -41,9 +75,13 @@ const CARD_ELEMENT_OPTIONS = {
     },
   },
   hidePostalCode: false,
-};
+} as const;
 
-const PaymentFormContent = ({
+// ============================================================================
+// Payment Form Content Component
+// ============================================================================
+
+const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
   planId,
   userId,
   onSuccess,
@@ -53,12 +91,12 @@ const PaymentFormContent = ({
   const stripe = useStripe();
   const elements = useElements();
 
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [cardComplete, setCardComplete] = useState(false);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+  const [cardComplete, setCardComplete] = useState<boolean>(false);
 
-  const handleCardChange = (event) => {
+  const handleCardChange = (event: CardChangeEvent): void => {
     setError(null);
     setCardComplete(event.complete);
 
@@ -67,7 +105,7 @@ const PaymentFormContent = ({
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
     if (!stripe || !elements) {
@@ -86,6 +124,10 @@ const PaymentFormContent = ({
     try {
       const cardElement = elements.getElement(CardElement);
 
+      if (!cardElement) {
+        throw new Error('Card element not found');
+      }
+
       // Create payment method
       const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
@@ -99,6 +141,10 @@ const PaymentFormContent = ({
         throw new Error(stripeError.message);
       }
 
+      if (!paymentMethod) {
+        throw new Error('Failed to create payment method');
+      }
+
       // Create subscription with the payment method
       const response = await paymentAPI.createSubscription({
         user_id: userId,
@@ -109,9 +155,13 @@ const PaymentFormContent = ({
 
       if (response.status === 'active' || response.status === 'trialing') {
         setSuccess(true);
-        onSuccess && onSuccess(response);
+        onSuccess?.(response);
       } else if (response.status === 'incomplete') {
         // Handle 3D Secure or other authentication
+        if (!response.client_secret) {
+          throw new Error('Missing client secret for authentication');
+        }
+
         const { error: confirmError } = await stripe.confirmCardPayment(
           response.client_secret
         );
@@ -120,15 +170,16 @@ const PaymentFormContent = ({
           throw new Error(confirmError.message);
         } else {
           setSuccess(true);
-          onSuccess && onSuccess(response);
+          onSuccess?.(response);
         }
       } else {
         throw new Error('Subscription creation failed');
       }
 
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred');
-      onError && onError(err);
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      onError?.(err instanceof Error ? err : new Error(errorMessage));
     } finally {
       setProcessing(false);
     }
@@ -183,7 +234,7 @@ const PaymentFormContent = ({
             >
               <CardElement
                 options={CARD_ELEMENT_OPTIONS}
-                onChange={handleCardChange}
+                onChange={handleCardChange as any}
               />
             </Box>
             {error && (
@@ -239,7 +290,11 @@ const PaymentFormContent = ({
   );
 };
 
-const PaymentForm = (props) => {
+// ============================================================================
+// Main Payment Form Component with Stripe Elements Provider
+// ============================================================================
+
+const PaymentForm: React.FC<PaymentFormProps> = (props) => {
   return (
     <Elements stripe={stripePromise}>
       <PaymentFormContent {...props} />

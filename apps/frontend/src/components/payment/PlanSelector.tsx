@@ -31,14 +31,63 @@ import {
 import { paymentAPI } from '@services/api';
 import PaymentForm from './PaymentForm';
 
-const formatCurrency = (amount, currency = 'USD') => {
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+export type BillingCycle = 'monthly' | 'yearly';
+
+export interface Plan {
+  id: string;
+  name: string;
+  price_monthly: number;
+  price_yearly: number;
+  currency: string;
+  features: string[];
+  max_channels?: number;
+  max_posts_per_month?: number;
+  stripe_price_id: string;
+  stripe_yearly_price_id?: string;
+  trial_days?: number;
+  is_active: boolean;
+  description?: string;
+}
+
+export interface SubscriptionResponse {
+  status: 'active' | 'trialing' | 'incomplete' | 'past_due' | 'canceled';
+  client_secret?: string;
+  subscription_id?: string;
+  [key: string]: any;
+}
+
+interface PlanCardProps {
+  plan: Plan;
+  billingCycle: BillingCycle;
+  isPopular: boolean;
+  isSelected: boolean;
+  onSelect: (plan: Plan) => void;
+  disabled?: boolean;
+}
+
+export interface PlanSelectorProps {
+  userId: number | string;
+  onPlanSelected?: (plan: Plan, subscriptionResponse?: SubscriptionResponse) => void;
+  showPaymentForm?: boolean;
+  preselectedPlanId?: string | null;
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+const formatCurrency = (amount: number, currency: string = 'USD'): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency
   }).format(amount);
 };
 
-const getFeatureIcon = (feature) => {
+const getFeatureIcon = (feature: string): React.ReactElement => {
   const featureLower = feature.toLowerCase();
   if (featureLower.includes('analytics') || featureLower.includes('insight')) {
     return <TrendingUp sx={{ fontSize: 16 }} />;
@@ -55,7 +104,11 @@ const getFeatureIcon = (feature) => {
   return <Check sx={{ fontSize: 16 }} />;
 };
 
-const PlanCard = ({
+// ============================================================================
+// Plan Card Component
+// ============================================================================
+
+const PlanCard: React.FC<PlanCardProps> = ({
   plan,
   billingCycle,
   isPopular,
@@ -193,18 +246,22 @@ const PlanCard = ({
   );
 };
 
-const PlanSelector = ({
+// ============================================================================
+// Plan Selector Component
+// ============================================================================
+
+const PlanSelector: React.FC<PlanSelectorProps> = ({
   userId,
   onPlanSelected,
   showPaymentForm = false,
   preselectedPlanId = null
 }) => {
-  const [plans, setPlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [billingCycle, setBillingCycle] = useState('monthly');
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [showPayment, setShowPayment] = useState(showPaymentForm);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [showPayment, setShowPayment] = useState<boolean>(showPaymentForm);
 
   useEffect(() => {
     loadPlans();
@@ -219,18 +276,18 @@ const PlanSelector = ({
     }
   }, [preselectedPlanId, plans]);
 
-  const loadPlans = async () => {
+  const loadPlans = async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
 
       const response = await paymentAPI.getAvailablePlans();
-      const activePlans = response.filter(plan => plan.is_active);
+      const activePlans = response.filter((plan: Plan) => plan.is_active);
       setPlans(activePlans);
 
       // Auto-select most popular plan if none selected
       if (!selectedPlan && activePlans.length > 0) {
-        const popularPlan = activePlans.find(plan =>
+        const popularPlan = activePlans.find((plan: Plan) =>
           plan.name.toLowerCase().includes('pro') ||
           plan.name.toLowerCase().includes('premium')
         ) || activePlans[Math.floor(activePlans.length / 2)];
@@ -238,30 +295,33 @@ const PlanSelector = ({
       }
 
     } catch (err) {
-      setError(err.message || 'Failed to load plans');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load plans';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handlePlanSelect = (plan) => {
+  const handlePlanSelect = (plan: Plan): void => {
     setSelectedPlan(plan);
-    onPlanSelected && onPlanSelected(plan);
+    onPlanSelected?.(plan);
   };
 
-  const handleContinueToPayment = () => {
+  const handleContinueToPayment = (): void => {
     if (selectedPlan) {
       setShowPayment(true);
     }
   };
 
-  const handlePaymentSuccess = (subscriptionResponse) => {
+  const handlePaymentSuccess = (subscriptionResponse: SubscriptionResponse): void => {
     // Handle successful payment
     console.log('Payment successful:', subscriptionResponse);
-    onPlanSelected && onPlanSelected(selectedPlan, subscriptionResponse);
+    if (selectedPlan) {
+      onPlanSelected?.(selectedPlan, subscriptionResponse);
+    }
   };
 
-  const handlePaymentError = (error) => {
+  const handlePaymentError = (error: Error): void => {
     setError(error.message || 'Payment failed');
     setShowPayment(false);
   };
@@ -342,7 +402,7 @@ const PlanSelector = ({
           <RadioGroup
             row
             value={billingCycle}
-            onChange={(e) => setBillingCycle(e.target.value)}
+            onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
             sx={{
               gap: 2,
               justifyContent: 'center',

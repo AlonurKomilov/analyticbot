@@ -1747,3 +1747,36 @@ npm run build
 ---
 
 **Next Steps:** Ready to start implementation? Begin with Phase 1, Step 1.1!
+
+---
+
+## ✅ Phase 6: Mock/Demo Code Organization (IN PROGRESS - Oct 21, 2025)
+**Goal:** Isolate all mock/demo code and ensure proper demo mode gating
+**Status:** ✅ PHASE 1 COMPLETED - Files Moved
+**Documented in:** `MOCK_DEMO_CLEANUP_PLAN.md`
+
+### ✅ Step 6.1: Move Mock/Demo Files to `__mocks__/` (COMPLETED)
+**Time:** 30 minutes
+
+**Files Moved:**
+- ✅ PostsTableDemo.tsx → `__mocks__/components/showcase/tables/`
+- ✅ demoUserUtils.js → `__mocks__/utils/`
+- ✅ testDemoFallback.js → `__mocks__/utils/`
+- ✅ demoUserUtils.test.js → `__mocks__/utils/__tests__/`
+- ✅ simpleDemoTest.js → `__mocks__/utils/__tests__/`
+- ✅ storageMockService.js → `__mocks__/services/`
+- ✅ mockConfig.js → `__mocks__/config/`
+
+**Import Paths Updated:**
+- ✅ `components/showcase/index.js`
+- ✅ `services/analyticsService.js`
+- ✅ `__mocks__/aiServices/aiServicesAPIService.js`
+
+**Benefits:**
+- ✅ Clear separation of production vs demo code
+- ✅ All mock/demo files in `__mocks__/` directory
+- ✅ Easier to identify and maintain demo code
+
+### ⏳ Step 6.2: Audit Demo Mode Gating (NEXT)
+**Status:** 📋 Planned
+**See:** `MOCK_DEMO_CLEANUP_PLAN.md` Phase 3-6

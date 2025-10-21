@@ -6,7 +6,7 @@
  * data locally, creating a single source of truth for AI services mock data.
  */
 
-import { API_CONFIG } from '../../config/mockConfig.js';
+import { API_CONFIG } from '../config/mockConfig.js';
 
 class AIServicesAPIService {
     constructor() {

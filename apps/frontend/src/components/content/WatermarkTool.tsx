@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import {
     Box,
     Card,
@@ -18,7 +18,8 @@ import {
     LinearProgress,
     Chip,
     Grid,
-    Divider
+    Divider,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     CloudUpload as UploadIcon,
@@ -27,17 +28,47 @@ import {
     Security as SecurityIcon,
     Palette as PaletteIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../api/client.js';
 
-const WatermarkTool = () => {
-    const [file, setFile] = useState(null);
-    const [processing, setProcessing] = useState(false);
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
-    const [preview, setPreview] = useState(null);
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+type WatermarkPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+type WatermarkColor = 'white' | 'black' | 'red' | 'blue' | 'green';
+
+interface WatermarkConfig {
+    text: string;
+    position: WatermarkPosition;
+    opacity: number;
+    fontSize: number;
+    color: WatermarkColor;
+    addShadow: boolean;
+}
+
+interface ProcessingResult {
+    downloadUrl: string;
+    filename: string;
+    size: number;
+}
+
+interface OptionItem {
+    value: string;
+    label: string;
+}
+
+// ============================================================================
+// Watermark Tool Component
+// ============================================================================
+
+const WatermarkTool: React.FC = () => {
+    const [file, setFile] = useState<File | null>(null);
+    const [processing, setProcessing] = useState<boolean>(false);
+    const [result, setResult] = useState<ProcessingResult | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
 
     // Watermark configuration
-    const [watermarkConfig, setWatermarkConfig] = useState({
+    const [watermarkConfig, setWatermarkConfig] = useState<WatermarkConfig>({
         text: 'Copyright © 2025',
         position: 'bottom-right',
         opacity: 70,
@@ -46,7 +77,7 @@ const WatermarkTool = () => {
         addShadow: true
     });
 
-    const positionOptions = [
+    const positionOptions: OptionItem[] = [
         { value: 'top-left', label: 'Top Left' },
         { value: 'top-right', label: 'Top Right' },
         { value: 'bottom-left', label: 'Bottom Left' },
@@ -54,7 +85,7 @@ const WatermarkTool = () => {
         { value: 'center', label: 'Center' }
     ];
 
-    const colorOptions = [
+    const colorOptions: OptionItem[] = [
         { value: 'white', label: 'White' },
         { value: 'black', label: 'Black' },
         { value: 'red', label: 'Red' },
@@ -62,8 +93,8 @@ const WatermarkTool = () => {
         { value: 'green', label: 'Green' }
     ];
 
-    const handleFileChange = (event) => {
-        const selectedFile = event.target.files[0];
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>): void => {
+        const selectedFile = event.target.files?.[0];
         if (selectedFile) {
             setFile(selectedFile);
             setError(null);
@@ -71,19 +102,22 @@ const WatermarkTool = () => {
 
             // Create preview
             const reader = new FileReader();
-            reader.onload = (e) => setPreview(e.target.result);
+            reader.onload = (e) => setPreview(e.target?.result as string);
             reader.readAsDataURL(selectedFile);
         }
     };
 
-    const handleConfigChange = (field, value) => {
+    const handleConfigChange = <K extends keyof WatermarkConfig>(
+        field: K,
+        value: WatermarkConfig[K]
+    ): void => {
         setWatermarkConfig(prev => ({
             ...prev,
             [field]: value
         }));
     };
 
-    const handleWatermark = async () => {
+    const handleWatermark = async (): Promise<void> => {
         if (!file) {
             setError('Please select a file first');
             return;
@@ -102,13 +136,13 @@ const WatermarkTool = () => {
             formData.append('color', watermarkConfig.color);
             formData.append('add_shadow', watermarkConfig.addShadow.toString());
 
-            // Use proper base URL from apiClient instead of hardcoded localhost
-            const baseURL = apiClient.baseURL || '';
+            // Use API endpoint
+            const baseURL = process.env.REACT_APP_API_URL || '';
             const response = await fetch(`${baseURL}/api/v1/content-protection/watermark/image`, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'Authorization': `TWA ${window.Telegram?.WebApp?.initData || ''}`
+                    'Authorization': `TWA ${(window as any).Telegram?.WebApp?.initData || ''}`
                 }
             });
 
@@ -127,15 +161,16 @@ const WatermarkTool = () => {
                 size: blob.size
             });
 
-        } catch (error) {
-            console.error('Watermarking failed:', error);
-            setError(error.message || 'Failed to add watermark');
+        } catch (err) {
+            console.error('Watermarking failed:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to add watermark';
+            setError(errorMessage);
         } finally {
             setProcessing(false);
         }
     };
 
-    const downloadFile = () => {
+    const downloadFile = (): void => {
         if (result) {
             const link = document.createElement('a');
             link.href = result.downloadUrl;
@@ -176,7 +211,7 @@ const WatermarkTool = () => {
                                 bgcolor: 'primary.50'
                             }
                         }}
-                        onClick={() => document.getElementById('watermark-file-input').click()}
+                        onClick={() => document.getElementById('watermark-file-input')?.click()}
                     >
                         <input
                             id="watermark-file-input"
@@ -254,7 +289,9 @@ const WatermarkTool = () => {
                                 <Select
                                     value={watermarkConfig.position}
                                     label="Position"
-                                    onChange={(e) => handleConfigChange('position', e.target.value)}
+                                    onChange={(e: SelectChangeEvent) => 
+                                        handleConfigChange('position', e.target.value as WatermarkPosition)
+                                    }
                                 >
                                     {positionOptions.map(option => (
                                         <MenuItem key={option.value} value={option.value}>
@@ -269,7 +306,9 @@ const WatermarkTool = () => {
                                 <Select
                                     value={watermarkConfig.color}
                                     label="Color"
-                                    onChange={(e) => handleConfigChange('color', e.target.value)}
+                                    onChange={(e: SelectChangeEvent) => 
+                                        handleConfigChange('color', e.target.value as WatermarkColor)
+                                    }
                                 >
                                     {colorOptions.map(option => (
                                         <MenuItem key={option.value} value={option.value}>
@@ -287,7 +326,7 @@ const WatermarkTool = () => {
                                 </Typography>
                                 <Slider
                                     value={watermarkConfig.opacity}
-                                    onChange={(e, value) => handleConfigChange('opacity', value)}
+                                    onChange={(_e, value) => handleConfigChange('opacity', value as number)}
                                     min={10}
                                     max={100}
                                     step={5}
@@ -302,7 +341,7 @@ const WatermarkTool = () => {
                                 </Typography>
                                 <Slider
                                     value={watermarkConfig.fontSize}
-                                    onChange={(e, value) => handleConfigChange('fontSize', value)}
+                                    onChange={(_e, value) => handleConfigChange('fontSize', value as number)}
                                     min={12}
                                     max={72}
                                     step={2}

@@ -31,15 +31,49 @@ import {
     Error as ErrorIcon,
     Info as InfoIcon
 } from '@mui/icons-material';
-import { apiClient } from '../../api/client.js';
 
-const TheftDetection = () => {
-    const [contentHash, setContentHash] = useState('');
-    const [scanning, setScanning] = useState(false);
-    const [scanResults, setScanResults] = useState([]);
-    const [error, setError] = useState(null);
-    const [scanHistory, setScanHistory] = useState([]);
-    const [stats, setStats] = useState({
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+type ScanStatus = 'clean' | 'threat' | 'confirmed' | 'suspected';
+
+interface ScanMatch {
+    id: number;
+    url: string;
+    platform: string;
+    matchPercentage: number;
+    lastSeen: Date;
+    status: ScanStatus;
+}
+
+interface ScanHistoryItem {
+    id: number;
+    contentHash: string;
+    timestamp: Date;
+    status: 'clean' | 'threat';
+    matchCount: number;
+}
+
+interface ScanStats {
+    totalScans: number;
+    threatsDetected: number;
+    cleanScans: number;
+}
+
+type SeverityColor = 'error' | 'warning' | 'info' | 'success';
+
+// ============================================================================
+// Theft Detection Component
+// ============================================================================
+
+const TheftDetection: React.FC = () => {
+    const [contentHash, setContentHash] = useState<string>('');
+    const [scanning, setScanning] = useState<boolean>(false);
+    const [scanResults, setScanResults] = useState<ScanMatch[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+    const [stats, setStats] = useState<ScanStats>({
         totalScans: 0,
         threatsDetected: 0,
         cleanScans: 0
@@ -51,7 +85,7 @@ const TheftDetection = () => {
         loadStats();
     }, []);
 
-    const loadScanHistory = async () => {
+    const loadScanHistory = async (): Promise<void> => {
         try {
             // In a real implementation, this would fetch from API
             // For now, using mock data
@@ -76,7 +110,7 @@ const TheftDetection = () => {
         }
     };
 
-    const loadStats = async () => {
+    const loadStats = async (): Promise<void> => {
         try {
             // In a real implementation, this would fetch from API
             setStats({
@@ -89,7 +123,7 @@ const TheftDetection = () => {
         }
     };
 
-    const scanForTheft = async () => {
+    const scanForTheft = async (): Promise<void> => {
         if (!contentHash.trim()) {
             setError('Please enter a content hash to scan');
             return;
@@ -109,7 +143,7 @@ const TheftDetection = () => {
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             // Mock scan results
-            const mockResults = [
+            const mockResults: ScanMatch[] = [
                 {
                     id: 1,
                     url: 'https://example-thief1.com/stolen-content',
@@ -139,7 +173,7 @@ const TheftDetection = () => {
             setScanResults(mockResults);
 
             // Update scan history
-            const newScan = {
+            const newScan: ScanHistoryItem = {
                 id: Date.now(),
                 contentHash: contentHash,
                 timestamp: new Date(),
@@ -156,21 +190,22 @@ const TheftDetection = () => {
                 cleanScans: prev.cleanScans + (mockResults.length === 0 ? 1 : 0)
             }));
 
-        } catch (error) {
-            console.error('Scan failed:', error);
-            setError(error.message || 'Failed to scan for content theft');
+        } catch (err) {
+            console.error('Scan failed:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to scan for content theft';
+            setError(errorMessage);
         } finally {
             setScanning(false);
         }
     };
 
-    const getSeverityColor = (matchPercentage) => {
+    const getSeverityColor = (matchPercentage: number): SeverityColor => {
         if (matchPercentage >= 90) return 'error';
         if (matchPercentage >= 70) return 'warning';
         return 'info';
     };
 
-    const getStatusIcon = (status) => {
+    const getStatusIcon = (status: ScanStatus | 'clean' | 'threat'): React.ReactElement => {
         switch (status) {
             case 'confirmed':
                 return <ErrorIcon color="error" />;
@@ -178,6 +213,8 @@ const TheftDetection = () => {
                 return <WarningIcon color="warning" />;
             case 'clean':
                 return <CheckIcon color="success" />;
+            case 'threat':
+                return <ErrorIcon color="error" />;
             default:
                 return <InfoIcon color="info" />;
         }

@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { server } from '../__mocks__/api/server.js';
 import { http, HttpResponse } from 'msw';
 import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard/AnalyticsDashboard';
+import React from 'react';
 
 // Mock child components (keep these for unit testing focus)
 vi.mock('../components/charts/PostViewDynamics', () => ({
@@ -20,7 +21,11 @@ vi.mock('../components/BestTimeRecommender', () => ({
 
 const theme = createTheme();
 
-const TestWrapper = ({ children }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <ThemeProvider theme={theme}>
     {children}
   </ThemeProvider>
@@ -34,7 +39,9 @@ describe('AnalyticsDashboard', () => {
       getItem: vi.fn(() => null),
       setItem: vi.fn(),
       clear: vi.fn(),
-      removeItem: vi.fn()
+      removeItem: vi.fn(),
+      length: 0,
+      key: vi.fn()
     };
     Object.defineProperty(window, 'localStorage', {
       value: localStorageMock,

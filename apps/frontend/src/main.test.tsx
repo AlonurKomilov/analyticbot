@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { createRoot } from 'react-dom/client';
 
 describe('Main Entry Point', () => {
-    let container;
+    let container: HTMLDivElement;
 
     beforeAll(() => {
         container = document.createElement('div');

@@ -2,20 +2,21 @@ import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import PostViewDynamicsChart from '../components/charts/PostViewDynamics';
+import React from 'react';
 
 // Mock recharts components completely
 vi.mock('recharts', () => ({
   __esModule: true,
-  ResponsiveContainer: ({ children }) => <div data-testid="responsive-container">{children}</div>,
-  LineChart: ({ children, data }) => (
+  ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
+  LineChart: ({ children, data }: { children: React.ReactNode; data: any }) => (
     <div data-testid="line-chart" data-chart-data={JSON.stringify(data)}>
       {children}
     </div>
   ),
-  Line: ({ dataKey, stroke }) => (
+  Line: ({ dataKey, stroke }: { dataKey: string; stroke: string }) => (
     <div data-testid={`line-${dataKey}`} data-stroke={stroke} />
   ),
-  XAxis: ({ dataKey }) => <div data-testid="x-axis" data-key={dataKey} />,
+  XAxis: ({ dataKey }: { dataKey: string }) => <div data-testid="x-axis" data-key={dataKey} />,
   YAxis: () => <div data-testid="y-axis" />,
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
   Tooltip: () => <div data-testid="tooltip" />,
@@ -24,7 +25,11 @@ vi.mock('recharts', () => ({
 
 const theme = createTheme();
 
-const TestWrapper = ({ children }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <ThemeProvider theme={theme}>
     {children}
   </ThemeProvider>
@@ -45,11 +50,11 @@ describe('PostViewDynamicsChart', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock fetch API
-    window.fetch = vi.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockChartData),
-      })
+      } as Response)
     );
   });
 

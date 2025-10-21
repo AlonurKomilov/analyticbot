@@ -13,9 +13,22 @@ import {
 } from '@mui/icons-material';
 import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
 
-const GenericTableDemo = () => {
+interface GenericTableRow {
+    id: number;
+    name: string;
+    type: 'Report' | 'Export' | 'Metrics' | 'Backup';
+    status: 'completed' | 'processing' | 'failed';
+    date: Date;
+    size: string;
+}
+
+interface CellProps {
+    value: any;
+}
+
+const GenericTableDemo: React.FC = () => {
     // Mock generic table data
-    const mockGenericData = useMemo(() => [
+    const mockGenericData = useMemo<GenericTableRow[]>(() => [
         { id: 1, name: 'Analytics Report', type: 'Report', status: 'completed', date: new Date(), size: '2.5 MB' },
         { id: 2, name: 'User Export', type: 'Export', status: 'processing', date: new Date(Date.now() - 60000), size: '1.2 MB' },
         { id: 3, name: 'Performance Metrics', type: 'Metrics', status: 'failed', date: new Date(Date.now() - 120000), size: '850 KB' },
@@ -28,16 +41,16 @@ const GenericTableDemo = () => {
         {
             id: 'name',
             header: 'Name',
-            accessor: (row) => row.name,
+            accessor: (row: GenericTableRow) => row.name,
             minWidth: 200
         },
         {
             id: 'type',
             header: 'Type',
-            accessor: (row) => row.type,
-            align: 'center',
+            accessor: (row: GenericTableRow) => row.type,
+            align: 'center' as const,
             width: 120,
-            Cell: ({ value }) => (
+            Cell: ({ value }: CellProps) => (
                 <Typography variant="body2" sx={{
                     px: 1,
                     py: 0.5,
@@ -56,10 +69,10 @@ const GenericTableDemo = () => {
         {
             id: 'status',
             header: 'Status',
-            accessor: (row) => row.status,
-            align: 'center',
+            accessor: (row: GenericTableRow) => row.status,
+            align: 'center' as const,
             width: 120,
-            Cell: ({ value }) => (
+            Cell: ({ value }: CellProps) => (
                 <Typography variant="body2" sx={{
                     px: 1,
                     py: 0.5,
@@ -76,15 +89,15 @@ const GenericTableDemo = () => {
         {
             id: 'date',
             header: 'Date',
-            accessor: (row) => row.date,
-            Cell: ({ value }) => value.toLocaleString(),
+            accessor: (row: GenericTableRow) => row.date,
+            Cell: ({ value }: CellProps) => value.toLocaleString(),
             width: 160
         },
         {
             id: 'size',
             header: 'File Size',
-            accessor: (row) => row.size,
-            align: 'right',
+            accessor: (row: GenericTableRow) => row.size,
+            align: 'right' as const,
             width: 100
         }
     ];
@@ -104,7 +117,7 @@ const GenericTableDemo = () => {
                 title="System Files & Reports"
                 subtitle="File management system with advanced table features"
                 data={mockGenericData}
-                columns={genericColumns}
+                columns={genericColumns as any}
 
                 enablePagination={true}
                 defaultPageSize={10}
@@ -124,25 +137,25 @@ const GenericTableDemo = () => {
                     {
                         label: 'Download Selected',
                         icon: <AnalyticsIcon />,
-                        onClick: (ids) => console.log('Download:', ids),
-                        color: 'primary'
+                        onClick: (ids: (string | number)[]) => console.log('Download:', ids),
+                        color: 'primary' as const
                     },
                     {
                         label: 'Delete Selected',
                         icon: <PeopleIcon />,
-                        onClick: (ids) => console.log('Delete:', ids),
-                        color: 'error'
+                        onClick: (ids: (string | number)[]) => console.log('Delete:', ids),
+                        color: 'error' as const
                     }
-                ]}
+                ] as any}
 
                 rowActions={[
                     {
                         icon: <AnalyticsIcon />,
                         label: 'View Details',
-                        onClick: (row) => console.log('View:', row.id),
-                        color: 'primary'
+                        onClick: (row: GenericTableRow) => console.log('View:', row.id),
+                        color: 'primary' as const
                     }
-                ]}
+                ] as any}
 
                 enableExport={true}
                 exportFilename="system-files-report"

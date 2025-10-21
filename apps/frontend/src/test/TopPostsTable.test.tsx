@@ -2,17 +2,49 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import TopPostsTable from '../components/analytics/TopPostsTable/TopPostsTable';
+import React from 'react';
 
 const theme = createTheme();
 
-const TestWrapper = ({ children }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <ThemeProvider theme={theme}>
     {children}
   </ThemeProvider>
 );
 
 // Mock data
-const mockTopPostsData = {
+interface PostMetrics {
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  engagement: number;
+}
+
+interface PostAuthor {
+  name: string;
+  avatar: string;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  author: PostAuthor;
+  publishedAt: string;
+  metrics: PostMetrics;
+  tags: string[];
+}
+
+interface TopPostsData {
+  posts: Post[];
+}
+
+const mockTopPostsData: TopPostsData = {
   posts: [
     {
       id: 1,
@@ -75,11 +107,11 @@ describe('TopPostsTable', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock fetch API
-    window.fetch = vi.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockTopPostsData),
-      })
+      } as Response)
     );
   });
 

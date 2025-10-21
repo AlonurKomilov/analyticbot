@@ -9,11 +9,30 @@ import React, { useState, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import EnhancedUserManagementTable from '@components/EnhancedUserManagementTable';
 
-const UsersTableDemo = () => {
-    const [usersLoading, setUsersLoading] = useState(false);
+interface User {
+    id: number;
+    telegram_id: string;
+    username: string | null;
+    full_name: string;
+    email?: string;
+    phone?: string;
+    status: 'active' | 'inactive' | 'suspended';
+    subscription_tier: 'free' | 'premium';
+    total_channels: number;
+    total_posts: number;
+    email_verified: boolean;
+    phone_verified: boolean;
+    is_premium: boolean;
+    last_active: Date;
+    created_at: Date;
+    avatar_url?: string;
+}
+
+const UsersTableDemo: React.FC = () => {
+    const [usersLoading, setUsersLoading] = useState<boolean>(false);
 
     // Mock user data for demonstration
-    const mockUsers = useMemo(() => [
+    const mockUsers = useMemo<User[]>(() => [
         {
             id: 1,
             telegram_id: '12345678',
@@ -103,7 +122,7 @@ const UsersTableDemo = () => {
     ], []);
 
     // Event handlers
-    const handleRefreshUsers = () => {
+    const handleRefreshUsers = (): void => {
         setUsersLoading(true);
         // Simulate API call
         setTimeout(() => {
@@ -112,15 +131,15 @@ const UsersTableDemo = () => {
         }, 1000);
     };
 
-    const handleUserUpdate = (userId, updates) => {
+    const handleUserUpdate = (userId: number, updates: Partial<User>): void => {
         console.log('Update user:', userId, updates);
     };
 
-    const handleUserDelete = (userId) => {
+    const handleUserDelete = (userId: number): void => {
         console.log('Delete user:', userId);
     };
 
-    const handleBulkAction = (action, userIds) => {
+    const handleBulkAction = (action: string, userIds: number[]): void => {
         console.log('Bulk action:', action, userIds);
     };
 
@@ -136,12 +155,12 @@ const UsersTableDemo = () => {
                 </Typography>
             </Box>
             <EnhancedUserManagementTable
-                users={mockUsers}
+                users={mockUsers as any}
                 loading={usersLoading}
                 onRefresh={handleRefreshUsers}
-                onUserUpdate={handleUserUpdate}
-                onUserDelete={handleUserDelete}
-                onBulkAction={handleBulkAction}
+                onUserUpdate={handleUserUpdate as any}
+                onUserDelete={handleUserDelete as any}
+                onBulkAction={handleBulkAction as any}
             />
         </>
     );

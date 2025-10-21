@@ -2,10 +2,15 @@ import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import BestTimeRecommender from '../components/analytics/BestTimeRecommender/BestTimeRecommender';
+import React from 'react';
 
 const theme = createTheme();
 
-const TestWrapper = ({ children }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <ThemeProvider theme={theme}>
     {children}
   </ThemeProvider>
@@ -42,11 +47,11 @@ describe('BestTimeRecommender', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock fetch API
-    window.fetch = vi.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockRecommenderData),
-      })
+      } as Response)
     );
   });
 

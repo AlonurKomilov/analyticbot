@@ -16,16 +16,21 @@ import { server } from '../__mocks__/api/server.js';
 import { http, HttpResponse } from 'msw';
 import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard/AnalyticsDashboard';
 import { useUIStore } from '../stores';
+import React from 'react';
 
 // Test utilities
-const TestWrapper = ({ children }) => (
+interface TestWrapperProps {
+  children: React.ReactNode;
+}
+
+const TestWrapper: React.FC<TestWrapperProps> = ({ children }) => (
   <ThemeProvider theme={createTheme()}>
     {children}
   </ThemeProvider>
 );
 
 // Helper to set store data source for tests
-const setTestDataSource = (source) => {
+const setTestDataSource = (source: 'mock' | 'real'): void => {
   useUIStore.getState().setDataSource(source);
 };
 
@@ -212,7 +217,7 @@ describe('AnalyticsDashboard - Golden Standard Test', () => {
     it('renders without unnecessary re-renders', async () => {
       const renderSpy = vi.fn();
 
-      const TestComponent = () => {
+      const TestComponent: React.FC = () => {
         renderSpy();
         return <AnalyticsDashboard />;
       };

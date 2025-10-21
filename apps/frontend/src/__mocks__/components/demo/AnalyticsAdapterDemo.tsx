@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -9,7 +9,6 @@ import {
   CircularProgress,
   Grid,
   Chip,
-  Divider,
 } from '@mui/material';
 import {
   Settings as SettingsIcon,
@@ -23,9 +22,27 @@ import {
 import { useDataSource, useAnalytics } from '@hooks/useDataSource';
 import { DataSourceManager } from '@utils/dataSourceManager';
 
-const AnalyticsAdapterDemo = () => {
-  const [testing, setTesting] = useState(false);
-  const [testResults, setTestResults] = useState(null);
+interface TestResults {
+  mock: {
+    success: boolean;
+    responseTime: number;
+    adapter: string;
+  };
+  real: {
+    success: boolean;
+    responseTime: number;
+    adapter: string;
+    error: string | null;
+  };
+}
+
+interface TestResultsError {
+  error: string;
+}
+
+const AnalyticsAdapterDemo: React.FC = () => {
+  const [testing, setTesting] = useState<boolean>(false);
+  const [testResults, setTestResults] = useState<TestResults | TestResultsError | null>(null);
   const { currentDataSource, isUsingMock, switchDataSource } = useDataSource();
 
   // Test both adapters with a demo channel
@@ -42,7 +59,7 @@ const AnalyticsAdapterDemo = () => {
     error: realError
   } = useAnalytics(demoChannelId, 7, 'real');
 
-  const handleSwitchToMock = async () => {
+  const handleSwitchToMock = async (): Promise<void> => {
     try {
       await switchDataSource('mock');
     } catch (error) {
@@ -50,7 +67,7 @@ const AnalyticsAdapterDemo = () => {
     }
   };
 
-  const handleSwitchToReal = async () => {
+  const handleSwitchToReal = async (): Promise<void> => {
     try {
       await switchDataSource('real');
     } catch (error) {
@@ -58,7 +75,7 @@ const AnalyticsAdapterDemo = () => {
     }
   };
 
-  const runAdapterTests = async () => {
+  const runAdapterTests = async (): Promise<void> => {
     setTesting(true);
     setTestResults(null);
 
@@ -72,7 +89,7 @@ const AnalyticsAdapterDemo = () => {
       // Test real adapter (may fail if not configured)
       let realTime = 0;
       let realSuccess = true;
-      let realErrorMsg = null;
+      let realErrorMsg: string | null = null;
 
       try {
         const realStart = performance.now();
@@ -81,7 +98,7 @@ const AnalyticsAdapterDemo = () => {
         realTime = realEnd - realStart;
       } catch (error) {
         realSuccess = false;
-        realErrorMsg = error.message;
+        realErrorMsg = error instanceof Error ? error.message : 'Unknown error';
       }
 
       setTestResults({
@@ -97,14 +114,17 @@ const AnalyticsAdapterDemo = () => {
           error: realErrorMsg
         }
       });
-
     } catch (error) {
       setTestResults({
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     } finally {
       setTesting(false);
     }
+  };
+
+  const isTestResultsError = (results: TestResults | TestResultsError | null): results is TestResultsError => {
+    return results !== null && 'error' in results && !('mock' in results);
   };
 
   return (
@@ -189,7 +209,7 @@ const AnalyticsAdapterDemo = () => {
 
           {testResults && (
             <Box sx={{ mt: 2 }}>
-              {testResults.error ? (
+              {isTestResultsError(testResults) ? (
                 <Alert severity="error">
                   Test Error: {testResults.error}
                 </Alert>

@@ -373,7 +373,9 @@ class AdvancedDataProcessor:
             analysis["missing_data"] = {
                 "total_missing": missing_data.sum(),
                 "columns_with_missing": (missing_data > 0).sum(),
-                "highest_missing_column": missing_data.idxmax() if missing_data.max() > 0 else None,
+                "highest_missing_column": (
+                    missing_data.idxmax() if missing_data.max() > 0 else None
+                ),
                 "highest_missing_percentage": (missing_data.max() / len(df)) * 100,
             }
 
@@ -539,7 +541,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to datetime: {e}")
-                    pass
 
                 # Try numeric
                 try:
@@ -547,7 +548,6 @@ class AdvancedDataProcessor:
                     continue
                 except Exception as e:
                     logger.debug(f"Failed to convert column {col} to numeric: {e}")
-                    pass
 
         return df
 

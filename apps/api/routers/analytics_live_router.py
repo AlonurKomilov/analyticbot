@@ -202,13 +202,15 @@ async def get_live_metrics_optimized(
             "timestamp": datetime.utcnow().isoformat(),
             "channel_id": channel_id,
             "time_window_hours": hours,
-            "metrics": analysis_result.get("results", {})
-            if isinstance(analysis_result, dict)
-            else {},
+            "metrics": (
+                analysis_result.get("results", {}) if isinstance(analysis_result, dict) else {}
+            ),
             "status": "live",
-            "success": analysis_result.get("success", False)
-            if isinstance(analysis_result, dict)
-            else False,
+            "success": (
+                analysis_result.get("success", False)
+                if isinstance(analysis_result, dict)
+                else False
+            ),
         }
 
         return live_metrics
@@ -344,12 +346,10 @@ def calculate_trend_indicators(overview_data, growth_data, reach_data) -> dict[s
         engagement_rate = getattr(overview_data, "engagement_rate", 0)
 
         return {
-            "growth_trend": "📈" if growth_rate > 0 else "📉" if growth_rate < 0 else "➡️",
-            "engagement_trend": "📈"
-            if engagement_rate > 2
-            else "📉"
-            if engagement_rate < 1
-            else "➡️",
+            "growth_trend": ("📈" if growth_rate > 0 else "📉" if growth_rate < 0 else "➡️"),
+            "engagement_trend": (
+                "📈" if engagement_rate > 2 else "📉" if engagement_rate < 1 else "➡️"
+            ),
         }
     except:
         return {"growth_trend": "❓", "engagement_trend": "❓"}

@@ -190,7 +190,10 @@ class SecurityManager:
             logger.info(f"Security event: {event_type} - User: {user_id} - Details: {details}")
 
     def create_access_token(
-        self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
+        self,
+        user: User,
+        expires_delta: timedelta | None = None,
+        session_id: str | None = None,
     ) -> str:
         """
         Create JWT access token with user claims
@@ -210,12 +213,17 @@ class SecurityManager:
 
         # Token payload with comprehensive claims
         # Handle both enum and string values for role/status
-        from core.security_engine.models import UserStatus, UserRole, AuthProvider
 
         # Type-safe extraction of values
-        role_val = getattr(user.role, 'value', str(user.role)) if user.role is not None else 'user'
-        status_val = getattr(user.status, 'value', str(user.status)) if user.status is not None else 'active'
-        auth_provider_val = getattr(user.auth_provider, 'value', str(user.auth_provider)) if user.auth_provider is not None else 'local'
+        role_val = getattr(user.role, "value", str(user.role)) if user.role is not None else "user"
+        status_val = (
+            getattr(user.status, "value", str(user.status)) if user.status is not None else "active"
+        )
+        auth_provider_val = (
+            getattr(user.auth_provider, "value", str(user.auth_provider))
+            if user.auth_provider is not None
+            else "local"
+        )
 
         # Create TokenClaims with correct parameters (matching CoreSecurityService)
         claims = TokenClaims(
@@ -364,7 +372,10 @@ class SecurityManager:
             raise AuthenticationError("Could not validate credentials", 401)
 
     def create_user_session(
-        self, user: User, auth_request: AuthRequest, device_info: dict[str, Any] | None = None
+        self,
+        user: User,
+        auth_request: AuthRequest,
+        device_info: dict[str, Any] | None = None,
     ) -> UserSession:
         """
         Create new user session with security tracking
@@ -520,7 +531,7 @@ class SecurityManager:
         try:
             # Use adapter to decode token (ignore expiration for revocation)
             try:
-                claims = self.token_generator.verify_jwt_token(token)
+                self.token_generator.verify_jwt_token(token)
                 # For revocation, we need the expiration time, so we'll use a fallback
                 # Since we can't easily get exp from claims, we'll revoke for a default period
                 seconds_until_exp = 3600  # 1 hour default
@@ -640,7 +651,9 @@ class SecurityManager:
             refresh_data_str = self._cache_get(f"refresh_token:{refresh_token}")
             if not refresh_data_str or not isinstance(refresh_data_str, str):
                 raise AuthenticationError(
-                    "Invalid refresh token", status_code=401, error_code="INVALID_REFRESH_TOKEN"
+                    "Invalid refresh token",
+                    status_code=401,
+                    error_code="INVALID_REFRESH_TOKEN",
                 )
 
             refresh_data = json.loads(refresh_data_str)
@@ -649,7 +662,9 @@ class SecurityManager:
 
             if not user_id or not session_id:
                 raise AuthenticationError(
-                    "Invalid refresh token data", status_code=401, error_code="INVALID_TOKEN_DATA"
+                    "Invalid refresh token data",
+                    status_code=401,
+                    error_code="INVALID_TOKEN_DATA",
                 )
 
             # Verify session still exists
@@ -661,7 +676,12 @@ class SecurityManager:
 
             # Create new access token with minimal user data
             # In a real implementation, you'd fetch full user data from database
-            from core.security_engine.models import AuthProvider, User, UserRole, UserStatus
+            from core.security_engine.models import (
+                AuthProvider,
+                User,
+                UserRole,
+                UserStatus,
+            )
 
             # Mock user object for token creation - replace with actual user lookup
             user = User(
@@ -686,14 +706,18 @@ class SecurityManager:
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing refresh token data: {e}")
             raise AuthenticationError(
-                "Invalid refresh token", status_code=401, error_code="INVALID_TOKEN_FORMAT"
+                "Invalid refresh token",
+                status_code=401,
+                error_code="INVALID_TOKEN_FORMAT",
             )
         except AuthenticationError:
             raise
         except Exception as e:
             logger.error(f"Error refreshing access token: {e}")
             raise AuthenticationError(
-                "Token refresh failed", status_code=500, error_code="TOKEN_REFRESH_ERROR"
+                "Token refresh failed",
+                status_code=500,
+                error_code="TOKEN_REFRESH_ERROR",
             )
 
     def revoke_user_sessions(self, user_id: str) -> int:

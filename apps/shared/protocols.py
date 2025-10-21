@@ -10,7 +10,11 @@ from abc import ABC, abstractmethod
 from typing import Any, Protocol, TypeVar
 
 # Import core protocols (this is allowed - apps can import from core)
-from core.repositories.interfaces import AdminRepository, ChannelRepository, UserRepository
+from core.repositories.interfaces import (
+    AdminRepository,
+    ChannelRepository,
+    UserRepository,
+)
 
 
 # Create AnalyticsRepository protocol stub if not available

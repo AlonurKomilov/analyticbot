@@ -170,7 +170,9 @@ class MTProtoServiceManager:
             "stats_enabled": self.settings.MTPROTO_STATS_ENABLED,
             "configured_peers": len(self.settings.MTPROTO_PEERS),
             "running_tasks": len(self.tasks),
-            "scaling_stats": self.scaling_container.get_stats() if self.scaling_container else None,
+            "scaling_stats": (
+                self.scaling_container.get_stats() if self.scaling_container else None
+            ),
         }
 
         return status
@@ -217,14 +219,18 @@ async def main():
     )
     parser.add_argument("--peers", help="Comma-separated list of peers for history collection")
     parser.add_argument(
-        "--limit", type=int, default=50, help="Message limit per peer (default: 50 for safety)"
+        "--limit",
+        type=int,
+        default=50,
+        help="Message limit per peer (default: 50 for safety)",
     )
 
     args = parser.parse_args()
 
     # Set up logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     manager = MTProtoServiceManager()

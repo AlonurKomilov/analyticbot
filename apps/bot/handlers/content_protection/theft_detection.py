@@ -11,19 +11,16 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, User
 
+from .services.tier_service import (
+    check_feature_usage_limit,
+    get_user_subscription_tier,
+    increment_feature_usage,
+)
 from .states import ContentProtectionStates
 from .validation import validate_callback_state, validate_message_state
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-
-# Import tier service functions (will be refactored in Phase 2.8)
-from apps.bot.handlers.content_protection.services.tier_service import (
-    check_feature_usage_limit,
-    get_user_subscription_tier,
-    increment_feature_usage,
-)
 
 
 @router.callback_query(F.data == "protect_theft_check")

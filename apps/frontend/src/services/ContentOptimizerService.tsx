@@ -53,13 +53,13 @@ interface TabPanelProps {
 /**
  * Content Optimizer Service Page
  * Professional AI service dashboard with real-time status and controls
- * 
+ *
  * ✨ Features Demo Guard utility for reactive demo/real API switching
  */
 const ContentOptimizerService: React.FC = () => {
     // Use Demo Guard hook - automatically re-renders when data source changes
     const isDemo = useDemoMode();
-    
+
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [autoOptimization, setAutoOptimization] = useState<boolean>(true);
     const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
@@ -85,7 +85,7 @@ const ContentOptimizerService: React.FC = () => {
                 const mockModule = await loadMockData(
                     () => import('../__mocks__/aiServices/contentOptimizer')
                 );
-                
+
                 if (mockModule) {
                     setServiceStats(mockModule.contentOptimizerStats);
                     setOptimizations(mockModule.recentOptimizations);

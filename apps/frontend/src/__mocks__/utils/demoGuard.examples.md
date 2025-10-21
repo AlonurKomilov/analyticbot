@@ -57,8 +57,8 @@ export const DashboardHeader = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      <span style={{ 
-        padding: '4px 8px', 
+      <span style={{
+        padding: '4px 8px',
         borderRadius: '4px',
         background: isDemo ? '#ff9800' : '#4caf50',
         color: 'white'

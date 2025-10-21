@@ -39,7 +39,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 export const SecurityMonitoringPage: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const isDemo = useDemoMode();
-  
+
   // State for dynamically loaded mock data
   const [mockSecurityAlerts, setMockSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [securityMetrics, setSecurityMetrics] = useState<any[]>([]);
@@ -68,7 +68,7 @@ export const SecurityMonitoringPage: React.FC = () => {
         const mockModule = await loadMockData(
           () => import('@/__mocks__/aiServices/securityMonitor')
         );
-        
+
         if (mockModule) {
           // Transform mock data to match our types
           const transformedAlerts: SecurityAlert[] = mockModule.mockSecurityAlerts.map((alert: any) => ({
@@ -81,13 +81,13 @@ export const SecurityMonitoringPage: React.FC = () => {
             description: alert.description,
             status: alert.status === 'Investigating' ? 'new' : alert.status === 'Resolved' ? 'resolved' : 'acknowledged'
           }));
-          
+
           const transformedMetrics = mockModule.securityMetrics.map((metric: any) => ({
             metric: metric.metric,
             score: parseInt(metric.value) || 0,
             status: metric.status
           }));
-          
+
           setMockSecurityAlerts(transformedAlerts);
           setSecurityMetrics(transformedMetrics);
           console.log('✅ Loaded demo data for Security Monitoring Page');
@@ -99,7 +99,7 @@ export const SecurityMonitoringPage: React.FC = () => {
         console.log('🔄 Using real API data for Security Monitoring Page');
       }
     };
-    
+
     loadDemoData();
   }, [isDemo]);
 

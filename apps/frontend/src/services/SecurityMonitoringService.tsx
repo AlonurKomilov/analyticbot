@@ -75,13 +75,13 @@ type ScoreStatus = 'excellent' | 'good' | 'needs-attention' | 'poor';
 /**
  * Security Monitoring Service Page
  * Real-time security analysis and threat detection
- * 
+ *
  * ✨ Features Demo Guard utility for reactive demo/real API switching
  */
 const SecurityMonitoringService: React.FC = () => {
     // Use Demo Guard hook - automatically re-renders when data source changes
     const isDemo = useDemoMode();
-    
+
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [realTimeMonitoring, setRealTimeMonitoring] = useState<boolean>(true);
     const [threats, setThreats] = useState<SecurityAlert[]>([]);
@@ -113,7 +113,7 @@ const SecurityMonitoringService: React.FC = () => {
                     const mockModule = await loadMockData(
                         () => import('../__mocks__/aiServices/securityMonitor')
                     );
-                    
+
                     if (mockModule) {
                         setServiceStats(mockModule.securityStats);
                         setAlerts(mockModule.mockSecurityAlerts as any);
@@ -125,7 +125,7 @@ const SecurityMonitoringService: React.FC = () => {
                     console.log('🔄 Fetching real API data for Security Monitoring...');
                     // TODO: Implement real API call when security monitoring endpoint is ready
                     console.warn('⚠️ Real security monitoring API not yet implemented');
-                    
+
                     // Set empty state for real API until endpoint is ready
                     setServiceStats({
                         status: 'pending',

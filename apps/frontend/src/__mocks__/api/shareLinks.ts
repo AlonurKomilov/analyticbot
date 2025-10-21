@@ -27,7 +27,7 @@ const calculateExpiry = (ttl: TTLOption): string => {
     '3d': 259200000,
     '7d': 604800000
   };
-  
+
   return new Date(Date.now() + ttlMs[ttl]).toISOString();
 };
 
@@ -40,7 +40,7 @@ export const createMockShareLink = (
   ttl: TTLOption = '24h'
 ): ShareLinkResponse => {
   const shareId = `share-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-  
+
   return {
     share_url: `https://analyticbot.com/share/${channelId}-${dataType}-${Date.now()}`,
     expires_at: calculateExpiry(ttl),

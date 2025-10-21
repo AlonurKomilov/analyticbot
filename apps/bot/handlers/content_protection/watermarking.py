@@ -26,19 +26,16 @@ from aiogram.types import (
 
 from apps.bot.models.content_protection import PremiumFeatureLimits, UserTier
 
+from .services.tier_service import (
+    check_feature_usage_limit,
+    get_user_subscription_tier,
+    increment_feature_usage,
+)
 from .states import ContentProtectionStates
 from .validation import validate_callback_state, validate_message_state
 
 logger = logging.getLogger(__name__)
 router = Router()
-
-
-# Import tier service functions (will be refactored in Phase 2.8)
-from apps.bot.handlers.content_protection.services.tier_service import (
-    check_feature_usage_limit,
-    get_user_subscription_tier,
-    increment_feature_usage,
-)
 
 
 @router.message(Command("protect"))
@@ -131,7 +128,6 @@ async def handle_image_watermark_start(callback: CallbackQuery, state: FSMContex
     assert callback.bot is not None
     assert callback.from_user is not None
     msg = cast(Message, callback.message)
-    bot = cast(Bot, callback.bot)
 
     user_tier = await get_user_subscription_tier(callback.from_user.id)
 
@@ -189,7 +185,8 @@ async def handle_watermark_image_upload(message: Message, state: FSMContext):
     # Check file size limit (after guard, file_size is guaranteed to be int)
     if file_size and file_size > limits.max_file_size_mb * 1024 * 1024:
         await message.answer(
-            f"❌ File too large! Maximum size for {user_tier.value} tier: {limits.max_file_size_mb}MB"
+            f"❌ File too large! Maximum size for {user_tier.value} tier: "
+            f"{limits.max_file_size_mb}MB"
         )
         return
 

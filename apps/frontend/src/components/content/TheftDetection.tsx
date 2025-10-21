@@ -172,7 +172,7 @@ const TheftDetection: React.FC = () => {
                 //     content_hash: contentHash
                 // });
                 // setScanResults(response.data.matches || []);
-                
+
                 // For now, show error if real API not implemented
                 throw new Error('Real theft detection API not yet implemented. Please use demo mode.');
             }

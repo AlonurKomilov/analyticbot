@@ -211,7 +211,7 @@ const Dashboard = () => {
 ```typescript
 it('should re-render when mode changes', () => {
   const { result } = renderHook(() => useDemoMode());
-  
+
   expect(result.current).toBe(false); // Real API
 
   act(() => {
@@ -346,11 +346,11 @@ useEffect(() => {
 // Manual checking, not reactive
 const ContentOptimizer = () => {
   const dataSource = useUIStore((state) => state.dataSource);
-  
+
   useEffect(() => {
     loadData();
   }, [dataSource]); // Works but verbose
-  
+
   const loadData = async () => {
     if (dataSource === 'mock') {
       // Load mock
@@ -365,11 +365,11 @@ const ContentOptimizer = () => {
 // Clean, reactive with Demo Guard
 const ContentOptimizer = () => {
   const isDemo = useDemoMode(); // ← Clean hook
-  
+
   useEffect(() => {
     loadData();
   }, [isDemo]); // ← Clear dependency
-  
+
   const loadData = async () => {
     if (isDemo) {
       const mock = await loadMockData(...); // ← Utility helper
@@ -419,7 +419,7 @@ const ContentOptimizer = () => {
    useEffect(() => {
      loadData();
    }, [isDemo]);
-   
+
    // ✅ GOOD
    useEffect(() => {
      let cancelled = false;
@@ -436,7 +436,7 @@ const ContentOptimizer = () => {
    ```typescript
    // ❌ BAD
    const dataSource = useUIStore((state) => state.dataSource);
-   
+
    // ✅ GOOD
    const isDemo = useDemoMode();
    ```
@@ -447,7 +447,7 @@ const ContentOptimizer = () => {
    useEffect(() => {
      loadData();
    }, []); // No dependencies!
-   
+
    // ✅ GOOD - Reacts to changes
    useEffect(() => {
      loadData();
@@ -476,6 +476,6 @@ When updating a service to use reactive switching:
 
 ---
 
-**Version:** 1.0.0  
-**Created:** October 21, 2025  
+**Version:** 1.0.0
+**Created:** October 21, 2025
 **Part of:** Phase 5 - Reactive Demo/Real API Switching

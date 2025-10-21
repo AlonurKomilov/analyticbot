@@ -133,7 +133,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 // });
                 // setShareLink(response.data);
                 // setSuccess('Share link created successfully!');
-                
+
                 // For now, show error if real API not implemented
                 throw new Error('Real share link API not yet implemented. Please use demo mode.');
             }

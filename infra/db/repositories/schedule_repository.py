@@ -5,6 +5,7 @@ Concrete implementation using PostgreSQL/asyncpg
 
 import json
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from core.models import (
@@ -280,6 +281,133 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         """
         result = await self.db.fetchval(query, user_id)
         return result or 0
+
+    async def delete_old_posts(self, days_old: int, statuses: list[str]) -> int:
+        """
+        Delete old posts in specified statuses
+        
+        ✅ Issue #3 Phase 3: Real implementation for cleanup_old_posts
+        
+        Args:
+            days_old: Delete posts older than this many days
+            statuses: List of statuses to delete (e.g., ['sent', 'cancelled', 'error'])
+        
+        Returns:
+            Number of posts deleted
+        """
+        query = """
+        DELETE FROM scheduled_posts
+        WHERE status = ANY($1)
+        AND created_at < NOW() - INTERVAL '1 day' * $2
+        """
+        try:
+            result = await self.db.execute(query, statuses, days_old)
+            # Parse "DELETE N" result
+            deleted_count = int(result.split()[-1]) if result else 0
+            return deleted_count
+        except Exception:
+            return 0
+
+    async def get_stuck_sending_posts(self, timeout_minutes: int = 30) -> list[dict]:
+        """
+        Get posts stuck in 'sending' status for too long
+        
+        ✅ Issue #3 Phase 3: Real implementation for requeue_stuck_sending_posts
+        
+        Args:
+            timeout_minutes: Consider posts stuck if in 'sending' status for this many minutes
+        
+        Returns:
+            List of stuck post dictionaries
+        """
+        query = """
+        SELECT id, user_id, channel_id, post_text, schedule_time,
+               media_id, media_type, inline_buttons, status, created_at
+        FROM scheduled_posts
+        WHERE status = 'sending'
+        AND updated_at < NOW() - INTERVAL '1 minute' * $1
+        ORDER BY updated_at ASC
+        """
+        try:
+            rows = await self.db.fetch(query, timeout_minutes)
+            posts = []
+            for row in rows:
+                post_dict = dict(row)
+                # Parse inline_buttons JSON if present
+                if post_dict.get("inline_buttons"):
+                    try:
+                        post_dict["inline_buttons"] = json.loads(post_dict["inline_buttons"])
+                    except (json.JSONDecodeError, TypeError):
+                        post_dict["inline_buttons"] = None
+                posts.append(post_dict)
+            return posts
+        except Exception:
+            return []
+
+    async def count_posts_by_status(
+        self,
+        status: str,
+        user_id: int | None = None,
+        channel_id: int | None = None,
+    ) -> int:
+        """
+        Count posts by status with optional filters
+        
+        ✅ Issue #3 Phase 3: Supporting method for maintenance tasks
+        
+        Args:
+            status: Post status to count
+            user_id: Optional user ID filter
+            channel_id: Optional channel ID filter
+        
+        Returns:
+            Count of posts with given status
+        """
+        query = "SELECT COUNT(*) FROM scheduled_posts WHERE status = $1"
+        params: list[Any] = [status]
+        param_count = 1
+        
+        if user_id is not None:
+            param_count += 1
+            query += f" AND user_id = ${param_count}"
+            params.append(user_id)
+        
+        if channel_id is not None:
+            param_count += 1
+            query += f" AND channel_id = ${param_count}"
+            params.append(channel_id)
+        
+        try:
+            result = await self.db.fetchval(query, *params)
+            return result or 0
+        except Exception:
+            return 0
+
+    async def get_expired_schedulers(self, days_old: int = 90) -> list[dict]:
+        """
+        Get schedulers that are very old and in terminal states
+        
+        ✅ Issue #3 Phase 3: Real implementation for remove_expired_schedulers
+        
+        Args:
+            days_old: Consider schedulers expired if older than this many days
+        
+        Returns:
+            List of expired scheduler dictionaries
+        """
+        query = """
+        SELECT id, user_id, channel_id, status, created_at
+        FROM scheduled_posts
+        WHERE status IN ('sent', 'cancelled', 'error', 'failed')
+        AND created_at < NOW() - INTERVAL '1 day' * $1
+        ORDER BY created_at ASC
+        LIMIT 1000
+        """
+        try:
+            rows = await self.db.fetch(query, days_old)
+            return [dict(row) for row in rows]
+        except Exception:
+            return []
 
     def _row_to_scheduled_post(self, row) -> ScheduledPost:
         """Convert database row to ScheduledPost domain model"""

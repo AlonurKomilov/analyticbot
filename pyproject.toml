@@ -236,7 +236,6 @@ ignore_imports = [
     "apps.api.routers.statistics_core_router -> apps.shared.performance",
     "apps.api.routers.statistics_reports_router -> apps.shared.performance",
     "apps.api.routers.sharing_router -> apps.shared.services.chart_service",
-    "apps.api.routers.exports_router -> apps.shared.services.chart_service",
     "apps.bot.handlers.exports -> apps.shared.services.chart_service",
     "apps.bot.handlers.admin_handlers -> apps.shared.services.chart_service",
     # Middleware uses DI for repository access (composition root pattern)

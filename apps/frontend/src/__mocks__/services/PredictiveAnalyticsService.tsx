@@ -20,7 +20,8 @@ import {
     Select,
     MenuItem,
     Card,
-    CardContent
+    CardContent,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     TrendingUp as PredictiveIcon,
@@ -28,7 +29,8 @@ import {
     Analytics as AnalyticsIcon,
     Settings as SettingsIcon,
     TrendingDown as DownIcon,
-    TrendingFlat as FlatIcon
+    TrendingFlat as FlatIcon,
+    TrendingUp
 } from '@mui/icons-material';
 import ModernCard, { ModernCardHeader } from '@components/common/ModernCard.jsx';
 import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
@@ -44,32 +46,75 @@ import {
 /**
  * Mock Predictive Analytics Service Page
  * Demo implementation with mock data for demo users
+ * 
+ * NOTE: This is a MOCK/DEMO component for demonstration purposes only.
+ * The real production implementation is located at:
+ * /apps/frontend/src/services/PredictiveAnalyticsService.tsx
  */
-const PredictiveAnalyticsService = () => {
-    const [currentTab, setCurrentTab] = useState(0);
-    const [timeRange, setTimeRange] = useState('30d');
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    // Use mock data
-    const stats = predictiveStats;
-    const predictions = mockForecasts;
-    const insights = trendInsights;
-    const models = forecastModels;
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
 
-    const handleTabChange = (event, newValue) => {
+interface PredictiveStats {
+    accuracy: number;
+    activeModels: number;
+    predictionsMade: number;
+    confidenceScore: number;
+}
+
+interface Forecast {
+    metric: string;
+    currentValue: string | number;
+    predictedValue: string | number;
+    trend: 'up' | 'down' | 'flat';
+    change: string;
+    confidence: number;
+}
+
+interface TrendInsight {
+    title: string;
+    description: string;
+    impact: 'High' | 'Medium' | 'Low';
+    timeframe: string;
+}
+
+interface ForecastModel {
+    name: string;
+    description: string;
+    accuracy: number;
+    status: 'Active' | 'Inactive';
+}
+
+type TimeRange = '7d' | '30d' | '90d' | '1y';
+
+const PredictiveAnalyticsService: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<number>(0);
+    const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+    const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+
+    // Use mock data (type assertions for demo compatibility)
+    const stats: PredictiveStats = predictiveStats as any;
+    const predictions: Forecast[] = mockForecasts as any;
+    const insights: TrendInsight[] = trendInsights as any;
+    const models: ForecastModel[] = forecastModels as any;
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setCurrentTab(newValue);
     };
 
-    const handleTimeRangeChange = (event) => {
-        setTimeRange(event.target.value);
+    const handleTimeRangeChange = (event: SelectChangeEvent<TimeRange>): void => {
+        setTimeRange(event.target.value as TimeRange);
     };
 
-    const handleAnalyze = () => {
+    const handleAnalyze = (): void => {
         setIsAnalyzing(true);
         setTimeout(() => setIsAnalyzing(false), 3000);
     };
 
-    const getTrendIcon = (trend) => {
+    const getTrendIcon = (trend: string): React.ReactNode => {
         switch(trend) {
             case 'up': return <TrendingUp color="success" />;
             case 'down': return <DownIcon color="error" />;
@@ -78,7 +123,7 @@ const PredictiveAnalyticsService = () => {
         }
     };
 
-    const getTrendColor = (trend) => {
+    const getTrendColor = (trend: string): string => {
         switch(trend) {
             case 'up': return '#4caf50';
             case 'down': return '#f44336';
@@ -87,16 +132,16 @@ const PredictiveAnalyticsService = () => {
         }
     };
 
-    const TabPanel = ({ children, value, index }) => (
-        <div hidden={value !== index} style={{ paddingTop: SEMANTIC_SPACING.sections.small }}>
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+        <div hidden={value !== index} style={{ paddingTop: (SEMANTIC_SPACING as any).sections?.small || 16 }}>
             {value === index && children}
         </div>
     );
 
     return (
-        <Box sx={{ p: SEMANTIC_SPACING.sections.medium }}>
+        <Box sx={{ p: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
             {/* Header */}
-            <Box sx={{ mb: SEMANTIC_SPACING.sections.medium }}>
+            <Box sx={{ mb: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
                 <Typography variant="h4" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PredictiveIcon color="primary" />
                     Predictive Analytics
@@ -111,7 +156,7 @@ const PredictiveAnalyticsService = () => {
             </Box>
 
             {/* Statistics Overview */}
-            <Grid container spacing={SEMANTIC_SPACING.components.medium} sx={{ mb: SEMANTIC_SPACING.sections.medium }}>
+            <Grid container spacing={(SEMANTIC_SPACING as any).components?.medium || 2} sx={{ mb: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -224,7 +269,7 @@ const PredictiveAnalyticsService = () => {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {(predictions || []).map((prediction, index) => (
+                                    {(predictions || []).map((prediction: Forecast, index: number) => (
                                         <TableRow key={index}>
                                             <TableCell>{prediction.metric}</TableCell>
                                             <TableCell>{prediction.currentValue}</TableCell>
@@ -263,7 +308,7 @@ const PredictiveAnalyticsService = () => {
                         </Typography>
 
                         <Grid container spacing={2}>
-                            {(insights || []).map((insight, index) => (
+                            {(insights || []).map((insight: TrendInsight, index: number) => (
                                 <Grid item xs={12} md={6} key={index}>
                                     <Card variant="outlined">
                                         <CardContent>
@@ -303,7 +348,7 @@ const PredictiveAnalyticsService = () => {
                         </Alert>
 
                         <Grid container spacing={2}>
-                            {(models || []).map((model, index) => (
+                            {(models || []).map((model: ForecastModel, index: number) => (
                                 <Grid item xs={12} md={4} key={index}>
                                     <Card variant="outlined">
                                         <CardContent>

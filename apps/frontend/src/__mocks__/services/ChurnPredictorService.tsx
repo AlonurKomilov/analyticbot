@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import {
     Box,
     Typography,
@@ -6,10 +6,6 @@ import {
     Grid,
     Chip,
     Alert,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Tabs,
     Tab,
     LinearProgress,
@@ -20,7 +16,8 @@ import {
     Switch,
     FormControlLabel,
     Card,
-    CardContent
+    CardContent,
+    SelectChangeEvent
 } from '@mui/material';
 import {
     PersonRemove as ChurnIcon,
@@ -38,33 +35,67 @@ import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 import {
     churnPredictorStats,
     mockChurnPredictions,
-    retentionStrategies,
-    riskSegments
+    retentionStrategies
 } from '../aiServices/churnPredictor.js';
 
 /**
  * Mock Churn Predictor Service Page
  * Demo implementation with mock data for demo users
+ * 
+ * NOTE: This is a MOCK/DEMO component for demonstration purposes only.
+ * The real production implementation is located at:
+ * /apps/frontend/src/services/ChurnPredictorService.tsx
  */
-const ChurnPredictorService = () => {
-    const [currentTab, setCurrentTab] = useState(0);
-    const [riskThreshold, setRiskThreshold] = useState('medium');
-    const [autoRefresh, setAutoRefresh] = useState(true);
 
-    // Use mock data with safety checks
-    const stats = churnPredictorStats;
-    const riskUsers = mockChurnPredictions || [];
-    const strategies = retentionStrategies || [];
+interface TabPanelProps {
+    children: React.ReactNode;
+    value: number;
+    index: number;
+}
 
-    const handleTabChange = (event, newValue) => {
+interface ChurnUser {
+    id: string;
+    name: string;
+    risk: 'high' | 'medium' | 'low';
+    score: number;
+    factors: string[];
+}
+
+interface RetentionStrategy {
+    title: string;
+    description: string;
+    targetAudience: string;
+    expectedImpact: string;
+}
+
+interface ChurnStats {
+    totalCustomers: number;
+    atRisk: number;
+    retentionRate: number;
+    avgRiskScore: number;
+}
+
+type RiskThreshold = 'all' | 'high' | 'medium';
+
+const ChurnPredictorService: React.FC = () => {
+    const [currentTab, setCurrentTab] = useState<number>(0);
+    const [riskThreshold, setRiskThreshold] = useState<RiskThreshold>('medium');
+    const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
+
+    // Use mock data with safety checks (type assertions for demo compatibility)
+    const stats: ChurnStats = churnPredictorStats as any;
+    const riskUsers: ChurnUser[] = (mockChurnPredictions as any) || [];
+    const strategies: RetentionStrategy[] = (retentionStrategies as any) || [];
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setCurrentTab(newValue);
     };
 
-    const handleThresholdChange = (event) => {
-        setRiskThreshold(event.target.value);
+    const handleThresholdChange = (event: SelectChangeEvent<RiskThreshold>): void => {
+        setRiskThreshold(event.target.value as RiskThreshold);
     };
 
-    const getRiskColor = (risk) => {
+    const getRiskColor = (risk: string): string => {
         switch(risk) {
             case 'high': return '#f44336';
             case 'medium': return '#ff9800';
@@ -73,7 +104,7 @@ const ChurnPredictorService = () => {
         }
     };
 
-    const getRiskIcon = (risk) => {
+    const getRiskIcon = (risk: string): React.ReactNode => {
         switch(risk) {
             case 'high': return <HighRiskIcon sx={{ color: '#f44336' }} />;
             case 'medium': return <WarningIcon sx={{ color: '#ff9800' }} />;
@@ -82,23 +113,23 @@ const ChurnPredictorService = () => {
         }
     };
 
-    const filteredUsers = riskUsers.filter(user => {
+    const filteredUsers = riskUsers.filter((user: ChurnUser) => {
         if (riskThreshold === 'all') return true;
         if (riskThreshold === 'high') return user.risk === 'high';
         if (riskThreshold === 'medium') return user.risk === 'high' || user.risk === 'medium';
         return true;
     });
 
-    const TabPanel = ({ children, value, index }) => (
-        <div hidden={value !== index} style={{ paddingTop: SEMANTIC_SPACING.sections.small }}>
+    const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+        <div hidden={value !== index} style={{ paddingTop: (SEMANTIC_SPACING as any).sections?.small || 16 }}>
             {value === index && children}
         </div>
     );
 
     return (
-        <Box sx={{ p: SEMANTIC_SPACING.sections.medium }}>
+        <Box sx={{ p: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
             {/* Header */}
-            <Box sx={{ mb: SEMANTIC_SPACING.sections.medium }}>
+            <Box sx={{ mb: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
                 <Typography variant="h4" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ChurnIcon color="primary" />
                     Churn Predictor
@@ -113,7 +144,7 @@ const ChurnPredictorService = () => {
             </Box>
 
             {/* Statistics Overview */}
-            <Grid container spacing={SEMANTIC_SPACING.components.medium} sx={{ mb: SEMANTIC_SPACING.sections.medium }}>
+            <Grid container spacing={(SEMANTIC_SPACING as any).components?.medium || 2} sx={{ mb: (SEMANTIC_SPACING as any).sections?.medium || 3 }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <ModernCard>
                         <CardContent>
@@ -177,7 +208,7 @@ const ChurnPredictorService = () => {
                                 control={
                                     <Switch
                                         checked={autoRefresh}
-                                        onChange={(e) => setAutoRefresh(e.target.checked)}
+                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setAutoRefresh(e.target.checked)}
                                     />
                                 }
                                 label="Auto Refresh"
@@ -216,7 +247,7 @@ const ChurnPredictorService = () => {
                         </Typography>
 
                         <Grid container spacing={2}>
-                            {(filteredUsers || []).map((user, index) => (
+                            {(filteredUsers || []).map((user: ChurnUser, index: number) => (
                                 <Grid item xs={12} md={6} key={index}>
                                     <Card variant="outlined">
                                         <CardContent>
@@ -253,7 +284,7 @@ const ChurnPredictorService = () => {
                                                 <strong>Risk Factors:</strong>
                                             </Typography>
                                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                                {(user.factors || []).map((factor, index) => (
+                                                {(user.factors || []).map((factor: string, index: number) => (
                                                     <Chip
                                                         key={index}
                                                         label={factor}
@@ -278,7 +309,7 @@ const ChurnPredictorService = () => {
                         </Typography>
 
                         <Grid container spacing={2}>
-                            {(strategies || []).map((strategy, index) => (
+                            {(strategies || []).map((strategy: RetentionStrategy, index: number) => (
                                 <Grid item xs={12} md={6} key={index}>
                                     <Card variant="outlined">
                                         <CardContent>

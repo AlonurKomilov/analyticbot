@@ -235,9 +235,6 @@ ignore_imports = [
     "apps.api.routers.insights_engagement_router -> apps.shared.performance",
     "apps.api.routers.statistics_core_router -> apps.shared.performance",
     "apps.api.routers.statistics_reports_router -> apps.shared.performance",
-    "apps.api.routers.sharing_router -> apps.shared.services.chart_service",
-    "apps.bot.handlers.exports -> apps.shared.services.chart_service",
-    "apps.bot.handlers.admin_handlers -> apps.shared.services.chart_service",
     # Middleware uses DI for repository access (composition root pattern)
     "apps.api.routers.admin_channels_router -> apps.api.middleware.auth",
     "apps.api.routers.admin_system_router -> apps.api.middleware.auth",
@@ -260,7 +257,15 @@ ignore_imports = [
     "apps.api.routers.system_router -> apps.api.deps_factory",
     # Telegram validation uses telethon (infra dependency - architectural debt)
     "apps.api.services.telegram_validation_service -> infra.tg.telethon_client",
-    "apps.api.routers.analytics_channels_router -> apps.api.services.telegram_validation_service"
+    "apps.api.routers.analytics_channels_router -> apps.api.services.telegram_validation_service",
+    # Known technical debt - Issue #4 (content_protection god object refactoring)
+    "apps.api.routers.content_protection_router -> infra.db.connection_manager",
+    "apps.api.routers.content_protection_router -> infra.db.repositories.user_repository",
+    "apps.bot.handlers.content_protection -> infra.db.connection_manager",
+    "apps.bot.handlers.content_protection -> infra.db.repositories.user_repository",
+    # Exports router imports DI (composition root pattern)
+    "apps.api.routers.exports_router -> apps.di",
+    "apps.bot.handlers.exports -> apps.di"
 ]
 
 # Note: apps.di.*, apps.api.di_analytics, and apps.mtproto.* intentionally allowed

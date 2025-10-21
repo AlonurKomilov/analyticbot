@@ -102,7 +102,9 @@ def send_scheduled_message():
         try:
             # Get services from container with fallback handling
             bot = get_container().bot_client()
-            scheduler_service = get_container().scheduler_service()
+            # Use new scheduling services (scheduler_service deprecated)
+            schedule_manager = get_container().bot.schedule_manager()
+            post_delivery_service = get_container().bot.post_delivery_service()
             scheduler_repo_result = get_container().schedule_repo()
 
             # Handle potential coroutines
@@ -112,9 +114,9 @@ def send_scheduled_message():
                 scheduler_repo = scheduler_repo_result
 
             # Safety checks for services
-            if not scheduler_service:
-                logger.error("Scheduler service not available")
-                return "scheduler-service-unavailable"
+            if not schedule_manager:
+                logger.error("Schedule manager not available")
+                return "schedule-manager-unavailable"
 
             if not scheduler_repo:
                 logger.error("Scheduler repository not available")
@@ -132,13 +134,16 @@ def send_scheduled_message():
             stats["processed"] = len(due_posts)
             for post in due_posts:
                 try:
-                    if hasattr(scheduler_service, "send_post_to_channel"):
-                        result = await scheduler_service.send_post_to_channel(post)
+                    # Use new post_delivery_service instead of deprecated scheduler_service
+                    if post_delivery_service and hasattr(post_delivery_service, "deliver_post"):
+                        result = await post_delivery_service.deliver_post(post)
+                        success = result.get("success", False)
                     else:
-                        logger.warning("send_post_to_channel method not available")
+                        logger.warning("post_delivery_service not available, skipping")
                         stats["errors"] += 1
                         continue
-                    if result.get("success"):
+
+                    if success:
                         stats["sent"] += 1
                         logger.debug(f"Successfully sent post {post.id}")
                     else:

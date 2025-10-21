@@ -115,7 +115,7 @@ class DependencyMiddleware(BaseMiddleware):
                 # Legacy services (will be deprecated)
                 data["subscription_service"] = self.container.bot.subscription_service()
                 data["guard_service"] = self.container.bot.guard_service()
-                data["scheduler_service"] = self.container.bot.scheduler_service()  # LEGACY
+                # REMOVED: scheduler_service (deprecated - use schedule_manager instead)
                 data["analytics_service"] = self.container.bot.analytics_service()
 
                 # New scheduling services (Clean Architecture)

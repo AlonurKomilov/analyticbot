@@ -204,21 +204,8 @@ def _create_payment_orchestrator(payment_repository=None, **kwargs):
         return None
 
 
-def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """
-    DEPRECATED: Legacy scheduler service (archived in Phase 3.1)
-
-    Use instead:
-    - schedule_manager() for core scheduling logic
-    - post_delivery_service() for message delivery
-    - delivery_status_tracker() for status management
-    """
-    logger.warning(
-        "SchedulerService is deprecated. Use new scheduling services: "
-        "schedule_manager, post_delivery_service, delivery_status_tracker"
-    )
-    return None
-
+# REMOVED: _create_scheduler_service (deprecated - archived in Phase 3.1)
+# Use instead: schedule_manager, post_delivery_service, delivery_status_tracker
 
 # ============================================================================
 # NEW SCHEDULING SERVICES (Clean Architecture)
@@ -369,21 +356,9 @@ def _create_analytics_service(analytics_repository=None, channel_repository=None
         return None
 
 
-def _create_alerting_service(bot=None, user_repository=None, **kwargs):
-    """
-    DEPRECATED: Legacy alerting service (archived in Phase 3.2)
-
-    Use instead:
-    - alert_condition_evaluator() for metric evaluation
-    - alert_rule_manager() for rule management
-    - alert_event_manager() for event lifecycle
-    - telegram_alert_notifier() for notifications
-    """
-    logger.warning(
-        "AlertingService is deprecated. Use new alert services: "
-        "alert_condition_evaluator, alert_rule_manager, alert_event_manager"
-    )
-    return None
+# REMOVED: _create_alerting_service (deprecated - archived in Phase 3.2)
+# Use instead: alert_condition_evaluator, alert_rule_manager,
+# alert_event_manager, telegram_alert_notifier
 
 
 def _create_channel_management_service(channel_repository=None, bot=None, **kwargs):
@@ -765,11 +740,8 @@ class BotContainer(containers.DeclarativeContainer):
         _create_payment_orchestrator, payment_repository=database.payment_repo
     )
 
-    scheduler_service = providers.Factory(
-        _create_scheduler_service,
-        schedule_repository=database.schedule_repo,
-        bot=bot_client,
-    )
+    # REMOVED: scheduler_service (deprecated - use schedule_manager instead)
+    # Legacy service archived in Phase 3.1
 
     # New scheduling services (Clean Architecture)
     schedule_manager = providers.Factory(
@@ -875,9 +847,9 @@ class BotContainer(containers.DeclarativeContainer):
         channel_repository=database.channel_repo,
     )
 
-    alerting_service = providers.Factory(
-        _create_alerting_service, bot=bot_client, user_repository=database.user_repo
-    )
+    # REMOVED: alerting_service (deprecated - use alert_* services instead)
+    # Legacy service archived in Phase 3.2
+    # Use: alert_condition_evaluator, alert_rule_manager, alert_event_manager
 
     channel_management_service = providers.Factory(
         _create_channel_management_service,

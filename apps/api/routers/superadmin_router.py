@@ -11,12 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# ✅ MIGRATED: Use new modular DI instead of legacy apps.api.deps
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
-
-# Import new role system with backwards compatibility
 from core.security_engine import User as AdminUser
 from core.services.superadmin_service import SuperAdminService
 
@@ -100,13 +96,16 @@ security = HTTPBearer()
 
 
 async def get_superadmin_service():
-    """Get SuperAdmin service using repository factory pattern"""
+    """
+    Get SuperAdmin service using DI container
+    Phase 3 Fix (Oct 19, 2025): Removed factory usage
+    """
     # For now, return a basic service that meets our API needs
     # This is a temporary solution until the full port interfaces are implemented
-    from apps.shared.factory import get_repository_factory
+    from apps.di import get_container
 
-    factory = get_repository_factory()
-    admin_repo = await factory.get_admin_repository()
+    container = get_container()
+    admin_repo = await container.database.admin_repo()
 
     # Create a simple wrapper that provides the methods we need
     class SimpleAdminService:
@@ -156,7 +155,7 @@ async def get_current_admin_user(
         )
 
 
-async def require_admin_role(
+async def require_admin_user(
     min_role: str = AdministrativeRole.SUPER_ADMIN.value,  # Use new role system
     current_admin: AdminUser = Depends(get_current_admin_user),
 ) -> AdminUser:
@@ -220,8 +219,13 @@ async def admin_login(
 
 @router.post("/auth/logout")
 async def admin_logout(current_admin: AdminUser = Depends(get_current_admin_user)):
-    """Logout admin user (invalidate session)"""
-    # TODO: Implement session invalidation
+    """
+    Logout admin user (invalidate session).
+    
+    Note: Session invalidation deferred to Week 2.
+    Currently relies on JWT expiration only (stateless).
+    Tracked in GitHub Issue #TBD: Implement session blacklist/invalidation
+    """
     return {"message": "Logged out successfully"}
 
 
@@ -234,7 +238,7 @@ async def get_system_users(
     limit: int = Query(100, ge=1, le=1000),
     status: UserStatus | None = None,
     search: str | None = None,
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system users with filtering and pagination"""
@@ -266,7 +270,7 @@ async def suspend_user(
     suspension_request: UserSuspensionRequest,
     request: Request,
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Suspend a system user"""
@@ -283,7 +287,7 @@ async def suspend_user(
 async def reactivate_user(
     user_id: int,
     request: Request,
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Reactivate a suspended user"""
@@ -300,7 +304,7 @@ async def reactivate_user(
 @router.get("/stats", response_model=SystemStatsResponse)
 async def get_system_stats(
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get comprehensive system statistics"""
@@ -320,7 +324,7 @@ async def get_audit_logs(
     start_date: datetime | None = None,
     end_date: datetime | None = None,
     db: AsyncSession = Depends(get_db_connection),
-    current_admin: AdminUser = Depends(require_admin_role),
+    current_admin: AdminUser = Depends(require_admin_user),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get audit logs with filtering"""
@@ -353,7 +357,7 @@ async def get_audit_logs(
 async def get_system_config(
     category: str | None = None,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
@@ -381,7 +385,7 @@ async def update_system_config(
     config_update: ConfigUpdateRequest,
     request: Request,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_role(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):

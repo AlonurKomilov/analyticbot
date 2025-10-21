@@ -447,7 +447,7 @@ export const useAppStore = create(
                 } else {
                     // Load from mock data
                     console.log('📊 Loading storage files demo data');
-                    const { storageMockService } = await import('../services/storageMockService.js');
+                    const { storageMockService } = await import('../__mocks__/services/storageMockService.js');
                     response = await storageMockService.getStorageFiles(limit, offset);
                 }
 

@@ -14,6 +14,7 @@ isort>=5.12.0
 mypy>=1.7.1
 flake8>=6.1.0
 pre-commit>=3.6.0
+import-linter>=2.0  # Phase 6: Architectural import validation
 
 # Development servers
 watchdog>=3.0.0

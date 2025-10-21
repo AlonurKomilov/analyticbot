@@ -12,11 +12,35 @@ export { useAnalyticsStore } from './analytics/useAnalyticsStore';
 export { useMediaStore } from './media/useMediaStore';
 export { useUIStore } from './ui/useUIStore';
 
-// Type exports
-export type { PendingMedia } from './media/useMediaStore';
+// Re-export types from @/types for convenience
 export type {
+  // Auth types
+  User,
+  UserRole,
+  UserPreferences,
+
+  // Channel types
+  Channel,
+  ChannelMetrics,
+
+  // Post types
+  Post,
+  ScheduledPost,
+  PostStatus,
+
+  // Analytics types
+  AnalyticsOverview,
+  GrowthMetrics,
   PostDynamics,
   TopPost,
   BestTimeRecommendation,
-  EngagementMetrics
-} from './analytics/useAnalyticsStore';
+  EngagementMetrics,
+
+  // Media types
+  MediaFile,
+  PendingMedia,
+  UploadProgress,
+
+  // UI types
+  DataSource
+} from '@/types';

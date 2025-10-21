@@ -18,10 +18,8 @@ from pydantic import BaseModel, Field
 from apps.api.di_analytics import get_analytics_fusion_service
 from apps.api.middleware.auth import (
     get_current_user,
-    require_admin_role,
+    require_admin_user,
 )
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
 
 # Updated import to use new microservices
@@ -75,7 +73,7 @@ async def get_system_statistics(
     - System-wide statistics and health status
     """
     try:
-        await require_admin_role(current_user["id"])
+        await require_admin_user(current_user["id"])
 
         with performance_timer("admin_system_stats_fetch"):
             stats = await analytics_service.get_system_statistics_admin()
@@ -116,7 +114,7 @@ async def get_recent_admin_actions(
     - List of recent administrative actions
     """
     try:
-        await require_admin_role(current_user["id"])
+        await require_admin_user(current_user["id"])
 
         with performance_timer("admin_audit_logs_fetch"):
             audit_logs = await analytics_service.get_admin_audit_logs(limit=limit)
@@ -157,7 +155,7 @@ async def get_system_health(
     - Detailed system health information
     """
     try:
-        await require_admin_role(current_user["id"])
+        await require_admin_user(current_user["id"])
 
         with performance_timer("admin_system_health_check"):
             health_data = await analytics_service.check_system_health()

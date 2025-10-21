@@ -194,6 +194,3 @@ def get_demo_type_from_user_id(user_id: str | int) -> str:
 
 # Convenience instance
 demo_service = DemoService()
-
-# Backward compatibility
-DemoModeService = DemoService

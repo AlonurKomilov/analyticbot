@@ -22,11 +22,11 @@ def _create_ml_service(service_name: str) -> Any | None:
     """Create ML service (optional - returns None if not available)"""
     try:
         if service_name == "PredictiveEngine":
-            from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
+            from apps.shared.adapters.ml_coordinator import create_ml_coordinator
 
             return create_ml_coordinator()
         elif service_name == "EngagementAnalyzer":
-            from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+            from apps.shared.adapters.ml_facade import create_bot_ml_facade
 
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":

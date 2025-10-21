@@ -5,7 +5,7 @@
  * Now properly separated into focused, reusable components.
  */
 
-export { default as UserManagementTable } from './UserManagementTable';
+export { default as UserManagementTable } from './UserManagementTable.tsx';
 export * from './UserDisplayComponents';
-export * from './UserUtils';
-export { UserActions } from './UserActions';
+export * from './UserUtils.tsx';
+export { UserActions } from './UserActions.tsx';

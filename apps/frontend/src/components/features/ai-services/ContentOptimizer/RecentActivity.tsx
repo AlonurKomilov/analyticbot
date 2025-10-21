@@ -3,7 +3,7 @@
  * Displays recent content optimizations
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -15,34 +15,45 @@ import {
   LinearProgress
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useDemoMode, loadMockData } from '@/__mocks__/utils/demoGuard';
 
 interface RecentActivityProps {
   isOptimizing: boolean;
 }
 
-// Mock data - in real app this would come from the service
-const mockOptimizations = [
-  {
-    id: 1,
-    content: 'Product Launch Announcement',
-    improvement: '+25%',
-    timestamp: '2 minutes ago'
-  },
-  {
-    id: 2,
-    content: 'Weekly Newsletter Content',
-    improvement: '+18%',
-    timestamp: '15 minutes ago'
-  },
-  {
-    id: 3,
-    content: 'Blog Post Introduction',
-    improvement: '+32%',
-    timestamp: '1 hour ago'
-  }
-];
+interface Optimization {
+  id: number;
+  content: string;
+  improvement: string;
+  timestamp: string;
+  status?: 'completed' | 'pending' | 'failed';
+}
 
 export const RecentActivity: React.FC<RecentActivityProps> = ({ isOptimizing }) => {
+  const isDemo = useDemoMode();
+  const [optimizations, setOptimizations] = useState<Optimization[]>([]);
+
+  // Load optimizations on mount and when demo mode changes
+  useEffect(() => {
+    const loadOptimizations = async () => {
+      if (isDemo) {
+        // Load mock data dynamically in demo mode
+        const mock = await loadMockData(() => import('@/__mocks__/data/recentOptimizations'));
+        if (mock?.mockOptimizations) {
+          setOptimizations(mock.mockOptimizations.slice(0, 3)); // Show top 3
+        }
+      } else {
+        // Real API implementation
+        // const response = await fetch('/api/optimizations/recent');
+        // const data = await response.json();
+        // setOptimizations(data);
+        setOptimizations([]); // Empty until real API implemented
+      }
+    };
+
+    loadOptimizations();
+  }, [isDemo]);
+
   return (
     <CardContent sx={{ p: 4 }}>
       {isOptimizing && (
@@ -75,7 +86,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ isOptimizing }) 
           Recent Optimizations
         </Typography>
         <Chip
-          label={`${mockOptimizations.length} completed`}
+          label={`${optimizations.length} completed`}
           size="small"
           color="primary"
           sx={{ ml: 2, fontWeight: 600 }}
@@ -83,7 +94,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ isOptimizing }) 
       </Box>
 
       <Grid container spacing={3}>
-        {mockOptimizations.map((item, index) => (
+        {optimizations.map((item, index) => (
           <Grid item xs={12} key={item.id}>
             <Card
               elevation={0}

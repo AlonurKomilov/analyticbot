@@ -168,9 +168,3 @@ def measure_performance(operation_name: str):
             return sync_wrapper
 
     return decorator
-
-
-# For backward compatibility - expose as module-level function
-async def measure_operation(operation_name: str, **metadata):
-    """Module-level function for measuring operations"""
-    return _global_collector.measure(operation_name, **metadata)

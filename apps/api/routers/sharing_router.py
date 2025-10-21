@@ -12,7 +12,6 @@ import aiohttp
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from apps.api.exports.csv_v2 import CSVExporter
 from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
@@ -26,7 +25,10 @@ from apps.shared.clients.analytics_client import (
     TopPostsResponse,
     TrendingResponse,
 )
-from apps.shared.factory import get_repository_factory
+
+# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.di import get_container
+from apps.shared.exports.csv_v2 import CSVExporter
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
 from core.repositories.shared_reports_repository import SharedReportsRepository
@@ -61,9 +63,12 @@ def get_analytics_client() -> AnalyticsClient:
 
 
 async def get_shared_reports_repository() -> SharedReportsRepository:
-    """Get shared reports repository"""
-    factory = get_repository_factory()
-    return await factory.get_shared_reports_repository()
+    """
+    Get shared reports repository via DI container
+    Phase 3 Fix (Oct 19, 2025): Removed factory usage
+    """
+    container = get_container()
+    return await container.database.shared_reports_repo()
 
 
 def get_csv_exporter() -> CSVExporter:
@@ -72,9 +77,15 @@ def get_csv_exporter() -> CSVExporter:
 
 
 def get_chart_service() -> ChartServiceProtocol:
-    """Get chart service instance"""
-    factory = get_repository_factory()
-    return factory.get_chart_service()
+    """
+    Get chart service instance from DI container.
+    
+    ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
+    """
+    from apps.di import get_container
+
+    container = get_container()
+    return container.bot.chart_service()
 
 
 def check_share_enabled():

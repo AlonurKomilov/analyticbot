@@ -18,11 +18,10 @@ from pydantic import BaseModel, Field
 from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user,
-    require_admin_role,
+    require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
+from apps.shared.performance import performance_timer
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -89,7 +88,7 @@ async def get_user_channels_admin(
     - User channel information and statistics
     """
     try:
-        await require_admin_role(current_user["id"])
+        await require_admin_user(current_user["id"])
 
         with performance_timer("admin_user_channels_fetch"):
             user_channels = await channel_service.get_user_channels(user_id=user_id)

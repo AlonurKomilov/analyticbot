@@ -19,30 +19,10 @@ import { SecurityMetrics } from './SecurityMetrics';
 import { ActiveMonitors } from './ActiveMonitors';
 import { SecuritySettings } from './SecuritySettings';
 import { SecurityAlert } from '@services/ai/securityMonitoring';
+import { useDemoMode, loadMockData } from '@/__mocks__/utils/demoGuard';
 
-// Import mock data for alerts and metrics
-import {
-  mockSecurityAlerts as rawMockAlerts,
-  securityMetrics as rawSecurityMetrics
-} from '@/__mocks__/aiServices/securityMonitor.js';
-
-// Transform mock data to match our types
-const mockSecurityAlerts: SecurityAlert[] = rawMockAlerts.map((alert: any) => ({
-  id: alert.id,
-  type: alert.type,
-  severity: alert.severity.toLowerCase() as 'critical' | 'high' | 'medium' | 'low',
-  timestamp: alert.timestamp,
-  source: alert.source,
-  action: alert.status || 'Monitored',
-  description: alert.description,
-  status: alert.status === 'Investigating' ? 'new' : alert.status === 'Resolved' ? 'resolved' : 'acknowledged'
-}));
-
-const securityMetrics = rawSecurityMetrics.map((metric: any) => ({
-  metric: metric.metric,
-  score: parseInt(metric.value) || 0,
-  status: metric.status
-}));
+// Mock data will be loaded dynamically based on demo mode
+// No top-level imports to prevent loading in real API mode
 
 interface TabPanelProps {
   children: React.ReactNode;
@@ -58,6 +38,11 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 
 export const SecurityMonitoringPage: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(0);
+  const isDemo = useDemoMode();
+
+  // State for dynamically loaded mock data
+  const [mockSecurityAlerts, setMockSecurityAlerts] = useState<SecurityAlert[]>([]);
+  const [securityMetrics, setSecurityMetrics] = useState<any[]>([]);
 
   const {
     stats,
@@ -70,13 +55,55 @@ export const SecurityMonitoringPage: React.FC = () => {
     setRealTimeMonitoring
   } = useSecurityMonitoring();
 
-  // Load data on mount
+  // Load data reactively when demo mode changes
   useEffect(() => {
     loadStats();
     loadMonitors();
-  }, [loadStats, loadMonitors]);
+  }, [loadStats, loadMonitors, isDemo]);
 
-  // Combine and sort alerts
+  // Load mock data dynamically only in demo mode
+  useEffect(() => {
+    const loadDemoData = async () => {
+      if (isDemo) {
+        const mockModule = await loadMockData(
+          () => import('@/__mocks__/aiServices/securityMonitor')
+        );
+
+        if (mockModule) {
+          // Transform mock data to match our types
+          const transformedAlerts: SecurityAlert[] = mockModule.mockSecurityAlerts.map((alert: any) => ({
+            id: alert.id,
+            type: alert.type,
+            severity: alert.severity.toLowerCase() as 'critical' | 'high' | 'medium' | 'low',
+            timestamp: alert.timestamp,
+            source: alert.source,
+            action: alert.status || 'Monitored',
+            description: alert.description,
+            status: alert.status === 'Investigating' ? 'new' : alert.status === 'Resolved' ? 'resolved' : 'acknowledged'
+          }));
+
+          const transformedMetrics = mockModule.securityMetrics.map((metric: any) => ({
+            metric: metric.metric,
+            score: parseInt(metric.value) || 0,
+            status: metric.status
+          }));
+
+          setMockSecurityAlerts(transformedAlerts);
+          setSecurityMetrics(transformedMetrics);
+          console.log('✅ Loaded demo data for Security Monitoring Page');
+        }
+      } else {
+        // Clear mock data in real API mode
+        setMockSecurityAlerts([]);
+        setSecurityMetrics([]);
+        console.log('🔄 Using real API data for Security Monitoring Page');
+      }
+    };
+
+    loadDemoData();
+  }, [isDemo]);
+
+  // Combine and sort alerts (only includes mock alerts in demo mode)
   const allAlerts = sortAlerts([...mockSecurityAlerts, ...threats]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {

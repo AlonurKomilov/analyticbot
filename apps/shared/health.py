@@ -6,9 +6,9 @@ System health monitoring for Clean Architecture components
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from apps.shared.di import Container, get_container
+from apps.di import get_container
 
 router = APIRouter(prefix="/health", tags=["Health"])
 
@@ -26,7 +26,7 @@ async def health_check() -> dict[str, Any]:
 
 
 @router.get("/db", summary="Database Health Check")
-async def database_health(container: Container = Depends(get_container)) -> dict[str, Any]:
+async def database_health() -> dict[str, Any]:
     """Check database connectivity and basic operations"""
 
     health_info: dict[str, Any] = {
@@ -38,8 +38,10 @@ async def database_health(container: Container = Depends(get_container)) -> dict
     }
 
     try:
+        container = get_container()
+
         # Test optimized database manager
-        db_mgr = await container.database_manager()
+        db_mgr = await container.database.database_manager()
         health_check = await db_mgr.health_check()
 
         health_info["database"] = {
@@ -63,13 +65,13 @@ async def database_health(container: Container = Depends(get_container)) -> dict
 
         # Test repository instantiation with optimized connection management
         try:
-            await container.user_repo()
+            await container.database.user_repo()
             health_info["repositories"]["user"] = "initialized"
 
-            await container.analytics_repo()
+            await container.database.analytics_repo()
             health_info["repositories"]["analytics"] = "initialized"
 
-            await container.channel_repo()
+            await container.database.channel_repo()
             health_info["repositories"]["channel"] = "initialized"
 
         except Exception as repo_error:
@@ -139,25 +141,27 @@ async def architecture_health() -> dict[str, Any]:
 
 
 @router.get("/di", summary="Dependency Injection Health")
-async def di_health(container: Container = Depends(get_container)) -> dict[str, Any]:
+async def di_health() -> dict[str, Any]:
     """Check dependency injection container health"""
 
     di_info: dict[str, Any] = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "container": {"type": "apps.shared.di.Container", "initialized": True},
+        "container": {"type": "apps.di.ApplicationContainer", "initialized": True},
         "dependencies": {},
     }
 
     try:
+        container = get_container()
+
         # Test repository dependencies
         dependencies = [
-            ("user_repo", container.user_repo),
-            ("admin_repo", container.admin_repo),
-            ("analytics_repo", container.analytics_repo),
-            ("channel_repo", container.channel_repo),
-            ("payment_repo", container.payment_repo),
-            ("plan_repo", container.plan_repo),
+            ("user_repo", container.database.user_repo),
+            ("admin_repo", container.database.admin_repo),
+            ("analytics_repo", container.database.analytics_repo),
+            ("channel_repo", container.database.channel_repo),
+            ("payment_repo", container.database.payment_repo),
+            ("plan_repo", container.database.plan_repo),
         ]
 
         for name, factory in dependencies:

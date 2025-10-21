@@ -9,6 +9,9 @@ export { default as ShowcaseLayout } from './ShowcaseLayout.jsx';
 export { default as ShowcaseNavigation, TabPanel } from './ShowcaseNavigation.jsx';
 
 // Table demo components
-export { default as PostsTableDemo } from './tables/PostsTableDemo.jsx';
+export { default as UsersTable } from './tables/UsersTable.jsx';
+export { default as PostsTable } from './tables/PostsTable.jsx';
+export { default as PostsTableDemo } from '../../__mocks__/components/showcase/tables/PostsTableDemo';
+
 export { default as UsersTableDemo } from './tables/UsersTableDemo.jsx';
 export { default as GenericTableDemo } from './tables/GenericTableDemo.jsx';

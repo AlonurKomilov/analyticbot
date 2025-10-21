@@ -8,8 +8,6 @@ from apps.bot.utils.error_handler import ErrorContext, ErrorHandler
 from apps.bot.utils.task_utils import enhanced_retry_task
 
 logger = logging.getLogger(__name__)
-
-# ✅ MIGRATED: Use new modular DI instead of legacy bot.di
 from apps.di import get_container
 
 
@@ -28,7 +26,6 @@ def send_post_task(scheduler_id: int):
     async def _run():
         context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
-            # ✅ MIGRATED: Use new modular DI container structure
             container = get_container()
             bot = await container.bot.bot_client()
             scheduler_repo_result = await container.database.schedule_repo()
@@ -79,13 +76,42 @@ def remove_expired_schedulers():
     async def _run():
         context = ErrorContext().add("task", "remove_expired_schedulers")
         try:
-            bot = get_container().bot_client()
-            repo = get_container().schedule_repo()
-            # TODO: Implement remove_expired using clean architecture patterns
-            # For now, using safe placeholder that logs the request
-            logger.info("remove_expired_schedulers called - placeholder implementation")
-            removed_count = 0  # Safe placeholder logic
-            logger.info(f"Removed {removed_count} expired schedulers (placeholder)")
+            # ✅ Issue #3 Phase 3: Real implementation using clean architecture
+            logger.info("Starting remove_expired_schedulers task")
+            
+            # Get schedule repository from DI container
+            container = get_container()
+            scheduler_repo_result = await container.database.schedule_repo()
+            
+            # Handle potential coroutines
+            if asyncio.iscoroutine(scheduler_repo_result):
+                scheduler_repo = await scheduler_repo_result
+            else:
+                scheduler_repo = scheduler_repo_result
+            
+            if not scheduler_repo:
+                logger.error("Scheduler repository not available")
+                return "scheduler-repo-unavailable"
+            
+            # Get expired schedulers (older than 90 days in terminal states)
+            if hasattr(scheduler_repo, "get_expired_schedulers"):
+                expired_schedulers = await scheduler_repo.get_expired_schedulers(days_old=90)
+                logger.info(f"Found {len(expired_schedulers)} expired schedulers")
+                
+                # Delete them using delete_old_posts method
+                if len(expired_schedulers) > 0 and hasattr(scheduler_repo, "delete_old_posts"):
+                    removed_count = await scheduler_repo.delete_old_posts(
+                        days_old=90,
+                        statuses=["sent", "cancelled", "error", "failed"]
+                    )
+                    logger.info(f"Removed {removed_count} expired schedulers (>90 days old)")
+                else:
+                    removed_count = 0
+                    logger.info("No expired schedulers to remove")
+            else:
+                logger.warning("get_expired_schedulers method not available")
+                removed_count = 0
+            
             return f"removed-{removed_count}"
         except Exception as e:
             ErrorHandler.log_error(e, context)
@@ -265,18 +291,63 @@ def maintenance_cleanup():
     async def _run():
         bot = get_container().bot_client()
         try:
-            scheduler_repo = get_container().schedule_repo()
-            # TODO: Implement requeue_stuck_sending_posts and cleanup_old_posts using clean architecture - PLACEHOLDER
-            # Using safe placeholder implementation that logs the maintenance request
-            logger.info("maintenance_cleanup called - using safe placeholder implementation")
-            requeued = 0  # Safe placeholder - no actual requeueing performed
-            cleaned = 0  # Safe placeholder - no actual cleanup performed
+            # ✅ Issue #3 Phase 3: Real implementation using clean architecture
+            logger.info("Starting maintenance_cleanup task")
+            
+            container = get_container()
+            scheduler_repo_result = await container.database.schedule_repo()
+            
+            # Handle potential coroutines
+            if asyncio.iscoroutine(scheduler_repo_result):
+                scheduler_repo = await scheduler_repo_result
+            else:
+                scheduler_repo = scheduler_repo_result
+            
+            if not scheduler_repo:
+                logger.error("Scheduler repository not available")
+                return "scheduler-repo-unavailable"
+            
+            # Part 1: Requeue stuck 'sending' posts (timeout: 30 minutes)
+            requeued = 0
+            if hasattr(scheduler_repo, "get_stuck_sending_posts"):
+                stuck_posts = await scheduler_repo.get_stuck_sending_posts(timeout_minutes=30)
+                logger.info(f"Found {len(stuck_posts)} stuck posts in 'sending' status")
+                
+                for post in stuck_posts:
+                    try:
+                        # Update status back to 'pending' so they can be retried
+                        if hasattr(scheduler_repo, "update_post_status"):
+                            success = await scheduler_repo.update_post_status(
+                                post["id"], "pending"
+                            )
+                            if success:
+                                requeued += 1
+                                logger.debug(f"Requeued stuck post {post['id']}")
+                    except Exception as e:
+                        logger.error(f"Failed to requeue post {post['id']}: {e}")
+                
+                logger.info(f"Requeued {requeued} stuck posts")
+            else:
+                logger.warning("get_stuck_sending_posts method not available")
+            
+            # Part 2: Cleanup old posts (older than 30 days in terminal states)
+            cleaned = 0
+            if hasattr(scheduler_repo, "delete_old_posts"):
+                cleaned = await scheduler_repo.delete_old_posts(
+                    days_old=30,
+                    statuses=["sent", "cancelled", "error"]
+                )
+                logger.info(f"Cleaned up {cleaned} old posts (>30 days)")
+            else:
+                logger.warning("delete_old_posts method not available")
 
             logger.info(
-                f"Maintenance cleanup completed (placeholder): {requeued} requeued, {cleaned} cleaned"
+                f"Maintenance cleanup completed: {requeued} requeued, {cleaned} cleaned"
             )
+            return f"requeued-{requeued}-cleaned-{cleaned}"
         except Exception as e:
             logger.exception("maintenance_cleanup failed", exc_info=e)
+            return "maintenance-cleanup-failed"
         finally:
             # Cleanup is handled by DI container lifecycle
             await cleanup_resources()

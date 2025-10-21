@@ -10,7 +10,9 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "resolveJsonModule": true,
-    "allowJs": true
+    "allowJs": true,
+    "checkJs": false,
+    "emitDeclarationOnly": true
   },
   "include": ["vite.config.js", "vite.config.ts", "vitest.config.js", "eslint.config.js"]
 }

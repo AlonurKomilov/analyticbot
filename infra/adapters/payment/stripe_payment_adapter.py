@@ -14,9 +14,9 @@ try:
 except ImportError:
     StripeError = Exception
 
-from apps.bot.models.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 from config.settings import settings
 from core.adapters.payment import PaymentGatewayAdapter
+from core.domain.payment import BillingCycle, PaymentStatus, SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class StripePaymentAdapter(PaymentGatewayAdapter):
         customer_id: str,
         price_id: str,
         payment_method_id: str,
-        billing_cycle: BillingCycle,
+        billing_cycle: BillingCycle | str,
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create Stripe subscription"""

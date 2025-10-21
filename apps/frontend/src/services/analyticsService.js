@@ -13,7 +13,9 @@
  */
 
 import { dataSourceManager } from '../utils/dataSourceManager.js';
-import { MOCK_CONFIG, API_CONFIG, configUtils } from '../config/mockConfig.js';
+
+// Import centralized mock config from __mocks__
+import { MOCK_CONFIG, API_CONFIG, configUtils } from '../__mocks__/config/mockConfig.js';
 import { DEFAULT_DEMO_CHANNEL_ID } from '../__mocks__/constants.js';
 
 // Import unified API client

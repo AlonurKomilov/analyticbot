@@ -160,9 +160,5 @@ class DemoMiddleware(BaseHTTPMiddleware):
                 return json.loads(body.decode())
             return None
         except Exception as e:
-            logger.debug(f"Could not peek request body: {e}")
-            return None
-
-
-# Maintain backward compatibility
-DemoModeMiddleware = DemoMiddleware
+            logger.error(f"Error in demo middleware: {e}")
+            raise

@@ -61,12 +61,18 @@ async def _create_bot_analytics_adapter(core_analytics_service=None, bot=None, *
     """Create bot analytics adapter (thin layer over core service)"""
     try:
         from apps.bot.adapters.analytics_adapter import BotAnalyticsAdapter
+        from infra.adapters.analytics.aiogram_bot_adapter import AiogramBotAdapter
 
         # Only create if core service is available
         if core_analytics_service is None:
             return None
 
-        return BotAnalyticsAdapter(batch_processor=core_analytics_service, bot=bot)
+        # Create telegram port from bot (factory pattern in DI container)
+        telegram_port = AiogramBotAdapter(bot) if bot else None
+
+        return BotAnalyticsAdapter(
+            batch_processor=core_analytics_service, telegram_port=telegram_port
+        )
     except ImportError as e:
         logger.warning(f"Bot analytics adapter not available: {e}")
         return None
@@ -198,21 +204,8 @@ def _create_payment_orchestrator(payment_repository=None, **kwargs):
         return None
 
 
-def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """
-    DEPRECATED: Legacy scheduler service (archived in Phase 3.1)
-
-    Use instead:
-    - schedule_manager() for core scheduling logic
-    - post_delivery_service() for message delivery
-    - delivery_status_tracker() for status management
-    """
-    logger.warning(
-        "SchedulerService is deprecated. Use new scheduling services: "
-        "schedule_manager, post_delivery_service, delivery_status_tracker"
-    )
-    return None
-
+# REMOVED: _create_scheduler_service (deprecated - archived in Phase 3.1)
+# Use instead: schedule_manager, post_delivery_service, delivery_status_tracker
 
 # ============================================================================
 # NEW SCHEDULING SERVICES (Clean Architecture)
@@ -363,21 +356,9 @@ def _create_analytics_service(analytics_repository=None, channel_repository=None
         return None
 
 
-def _create_alerting_service(bot=None, user_repository=None, **kwargs):
-    """
-    DEPRECATED: Legacy alerting service (archived in Phase 3.2)
-
-    Use instead:
-    - alert_condition_evaluator() for metric evaluation
-    - alert_rule_manager() for rule management
-    - alert_event_manager() for event lifecycle
-    - telegram_alert_notifier() for notifications
-    """
-    logger.warning(
-        "AlertingService is deprecated. Use new alert services: "
-        "alert_condition_evaluator, alert_rule_manager, alert_event_manager"
-    )
-    return None
+# REMOVED: _create_alerting_service (deprecated - archived in Phase 3.2)
+# Use instead: alert_condition_evaluator, alert_rule_manager,
+# alert_event_manager, telegram_alert_notifier
 
 
 def _create_channel_management_service(channel_repository=None, bot=None, **kwargs):
@@ -436,14 +417,43 @@ def _create_file_system_adapter(**kwargs):
 
 
 def _create_subscription_adapter(**kwargs):
-    """Create subscription service adapter (stub for now)"""
-    try:
-        from apps.bot.adapters.content import StubSubscriptionService
+    """
+    Create subscription service adapter.
 
-        return StubSubscriptionService()
+    ✅ Issue #3 Phase 1 (Oct 21, 2025): Replaced StubSubscriptionService with real
+    SubscriptionAdapter that integrates with payment domain subscription service.
+    """
+    try:
+        from apps.bot.adapters.content import SubscriptionAdapter
+        from infra.services.payment import SubscriptionService
+
+        # Get subscription service from infra layer (payment domain)
+        # TODO: Inject payment_repository and payment_method_service via DI
+        # For now, we'll create a basic subscription service
+        # In production, this should come from payment container
+        payment_repository = None  # Will be injected properly in payment container
+        payment_method_service = None
+
+        subscription_service = SubscriptionService(
+            payment_repository=payment_repository,
+            payment_method_service=payment_method_service,
+        )
+
+        return SubscriptionAdapter(subscription_service=subscription_service)
+
     except ImportError as e:
-        logger.warning(f"Subscription adapter not available: {e}")
-        return None
+        logger.warning(
+            f"SubscriptionAdapter not available, falling back to stub: {e}. "
+            "This is expected if payment domain is not fully configured."
+        )
+        # Fallback to stub for backward compatibility
+        try:
+            from apps.bot.adapters.content import StubSubscriptionService
+
+            return StubSubscriptionService()
+        except ImportError:
+            logger.error("Neither SubscriptionAdapter nor StubSubscriptionService available")
+            return None
 
 
 def _create_theft_detector(**kwargs):
@@ -656,6 +666,26 @@ def _create_system_metrics_service(metrics_backend=None, system_monitor=None, **
         return None
 
 
+def _create_chart_service(**kwargs):
+    """Create chart service for rendering analytics charts"""
+    try:
+        from apps.shared.services.chart_service import ChartService
+        from infra.rendering.charts import MATPLOTLIB_AVAILABLE, ChartRenderer
+
+        if not MATPLOTLIB_AVAILABLE:
+            logger.warning(
+                "Matplotlib not available - chart service will have limited functionality"
+            )
+            return ChartService(chart_renderer=None)
+
+        # Create chart renderer from infrastructure layer
+        chart_renderer = ChartRenderer()
+        return ChartService(chart_renderer=chart_renderer)
+    except ImportError as e:
+        logger.warning(f"Chart service not available: {e}")
+        return None
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -759,11 +789,8 @@ class BotContainer(containers.DeclarativeContainer):
         _create_payment_orchestrator, payment_repository=database.payment_repo
     )
 
-    scheduler_service = providers.Factory(
-        _create_scheduler_service,
-        schedule_repository=database.schedule_repo,
-        bot=bot_client,
-    )
+    # REMOVED: scheduler_service (deprecated - use schedule_manager instead)
+    # Legacy service archived in Phase 3.1
 
     # New scheduling services (Clean Architecture)
     schedule_manager = providers.Factory(
@@ -869,9 +896,12 @@ class BotContainer(containers.DeclarativeContainer):
         channel_repository=database.channel_repo,
     )
 
-    alerting_service = providers.Factory(
-        _create_alerting_service, bot=bot_client, user_repository=database.user_repo
-    )
+    # Chart rendering service (Issue #10 - Oct 21, 2025)
+    chart_service = providers.Factory(_create_chart_service)
+
+    # REMOVED: alerting_service (deprecated - use alert_* services instead)
+    # Legacy service archived in Phase 3.2
+    # Use: alert_condition_evaluator, alert_rule_manager, alert_event_manager
 
     channel_management_service = providers.Factory(
         _create_channel_management_service,

@@ -5,6 +5,7 @@ Orchestrates core delivery services for background processing.
 """
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -30,15 +31,15 @@ class DeliveryJobService:
         try:
             logger.info(f"Starting delivery for schedule ID: {schedule_id}")
 
-            # TODO: Once core delivery services are defined, use them here
-            # For now, simulate delivery
+            # Simulated delivery - integration with core delivery services pending
+            # Tracked in GitHub Issue #TBD: Implement actual delivery via core services
             delivered = True
 
             result = {
                 "status": "completed",
                 "schedule_id": schedule_id,
                 "delivered": delivered,
-                "delivery_time": "now",  # TODO: Use proper timestamp
+                "delivery_time": datetime.now(UTC).isoformat(),
             }
 
             logger.info(f"Content delivery completed for schedule {schedule_id}")

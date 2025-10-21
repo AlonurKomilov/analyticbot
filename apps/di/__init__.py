@@ -148,21 +148,29 @@ def get_container() -> ApplicationContainer:
     return configure_container()
 
 
+async def initialize_container() -> ApplicationContainer:
+    """
+    Initialize the application container.
+
+    This function ensures the container is properly configured and wired.
+    Safe to call multiple times (idempotent).
+
+    Usage:
+        await initialize_container()
+        container = get_container()
+
+    Returns:
+        The initialized ApplicationContainer
+    """
+    global _container
+    if _container is None:
+        _container = configure_container()
+    return _container
+
+
 # ============================================================================
-# BACKWARD COMPATIBILITY ALIASES
+# Public API
 # ============================================================================
-
-
-def get_bot_container() -> ApplicationContainer:
-    """Alias for backward compatibility - returns full container"""
-    return get_container()
-
-
-def get_api_container() -> ApplicationContainer:
-    """Alias for backward compatibility - returns full container"""
-    return get_container()
-
-
 def get_unified_container() -> ApplicationContainer:
     """Alias for transition from unified_di.py"""
     return get_container()
@@ -324,8 +332,7 @@ __all__ = [
     "ApplicationContainer",
     "configure_container",
     "get_container",
-    "get_bot_container",
-    "get_api_container",
+    "initialize_container",
     "get_unified_container",
     "cleanup_container",
     "get_database_pool",

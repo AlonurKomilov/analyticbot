@@ -192,12 +192,6 @@ async def _set_cached_value(cache_key: str, value: Any, ttl: int):
     logger.debug(f"Cached value for key: {cache_key}")
 
 
-# For backward compatibility
-async def clear_cache():
-    """Clear all cached values"""
-    await _global_cache.clear()
-
-
 def get_cache_stats() -> dict[str, Any]:
     """Get cache statistics"""
     return {"memory_cache_size": len(_global_cache._cache), "max_size": _global_cache._max_size}

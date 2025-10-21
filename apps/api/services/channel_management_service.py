@@ -280,12 +280,22 @@ class ChannelManagementService:
             )
 
     async def suspend_channel(self, channel_id: int) -> dict:
-        """Suspend a channel - TODO: Implement in core service"""
+        """
+        Suspend a channel
+        
+        ✅ Issue #3 Phase 4: Real implementation using core service
+        """
         try:
-            # TODO: Core service needs update_channel_status method
-            # For now, return a stub response
-            self.logger.warning(f"suspend_channel not fully implemented for channel {channel_id}")
-            return {"message": "Channel suspension not yet implemented", "channel_id": channel_id}
+            await self.core_service.update_channel_status(channel_id, is_active=False)
+            self.logger.info(f"Channel {channel_id} suspended successfully")
+            return {
+                "message": f"Channel {channel_id} suspended successfully",
+                "channel_id": channel_id,
+                "status": "suspended"
+            }
+        except ValueError as e:
+            self.logger.error(f"Validation error suspending channel {channel_id}: {e}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except Exception as e:
             self.logger.error(f"Error suspending channel {channel_id}: {e}")
             raise HTTPException(
@@ -294,12 +304,22 @@ class ChannelManagementService:
             )
 
     async def unsuspend_channel(self, channel_id: int) -> dict:
-        """Unsuspend a channel - TODO: Implement in core service"""
+        """
+        Unsuspend a channel
+        
+        ✅ Issue #3 Phase 4: Real implementation using core service
+        """
         try:
-            # TODO: Core service needs update_channel_status method
-            # For now, return a stub response
-            self.logger.warning(f"unsuspend_channel not fully implemented for channel {channel_id}")
-            return {"message": "Channel unsuspension not yet implemented", "channel_id": channel_id}
+            await self.core_service.update_channel_status(channel_id, is_active=True)
+            self.logger.info(f"Channel {channel_id} unsuspended successfully")
+            return {
+                "message": f"Channel {channel_id} unsuspended successfully",
+                "channel_id": channel_id,
+                "status": "active"
+            }
+        except ValueError as e:
+            self.logger.error(f"Validation error unsuspending channel {channel_id}: {e}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except Exception as e:
             self.logger.error(f"Error unsuspending channel {channel_id}: {e}")
             raise HTTPException(
@@ -308,18 +328,29 @@ class ChannelManagementService:
             )
 
     async def update_channel(self, channel_id: int, **kwargs) -> ChannelResponse:
-        """Update a channel - TODO: Implement in core service"""
+        """
+        Update a channel
+        
+        ✅ Issue #3 Phase 4: Real implementation using core service
+        """
         try:
-            # TODO: Core service needs update_channel method
-            # For now, fetch and return existing channel
-            self.logger.warning(f"update_channel not fully implemented for channel {channel_id}")
-            channel = await self.core_service.get_channel_by_id(channel_id)
-            if not channel:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Channel with ID {channel_id} not found"
-                )
-            return self._map_domain_to_response(channel)
+            if not kwargs:
+                raise ValueError("No fields provided for update")
+            
+            # Filter allowed fields
+            allowed_fields = {"name", "description", "username", "is_active"}
+            update_fields = {k: v for k, v in kwargs.items() if k in allowed_fields}
+            
+            if not update_fields:
+                raise ValueError(f"No valid fields to update. Allowed: {allowed_fields}")
+            
+            updated_channel = await self.core_service.update_channel(channel_id, **update_fields)
+            self.logger.info(f"Channel {channel_id} updated successfully with fields: {list(update_fields.keys())}")
+            
+            return self._map_domain_to_response(updated_channel)
+        except ValueError as e:
+            self.logger.error(f"Validation error updating channel {channel_id}: {e}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except HTTPException:
             raise
         except Exception as e:

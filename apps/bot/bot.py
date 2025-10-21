@@ -11,8 +11,6 @@ from aiogram.fsm.storage.redis import RedisStorage
 
 from apps.bot.config import settings
 from apps.bot.config import settings as app_settings
-
-# ✅ MIGRATED: Use new modular DI instead of legacy container
 from apps.di import get_container
 from apps.bot.handlers import admin_handlers, user_handlers
 from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
@@ -41,7 +39,6 @@ async def main():
     """
     Botni ishga tushiruvchi asosiy funksiya.
     """
-    # ✅ MIGRATED: Get container from new modular DI
     container = get_container()
     pool = await container.database.asyncpg_pool()
     try:

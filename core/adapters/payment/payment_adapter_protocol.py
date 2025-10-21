@@ -8,10 +8,11 @@ This is a core protocol - implementations belong in infra layer.
 
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any
 
-# Type for billing cycle - implementations can use enum from apps layer
-BillingCycleType = Literal["monthly", "yearly"]
+if TYPE_CHECKING:
+    # Import for type checking only - avoid circular imports
+    from core.domain.payment import BillingCycle
 
 
 class PaymentGatewayAdapter(ABC):
@@ -82,7 +83,7 @@ class PaymentGatewayAdapter(ABC):
         customer_id: str,
         price_id: str,
         payment_method_id: str,
-        billing_cycle: BillingCycleType | Any,  # Accept any enum that has monthly/yearly
+        billing_cycle: "BillingCycle | str",  # Accept BillingCycle enum or string literals
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """

@@ -45,3 +45,14 @@ repos:
         exclude: ^(core/services/payment/|tests/|bot/database/migrations/|docs/|scripts/)
         pass_filenames: false
         always_run: true
+
+      - id: import-linter
+        name: 🔒 Import Linter - Architecture Validation
+        entry: lint-imports
+        language: system
+        types: [python]
+        description: "Validate Clean Architecture layer boundaries (Phase 6)"
+        pass_filenames: false
+        always_run: true
+        # Note: Some transitive imports through DI containers may be flagged
+        # These are acceptable - focus on preventing NEW direct violations

@@ -18,27 +18,20 @@ from apps.api.routers.auth_router import router as auth_router
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
 
-# Legacy routers (keeping for compatibility during transition)
-# DEPRECATED ROUTERS REMOVED - cleanup
+# ✅ PHASE 1 FIX: Moved routers from apps/shared/api to apps/api/routers (circular dep fix)
+from apps.api.routers.content_protection_router import router as content_protection_router
+
 from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
+from apps.api.routers.payment_router import router as payment_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
-
-# ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
 from apps.di import cleanup_container as cleanup_db_pool
-from apps.shared.api.content_protection_router import router as content_protection_router
-from apps.shared.api.payment_router import router as payment_router
-
-# ✅ CLEAN ARCHITECTURE: Use shared DI container instead of direct infra imports
-from apps.shared.di import close_container, get_container
+from apps.di import get_container
 from config import settings
-
-# ✅ PRODUCTION READY: No more direct mock imports
-# Demo services now injected via DI container based on configuration
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +41,6 @@ async def lifespan(app: FastAPI):
     """Application lifespan events - now with proper DI container management and health checks"""
     # Startup - Initialize database and DI container
     try:
-        # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
         container = get_container()
         db_manager = await container.database_manager()
         await db_manager.initialize()
@@ -101,8 +93,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
-        await close_container()
-        await cleanup_db_pool()
+        await cleanup_db_pool()  # This calls cleanup_container internally
         logger.info("✅ Application shutdown completed")
     except Exception as e:
         logger.error(f"Application shutdown failed: {e}")
@@ -233,13 +224,9 @@ app.add_middleware(
 )
 
 # Add demo mode detection middleware
-import apps.api.di as api_di
 from apps.demo.middleware import DemoMiddleware
 
 app.add_middleware(DemoMiddleware)
-
-# Initialize API DI container
-api_container = api_di.configure_api_container()
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)  # Core system operations (performance, scheduling)
@@ -333,11 +320,5 @@ app.include_router(ai_services_router)
 # - /health, /performance, /initial-data → system_router.py
 # - /schedule → system_router.py
 # - /delivery/stats → system_router.py
-#
-# ✅ CLEAN ARCHITECTURE BENEFITS ACHIEVED:
-# - Single Responsibility Principle: Each router has one focused domain
-# - Domain Separation: Clear boundaries between business domains
-# - Maintainability: Easy to understand, modify, and test each domain
-# - Scalability: New features can be added to appropriate domains
 
 # API DI Container initialized above in main.py

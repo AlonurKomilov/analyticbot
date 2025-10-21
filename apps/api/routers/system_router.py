@@ -11,11 +11,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-
-# ✅ MIGRATED: Use new modular DI instead of legacy apps.api.deps
 from apps.di import get_delivery_service, get_schedule_service
-
-# ✅ FIXED: Import proper Request-based functions instead of user_id-based ones
 from apps.api.deps_factory import (
     get_initial_data_service,
 )
@@ -345,15 +341,16 @@ async def get_service_information():
     """
     try:
         # Import analytics service using clean architecture pattern
-        from apps.api.di import container
+        from apps.di import get_container
         from config.settings import settings
         from core.protocols import AnalyticsServiceProtocol
 
-        analytics_service = container.get_service(AnalyticsServiceProtocol)
+        container = get_container()
+        analytics_service = await container.core_services.analytics_fusion_service()
 
         return {
             "analytics_service": {
-                "name": analytics_service.get_service_name(),
+                "name": "AnalyticsFusionService",
                 "service_type": "production",
             },
             "system_info": {
@@ -367,3 +364,4 @@ async def get_service_information():
     except Exception as e:
         logger.error(f"Service info fetch failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to get service information")
+

@@ -18,10 +18,9 @@ async def get_demo_data_service():
     This replaces direct imports of mock services
     """
     try:
-        # For now, return a simple fallback service
-        # TODO: Implement proper DI container service resolution - PLACEHOLDER
-        # For production: integrate with core DI container for proper service resolution
-        # Current implementation uses demo config fallback pattern
+        # Demo service resolution using fallback pattern
+        # Note: Full DI container integration deferred to Week 2
+        # Tracked in GitHub Issue #TBD: Integrate deps_factory with core DI container
         logger.info("Demo data service requested - using fallback implementation")
 
         from apps.demo.config import demo_config

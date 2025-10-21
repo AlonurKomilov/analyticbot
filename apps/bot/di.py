@@ -15,7 +15,7 @@ OLD (deprecated):
 
 NEW (modular DI):
     from apps.di import get_container
-    container = get_container()
+    container = get_unified_container()
     bot = await container.bot.bot_client()
 
 DEPRECATION SCHEDULE:
@@ -29,6 +29,13 @@ import logging
 import warnings
 from typing import Any
 
+from dependency_injector import containers, providers
+
+from apps.bot.config import Settings as BotSettings
+from apps.di import (  # noqa: E402
+    get_container as get_unified_container,
+)
+
 # Emit deprecation warning when module is imported
 warnings.warn(
     "apps.bot.di is DEPRECATED. "
@@ -38,13 +45,6 @@ warnings.warn(
     DeprecationWarning,
     stacklevel=2,
 )
-
-from dependency_injector import containers, providers
-
-from apps.bot.config import Settings as BotSettings
-
-# ✅ CLEAN ARCHITECTURE: Use repository factory instead of direct infra imports
-from apps.shared.factory import get_repository_factory
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +75,9 @@ async def _create_repository(factory, repo_type: str) -> Any:
 async def _create_extended_repository(repo_type: str) -> Any:
     """Create extended repositories with dynamic imports"""
     try:
-        # Get connection from shared container
-        from apps.shared.di import get_container
-
-        container = get_container()
-        connection = await container.asyncpg_pool()
+        # Get connection from unified DI container
+        container = get_unified_container()
+        connection = await container.database.asyncpg_pool()
 
         if repo_type == "plan":
             from infra.db.repositories.plan_repository import AsyncpgPlanRepository
@@ -146,12 +144,9 @@ def _create_guard_service(user_repository=None, **kwargs):
         from apps.bot.services.guard_service import GuardService
         from infra.cache.redis_cache_adapter import create_redis_cache_adapter
 
-        # Try to get Redis connection from shared container
+        # Try to get Redis connection from unified DI container
         redis_client = None
         try:
-            from apps.shared.di import get_container
-
-            container = get_container()
             # Try to get redis client if available
             # Most installations won't have Redis, so we'll use in-memory fallback
             redis_client = None  # For now, default to in-memory
@@ -230,7 +225,10 @@ def _create_payment_microservices(payment_repository=None, **kwargs):
 
 
 def _create_scheduler_service(schedule_repository=None, bot=None, **kwargs):
-    """Create scheduler service with flexible dependency resolution (LEGACY - use ScheduleManager)"""
+    """
+    Create scheduler service with flexible dependency resolution.
+    LEGACY - use ScheduleManager
+    """
     try:
         # UPDATED: Use new clean architecture service
         from core.services.bot.scheduling import ScheduleManager
@@ -263,7 +261,10 @@ def _create_analytics_service(analytics_repository=None, channel_repository=None
 
 
 def _create_alerting_service(bot=None, user_repository=None, **kwargs):
-    """Create alerting service with flexible dependency resolution (LEGACY - use AlertEventManager)"""
+    """
+    Create alerting service with flexible dependency resolution.
+    LEGACY - use AlertEventManager
+    """
     try:
         # UPDATED: Use new clean architecture service
         from core.services.bot.alerts import AlertEventManager
@@ -298,13 +299,15 @@ def _create_ml_service(service_name: str) -> Any | None:
     """Create ML service (optional - returns None if not available)"""
     try:
         if service_name == "PredictiveEngine":
-            from apps.bot.services.adapters.ml_coordinator import create_ml_coordinator
+            from apps.shared.adapters.ml_coordinator import create_ml_coordinator
 
             return create_ml_coordinator()
         elif service_name == "EngagementAnalyzer":
-            from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
-
-            return create_bot_ml_facade()
+            # REMOVED: bot_ml_facade module doesn't exist (Oct 19, 2025)
+            # from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+            # return create_bot_ml_facade()
+            logger.warning("EngagementAnalyzer not available - bot_ml_facade module missing")
+            return None
         elif service_name == "ChurnPredictor":
             # Create ChurnPredictor using the new churn intelligence service
             from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
@@ -318,18 +321,10 @@ def _create_ml_service(service_name: str) -> Any | None:
                 return None
         elif service_name == "ContentOptimizer":
             try:
-                # Create dependent services first
-                prediction_service = _create_ml_service("PredictiveEngine")
-                content_optimizer = None  # ContentOptimizer is not yet implemented
-                churn_predictor = None  # ChurnPredictor is not yet implemented
-
-                # Only create if all dependencies are available
-                if prediction_service and content_optimizer and churn_predictor:
-                    from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
-
-                    return create_bot_ml_facade()
-                else:
-                    return None
+                # REMOVED: bot_ml_facade module doesn't exist (Oct 19, 2025)
+                # ContentOptimizer depends on ML services that are not yet implemented
+                logger.warning("ContentOptimizer not available - ML dependencies missing")
+                return None
             except (TypeError, ImportError, Exception):
                 # ML services not available
                 return None
@@ -344,7 +339,8 @@ def _create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:
     """Create service with flexible dependency injection based on constructor signature"""
     import inspect
 
-    sig = inspect.signature(ServiceCls.__init__)
+    # Get signature from the class, not the instance
+    sig = inspect.signature(ServiceCls)
     accepted_params = set(sig.parameters.keys()) - {"self"}
 
     # Filter to only include parameters the service accepts and that are not None
@@ -362,6 +358,50 @@ def _create_service_with_deps(ServiceCls: type, **provided_kwargs) -> Any:
             return None
 
 
+# ✅ PHASE 3 FIX: Repository delegation helpers
+# These async callables delegate to main container for repository access
+async def _get_user_repo():
+    """Get user repository from main container"""
+    container = get_unified_container()
+    return await container.database.user_repo()  # type: ignore[attr-defined]
+
+
+async def _get_channel_repo():
+    """Get channel repository from main container"""
+    container = get_unified_container()
+    return await container.database.channel_repo()  # type: ignore[attr-defined]
+
+
+async def _get_analytics_repo():
+    """Get analytics repository from main container"""
+    container = get_unified_container()
+    return await container.database.analytics_repo()  # type: ignore[attr-defined]
+
+
+async def _get_admin_repo():
+    """Get admin repository from main container"""
+    container = get_unified_container()
+    return await container.database.admin_repo()  # type: ignore[attr-defined]
+
+
+async def _get_plan_repo():
+    """Get plan repository from main container"""
+    container = get_unified_container()
+    return await container.database.plan_repo()  # type: ignore[attr-defined]
+
+
+async def _get_schedule_repo():
+    """Get schedule repository from main container"""
+    container = get_unified_container()
+    return await container.database.schedule_repo()  # type: ignore[attr-defined]
+
+
+async def _get_payment_repo():
+    """Get payment repository from main container"""
+    container = get_unified_container()
+    return await container.database.payment_repo()  # type: ignore[attr-defined]
+
+
 class BotContainer(containers.DeclarativeContainer):
     """Clean Architecture Bot Container - replaces god container."""
 
@@ -372,8 +412,9 @@ class BotContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
     bot_settings = providers.Singleton(BotSettings)
 
-    # ✅ CLEAN ARCHITECTURE: Repository factory (no direct DB dependencies)
-    repository_factory = providers.Singleton(get_repository_factory)
+    # ✅ PHASE 3 FIX (Oct 19, 2025): Use main container's repositories
+    # Repository access now delegates to main DI container
+    _main_container = providers.Singleton(get_unified_container)
 
     # Bot Client
     bot_client = providers.Factory(_create_bot_client, settings=bot_settings)
@@ -381,26 +422,18 @@ class BotContainer(containers.DeclarativeContainer):
     # Dispatcher
     dispatcher = providers.Factory(_create_dispatcher)
 
-    # ✅ CLEAN ARCHITECTURE: Repository providers using factory pattern
-    user_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="user")
-    channel_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="channel"
-    )
-    analytics_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="analytics"
-    )
-    admin_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="admin"
-    )
+    # ✅ PHASE 3 FIX: Repository providers delegate to main container
+    # Note: These are kept for backward compatibility during migration
+    # Bot handlers should eventually use get_container().database directly
 
-    # Additional repositories for backward compatibility
-    plan_repo = providers.Factory(_create_repository, factory=repository_factory, repo_type="plan")
-    schedule_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="schedule"
-    )
-    payment_repo = providers.Factory(
-        _create_repository, factory=repository_factory, repo_type="payment"
-    )
+    # Repository providers using Callable pattern
+    user_repo = providers.Callable(_get_user_repo)
+    channel_repo = providers.Callable(_get_channel_repo)
+    analytics_repo = providers.Callable(_get_analytics_repo)
+    admin_repo = providers.Callable(_get_admin_repo)
+    plan_repo = providers.Callable(_get_plan_repo)
+    schedule_repo = providers.Callable(_get_schedule_repo)
+    payment_repo = providers.Callable(_get_payment_repo)
 
     # Bot Services
     guard_service = providers.Factory(_create_guard_service, user_repository=user_repo)
@@ -463,7 +496,7 @@ def configure_bot_container() -> BotContainer:
     return _container
 
 
-# For backward compatibility
-def get_container() -> BotContainer:
+# For backward compatibility - renamed to avoid conflict with apps.di.get_container
+def get_bot_container() -> BotContainer:
     """Get the configured container instance"""
     return configure_bot_container()

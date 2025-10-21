@@ -5,7 +5,7 @@
  */
 
 export { default as EnhancedDashboardLayout } from './EnhancedDashboardLayout.jsx';
-export { default as EnhancedSection } from './EnhancedSection.jsx';
+export { default as EnhancedSection } from './EnhancedSection.tsx';
 export { default as EnhancedCard } from './EnhancedCard.jsx';
 export {
   default as LayoutUtils,

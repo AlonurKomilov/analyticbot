@@ -18,8 +18,6 @@ from apps.api.middleware.auth import get_current_user, require_channel_access
 # Schemas
 # Schemas
 from apps.api.schemas.analytics import PostListResponse
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from apps.shared.performance import performance_timer
 from core.protocols import AnalyticsFusionServiceProtocol
 

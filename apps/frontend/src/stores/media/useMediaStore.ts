@@ -1,95 +1,141 @@
 /**
- * Media Store
+ * Media Store (TypeScript)
  * Manages media upload state and operations
  * Pure domain logic for media - separated from god store
  */
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { apiClient } from '@/api/client.js';
-import { ErrorHandler } from '@/utils/errorHandler.js';
-
-export interface PendingMedia {
-  file_id: string | null;
-  file_type: string | null;
-  previewUrl: string | null;
-  uploadProgress: number;
-  fileName?: string;
-  fileSize?: number;
-}
+import { apiClient } from '@/api/client';
+import { ErrorHandler } from '@/utils/errorHandler';
+import type { MediaFile, PendingMedia, UploadProgress } from '@/types';
 
 interface MediaState {
   // State
-  pendingMedia: PendingMedia;
+  mediaFiles: MediaFile[];
+  pendingMedia: PendingMedia | null;
+  uploadProgress: UploadProgress | null;
   isUploading: boolean;
+  isLoading: boolean;
   error: string | null;
 
   // Actions
-  uploadMedia: (file: File) => Promise<any>;
-  uploadMediaDirect: (file: File, channelId?: string | number) => Promise<any>;
+  fetchMediaFiles: (channelId?: string) => Promise<void>;
+  uploadMedia: (file: File, metadata?: {
+    channelId?: string;
+    caption?: string;
+  }) => Promise<MediaFile>;
+  deleteMedia: (mediaId: string) => Promise<void>;
+  setPendingMedia: (media: PendingMedia | null) => void;
   clearPendingMedia: () => void;
-  setUploadProgress: (progress: number) => void;
+  setUploadProgress: (progress: UploadProgress) => void;
+  clearUploadProgress: () => void;
   clearError: () => void;
 }
 
 export const useMediaStore = create<MediaState>()(
   subscribeWithSelector((set, get) => ({
     // Initial state
-    pendingMedia: {
-      file_id: null,
-      file_type: null,
-      previewUrl: null,
-      uploadProgress: 0
-    },
+    mediaFiles: [],
+    pendingMedia: null as PendingMedia | null,
+    uploadProgress: null,
     isUploading: false,
+    isLoading: false,
     error: null,
 
+    // Fetch media files
+    fetchMediaFiles: async (channelId?: string) => {
+      set({ isLoading: true, error: null });
+
+      try {
+        const endpoint = channelId ? `/media?channel_id=${channelId}` : '/media';
+        const mediaFiles = await apiClient.get<MediaFile[]>(endpoint);
+
+        set({
+          mediaFiles: mediaFiles || [],
+          isLoading: false
+        });
+
+        console.log('✅ Media files loaded:', mediaFiles?.length || 0);
+      } catch (error) {
+        console.error('❌ Failed to load media files:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load media files';
+        set({
+          mediaFiles: [],
+          error: errorMessage,
+          isLoading: false
+        });
+      }
+    },
+
     // Upload media file
-    uploadMedia: async (file: File) => {
+    uploadMedia: async (file: File, metadata = {}) => {
       set({ isUploading: true, error: null });
 
       try {
         // Create preview URL
-        const previewUrl = URL.createObjectURL(file);
+        const preview = URL.createObjectURL(file);
 
         set({
           pendingMedia: {
-            file_id: null,
-            file_type: file.type,
-            previewUrl,
-            uploadProgress: 0,
-            fileName: file.name,
-            fileSize: file.size
+            file,
+            preview,
+            type: file.type.startsWith('image/') ? 'image' :
+                  file.type.startsWith('video/') ? 'video' :
+                  file.type.startsWith('audio/') ? 'audio' : 'document'
+          },
+          uploadProgress: {
+            progress: 0,
+            loaded: 0,
+            total: file.size
           }
         });
 
         console.log('📤 Uploading media:', file.name, file.type);
 
-        const response = await (apiClient.uploadFile as any)('/upload-media', file, (progress: number) => {
-          set(state => ({
-            pendingMedia: {
-              ...state.pendingMedia,
-              uploadProgress: progress
+        // Create FormData
+        const formData = new FormData();
+        formData.append('file', file);
+        if (metadata.channelId) {
+          formData.append('channel_id', metadata.channelId);
+        }
+        if (metadata.caption) {
+          formData.append('caption', metadata.caption);
+        }
+
+        const uploadedFile = await apiClient.post<MediaFile>('/media/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          onUploadProgress: (progressEvent: any) => {
+            if (progressEvent.total) {
+              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              set({
+                uploadProgress: {
+                  progress,
+                  loaded: progressEvent.loaded,
+                  total: progressEvent.total
+                }
+              });
             }
-          }));
+          }
         });
 
         set(state => ({
-          pendingMedia: {
-            ...state.pendingMedia,
-            file_id: response.file_id,
-            file_type: response.file_type,
-            uploadProgress: 100
-          },
-          isUploading: false
+          mediaFiles: [...state.mediaFiles, uploadedFile],
+          isUploading: false,
+          uploadProgress: null
         }));
 
-        console.log('✅ Media uploaded successfully:', response.file_id);
-        return response;
+        // Clear pending media after successful upload
+        get().clearPendingMedia();
+
+        console.log('✅ Media uploaded successfully:', uploadedFile.id);
+        return uploadedFile;
 
       } catch (error) {
         console.error('❌ Media upload error:', error);
-        ErrorHandler.handleError(error, {
+        ErrorHandler.handleError(error as Error, {
           component: 'MediaStore',
           action: 'uploadMedia',
           fileType: file.type,
@@ -99,7 +145,8 @@ export const useMediaStore = create<MediaState>()(
         const errorMessage = error instanceof Error ? error.message : 'Failed to upload media';
         set({
           error: errorMessage,
-          isUploading: false
+          isUploading: false,
+          uploadProgress: null
         });
 
         get().clearPendingMedia();
@@ -107,82 +154,34 @@ export const useMediaStore = create<MediaState>()(
       }
     },
 
-    // Direct media upload for TWA
-    uploadMediaDirect: async (file: File, channelId?: string | number) => {
-      set({ isUploading: true, error: null });
+    // Delete media file
+    deleteMedia: async (mediaId: string) => {
+      set({ isLoading: true, error: null });
 
       try {
-        // Create preview URL
-        const previewUrl = URL.createObjectURL(file);
-
-        set({
-          pendingMedia: {
-            file_id: null,
-            file_type: file.type,
-            previewUrl,
-            uploadProgress: 0,
-            fileName: file.name,
-            fileSize: file.size
-          }
-        });
-
-        console.log('📤 Direct media upload:', file.name, channelId);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        if (channelId) {
-          formData.append('channel_id', String(channelId));
-        }
-
-        const response = await apiClient.post('/media/upload-direct', formData as any, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (progressEvent: any) => {
-            if (progressEvent.total) {
-              const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-              set(state => ({
-                pendingMedia: {
-                  ...state.pendingMedia,
-                  uploadProgress: progress
-                }
-              }));
-            }
-          }
-        });
+        console.log('�️ Deleting media:', mediaId);
+        await apiClient.delete(`/media/${mediaId}`);
 
         set(state => ({
-          pendingMedia: {
-            ...state.pendingMedia,
-            file_id: response.file_id || response.id,
-            file_type: response.file_type || file.type,
-            uploadProgress: 100
-          },
-          isUploading: false
+          mediaFiles: state.mediaFiles.filter(file => file.id !== mediaId),
+          isLoading: false
         }));
 
-        console.log('✅ Direct media uploaded successfully');
-        return response;
-
+        console.log('✅ Media deleted successfully');
       } catch (error) {
-        console.error('❌ Direct media upload error:', error);
-        ErrorHandler.handleError(error, {
-          component: 'MediaStore',
-          action: 'uploadMediaDirect',
-          fileType: file.type,
-          fileSize: file.size,
-          channelId
-        });
-
-        const errorMessage = error instanceof Error ? error.message : 'Failed to upload media';
+        console.error('❌ Delete media error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to delete media';
         set({
           error: errorMessage,
-          isUploading: false
+          isLoading: false
         });
-
-        get().clearPendingMedia();
         throw error;
       }
+    },
+
+    // Set pending media
+    setPendingMedia: (media: PendingMedia | null) => {
+      set({ pendingMedia: media });
     },
 
     // Clear pending media
@@ -190,28 +189,23 @@ export const useMediaStore = create<MediaState>()(
       const currentMedia = get().pendingMedia;
 
       // Revoke object URL to free memory
-      if (currentMedia.previewUrl) {
-        URL.revokeObjectURL(currentMedia.previewUrl);
+      if (currentMedia?.preview) {
+        URL.revokeObjectURL(currentMedia.preview);
       }
 
       set({
-        pendingMedia: {
-          file_id: null,
-          file_type: null,
-          previewUrl: null,
-          uploadProgress: 0
-        }
+        pendingMedia: null
       });
     },
 
     // Set upload progress
-    setUploadProgress: (progress: number) => {
-      set(state => ({
-        pendingMedia: {
-          ...state.pendingMedia,
-          uploadProgress: progress
-        }
-      }));
+    setUploadProgress: (progress: UploadProgress) => {
+      set({ uploadProgress: progress });
+    },
+
+    // Clear upload progress
+    clearUploadProgress: () => {
+      set({ uploadProgress: null });
     },
 
     // Clear error

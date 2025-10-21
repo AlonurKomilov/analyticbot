@@ -67,13 +67,14 @@ describe('PostViewDynamicsChart', () => {
     expect(screen.getByText('Post View Dynamics')).toBeInTheDocument();
   });
 
-  it('shows loading state initially', () => {
+  it('shows empty state when no data', () => {
     render(
       <TestWrapper>
         <PostViewDynamicsChart />
       </TestWrapper>
     );
 
-    expect(screen.getByText('Loading analytics data...')).toBeInTheDocument();
+    // Component shows empty state when there's no data (default store state)
+    expect(screen.getByText('No post activity data for the selected time range')).toBeInTheDocument();
   });
 });

@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 from apps.bot.services.guard_service import GuardService
 
 # Metrics now via DI (Phase 3.4)
-from apps.di import get_metrics_collector_service
-from apps.shared.factory import get_repository_factory
+from apps.di import get_container, get_metrics_collector_service
 from apps.shared.protocols import ChartServiceProtocol
 from core.repositories.interfaces import ChannelRepository
 from core.services.bot.analytics import AnalyticsService
@@ -29,15 +28,19 @@ router = Router()
 
 
 async def get_channel_repository() -> ChannelRepository:
-    """Get channel repository from factory"""
-    factory = get_repository_factory()
-    return await factory.get_channel_repository()
+    """Get channel repository from DI container"""
+    container = get_container()
+    return await container.database.channel_repo()
 
 
 def get_chart_service() -> ChartServiceProtocol:
-    """Get chart service from factory"""
-    factory = get_repository_factory()
-    return factory.get_chart_service()
+    """
+    Get chart service instance from DI container.
+    
+    ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
+    """
+    container = get_container()
+    return container.bot.chart_service()
 
 
 def _bot_of(msg: types.Message) -> Bot | None:

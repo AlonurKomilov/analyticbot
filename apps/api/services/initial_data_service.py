@@ -21,14 +21,13 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
     This replaces demo/mock data with actual database queries
     """
     try:
-        # ✅ FIXED: Use proper DI container for repository instantiation
-        from apps.shared.di import get_container
+        from apps.di import get_container
 
         container = get_container()
 
         # Get repositories with proper pool injection
-        user_repo = await container.user_repo()
-        channel_repo = await container.channel_repo()
+        user_repo = await container.database.user_repo()
+        channel_repo = await container.database.channel_repo()
 
         # Get user data
         user = await user_repo.get_user_by_id(user_id)
@@ -50,7 +49,7 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
         features = await _get_user_features(user_id, plan)
 
         # Convert dicts to Pydantic models
-        from apps.shared.models.twa import User, Plan, Channel, ScheduledPost
+        from apps.shared.models.twa import Channel, Plan, ScheduledPost, User
 
         return InitialDataResponse(
             user=User(
@@ -61,7 +60,9 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
                 name=plan.get("name", "Free"),
                 max_channels=plan.get("channels_limit", 5),
                 max_posts_per_month=plan.get("posts_limit", 100),
-            ) if plan else None,
+            )
+            if plan
+            else None,
             channels=[
                 Channel(
                     id=ch["id"],
@@ -79,7 +80,8 @@ async def get_real_initial_data(user_id: int) -> InitialDataResponse:
                     media_id=post.get("media_id"),
                     media_type=post.get("media_type"),
                     buttons=post.get("buttons"),
-                ) for post in scheduled_posts
+                )
+                for post in scheduled_posts
             ],
             features=features,
         )

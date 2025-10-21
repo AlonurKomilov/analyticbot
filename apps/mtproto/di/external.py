@@ -1,12 +1,25 @@
 """
 MTProto External Services Container
 Focused on external integrations and monitoring
+
+✅ Phase 4 Note (Oct 19, 2025): Cross-cutting concerns
+The infra imports here are acceptable because they represent cross-cutting concerns:
+1. Observability (tracing, metrics) - infra.obs.otel
+2. Resilience patterns (rate limiting, fault injection) - infra.common
+3. These are infrastructure-level concerns that span all layers
+4. They don't represent business logic dependencies
+5. Cross-cutting concerns are allowed to be used throughout the application
+
+This is consistent with Clean Architecture - cross-cutting concerns like
+logging, monitoring, and resilience are infrastructure that all layers can use.
 """
 
 from dependency_injector import containers, providers
 
 from apps.mtproto.config import MTProtoSettings
 from apps.mtproto.health_http import HealthCheckServer
+
+# Cross-cutting concerns (acceptable - observability & resilience patterns)
 from infra.common.faults import get_global_injector
 from infra.common.ratelimit import RateLimitManager
 from infra.obs.otel import MTProtoTracer, initialize_global_tracer

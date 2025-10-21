@@ -99,6 +99,98 @@ class AsyncpgUserRepository(IUserRepository):
         query = "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)"
         return await self._pool.fetchval(query, user_id)
 
+    async def get_feature_usage(self, user_id: int, year: int, month: int) -> dict[str, int]:
+        """
+        Get premium feature usage for a specific month.
+
+        Args:
+            user_id: User ID
+            year: Year (e.g., 2025)
+            month: Month (1-12)
+
+        Returns:
+            Dictionary with feature usage counts (e.g., {"watermarks": 5, "custom_emojis": 12})
+        """
+        query = """
+            SELECT feature_type, usage_count
+            FROM user_premium_feature_usage
+            WHERE user_id = $1 AND usage_year = $2 AND usage_month = $3
+        """
+        rows = await self._pool.fetch(query, user_id, year, month)
+
+        # Convert to dictionary
+        usage = {}
+        for row in rows:
+            usage[row["feature_type"]] = row["usage_count"]
+
+        return usage
+
+    async def increment_feature_usage(self, user_id: int, feature_type: str, count: int = 1) -> int:
+        """
+        Increment premium feature usage counter for current month.
+
+        Args:
+            user_id: User ID
+            feature_type: Feature type (e.g., "watermarks", "custom_emojis", "theft_scans")
+            count: Number to increment by (default: 1)
+
+        Returns:
+            New usage count for this feature this month
+        """
+        from datetime import datetime
+
+        now = datetime.utcnow()
+        year = now.year
+        month = now.month
+
+        query = """
+            INSERT INTO user_premium_feature_usage (user_id, feature_type, usage_year, usage_month, usage_count)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (user_id, feature_type, usage_year, usage_month)
+            DO UPDATE SET usage_count = user_premium_feature_usage.usage_count + $5
+            RETURNING usage_count
+        """
+        new_count = await self._pool.fetchval(query, user_id, feature_type, year, month, count)
+        return new_count or 0
+
+    async def get_current_month_usage(self, user_id: int) -> dict[str, int]:
+        """
+        Get current month's premium feature usage.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            Dictionary with current month's usage counts
+        """
+        from datetime import datetime
+
+        now = datetime.utcnow()
+        return await self.get_feature_usage(user_id, now.year, now.month)
+
+    async def reset_feature_usage(self, user_id: int, feature_type: str) -> bool:
+        """
+        Reset feature usage counter (useful for testing or manual adjustments).
+
+        Args:
+            user_id: User ID
+            feature_type: Feature type to reset
+
+        Returns:
+            True if reset was successful
+        """
+        from datetime import datetime
+
+        now = datetime.utcnow()
+        query = """
+            UPDATE user_premium_feature_usage
+            SET usage_count = 0
+            WHERE user_id = $1 AND feature_type = $2
+              AND usage_year = $3 AND usage_month = $4
+        """
+        result = await self._pool.execute(query, user_id, feature_type, now.year, now.month)
+        return "UPDATE" in result
+
     async def get_user_plan_name(self, user_id: int) -> str | None:
         """Get user's plan name"""
         query = """

@@ -12,11 +12,7 @@ from pydantic import BaseModel
 
 from apps.api.middleware.auth import get_current_user_id
 from apps.shared.adapters import create_bot_ml_facade
-
-# ✅ CLEAN ARCHITECTURE: Use apps cache abstraction instead of direct infra import
 from apps.shared.cache import cache_result
-
-# ✅ CLEAN ARCHITECTURE: Use apps performance abstraction instead of direct infra import
 from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
 
 logger = logging.getLogger(__name__)
@@ -273,18 +269,64 @@ async def analyze_security(
                 recommendations=security_data["recommendations"],
             )
 
-        # For non-demo users, implement actual AI security analysis
-        # TODO: Implement real AI security analysis service - PLACEHOLDER
-        # For production: integrate with actual AI security services like:
-        # 1. Analyze content using AI models (GPT-4, Claude, etc.)
-        # 2. Check against security databases (VirusTotal, URLVoid, etc.)
-        # 3. Generate real threat assessment scores
-        # Current implementation returns demo data for non-demo users
-
-        # For now, return error indicating feature not available for non-demo users
-        raise HTTPException(
-            status_code=503,
-            detail="AI Security Analysis is currently available for demo users only. Full implementation coming soon.",
+        # ✅ Issue #3 Phase 4: Basic security analysis implementation
+        # For production users, provide basic heuristic-based analysis
+        # Full AI/ML integration is a future enhancement (requires external services)
+        
+        content = request.content if request.content else ""
+        content_lower = content.lower()
+        
+        # Basic heuristic checks
+        detected_risks = []
+        risk_score = 0
+        
+        # Check for suspicious URLs
+        suspicious_keywords = ["http://", "https://", "bit.ly", "tinyurl"]
+        if any(keyword in content_lower for keyword in suspicious_keywords):
+            detected_risks.append("External links detected - verify before clicking")
+            risk_score += 20
+        
+        # Check for financial/payment related content
+        financial_keywords = ["payment", "credit card", "bank", "password", "login"]
+        if any(keyword in content_lower for keyword in financial_keywords):
+            detected_risks.append("Financial/sensitive information detected")
+            risk_score += 15
+        
+        # Check for urgency/scam indicators
+        urgency_keywords = ["urgent", "act now", "limited time", "click here", "verify account"]
+        if any(keyword in content_lower for keyword in urgency_keywords):
+            detected_risks.append("Urgency indicators detected - potential phishing")
+            risk_score += 25
+        
+        # Calculate threat level and security score
+        if risk_score >= 40:
+            threat_level = "high"
+            security_score = max(0, 40 - risk_score)
+        elif risk_score >= 20:
+            threat_level = "medium"
+            security_score = max(0, 70 - risk_score)
+        else:
+            threat_level = "low"
+            security_score = max(0, 95 - risk_score)
+        
+        # Generate recommendations
+        recommendations = []
+        if detected_risks:
+            recommendations.append("Review content carefully before sharing")
+            recommendations.append("Verify source authenticity")
+            if "External links" in str(detected_risks):
+                recommendations.append("Check URL legitimacy before clicking")
+            if "Financial" in str(detected_risks):
+                recommendations.append("Never share sensitive information via unsecured channels")
+        else:
+            recommendations.append("Content appears safe - no obvious threats detected")
+            recommendations.append("Always practice good security hygiene")
+        
+        return SecurityAnalysisResponse(
+            threat_level=threat_level,
+            security_score=security_score,
+            detected_risks=detected_risks if detected_risks else ["No immediate threats detected"],
+            recommendations=recommendations,
         )
 
     except HTTPException:

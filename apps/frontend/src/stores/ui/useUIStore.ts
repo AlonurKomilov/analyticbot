@@ -1,51 +1,61 @@
 /**
- * UI Store
- * Manages global UI state (data source, loading states, errors)
+ * UI Store (TypeScript)
+ * Manages global UI state (data source, loading states, errors, notifications)
  * Pure domain logic for UI state - separated from god store
  */
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import type { DataSource } from '@/types';
 
-type DataSource = 'api' | 'mock';
-
-interface LoadingState {
-  isLoading: boolean;
-  error: string | null;
-  lastUpdated: number | null;
+interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'warning' | 'info';
+  message: string;
+  duration?: number;
 }
 
 interface UIState {
   // State
   dataSource: DataSource;
-  globalLoading: LoadingState;
+  isSidebarOpen: boolean;
+  isMobileMenuOpen: boolean;
+  activeModal: string | null;
+  notifications: Notification[];
+  theme: 'light' | 'dark' | 'system';
+  isGlobalLoading: boolean;
 
   // Actions
   setDataSource: (source: DataSource) => void;
-  isUsingRealAPI: () => boolean;
+  toggleSidebar: () => void;
+  setSidebarOpen: (isOpen: boolean) => void;
+  toggleMobileMenu: () => void;
+  setMobileMenuOpen: (isOpen: boolean) => void;
+  openModal: (modalId: string) => void;
+  closeModal: () => void;
+  addNotification: (notification: Omit<Notification, 'id'>) => void;
+  removeNotification: (id: string) => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setGlobalLoading: (isLoading: boolean) => void;
-  setGlobalError: (error: string | null) => void;
-  clearGlobalError: () => void;
 }
-
-const createLoadingState = (): LoadingState => ({
-  isLoading: false,
-  error: null,
-  lastUpdated: null
-});
 
 export const useUIStore = create<UIState>()(
   subscribeWithSelector((set, get) => ({
-    // Initial state - read from localStorage
-    dataSource: (localStorage.getItem('useRealAPI') === 'true' ? 'api' : 'mock') as DataSource,
-    globalLoading: createLoadingState(),
+    // Initial state
+    dataSource: (localStorage.getItem('dataSource') || 'api') as DataSource,
+    isSidebarOpen: true,
+    isMobileMenuOpen: false,
+    activeModal: null,
+    notifications: [],
+    theme: (localStorage.getItem('theme') || 'system') as 'light' | 'dark' | 'system',
+    isGlobalLoading: false,
 
-    // Set data source (API or Mock)
+    // Set data source
     setDataSource: (source: DataSource) => {
       const previousSource = get().dataSource;
 
       set({ dataSource: source });
-      localStorage.setItem('useRealAPI', source === 'api' ? 'true' : 'false');
+      localStorage.setItem('dataSource', source);
 
       console.log(`📡 Data source changed: ${previousSource} → ${source}`);
 
@@ -59,41 +69,69 @@ export const useUIStore = create<UIState>()(
       }
     },
 
-    // Check if using real API
-    isUsingRealAPI: () => {
-      return get().dataSource === 'api';
+    // Toggle sidebar
+    toggleSidebar: () => {
+      set(state => ({ isSidebarOpen: !state.isSidebarOpen }));
     },
 
-    // Set global loading state
+    // Set sidebar open state
+    setSidebarOpen: (isOpen: boolean) => {
+      set({ isSidebarOpen: isOpen });
+    },
+
+    // Toggle mobile menu
+    toggleMobileMenu: () => {
+      set(state => ({ isMobileMenuOpen: !state.isMobileMenuOpen }));
+    },
+
+    // Set mobile menu open state
+    setMobileMenuOpen: (isOpen: boolean) => {
+      set({ isMobileMenuOpen: isOpen });
+    },
+
+    // Open modal
+    openModal: (modalId: string) => {
+      set({ activeModal: modalId });
+    },
+
+    // Close modal
+    closeModal: () => {
+      set({ activeModal: null });
+    },
+
+    // Add notification
+    addNotification: (notification) => {
+      const id = `notification-${Date.now()}-${Math.random()}`;
+      const newNotification: Notification = { id, ...notification };
+
+      set(state => ({
+        notifications: [...state.notifications, newNotification]
+      }));
+
+      // Auto-remove notification after duration
+      if (notification.duration) {
+        setTimeout(() => {
+          get().removeNotification(id);
+        }, notification.duration);
+      }
+    },
+
+    // Remove notification
+    removeNotification: (id: string) => {
+      set(state => ({
+        notifications: state.notifications.filter(n => n.id !== id)
+      }));
+    },
+
+    // Set theme
+    setTheme: (theme: 'light' | 'dark' | 'system') => {
+      set({ theme });
+      localStorage.setItem('theme', theme);
+    },
+
+    // Set global loading
     setGlobalLoading: (isLoading: boolean) => {
-      set(state => ({
-        globalLoading: {
-          ...state.globalLoading,
-          isLoading,
-          lastUpdated: isLoading ? state.globalLoading.lastUpdated : Date.now()
-        }
-      }));
-    },
-
-    // Set global error
-    setGlobalError: (error: string | null) => {
-      set(state => ({
-        globalLoading: {
-          ...state.globalLoading,
-          error,
-          isLoading: false
-        }
-      }));
-    },
-
-    // Clear global error
-    clearGlobalError: () => {
-      set(state => ({
-        globalLoading: {
-          ...state.globalLoading,
-          error: null
-        }
-      }));
+      set({ isGlobalLoading: isLoading });
     }
   }))
 );

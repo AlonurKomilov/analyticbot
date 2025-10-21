@@ -18,7 +18,7 @@ from aiogram_i18n import I18nContext
 
 from apps.bot.config import settings
 from apps.bot.services.subscription_service import SubscriptionService
-from apps.shared.factory import get_repository_factory
+from apps.di import get_container
 from core.repositories.interfaces import UserRepository
 
 router = Router()
@@ -26,9 +26,9 @@ log = logging.getLogger(__name__)
 
 
 async def get_user_repository() -> UserRepository:
-    """Get user repository from factory"""
-    factory = get_repository_factory()
-    return await factory.get_user_repository()
+    """Get user repository from DI container"""
+    container = get_container()
+    return await container.database.user_repo()
 
 
 def _chat_id_of(msg: types.Message) -> int | None:

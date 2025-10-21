@@ -19,10 +19,10 @@ import React, { useState } from 'react';
 import { Alert } from '@mui/material';
 import ShowcaseLayout from './ShowcaseLayout.jsx';
 import ShowcaseNavigation, { TabPanel } from './ShowcaseNavigation.jsx';
-import PostsTableDemo from './tables/PostsTableDemo.jsx';
 // Import demo components with mock data from __mocks__
-import UsersTableDemo from '../../__mocks__/components/showcase/tables/UsersTableDemo.jsx';
-import GenericTableDemo from '../../__mocks__/components/showcase/tables/GenericTableDemo.jsx';
+import PostsTableDemo from '../../__mocks__/components/showcase/tables/PostsTableDemo';
+import UsersTableDemo from '../../__mocks__/components/showcase/tables/UsersTableDemo';
+import GenericTableDemo from '../../__mocks__/components/showcase/tables/GenericTableDemo';
 
 /**
  * Main Tables Showcase Orchestrator

@@ -107,29 +107,29 @@ apps/frontend/src/__mocks__/
 
 #### ⚠️ **Need Review - Potential Issues**
 
-4. **`services/ContentOptimizerService.tsx`**
+4. **`services/ContentOptimizerService.tsx`** ✅ **FIXED**
    ```typescript
-   // Line 32
-   import { mockContentOptimizer } from '../__mocks__/aiServices/contentOptimizer';
+   // Previously had undefined variables - now uses dynamic imports
+   // Loads mock data only in demo mode with: dataSource === 'mock'
    ```
-   - **Status:** ⚠️ Need to verify demo mode gating
-   - **Action:** Audit usage, ensure gated by `dataSource`
+   - **Status:** ✅ Fixed with dynamic imports
+   - **Action:** Complete - proper demo mode gating implemented
 
-5. **`services/SecurityMonitoringService.tsx`**
+5. **`services/SecurityMonitoringService.tsx`** ✅ **FIXED**
    ```typescript
-   // Line 42
-   import { mockSecurityMonitoring } from '../__mocks__/aiServices/securityMonitor';
+   // Previously had top-level mock imports - now uses dynamic imports
+   // Loads mock data only in demo mode with: dataSource === 'mock'
    ```
-   - **Status:** ⚠️ Need to verify demo mode gating
-   - **Action:** Audit usage, ensure gated by `dataSource`
+   - **Status:** ✅ Fixed with dynamic imports
+   - **Action:** Complete - proper demo mode gating implemented
 
-6. **`services/aiServicesAPI.js`**
+6. **`services/aiServicesAPI.js`** ✅ **FIXED**
    ```javascript
-   // Line 8
-   import { aiServicesStatsMock } from '../__mocks__/aiServices/statsService.js';
+   // Previously imported but never used aiServicesStatsMock
+   // Import removed - dead code eliminated
    ```
-   - **Status:** ⚠️ Need to verify not used in real mode
-   - **Action:** Audit usage
+   - **Status:** ✅ Fixed - unused import removed
+   - **Action:** Complete - clean code
 
 7. **`components/showcase/TablesShowcase.tsx`**
    ```typescript
@@ -404,14 +404,14 @@ All files in `__mocks__/` are for:
 
 After implementing changes:
 
-- [ ] All demo files moved to `__mocks__/`
-- [ ] No production files have top-level imports from `__mocks__/` (except tests)
-- [ ] All mock data access is gated by `dataSource === 'mock'` check
-- [ ] Dynamic imports used for mock code
-- [ ] No fallbacks from real API to mock data on errors
-- [ ] Demo guard utility implemented
-- [ ] All import paths updated
-- [ ] README.md in `__mocks__/` updated
+- [x] All demo files moved to `__mocks__/`
+- [x] No production files have top-level imports from `__mocks__/` (except tests)
+- [x] All mock data access is gated by `dataSource === 'mock'` check
+- [x] Dynamic imports used for mock code
+- [x] No fallbacks from real API to mock data on errors
+- [x] Demo guard utility implemented
+- [x] All import paths updated
+- [x] README.md in `__mocks__/` updated
 - [ ] Tests still pass
 - [ ] Demo mode still works
 - [ ] Real API mode doesn't touch mock code
@@ -458,11 +458,32 @@ Demo/Test Code (__mocks__/)
    - Updated 2 files (appStore.js, TablesShowcase.tsx)
    - Verified all imports resolve correctly
    - Commit: `b906ecd8`
-4. 🔄 **Phase 3: Audit and fix demo mode gating** (IN PROGRESS)
-   - Reviewing production code imports from `__mocks__/`
-   - Ensuring proper `dataSource === 'mock'` checks
-   - Removing unsafe fallbacks to mock data
-5. ⏳ Phase 4: Create demo guard utility
+4. ✅ **Phase 3: Audit and fix demo mode gating** (COMPLETED)
+   - ✅ Fixed ContentOptimizerService.tsx - dynamic imports
+   - ✅ Fixed SecurityMonitoringService.tsx - dynamic imports  
+   - ✅ Fixed aiServicesAPI.js - removed unused import
+   - ✅ All production code properly gated by `dataSource === 'mock'`
+   - ✅ No unsafe fallbacks to mock data
+   - Commit: TBD
+5. ✅ **Phase 4: Create demo guard utility** (COMPLETED)
+   - ✅ Created comprehensive Demo Guard utility (`__mocks__/utils/demoGuard.ts`)
+   - ✅ Implemented 11 utility functions:
+     - `isDemoMode()` - Check demo mode
+     - `useDemoMode()` - React hook
+     - `assertDemoMode()` - Throw if not demo
+     - `onlyInDemoMode()` - Conditional execution
+     - `onlyInDemoModeAsync()` - Async conditional
+     - `loadMockData()` - Dynamic import helper
+     - `getDataSource()` - Get current source
+     - `isRealApiMode()` - Check real API mode
+     - `demoModeOnly()` - Class decorator
+     - `markAsDemoData()` - Type-safe marking
+     - `isDemoData()` - Type guard
+   - ✅ Created comprehensive documentation (`__mocks__/utils/README.md`)
+   - ✅ Created migration examples (`__mocks__/utils/demoGuard.examples.tsx`)
+   - ✅ Updated main `__mocks__/README.md`
+   - ✅ Full TypeScript support with generics
+   - Commit: TBD
 6. ⏳ Phase 5: Update production services
 7. ⏳ Phase 6: Update documentation
 8. ⏳ Validate and test
@@ -471,4 +492,4 @@ Demo/Test Code (__mocks__/)
 
 **Created:** October 21, 2025
 **Last Updated:** October 21, 2025
-**Status:** � Phase 3 In Progress - Demo Mode Gating Audit
+**Status:** ✅ Phase 4 Complete - Demo Guard Utility Implemented

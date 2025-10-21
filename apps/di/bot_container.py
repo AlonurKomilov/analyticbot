@@ -673,7 +673,9 @@ def _create_chart_service(**kwargs):
         from infra.rendering.charts import MATPLOTLIB_AVAILABLE, ChartRenderer
 
         if not MATPLOTLIB_AVAILABLE:
-            logger.warning("Matplotlib not available - chart service will have limited functionality")
+            logger.warning(
+                "Matplotlib not available - chart service will have limited functionality"
+            )
             return ChartService(chart_renderer=None)
 
         # Create chart renderer from infrastructure layer

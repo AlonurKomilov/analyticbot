@@ -34,12 +34,10 @@ import {
     Notifications as NotificationsIcon
 } from '@mui/icons-material';
 
-// Import centralized mock data
-import {
-    securityStats,
-    mockSecurityAlerts,
-    securityMetrics
-} from '../__mocks__/aiServices/securityMonitor';
+import { useUIStore } from '../stores';
+
+// Mock data will be imported dynamically only in demo mode
+// Removed top-level imports to prevent loading in real API mode
 
 interface SecurityAlert {
     id: number | string;
@@ -79,14 +77,18 @@ type ScoreStatus = 'excellent' | 'good' | 'needs-attention' | 'poor';
  * Real-time security analysis and threat detection
  */
 const SecurityMonitoringService: React.FC = () => {
+    const dataSource = useUIStore((state) => state.dataSource);
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [realTimeMonitoring, setRealTimeMonitoring] = useState<boolean>(true);
     const [threats, setThreats] = useState<SecurityAlert[]>([]);
-
-    // Use centralized mock data
-    const serviceStats = securityStats;
-    const alerts: SecurityAlert[] = mockSecurityAlerts as any;
-    const metrics: SecurityMetric[] = securityMetrics as any;
+    const [serviceStats, setServiceStats] = useState<any>({
+        status: 'loading',
+        threatsBlocked: 0,
+        activeMonitors: 0,
+        securityScore: 0
+    });
+    const [alerts, setAlerts] = useState<SecurityAlert[]>([]);
+    const [metrics, setMetrics] = useState<SecurityMetric[]>([]);
 
     const activeMonitors: ActiveMonitor[] = [
         { name: 'Brute Force Detection', status: 'active', lastUpdate: '30s ago' },
@@ -96,6 +98,34 @@ const SecurityMonitoringService: React.FC = () => {
         { name: 'Anomaly Detection', status: 'active', lastUpdate: '3m ago' },
         { name: 'Data Leak Monitor', status: 'maintenance', lastUpdate: '5m ago' }
     ];
+
+    // Load service data based on data source
+    useEffect(() => {
+        const loadSecurityData = async () => {
+            try {
+                if (dataSource === 'mock') {
+                    // Dynamic import in demo mode only
+                    const {
+                        securityStats,
+                        mockSecurityAlerts,
+                        securityMetrics
+                    } = await import('../__mocks__/aiServices/securityMonitor');
+                    
+                    setServiceStats(securityStats);
+                    setAlerts(mockSecurityAlerts as any);
+                    setMetrics(securityMetrics as any);
+                } else {
+                    // Real API mode - fetch live security data
+                    // TODO: Implement real API call when security monitoring endpoint is ready
+                    console.log('Real security monitoring API not yet implemented');
+                }
+            } catch (err) {
+                console.error('Failed to load security data:', err);
+            }
+        };
+
+        loadSecurityData();
+    }, [dataSource]);
 
     useEffect(() => {
         // Simulate real-time threat updates

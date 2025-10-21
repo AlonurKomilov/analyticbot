@@ -5,7 +5,9 @@
  */
 
 import { apiClient } from '../api/client.js';
-import { aiServicesStatsMock } from '../__mocks__/aiServices/statsService.js';
+
+// Mock data removed - should only be loaded dynamically in demo mode
+// See ContentOptimizerService.tsx for proper dynamic import pattern
 
 const AI_SERVICES_BASE = '/ai-services';
 

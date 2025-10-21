@@ -55,20 +55,38 @@ interface TabPanelProps {
  * Professional AI service dashboard with real-time status and controls
  */
 const ContentOptimizerService: React.FC = () => {
+    const dataSource = useUIStore((state) => state.dataSource);
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [autoOptimization, setAutoOptimization] = useState<boolean>(true);
     const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
-    const [serviceStats, setServiceStats] = useState<ServiceStats>(contentOptimizerStats);
-    const [optimizations, setOptimizations] = useState<Optimization[]>(recentOptimizations);
+    const [serviceStats, setServiceStats] = useState<ServiceStats>({
+        totalOptimized: 0,
+        todayOptimized: 0,
+        avgImprovement: '0%',
+        status: 'loading'
+    });
+    const [optimizations, setOptimizations] = useState<Optimization[]>([]);
     const [_error, _setError] = useState<string | null>(null);
 
-    // Load real service data
+    // Load service data (real API or demo mode)
     useEffect(() => {
         loadServiceData();
-    }, []);
+    }, [dataSource]);
 
     const loadServiceData = async (): Promise<void> => {
         try {
+            // In demo mode, load mock data dynamically
+            if (dataSource === 'mock') {
+                const { contentOptimizerStats, recentOptimizations } = await import(
+                    '../__mocks__/aiServices/contentOptimizer'
+                );
+                setServiceStats(contentOptimizerStats);
+                setOptimizations(recentOptimizations);
+                _setError(null);
+                return;
+            }
+
+            // Real API mode - fetch live data
             const stats = await AIServicesAPI.getAllStats();
             setServiceStats({
                 totalOptimized: stats.content_optimizer.total_optimized,
@@ -79,7 +97,8 @@ const ContentOptimizerService: React.FC = () => {
             _setError(null);
         } catch (err) {
             console.error('Failed to load service data:', err);
-            _setError('Failed to load real-time data. Using cached results.');
+            _setError('Failed to load real-time data. Please try again.');
+            // Don't fall back to mock data in real API mode
         }
     };
 

@@ -4,6 +4,7 @@ FastAPI routes for Phase 3.3: Content Protection with Clean Architecture
 Uses Protocol-based services from Phase 3.3 refactoring
 """
 
+import logging
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +27,8 @@ from apps.bot.services.premium_emoji_service import PremiumEmojiService
 # ✅ Phase 3.3: Use DI container to get services
 from apps.di import get_content_protection_service
 from core.services.bot.content.content_protection_service import ContentProtectionService
+
+logger = logging.getLogger(__name__)
 
 # ✅ Phase 3.3: Use new domain models
 from core.services.bot.content.models import (
@@ -402,10 +405,33 @@ async def get_feature_usage(user_id: int, current_user: dict = Depends(get_curre
 
 # Helper functions (implement based on your existing systems)
 async def _get_user_tier(user_id: int) -> UserTier:
-    """Get user's current subscription tier"""
-    # TODO: Integrate with your payment system (Phase 2.2) via infrastructure layer
-    # For now, return PRO for demo purposes
-    return UserTier.PRO  # Replace with actual subscription check using AsyncpgUserRepository
+    """
+    Get user's current subscription tier.
+
+    ✅ Issue #3 Phase 2 (Oct 21, 2025): Integrated with SubscriptionAdapter
+    """
+    try:
+        from apps.di import get_container
+
+        container = get_container()
+        subscription_service = container.bot.subscription_service()
+
+        if subscription_service:
+            tier_name = await subscription_service.get_user_tier(user_id)
+            # Map tier name to UserTier enum
+            tier_map = {
+                "free": UserTier.FREE,
+                "starter": UserTier.STARTER,
+                "pro": UserTier.PRO,
+                "premium": UserTier.PRO,  # Map premium to PRO
+                "enterprise": UserTier.ENTERPRISE,
+            }
+            return tier_map.get(tier_name.lower(), UserTier.FREE)
+    except Exception as e:
+        logger.error(f"Error getting user tier: {e}", exc_info=True)
+
+    # Default to FREE on error
+    return UserTier.FREE
 
 
 async def _check_feature_usage(feature: str, user_id: int, user_tier: UserTier):
@@ -421,13 +447,56 @@ async def _check_feature_usage(feature: str, user_id: int, user_tier: UserTier):
 
 
 async def _increment_feature_usage(feature: str, user_id: int, count: int = 1):
-    """Increment feature usage counter"""
-    # TODO: Implement database update via infrastructure layer
-    # This should update the user_premium_features table using AsyncpgUserRepository
+    """
+    Increment feature usage counter.
+
+    ✅ Issue #3 Phase 2 (Oct 21, 2025): Implemented real database update
+    """
+    try:
+        # Get database pool from connection manager
+        from infra.db.connection_manager import db_manager
+
+        pool = db_manager._pool._pool if db_manager._pool else None
+        if not pool:
+            logger.warning("Database pool not available, skipping usage tracking")
+            return
+
+        # Use user repository to increment usage
+        from infra.db.repositories.user_repository import AsyncpgUserRepository
+
+        user_repo = AsyncpgUserRepository(pool)
+        new_count = await user_repo.increment_feature_usage(user_id, feature, count)
+        logger.debug(f"Incremented {feature} usage for user {user_id}: new count = {new_count}")
+
+    except Exception as e:
+        logger.error(f"Error incrementing feature usage: {e}", exc_info=True)
+        # Don't fail the request if usage tracking fails
 
 
 async def _get_current_usage(user_id: int) -> dict:
-    """Get current month's feature usage"""
-    # TODO: Implement database query via infrastructure layer
-    # Return current usage from user_premium_features table using AsyncpgUserRepository
-    return {"watermarks": 5, "custom_emojis": 12, "theft_scans": 2}  # Placeholder data
+    """
+    Get current month's feature usage.
+
+    ✅ Issue #3 Phase 2 (Oct 21, 2025): Implemented real database query
+    """
+    try:
+        # Get database pool from connection manager
+        from infra.db.connection_manager import db_manager
+
+        pool = db_manager._pool._pool if db_manager._pool else None
+        if not pool:
+            logger.warning("Database pool not available, returning empty usage")
+            return {}
+
+        # Use user repository to get usage
+        from infra.db.repositories.user_repository import AsyncpgUserRepository
+
+        user_repo = AsyncpgUserRepository(pool)
+        usage = await user_repo.get_current_month_usage(user_id)
+        logger.debug(f"Current usage for user {user_id}: {usage}")
+        return usage
+
+    except Exception as e:
+        logger.error(f"Error getting current usage: {e}", exc_info=True)
+        # Return empty dict on error (safe default - allows features to work)
+        return {}

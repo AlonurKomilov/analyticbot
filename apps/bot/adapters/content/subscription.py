@@ -7,7 +7,6 @@ Integrates with payment/subscription services from infra layer.
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from core.domain.payment import SubscriptionStatus
 
@@ -97,9 +96,7 @@ class SubscriptionAdapter:
             is_premium = await self.check_premium_status(user_id)
 
             if not is_premium:
-                logger.debug(
-                    f"User {user_id} has inactive/expired subscription, returning 'free'"
-                )
+                logger.debug(f"User {user_id} has inactive/expired subscription, returning 'free'")
                 return "free"
 
             # Map plan_id to tier
@@ -173,4 +170,3 @@ class StubSubscriptionService:
             "⚠️ StubSubscriptionService.get_user_tier called - " "migrate to SubscriptionAdapter"
         )
         return "pro"
-

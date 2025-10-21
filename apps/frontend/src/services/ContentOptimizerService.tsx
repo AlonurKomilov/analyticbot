@@ -24,10 +24,10 @@ import {
 } from '@mui/icons-material';
 
 import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
-import { useUIStore } from '../stores';
+import { useDemoMode, loadMockData } from '../__mocks__/utils/demoGuard';
 
-// Mock data will be imported dynamically only in demo mode
-// Removed top-level imports to prevent loading in real API mode
+// Using Demo Guard utility for clean demo mode management
+// Mock data loaded dynamically only in demo mode
 
 interface ServiceStats {
     totalOptimized: number;
@@ -53,9 +53,13 @@ interface TabPanelProps {
 /**
  * Content Optimizer Service Page
  * Professional AI service dashboard with real-time status and controls
+ * 
+ * ✨ Features Demo Guard utility for reactive demo/real API switching
  */
 const ContentOptimizerService: React.FC = () => {
-    const dataSource = useUIStore((state) => state.dataSource);
+    // Use Demo Guard hook - automatically re-renders when data source changes
+    const isDemo = useDemoMode();
+    
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [autoOptimization, setAutoOptimization] = useState<boolean>(true);
     const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
@@ -68,25 +72,31 @@ const ContentOptimizerService: React.FC = () => {
     const [optimizations, setOptimizations] = useState<Optimization[]>([]);
     const [_error, _setError] = useState<string | null>(null);
 
-    // Load service data (real API or demo mode)
+    // Reactively load data when demo mode changes
+    // This ensures switching between demo/real API works instantly
     useEffect(() => {
         loadServiceData();
-    }, [dataSource]);
+    }, [isDemo]); // Re-run when demo mode changes
 
     const loadServiceData = async (): Promise<void> => {
         try {
-            // In demo mode, load mock data dynamically
-            if (dataSource === 'mock') {
-                const { contentOptimizerStats, recentOptimizations } = await import(
-                    '../__mocks__/aiServices/contentOptimizer'
+            // Demo mode: Load mock data dynamically using Demo Guard utility
+            if (isDemo) {
+                const mockModule = await loadMockData(
+                    () => import('../__mocks__/aiServices/contentOptimizer')
                 );
-                setServiceStats(contentOptimizerStats);
-                setOptimizations(recentOptimizations);
-                _setError(null);
+                
+                if (mockModule) {
+                    setServiceStats(mockModule.contentOptimizerStats);
+                    setOptimizations(mockModule.recentOptimizations);
+                    _setError(null);
+                    console.log('✅ Loaded demo data for Content Optimizer');
+                }
                 return;
             }
 
-            // Real API mode - fetch live data
+            // Real API mode: Fetch live data from backend
+            console.log('🔄 Fetching real API data for Content Optimizer...');
             const stats = await AIServicesAPI.getAllStats();
             setServiceStats({
                 totalOptimized: stats.content_optimizer.total_optimized,
@@ -95,10 +105,11 @@ const ContentOptimizerService: React.FC = () => {
                 status: stats.content_optimizer.status
             });
             _setError(null);
+            console.log('✅ Loaded real API data for Content Optimizer');
         } catch (err) {
-            console.error('Failed to load service data:', err);
+            console.error('❌ Failed to load service data:', err);
             _setError('Failed to load real-time data. Please try again.');
-            // Don't fall back to mock data in real API mode
+            // No fallback to mock - show error to user
         }
     };
 

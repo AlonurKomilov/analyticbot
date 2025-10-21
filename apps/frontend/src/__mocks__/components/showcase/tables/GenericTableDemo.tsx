@@ -7,10 +7,6 @@
 
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import {
-    Analytics as AnalyticsIcon,
-    People as PeopleIcon
-} from '@mui/icons-material';
 import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
 
 interface GenericTableRow {
@@ -126,36 +122,10 @@ const GenericTableDemo: React.FC = () => {
                 defaultSortDirection="desc"
 
                 enableSearch={true}
-                enableFiltering={true}
                 searchPlaceholder="Search files and reports..."
 
                 enableColumnVisibility={true}
                 enableSelection={true}
-                enableBulkActions={true}
-
-                bulkActions={[
-                    {
-                        label: 'Download Selected',
-                        icon: <AnalyticsIcon />,
-                        onClick: (ids: (string | number)[]) => console.log('Download:', ids),
-                        color: 'primary' as const
-                    },
-                    {
-                        label: 'Delete Selected',
-                        icon: <PeopleIcon />,
-                        onClick: (ids: (string | number)[]) => console.log('Delete:', ids),
-                        color: 'error' as const
-                    }
-                ] as any}
-
-                rowActions={[
-                    {
-                        icon: <AnalyticsIcon />,
-                        label: 'View Details',
-                        onClick: (row: GenericTableRow) => console.log('View:', row.id),
-                        color: 'primary' as const
-                    }
-                ] as any}
 
                 enableExport={true}
                 exportFilename="system-files-report"

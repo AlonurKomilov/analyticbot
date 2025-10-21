@@ -154,8 +154,8 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
         label: `${channel.title} (@${channel.username})`
     }));
 
-    // Upload progress percentage
-    const uploadProgress = (pendingMedia as any).uploadProgress || 0;
+    // Upload progress percentage - safely handle null pendingMedia
+    const uploadProgress = pendingMedia ? ((pendingMedia as any).uploadProgress || 0) : 0;
 
     return (
         <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
@@ -235,7 +235,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
             </Box>
 
             {/* Upload Progress */}
-            {isUploading && (
+            {isUploading && pendingMedia && (
                 <Box sx={{ mt: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <Typography variant="body2" sx={{ flex: 1 }}>
@@ -264,7 +264,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
             )}
 
             {/* Upload Success & Stats */}
-            {(pendingMedia as any).file_id && !isUploading && (
+            {pendingMedia && (pendingMedia as any).file_id && !isUploading && (
                 <Alert
                     severity="success"
                     sx={{ mt: 2 }}
@@ -323,7 +323,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
             )}
 
             {/* Media Preview */}
-            {(pendingMedia as any).previewUrl && (
+            {pendingMedia && (pendingMedia as any).previewUrl && (
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>Preview:</Typography>
                     {(pendingMedia as any).file_type?.startsWith('image/') ||

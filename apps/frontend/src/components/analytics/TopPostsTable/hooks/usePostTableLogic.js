@@ -31,51 +31,6 @@ export const usePostTableLogic = () => {
         loadTopPosts();
     }, [loadTopPosts]);
 
-    // Generate mock posts if needed (fallback)
-    const generateMockPosts = useCallback(() => {
-        const mockPosts = [
-            {
-                id: 1,
-                title: "🚀 AnalyticBot new features: Real-time analytics and AI recommendations",
-                content: "Our bot now provides real-time analytics...",
-                type: "📊 Analytics",
-                views: 15420,
-                likes: 1542,
-                shares: 234,
-                comments: 89,
-                created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                thumbnail: null
-            },
-            {
-                id: 2,
-                title: "💡 Growing your Telegram channel: 10 effective tips",
-                content: "Best strategies for growing your channels...",
-                type: "🎯 Guide",
-                views: 12300,
-                likes: 987,
-                shares: 156,
-                comments: 67,
-                created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-                thumbnail: null
-            },
-            {
-                id: 3,
-                title: "🤖 AI-powered optimal posting time selection",
-                content: "Machine Learning algorithms for your audience...",
-                type: "🧠 AI/ML",
-                views: 9800,
-                likes: 756,
-                shares: 89,
-                comments: 45,
-                created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-                thumbnail: null
-            }
-        ];
-
-        setPosts(mockPosts);
-        setLoading(false);
-    }, []);
-
     // No auto-mock generation - data should come from backend (including demo data)
     useEffect(() => {
         if (!isLoadingTopPosts && posts.length === 0 && !error) {

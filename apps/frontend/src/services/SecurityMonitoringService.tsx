@@ -34,10 +34,10 @@ import {
     Notifications as NotificationsIcon
 } from '@mui/icons-material';
 
-import { useUIStore } from '../stores';
+import { useDemoMode, loadMockData } from '../__mocks__/utils/demoGuard';
 
-// Mock data will be imported dynamically only in demo mode
-// Removed top-level imports to prevent loading in real API mode
+// Using Demo Guard utility for clean demo mode management
+// Mock data loaded dynamically only in demo mode
 
 interface SecurityAlert {
     id: number | string;
@@ -75,9 +75,13 @@ type ScoreStatus = 'excellent' | 'good' | 'needs-attention' | 'poor';
 /**
  * Security Monitoring Service Page
  * Real-time security analysis and threat detection
+ * 
+ * ✨ Features Demo Guard utility for reactive demo/real API switching
  */
 const SecurityMonitoringService: React.FC = () => {
-    const dataSource = useUIStore((state) => state.dataSource);
+    // Use Demo Guard hook - automatically re-renders when data source changes
+    const isDemo = useDemoMode();
+    
     const [currentTab, setCurrentTab] = useState<number>(0);
     const [realTimeMonitoring, setRealTimeMonitoring] = useState<boolean>(true);
     const [threats, setThreats] = useState<SecurityAlert[]>([]);
@@ -99,33 +103,46 @@ const SecurityMonitoringService: React.FC = () => {
         { name: 'Data Leak Monitor', status: 'maintenance', lastUpdate: '5m ago' }
     ];
 
-    // Load service data based on data source
+    // Reactively load data when demo mode changes
+    // This ensures switching between demo/real API works instantly
     useEffect(() => {
         const loadSecurityData = async () => {
             try {
-                if (dataSource === 'mock') {
-                    // Dynamic import in demo mode only
-                    const {
-                        securityStats,
-                        mockSecurityAlerts,
-                        securityMetrics
-                    } = await import('../__mocks__/aiServices/securityMonitor');
+                // Demo mode: Load mock data dynamically using Demo Guard utility
+                if (isDemo) {
+                    const mockModule = await loadMockData(
+                        () => import('../__mocks__/aiServices/securityMonitor')
+                    );
                     
-                    setServiceStats(securityStats);
-                    setAlerts(mockSecurityAlerts as any);
-                    setMetrics(securityMetrics as any);
+                    if (mockModule) {
+                        setServiceStats(mockModule.securityStats);
+                        setAlerts(mockModule.mockSecurityAlerts as any);
+                        setMetrics(mockModule.securityMetrics as any);
+                        console.log('✅ Loaded demo data for Security Monitoring');
+                    }
                 } else {
-                    // Real API mode - fetch live security data
+                    // Real API mode: Fetch live security data
+                    console.log('🔄 Fetching real API data for Security Monitoring...');
                     // TODO: Implement real API call when security monitoring endpoint is ready
-                    console.log('Real security monitoring API not yet implemented');
+                    console.warn('⚠️ Real security monitoring API not yet implemented');
+                    
+                    // Set empty state for real API until endpoint is ready
+                    setServiceStats({
+                        status: 'pending',
+                        threatsBlocked: 0,
+                        activeMonitors: 6,
+                        securityScore: 0
+                    });
+                    setAlerts([]);
+                    setMetrics([]);
                 }
             } catch (err) {
-                console.error('Failed to load security data:', err);
+                console.error('❌ Failed to load security data:', err);
             }
         };
 
         loadSecurityData();
-    }, [dataSource]);
+    }, [isDemo]); // Re-run when demo mode changes
 
     useEffect(() => {
         // Simulate real-time threat updates

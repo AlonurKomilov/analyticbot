@@ -18,11 +18,11 @@ export const isDemoUser = () => {
 export const getDemoAwareDataProvider = async () => {
     if (isDemoUser()) {
         // For demo users, use enhanced mock services with fallbacks
-        const { MockDataProvider } = await import('../__mocks__/providers/MockDataProvider.js');
+        const { MockDataProvider } = await import('../providers/MockDataProvider.js');
         return new MockDataProvider();
     } else {
         // For real users, use production API
-        const { productionDataProvider } = await import('../providers/DataProvider.js');
+        const { productionDataProvider } = await import('../../providers/DataProvider.js');
         return productionDataProvider;
     }
 };

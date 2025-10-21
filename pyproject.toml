@@ -218,7 +218,8 @@ ignore_imports = [
     "apps.api.services.startup_health_check -> apps.di",
     "apps.bot.handlers.admin_handlers -> apps.di",
     "apps.bot.handlers.bot_alerts_handler -> apps.di",
-    "apps.bot.handlers.content_protection -> apps.di",
+    # ✅ FIXED Issue #4 Phase 2: content_protection now uses package structure
+    # "apps.bot.handlers.content_protection -> apps.di" (REMOVED - no longer needed)
     # Additional DI container imports
     "apps.api.routers.analytics_live_router -> apps.api.di_analytics",
     "apps.api.routers.analytics_post_dynamics_router -> apps.api.di_analytics",
@@ -258,11 +259,16 @@ ignore_imports = [
     # Telegram validation uses telethon (infra dependency - architectural debt)
     "apps.api.services.telegram_validation_service -> infra.tg.telethon_client",
     "apps.api.routers.analytics_channels_router -> apps.api.services.telegram_validation_service",
-    # Known technical debt - Issue #4 (content_protection god object refactoring)
+    # Known technical debt - Issue #4 (API content_protection still needs refactoring)
     "apps.api.routers.content_protection_router -> infra.db.connection_manager",
     "apps.api.routers.content_protection_router -> infra.db.repositories.user_repository",
-    "apps.bot.handlers.content_protection -> infra.db.connection_manager",
-    "apps.bot.handlers.content_protection -> infra.db.repositories.user_repository",
+    # ✅ FIXED Issue #4 Phase 2 (Oct 21, 2025): Bot handlers now use DI container
+    # "apps.bot.handlers.content_protection -> infra.db.connection_manager" (REMOVED)
+    # "apps.bot.handlers.content_protection -> infra.db.repositories.user_repository" (REMOVED)
+    # Content protection package uses DI container (clean architecture pattern)
+    "apps.bot.handlers.content_protection.services.tier_service -> apps.di",
+    "apps.bot.handlers.content_protection.theft_detection -> apps.di",
+    "apps.bot.handlers.content_protection.watermarking -> apps.di",
     # Exports router imports DI (composition root pattern)
     "apps.api.routers.exports_router -> apps.di",
     "apps.bot.handlers.exports -> apps.di"

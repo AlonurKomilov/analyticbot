@@ -125,9 +125,7 @@ class AsyncpgUserRepository(IUserRepository):
 
         return usage
 
-    async def increment_feature_usage(
-        self, user_id: int, feature_type: str, count: int = 1
-    ) -> int:
+    async def increment_feature_usage(self, user_id: int, feature_type: str, count: int = 1) -> int:
         """
         Increment premium feature usage counter for current month.
 

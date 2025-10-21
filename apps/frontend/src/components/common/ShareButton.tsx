@@ -26,6 +26,7 @@ import {
     AccessTime as TimeIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
+import { useDemoMode, loadMockData } from '@/__mocks__/utils/demoGuard';
 // import { analyticsService } from '@services/analyticsService.js';
 // import { useAnalyticsStore } from '@/stores'; // TODO: Use for real share functionality
 
@@ -76,6 +77,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     size = 'medium',
     ...props
 }) => {
+    const isDemo = useDemoMode();
     // const analyticsStore = useAnalyticsStore(); // TODO: Use for real share functionality
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -109,17 +111,32 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         setError(null);
 
         try {
-            // TODO: Implement proper share functionality with analytics store
-            // For now, create a mock share link
-            const mockResponse: ShareLinkResponse = {
-                share_url: `https://analyticbot.com/share/${channelId}-${dataType}-${Date.now()}`,
-                expires_at: new Date(Date.now() + (ttl === '1h' ? 3600000 : ttl === '6h' ? 21600000 : ttl === '24h' ? 86400000 : ttl === '3d' ? 259200000 : 604800000)).toISOString(),
-                share_id: `share-${Date.now()}`,
-                data_type: dataType,
-                channel_id: channelId
-            };
-            setShareLink(mockResponse);
-            setSuccess('Share link created successfully!');
+            if (isDemo) {
+                // Load mock data dynamically in demo mode
+                const mock = await loadMockData(() => import('@/__mocks__/api/shareLinks'));
+                if (mock?.createMockShareLink && mock?.mockShareLinkDelay) {
+                    // Simulate API delay for realistic demo
+                    await mock.mockShareLinkDelay(800);
+                    const mockResponse = mock.createMockShareLink(channelId, dataType, ttl);
+                    setShareLink(mockResponse);
+                    setSuccess('Share link created successfully!');
+                } else {
+                    throw new Error('Mock data not available');
+                }
+            } else {
+                // Real API implementation
+                // TODO: Implement real share link API call
+                // const response = await analyticsService.createShareLink({
+                //     channelId,
+                //     dataType,
+                //     ttl
+                // });
+                // setShareLink(response.data);
+                // setSuccess('Share link created successfully!');
+                
+                // For now, show error if real API not implemented
+                throw new Error('Real share link API not yet implemented. Please use demo mode.');
+            }
         } catch (err) {
             console.error('Share creation failed:', err);
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';

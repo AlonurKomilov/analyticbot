@@ -20,9 +20,9 @@ const TopPostsTable: React.FC = () => {
 
     // Menu state for actions
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+    const [selectedPostId, setSelectedPostId] = useState<string | number | null>(null);
 
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>, postId: number) => {
+    const handleMenuClick = (event: React.MouseEvent<HTMLElement>, postId: string | number) => {
         setAnchorEl(event.currentTarget);
         setSelectedPostId(postId);
     };

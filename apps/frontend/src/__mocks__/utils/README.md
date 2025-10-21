@@ -33,7 +33,7 @@ import { useDemoMode } from '@/__mocks__/utils/demoGuard';
 
 const MyComponent = () => {
   const isDemo = useDemoMode();
-  
+
   return (
     <Badge color={isDemo ? 'warning' : 'success'}>
       {isDemo ? 'Demo Mode' : 'Live Data'}
@@ -147,9 +147,9 @@ export const DashboardHeader = () => {
     <Box>
       <Typography variant="h4">Analytics Dashboard</Typography>
       {isDemo && (
-        <Chip 
-          label="Demo Mode" 
-          color="warning" 
+        <Chip
+          label="Demo Mode"
+          color="warning"
           icon={<DemoIcon />}
         />
       )}
@@ -187,7 +187,7 @@ import { assertDemoMode } from '@/__mocks__/utils/demoGuard';
 // This function should NEVER be called in production
 export const resetDemoData = () => {
   assertDemoMode('resetDemoData');
-  
+
   // Safe - will throw error if called in production
   localStorage.removeItem('demo_state');
   window.location.reload();
@@ -204,7 +204,7 @@ class AnalyticsService {
   loadMockData() {
     return mockAnalyticsData;
   }
-  
+
   async getData() {
     if (isDemoMode()) {
       return this.loadMockData();
@@ -273,7 +273,7 @@ describe('Demo Mode Guard', () => {
     // Set demo mode
     useUIStore.setState({ dataSource: 'mock' });
     expect(isDemoMode()).toBe(true);
-    
+
     // Set real API mode
     useUIStore.setState({ dataSource: 'api' });
     expect(isDemoMode()).toBe(false);
@@ -396,6 +396,6 @@ export const getMockData = () => {
 
 ---
 
-**Version:** 1.0.0  
-**Created:** October 21, 2025  
+**Version:** 1.0.0
+**Created:** October 21, 2025
 **Part of:** Mock/Demo Cleanup Phase 4

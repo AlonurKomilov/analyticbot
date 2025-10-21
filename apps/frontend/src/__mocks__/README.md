@@ -78,7 +78,7 @@ The **Demo Guard** utility provides centralized, type-safe demo mode checking.
 ### Quick Start
 
 ```typescript
-import { 
+import {
   isDemoMode,      // Check if in demo mode
   useDemoMode,     // React hook for demo mode
   loadMockData,    // Dynamic import helper
@@ -192,7 +192,7 @@ export const AnalyticsService = {
       const { getMockStats } = await import('@/__mocks__/analytics/stats');
       return getMockStats(channelId);
     }
-    
+
     const response = await apiClient.get(`/analytics/${channelId}/stats`);
     return response.data;
   }
@@ -302,6 +302,6 @@ export const getMockData = () => {
 
 ---
 
-**Last Updated:** October 21, 2025  
-**Version:** 2.0 (Phase 4 Complete)  
+**Last Updated:** October 21, 2025
+**Version:** 2.0 (Phase 4 Complete)
 **Status:** ✅ Demo Guard Utility Implemented

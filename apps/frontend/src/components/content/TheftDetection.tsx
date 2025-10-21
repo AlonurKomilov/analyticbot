@@ -31,6 +31,7 @@ import {
     Error as ErrorIcon,
     Info as InfoIcon
 } from '@mui/icons-material';
+import { useDemoMode, loadMockData } from '@/__mocks__/utils/demoGuard';
 
 // ============================================================================
 // Type Definitions
@@ -68,6 +69,7 @@ type SeverityColor = 'error' | 'warning' | 'info' | 'success';
 // ============================================================================
 
 const TheftDetection: React.FC = () => {
+    const isDemo = useDemoMode();
     const [contentHash, setContentHash] = useState<string>('');
     const [scanning, setScanning] = useState<boolean>(false);
     const [scanResults, setScanResults] = useState<ScanMatch[]>([]);
@@ -83,28 +85,23 @@ const TheftDetection: React.FC = () => {
     useEffect(() => {
         loadScanHistory();
         loadStats();
-    }, []);
+    }, [isDemo]);
 
     const loadScanHistory = async (): Promise<void> => {
         try {
-            // In a real implementation, this would fetch from API
-            // For now, using mock data
-            setScanHistory([
-                {
-                    id: 1,
-                    contentHash: 'abc123...',
-                    timestamp: new Date(Date.now() - 86400000),
-                    status: 'clean',
-                    matchCount: 0
-                },
-                {
-                    id: 2,
-                    contentHash: 'def456...',
-                    timestamp: new Date(Date.now() - 172800000),
-                    status: 'threat',
-                    matchCount: 3
+            if (isDemo) {
+                // Load mock data dynamically in demo mode
+                const mock = await loadMockData(() => import('@/__mocks__/api/theftDetection'));
+                if (mock?.generateMockScanHistory) {
+                    setScanHistory(mock.generateMockScanHistory());
                 }
-            ]);
+            } else {
+                // Real API implementation
+                // const response = await fetch('/api/content-protection/detection/history');
+                // const data = await response.json();
+                // setScanHistory(data);
+                setScanHistory([]); // Empty until real API implemented
+            }
         } catch (error) {
             console.error('Failed to load scan history:', error);
         }
@@ -112,12 +109,19 @@ const TheftDetection: React.FC = () => {
 
     const loadStats = async (): Promise<void> => {
         try {
-            // In a real implementation, this would fetch from API
-            setStats({
-                totalScans: 25,
-                threatsDetected: 3,
-                cleanScans: 22
-            });
+            if (isDemo) {
+                // Load mock data dynamically in demo mode
+                const mock = await loadMockData(() => import('@/__mocks__/api/theftDetection'));
+                if (mock?.generateMockStats) {
+                    setStats(mock.generateMockStats());
+                }
+            } else {
+                // Real API implementation
+                // const response = await fetch('/api/content-protection/detection/stats');
+                // const data = await response.json();
+                // setStats(data);
+                setStats({ totalScans: 0, threatsDetected: 0, cleanScans: 0 }); // Empty until real API implemented
+            }
         } catch (error) {
             console.error('Failed to load stats:', error);
         }
@@ -134,66 +138,48 @@ const TheftDetection: React.FC = () => {
         setScanResults([]);
 
         try {
-            // Mock API call - in real implementation, this would call:
-            // const response = await apiClient.post('/api/v1/content-protection/detection/scan', {
-            //     content_hash: contentHash
-            // });
+            if (isDemo) {
+                // Load mock data dynamically in demo mode
+                const mock = await loadMockData(() => import('@/__mocks__/api/theftDetection'));
+                if (mock?.generateMockScanResults && mock?.mockScanDelay) {
+                    // Simulate API delay for realistic demo
+                    await mock.mockScanDelay(2000);
+                    const mockResults = mock.generateMockScanResults(contentHash);
+                    setScanResults(mockResults);
 
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
+                    // Update scan history
+                    const newScan: ScanHistoryItem = {
+                        id: Date.now(),
+                        contentHash: contentHash,
+                        timestamp: new Date(),
+                        status: mockResults.length > 0 ? 'threat' : 'clean',
+                        matchCount: mockResults.length
+                    };
+                    setScanHistory(prev => [newScan, ...prev]);
 
-            // Mock scan results
-            const mockResults: ScanMatch[] = [
-                {
-                    id: 1,
-                    url: 'https://example-thief1.com/stolen-content',
-                    platform: 'Website',
-                    matchPercentage: 95,
-                    lastSeen: new Date(Date.now() - 86400000),
-                    status: 'confirmed'
-                },
-                {
-                    id: 2,
-                    url: 'https://social-platform.com/user/post/123',
-                    platform: 'Social Media',
-                    matchPercentage: 87,
-                    lastSeen: new Date(Date.now() - 172800000),
-                    status: 'suspected'
-                },
-                {
-                    id: 3,
-                    url: 'https://another-site.com/gallery/image',
-                    platform: 'Image Gallery',
-                    matchPercentage: 92,
-                    lastSeen: new Date(Date.now() - 259200000),
-                    status: 'confirmed'
+                    // Update stats
+                    setStats(prev => ({
+                        totalScans: prev.totalScans + 1,
+                        threatsDetected: prev.threatsDetected + (mockResults.length > 0 ? 1 : 0),
+                        cleanScans: prev.cleanScans + (mockResults.length === 0 ? 1 : 0)
+                    }));
+                } else {
+                    throw new Error('Mock data not available');
                 }
-            ];
-
-            setScanResults(mockResults);
-
-            // Update scan history
-            const newScan: ScanHistoryItem = {
-                id: Date.now(),
-                contentHash: contentHash,
-                timestamp: new Date(),
-                status: mockResults.length > 0 ? 'threat' : 'clean',
-                matchCount: mockResults.length
-            };
-
-            setScanHistory(prev => [newScan, ...prev.slice(0, 9)]); // Keep last 10
-
-            // Update stats
-            setStats(prev => ({
-                totalScans: prev.totalScans + 1,
-                threatsDetected: prev.threatsDetected + (mockResults.length > 0 ? 1 : 0),
-                cleanScans: prev.cleanScans + (mockResults.length === 0 ? 1 : 0)
-            }));
-
+            } else {
+                // Real API implementation
+                // const response = await apiClient.post('/api/v1/content-protection/detection/scan', {
+                //     content_hash: contentHash
+                // });
+                // setScanResults(response.data.matches || []);
+                
+                // For now, show error if real API not implemented
+                throw new Error('Real theft detection API not yet implemented. Please use demo mode.');
+            }
         } catch (err) {
             console.error('Scan failed:', err);
-            const errorMessage = err instanceof Error ? err.message : 'Failed to scan for content theft';
-            setError(errorMessage);
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(`Scan failed: ${errorMessage}`);
         } finally {
             setScanning(false);
         }

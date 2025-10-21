@@ -1,7 +1,7 @@
 /**
  * Demo Mode Guard Utility
  * Ensures mock code only runs in demo mode
- * 
+ *
  * This utility provides centralized functions for checking and enforcing
  * demo mode restrictions, preventing mock code from running in production.
  */
@@ -11,7 +11,7 @@ import { useUIStore } from '@/stores';
 /**
  * Check if application is in demo mode
  * @returns {boolean} True if dataSource is 'mock', false otherwise
- * 
+ *
  * @example
  * if (isDemoMode()) {
  *   // Load mock data
@@ -25,11 +25,11 @@ export const isDemoMode = (): boolean => {
 /**
  * Execute callback only if in demo mode
  * Provides a clean way to conditionally execute code based on data source
- * 
+ *
  * @param demoCallback - Function to execute in demo mode
  * @param realCallback - Optional function to execute in real API mode
  * @returns Result of the appropriate callback, or undefined
- * 
+ *
  * @example
  * const data = onlyInDemoMode(
  *   () => mockData,
@@ -49,10 +49,10 @@ export const onlyInDemoMode = <T>(
 /**
  * Throw error if mock code is accessed in real mode
  * Use this at the entry point of mock-only code to fail fast
- * 
+ *
  * @param context - Description of where the check is happening (for error message)
  * @throws {Error} If called when not in demo mode
- * 
+ *
  * @example
  * export const getMockData = () => {
  *   assertDemoMode('getMockData');
@@ -71,13 +71,13 @@ export const assertDemoMode = (context: string): void => {
 /**
  * React hook to check demo mode
  * Automatically re-renders when data source changes
- * 
+ *
  * @returns {boolean} True if in demo mode
- * 
+ *
  * @example
  * const MyComponent = () => {
  *   const isDemo = useDemoMode();
- *   
+ *
  *   return (
  *     <div>
  *       {isDemo ? <DemoFeature /> : <ProductionFeature />}
@@ -92,11 +92,11 @@ export const useDemoMode = (): boolean => {
 
 /**
  * Async version of onlyInDemoMode for async operations
- * 
+ *
  * @param demoCallback - Async function to execute in demo mode
  * @param realCallback - Optional async function to execute in real API mode
  * @returns Promise that resolves to the result of the appropriate callback
- * 
+ *
  * @example
  * const data = await onlyInDemoModeAsync(
  *   async () => {
@@ -124,13 +124,14 @@ export const onlyInDemoModeAsync = async <T>(
  */
 export const getDataSource = (): 'mock' | 'api' => {
   const { dataSource } = useUIStore.getState();
-  return dataSource;
+  // Filter to only return mock or api
+  return dataSource === 'mock' ? 'mock' : 'api';
 };
 
 /**
  * Check if using real API
  * Convenience method, opposite of isDemoMode
- * 
+ *
  * @returns {boolean} True if dataSource is 'api'
  */
 export const isRealApiMode = (): boolean => {
@@ -140,10 +141,10 @@ export const isRealApiMode = (): boolean => {
 /**
  * Load mock data dynamically only in demo mode
  * Helper function that encapsulates the dynamic import pattern
- * 
+ *
  * @param importFn - Function that returns dynamic import promise
  * @returns Promise resolving to imported module or null if not in demo mode
- * 
+ *
  * @example
  * const mockData = await loadMockData(
  *   () => import('@/__mocks__/analytics/mockData')
@@ -159,7 +160,7 @@ export const loadMockData = async <T>(
     console.warn('Attempted to load mock data in real API mode - ignoring');
     return null;
   }
-  
+
   try {
     return await importFn();
   } catch (error) {
@@ -171,7 +172,7 @@ export const loadMockData = async <T>(
 /**
  * Demo mode decorator for class methods
  * Ensures method only executes in demo mode
- * 
+ *
  * @example
  * class MyService {
  *   @demoModeOnly('MyService.loadMockData')
@@ -187,12 +188,12 @@ export function demoModeOnly(context: string) {
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
-    
+
     descriptor.value = function (...args: any[]) {
       assertDemoMode(context);
       return originalMethod.apply(this, args);
     };
-    
+
     return descriptor;
   };
 }
@@ -214,5 +215,5 @@ export const markAsDemoData = <T>(data: T): DemoModeData<T> => {
  * Check if data is marked as demo data
  */
 export const isDemoData = <T>(data: T | DemoModeData<T>): data is DemoModeData<T> => {
-  return '__demoMode' in data && (data as any).__demoMode === true;
+  return typeof data === 'object' && data !== null && '__demoMode' in data && (data as any).__demoMode === true;
 };

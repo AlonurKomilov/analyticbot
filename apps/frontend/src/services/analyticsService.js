@@ -13,7 +13,6 @@
  */
 
 import { dataSourceManager } from '../utils/dataSourceManager.js';
-import { analyticsPosts } from '../domains/analytics';
 
 // Import centralized mock config from __mocks__
 import { MOCK_CONFIG, API_CONFIG, configUtils } from '../__mocks__/config/mockConfig.js';

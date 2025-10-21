@@ -138,8 +138,9 @@ const useNavigationAnalytics = () => {
         });
 
         // Analytics tracking (could integrate with Google Analytics, etc.)
-        if (process.env.NODE_ENV === 'development') {
-            console.log('Navigation Analytics:', {
+        // Disabled verbose logging - enable only when debugging navigation
+        if (process.env.NODE_ENV === 'development' && process.env.VITE_DEBUG_NAVIGATION === 'true') {
+            console.debug('[Navigation]', {
                 path,
                 title,
                 sessionTime: Date.now() - sessionStart

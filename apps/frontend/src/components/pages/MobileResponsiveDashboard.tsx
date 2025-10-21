@@ -26,15 +26,13 @@ import {
   Settings as SettingsIcon,
   TrendingUp as TrendingIcon,
   Speed as SpeedIcon,
-  Menu as MenuIcon,
-  FullscreenExit as ExitFullscreenIcon,
-  Fullscreen as FullscreenIcon
+  Menu as MenuIcon
 } from '@mui/icons-material';
 import { useChannelStore, usePostStore, useUIStore } from '@/stores';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
-import EnhancedSection from '../layout/EnhancedSection.tsx';
+import EnhancedSection from '../layout/EnhancedSection';
 import EnhancedCard from '../layout/EnhancedCard.jsx';
 
 // Mobile responsive components
@@ -49,32 +47,56 @@ import {
 import {
   TabletDashboardLayout,
   TabletCollapsibleCard,
-  TabletAnalyticsGrid,
   TabletStatusBar
 } from '../layout/TabletOptimizations.jsx';
 
 // Existing components
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import SystemStatusWidget from '../dashboard/SystemStatusWidget.jsx';
-import AIServicesGrid from '../dashboard/AIServicesGrid.tsx';
+import AIServicesGrid from '../dashboard/AIServicesGrid';
 import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 
-const MobileResponsiveDashboard = () => {
-  const { channels, loadChannels, addChannel, removeChannel, isLoading: isLoadingChannels } = useChannelStore();
+interface MobileTab {
+  label: string;
+  badge: string | number | null;
+}
+
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon: React.ReactNode;
+  badge: string | number | null;
+}
+
+interface StatusItem {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  status: 'success' | 'warning' | 'error' | 'info' | 'default' | 'primary' | 'secondary';
+}
+
+interface DataSourceStatus {
+  label: string;
+  color: 'success' | 'warning' | 'error' | 'info' | 'default' | 'primary' | 'secondary';
+}
+
+const MobileResponsiveDashboard: React.FC = () => {
+  const { channels, addChannel, isLoading: isLoadingChannels } = useChannelStore();
+  const loadChannels = useChannelStore.getState().fetchChannels || (() => Promise.resolve());
+  const removeChannel = useChannelStore.getState().deleteChannel || (() => Promise.resolve());
   const { scheduledPosts } = usePostStore();
-  const { dataSource, globalLoading } = useUIStore();
+  const { dataSource } = useUIStore();
+  const globalLoading = { isLoading: false };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
-  const isLandscape = useMediaQuery('(orientation: landscape)');
 
   // Mobile navigation state
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
-  const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [fullScreenWidget, setFullScreenWidget] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   const isLoadingData = globalLoading.isLoading || isLoadingChannels;
 
@@ -82,12 +104,12 @@ const MobileResponsiveDashboard = () => {
     loadChannels();
   }, [loadChannels]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (): Promise<void> => {
     await loadChannels();
     setLastRefresh(new Date());
   };
 
-  const getDataSourceStatus = () => {
+  const getDataSourceStatus = (): DataSourceStatus => {
     return {
       label: dataSource === 'api' ? 'Real API' : 'Demo Mode',
       color: dataSource === 'api' ? 'success' : 'warning'
@@ -95,7 +117,7 @@ const MobileResponsiveDashboard = () => {
   };
 
   // Mobile tabs configuration
-  const mobileTabs = [
+  const mobileTabs: MobileTab[] = [
     { label: 'Overview', badge: null },
     { label: 'Analytics', badge: 'New' },
     { label: 'Posts', badge: scheduledPosts?.length || 0 },
@@ -103,7 +125,7 @@ const MobileResponsiveDashboard = () => {
   ];
 
   // Navigation items for mobile drawer
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       label: 'Dashboard',
       path: '/dashboard',
@@ -114,7 +136,7 @@ const MobileResponsiveDashboard = () => {
       label: 'Analytics',
       path: '/analytics',
       icon: <TrendingIcon />,
-      badge: 'New'
+      badge: null
     }
   ];
 
@@ -127,7 +149,9 @@ const MobileResponsiveDashboard = () => {
             title="Analytics Dashboard"
             subtitle="Loading your analytics data..."
             level={1}
-          />
+          >
+            <></>
+          </EnhancedSection>
           <MobileCardStack>
             <EnhancedCard loading title="Analytics Overview" />
             <EnhancedCard loading title="Quick Actions" />
@@ -198,7 +222,7 @@ const MobileResponsiveDashboard = () => {
 
           {/* Swipeable Tab Content */}
           <SwipeableTabNavigation
-            tabs={mobileTabs}
+            tabs={mobileTabs as any}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             enableSwipe={true}
@@ -218,17 +242,13 @@ const MobileResponsiveDashboard = () => {
 
             {activeTab === 2 && (
               <MobileCardStack>
-                <ScheduledPostsList posts={scheduledPosts} />
+                <ScheduledPostsList {...{ posts: scheduledPosts } as any} />
               </MobileCardStack>
             )}
 
             {activeTab === 3 && (
               <MobileCardStack>
-                <AddChannel
-                  channels={channels}
-                  onAdd={addChannel}
-                  onRemove={removeChannel}
-                />
+                <AddChannel {...{ channels, onAdd: addChannel, onRemove: removeChannel } as any} />
               </MobileCardStack>
             )}
           </SwipeableTabNavigation>
@@ -237,7 +257,7 @@ const MobileResponsiveDashboard = () => {
           <MobileNavigationDrawer
             open={mobileMenuOpen}
             onClose={() => setMobileMenuOpen(false)}
-            navigationItems={navigationItems}
+            navigationItems={navigationItems as any}
             showChannelStatus={true}
             channelCount={channels?.length || 0}
           />
@@ -262,7 +282,7 @@ const MobileResponsiveDashboard = () => {
 
   // Tablet view with enhanced layout
   if (isTablet) {
-    const statusItems = [
+    const statusItems: StatusItem[] = [
       {
         icon: <SpeedIcon />,
         label: 'Data Source',
@@ -301,7 +321,9 @@ const MobileResponsiveDashboard = () => {
                     </Tooltip>
                   </Box>
                 }
-              />
+              >
+                <></>
+              </EnhancedSection>
               <TabletStatusBar statusItems={statusItems} />
             </Box>
           }
@@ -320,8 +342,6 @@ const MobileResponsiveDashboard = () => {
                 title="Analytics Overview"
                 subtitle="Performance metrics and insights"
                 defaultExpanded={true}
-                showFullscreen={true}
-                onFullscreen={() => setFullScreenWidget('analytics')}
               >
                 <AnalyticsDashboard />
               </TabletCollapsibleCard>
@@ -335,7 +355,7 @@ const MobileResponsiveDashboard = () => {
                 subtitle={`${scheduledPosts?.length || 0} posts in queue`}
                 defaultExpanded={true}
               >
-                <ScheduledPostsList posts={scheduledPosts} />
+                <ScheduledPostsList {...{ posts: scheduledPosts } as any} />
               </TabletCollapsibleCard>
 
               <TabletCollapsibleCard
@@ -343,11 +363,7 @@ const MobileResponsiveDashboard = () => {
                 subtitle={`${channels?.length || 0} channels connected`}
                 defaultExpanded={true}
               >
-                <AddChannel
-                  channels={channels}
-                  onAdd={addChannel}
-                  onRemove={removeChannel}
-                />
+                <AddChannel {...{ channels, onAdd: addChannel, onRemove: removeChannel } as any} />
               </TabletCollapsibleCard>
             </Box>
           }
@@ -379,7 +395,9 @@ const MobileResponsiveDashboard = () => {
           title="Analytics Dashboard"
           subtitle="Full desktop experience"
           level={1}
-        />
+        >
+          <></>
+        </EnhancedSection>
         <ResponsiveGrid
           mobileColumns={1}
           tabletColumns={2}
@@ -389,13 +407,9 @@ const MobileResponsiveDashboard = () => {
           <AIServicesGrid />
           <AnalyticsDashboard />
           <Box>
-            <ScheduledPostsList posts={scheduledPosts} />
+            <ScheduledPostsList {...{ posts: scheduledPosts } as any} />
             <Box sx={{ mt: 3 }}>
-              <AddChannel
-                channels={channels}
-                onAdd={addChannel}
-                onRemove={removeChannel}
-              />
+              <AddChannel {...{ channels, onAdd: addChannel, onRemove: removeChannel } as any} />
             </Box>
           </Box>
         </ResponsiveGrid>

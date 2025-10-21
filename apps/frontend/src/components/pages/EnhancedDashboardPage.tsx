@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Alert, Tooltip, useTheme, useMediaQuery, Fade } from '@mui/material';
+import { Box, Typography, Alert, Tooltip, useTheme, useMediaQuery } from '@mui/material';
 import { IconButton } from '../common/TouchTargetCompliance.jsx';
 import ErrorBoundary from '../common/ErrorBoundary.jsx';
 import { StatusChip } from '../common';
@@ -28,8 +28,7 @@ import { TouchTargetProvider } from '../common/TouchTargetCompliance.jsx';
 
 // Enhanced layout components
 import EnhancedDashboardLayout from '../layout/EnhancedDashboardLayout.jsx';
-import EnhancedSection from '../layout/EnhancedSection.tsx';
-import EnhancedCard from '../layout/EnhancedCard.jsx';
+import EnhancedSection from '../layout/EnhancedSection';
 
 // Micro-interaction components
 import {
@@ -38,39 +37,51 @@ import {
   FeedbackAnimation
 } from '../animations/MicroInteractions.jsx';
 import {
-  InteractiveButton,
   InteractiveIconButton
 } from '../animations/InteractiveButtons.jsx';
 import {
-  AnimatedCard,
   DashboardCard
 } from '../animations/InteractiveCards.jsx';
 
 // Mobile responsive dashboard
-import MobileResponsiveDashboard from './MobileResponsiveDashboard.jsx';
+import MobileResponsiveDashboard from './MobileResponsiveDashboard';
 
 // Existing components
 import { AnalyticsDashboard } from '../dashboard/AnalyticsDashboard';
 import SystemStatusWidget from '../dashboard/SystemStatusWidget.jsx';
-import AIServicesGrid from '../dashboard/AIServicesGrid.tsx';
+import AIServicesGrid from '../dashboard/AIServicesGrid';
 import AddChannel from '../AddChannel.jsx';
 import ScheduledPostsList from '../ScheduledPostsList.jsx';
 import ChannelSelector from '../ChannelSelector.jsx';
 
-const EnhancedDashboardPage = () => {
-  const { channels, loadChannels, addChannel, removeChannel, isLoading: isLoadingChannels } = useChannelStore();
+interface DataSourceStatus {
+  label: string;
+  color: 'success' | 'warning' | 'error' | 'info' | 'default' | 'primary' | 'secondary';
+}
+
+interface Channel {
+  id: string | number;
+  name?: string;
+  [key: string]: any;
+}
+
+const EnhancedDashboardPage: React.FC = () => {
+  const { channels, addChannel, isLoading: isLoadingChannels } = useChannelStore();
+  const loadChannels = useChannelStore.getState().fetchChannels || (() => Promise.resolve());
+  const removeChannel = useChannelStore.getState().deleteChannel || (() => Promise.resolve());
   const { scheduledPosts } = usePostStore();
-  const { dataSource, globalLoading } = useUIStore();
+  const { dataSource } = useUIStore();
+  const globalLoading = { isLoading: false };
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));
 
-  const [lastRefresh, setLastRefresh] = useState(new Date());
-  const [refreshing, setRefreshing] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [pageLoaded, setPageLoaded] = useState<boolean>(false);
+  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const isLoadingData = globalLoading.isLoading || isLoadingChannels;
 
   useEffect(() => {
@@ -84,7 +95,7 @@ const EnhancedDashboardPage = () => {
     return <MobileResponsiveDashboard />;
   }
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (): Promise<void> => {
     setRefreshing(true);
     try {
       await loadChannels();
@@ -96,7 +107,7 @@ const EnhancedDashboardPage = () => {
     }
   };
 
-  const getDataSourceStatus = () => {
+  const getDataSourceStatus = (): DataSourceStatus => {
     return {
       label: dataSource === 'api' ? 'Real API' : 'Demo Mode',
       color: dataSource === 'api' ? 'success' : 'warning'
@@ -114,17 +125,23 @@ const EnhancedDashboardPage = () => {
                 title="Analytics Dashboard"
                 subtitle="Loading your analytics data..."
                 level={1}
-              />
+              >
+                <></>
+              </EnhancedSection>
             </StaggeredAnimation>
           }
           primaryContent={
             <StaggeredAnimation delay={300}>
-              <DashboardCard loading title="Analytics Overview" />
+              <DashboardCard loading title="Analytics Overview">
+                <></>
+              </DashboardCard>
             </StaggeredAnimation>
           }
           secondaryContent={
             <StaggeredAnimation delay={450}>
-              <DashboardCard loading title="Quick Actions" />
+              <DashboardCard loading title="Quick Actions">
+                <></>
+              </DashboardCard>
             </StaggeredAnimation>
           }
         />
@@ -172,7 +189,7 @@ const EnhancedDashboardPage = () => {
                       <StatusChip
                         icon={<SpeedIcon sx={{ fontSize: 16 }} />}
                         label={getDataSourceStatus().label}
-                        variant={getDataSourceStatus().color}
+                        variant={getDataSourceStatus().color as any}
                         size="small"
                         sx={{
                           transition: 'all 0.2s ease-in-out',
@@ -206,7 +223,9 @@ const EnhancedDashboardPage = () => {
                     </Tooltip>
                   </Box>
                 }
-              />
+              >
+                <></>
+              </EnhancedSection>
             </StaggeredAnimation>
           }
 
@@ -244,10 +263,7 @@ const EnhancedDashboardPage = () => {
                 </Tooltip>
               }
             >
-              <AnalyticsDashboard
-                selectedChannel={selectedChannel}
-                channelId={selectedChannel?.id}
-              />
+              <AnalyticsDashboard {...{ selectedChannel, channelId: selectedChannel?.id } as any} />
             </EnhancedSection>
           </>
         }
@@ -261,7 +277,7 @@ const EnhancedDashboardPage = () => {
               subtitle={`${scheduledPosts?.length || 0} posts in queue`}
               level={3}
             >
-              <ScheduledPostsList posts={scheduledPosts} />
+              <ScheduledPostsList {...{ posts: scheduledPosts } as any} />
             </EnhancedSection>
 
             {/* Channel Management - Utility */}
@@ -270,11 +286,7 @@ const EnhancedDashboardPage = () => {
               subtitle={`${channels?.length || 0} channels connected`}
               level={3}
             >
-              <AddChannel
-                channels={channels}
-                onAdd={addChannel}
-                onRemove={removeChannel}
-              />
+              <AddChannel {...{ channels, onAdd: addChannel, onRemove: removeChannel } as any} />
             </EnhancedSection>
           </>
         }

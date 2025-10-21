@@ -17,14 +17,7 @@ import {
     Warning as WarningIcon
 } from '@mui/icons-material';
 import { formatDate } from '../utils/adminUtils';
-
-interface AuditLog {
-    id: string | number;
-    admin_username: string;
-    action: string;
-    created_at: string;
-    success: boolean;
-}
+import type { AuditLog } from '@hooks/useAdminAPI';
 
 interface OverviewTabProps {
     auditLogs?: AuditLog[];
@@ -55,8 +48,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ auditLogs = [] }) => {
                                                 </Avatar>
                                             </ListItemAvatar>
                                             <ListItemText
-                                                primary={`${log.admin_username} - ${log.action}`}
-                                                secondary={formatDate(log.created_at)}
+                                                primary={`${log.admin_username || 'Unknown'} - ${log.action}`}
+                                                secondary={log.created_at ? formatDate(String(log.created_at)) : 'N/A'}
                                             />
                                         </ListItem>
                                         {index < 4 && <Divider />}

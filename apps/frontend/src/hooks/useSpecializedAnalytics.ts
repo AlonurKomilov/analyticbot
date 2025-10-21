@@ -18,7 +18,7 @@ interface DashboardAnalyticsOptions {
 /**
  * Dashboard data structure
  */
-interface DashboardData {
+export interface DashboardData {
     totalViews: number;
     totalPosts: number;
     averageEngagement: number;
@@ -85,7 +85,7 @@ export const useDashboardAnalytics = (channelId: string, options: DashboardAnaly
 /**
  * Admin data structure
  */
-interface AdminData {
+export interface AdminData {
     activeUsers: number;
     totalUsers: number;
     systemLoad: number;
@@ -150,7 +150,7 @@ interface MobileAnalyticsOptions {
 /**
  * Mobile data structure
  */
-interface MobileData {
+export interface MobileData {
     views: number;
     posts: number;
     engagement: number;
@@ -216,7 +216,7 @@ interface Alert {
 /**
  * Performance data structure
  */
-interface PerformanceData {
+export interface PerformanceData {
     score: number;
     grade: 'A' | 'B' | 'C' | 'D';
     responseTime: number;
@@ -292,7 +292,7 @@ interface RealTimeAnalyticsOptions {
 /**
  * Real-time data structure
  */
-interface RealTimeData {
+export interface RealTimeData {
     liveViews: number;
     liveEngagement: number;
     dataAge: number;

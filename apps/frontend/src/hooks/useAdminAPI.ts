@@ -17,8 +17,11 @@ export interface AdminUser {
     id: number | string;
     username: string;
     email?: string;
-    status?: string;
+    status?: string | 'active' | 'suspended';
     role?: string;
+    // Component-expected properties
+    subscription?: string;
+    joinedDate?: string;
     [key: string]: any;
 }
 
@@ -31,6 +34,12 @@ export interface AuditLog {
     userId?: number | string;
     timestamp: string;
     details?: any;
+    // Component-expected properties
+    created_at?: string | Date;
+    admin_username?: string;
+    resource_type?: string;
+    ip_address?: string;
+    success?: boolean;
     [key: string]: any;
 }
 

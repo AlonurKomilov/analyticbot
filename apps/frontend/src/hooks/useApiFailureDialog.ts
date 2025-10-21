@@ -4,7 +4,7 @@ import { useUIStore } from '../stores';
 /**
  * API Error type
  */
-interface APIError {
+export interface APIError {
     type: string;
     message: string;
     retryCount?: number;

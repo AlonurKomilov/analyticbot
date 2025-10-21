@@ -10,12 +10,12 @@ import { useTheme, useMediaQuery } from '@mui/material';
 /**
  * Device type
  */
-type DeviceType = 'mobile' | 'tablet' | 'desktop';
+export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 /**
  * Responsive configuration for getValue
  */
-interface ResponsiveConfig<T> {
+export interface ResponsiveConfig<T> {
   mobile?: T;
   tablet?: T;
   desktop?: T;
@@ -89,7 +89,7 @@ interface TouchCoordinates {
 /**
  * Swipe gesture options
  */
-interface SwipeGestureOptions {
+export interface SwipeGestureOptions {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   onSwipeUp?: () => void;

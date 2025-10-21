@@ -16,15 +16,8 @@ import type {
 } from '@/types';
 import type { DataProvider } from './useDataSource';
 
-/**
- * User type from AuthContext
- */
-interface User {
-    id: string;
-    username: string;
-    email?: string;
-    role?: string;
-}
+// Use the User type from Auth Context directly to avoid conflicts
+type AuthContextUser = ReturnType<typeof useAuth>['user'];
 
 /**
  * Hook to create an authenticated data provider instance
@@ -51,7 +44,7 @@ export interface UseAuthenticatedAnalyticsReturn {
     error: string | null;
     lastFetch: string | null;
     refetch: () => Promise<void>;
-    user: User | null;
+    user: AuthContextUser | null;
     isAuthenticated: boolean;
 }
 
@@ -121,7 +114,7 @@ export interface UseAuthenticatedTopPostsReturn {
     error: string | null;
     lastFetch: string | null;
     refetch: () => Promise<void>;
-    user: User | null;
+    user: AuthContextUser | null;
     isAuthenticated: boolean;
 }
 
@@ -193,7 +186,7 @@ export interface UseAuthenticatedEngagementMetricsReturn {
     error: string | null;
     lastFetch: string | null;
     refetch: () => Promise<void>;
-    user: User | null;
+    user: AuthContextUser | null;
     isAuthenticated: boolean;
 }
 
@@ -265,7 +258,7 @@ export interface UseAuthenticatedRecommendationsReturn {
     error: string | null;
     lastFetch: string | null;
     refetch: () => Promise<void>;
-    user: User | null;
+    user: AuthContextUser | null;
     isAuthenticated: boolean;
 }
 
@@ -409,7 +402,7 @@ export interface UseAuthenticatedDataSourceReturn {
     isLoading: boolean;
     hasError: boolean;
     isAuthenticated: boolean;
-    user: User | null;
+    user: AuthContextUser | null;
 }
 
 /**

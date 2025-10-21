@@ -236,14 +236,14 @@ class AlertRunner:
         self.running = False
 
     async def _ensure_dependencies(self):
-        """Ensure dependencies are available using factory pattern"""
+        """Ensure dependencies are available using DI container"""
         if (
             self.analytics_client is None
             or self.alert_repository is None
             or self.alert_sent_repository is None
             or self.telegram_delivery is None
         ):
-            from apps.shared.factory import get_repository_factory
+            from apps.di import get_container
 
             # Get settings
             try:
@@ -257,14 +257,14 @@ class AlertRunner:
             if self.analytics_client is None:
                 self.analytics_client = SharedAnalyticsService(analytics_api_url)
 
-            # Get repositories from factory
-            factory = get_repository_factory()
+            # Get repositories from DI container
+            container = get_container()
 
             if self.alert_repository is None:
-                self.alert_repository = await factory.get_alert_subscription_repository()
+                self.alert_repository = await container.database.alert_subscription_repo()
 
             if self.alert_sent_repository is None:
-                self.alert_sent_repository = await factory.get_alert_sent_repository()
+                self.alert_sent_repository = await container.database.alert_sent_repo()
 
             # Create Telegram delivery service
             if self.telegram_delivery is None:

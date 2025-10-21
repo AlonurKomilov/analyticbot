@@ -3,8 +3,8 @@ import { useMediaStore, useUIStore } from '@/stores';
 
 // Export all major hooks with their types
 export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
-export type {
-    UseAdminAPIReturn,
+export type { 
+    UseAdminAPIReturn, 
     UseAdminDashboardReturn,
     AdminStats,
     AdminUser,
@@ -59,7 +59,7 @@ export type {
     DataProvider
 } from './useDataSource';
 
-export {
+export { 
     useAuthenticatedDataProvider,
     useAuthenticatedAnalytics,
     useAuthenticatedTopPosts,
@@ -104,13 +104,13 @@ export interface UseLoadingStateReturn {
 /**
  * Custom hook for managing loading states with debouncing
  */
-export const useLoadingState = (operation?: string, delay: number = 300): UseLoadingStateReturn => {
+export const useLoadingState = (_operation?: string, delay: number = 300): UseLoadingStateReturn => {
     const [debouncedLoading, setDebouncedLoading] = useState<boolean>(false);
-    const { globalLoading } = useUIStore();
-    const timeoutRef = useRef<NodeJS.Timeout>();
+    const { isGlobalLoading } = useUIStore();
+    const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-    const loading = globalLoading.isLoading;
-    const error = globalLoading.error;
+    const loading = isGlobalLoading;
+    const error = null; // Error handling moved to individual stores
 
     useEffect(() => {
         if (timeoutRef.current) {
@@ -133,8 +133,8 @@ export const useLoadingState = (operation?: string, delay: number = 300): UseLoa
     }, [loading, delay]);
 
     const clearOperationError = useCallback(() => {
-        const { clearGlobalError } = useUIStore.getState();
-        clearGlobalError();
+        // Error clearing moved to individual stores
+        // This is a no-op for now
     }, []);
 
     return {
@@ -272,7 +272,7 @@ export interface UseMediaUploadReturn {
  * Custom hook for managing media uploads (Enhanced for TWA Phase 2.1)
  */
 export const useMediaUpload = (): UseMediaUploadReturn => {
-    const { uploadMedia, uploadMediaDirect, pendingMedia, clearPendingMedia } = useMediaStore();
+    const { uploadMedia, pendingMedia, clearPendingMedia } = useMediaStore();
     const [uploadProgress, setUploadProgress] = useState<number>(0);
     const loading = useMediaStore(state => state.isUploading);
     const error = useMediaStore(state => state.error);
@@ -299,13 +299,9 @@ export const useMediaUpload = (): UseMediaUploadReturn => {
 
         setUploadProgress(0);
 
-        // Use direct upload if channel specified, otherwise use regular upload
-        if (channelId) {
-            return uploadMediaDirect(file, channelId);
-        } else {
-            return uploadMedia(file);
-        }
-    }, [uploadMedia, uploadMediaDirect]);
+        // Upload with optional channel ID in metadata
+        return uploadMedia(file, channelId ? { channelId } : {});
+    }, [uploadMedia]);
 
     // Enhanced upload with progress tracking
     const handleUploadWithProgress = useCallback(async (
@@ -318,8 +314,8 @@ export const useMediaUpload = (): UseMediaUploadReturn => {
         try {
             const result = await handleUpload(file, channelId);
 
-            // Update progress state if callback provided
-            if (onProgress && pendingMedia.uploadProgress !== undefined) {
+            // Update progress state if callback provided and media exists
+            if (onProgress && pendingMedia?.uploadProgress !== undefined) {
                 setUploadProgress(pendingMedia.uploadProgress);
                 onProgress(pendingMedia.uploadProgress);
             }
@@ -329,11 +325,11 @@ export const useMediaUpload = (): UseMediaUploadReturn => {
             setUploadProgress(0);
             throw error;
         }
-    }, [handleUpload, pendingMedia.uploadProgress]);
+    }, [handleUpload, pendingMedia?.uploadProgress]);
 
     useEffect(() => {
-        setUploadProgress(pendingMedia.uploadProgress || 0);
-    }, [pendingMedia.uploadProgress]);
+        setUploadProgress(pendingMedia?.uploadProgress || 0);
+    }, [pendingMedia?.uploadProgress]);
 
     return {
         handleUpload,
@@ -343,14 +339,12 @@ export const useMediaUpload = (): UseMediaUploadReturn => {
         clearPendingMedia,
         loading,
         error,
-        // Enhanced metadata
-        uploadSpeed: pendingMedia.uploadSpeed || 0,
-        uploadType: pendingMedia.uploadType || 'storage',
-        metadata: pendingMedia.metadata || {}
+        // Enhanced metadata (with null safety)
+        uploadSpeed: 0, // Not available in current PendingMedia type
+        uploadType: 'storage', // Default type
+        metadata: {} // Not available in current PendingMedia type
     };
-};
-
-/**
+};/**
  * Telegram WebApp type
  */
 export interface TelegramWebApp {

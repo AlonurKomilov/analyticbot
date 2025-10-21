@@ -11,20 +11,10 @@ import {
     Block as BlockIcon,
     Security as SecurityIcon
 } from '@mui/icons-material';
-
-interface Stats {
-    users: {
-        total: number;
-        active: number;
-        suspended: number;
-    };
-    activity: {
-        admin_logins_24h: number;
-    };
-}
+import type { AdminStats } from '@hooks/useAdminAPI';
 
 interface AdminStatsCardsProps {
-    stats: Stats | null;
+    stats: AdminStats | null;
 }
 
 /**
@@ -34,6 +24,12 @@ interface AdminStatsCardsProps {
 const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
     if (!stats) return null;
 
+    // AdminStats has flat structure, map to expected nested structure
+    const totalUsers = (stats as any).users?.total ?? stats.totalUsers ?? 0;
+    const activeUsers = (stats as any).users?.active ?? stats.activeUsers ?? 0;
+    const suspendedUsers = (stats as any).users?.suspended ?? 0;
+    const adminLogins = (stats as any).activity?.admin_logins_24h ?? 0;
+
     return (
         <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} md={3}>
@@ -41,7 +37,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <PeopleIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
                         <Typography variant="h4" color="primary">
-                            {stats.users.total}
+                            {totalUsers}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             Total Users
@@ -55,7 +51,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <CheckCircleIcon sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
                         <Typography variant="h4" color="success.main">
-                            {stats.users.active}
+                            {activeUsers}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             Active Users
@@ -69,7 +65,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <BlockIcon sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
                         <Typography variant="h4" color="error.main">
-                            {stats.users.suspended}
+                            {suspendedUsers}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             Suspended Users
@@ -83,7 +79,7 @@ const AdminStatsCards: React.FC<AdminStatsCardsProps> = ({ stats }) => {
                     <CardContent sx={{ textAlign: 'center' }}>
                         <SecurityIcon sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
                         <Typography variant="h4" color="info.main">
-                            {stats.activity.admin_logins_24h}
+                            {adminLogins}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             Admin Logins (24h)

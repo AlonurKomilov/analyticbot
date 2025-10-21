@@ -20,19 +20,10 @@ import {
     Typography
 } from '@mui/material';
 import { Block as BlockIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    role: string;
-    status: 'active' | 'suspended';
-    subscription: string;
-    joinedDate: string;
-}
+import type { AdminUser } from '@hooks/useAdminAPI';
 
 interface UserManagementTabProps {
-    users: User[];
+    users: AdminUser[];
     onSuspendUser: (userId: number) => void;
     onReactivateUser: (userId: number) => void;
 }
@@ -70,23 +61,23 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                         {user.username}
                                     </Typography>
                                 </TableCell>
-                                <TableCell>{user.email}</TableCell>
+                                <TableCell>{user.email || 'N/A'}</TableCell>
                                 <TableCell>
                                     <Chip
-                                        label={user.role}
+                                        label={user.role || 'user'}
                                         size="small"
                                         color={user.role === 'admin' ? 'primary' : 'default'}
                                     />
                                 </TableCell>
                                 <TableCell>
                                     <Chip
-                                        label={user.status}
+                                        label={user.status || 'active'}
                                         size="small"
                                         color={user.status === 'active' ? 'success' : 'error'}
                                     />
                                 </TableCell>
-                                <TableCell>{user.subscription}</TableCell>
-                                <TableCell>{user.joinedDate}</TableCell>
+                                <TableCell>{user.subscription || 'free'}</TableCell>
+                                <TableCell>{user.joinedDate || 'N/A'}</TableCell>
                                 <TableCell align="right">
                                     {user.status === 'active' ? (
                                         <Button
@@ -94,7 +85,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                             size="small"
                                             color="error"
                                             startIcon={<BlockIcon />}
-                                            onClick={() => onSuspendUser(user.id)}
+                                            onClick={() => onSuspendUser(Number(user.id))}
                                         >
                                             Suspend
                                         </Button>
@@ -104,7 +95,7 @@ const UserManagementTab: React.FC<UserManagementTabProps> = ({
                                             size="small"
                                             color="success"
                                             startIcon={<CheckCircleIcon />}
-                                            onClick={() => onReactivateUser(user.id)}
+                                            onClick={() => onReactivateUser(Number(user.id))}
                                         >
                                             Reactivate
                                         </Button>

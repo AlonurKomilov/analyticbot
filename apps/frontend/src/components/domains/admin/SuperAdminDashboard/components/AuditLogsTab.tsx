@@ -11,16 +11,7 @@ import {
     Chip
 } from '@mui/material';
 import { formatDate } from '../utils/adminUtils';
-
-interface AuditLog {
-    id: string | number;
-    created_at: string | Date;
-    admin_username: string;
-    action: string;
-    resource_type: string;
-    ip_address: string;
-    success: boolean;
-}
+import type { AuditLog } from '@hooks/useAdminAPI';
 
 interface AuditLogsTabProps {
     auditLogs?: AuditLog[];

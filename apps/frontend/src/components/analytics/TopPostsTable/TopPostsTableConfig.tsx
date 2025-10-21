@@ -3,7 +3,7 @@
  * Consolidates table logic from TopPostsTable.jsx into reusable configuration
  */
 
-import React from 'react';
+import React, { MouseEvent } from 'react';
 import {
     Box,
     Typography,
@@ -12,8 +12,10 @@ import {
     Menu,
     MenuItem,
     Avatar,
-    Link
+    Link,
+    ChipPropsColorOverrides
 } from '@mui/material';
+import { OverridableStringUnion } from '@mui/types';
 import {
     Visibility as ViewsIcon,
     Favorite as LikeIcon,
@@ -26,8 +28,90 @@ import {
 } from '@mui/icons-material';
 import { formatNumber, formatDate, calculateEngagementRate } from '@utils/formatters';
 
-// Post display components for table cells
-export const PostDisplayCell = ({ post }) => (
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+export interface Post {
+    id: string | number;
+    text?: string;
+    media?: Array<{ url: string; type?: string }>;
+    post_url?: string;
+    views?: number;
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    date?: string;
+    created_at?: string;
+    status?: string;
+    [key: string]: any;
+}
+
+type ChipColor = OverridableStringUnion<
+    'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning',
+    ChipPropsColorOverrides
+>;
+
+interface MetricCellProps {
+    value: number;
+    icon: React.ElementType;
+    color?: string;
+    format?: boolean;
+}
+
+interface PostDisplayCellProps {
+    post: Post;
+}
+
+interface EngagementCellProps {
+    post: Post;
+}
+
+interface StatusCellProps {
+    post: Post;
+}
+
+interface DateCellProps {
+    date: string;
+}
+
+interface PostActionsCellProps {
+    post: Post;
+    onMenuClick: (event: MouseEvent<HTMLButtonElement>, postId: string | number) => void;
+    anchorEl: HTMLElement | null;
+    selectedPostId: string | number | null;
+    onMenuClose: () => void;
+}
+
+interface TableColumn {
+    id: string;
+    label: string;
+    align?: 'left' | 'center' | 'right';
+    minWidth?: number;
+    sortable?: boolean;
+    renderCell: (value: any, row: Post, index?: number) => React.ReactNode;
+}
+
+interface TableConfig {
+    title: string;
+    defaultSortField: string;
+    defaultSortDirection: 'asc' | 'desc';
+    defaultPageSize: number;
+    pageSizeOptions: number[];
+    enableSearch: boolean;
+    searchFields: string[];
+    enableExport: boolean;
+    enableBulkActions: boolean;
+    enableColumnManagement: boolean;
+    stickyHeader: boolean;
+    maxHeight: number;
+}
+
+// ============================================================================
+// Post Display Components for Table Cells
+// ============================================================================
+
+export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ post }) => (
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: 350 }}>
         {post.media && post.media.length > 0 && (
             <Avatar
@@ -66,7 +150,12 @@ export const PostDisplayCell = ({ post }) => (
     </Box>
 );
 
-export const MetricCell = ({ value, icon: Icon, color = 'text.primary', format = true }) => (
+export const MetricCell: React.FC<MetricCellProps> = ({ 
+    value, 
+    icon: Icon, 
+    color = 'text.primary', 
+    format = true 
+}) => (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
         <Icon fontSize="small" sx={{ color }} />
         <Typography variant="body2" sx={{ fontWeight: 500, color }}>
@@ -75,9 +164,9 @@ export const MetricCell = ({ value, icon: Icon, color = 'text.primary', format =
     </Box>
 );
 
-export const EngagementCell = ({ post }) => {
+export const EngagementCell: React.FC<EngagementCellProps> = ({ post }) => {
     const engagementRate = calculateEngagementRate(post);
-    const getEngagementColor = (rate) => {
+    const getEngagementColor = (rate: number): string => {
         if (rate >= 5) return 'success.main';
         if (rate >= 2) return 'warning.main';
         return 'text.secondary';
@@ -102,8 +191,8 @@ export const EngagementCell = ({ post }) => {
     );
 };
 
-export const StatusCell = ({ post }) => {
-    const getStatusColor = (status) => {
+export const StatusCell: React.FC<StatusCellProps> = ({ post }) => {
+    const getStatusColor = (status?: string): ChipColor => {
         switch (status?.toLowerCase()) {
             case 'published': return 'success';
             case 'scheduled': return 'info';
@@ -123,7 +212,7 @@ export const StatusCell = ({ post }) => {
     );
 };
 
-export const DateCell = ({ date }) => (
+export const DateCell: React.FC<DateCellProps> = ({ date }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
         <CalendarIcon fontSize="small" sx={{ color: 'text.secondary' }} />
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -132,7 +221,13 @@ export const DateCell = ({ date }) => (
     </Box>
 );
 
-export const PostActionsCell = ({ post, onMenuClick, anchorEl, selectedPostId, onMenuClose }) => (
+export const PostActionsCell: React.FC<PostActionsCellProps> = ({ 
+    post, 
+    onMenuClick, 
+    anchorEl, 
+    selectedPostId, 
+    onMenuClose 
+}) => (
     <>
         <IconButton
             size="small"
@@ -158,15 +253,23 @@ export const PostActionsCell = ({ post, onMenuClick, anchorEl, selectedPostId, o
     </>
 );
 
-// Column configuration for EnhancedDataTable
-export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onMenuClose) => [
+// ============================================================================
+// Column Configuration for EnhancedDataTable
+// ============================================================================
+
+export const createTopPostsColumns = (
+    anchorEl: HTMLElement | null,
+    selectedPostId: string | number | null,
+    onMenuClick: (event: MouseEvent<HTMLButtonElement>, postId: string | number) => void,
+    onMenuClose: () => void
+): TableColumn[] => [
     {
         id: 'rank',
         label: 'Rank',
         align: 'center',
         minWidth: 80,
         sortable: false,
-        renderCell: (value, row, index) => (
+        renderCell: (_value: any, _row: Post, index: number = 0) => (
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 #{index + 1}
             </Typography>
@@ -177,7 +280,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         label: 'Post',
         minWidth: 300,
         sortable: false,
-        renderCell: (value, row) => <PostDisplayCell post={row} />
+        renderCell: (_value: any, row: Post) => <PostDisplayCell post={row} />
     },
     {
         id: 'views',
@@ -185,7 +288,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (value, row) => (
+        renderCell: (_value: any, row: Post) => (
             <MetricCell
                 value={row.views || 0}
                 icon={ViewsIcon}
@@ -199,7 +302,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (value, row) => (
+        renderCell: (_value: any, row: Post) => (
             <MetricCell
                 value={row.likes || 0}
                 icon={LikeIcon}
@@ -213,7 +316,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (value, row) => (
+        renderCell: (_value: any, row: Post) => (
             <MetricCell
                 value={row.shares || 0}
                 icon={ShareIcon}
@@ -227,7 +330,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (value, row) => (
+        renderCell: (_value: any, row: Post) => (
             <MetricCell
                 value={row.comments || 0}
                 icon={CommentIcon}
@@ -241,7 +344,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 140,
         sortable: true,
-        renderCell: (value, row) => <EngagementCell post={row} />
+        renderCell: (_value: any, row: Post) => <EngagementCell post={row} />
     },
     {
         id: 'status',
@@ -249,7 +352,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (value, row) => <StatusCell post={row} />
+        renderCell: (_value: any, row: Post) => <StatusCell post={row} />
     },
     {
         id: 'date',
@@ -257,7 +360,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 140,
         sortable: true,
-        renderCell: (value, row) => <DateCell date={row.date || row.created_at} />
+        renderCell: (_value: any, row: Post) => <DateCell date={row.date || row.created_at || ''} />
     },
     {
         id: 'actions',
@@ -265,7 +368,7 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
         align: 'center',
         minWidth: 100,
         sortable: false,
-        renderCell: (value, row) => (
+        renderCell: (_value: any, row: Post) => (
             <PostActionsCell
                 post={row}
                 onMenuClick={onMenuClick}
@@ -277,8 +380,11 @@ export const createTopPostsColumns = (anchorEl, selectedPostId, onMenuClick, onM
     }
 ];
 
-// Table configuration object
-export const topPostsTableConfig = {
+// ============================================================================
+// Table Configuration Object
+// ============================================================================
+
+export const topPostsTableConfig: TableConfig = {
     title: 'Top Posts Analytics',
     defaultSortField: 'views',
     defaultSortDirection: 'desc',

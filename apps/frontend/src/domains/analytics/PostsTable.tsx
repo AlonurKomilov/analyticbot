@@ -12,22 +12,71 @@ import {
     DateCell,
     StatusCell
 } from './PostsDisplayComponents';
-import { PostActions, PostBulkActions } from './PostsActions';
+import { PostActions } from './PostsActions';
 import { generateMockPosts } from './PostsUtils';
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
+
+export interface Post {
+    id: string | number;
+    text?: string;
+    media?: Array<{ url: string; type?: string }>;
+    post_url?: string;
+    views?: number;
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    date?: string;
+    created_at?: string;
+    status?: string;
+    engagement_rate?: number;
+    performance_score?: number;
+    [key: string]: any;
+}
+
+type RowAction = 'view' | 'analytics' | 'edit' | 'share' | 'download' | 'delete';
+
+interface TableColumn {
+    id: string;
+    header: string;
+    accessor: (row: Post) => any;
+    width?: number;
+    align?: 'left' | 'center' | 'right';
+    disableSort?: boolean;
+    Cell: React.FC<{ value: any }>;
+}
+
+interface TableConfig {
+    enableSelection: boolean;
+    enableSorting: boolean;
+    enableFiltering: boolean;
+    enableExport: boolean;
+    enableColumnManagement: boolean;
+    enableDensityToggle: boolean;
+    enableRefresh: boolean;
+    defaultPageSize: number;
+    pageSizeOptions: number[];
+}
+
+// ============================================================================
+// Main Posts Table Component
+// ============================================================================
 
 /**
  * Main Posts Table Component
  * Modular table implementation for top posts analytics
  */
-const PostsTable = () => {
-    const [posts, setPosts] = useState([]);
-    const [error, setError] = useState(null);
+const PostsTable: React.FC = () => {
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [error, setError] = useState<string | null>(null);
     const { dataSource } = useUIStore();
     const { channels } = useChannelStore();
     const { fetchTopPosts, topPosts, isLoadingTopPosts } = useAnalyticsStore();
 
     // Load posts data
-    const loadTopPosts = useCallback(async () => {
+    const loadTopPosts = useCallback(async (): Promise<void> => {
         try {
             setError(null);
 
@@ -47,7 +96,8 @@ const PostsTable = () => {
             }
         } catch (err) {
             console.error('Error loading posts:', err);
-            setError(err.message || 'Failed to load posts data');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to load posts data';
+            setError(errorMessage);
             // In real API mode, show empty on error, NOT mock data
             if (dataSource !== 'mock') {
                 setPosts([]);
@@ -62,13 +112,15 @@ const PostsTable = () => {
         loadTopPosts();
 
         // Listen for data source changes
-        const handleDataSourceChange = () => loadTopPosts();
+        const handleDataSourceChange = (): void => {
+            loadTopPosts();
+        };
         window.addEventListener('dataSourceChanged', handleDataSourceChange);
         return () => window.removeEventListener('dataSourceChanged', handleDataSourceChange);
     }, [loadTopPosts]);
 
     // Action handlers
-    const handleRowAction = useCallback((action, post) => {
+    const handleRowAction = useCallback((action: RowAction, post: Post): void => {
         console.log(`Action ${action} on post:`, post);
 
         switch (action) {
@@ -95,105 +147,87 @@ const PostsTable = () => {
         }
     }, []);
 
-    const handleBulkAction = useCallback((action, selectedPosts) => {
-        console.log(`Bulk action ${action} on posts:`, selectedPosts);
-
-        switch (action) {
-            case 'download':
-                // Download bulk reports
-                break;
-            case 'analytics':
-                // Show bulk analytics
-                break;
-            case 'delete':
-                // Bulk delete with confirmation
-                break;
-            default:
-                console.log('Unknown bulk action:', action);
-        }
-    }, []);
-
     // Column definitions
-    const columns = useMemo(() => [
+    const columns = useMemo<TableColumn[]>(() => [
         {
             id: 'post',
             header: 'Post',
-            accessor: (row) => row,
+            accessor: (row: Post) => row,
             width: 300,
-            Cell: ({ value }) => <PostDisplayCell row={value} />
+            Cell: ({ value }: { value: Post }) => <PostDisplayCell row={value as any} />
         },
         {
             id: 'views',
             header: 'Views',
-            accessor: (row) => row.views || 0,
+            accessor: (row: Post) => row.views || 0,
             align: 'center',
             width: 120,
-            Cell: ({ value }) => <ViewsCell value={value} />
+            Cell: ({ value }: { value: number }) => <ViewsCell value={value} />
         },
         {
             id: 'likes',
             header: 'Likes',
-            accessor: (row) => row.likes || 0,
+            accessor: (row: Post) => row.likes || 0,
             align: 'center',
             width: 100,
-            Cell: ({ value }) => <LikesCell value={value} />
+            Cell: ({ value }: { value: number }) => <LikesCell value={value} />
         },
         {
             id: 'shares',
             header: 'Shares',
-            accessor: (row) => row.shares || 0,
+            accessor: (row: Post) => row.shares || 0,
             align: 'center',
             width: 100,
-            Cell: ({ value }) => <SharesCell value={value} />
+            Cell: ({ value }: { value: number }) => <SharesCell value={value} />
         },
         {
             id: 'comments',
             header: 'Comments',
-            accessor: (row) => row.comments || 0,
+            accessor: (row: Post) => row.comments || 0,
             align: 'center',
             width: 120,
-            Cell: ({ value }) => <CommentsCell value={value} />
+            Cell: ({ value }: { value: number }) => <CommentsCell value={value} />
         },
         {
             id: 'engagement',
             header: 'Engagement',
-            accessor: (row) => row,
+            accessor: (row: Post) => row,
             align: 'center',
             width: 140,
-            Cell: ({ value }) => <EngagementCell row={value} />
+            Cell: ({ value }: { value: Post }) => <EngagementCell row={value as any} />
         },
         {
             id: 'performance',
             header: 'Performance',
-            accessor: (row) => row,
+            accessor: (row: Post) => row,
             align: 'center',
             width: 130,
-            Cell: ({ value }) => <PerformanceCell row={value} />
+            Cell: ({ value }: { value: Post }) => <PerformanceCell row={value as any} />
         },
         {
             id: 'date',
             header: 'Published',
-            accessor: (row) => row.date,
+            accessor: (row: Post) => row.date,
             align: 'center',
             width: 140,
-            Cell: ({ value }) => <DateCell value={value} />
+            Cell: ({ value }: { value: string }) => <DateCell value={value} />
         },
         {
             id: 'status',
             header: 'Status',
-            accessor: (row) => row,
+            accessor: (row: Post) => row,
             align: 'center',
             width: 120,
-            Cell: ({ value }) => <StatusCell row={value} />
+            Cell: ({ value }: { value: Post }) => <StatusCell row={value as any} />
         },
         {
             id: 'actions',
             header: 'Actions',
-            accessor: (row) => row,
+            accessor: (row: Post) => row,
             align: 'center',
             width: 80,
             disableSort: true,
-            Cell: ({ value }) => (
+            Cell: ({ value }: { value: Post }) => (
                 <PostActions
                     row={value}
                     onAction={handleRowAction}
@@ -203,7 +237,7 @@ const PostsTable = () => {
     ], [handleRowAction]);
 
     // Table configuration
-    const tableConfig = {
+    const tableConfig: TableConfig = {
         enableSelection: true,
         enableSorting: true,
         enableFiltering: true,
@@ -218,16 +252,10 @@ const PostsTable = () => {
     return (
         <EnhancedDataTable
             data={posts}
-            columns={columns}
+            columns={columns as any}
             loading={isLoadingTopPosts}
             error={error}
             onRefresh={loadTopPosts}
-            bulkActions={(selectedRows) => (
-                <PostBulkActions
-                    selectedRows={selectedRows}
-                    onBulkAction={handleBulkAction}
-                />
-            )}
             {...tableConfig}
         />
     );

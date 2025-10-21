@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import BestTimeRecommender from '../components/analytics/BestTimeRecommender/BestTimeRecommender';
 import React from 'react';
+import '@testing-library/jest-dom';
 
 const theme = createTheme();
 

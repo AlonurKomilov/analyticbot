@@ -1,21 +1,25 @@
 /**
  * DashboardPage Component
  *
- * Main dashboard orchestrator with enhanced features and legacy fallback.
- * Integrates multiple stores and displays comprehensive analytics.
+ * Main dashboard orchestrator with comprehensive analytics.
+ * Uses full-featured AnalyticsDashboard with tab navigation.
+ *
+ * Updated: October 2025
+ * - Switched from minimal dashboard to comprehensive AnalyticsDashboard
+ * - Provides better analytics overview with KPIs, charts, and insights
+ * - Enhanced dashboard available via feature flag if needed
  */
 
 import React from 'react';
-import { Box, Container } from '@mui/material';
 import { TouchTargetProvider } from '../common/TouchTargetCompliance';
+import AnalyticsDashboard from '../dashboard/AnalyticsDashboard/AnalyticsDashboard';
 import EnhancedDashboardPage from './EnhancedDashboardPage';
-import BestTimeRecommender from '../analytics/BestTimeRecommender/BestTimeRecommender';
-import SmartAlertsPanel from '../analytics/AdvancedAnalyticsDashboard/SmartAlertsPanel';
 
 const DashboardPage: React.FC = () => {
+    // Feature flag: Set to true to enable premium enhanced dashboard with animations
     const showEnhancedDashboard = false;
 
-    // Use enhanced dashboard if enabled
+    // Enhanced dashboard with micro-interactions and advanced features
     if (showEnhancedDashboard) {
         return (
             <TouchTargetProvider>
@@ -24,21 +28,11 @@ const DashboardPage: React.FC = () => {
         );
     }
 
-    // Legacy dashboard layout
+    // Standard comprehensive analytics dashboard (recommended for most users)
     return (
-        <Container maxWidth="xl">
-            <Box sx={{ py: 3 }}>
-                {/* Best Time Recommender */}
-                <Box sx={{ mt: 3 }}>
-                    <BestTimeRecommender />
-                </Box>
-
-                {/* Smart Alerts Panel */}
-                <Box sx={{ mt: 3 }}>
-                    <SmartAlertsPanel />
-                </Box>
-            </Box>
-        </Container>
+        <TouchTargetProvider>
+            <AnalyticsDashboard />
+        </TouchTargetProvider>
     );
 };
 

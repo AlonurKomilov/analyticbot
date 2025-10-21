@@ -1,5 +1,6 @@
 import React, { useState, useEffect, SyntheticEvent } from 'react';
 import {
+    Box,
     Container,
     Typography,
     Paper,
@@ -19,6 +20,12 @@ import DashboardTabs from './DashboardTabs';
 import LoadingOverlay from './LoadingOverlay';
 import DashboardSpeedDial from './DashboardSpeedDial';
 import TabPanel from './TabPanel';
+
+// Import Quick Win components
+import HeroMetricsSection from './HeroMetricsSection';
+import DataSourceBanner from './DataSourceBanner';
+import LastUpdatedIndicator from './LastUpdatedIndicator';
+import ExportButtons from './ExportButtons';
 
 // Import existing components
 import PostViewDynamicsChart from '../../charts/PostViewDynamics';
@@ -55,7 +62,7 @@ import { useApiFailureDialog } from '@hooks/useApiFailureDialog';
  */
 const AnalyticsDashboard: React.FC = React.memo(() => {
     const [activeTab, setActiveTab] = useState<number>(0);
-    const [_lastUpdated, setLastUpdated] = useState<Date>(new Date());
+    const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showSettings, setShowSettings] = useState<boolean>(false);
 
@@ -126,14 +133,49 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
         setShowSettings(!showSettings);
     };
 
+    const handleSwitchToRealData = async (): Promise<void> => {
+        await handleDataSourceChange('api');
+    };
+
+    const handleExportPDF = async (): Promise<void> => {
+        // TODO: Implement PDF export
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    };
+
+    const handleExportCSV = async (): Promise<void> => {
+        // TODO: Implement CSV export
+        await new Promise(resolve => setTimeout(resolve, 1500));
+    };
+
     return (
         <Container maxWidth="xl" sx={{ py: 3 }}>
-            {/* Header Section */}
-            <DashboardHeader
-                showSettings={showSettings}
-                onToggleSettings={handleToggleSettings}
-                onDataSourceChange={handleDataSourceChange}
-            />
+            {/* Data Source Banner - Quick Win #3 */}
+            <DataSourceBanner onSwitchToRealData={handleSwitchToRealData} />
+
+            {/* Hero Metrics Section - Quick Win #1 */}
+            <HeroMetricsSection />
+
+            {/* Header Section with Export & Last Updated */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <DashboardHeader
+                    showSettings={showSettings}
+                    onToggleSettings={handleToggleSettings}
+                    onDataSourceChange={handleDataSourceChange}
+                />
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    {/* Last Updated Indicator - Quick Win #4 */}
+                    <LastUpdatedIndicator
+                        lastUpdated={lastUpdated}
+                        autoRefreshInterval={60}
+                        onRefresh={handleRefresh}
+                    />
+                    {/* Export Buttons - Quick Win #5 */}
+                    <ExportButtons
+                        onExportPDF={handleExportPDF}
+                        onExportCSV={handleExportCSV}
+                    />
+                </Box>
+            </Box>
 
             {/* Navigation Tabs */}
             <DashboardTabs

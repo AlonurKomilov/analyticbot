@@ -24,12 +24,10 @@ import {
 } from '@mui/icons-material';
 
 import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
+import { useUIStore } from '../stores';
 
-// Import centralized mock data
-import {
-    contentOptimizerStats,
-    recentOptimizations
-} from '../__mocks__/aiServices/contentOptimizer';
+// Mock data will be imported dynamically only in demo mode
+// Removed top-level imports to prevent loading in real API mode
 
 interface ServiceStats {
     totalOptimized: number;

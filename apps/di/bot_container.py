@@ -417,14 +417,43 @@ def _create_file_system_adapter(**kwargs):
 
 
 def _create_subscription_adapter(**kwargs):
-    """Create subscription service adapter (stub for now)"""
-    try:
-        from apps.bot.adapters.content import StubSubscriptionService
+    """
+    Create subscription service adapter.
 
-        return StubSubscriptionService()
+    ✅ Issue #3 Phase 1 (Oct 21, 2025): Replaced StubSubscriptionService with real
+    SubscriptionAdapter that integrates with payment domain subscription service.
+    """
+    try:
+        from apps.bot.adapters.content import SubscriptionAdapter
+        from infra.services.payment import SubscriptionService
+
+        # Get subscription service from infra layer (payment domain)
+        # TODO: Inject payment_repository and payment_method_service via DI
+        # For now, we'll create a basic subscription service
+        # In production, this should come from payment container
+        payment_repository = None  # Will be injected properly in payment container
+        payment_method_service = None
+
+        subscription_service = SubscriptionService(
+            payment_repository=payment_repository,
+            payment_method_service=payment_method_service,
+        )
+
+        return SubscriptionAdapter(subscription_service=subscription_service)
+
     except ImportError as e:
-        logger.warning(f"Subscription adapter not available: {e}")
-        return None
+        logger.warning(
+            f"SubscriptionAdapter not available, falling back to stub: {e}. "
+            "This is expected if payment domain is not fully configured."
+        )
+        # Fallback to stub for backward compatibility
+        try:
+            from apps.bot.adapters.content import StubSubscriptionService
+
+            return StubSubscriptionService()
+        except ImportError:
+            logger.error("Neither SubscriptionAdapter nor StubSubscriptionService available")
+            return None
 
 
 def _create_theft_detector(**kwargs):

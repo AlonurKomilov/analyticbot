@@ -45,20 +45,52 @@ def get_csv_exporter() -> CSVExporter:
 
 def get_chart_service() -> ChartServiceProtocol:
     """
-    Get chart service instance - temporary factory.
+    Get chart service instance from DI container.
 
-    Phase 3 Fix (Oct 19, 2025): Removed factory usage
-    Chart service DI integration tracked in GitHub Issue #TBD
+    ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
-    from apps.shared.services.chart_service import create_chart_service
+    from apps.di import get_container
 
-    return create_chart_service()
+    container = get_container()
+    return container.bot.chart_service()
 
 
 def check_export_enabled():
     """Check if export functionality is enabled"""
     if not settings.EXPORT_ENABLED:
         raise HTTPException(status_code=403, detail="Export functionality is disabled")
+
+
+# Health Check Endpoint
+
+
+@router.get("/health")
+async def health_check(
+    chart_service: ChartServiceProtocol = Depends(get_chart_service),
+):
+    """
+    Check export service health including chart rendering availability
+    
+    Returns:
+        - status: "healthy" or "degraded"
+        - chart_rendering: availability status
+        - supported_formats: list of available export formats
+    """
+    chart_available = chart_service.is_available()
+    
+    return {
+        "status": "healthy" if chart_available else "degraded",
+        "export_enabled": settings.EXPORT_ENABLED,
+        "chart_rendering": {
+            "available": chart_available,
+            "formats": chart_service.get_supported_formats(),
+            "chart_types": chart_service.get_supported_chart_types(),
+        },
+        "csv_export": {
+            "available": True,
+            "formats": ["csv"],
+        },
+    }
 
 
 # CSV Export Endpoints

@@ -57,14 +57,14 @@ router = Router()
 
 def get_chart_service():
     """
-    Get chart service instance - temporary factory.
+    Get chart service instance from DI container.
     
-    Phase 3 Fix (Oct 19, 2025): Removed factory usage
-    Chart service DI integration tracked in GitHub Issue #TBD
+    ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
-    from apps.shared.services.chart_service import create_chart_service
+    from apps.di import get_container
 
-    return create_chart_service()
+    container = get_container()
+    return container.bot.chart_service()
 
 
 @router.callback_query(F.data == "analytics_export")

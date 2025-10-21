@@ -35,15 +35,12 @@ async def get_channel_repository() -> ChannelRepository:
 
 def get_chart_service() -> ChartServiceProtocol:
     """
-    Get chart service - temporary factory function.
+    Get chart service instance from DI container.
     
-    Note: Chart service DI integration deferred to Week 2.
-    Tracked in GitHub Issue #TBD: Implement chart service DI provider
-    Affects 4 locations: admin_handlers, exports (bot+API), sharing_router
+    ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
-    from apps.shared.services.chart_service import ChartService
-    
-    return ChartService()
+    container = get_container()
+    return container.bot.chart_service()
 
 
 def _bot_of(msg: types.Message) -> Bot | None:

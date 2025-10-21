@@ -637,6 +637,24 @@ def _create_system_metrics_service(metrics_backend=None, system_monitor=None, **
         return None
 
 
+def _create_chart_service(**kwargs):
+    """Create chart service for rendering analytics charts"""
+    try:
+        from apps.shared.services.chart_service import ChartService
+        from infra.rendering.charts import MATPLOTLIB_AVAILABLE, ChartRenderer
+
+        if not MATPLOTLIB_AVAILABLE:
+            logger.warning("Matplotlib not available - chart service will have limited functionality")
+            return ChartService(chart_renderer=None)
+
+        # Create chart renderer from infrastructure layer
+        chart_renderer = ChartRenderer()
+        return ChartService(chart_renderer=chart_renderer)
+    except ImportError as e:
+        logger.warning(f"Chart service not available: {e}")
+        return None
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -846,6 +864,9 @@ class BotContainer(containers.DeclarativeContainer):
         analytics_repository=database.analytics_repo,
         channel_repository=database.channel_repo,
     )
+
+    # Chart rendering service (Issue #10 - Oct 21, 2025)
+    chart_service = providers.Factory(_create_chart_service)
 
     # REMOVED: alerting_service (deprecated - use alert_* services instead)
     # Legacy service archived in Phase 3.2

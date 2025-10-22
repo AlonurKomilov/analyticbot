@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 from apps.api.middleware.auth import get_current_user
 from apps.shared.clients.analytics_client import AnalyticsClient
@@ -65,7 +66,8 @@ class PredictionRequest(BaseModel):
 async def get_ai_recommendations(
     channel_id: int,
     context: str = Query(
-        default="general", description="Recommendation context (general, growth, engagement)"
+        default="general",
+        description="Recommendation context (general, growth, engagement)",
     ),
     current_user: dict = Depends(get_current_user),
     analytics_client: AnalyticsClient = Depends(get_analytics_client),
@@ -124,7 +126,8 @@ async def generate_predictions(
         valid_types = ["growth", "engagement", "reach", "views", "subscribers"]
         if request.prediction_type not in valid_types:
             raise HTTPException(
-                status_code=400, detail=f"Invalid prediction type. Must be one of: {valid_types}"
+                status_code=400,
+                detail=f"Invalid prediction type. Must be one of: {valid_types}",
             )
 
         # Generate cache key
@@ -467,7 +470,8 @@ async def analyze_cross_channel_intelligence(
 
         # Get cross-channel intelligence analysis
         cross_intelligence = await analytics_service.analyze_cross_channel_intelligence(
-            channel_ids=request.channel_ids, correlation_depth_days=request.correlation_depth_days
+            channel_ids=request.channel_ids,
+            correlation_depth_days=request.correlation_depth_days,
         )
 
         return {
@@ -482,7 +486,8 @@ async def analyze_cross_channel_intelligence(
     except Exception as e:
         logger.error(f"Cross-channel intelligence analysis failed: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Cross-channel intelligence analysis failed: {str(e)}"
+            status_code=500,
+            detail=f"Cross-channel intelligence analysis failed: {str(e)}",
         )
 
 
@@ -490,7 +495,8 @@ async def analyze_cross_channel_intelligence(
 async def get_prediction_narrative(
     channel_id: int,
     narrative_style: str = Query(
-        "conversational", description="Narrative style: conversational, technical, executive"
+        "conversational",
+        description="Narrative style: conversational, technical, executive",
     ),
     prediction_type: str = Query("comprehensive", description="Type of prediction to explain"),
     current_user: dict = Depends(get_current_user),
@@ -617,4 +623,8 @@ async def generate_growth_forecast(historical_data, forecast_days: int) -> dict[
         }
 
     except Exception:
-        return {"forecast_points": [], "confidence": 0.5, "error": "Unable to generate forecast"}
+        return {
+            "forecast_points": [],
+            "confidence": 0.5,
+            "error": "Unable to generate forecast",
+        }

@@ -84,7 +84,7 @@ class AnalyticsCoreService(AnalyticsCoreProtocol):
                 )
 
             # Process data through pipeline
-            processed_data = await self.data_processor.process_raw_data(channel_data)
+            await self.data_processor.process_raw_data(channel_data)
 
             # Calculate metrics based on configuration
             metrics_results = {}
@@ -133,7 +133,10 @@ class AnalyticsCoreService(AnalyticsCoreProtocol):
 
             # Cache result for performance
             cache_key = f"metrics_{channel_id}_{processing_config.time_range_days}"
-            self.analytics_cache[cache_key] = {"result": result, "cached_at": datetime.utcnow()}
+            self.analytics_cache[cache_key] = {
+                "result": result,
+                "cached_at": datetime.utcnow(),
+            }
 
             logger.info(
                 f"✅ Processed metrics in {processing_time:.1f}ms with confidence {confidence_score:.2f}"

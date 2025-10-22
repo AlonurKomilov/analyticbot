@@ -174,7 +174,8 @@ forbidden_modules = [
 ]
 ignore_imports = [
     # Jobs use shared DI container which transitively imports bot services
-    "apps.jobs.alerts.runner -> apps.di",
+    "apps.jobs.alerts.runner.runner -> apps.di",
+    "apps.jobs.alerts.runner.notifier -> apps.di",
     "apps.jobs.di -> apps.di"
 ]
 

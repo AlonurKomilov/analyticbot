@@ -274,7 +274,7 @@ from apps.api.routers.analytics_alerts_router import router as analytics_alerts_
 from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_predictive_router import router as insights_predictive_router
+from apps.api.routers.insights_predictive import router as insights_predictive_router
 from apps.api.routers.statistics_core_router import router as statistics_core_router
 from apps.api.routers.statistics_reports_router import router as statistics_reports_router
 from apps.demo.routers.main import router as demo_router

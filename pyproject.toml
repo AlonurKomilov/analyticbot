@@ -224,7 +224,8 @@ ignore_imports = [
     "apps.api.routers.analytics_live_router -> apps.api.di_analytics",
     "apps.api.routers.analytics_post_dynamics_router -> apps.api.di_analytics",
     "apps.api.routers.content_protection_router -> apps.di",
-    "apps.api.routers.insights_predictive_router -> apps.api.di_analytics",
+    "apps.api.routers.insights_predictive.dependencies -> apps.api.di_analytics",
+    "apps.api.routers.insights_predictive.dependencies -> apps.di",
     "apps.api.routers.superadmin_router -> apps.di",
     "apps.api.routers.system_router -> apps.di",
     "apps.bot.handlers.user_handlers -> apps.di",
@@ -250,7 +251,8 @@ ignore_imports = [
     "apps.api.routers.channels_router -> apps.api.middleware.auth",
     "apps.api.routers.content_protection_router -> apps.api.middleware.auth",
     "apps.api.routers.insights_engagement_router -> apps.api.middleware.auth",
-    "apps.api.routers.insights_predictive_router -> apps.api.middleware.auth",
+    "apps.api.routers.insights_predictive.recommendations -> apps.api.middleware.auth",
+    "apps.api.routers.insights_predictive.intelligence -> apps.api.middleware.auth",
     "apps.api.routers.statistics_core_router -> apps.api.middleware.auth",
     "apps.api.routers.statistics_reports_router -> apps.api.middleware.auth",
     "apps.api.routers.system_router -> apps.api.middleware.auth",
@@ -277,7 +279,6 @@ ignore_imports = [
     # Issue #4 - pending refactor (routers using DI instead of proper dependency injection)
     "apps.api.routers.ai_chat_router -> apps.di",
     "apps.api.routers.competitive_intelligence_router -> apps.di",
-    "apps.api.routers.insights_predictive_router -> apps.di",
     "apps.api.routers.strategy_router -> apps.di",
     "apps.api.routers.trend_analysis_router -> apps.di"
 ]

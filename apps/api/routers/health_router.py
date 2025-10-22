@@ -414,7 +414,7 @@ async def debug_info():
         "alerts": system_health.alerts,
         "performance_metrics": system_health.performance_metrics,
         "thresholds": health_service.thresholds,
-        "history_size": len(health_service.health_history),
+        "history_size": len(health_service.history.health_history),
     }
 
     # Detailed component information

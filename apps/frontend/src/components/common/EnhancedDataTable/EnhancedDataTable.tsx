@@ -247,7 +247,7 @@ export const EnhancedDataTable = <T extends Record<string, any> = any>({
         paginatedData,
         selectedRows,
         setSelectedRows,
-        onSelectionChange
+        onSelectionChange: onSelectionChange ? (indices: number[]) => onSelectionChange(new Set(indices)) : undefined
     }) as any;
 
     const {

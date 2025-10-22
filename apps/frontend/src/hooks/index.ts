@@ -3,8 +3,8 @@ import { useMediaStore, useUIStore } from '@/stores';
 
 // Export all major hooks with their types
 export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
-export type { 
-    UseAdminAPIReturn, 
+export type {
+    UseAdminAPIReturn,
     UseAdminDashboardReturn,
     AdminStats,
     AdminUser,
@@ -59,7 +59,7 @@ export type {
     DataProvider
 } from './useDataSource';
 
-export { 
+export {
     useAuthenticatedDataProvider,
     useAuthenticatedAnalytics,
     useAuthenticatedTopPosts,
@@ -90,6 +90,18 @@ export type {
     UseApiFailureDialogReturn,
     APIError
 } from './useApiFailureDialog';
+
+export { useAlerts } from './useAlerts';
+export type {
+    UseAlertsReturn,
+    UseAlertsOptions
+} from './useAlerts';
+
+export { usePredictiveAnalytics } from './usePredictiveAnalytics';
+export type {
+    UsePredictiveAnalyticsReturn,
+    UsePredictiveAnalyticsOptions
+} from './usePredictiveAnalytics';
 
 /**
  * Loading state return type

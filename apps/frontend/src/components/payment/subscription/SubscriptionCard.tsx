@@ -141,7 +141,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
                   <CalendarToday sx={{ fontSize: 16, color: 'text.secondary' }} />
                   <Typography variant="body2">
-                    Current period: {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                    Current period: {formatDate(subscription.current_period_start)} - {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'N/A'}
                   </Typography>
                 </Box>
               )}

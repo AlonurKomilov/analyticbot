@@ -1,6 +1,8 @@
 """
 Predictive analytics and AI/ML forecasting endpoints.
 Handles recommendations, forecasting, and predictive modeling.
+
+✅ REFACTORED (Oct 21, 2025): Now uses PredictiveOrchestratorService for predictive intelligence
 """
 
 import logging
@@ -9,13 +11,20 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache
-from apps.api.middleware.auth import get_current_user
+from apps.api.middleware.auth import get_current_user, get_current_user_id
+from apps.di import get_container
 from apps.shared.clients.analytics_client import AnalyticsClient
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/insights/predictive", tags=["insights-predictive"])
+
+
+# =====================================
+# Dependency Injection
+# =====================================
 
 
 # Analytics Client Dependency
@@ -25,25 +34,29 @@ def get_analytics_client() -> AnalyticsClient:
     return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
 
 
-# Predictive Engine Dependency (inline replacement for deprecated get_predictive_analytics_engine)
-async def get_predictive_analytics_engine():
+# Predictive Orchestrator Dependency (NEW - Oct 21, 2025)
+async def get_predictive_orchestrator():
     """
-    Get predictive analytics engine - inline replacement for deprecated deps function
+    Get PredictiveOrchestratorService from DI container.
+
+    Provides access to:
+    - Contextual intelligence analysis
+    - Temporal intelligence patterns
+    - Predictive modeling with ML
+    - Cross-channel intelligence
     """
+    try:
+        container = get_container()
+        orchestrator = await container.core_services.predictive_orchestrator_service()
+        return orchestrator
+    except Exception as e:
+        logger.error(f"Failed to get PredictiveOrchestratorService: {e}")
+        raise HTTPException(status_code=503, detail="Predictive Orchestrator Service unavailable")
 
-    class MockPredictiveEngine:
-        async def predict_growth(self, **kwargs):
-            return {"predictions": [], "confidence": 0.85}
 
-        async def forecast_metrics(self, **kwargs):
-            return {"forecasts": [], "accuracy": 0.80}
-
-    return MockPredictiveEngine()
-
-    # ✅ FIXED Oct 19, 2025: Removed duplicate get_analytics_client() function
-    # The function is already defined above (line 29)
-
-    return AnalyticsClient(settings.ANALYTICS_V2_BASE_URL)
+# =====================================
+# Request/Response Models
+# =====================================
 
 
 # Request Models
@@ -104,8 +117,8 @@ async def get_ai_recommendations(
 @router.post("/forecast")
 async def generate_predictions(
     request: PredictionRequest,
-    current_user: dict = Depends(get_current_user),
-    predictive_engine=Depends(get_predictive_analytics_engine),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
     cache=Depends(get_cache),
 ):
     """
@@ -141,12 +154,23 @@ async def generate_predictions(
         if cached_result:
             return cached_result
 
-        # Generate predictions using ML engine
-        prediction_result = await predictive_engine.forecast(
-            channel_ids=request.channel_ids,
-            prediction_type=request.prediction_type,
-            forecast_days=request.forecast_days,
-            confidence_level=request.confidence_level,
+        # Build prediction request for orchestrator
+        prediction_request = {
+            "channel_ids": request.channel_ids,
+            "prediction_type": request.prediction_type,
+            "forecast_horizon": request.forecast_days,
+            "confidence_level": request.confidence_level,
+        }
+
+        # Generate predictions using predictive orchestrator
+        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+            IntelligenceContext,
+        )
+
+        prediction_result = await predictive_orchestrator.orchestrate_enhanced_prediction(
+            prediction_request=prediction_request,
+            context_types=[IntelligenceContext.TEMPORAL, IntelligenceContext.ENVIRONMENTAL],
+            include_narrative=False,
         )
 
         # Cache result (valid for 6 hours for predictions)
@@ -304,8 +328,8 @@ class CrossChannelIntelligenceRequest(BaseModel):
 @router.post("/intelligence/contextual")
 async def analyze_contextual_intelligence(
     request: ContextualIntelligenceRequest,
-    current_user: dict = Depends(get_current_user),
-    analytics_service=Depends(get_analytics_fusion_service),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
 ):
     """
     ## 🧠 Contextual Intelligence Analysis
@@ -337,17 +361,40 @@ async def analyze_contextual_intelligence(
             f"🧠 Processing contextual intelligence request for channel {request.channel_id}"
         )
 
-        # Build intelligence request
-        intelligence_request = {
-            "channel_id": request.channel_id,
-            "intelligence_context": request.intelligence_context,
-            "analysis_period": request.analysis_period_days,
-            "prediction_horizon": request.prediction_horizon_days,
-            "include_explanations": request.include_explanations,
+        # Map string contexts to IntelligenceContext enum
+        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+            IntelligenceContext,
+        )
+
+        context_map = {
+            "temporal": IntelligenceContext.TEMPORAL,
+            "environmental": IntelligenceContext.ENVIRONMENTAL,
+            "competitive": IntelligenceContext.COMPETITIVE,
+            "behavioral": IntelligenceContext.BEHAVIORAL,
+            "seasonal": IntelligenceContext.SEASONAL,
+            "comprehensive": IntelligenceContext.COMPREHENSIVE,
         }
 
-        # Get contextual intelligence analysis
-        result = await analytics_service.analyze_prediction_context(intelligence_request)
+        context_types = [
+            context_map.get(ctx, IntelligenceContext.COMPREHENSIVE)
+            for ctx in request.intelligence_context
+        ]
+
+        # Build prediction request
+        prediction_request = {
+            "channel_id": request.channel_id,
+            "channel_ids": [request.channel_id],
+            "analysis_period": request.analysis_period_days,
+            "prediction_horizon": request.prediction_horizon_days,
+            "include_narrative": request.include_explanations,
+        }
+
+        # Use PredictiveOrchestratorService for enhanced prediction
+        result = await predictive_orchestrator.orchestrate_enhanced_prediction(
+            prediction_request=prediction_request,
+            context_types=context_types,
+            include_narrative=request.include_explanations,
+        )
 
         return {
             "success": True,
@@ -373,8 +420,8 @@ async def discover_temporal_patterns(
     analysis_depth_days: int = Query(
         90, ge=30, le=365, description="Days of historical data to analyze"
     ),
-    current_user: dict = Depends(get_current_user),
-    analytics_service=Depends(get_analytics_fusion_service),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
 ):
     """
     ## ⏰ Temporal Pattern Intelligence Discovery
@@ -406,9 +453,16 @@ async def discover_temporal_patterns(
     try:
         logger.info(f"⏰ Processing temporal intelligence discovery for channel {channel_id}")
 
-        # Get temporal intelligence analysis
-        temporal_intelligence = await analytics_service.discover_temporal_intelligence(
-            channel_id=channel_id, analysis_depth_days=analysis_depth_days
+        # Build temporal prediction request
+        prediction_request = {
+            "channel_id": channel_id,
+            "analysis_depth_days": analysis_depth_days,
+        }
+
+        # Use PredictiveOrchestratorService for temporal prediction
+        temporal_intelligence = await predictive_orchestrator.orchestrate_temporal_prediction(
+            channel_id=channel_id,
+            time_range={"days": analysis_depth_days},
         )
 
         return {
@@ -430,8 +484,8 @@ async def discover_temporal_patterns(
 @router.post("/intelligence/cross-channel")
 async def analyze_cross_channel_intelligence(
     request: CrossChannelIntelligenceRequest,
-    current_user: dict = Depends(get_current_user),
-    analytics_service=Depends(get_analytics_fusion_service),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
 ):
     """
     ## 🌐 Cross-Channel Intelligence Analysis
@@ -465,9 +519,17 @@ async def analyze_cross_channel_intelligence(
             f"🌐 Processing cross-channel intelligence for {len(request.channel_ids)} channels"
         )
 
-        # Get cross-channel intelligence analysis
-        cross_intelligence = await analytics_service.analyze_cross_channel_intelligence(
-            channel_ids=request.channel_ids, correlation_depth_days=request.correlation_depth_days
+        # Build cross-channel prediction request
+        prediction_request = {
+            "channel_ids": request.channel_ids,
+            "correlation_depth": request.correlation_depth_days,
+            "include_competitive": request.include_competitive_intelligence,
+        }
+
+        # Use PredictiveOrchestratorService for cross-channel prediction
+        cross_intelligence = await predictive_orchestrator.orchestrate_cross_channel_prediction(
+            channel_ids=request.channel_ids,
+            analysis_parameters=prediction_request,
         )
 
         return {
@@ -493,9 +555,8 @@ async def get_prediction_narrative(
         "conversational", description="Narrative style: conversational, technical, executive"
     ),
     prediction_type: str = Query("comprehensive", description="Type of prediction to explain"),
-    current_user: dict = Depends(get_current_user),
-    analytics_service=Depends(get_analytics_fusion_service),
-    predictive_engine=Depends(get_predictive_analytics_engine),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
 ):
     """
     ## 📖 Prediction Reasoning Narrative
@@ -530,21 +591,29 @@ async def get_prediction_narrative(
     try:
         logger.info(f"📖 Generating prediction narrative for channel {channel_id}")
 
-        # First get a prediction to explain
-        prediction = await predictive_engine.forecast_metrics(
-            channel_id=channel_id, prediction_type=prediction_type
+        # Build prediction request with narrative
+        prediction_request = {
+            "channel_id": channel_id,
+            "prediction_type": prediction_type,
+            "narrative_style": narrative_style,
+        }
+
+        # Use PredictiveOrchestratorService for enhanced prediction with narrative
+        from core.services.predictive_intelligence.protocols.predictive_protocols import (
+            IntelligenceContext,
         )
 
-        # Generate narrative explanation
-        narrative = await analytics_service.generate_prediction_narratives(
-            prediction=prediction, narrative_style=narrative_style
+        result = await predictive_orchestrator.orchestrate_enhanced_prediction(
+            prediction_request=prediction_request,
+            context_types=[IntelligenceContext.COMPREHENSIVE],
+            include_narrative=True,
         )
 
         return {
             "success": True,
             "channel_id": channel_id,
-            "prediction_summary": prediction,
-            "narrative": narrative,
+            "prediction_summary": result.get("predictions", {}),
+            "narrative": result.get("narrative", {}),
             "narrative_style": narrative_style,
             "generated_at": datetime.utcnow().isoformat(),
         }
@@ -558,8 +627,8 @@ async def get_prediction_narrative(
 
 @router.get("/intelligence/health")
 async def get_intelligence_health_status(
-    current_user: dict = Depends(get_current_user),
-    analytics_service=Depends(get_analytics_fusion_service),
+    current_user_id: int = Depends(get_current_user_id),
+    predictive_orchestrator=Depends(get_predictive_orchestrator),
 ):
     """
     ## 🏥 Predictive Intelligence Health Status
@@ -573,7 +642,7 @@ async def get_intelligence_health_status(
     - Performance metrics
     """
     try:
-        health_status = await analytics_service.get_intelligence_health_status()
+        health_status = await predictive_orchestrator.health_check()
 
         return {
             "success": True,

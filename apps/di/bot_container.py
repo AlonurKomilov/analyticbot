@@ -13,7 +13,7 @@ from dependency_injector import containers, providers
 from apps.bot.config import Settings as BotSettings
 
 # Import all provider factories from modular packages
-from apps.di.providers import (
+from apps.di.provider_modules import (
     # Adapters
     create_aiogram_markup_builder,
     create_aiogram_message_sender,
@@ -240,4 +240,58 @@ class BotContainer(containers.DeclarativeContainer):
         create_channel_management_service,
         channel_repository=database.channel_repo,
         bot=bot_client,
+    )
+
+    # ✅ PHASE 2: Business Intelligence Services (October 21, 2025)
+    # Competitive intelligence and market analysis
+    competitive_intelligence_service = providers.Factory(
+        lambda posts_repo, daily_repo, channels_repo: __import__(
+            "core.services.alerts_fusion.competitive.competitive_intelligence_service",
+            fromlist=["CompetitiveIntelligenceService"],
+        ).CompetitiveIntelligenceService(
+            posts_repo=posts_repo,
+            daily_repo=daily_repo,
+            channels_repo=channels_repo,
+        ),
+        posts_repo=database.post_repo,
+        daily_repo=database.channel_daily_repo,
+        channels_repo=database.channel_repo,
+    )
+
+    # ✅ PHASE 2.5: Alerts Fusion Services (Refactor - October 21, 2025)
+    # Alert fusion microservices for orchestrated alert management
+    live_monitoring_service = providers.Factory(
+        lambda: __import__(
+            "core.services.alerts_fusion.live_monitoring_service",
+            fromlist=["LiveMonitoringService"],
+        ).LiveMonitoringService(),
+    )
+
+    alerts_management_service = providers.Factory(
+        lambda posts_repo, daily_repo, channels_repo: __import__(
+            "core.services.alerts_fusion.alerts.alerts_management_service",
+            fromlist=["AlertsManagementService"],
+        ).AlertsManagementService(
+            posts_repo=posts_repo,
+            daily_repo=daily_repo,
+            channels_repo=channels_repo,
+        ),
+        posts_repo=database.post_repo,
+        daily_repo=database.channel_daily_repo,
+        channels_repo=database.channel_repo,
+    )
+
+    # Alerts orchestrator - coordinates all alert fusion services
+    alerts_orchestrator_service = providers.Factory(
+        lambda monitoring, alerts, competitive: __import__(
+            "core.services.alerts_fusion.orchestrator.alerts_orchestrator_service",
+            fromlist=["AlertsOrchestratorService"],
+        ).AlertsOrchestratorService(
+            live_monitoring_service=monitoring,
+            alerts_management_service=alerts,
+            competitive_intelligence_service=competitive,
+        ),
+        monitoring=live_monitoring_service,
+        alerts=alerts_management_service,
+        competitive=competitive_intelligence_service,
     )

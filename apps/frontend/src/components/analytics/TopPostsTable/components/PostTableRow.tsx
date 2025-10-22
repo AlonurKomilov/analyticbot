@@ -9,22 +9,7 @@ import {
 } from '@mui/material';
 import PostMetricBadge from './PostMetricBadge';
 import PostActionMenu from './PostActionMenu';
-import { formatNumber, formatDate, calculateEngagementRate } from '../utils/postTableUtils';
-
-interface Post {
-    id: string | number;
-    title?: string;
-    thumbnail?: string;
-    type?: string;
-    views?: number;
-    likes?: number;
-    shares?: number;
-    comments?: number;
-    created_at: string | Date;
-    engagement?: number;
-    reach?: number;
-    [key: string]: any;
-}
+import { formatNumber, formatDate, calculateEngagementRate, type Post } from '../utils/postTableUtils';
 
 interface PostTableRowProps {
     post: Post;
@@ -140,9 +125,9 @@ const PostTableRow: React.FC<PostTableRowProps> = ({
             </TableCell>
 
             <TableCell align="center">
-                <Tooltip title={new Date(post.created_at).toLocaleString()}>
+                <Tooltip title={post.created_at ? new Date(post.created_at).toLocaleString() : ''}>
                     <Typography variant="caption" color="text.secondary">
-                        {formatDate(post.created_at)}
+                        {post.created_at ? formatDate(post.created_at) : 'N/A'}
                     </Typography>
                 </Tooltip>
             </TableCell>

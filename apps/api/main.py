@@ -12,7 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 from apps.api.routers.admin_channels_router import router as admin_channels_router
 from apps.api.routers.admin_system_router import router as admin_system_router
 from apps.api.routers.admin_users_router import router as admin_users_router
-from apps.api.routers.auth_router import router as auth_router
+from apps.api.routers.auth import router as auth_router
 
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
@@ -50,12 +50,12 @@ async def lifespan(app: FastAPI):
     try:
         # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
         container = get_container()
-        db_manager = await container.database_manager()
+        db_manager = await container.database.database_manager()
         await db_manager.initialize()
         logger.info("Database initialized successfully via shared DI container")
 
         # Pre-initialize asyncpg pool to ensure it's ready
-        pool = await container.asyncpg_pool()
+        pool = await container.database.asyncpg_pool()
         logger.info(
             f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections"
         )
@@ -177,6 +177,22 @@ Comprehensive data export capabilities with secure sharing mechanisms.
             "description": "🤖 Artificial Intelligence: content optimization, churn prediction, security analysis",
         },
         {
+            "name": "AI Insights",
+            "description": "🧠 AI Insights: comprehensive insights orchestration, pattern analysis, predictions",
+        },
+        {
+            "name": "Optimization",
+            "description": "⚡ Optimization: performance analysis, recommendations, optimization application",
+        },
+        {
+            "name": "AI Chat",
+            "description": "💬 AI Chat: conversational analytics, natural language queries, interactive insights",
+        },
+        {
+            "name": "Strategy",
+            "description": "📝 Strategy: content strategy generation, quick tips, implementation roadmaps",
+        },
+        {
             "name": "Machine Learning",
             "description": "🧠 ML Predictions: growth forecasting, engagement prediction (background tasks)",
         },
@@ -207,6 +223,14 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         {
             "name": "SuperAdmin Management",
             "description": "👑 Admin: user management, system stats, and administrative controls",
+        },
+        {
+            "name": "Competitive Intelligence",
+            "description": "🏆 Market Intelligence: competitor analysis, discovery, and benchmarking",
+        },
+        {
+            "name": "Trend Analysis",
+            "description": "📈 Trend Analytics: forecasting, anomaly detection, and change points",
         },
     ],
 )
@@ -311,6 +335,26 @@ app.include_router(payment_router)  # Payment system (unique)
 from apps.api.routers.ai_services_router import router as ai_services_router
 
 app.include_router(ai_services_router)
+
+# ✅ PHASE 5: NEW AI-POWERED ROUTERS (October 21, 2025)
+# Exposing previously internal orchestrator services via API
+from apps.api.routers.ai_chat_router import router as ai_chat_router
+from apps.api.routers.ai_insights_router import router as ai_insights_router
+from apps.api.routers.optimization_router import router as optimization_router
+from apps.api.routers.strategy_router import router as strategy_router
+
+app.include_router(ai_insights_router)  # AI Insights Orchestrator - /ai-insights/*
+app.include_router(optimization_router)  # Optimization Orchestrator - /optimization/*
+app.include_router(ai_chat_router)  # Conversational Analytics - /ai-chat/*
+app.include_router(strategy_router)  # Strategy Generation - /strategy/*
+
+# ✅ PHASE 6: BUSINESS INTELLIGENCE ROUTERS (Phase 2 - October 21, 2025)
+# Advanced analytics and market intelligence features
+from apps.api.routers.competitive_intelligence_router import router as competitive_router
+from apps.api.routers.trend_analysis_router import router as trends_router
+
+app.include_router(competitive_router)  # Competitive Intelligence - /competitive/*
+app.include_router(trends_router)  # Trend Analysis & Forecasting - /trends/*
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅
 # ===============================================

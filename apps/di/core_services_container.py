@@ -121,7 +121,9 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         analytics_repository=database.analytics_repo,
     )
 
-    analytics_fusion_service = providers.Singleton(_create_analytics_fusion_service)    # Reporting services
+    analytics_fusion_service = providers.Singleton(
+        _create_analytics_fusion_service
+    )  # Reporting services
     reporting_service = providers.Singleton(_create_reporting_service)
 
     # Dashboard services
@@ -138,4 +140,32 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         _create_delivery_service,
         delivery_repo=None,  # TODO: Add delivery repo when available
         schedule_repo=database.schedule_repo,
+    )
+
+    # ✅ PHASE 2: Business Intelligence Services (October 21, 2025)
+    # Trend analysis and forecasting
+    trend_analysis_service = providers.Factory(
+        lambda channel_daily_repo, post_repo: __import__(
+            "core.services.trend_analysis_service", fromlist=["TrendAnalysisService"]
+        ).TrendAnalysisService(
+            channel_daily_repo=channel_daily_repo,
+            post_repo=post_repo,
+            metrics_repo=None,  # Optional metrics repository
+        ),
+        channel_daily_repo=database.channel_daily_repo,
+        post_repo=database.post_repo,
+    )
+
+    # ✅ PHASE 2.5: Predictive Intelligence Services (October 21, 2025)
+    # Predictive orchestrator with contextual, temporal, modeling, and cross-channel intelligence
+    predictive_orchestrator_service = providers.Factory(
+        lambda: __import__(
+            "core.services.predictive_intelligence", fromlist=["create_predictive_orchestrator"]
+        ).create_predictive_orchestrator(
+            analytics_service=None,  # Optional analytics service
+            data_access_service=None,  # Optional data access service
+            predictive_analytics_service=None,  # Optional predictive analytics service
+            nlg_service=None,  # Optional NLG service
+            config_manager=None,  # Optional config manager
+        ),
     )

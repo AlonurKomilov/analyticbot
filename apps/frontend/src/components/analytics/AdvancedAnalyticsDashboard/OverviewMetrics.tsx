@@ -67,13 +67,13 @@ const OverviewMetrics: React.FC<OverviewMetricsProps> = React.memo(({ metrics })
                 <Typography
                   variant="h5"
                   component="div"
-                  sx={{ color: getMetricColor(metrics?.growthRate, { good: 10, warning: 5 }, theme) }}
+                  sx={{ color: getMetricColor(metrics?.growthRate ?? 0, { good: 10, warning: 5 }, theme) }}
                 >
                   {metrics?.growthRate?.toFixed(1)}%
                 </Typography>
               </Box>
               {(metrics?.growthRate ?? 0) > 0 ?
-                <TrendingUpIcon sx={{ color: getMetricColor(metrics?.growthRate, { good: 10, warning: 5 }, theme), fontSize: 40 }} /> :
+                <TrendingUpIcon sx={{ color: getMetricColor(metrics?.growthRate ?? 0, { good: 10, warning: 5 }, theme), fontSize: 40 }} /> :
                 <TrendingDownIcon color="error" sx={{ fontSize: 40 }} />
               }
             </Box>

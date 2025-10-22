@@ -9,13 +9,7 @@ import {
     Avatar
 } from '@mui/material';
 import { Psychology as AIIcon } from '@mui/icons-material';
-import { getAIInsightIcon } from '../utils/timeUtils';
-
-interface AIInsight {
-    title: string;
-    description: string;
-    [key: string]: any;
-}
+import { getAIInsightIcon, type AIInsight } from '../utils/timeUtils';
 
 interface AIInsightsPanelProps {
     aiInsights?: AIInsight[];

@@ -73,27 +73,22 @@ class PerformanceAnalysisProtocol(Protocol):
     @abstractmethod
     async def analyze_system_performance(self) -> dict[str, PerformanceBaseline]:
         """Analyze current system performance across all metrics"""
-        pass
 
     @abstractmethod
     async def collect_performance_metrics(self) -> dict[str, Any]:
         """Collect raw performance metrics"""
-        pass
 
     @abstractmethod
     async def analyze_query_performance(self) -> dict[str, Any]:
         """Analyze query performance metrics"""
-        pass
 
     @abstractmethod
     async def analyze_resource_utilization(self) -> dict[str, Any]:
         """Analyze CPU, memory, and resource usage"""
-        pass
 
     @abstractmethod
     async def analyze_cache_performance(self) -> dict[str, Any]:
         """Analyze cache effectiveness and hit rates"""
-        pass
 
 
 class RecommendationEngineProtocol(Protocol):
@@ -104,28 +99,24 @@ class RecommendationEngineProtocol(Protocol):
         self, performance_baselines: dict[str, PerformanceBaseline]
     ) -> list[OptimizationRecommendation]:
         """Generate optimization recommendations based on performance analysis"""
-        pass
 
     @abstractmethod
     async def generate_query_optimizations(
         self, baseline: PerformanceBaseline
     ) -> list[OptimizationRecommendation]:
         """Generate query-specific optimizations"""
-        pass
 
     @abstractmethod
     async def generate_resource_optimizations(
         self, baseline: PerformanceBaseline
     ) -> list[OptimizationRecommendation]:
         """Generate resource utilization optimizations"""
-        pass
 
     @abstractmethod
     async def generate_cache_optimizations(
         self, baseline: PerformanceBaseline
     ) -> list[OptimizationRecommendation]:
         """Generate cache strategy optimizations"""
-        pass
 
 
 class OptimizationApplicationProtocol(Protocol):
@@ -136,19 +127,16 @@ class OptimizationApplicationProtocol(Protocol):
         self, recommendations: list[OptimizationRecommendation]
     ) -> dict[str, Any]:
         """Automatically apply safe optimizations"""
-        pass
 
     @abstractmethod
     async def apply_optimization(
         self, recommendation: OptimizationRecommendation
     ) -> dict[str, Any]:
         """Apply a specific optimization"""
-        pass
 
     @abstractmethod
     async def rollback_optimization(self, optimization_id: str) -> dict[str, Any]:
         """Rollback a previously applied optimization"""
-        pass
 
 
 class ValidationProtocol(Protocol):
@@ -157,17 +145,14 @@ class ValidationProtocol(Protocol):
     @abstractmethod
     async def validate_optimization_impact(self, optimization_id: str) -> dict[str, Any]:
         """Validate the impact of an applied optimization"""
-        pass
 
     @abstractmethod
     async def setup_ab_test(self, optimization: OptimizationRecommendation) -> dict[str, Any]:
         """Setup A/B test for optimization validation"""
-        pass
 
     @abstractmethod
     async def analyze_ab_test_results(self, test_id: str) -> dict[str, Any]:
         """Analyze A/B test results"""
-        pass
 
 
 class OptimizationOrchestratorProtocol(Protocol):
@@ -178,23 +163,19 @@ class OptimizationOrchestratorProtocol(Protocol):
         self, auto_apply_safe: bool = True
     ) -> dict[str, Any]:
         """Orchestrate complete optimization workflow"""
-        pass
 
     @abstractmethod
     async def orchestrate_performance_analysis(self) -> dict[str, Any]:
         """Orchestrate performance analysis workflow"""
-        pass
 
     @abstractmethod
     async def orchestrate_recommendation_generation(
         self, performance_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Orchestrate recommendation generation workflow"""
-        pass
 
     @abstractmethod
     async def orchestrate_optimization_application(
         self, recommendations: list[OptimizationRecommendation], auto_apply: bool = True
     ) -> dict[str, Any]:
         """Orchestrate optimization application workflow"""
-        pass

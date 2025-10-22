@@ -178,8 +178,11 @@ class User:
         """Validate username format in __post_init__"""
         # Allow alphanumeric, underscores, hyphens, dots, and @ symbols (for email-style usernames)
         import re
-        if not re.match(r'^[a-zA-Z0-9._@-]+$', self.username):
-            raise ValueError("Username can only contain letters, numbers, underscores, hyphens, dots, and @ symbols")
+
+        if not re.match(r"^[a-zA-Z0-9._@-]+$", self.username):
+            raise ValueError(
+                "Username can only contain letters, numbers, underscores, hyphens, dots, and @ symbols"
+            )
         self.username = self.username.lower()
 
     def set_password(self, password: str) -> None:

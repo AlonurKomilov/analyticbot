@@ -11,11 +11,6 @@ from typing import Any
 from aiogram import Bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.services.bot.scheduling.protocols import (
-    MarkupBuilderPort,
-    MessageSenderPort,
-)
-
 logger = logging.getLogger(__name__)
 
 
@@ -218,14 +213,10 @@ class AiogramMarkupBuilder:
         if "url" in btn_data:
             return InlineKeyboardButton(text=text, url=btn_data["url"])
         elif "callback_data" in btn_data:
-            return InlineKeyboardButton(
-                text=text, callback_data=btn_data["callback_data"]
-            )
+            return InlineKeyboardButton(text=text, callback_data=btn_data["callback_data"])
         elif "switch_inline_query" in btn_data:
             return InlineKeyboardButton(
                 text=text, switch_inline_query=btn_data["switch_inline_query"]
             )
         else:
-            raise ValueError(
-                "Button must have one of: url, callback_data, switch_inline_query"
-            )
+            raise ValueError("Button must have one of: url, callback_data, switch_inline_query")

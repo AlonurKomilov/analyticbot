@@ -34,7 +34,9 @@ from core.security_engine.mfa import MFAManager
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/auth", tags=["Authentication"], responses={404: {"description": "Not found"}}
+    prefix="/auth",
+    tags=["Authentication"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -94,7 +96,8 @@ async def login(
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Create User object for SecurityManager - Updated for new role system
@@ -136,7 +139,8 @@ async def login(
         if not password_valid:
             print(f"   ❌ Password verification FAILED for {user.email}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         print(f"   ✅ Password verified successfully for {user.email}")
@@ -178,7 +182,9 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
-                "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+                "status": (
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
+                ),
             },
         )
 
@@ -193,7 +199,8 @@ async def login(
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
-    register_data: RegisterRequest, user_repo: UserRepository = Depends(get_user_repository)
+    register_data: RegisterRequest,
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
@@ -209,7 +216,8 @@ async def register(
         existing_user = await user_repo.get_user_by_email(register_data.email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
             )
 
         # Check if username already exists
@@ -245,7 +253,7 @@ async def register(
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
             "role": user.role,  # role is now a string, no .value needed
-            "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+            "status": (user.status.value if isinstance(user.status, UserStatus) else user.status),
             "plan_id": 1,  # Default plan
         }
 
@@ -264,7 +272,8 @@ async def register(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )
 
 
@@ -281,7 +290,11 @@ async def refresh_token(
         # Validate refresh token and get new access token
         new_access_token = auth_utils.refresh_access_token(refresh_token)
 
-        return {"access_token": new_access_token, "token_type": "bearer", "expires_in": 30 * 60}
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60,
+        }
 
     except Exception as e:
         logger.warning(f"Token refresh failed: {str(e)}")
@@ -335,7 +348,7 @@ async def get_current_user_profile(request: Request):
 
         step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
-        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
+        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1) * 1000:.2f}ms")
 
         # Get token from Authorization header
         auth_header = request.headers.get("Authorization", "")
@@ -344,7 +357,7 @@ async def get_current_user_profile(request: Request):
             token = auth_header[7:]
             security_manager = get_security_manager()
             claims = security_manager.verify_token(token)
-            logger.info(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
+            logger.info(f"⏱️ Token verification took {(time.time() - step2) * 1000:.2f}ms")
 
             # Extract user info from JWT claims
             response = UserResponse(
@@ -465,7 +478,8 @@ async def reset_password(
         reset_data = get_security_manager().verify_password_reset_token(request.token)
         if not reset_data:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset token"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset token",
             )
 
         user_email = reset_data["email"]
@@ -502,15 +516,14 @@ async def reset_password(
     except Exception as e:
         logger.error(f"Reset password error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Password reset failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Password reset failed",
         )
 
 
 # MFA Management Models
 class MFASetupRequest(BaseModel):
     """MFA setup initiation request"""
-
-    pass
 
 
 class MFAVerifySetupRequest(BaseModel):
@@ -568,7 +581,8 @@ async def get_mfa_status(
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MFA status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MFA status",
         )
 
 
@@ -635,7 +649,8 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy",
         )
 
 
@@ -675,5 +690,6 @@ async def verify_telegram(
     except Exception as e:
         logger.error(f"Telegram verification error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to verify account"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify account",
         )

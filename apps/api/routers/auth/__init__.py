@@ -5,17 +5,17 @@ This package provides authentication, registration, password management,
 and user profile functionality split into separate domain modules.
 """
 
-from .router import router
 from .models import (
-    LoginRequest,
-    RegisterRequest,
     AuthResponse,
-    UserResponse,
-    PasswordResetRequest,
-    PasswordResetConfirm,
+    LoginRequest,
     PasswordChangeRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    RegisterRequest,
     TelegramVerifyRequest,
+    UserResponse,
 )
+from .router import router
 
 __all__ = [
     "router",

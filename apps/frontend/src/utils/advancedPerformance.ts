@@ -9,8 +9,9 @@
  * - Critical path optimization
  */
 
-import { lazy, Suspense, memo, useMemo, useCallback } from 'react';
+import React, { lazy, Suspense, memo, useMemo, useCallback, useRef, ComponentType, ReactNode } from 'react';
 import { Box, CircularProgress, Skeleton } from '@mui/material';
+import type { LazyExoticComponent } from 'react';
 
 // Performance-aware loading states
 export const LOADING_STRATEGIES = {
@@ -18,12 +19,89 @@ export const LOADING_STRATEGIES = {
   SPINNER: 'spinner',
   PROGRESSIVE: 'progressive',
   INLINE: 'inline'
-};
+} as const;
+
+type LoadingStrategy = typeof LOADING_STRATEGIES[keyof typeof LOADING_STRATEGIES];
+
+interface SmartLazyOptions {
+  name?: string;
+  priority?: 'critical' | 'high' | 'normal' | 'low';
+  preloadStrategy?: 'idle' | 'immediate' | 'interaction' | 'viewport';
+  loadingStrategy?: LoadingStrategy;
+  chunkName?: string;
+  timeout?: number;
+  retryCount?: number;
+}
+
+interface PerformanceMetrics {
+  loadTime: number;
+  timestamp: number;
+  attempts: number;
+  success: boolean;
+  error?: string;
+}
+
+interface PerformanceLoadingFallbackProps {
+  strategy?: LoadingStrategy;
+  height?: number;
+  lines?: number;
+  variant?: 'text' | 'rectangular' | 'circular';
+}
+
+interface PerformanceSuspenseProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+  name?: string;
+  onLoad?: (loadTime: number) => void;
+  onError?: (error: Error, errorInfo?: React.ErrorInfo) => void;
+  timeout?: number;
+}
+
+interface LoadTrackerProps {
+  children: ReactNode;
+  onLoad?: () => void;
+}
+
+interface ErrorBoundaryWrapperProps {
+  children: ReactNode;
+  onError?: (error: Error, errorInfo?: React.ErrorInfo) => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+interface BundleMetrics {
+  importCount?: number;
+  lineCount?: number;
+  dependencies?: string[];
+}
+
+interface ChunkInfo {
+  name: string;
+  size: number;
+  loadTime: number;
+}
+
+interface LoadingStrategyConfig {
+  strategy: 'progressive' | 'batched' | 'parallel';
+  batchSize: number;
+  delay: number;
+}
+
+interface NetworkMetrics {
+  networkSpeed?: string;
+  deviceMemory?: number;
+}
 
 /**
  * Smart Lazy Loading with Performance Optimization
  */
 export class SmartLazyLoader {
+  loadCache: Map<string, Promise<any>>;
+  performanceMetrics: Map<string, PerformanceMetrics>;
+  criticalComponents: Set<string>;
+
   constructor() {
     this.loadCache = new Map();
     this.performanceMetrics = new Map();
@@ -33,10 +111,13 @@ export class SmartLazyLoader {
   /**
    * Create optimized lazy component with performance tracking
    */
-  createLazyComponent(importFn, options = {}) {
+  createLazyComponent<T extends ComponentType<any>>(
+    importFn: () => Promise<{ default: T }>,
+    options: SmartLazyOptions = {}
+  ): LazyExoticComponent<T> & { preload?: () => Promise<{ default: T }>; displayName?: string; priority?: string; chunkName?: string } {
     const {
       name = 'UnnamedComponent',
-      priority = 'normal', // 'critical', 'high', 'normal', 'low'
+      priority = 'normal',
       preloadStrategy = 'idle',
       loadingStrategy = LOADING_STRATEGIES.SKELETON,
       chunkName,
@@ -45,7 +126,7 @@ export class SmartLazyLoader {
     } = options;
 
     // Enhanced import function with error handling and retry
-    const enhancedImportFn = async () => {
+    const enhancedImportFn = async (): Promise<{ default: T }> => {
       const startTime = performance.now();
       let attempts = 0;
 
@@ -63,7 +144,7 @@ export class SmartLazyLoader {
           });
 
           return module;
-        } catch (error) {
+        } catch (error: any) {
           attempts++;
           console.warn(`Failed to load ${name} (attempt ${attempts}/${retryCount}):`, error);
 
@@ -82,35 +163,47 @@ export class SmartLazyLoader {
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempts) * 1000));
         }
       }
+
+      throw new Error(`Failed to load ${name} after ${retryCount} attempts`);
     };
 
     const LazyComponent = lazy(enhancedImportFn);
 
     // Add preload capability
-    LazyComponent.preload = () => {
+    const enhancedLazyComponent = LazyComponent as LazyExoticComponent<T> & {
+      preload?: () => Promise<{ default: T }>;
+      displayName?: string;
+      priority?: string;
+      chunkName?: string;
+    };
+
+    enhancedLazyComponent.preload = () => {
       if (!this.loadCache.has(name)) {
         const promise = enhancedImportFn();
         this.loadCache.set(name, promise);
         return promise;
       }
-      return this.loadCache.get(name);
+      return this.loadCache.get(name)!;
     };
 
     // Add metadata
-    LazyComponent.displayName = name;
-    LazyComponent.priority = priority;
-    LazyComponent.chunkName = chunkName;
+    enhancedLazyComponent.displayName = name;
+    enhancedLazyComponent.priority = priority;
+    enhancedLazyComponent.chunkName = chunkName;
 
-    return LazyComponent;
+    return enhancedLazyComponent;
   }
 
   /**
    * Preload components based on priority and strategy
    */
-  preloadComponents(components, strategy = 'idle') {
+  preloadComponents(
+    components: Array<LazyExoticComponent<any> & { preload?: () => Promise<any>; displayName?: string }>,
+    strategy: 'idle' | 'immediate' | 'interaction' | 'viewport' = 'idle'
+  ): void {
     const preloadFn = () => {
       components.forEach(component => {
-        if (component.preload && !this.loadCache.has(component.displayName)) {
+        if (component.preload && !this.loadCache.has(component.displayName || '')) {
           component.preload().catch(error => {
             console.warn(`Preload failed for ${component.displayName}:`, error);
           });
@@ -135,7 +228,7 @@ export class SmartLazyLoader {
         const handleInteraction = () => {
           preloadFn();
           interactionEvents.forEach(event => {
-            document.removeEventListener(event, handleInteraction, { passive: true });
+            document.removeEventListener(event, handleInteraction);
           });
         };
         interactionEvents.forEach(event => {
@@ -170,7 +263,7 @@ export class SmartLazyLoader {
       totalComponents: this.performanceMetrics.size,
       averageLoadTime: 0,
       failures: 0,
-      components: {}
+      components: {} as Record<string, PerformanceMetrics>
     };
 
     let totalLoadTime = 0;
@@ -199,21 +292,23 @@ export const PerformanceLoadingFallback = memo(({
   height = 200,
   lines = 3,
   variant = 'rectangular'
-}) => {
+}: PerformanceLoadingFallbackProps): JSX.Element => {
   const fallbackComponent = useMemo(() => {
     switch (strategy) {
       case LOADING_STRATEGIES.SKELETON:
         return (
           <Box sx={{ p: 2 }}>
-            {Array.from({ length: lines }).map((_, index) => (
-              <Skeleton
-                key={index}
-                variant={variant}
-                height={height / lines}
-                sx={{ mb: 1 }}
-                animation="wave"
-              />
-            ))}
+            {Array.from({ length: lines }).map((_, index) => {
+              return (
+                <Skeleton
+                  key={index}
+                  variant={variant}
+                  height={height / lines}
+                  sx={{ mb: 1 }}
+                  animation="wave"
+                />
+              );
+            })}
           </Box>
         );
 
@@ -280,7 +375,7 @@ export const PerformanceSuspense = memo(({
   onLoad,
   onError,
   timeout = 10000
-}) => {
+}: PerformanceSuspenseProps): JSX.Element => {
   const startTime = useRef(Date.now());
 
   const handleLoad = useCallback(() => {
@@ -289,21 +384,23 @@ export const PerformanceSuspense = memo(({
       loadTime,
       timestamp: Date.now(),
       success: true,
+      attempts: 1,
       type: 'suspense'
-    });
+    } as any);
     onLoad?.(loadTime);
   }, [name, onLoad]);
 
-  const handleError = useCallback((error) => {
+  const handleError = useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
     const loadTime = Date.now() - startTime.current;
     smartLoader.performanceMetrics.set(`${name}_suspense`, {
       loadTime,
       timestamp: Date.now(),
       success: false,
       error: error.message,
+      attempts: 1,
       type: 'suspense'
-    });
-    onError?.(error);
+    } as any);
+    onError?.(error, errorInfo);
   }, [name, onError]);
 
   return (
@@ -322,7 +419,7 @@ PerformanceSuspense.displayName = 'PerformanceSuspense';
 /**
  * Load tracking wrapper
  */
-const LoadTracker = memo(({ children, onLoad }) => {
+const LoadTracker = memo(({ children, onLoad }: LoadTrackerProps): JSX.Element => {
   const hasLoaded = useRef(false);
 
   React.useEffect(() => {
@@ -332,27 +429,29 @@ const LoadTracker = memo(({ children, onLoad }) => {
     }
   }, [onLoad]);
 
-  return children;
+  return <>{children}</>;
 });
+
+LoadTracker.displayName = 'LoadTracker';
 
 /**
  * Simple error boundary for Suspense
  */
-class ErrorBoundaryWrapper extends React.Component {
-  constructor(props) {
+class ErrorBoundaryWrapper extends React.Component<ErrorBoundaryWrapperProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryWrapperProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.props.onError?.(error, errorInfo);
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
         <Box sx={{ p: 2, textAlign: 'center', color: 'error.main' }}>
@@ -372,7 +471,7 @@ export const bundleAnalyzer = {
   /**
    * Estimate component bundle size impact
    */
-  estimateComponentSize: (componentName, metrics = {}) => {
+  estimateComponentSize: (componentName: string, metrics: BundleMetrics = {}): number => {
     // Basic heuristic based on component complexity
     const {
       importCount = 0,
@@ -392,15 +491,15 @@ export const bundleAnalyzer = {
   /**
    * Monitor actual bundle chunk sizes
    */
-  monitorChunkSizes: () => {
+  monitorChunkSizes: (): ChunkInfo[] => {
     if ('performance' in window && 'getEntriesByType' in performance) {
-      const resources = performance.getEntriesByType('resource');
+      const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       const chunks = resources.filter(resource =>
         resource.name.includes('.js') && resource.name.includes('chunk')
       );
 
       return chunks.map(chunk => ({
-        name: chunk.name.split('/').pop(),
+        name: chunk.name.split('/').pop() || 'unknown',
         size: chunk.transferSize,
         loadTime: chunk.responseEnd - chunk.requestStart
       }));
@@ -411,7 +510,7 @@ export const bundleAnalyzer = {
   /**
    * Performance-based chunk loading strategy
    */
-  getOptimalLoadingStrategy: (metrics = {}) => {
+  getOptimalLoadingStrategy: (metrics: NetworkMetrics = {}): LoadingStrategyConfig => {
     const { networkSpeed = 'unknown', deviceMemory = 4 } = metrics;
 
     if (networkSpeed === 'slow-2g' || deviceMemory < 2) {

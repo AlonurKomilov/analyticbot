@@ -6,6 +6,7 @@ MFA status, and administrative role information.
 """
 
 import json
+import logging
 import time
 from datetime import datetime
 from typing import Any
@@ -13,15 +14,15 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from apps.api.middleware.auth import get_current_user
+from core.common.cache_decorator import cache_endpoint
 from core.security_engine import get_security_manager
-from core.security_engine.mfa_manager import MFAManager
+from core.security_engine.decorators import require_analytics_access, require_permission
+from core.security_engine.mfa import MFAManager
 from core.security_engine.permissions import Permission
-from core.security_engine.decorators import require_permission, require_analytics_access
-from apps.shared.utils.cache_utils import cache_endpoint
 
-from ..auth_router import UserResponse  # Import from original file for now
-from ..dependencies import logger
+from .models import UserResponse
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 

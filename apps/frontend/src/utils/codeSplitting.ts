@@ -218,7 +218,7 @@ export const createSmartLazy = <T extends ComponentType<any>>(
     const preloadableComponent = LazyComponent as LazyExoticComponent<T> & {
         preload?: () => Promise<{ default: T }>;
     };
-    
+
     preloadableComponent.preload = enhancedImport;
 
     // Preload logic
@@ -460,7 +460,7 @@ export const usePreloadManager = () => {
     const manager = initPreloadManager();
 
     return {
-        addRoute: (routeName: string, importFn: () => Promise<any>, priority: 'high' | 'normal' | 'low' = 'normal') => 
+        addRoute: (routeName: string, importFn: () => Promise<any>, priority: 'high' | 'normal' | 'low' = 'normal') =>
             manager?.addRoute(routeName, importFn, priority),
         preloadRoute: (routeName: string) => manager?.preloadRoute(routeName),
         preloadCritical: () => manager?.preloadCriticalRoutes(),

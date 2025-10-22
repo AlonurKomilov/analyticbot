@@ -55,7 +55,6 @@ async def cmd_alerts(
                 "• 📈 Growth milestones (subscriber growth)\n\n"
                 "Configure alerts for specific channels to get real-time notifications!",
                 parse_mode="Markdown",
-                reply_markup=kb_alerts_main(),
             )
             return
 
@@ -91,10 +90,13 @@ async def cmd_alerts(
             "\n💡 Use the buttons below to manage your alert subscriptions."
         )
 
+        # Get first channel_id for the keyboard (if multiple channels, use the first one)
+        first_channel_id = str(list(channel_alerts.keys())[0]) if channel_alerts else "0"
+
         await message.answer(
             "\n".join(response_parts),
             parse_mode="Markdown",
-            reply_markup=kb_alerts_main(),
+            reply_markup=kb_alerts_main(first_channel_id),
         )
 
     except Exception as e:
@@ -138,7 +140,7 @@ async def show_channel_alerts(
                 f"📺 **Channel {channel_id} Alerts**\n\n"
                 "No alert subscriptions configured for this channel.\n\n"
                 "Use the buttons below to add alerts.",
-                reply_markup=kb_alerts_main(),
+                reply_markup=kb_alerts_main(str(channel_id)),
             )
             await callback.answer()
             return
@@ -157,7 +159,7 @@ async def show_channel_alerts(
         await callback.message.edit_text(
             "\n".join(alert_list),
             parse_mode="Markdown",
-            reply_markup=kb_alerts_main(),
+            reply_markup=kb_alerts_main(str(channel_id)),
         )
 
         await callback.answer()

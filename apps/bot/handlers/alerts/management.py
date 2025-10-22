@@ -31,14 +31,23 @@ async def toggle_alert(
 
         alert_id = int(callback.data.split(":")[2])
 
+        # Get the current subscription to check its state
+        all_subs = await alert_repo.get_user_subscriptions(callback.from_user.id if callback.from_user else 0)
+        current_sub = next((s for s in all_subs if s.id == alert_id), None)
+        
+        if not current_sub:
+            await callback.answer("❌ Alert not found", show_alert=True)
+            return
+
         # Toggle the alert
         toggled = await alert_repo.toggle_subscription(alert_id)
 
         if toggled:
-            status = "enabled" if toggled.enabled else "disabled"
-            await callback.answer(f"🔔 Alert {status} successfully!")
+            # Determine new status (opposite of current)
+            new_status = "disabled" if current_sub.enabled else "enabled"
+            await callback.answer(f"🔔 Alert {new_status} successfully!")
         else:
-            await callback.answer("❌ Alert not found", show_alert=True)
+            await callback.answer("❌ Failed to toggle alert", show_alert=True)
 
     except Exception as e:
         logger.error(f"Alert toggle failed: {e}")
@@ -65,6 +74,7 @@ async def delete_alert_confirmation(callback: CallbackQuery, i18n: I18nContext):
             "Are you sure you want to delete this alert?\n\n"
             "This action cannot be undone and you will stop receiving notifications for this alert.",
             reply_markup=kb_confirmation(
+                "Delete Alert",
                 f"alert:delete:confirm:{alert_id}",
                 f"alert:delete:cancel:{alert_id}",
             ),

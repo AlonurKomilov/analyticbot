@@ -154,7 +154,11 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         },
         {
             "name": "analytics-alerts",
-            "description": "� Alert Management: thresholds, notifications, and alert system",
+            "description": "🔔 Alert Management: thresholds, notifications, and alert system",
+        },
+        {
+            "name": "analytics-post-dynamics",
+            "description": "📊 Post Dynamics: time-series post performance tracking and analytics",
         },
         {
             "name": "statistics-core",
@@ -167,6 +171,10 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         {
             "name": "insights-engagement",
             "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content",
+        },
+        {
+            "name": "Analytics Orchestration v2",
+            "description": "🎼 Workflow Orchestration: comprehensive analytics pipelines and service coordination",
         },
         {
             "name": "insights-predictive",
@@ -273,8 +281,10 @@ app.include_router(admin_system_router)  # Admin - System Management
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
 from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
+from apps.api.routers.analytics_post_dynamics_router import router as analytics_post_dynamics_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_predictive import router as insights_predictive_router
+from apps.api.routers.insights_orchestration_router import router as insights_orchestration_router
+from apps.api.routers.insights_predictive_router import router as insights_predictive_router
 from apps.api.routers.statistics_core_router import router as statistics_core_router
 from apps.api.routers.statistics_reports_router import router as statistics_reports_router
 from apps.demo.routers.main import router as demo_router
@@ -285,6 +295,9 @@ app.include_router(
 )  # Real-time live analytics (4 endpoints) - /analytics/live/*
 app.include_router(analytics_alerts_router)  # Alert management (8 endpoints) - /analytics/alerts/*
 app.include_router(
+    analytics_post_dynamics_router
+)  # Post dynamics time-series (2 endpoints) - /analytics/post-dynamics/* ✅ RESTORED
+app.include_router(
     statistics_core_router
 )  # Historical statistics (5 endpoints) - /statistics/core/*
 app.include_router(
@@ -293,6 +306,9 @@ app.include_router(
 app.include_router(
     insights_engagement_router
 )  # Engagement intelligence (4 endpoints) - /insights/engagement/*
+app.include_router(
+    insights_orchestration_router
+)  # Workflow orchestration (3 endpoints) - /insights/orchestration/* ✅ RESTORED
 app.include_router(
     insights_predictive_router
 )  # AI/ML predictions (4 endpoints) - /insights/predictive/*

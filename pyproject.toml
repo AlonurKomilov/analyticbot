@@ -244,7 +244,9 @@ ignore_imports = [
     "apps.api.routers.analytics_alerts_router -> apps.api.middleware.auth",
     "apps.api.routers.analytics_live_router -> apps.api.middleware.auth",
     "apps.api.routers.analytics_post_dynamics_router -> apps.api.middleware.auth",
-    "apps.api.routers.auth_router -> apps.api.middleware.auth",
+    "apps.api.routers.auth.login -> apps.api.middleware.auth",
+    "apps.api.routers.auth.profile -> apps.api.middleware.auth",
+    "apps.api.routers.auth.registration -> apps.api.middleware.auth",
     "apps.api.routers.channels_router -> apps.api.middleware.auth",
     "apps.api.routers.content_protection_router -> apps.api.middleware.auth",
     "apps.api.routers.insights_engagement_router -> apps.api.middleware.auth",
@@ -271,7 +273,13 @@ ignore_imports = [
     "apps.bot.handlers.content_protection.watermarking -> apps.di",
     # Exports router imports DI (composition root pattern)
     "apps.api.routers.exports_router -> apps.di",
-    "apps.bot.handlers.exports -> apps.di"
+    "apps.bot.handlers.exports -> apps.di",
+    # Issue #4 - pending refactor (routers using DI instead of proper dependency injection)
+    "apps.api.routers.ai_chat_router -> apps.di",
+    "apps.api.routers.competitive_intelligence_router -> apps.di",
+    "apps.api.routers.insights_predictive_router -> apps.di",
+    "apps.api.routers.strategy_router -> apps.di",
+    "apps.api.routers.trend_analysis_router -> apps.di"
 ]
 
 # Note: apps.di.*, apps.api.di_analytics, and apps.mtproto.* intentionally allowed

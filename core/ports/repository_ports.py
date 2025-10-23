@@ -174,9 +174,9 @@ class ChannelRepository(Protocol):
     async def update_channel_status(self, channel_id: int, is_active: bool) -> None:
         """
         Update channel active status
-        
+
         ✅ Issue #3 Phase 4: Added to protocol for channel suspension/unsuspension
-        
+
         Args:
             channel_id: Channel ID to update
             is_active: New active status (True=active, False=suspended)
@@ -186,13 +186,13 @@ class ChannelRepository(Protocol):
     async def update_channel(self, channel_id: int, **kwargs) -> dict:
         """
         Update channel with provided fields
-        
+
         ✅ Issue #3 Phase 4: Added to protocol for channel updates
-        
+
         Args:
             channel_id: Channel ID to update
             **kwargs: Fields to update (name, description, username, is_active, etc.)
-        
+
         Returns:
             Updated channel data
         """

@@ -17,7 +17,9 @@ from apps.api.routers.auth import router as auth_router
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
-from apps.api.routers.content_protection_router import router as content_protection_router
+from apps.api.routers.content_protection_router import (
+    router as content_protection_router,
+)
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
@@ -30,10 +32,9 @@ from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 
+# ✅ CLEAN ARCHITECTURE: Use DI container
 # ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
 from apps.di import cleanup_container as cleanup_db_pool
-
-# ✅ CLEAN ARCHITECTURE: Use DI container
 from apps.di import get_container
 from config import settings
 
@@ -142,7 +143,10 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         "url": "https://t.me/abccontrol_bot",
         "email": "support@analyticbot.com",
     },
-    license_info={"name": "Enterprise License", "url": "https://analyticbot.com/license"},
+    license_info={
+        "name": "Enterprise License",
+        "url": "https://analyticbot.com/license",
+    },
     openapi_tags=[
         {
             "name": "Core",
@@ -250,7 +254,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 # Production performance middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"]
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"],
 )
 
 # Add CORS middleware with explicit configuration
@@ -279,14 +284,24 @@ app.include_router(admin_system_router)  # Admin - System Management
 
 # ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
-from apps.api.routers.analytics_channels_router import router as analytics_channels_router
+from apps.api.routers.analytics_channels_router import (
+    router as analytics_channels_router,
+)
 from apps.api.routers.analytics_live_router import router as analytics_live_router
-from apps.api.routers.analytics_post_dynamics_router import router as analytics_post_dynamics_router
-from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_orchestration_router import router as insights_orchestration_router
+from apps.api.routers.analytics_post_dynamics_router import (
+    router as analytics_post_dynamics_router,
+)
+from apps.api.routers.insights_engagement_router import (
+    router as insights_engagement_router,
+)
+from apps.api.routers.insights_orchestration_router import (
+    router as insights_orchestration_router,
+)
 from apps.api.routers.insights_predictive import router as insights_predictive_router
 from apps.api.routers.statistics_core_router import router as statistics_core_router
-from apps.api.routers.statistics_reports_router import router as statistics_reports_router
+from apps.api.routers.statistics_reports_router import (
+    router as statistics_reports_router,
+)
 from apps.demo.routers.main import router as demo_router
 
 app.include_router(analytics_channels_router)  # Channel list for analytics - /analytics/channels
@@ -366,7 +381,9 @@ app.include_router(strategy_router)  # Strategy Generation - /strategy/*
 
 # ✅ PHASE 6: BUSINESS INTELLIGENCE ROUTERS (Phase 2 - October 21, 2025)
 # Advanced analytics and market intelligence features
-from apps.api.routers.competitive_intelligence_router import router as competitive_router
+from apps.api.routers.competitive_intelligence_router import (
+    router as competitive_router,
+)
 from apps.api.routers.trend_analysis_router import router as trends_router
 
 app.include_router(competitive_router)  # Competitive Intelligence - /competitive/*

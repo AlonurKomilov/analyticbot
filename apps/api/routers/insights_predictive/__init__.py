@@ -5,12 +5,12 @@ This package provides predictive analytics, AI recommendations,
 forecasting, and intelligence analysis split into domain modules.
 """
 
-from .router import router
 from .models import (
-    PredictionRequest,
     ContextualIntelligenceRequest,
     CrossChannelIntelligenceRequest,
+    PredictionRequest,
 )
+from .router import router
 
 __all__ = [
     "router",

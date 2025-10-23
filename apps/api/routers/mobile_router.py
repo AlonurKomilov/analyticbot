@@ -76,7 +76,7 @@ def compress_analytics_data(full_data: dict, widget_type: str = "dashboard") -> 
         return {
             "key_metric": full_data.get("total_views", 0),
             "change": full_data.get("growth_rate", 0),
-            "status": "good" if full_data.get("performance_score", 0) > 70 else "warning",
+            "status": ("good" if full_data.get("performance_score", 0) > 70 else "warning"),
         }
     else:
         # Dashboard - balanced compression
@@ -93,7 +93,7 @@ def compress_analytics_data(full_data: dict, widget_type: str = "dashboard") -> 
                 {"period": "7d", "value": full_data.get("weekly_trend", 0)},
                 {"period": "30d", "value": full_data.get("monthly_trend", 0)},
             ],
-            "status": "good" if full_data.get("performance_score", 0) > 70 else "warning",
+            "status": ("good" if full_data.get("performance_score", 0) > 70 else "warning"),
         }
 
 

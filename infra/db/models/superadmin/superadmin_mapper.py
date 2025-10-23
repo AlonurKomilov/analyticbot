@@ -21,26 +21,18 @@ from core.models.superadmin_domain import (
     SystemStatus,
     UserStatus,
 )
-from infra.db.models.superadmin.superadmin_orm import (
-    AdminAuditLog as AuditEntryORM,
-)
-from infra.db.models.superadmin.superadmin_orm import (
-    AdminSession as AdminSessionORM,
-)
 
 # Import ORM models
-from infra.db.models.superadmin.superadmin_orm import (
-    AdminUser as AdminUserORM,
-)
+from infra.db.models.superadmin.superadmin_orm import AdminAuditLog as AuditEntryORM
+from infra.db.models.superadmin.superadmin_orm import AdminSession as AdminSessionORM
+from infra.db.models.superadmin.superadmin_orm import AdminUser as AdminUserORM
 from infra.db.models.superadmin.superadmin_orm import (
     SystemConfiguration as SystemConfigORM,
 )
 from infra.db.models.superadmin.superadmin_orm import (
     SystemMetrics as AdminNotificationORM,
 )
-from infra.db.models.superadmin.superadmin_orm import (
-    SystemUser as SystemComponentORM,
-)
+from infra.db.models.superadmin.superadmin_orm import SystemUser as SystemComponentORM
 
 
 # For Permission, we'll create a simple class until proper ORM is available
@@ -82,7 +74,9 @@ class AdminDomainMapper:
             email=domain.email,
             password_hash=domain.password_hash,
             role=domain.role if isinstance(domain.role, str) else domain.role.value,
-            status=domain.status.value if isinstance(domain.status, UserStatus) else domain.status,
+            status=(
+                domain.status.value if isinstance(domain.status, UserStatus) else domain.status
+            ),
             first_name=domain.first_name,
             last_name=domain.last_name,
             phone=domain.phone,

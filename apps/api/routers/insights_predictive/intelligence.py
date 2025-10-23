@@ -11,6 +11,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from apps.api.middleware.auth import get_current_user_id
+
 from .dependencies import get_predictive_orchestrator
 from .models import ContextualIntelligenceRequest, CrossChannelIntelligenceRequest
 
@@ -232,7 +233,8 @@ async def analyze_cross_channel_intelligence(
     except Exception as e:
         logger.error(f"Cross-channel intelligence analysis failed: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Cross-channel intelligence analysis failed: {str(e)}"
+            status_code=500,
+            detail=f"Cross-channel intelligence analysis failed: {str(e)}",
         )
 
 
@@ -240,7 +242,8 @@ async def analyze_cross_channel_intelligence(
 async def get_prediction_narrative(
     channel_id: int,
     narrative_style: str = Query(
-        "conversational", description="Narrative style: conversational, technical, executive"
+        "conversational",
+        description="Narrative style: conversational, technical, executive",
     ),
     prediction_type: str = Query("comprehensive", description="Type of prediction to explain"),
     current_user_id: int = Depends(get_current_user_id),

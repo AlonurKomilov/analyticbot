@@ -18,7 +18,6 @@ from core.security_engine import (
 from core.security_engine import LegacyUserRole as UserRole
 
 # Import new role system with backwards compatibility
-from core.security_engine.models import User
 
 # HTTP Bearer security scheme
 security_scheme = HTTPBearer()
@@ -29,7 +28,9 @@ class AuthError(HTTPException):
 
     def __init__(self, detail: str, status_code: int = status.HTTP_401_UNAUTHORIZED):
         super().__init__(
-            status_code=status_code, detail=detail, headers={"WWW-Authenticate": "Bearer"}
+            status_code=status_code,
+            detail=detail,
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
@@ -74,6 +75,7 @@ class FastAPIAuthUtils:
             JWT access token string
         """
         from datetime import timedelta
+
         expires_delta = timedelta(minutes=expires_minutes) if expires_minutes else None
         return self.security_manager.create_access_token(user, expires_delta)
 

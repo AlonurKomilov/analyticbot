@@ -62,9 +62,7 @@ class HealthMonitoringService:
         self.metrics = HealthMetrics(self.thresholds)
         self.history = HealthHistory()
 
-        logger.info(
-            f"🏥 HealthMonitoringService initialized for {service_name} v{self.version}"
-        )
+        logger.info(f"🏥 HealthMonitoringService initialized for {service_name} v{self.version}")
 
     def register_dependency(
         self,
@@ -131,7 +129,10 @@ class HealthMonitoringService:
         for (name, _), check_result in zip(component_checks, results, strict=False):
             if isinstance(check_result, Exception):
                 # Handle unexpected exceptions during health check execution
-                from apps.api.services.health_monitoring.base import ComponentHealth, HealthStatus
+                from apps.api.services.health_monitoring.base import (
+                    ComponentHealth,
+                    HealthStatus,
+                )
 
                 component_health = ComponentHealth(
                     name=name,

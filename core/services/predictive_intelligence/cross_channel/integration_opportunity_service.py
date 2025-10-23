@@ -60,7 +60,12 @@ class IntegrationOpportunityService:
                 "audience_alignment": 0.25,
                 "content_fit": 0.15,
             },
-            "priority_levels": {"critical": 0.8, "high": 0.6, "medium": 0.4, "low": 0.2},
+            "priority_levels": {
+                "critical": 0.8,
+                "high": 0.6,
+                "medium": 0.4,
+                "low": 0.2,
+            },
         }
 
         # Opportunity tracking
@@ -413,9 +418,9 @@ class IntegrationOpportunityService:
 
             return {
                 "feasibility_score": round(feasibility, 3),
-                "rating": "high"
-                if feasibility >= 0.7
-                else ("medium" if feasibility >= 0.5 else "low"),
+                "rating": (
+                    "high" if feasibility >= 0.7 else ("medium" if feasibility >= 0.5 else "low")
+                ),
                 "factors": {
                     "platform_compatibility": platform_compat,
                     "resource_requirements": resource_req,
@@ -583,9 +588,11 @@ class IntegrationOpportunityService:
             "engagement_boost": engagement_boost,
             "reach_increase": reach_increase,
             "audience_growth": f"{int(impact_score * 20)}-{int(impact_score * 30)}%",
-            "efficiency_gain": "15-25% time savings"
-            if opp_type == "content_sync"
-            else "10-20% resource optimization",
+            "efficiency_gain": (
+                "15-25% time savings"
+                if opp_type == "content_sync"
+                else "10-20% resource optimization"
+            ),
         }
 
     async def health_check(self) -> dict[str, Any]:

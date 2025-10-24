@@ -75,11 +75,12 @@ class ThrottleMiddleware(BaseMiddleware):
                 if isinstance(event, types.Message):
                     await event.answer(
                         f"⏰ Too fast! Please wait {remaining:.1f} seconds.",
-                        show_alert=True if isinstance(event, types.CallbackQuery) else False,
+                        show_alert=(True if isinstance(event, types.CallbackQuery) else False),
                     )
                 elif isinstance(event, types.CallbackQuery):
                     await event.answer(
-                        f"⏰ Too fast! Please wait {remaining:.1f} seconds.", show_alert=True
+                        f"⏰ Too fast! Please wait {remaining:.1f} seconds.",
+                        show_alert=True,
                     )
 
                 return  # Don't process the request

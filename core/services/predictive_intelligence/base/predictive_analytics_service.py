@@ -17,7 +17,11 @@ from datetime import datetime, timedelta
 
 import numpy as np
 
-from core.repositories.interfaces import ChannelDailyRepository, ChannelRepository, PostRepository
+from core.repositories.interfaces import (
+    ChannelDailyRepository,
+    ChannelRepository,
+    PostRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -451,7 +455,10 @@ class PredictiveAnalyticsService:
             daily_views = training_data.get("daily_views", [])
 
             if len(posts) < 5:
-                return {"confidence": 0.0, "message": "Insufficient post data for optimization"}
+                return {
+                    "confidence": 0.0,
+                    "message": "Insufficient post data for optimization",
+                }
 
             opportunities = []
 
@@ -528,7 +535,7 @@ class PredictiveAnalyticsService:
                 "confidence": confidence,
                 "analysis": {
                     "length_analysis": length_avg,
-                    "avg_engagement": np.mean(engagement_scores) if engagement_scores else 0,
+                    "avg_engagement": (np.mean(engagement_scores) if engagement_scores else 0),
                 },
             }
 
@@ -608,7 +615,8 @@ class PredictiveAnalyticsService:
             # Sort by priority and confidence
             priority_scores = {"high": 3, "medium": 2, "low": 1}
             recommendations.sort(
-                key=lambda x: (priority_scores.get(x["priority"], 0), x["confidence"]), reverse=True
+                key=lambda x: (priority_scores.get(x["priority"], 0), x["confidence"]),
+                reverse=True,
             )
 
             return recommendations[:10]  # Top 10 recommendations

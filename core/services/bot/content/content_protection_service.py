@@ -6,15 +6,15 @@ Combines watermarking, theft detection, and premium features.
 """
 
 import time
+
 from core.services.bot.content.models import (
     ContentProtectionRequest,
     ContentProtectionResponse,
-    WatermarkResult,
 )
-from core.services.bot.content.watermark_service import WatermarkService
-from core.services.bot.content.video_watermark_service import VideoWatermarkService
+from core.services.bot.content.protocols import FileSystemPort, SubscriptionPort
 from core.services.bot.content.theft_detector import TheftDetectorService
-from core.services.bot.content.protocols import SubscriptionPort, FileSystemPort
+from core.services.bot.content.video_watermark_service import VideoWatermarkService
+from core.services.bot.content.watermark_service import WatermarkService
 
 
 class ContentProtectionService:
@@ -71,9 +71,7 @@ class ContentProtectionService:
             # Check premium status if user_id provided
             has_premium = False
             if request.user_id is not None:
-                has_premium = await self._subscription_port.check_premium_status(
-                    request.user_id
-                )
+                has_premium = await self._subscription_port.check_premium_status(request.user_id)
 
             # Handle different content types
             if request.content_type == "image":
@@ -198,9 +196,7 @@ class ContentProtectionService:
             )
 
         # Analyze content
-        theft_analysis = await self._theft_detector.analyze_content(
-            request.text_content or ""
-        )
+        theft_analysis = await self._theft_detector.analyze_content(request.text_content or "")
 
         return ContentProtectionResponse(
             success=True,

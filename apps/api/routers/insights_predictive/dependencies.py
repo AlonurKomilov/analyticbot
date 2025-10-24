@@ -6,6 +6,7 @@ used across predictive analytics and intelligence endpoints.
 """
 
 import logging
+
 from fastapi import HTTPException
 
 from apps.api.di_analytics import get_analytics_fusion_service, get_cache

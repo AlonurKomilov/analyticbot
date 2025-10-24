@@ -289,7 +289,7 @@ const WatermarkTool: React.FC = () => {
                                 <Select
                                     value={watermarkConfig.position}
                                     label="Position"
-                                    onChange={(e: SelectChangeEvent) => 
+                                    onChange={(e: SelectChangeEvent) =>
                                         handleConfigChange('position', e.target.value as WatermarkPosition)
                                     }
                                 >
@@ -306,7 +306,7 @@ const WatermarkTool: React.FC = () => {
                                 <Select
                                     value={watermarkConfig.color}
                                     label="Color"
-                                    onChange={(e: SelectChangeEvent) => 
+                                    onChange={(e: SelectChangeEvent) =>
                                         handleConfigChange('color', e.target.value as WatermarkColor)
                                     }
                                 >

@@ -1,6 +1,6 @@
 /**
  * Content Protection Panel Component
- * 
+ *
  * UI for content theft detection and watermarking.
  * Integrates with contentProtectionService.ts
  */
@@ -101,7 +101,7 @@ const ContentProtectionPanel: React.FC<ContentProtectionPanelProps> = ({ channel
                 scanPlatforms
             );
             setScanResults(results);
-            
+
             if (results.detected) {
                 setSuccess(`Found ${results.matches.length} potential theft instances`);
             } else {
@@ -218,7 +218,7 @@ const ContentProtectionPanel: React.FC<ContentProtectionPanelProps> = ({ channel
                                         key={platform}
                                         label={platform}
                                         onClick={() => {
-                                            setScanPlatforms(prev => 
+                                            setScanPlatforms(prev =>
                                                 prev.includes(platform)
                                                     ? prev.filter(p => p !== platform)
                                                     : [...prev, platform]

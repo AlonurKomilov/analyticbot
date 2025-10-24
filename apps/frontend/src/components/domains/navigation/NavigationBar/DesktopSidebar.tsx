@@ -19,7 +19,7 @@ const DRAWER_WIDTH = 260;
 
 /**
  * DesktopSidebar Component
- * 
+ *
  * Permanent sidebar for desktop screens showing navigation menu
  * with icons, labels, and active state indicators
  */

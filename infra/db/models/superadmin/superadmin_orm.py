@@ -22,7 +22,7 @@ class Base(DeclarativeBase):
 class AdminRole(str, Enum):
     """
     DEPRECATED: Admin role hierarchy - use new 5-role system instead
-    
+
     Migration to new system:
     - SUPPORT → moderator (with customer_support permission)
     - MODERATOR → moderator
@@ -49,7 +49,7 @@ class UserStatus(str, Enum):
 class AdminUser(Base):
     """
     SuperAdmin users with elevated privileges - Aligned with 5-role domain model
-    
+
     Role system: viewer < user < moderator < admin < owner
     Default role: moderator (support team level)
     """

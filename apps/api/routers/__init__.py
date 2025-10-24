@@ -29,10 +29,10 @@ from .ai_services_router import router as ai_services_router
 from .analytics_alerts_router import router as analytics_alerts_router
 from .analytics_live_router import router as analytics_live_router
 from .auth.router import router as auth_router
-from .competitive_intelligence_router import router as competitive_intelligence_router
 
 # Other domain routers - FIXED: Updated to match renamed files
 from .channels_router import router as channels_router
+from .competitive_intelligence_router import router as competitive_intelligence_router
 from .exports_router import router as exports_router
 from .health_router import router as health_router
 from .insights_engagement_router import router as insights_engagement_router

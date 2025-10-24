@@ -1,4 +1,4 @@
-              indexname              |    tablename    |                                                                indexdef                                                                 
+              indexname              |    tablename    |                                                                indexdef
 -------------------------------------+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------
  admin_users_email_key               | admin_users     | CREATE UNIQUE INDEX admin_users_email_key ON public.admin_users USING btree (email)
  admin_users_pkey                    | admin_users     | CREATE UNIQUE INDEX admin_users_pkey ON public.admin_users USING btree (id)
@@ -29,4 +29,3 @@
  users_pkey                          | users           | CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)
  users_telegram_id_key               | users           | CREATE UNIQUE INDEX users_telegram_id_key ON public.users USING btree (telegram_id)
 (28 rows)
-

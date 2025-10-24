@@ -1,8 +1,8 @@
 # Frontend Endpoint Update Plan - Direct Code Changes
 
-**Goal:** Update ALL frontend code to use new organized API endpoints directly  
-**Date:** October 22, 2025  
-**Strategy:** Replace old endpoints in code, remove migration helper, clean URLs  
+**Goal:** Update ALL frontend code to use new organized API endpoints directly
+**Date:** October 22, 2025
+**Strategy:** Replace old endpoints in code, remove migration helper, clean URLs
 
 ---
 
@@ -15,9 +15,9 @@
 4. ❌ **Mixed patterns** (some with `/api/`, some without)
 
 ### Goal State:
-✅ **Clean, organized endpoints** without versions  
-✅ **Consistent structure** across all files  
-✅ **Match new backend** organization  
+✅ **Clean, organized endpoints** without versions
+✅ **Consistent structure** across all files
+✅ **Match new backend** organization
 
 ---
 
@@ -121,8 +121,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + `/analytics/channels/${id}/export/${type}?...`
 ```
 
-**Estimated time:** 30 minutes  
-**Lines to change:** ~15 lines  
+**Estimated time:** 30 minutes
+**Lines to change:** ~15 lines
 
 ---
 
@@ -157,8 +157,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 // NO changes needed for lines 274-391
 ```
 
-**Estimated time:** 20 minutes  
-**Lines to change:** ~9 lines  
+**Estimated time:** 20 minutes
+**Lines to change:** ~9 lines
 
 ---
 
@@ -184,8 +184,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + `/analytics/channels/${channelId}/best-times`
 ```
 
-**Estimated time:** 15 minutes  
-**Lines to change:** ~5 lines  
+**Estimated time:** 15 minutes
+**Lines to change:** ~5 lines
 
 ---
 
@@ -211,8 +211,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + `/analytics/channels/${channelId}/engagement?period=${period}`
 ```
 
-**Estimated time:** 15 minutes  
-**Lines to change:** ~5 lines  
+**Estimated time:** 15 minutes
+**Lines to change:** ~5 lines
 
 ---
 
@@ -226,8 +226,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + constructor(baseURL: string = '/payments') {
 ```
 
-**Estimated time:** 2 minutes  
-**Lines to change:** 1 line  
+**Estimated time:** 2 minutes
+**Lines to change:** 1 line
 
 ---
 
@@ -269,8 +269,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + apiClient.post('/mobile/analytics/quick', {...})
 ```
 
-**Estimated time:** 20 minutes  
-**Lines to change:** ~10 lines  
+**Estimated time:** 20 minutes
+**Lines to change:** ~10 lines
 
 ---
 
@@ -293,8 +293,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + apiClient.get('/analytics/trends/top-posts')
 ```
 
-**Estimated time:** 10 minutes  
-**Lines to change:** ~5 lines  
+**Estimated time:** 10 minutes
+**Lines to change:** ~5 lines
 
 ---
 
@@ -308,8 +308,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + const response = await fetch(`/admin/super/${endpoint}`, {...})
 ```
 
-**Estimated time:** 5 minutes  
-**Lines to change:** 1 line  
+**Estimated time:** 5 minutes
+**Lines to change:** 1 line
 
 ---
 
@@ -329,8 +329,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + (await (dataProvider as any)._makeRequest(`/channels/${channelId}`))
 ```
 
-**Estimated time:** 10 minutes  
-**Lines to change:** 3 lines  
+**Estimated time:** 10 minutes
+**Lines to change:** 3 lines
 
 ---
 
@@ -352,8 +352,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + // apiClient.post('/content/protection/detection/scan', {...})
 ```
 
-**Estimated time:** 5 minutes  
-**Lines to change:** 3 lines  
+**Estimated time:** 5 minutes
+**Lines to change:** 3 lines
 
 ---
 
@@ -367,8 +367,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + // fetch('/ai/optimization/recent')
 ```
 
-**Estimated time:** 2 minutes  
-**Lines to change:** 1 line  
+**Estimated time:** 2 minutes
+**Lines to change:** 1 line
 
 ---
 
@@ -388,8 +388,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + fetch(`/admin/analytics/channels/${channelId}`, {...})
 ```
 
-**Estimated time:** 10 minutes  
-**Lines to change:** 3 lines  
+**Estimated time:** 10 minutes
+**Lines to change:** 3 lines
 
 ---
 
@@ -403,8 +403,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + apiClient.get(`/analytics/channels/${channelId}/overview`)
 ```
 
-**Estimated time:** 2 minutes  
-**Lines to change:** 1 line  
+**Estimated time:** 2 minutes
+**Lines to change:** 1 line
 
 ---
 
@@ -427,8 +427,8 @@ async request<T>(endpoint: string, ...): Promise<T> {
 + '/analytics/predictive/best-times/demo_channel'
 ```
 
-**Estimated time:** 10 minutes  
-**Lines to change:** 4 lines  
+**Estimated time:** 10 minutes
+**Lines to change:** 4 lines
 
 ---
 
@@ -442,7 +442,7 @@ async request<T>(endpoint: string, ...): Promise<T> {
 rm apps/frontend/src/api/endpointMigration.ts
 ```
 
-**Estimated time:** 1 minute  
+**Estimated time:** 1 minute
 
 ---
 
@@ -453,7 +453,7 @@ rm apps/frontend/src/api/endpointMigration.ts
   - Remove migration helper import
   - Update 13 endpoints
   - Test import/export
-  
+
 ### Phase 2: High Priority Services (Day 1 - 1.5 hours)
 - [ ] **2. Update `services/aiServicesAPI.ts`** (20 min)
 - [ ] **3. Update `services/analyticsService.ts`** (15 min)
@@ -495,9 +495,9 @@ rm apps/frontend/src/api/endpointMigration.ts
 
 ## 🎯 Summary Statistics
 
-**Total Files to Update:** 15 files  
-**Total Lines to Change:** ~75 lines  
-**Total Estimated Time:** 6 hours (including testing)  
+**Total Files to Update:** 15 files
+**Total Lines to Change:** ~75 lines
+**Total Estimated Time:** 6 hours (including testing)
 
 **Breakdown by Type:**
 - Remove version prefixes (`/api/v1/`, `/api/v2/`): ~35 changes

@@ -1,6 +1,6 @@
 /**
  * Example Component with Design Tokens
- * 
+ *
  * This demonstrates the correct usage of design tokens in a component.
  * Use this as a reference when migrating other components.
  */

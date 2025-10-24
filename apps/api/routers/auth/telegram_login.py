@@ -93,9 +93,9 @@ def validate_telegram_auth(auth_data: dict[str, Any], bot_token: str) -> bool:
                     check_data.append(f"{key}={value}")
 
         data_check_string = "\n".join(check_data)
-        
+
         # Debug logging
-        logger.info(f"🔍 Telegram auth validation debug:")
+        logger.info("🔍 Telegram auth validation debug:")
         logger.info(f"  - Auth data keys: {sorted(auth_data.keys())}")
         logger.info(f"  - Data check string: {data_check_string[:100]}...")
         logger.info(f"  - Received hash: {received_hash[:20]}...")
@@ -108,18 +108,18 @@ def validate_telegram_auth(auth_data: dict[str, Any], bot_token: str) -> bool:
         calculated_hash = hmac.new(
             secret_key, data_check_string.encode(), hashlib.sha256
         ).hexdigest()
-        
+
         logger.info(f"  - Calculated hash: {calculated_hash[:20]}...")
 
         # Constant-time comparison to prevent timing attacks
         is_valid = hmac.compare_digest(calculated_hash, received_hash)
 
         if not is_valid:
-            logger.warning(f"❌ Telegram auth hash validation failed!")
+            logger.warning("❌ Telegram auth hash validation failed!")
             logger.warning(f"   Expected: {calculated_hash}")
             logger.warning(f"   Received: {received_hash}")
         else:
-            logger.info(f"✅ Telegram auth hash validated successfully!")
+            logger.info("✅ Telegram auth hash validated successfully!")
 
         return is_valid
 
@@ -228,25 +228,29 @@ async def telegram_login(
                 full_name += f" {telegram_data.last_name}"
 
             # Create user with Telegram provider
-            new_user = await user_repo.create_user({
-                "email": f"telegram_{telegram_data.id}@telegram.local",  # Placeholder
-                "username": username,
-                "password": None,  # No password needed for Telegram auth
-                "full_name": full_name,
-                "telegram_id": telegram_data.id,
-                "telegram_username": telegram_data.username,
-                "telegram_photo_url": telegram_data.photo_url,
-                "telegram_verified": True,
-                "status": "active",  # Auto-activate Telegram users
-                "auth_provider": "telegram",
-            })
+            new_user = await user_repo.create_user(
+                {
+                    "email": f"telegram_{telegram_data.id}@telegram.local",  # Placeholder
+                    "username": username,
+                    "password": None,  # No password needed for Telegram auth
+                    "full_name": full_name,
+                    "telegram_id": telegram_data.id,
+                    "telegram_username": telegram_data.username,
+                    "telegram_photo_url": telegram_data.photo_url,
+                    "telegram_verified": True,
+                    "status": "active",  # Auto-activate Telegram users
+                    "auth_provider": "telegram",
+                }
+            )
 
             user_data = new_user
 
         # Create User object for session
         user = User(
             id=str(user_data["id"]),
-            email=user_data.get("email", f"telegram_{telegram_data.id}@telegram.user"),  # Generate email for Telegram users
+            email=user_data.get(
+                "email", f"telegram_{telegram_data.id}@telegram.user"
+            ),  # Generate email for Telegram users
             username=user_data["username"],
             full_name=user_data.get("full_name"),
             hashed_password=user_data.get("hashed_password"),
@@ -435,9 +439,7 @@ async def link_telegram_account(
             telegram_verified=True,
         )
 
-        logger.info(
-            f"Linked Telegram account {telegram_data.id} to user {user_data['username']}"
-        )
+        logger.info(f"Linked Telegram account {telegram_data.id} to user {user_data['username']}")
 
         return {
             "message": "Telegram account linked successfully",

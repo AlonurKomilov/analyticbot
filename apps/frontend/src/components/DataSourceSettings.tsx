@@ -68,10 +68,10 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
       // Use the same base URL logic as apiClient.ts
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 
-                        import.meta.env.VITE_API_URL || 
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ||
+                        import.meta.env.VITE_API_URL ||
                         'https://b2qz1m0n-11400.euw.devtunnels.ms'; // Fallback to devtunnel
-      
+
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
         signal: controller.signal,

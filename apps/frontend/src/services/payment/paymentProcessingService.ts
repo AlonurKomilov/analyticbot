@@ -1,6 +1,6 @@
 /**
  * Payment Processing Microservice
- * 
+ *
  * Single Responsibility: Process individual payments only
  * Separated from: payment methods, subscriptions, invoicing
  */

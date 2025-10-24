@@ -1,9 +1,9 @@
 /**
  * useChannelManagement Hook
- * 
+ *
  * Custom hook that encapsulates all channel management business logic, state, and API calls.
  * Follows the same pattern as useUserManagement for consistency.
- * 
+ *
  * Features:
  * - Channel CRUD operations
  * - Search and filtering
@@ -40,7 +40,7 @@ export interface UseChannelManagementReturn {
     channels: AdminChannelInfo[];
     loading: boolean;
     error: string | null;
-    
+
     // Search & Pagination
     searchTerm: string;
     setSearchTerm: (term: string) => void;
@@ -48,24 +48,24 @@ export interface UseChannelManagementReturn {
     setPage: (page: number) => void;
     rowsPerPage: number;
     setRowsPerPage: (rows: number) => void;
-    
+
     // Dialog State
     dialogState: DialogState;
     dialogLoading: boolean;
     suspendReason: string;
     setSuspendReason: (reason: string) => void;
-    
+
     // Statistics & Audit
     statistics: ChannelStatistics | null;
     auditLogs: ChannelAuditLog[];
-    
+
     // Actions
     loadChannels: () => Promise<void>;
     handleSearch: () => Promise<void>;
     handleSuspendChannel: () => Promise<void>;
     handleUnsuspendChannel: (channel: AdminChannelInfo) => Promise<void>;
     handleDeleteChannel: () => Promise<void>;
-    
+
     // Dialog Actions
     openDialog: (type: Exclude<DialogType, null>, channel: AdminChannelInfo) => void;
     closeDialog: () => void;
@@ -82,19 +82,19 @@ export const useChannelManagement = (onChannelUpdated?: () => void): UseChannelM
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dialogLoading, setDialogLoading] = useState(false);
-    
+
     // Search & Pagination
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    
+
     // Dialog State
     const [dialogState, setDialogState] = useState<DialogState>({
         type: null,
         channel: null,
     });
     const [suspendReason, setSuspendReason] = useState('');
-    
+
     // Statistics & Audit
     const [statistics, setStatistics] = useState<ChannelStatistics | null>(null);
     const [auditLogs, setAuditLogs] = useState<ChannelAuditLog[]>([]);
@@ -147,7 +147,7 @@ export const useChannelManagement = (onChannelUpdated?: () => void): UseChannelM
     // Dialog Actions
     const openDialog = useCallback((type: Exclude<DialogType, null>, channel: AdminChannelInfo) => {
         setDialogState({ type, channel });
-        
+
         // Load data for specific dialog types
         if (type === 'stats') {
             loadStatisticsData();
@@ -259,7 +259,7 @@ export const useChannelManagement = (onChannelUpdated?: () => void): UseChannelM
         channels,
         loading,
         error,
-        
+
         // Search & Pagination
         searchTerm,
         setSearchTerm,
@@ -267,24 +267,24 @@ export const useChannelManagement = (onChannelUpdated?: () => void): UseChannelM
         setPage,
         rowsPerPage,
         setRowsPerPage,
-        
+
         // Dialog State
         dialogState,
         dialogLoading,
         suspendReason,
         setSuspendReason,
-        
+
         // Statistics & Audit
         statistics,
         auditLogs,
-        
+
         // Actions
         loadChannels,
         handleSearch,
         handleSuspendChannel,
         handleUnsuspendChannel,
         handleDeleteChannel,
-        
+
         // Dialog Actions
         openDialog,
         closeDialog,

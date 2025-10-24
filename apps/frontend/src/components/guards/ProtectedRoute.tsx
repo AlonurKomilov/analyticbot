@@ -3,8 +3,8 @@
  *
  * Route guard that checks authentication status and optional role requirements.
  * Redirects to login if not authenticated, shows fallback if role check fails.
- * 
- * Role checking uses hierarchy: higher roles (e.g., admin) can access 
+ *
+ * Role checking uses hierarchy: higher roles (e.g., admin) can access
  * routes requiring lower roles (e.g., moderator).
  */
 

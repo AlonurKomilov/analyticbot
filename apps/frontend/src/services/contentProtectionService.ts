@@ -1,9 +1,9 @@
 /**
  * Content Protection Service
- * 
+ *
  * Security and content protection features.
  * Integrates with backend /content/protection/* endpoints.
- * 
+ *
  * Features:
  * - Content theft detection
  * - Watermarking (text and images)
@@ -77,7 +77,7 @@ class ContentProtectionService {
 
     /**
      * Scan for content theft
-     * 
+     *
      * @param channelId - Channel ID
      * @param contentHash - Optional content hash
      * @param platforms - Platforms to check
@@ -106,7 +106,7 @@ class ContentProtectionService {
 
     /**
      * Get theft detection history
-     * 
+     *
      * @param channelId - Channel ID
      * @param limit - Number of results
      * @returns Detection history
@@ -131,7 +131,7 @@ class ContentProtectionService {
 
     /**
      * Get theft detection statistics
-     * 
+     *
      * @param channelId - Channel ID
      * @returns Detection stats
      */
@@ -154,7 +154,7 @@ class ContentProtectionService {
 
     /**
      * Apply text watermark
-     * 
+     *
      * @param text - Text to watermark
      * @param watermarkType - Watermark visibility
      * @param position - Watermark position
@@ -183,7 +183,7 @@ class ContentProtectionService {
 
     /**
      * Apply image watermark
-     * 
+     *
      * @param imageUrl - Image URL
      * @param watermarkText - Watermark text
      * @param opacity - Watermark opacity (0-1)
@@ -215,7 +215,7 @@ class ContentProtectionService {
 
     /**
      * Format text with premium emojis
-     * 
+     *
      * @param text - Text to format
      * @param customEmojiIds - Custom emoji IDs to use
      * @returns Formatted text with premium emojis
@@ -244,7 +244,7 @@ class ContentProtectionService {
 
     /**
      * Get protection history
-     * 
+     *
      * @param channelId - Channel ID
      * @param limit - Number of entries
      * @returns Protection history
@@ -269,7 +269,7 @@ class ContentProtectionService {
 
     /**
      * Get protection statistics
-     * 
+     *
      * @param channelId - Channel ID
      * @returns Protection stats
      */
@@ -288,7 +288,7 @@ class ContentProtectionService {
 
     /**
      * Verify watermark authenticity
-     * 
+     *
      * @param watermarkId - Watermark ID to verify
      * @returns Verification result
      */

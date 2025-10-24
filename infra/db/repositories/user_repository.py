@@ -66,9 +66,18 @@ class AsyncpgUserRepository(IUserRepository):
 
         # Whitelist of updatable fields
         allowed_fields = [
-            "username", "email", "full_name", "hashed_password", "role", 
-            "status", "plan_id", "last_login", "telegram_id", "telegram_username",
-            "telegram_photo_url", "telegram_verified"
+            "username",
+            "email",
+            "full_name",
+            "hashed_password",
+            "role",
+            "status",
+            "plan_id",
+            "last_login",
+            "telegram_id",
+            "telegram_username",
+            "telegram_photo_url",
+            "telegram_verified",
         ]
 
         for key, value in updates.items():

@@ -1,9 +1,9 @@
 /**
  * ChannelSearchBar Component
- * 
+ *
  * Search and filter bar for channel management.
  * Follows the same pattern as UserSearchBar for consistency.
- * 
+ *
  * Features:
  * - Search input with icon
  * - Search button

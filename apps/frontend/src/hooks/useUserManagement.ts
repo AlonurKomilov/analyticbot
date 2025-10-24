@@ -1,9 +1,9 @@
 /**
  * useUserManagement Hook
- * 
+ *
  * Custom hook that encapsulates all user management business logic, state, and API calls.
  * Extracted from UserManagement.tsx god component for reusability and testability.
- * 
+ *
  * Features:
  * - User CRUD operations
  * - Search and filtering
@@ -12,7 +12,7 @@
  * - Audit logs
  * - Role management
  * - Suspend/unsuspend functionality
- * 
+ *
  * Usage:
  * ```tsx
  * const {
@@ -57,7 +57,7 @@ export interface UseUserManagementReturn {
     users: AdminUserInfo[];
     loading: boolean;
     error: string | null;
-    
+
     // Search & Pagination
     searchTerm: string;
     setSearchTerm: (term: string) => void;
@@ -65,7 +65,7 @@ export interface UseUserManagementReturn {
     setPage: (page: number) => void;
     rowsPerPage: number;
     setRowsPerPage: (rows: number) => void;
-    
+
     // Dialog State
     dialogState: DialogState;
     dialogLoading: boolean;
@@ -75,11 +75,11 @@ export interface UseUserManagementReturn {
     setNewRole: (role: UserRole) => void;
     notificationMessage: string;
     setNotificationMessage: (message: string) => void;
-    
+
     // Statistics & Audit
     statistics: UserStatistics | null;
     auditLogs: UserAuditLog[];
-    
+
     // Actions
     loadUsers: () => Promise<void>;
     handleSearch: () => Promise<void>;
@@ -88,7 +88,7 @@ export interface UseUserManagementReturn {
     handleUpdateRole: () => Promise<void>;
     handleDeleteUser: () => Promise<void>;
     handleNotifyUser: () => Promise<void>;
-    
+
     // Dialog Actions
     openDialog: (type: Exclude<DialogType, null>, user: AdminUserInfo) => void;
     closeDialog: () => void;
@@ -105,12 +105,12 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [dialogLoading, setDialogLoading] = useState(false);
-    
+
     // Search & Pagination
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    
+
     // Dialog State
     const [dialogState, setDialogState] = useState<DialogState>({
         type: null,
@@ -119,7 +119,7 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
     const [suspendReason, setSuspendReason] = useState('');
     const [newRole, setNewRole] = useState<UserRole>('user');
     const [notificationMessage, setNotificationMessage] = useState('');
-    
+
     // Statistics & Audit
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
     const [auditLogs, setAuditLogs] = useState<UserAuditLog[]>([]);
@@ -172,7 +172,7 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
     // Dialog Actions
     const openDialog = useCallback((type: Exclude<DialogType, null>, user: AdminUserInfo) => {
         setDialogState({ type, user });
-        
+
         // Load data for specific dialog types
         if (type === 'stats') {
             loadStatisticsData();
@@ -330,7 +330,7 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
         users,
         loading,
         error,
-        
+
         // Search & Pagination
         searchTerm,
         setSearchTerm,
@@ -338,7 +338,7 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
         setPage,
         rowsPerPage,
         setRowsPerPage,
-        
+
         // Dialog State
         dialogState,
         dialogLoading,
@@ -348,11 +348,11 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
         setNewRole,
         notificationMessage,
         setNotificationMessage,
-        
+
         // Statistics & Audit
         statistics,
         auditLogs,
-        
+
         // Actions
         loadUsers,
         handleSearch,
@@ -361,7 +361,7 @@ export const useUserManagement = (onUserUpdated?: () => void): UseUserManagement
         handleUpdateRole,
         handleDeleteUser,
         handleNotifyUser,
-        
+
         // Dialog Actions
         openDialog,
         closeDialog,

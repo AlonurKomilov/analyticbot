@@ -32,9 +32,9 @@ psql your_database < docs/migrations/telegram_auth_migration.py
 
 Verify columns added:
 ```sql
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'users' 
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'users'
   AND column_name LIKE 'telegram%';
 ```
 
@@ -241,8 +241,8 @@ Track Telegram logins:
 
 ```sql
 -- Count Telegram users
-SELECT COUNT(*) 
-FROM users 
+SELECT COUNT(*)
+FROM users
 WHERE telegram_id IS NOT NULL;
 
 -- Recent Telegram logins
@@ -253,8 +253,8 @@ ORDER BY last_login DESC
 LIMIT 10;
 
 -- Telegram vs Email logins
-SELECT 
-    CASE 
+SELECT
+    CASE
         WHEN telegram_id IS NOT NULL THEN 'Telegram'
         ELSE 'Email/Password'
     END as auth_method,

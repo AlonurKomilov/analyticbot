@@ -473,7 +473,7 @@ const [show, setShow] = useState(true);
    ```typescript
    // Good - Uses base component
    <BaseDialog open={open} onClose={handleClose} title="Confirm" />
-   
+
    // Avoid - Custom implementation
    <Dialog><DialogTitle>Confirm</DialogTitle>...</Dialog>
    ```
@@ -482,7 +482,7 @@ const [show, setShow] = useState(true);
    ```typescript
    // Good - Uses built-in loading state
    <BaseForm onSubmit={handleSubmit} loading={isSubmitting} />
-   
+
    // Avoid - Custom loading logic
    <form>{isSubmitting ? <Spinner /> : <FormFields />}</form>
    ```
@@ -491,7 +491,7 @@ const [show, setShow] = useState(true);
    ```typescript
    // Good - Clear intent
    <BaseAlert severity="error" message="Invalid input" />
-   
+
    // Avoid - Generic styling
    <Box sx={{ color: 'red' }}>Invalid input</Box>
    ```
@@ -502,7 +502,7 @@ const [show, setShow] = useState(true);
    ```typescript
    // Bad - Overriding styles defeats the purpose
    <BaseDialog sx={{ '& .MuiDialog-paper': { background: 'red' } }} />
-   
+
    // Good - Use built-in props
    <BaseDialog size="lg" />
    ```
@@ -511,7 +511,7 @@ const [show, setShow] = useState(true);
    ```typescript
    // Bad - Reimplementing existing functionality
    const MyCustomDialog = () => <Dialog>...</Dialog>
-   
+
    // Good - Use base component
    <BaseDialog />
    ```
@@ -610,5 +610,5 @@ All base components include:
 
 ---
 
-**Last Updated:** October 23, 2025  
+**Last Updated:** October 23, 2025
 **Questions?** Check the component source code or ask the team!

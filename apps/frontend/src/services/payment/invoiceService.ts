@@ -1,6 +1,6 @@
 /**
  * Invoice Management Microservice
- * 
+ *
  * Single Responsibility: Manage invoices and billing only
  * Separated from: payments, subscriptions, payment methods
  */

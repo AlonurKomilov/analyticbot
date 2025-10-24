@@ -1,9 +1,9 @@
 /**
  * Mobile Service
- * 
+ *
  * Mobile-optimized endpoints for app integration.
  * Integrates with backend /mobile/* endpoints.
- * 
+ *
  * Features:
  * - Mobile dashboard with compressed data
  * - Quick analytics for widgets
@@ -59,7 +59,7 @@ class MobileService {
 
     /**
      * Get mobile-optimized dashboard data
-     * 
+     *
      * @param userId - User ID
      * @param channelId - Channel ID
      * @param period - Analysis period in days (1-30)
@@ -86,7 +86,7 @@ class MobileService {
 
     /**
      * Get quick analytics for widgets/notifications
-     * 
+     *
      * @param request - Quick analytics request
      * @returns Quick analytics response
      */
@@ -107,7 +107,7 @@ class MobileService {
 
     /**
      * Get metrics summary in mobile-optimized format
-     * 
+     *
      * @param channelId - Channel ID
      * @param format - Data format (compact, widget, notification)
      * @returns Metrics summary
@@ -130,7 +130,7 @@ class MobileService {
 
     /**
      * Check if mobile API is healthy
-     * 
+     *
      * @returns Health status
      */
     async checkHealth(): Promise<{

@@ -37,7 +37,9 @@ class ChannelInfo(BaseModel):
     last_analytics_update: datetime | None = None
 
 
-@router.get("", response_model=list[ChannelInfo])  # Fixed: Empty path since main.py adds /analytics/channels
+@router.get(
+    "", response_model=list[ChannelInfo]
+)  # Fixed: Empty path since main.py adds /analytics/channels
 @cache_endpoint(prefix="analytics:channels", ttl=600)  # Cache for 10 minutes
 async def get_analytics_channels(request: Request):
     """
@@ -99,7 +101,9 @@ async def get_telegram_validation_service() -> TelegramValidationService:
     return await di_get_service()
 
 
-@router.post("/validate", response_model=ChannelValidationResult)  # Fixed: /analytics/channels/validate
+@router.post(
+    "/validate", response_model=ChannelValidationResult
+)  # Fixed: /analytics/channels/validate
 async def validate_telegram_channel(
     request_data: ValidateChannelRequest,
     telegram_service: TelegramValidationService = Depends(get_telegram_validation_service),

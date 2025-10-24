@@ -1,9 +1,9 @@
 /**
  * UserSearchBar Component
- * 
+ *
  * Search and filter bar for user management.
  * Extracted from UserManagement.tsx god component.
- * 
+ *
  * Features:
  * - Search input with icon
  * - Search button

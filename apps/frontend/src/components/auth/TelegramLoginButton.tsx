@@ -1,6 +1,6 @@
 /**
  * Telegram Login Button Component
- * 
+ *
  * Integrates Telegram Login Widget with authentication system.
  * Supports auto-registration and account switching.
  */
@@ -62,7 +62,7 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
         }
 
         // Clear any Telegram-related items from localStorage
-        const telegramKeys = Object.keys(localStorage).filter(key => 
+        const telegramKeys = Object.keys(localStorage).filter(key =>
             key.includes('telegram') || key.includes('Telegram')
         );
         telegramKeys.forEach(key => localStorage.removeItem(key));
@@ -75,9 +75,9 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
 
         try {
             // Call backend API to verify and login
-            const response = await apiClient.post<{ 
-                access_token: string; 
-                refresh_token?: string; 
+            const response = await apiClient.post<{
+                access_token: string;
+                refresh_token?: string;
                 user: any;
             }>('/auth/telegram/login', user);
 
@@ -85,14 +85,14 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
                 // Store tokens and user data with correct keys
                 localStorage.setItem('auth_token', response.access_token);
                 localStorage.setItem('access_token', response.access_token); // Backup key
-                
+
                 if (response.refresh_token) {
                     localStorage.setItem('refresh_token', response.refresh_token);
                 }
-                
+
                 localStorage.setItem('auth_user', JSON.stringify(response.user));
                 localStorage.setItem('user', JSON.stringify(response.user)); // Backup key
-                
+
                 // Set fresh login timestamp to skip /auth/me timeout
                 localStorage.setItem('last_login_time', Date.now().toString());
 
@@ -122,7 +122,7 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
     const initTelegramWidget = () => {
         // Don't initialize if disabled
         if (disabled) return;
-        
+
         // Cleanup any existing widget first
         cleanupTelegramWidget();
 
@@ -149,7 +149,7 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
     const handleSwitchAccount = () => {
         // Clear logged in user
         setLoggedInUser(null);
-        
+
         // Clear all authentication data
         localStorage.removeItem('auth_token');
         localStorage.removeItem('access_token');
@@ -157,7 +157,7 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
         localStorage.removeItem('auth_user');
         localStorage.removeItem('user');
         localStorage.removeItem('last_login_time');
-        
+
         // Reinitialize widget with cache-busting
         setTimeout(() => {
             initTelegramWidget();
@@ -170,7 +170,7 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
 
         return () => {
             // Cleanup on unmount
-            const callbackNames = Object.keys(window).filter(key => 
+            const callbackNames = Object.keys(window).filter(key =>
                 key.startsWith('telegramCallback_')
             );
             callbackNames.forEach(name => {
@@ -220,10 +220,10 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
                 </Card>
             )}
 
-            <Box 
+            <Box
                 ref={containerRef}
-                sx={{ 
-                    display: 'flex', 
+                sx={{
+                    display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: '50px',
@@ -233,18 +233,18 @@ export const TelegramLoginButton: React.FC<TelegramLoginButtonProps> = ({
             />
 
             {loading && (
-                <Typography 
-                    variant="body2" 
-                    color="text.secondary" 
+                <Typography
+                    variant="body2"
+                    color="text.secondary"
                     sx={{ mt: 2, textAlign: 'center' }}
                 >
                     Authenticating...
                 </Typography>
             )}
 
-            <Typography 
-                variant="caption" 
-                color="text.secondary" 
+            <Typography
+                variant="caption"
+                color="text.secondary"
                 sx={{ mt: 2, display: 'block', textAlign: 'center' }}
             >
                 <TelegramIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />

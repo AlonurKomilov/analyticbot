@@ -1,9 +1,9 @@
 /**
  * BaseEmptyState Component
- * 
+ *
  * Reusable empty state component with icon/illustration, title, description, and action button.
  * Consolidates 8+ empty state patterns across the application.
- * 
+ *
  * Features:
  * - Customizable icon or illustration
  * - Title and description text
@@ -11,7 +11,7 @@
  * - Consistent spacing and sizing
  * - Accessibility support
  * - Uses design tokens
- * 
+ *
  * Usage:
  * ```tsx
  * <BaseEmptyState
@@ -36,14 +36,14 @@ export interface BaseEmptyStateProps {
   // Optional - Icon
   icon?: React.ReactElement<SvgIconProps> | React.ReactNode;
   iconSize?: 'sm' | 'md' | 'lg' | 'xl';
-  
+
   // Optional - Text
   title?: string;
   description?: string;
-  
+
   // Optional - Action
   action?: React.ReactNode;
-  
+
   // Optional - Styling
   compact?: boolean;
   minHeight?: string | number;

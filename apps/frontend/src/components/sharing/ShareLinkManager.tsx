@@ -1,6 +1,6 @@
 /**
  * Share Link Manager Component
- * 
+ *
  * UI for creating and managing share links.
  * Integrates with sharingService.ts
  */

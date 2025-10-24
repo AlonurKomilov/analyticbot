@@ -29,10 +29,10 @@ from apps.api.routers.auth.telegram_login import validate_telegram_auth
 
 def test_validate_telegram_auth():
     """Test Telegram authentication validation"""
-    
+
     # Get your bot token
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    
+
     # Sample Telegram data (THIS WILL FAIL - it's just for testing structure)
     auth_data = {
         "id": 123456789,
@@ -43,11 +43,11 @@ def test_validate_telegram_auth():
         "auth_date": 1698765432,
         "hash": "abc123def456"  # This will be invalid
     }
-    
+
     # This should return False (invalid hash)
     result = validate_telegram_auth(auth_data, bot_token)
     print(f"Validation result (should be False): {result}")
-    
+
     # To get REAL test data, you need to actually trigger Telegram widget
     # and capture the data it sends
 
@@ -70,16 +70,16 @@ Run: `python test_telegram_auth.py`
 </head>
 <body>
     <h1>Test Telegram Login Widget</h1>
-    
+
     <div id="result"></div>
-    
+
     <script>
         function onTelegramAuth(user) {
             // Display received data
-            document.getElementById('result').innerHTML = 
+            document.getElementById('result').innerHTML =
                 '<h2>Received Data:</h2>' +
                 '<pre>' + JSON.stringify(user, null, 2) + '</pre>';
-            
+
             // Send to your backend
             fetch('http://localhost:8000/api/auth/telegram/login', {
                 method: 'POST',
@@ -90,21 +90,21 @@ Run: `python test_telegram_auth.py`
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerHTML += 
+                document.getElementById('result').innerHTML +=
                     '<h2>Backend Response:</h2>' +
                     '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
             })
             .catch(error => {
-                document.getElementById('result').innerHTML += 
+                document.getElementById('result').innerHTML +=
                     '<h2>Error:</h2>' +
                     '<pre>' + error.toString() + '</pre>';
             });
         }
     </script>
-    
+
     <!-- Replace YOUR_BOT_USERNAME with your actual bot username -->
-    <script 
-        async 
+    <script
+        async
         src="https://telegram.org/js/telegram-widget.js?22"
         data-telegram-login="YOUR_BOT_USERNAME"
         data-size="large"
@@ -141,13 +141,13 @@ from core.repositories.user_repository import UserRepository
 
 async def test_telegram_user_creation():
     """Test creating and finding users by Telegram ID"""
-    
+
     # Get repository
     user_repo = UserRepository()
-    
+
     # Test data
     telegram_id = 123456789
-    
+
     # Create user with Telegram ID
     new_user = await user_repo.create_user(
         email=f"telegram_{telegram_id}@telegram.local",
@@ -159,17 +159,17 @@ async def test_telegram_user_creation():
         telegram_verified=True,
         status="active",
     )
-    
+
     print(f"✅ Created user: {new_user}")
-    
+
     # Find by Telegram ID
     found_user = await user_repo.get_user_by_telegram_id(telegram_id)
-    
+
     if found_user:
         print(f"✅ Found user by Telegram ID: {found_user['username']}")
     else:
         print("❌ Could not find user by Telegram ID")
-    
+
     # Cleanup
     await user_repo.delete_user(new_user['id'])
     print("✅ Cleanup complete")
@@ -193,7 +193,7 @@ BASE_URL = "http://localhost:8000/api"
 
 def test_full_telegram_login_flow():
     """Test complete login flow"""
-    
+
     # Step 1: Simulate Telegram widget data
     # (In reality, this comes from Telegram - this is just structure)
     telegram_data = {
@@ -205,37 +205,37 @@ def test_full_telegram_login_flow():
         "auth_date": 1698765432,
         "hash": "calculated_by_telegram"
     }
-    
+
     # Step 2: Send to login endpoint
     print("📤 Sending Telegram data to backend...")
     response = requests.post(
         f"{BASE_URL}/auth/telegram/login",
         json=telegram_data
     )
-    
+
     print(f"📥 Response status: {response.status_code}")
-    
+
     if response.status_code == 200:
         data = response.json()
         print("✅ Login successful!")
         print(f"   Access Token: {data['access_token'][:20]}...")
         print(f"   User: {data['user']['username']}")
-        
+
         # Step 3: Test authenticated request
         access_token = data['access_token']
-        
+
         profile_response = requests.get(
             f"{BASE_URL}/auth/profile",
             headers={"Authorization": f"Bearer {access_token}"}
         )
-        
+
         if profile_response.status_code == 200:
             print("✅ Authenticated request successful!")
             profile = profile_response.json()
             print(f"   Profile: {profile['username']}")
         else:
             print("❌ Authenticated request failed")
-            
+
     elif response.status_code == 401:
         print("❌ Authentication failed (expected with fake hash)")
         print(f"   Error: {response.json()}")
@@ -258,7 +258,7 @@ BASE_URL = "http://localhost:8000/api"
 
 def test_link_telegram_account():
     """Test linking Telegram to existing account"""
-    
+
     # Step 1: Login with email/password
     login_response = requests.post(
         f"{BASE_URL}/auth/login",
@@ -267,14 +267,14 @@ def test_link_telegram_account():
             "password": "yourpassword123"
         }
     )
-    
+
     if login_response.status_code != 200:
         print("❌ Failed to login with email/password")
         return
-    
+
     access_token = login_response.json()['access_token']
     print("✅ Logged in with email/password")
-    
+
     # Step 2: Link Telegram account
     telegram_data = {
         "id": 111222333,
@@ -283,13 +283,13 @@ def test_link_telegram_account():
         "auth_date": 1698765432,
         "hash": "calculated_by_telegram"
     }
-    
+
     link_response = requests.post(
         f"{BASE_URL}/auth/telegram/link",
         headers={"Authorization": f"Bearer {access_token}"},
         json={"telegram_data": telegram_data}
     )
-    
+
     if link_response.status_code == 200:
         print("✅ Telegram account linked successfully!")
         print(f"   {link_response.json()}")
@@ -311,9 +311,9 @@ import os
 
 def test_invalid_hash():
     """Test that invalid hashes are rejected"""
-    
+
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    
+
     # Data with tampered hash
     invalid_data = {
         "id": 123456,
@@ -321,9 +321,9 @@ def test_invalid_hash():
         "auth_date": 1698765432,
         "hash": "definitely_fake_hash_123"
     }
-    
+
     result = validate_telegram_auth(invalid_data, bot_token)
-    
+
     if result == False:
         print("✅ Invalid hash correctly rejected")
     else:
@@ -331,16 +331,16 @@ def test_invalid_hash():
 
 def test_missing_hash():
     """Test that missing hash is rejected"""
-    
+
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-    
+
     data_without_hash = {
         "id": 123456,
         "first_name": "Test"
     }
-    
+
     result = validate_telegram_auth(data_without_hash, bot_token)
-    
+
     if result == False:
         print("✅ Missing hash correctly rejected")
     else:
@@ -360,20 +360,20 @@ import time
 
 def test_auth_expiry():
     """Test authentication expiry checking"""
-    
+
     # Recent timestamp (should pass)
     recent = int(time.time()) - 3600  # 1 hour ago
     result = is_auth_recent(recent, max_age_hours=24)
-    
+
     if result:
         print("✅ Recent auth correctly accepted")
     else:
         print("❌ Recent auth rejected")
-    
+
     # Old timestamp (should fail)
     old = int(time.time()) - (25 * 3600)  # 25 hours ago
     result = is_auth_recent(old, max_age_hours=24)
-    
+
     if not result:
         print("✅ Expired auth correctly rejected")
     else:

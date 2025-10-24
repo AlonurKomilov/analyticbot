@@ -93,7 +93,7 @@ Replace the placeholder button with the real widget:
 import { TelegramLoginButton } from './TelegramLoginButton';
 
 // Replace the placeholder button with:
-<TelegramLoginButton 
+<TelegramLoginButton
     onSuccess={(data) => {
         console.log('Telegram login successful:', data);
         // AuthContext will handle redirect

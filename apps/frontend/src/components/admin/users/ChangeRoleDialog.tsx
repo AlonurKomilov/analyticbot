@@ -1,6 +1,6 @@
 /**
  * ChangeRoleDialog Component
- * 
+ *
  * Dialog for changing a user's role.
  * Extracted from UserManagement.tsx god component.
  */

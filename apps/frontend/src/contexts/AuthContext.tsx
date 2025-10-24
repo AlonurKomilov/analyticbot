@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     // For fresh logins (within last 5 seconds), trust the stored data
                     const lastLoginTime = localStorage.getItem('last_login_time');
                     const isFreshLogin = lastLoginTime && (Date.now() - parseInt(lastLoginTime)) < 5000;
-                    
+
                     if (isFreshLogin) {
                         console.log('✅ Fresh login detected - using stored credentials');
                         setToken(storedToken);
@@ -118,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         setIsLoading(false);
                         return;
                     }
-                    
+
                     // Verify token is still valid by making a test request with shorter timeout
                     try {
                         const userData = await apiClient.get('/auth/me', { timeout: 5000 });

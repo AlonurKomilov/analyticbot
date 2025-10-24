@@ -1,6 +1,6 @@
 /**
  * ChannelAuditDialog Component
- * 
+ *
  * Dialog for displaying channel audit logs.
  * Follows the same pattern as UserAuditDialog for consistency.
  */
@@ -54,11 +54,11 @@ const ChannelAuditDialog: React.FC<ChannelAuditDialogProps> = ({
                 ) : auditLogs.length > 0 ? (
                     <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
                         {auditLogs.map((log, index) => (
-                            <Box 
-                                key={index} 
-                                sx={{ 
-                                    mb: spacing.md, 
-                                    pb: spacing.md, 
+                            <Box
+                                key={index}
+                                sx={{
+                                    mb: spacing.md,
+                                    pb: spacing.md,
                                     borderBottom: `1px solid ${colors.border.default}`,
                                     '&:last-child': {
                                         borderBottom: 'none',
@@ -74,9 +74,9 @@ const ChannelAuditDialog: React.FC<ChannelAuditDialogProps> = ({
                                     by {log.admin_email} • {new Date(log.timestamp).toLocaleString()}
                                 </Typography>
                                 {log.details && Object.keys(log.details).length > 0 && (
-                                    <Typography 
-                                        variant="caption" 
-                                        display="block" 
+                                    <Typography
+                                        variant="caption"
+                                        display="block"
                                         sx={{ mt: spacing.xs, fontFamily: 'monospace' }}
                                     >
                                         {JSON.stringify(log.details, null, 2)}

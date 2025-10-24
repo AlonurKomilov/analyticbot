@@ -35,7 +35,7 @@ const TheftDetection: React.FC<TheftDetectionProps> = ({ channelId, loading, sca
                             key={platform}
                             label={platform}
                             onClick={() => {
-                                setScanPlatforms(prev => 
+                                setScanPlatforms(prev =>
                                     prev.includes(platform)
                                         ? prev.filter(p => p !== platform)
                                         : [...prev, platform]

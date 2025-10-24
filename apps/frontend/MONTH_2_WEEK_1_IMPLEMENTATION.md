@@ -1,8 +1,8 @@
 # Month 2 Week 1: AI Chat Endpoints Migration
 
-**Target:** Migrate `/ai-chat/*` → `/ai/chat/*`  
-**Status:** 🟢 IN PROGRESS  
-**Started:** October 22, 2025  
+**Target:** Migrate `/ai-chat/*` → `/ai/chat/*`
+**Status:** 🟢 IN PROGRESS
+**Started:** October 22, 2025
 **Estimated Completion:** October 24-25, 2025 (2-3 days)
 
 ---
@@ -202,21 +202,21 @@ useNewAiServicesEndpoints: true,
 ## 🚨 Troubleshooting
 
 ### Issue: Migration not working
-**Symptoms:** Requests still go to old endpoints  
+**Symptoms:** Requests still go to old endpoints
 **Solution:**
 1. Check feature flag: `endpointMigrationFlags.useNewAiChatEndpoints` should be `true`
 2. Clear browser cache and reload
 3. Verify API client imports migration helper
 
 ### Issue: Backend endpoint not found
-**Symptoms:** 404 Not Found errors  
+**Symptoms:** 404 Not Found errors
 **Solution:**
 1. Verify backend is running latest code
 2. Check `/docs` for available endpoints
 3. Both old and new should be listed
 
 ### Issue: Different responses from old vs new
-**Symptoms:** Data mismatch between endpoints  
+**Symptoms:** Data mismatch between endpoints
 **Solution:**
 1. Report to backend team immediately
 2. Disable feature flag: `useNewAiChatEndpoints: false`
@@ -294,6 +294,6 @@ Once Week 1 is complete and stable:
 
 ---
 
-**Last Updated:** October 22, 2025  
-**Next Review:** October 25, 2025  
+**Last Updated:** October 22, 2025
+**Next Review:** October 25, 2025
 **Migration Phase:** Month 2, Week 1 of 24 weeks

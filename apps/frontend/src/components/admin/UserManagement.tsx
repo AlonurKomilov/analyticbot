@@ -1,6 +1,6 @@
 /**
  * User Management Component
- * 
+ *
  * Admin dashboard for user oversight and management.
  * Integrates with admin/usersService.ts
  */
@@ -50,9 +50,9 @@ import {
     Person as PersonIcon,
     AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
-import { 
-    adminUsersService, 
-    type AdminUserInfo, 
+import {
+    adminUsersService,
+    type AdminUserInfo,
     type UserStatistics,
     type UserAuditLog
 } from '@/services/admin/usersService';
@@ -143,7 +143,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
     ) => {
         setActionDialog({ open: true, type, user });
         handleMenuClose();
-        
+
         if (type === 'stats') {
             loadStatistics();
         } else if (type === 'audit') {
@@ -295,7 +295,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
         }
     };
 
-    const filteredUsers = users.filter(user => 
+    const filteredUsers = users.filter(user =>
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (user.full_name && user.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (user.telegram_username && user.telegram_username.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -389,8 +389,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                                                 </Box>
                                             </TableCell>
                                             <TableCell>
-                                                <Chip 
-                                                    label={user.role} 
+                                                <Chip
+                                                    label={user.role}
                                                     color={getRoleColor(user.role)}
                                                     size="small"
                                                     icon={getRoleIcon(user.role)}
@@ -398,23 +398,23 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                                             </TableCell>
                                             <TableCell>
                                                 {user.status === 'suspended' ? (
-                                                    <Chip 
-                                                        label="Suspended" 
-                                                        color="error" 
+                                                    <Chip
+                                                        label="Suspended"
+                                                        color="error"
                                                         size="small"
                                                         icon={<BlockIcon />}
                                                     />
                                                 ) : user.status === 'deleted' ? (
-                                                    <Chip 
-                                                        label="Deleted" 
-                                                        color="default" 
+                                                    <Chip
+                                                        label="Deleted"
+                                                        color="default"
                                                         size="small"
                                                         icon={<DeleteIcon />}
                                                     />
                                                 ) : (
-                                                    <Chip 
-                                                        label="Active" 
-                                                        color="success" 
+                                                    <Chip
+                                                        label="Active"
+                                                        color="success"
                                                         size="small"
                                                         icon={<ActiveIcon />}
                                                     />
@@ -424,7 +424,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                                                 {user.total_channels || 0}
                                             </TableCell>
                                             <TableCell>
-                                                {user.last_login 
+                                                {user.last_login
                                                     ? new Date(user.last_login).toLocaleDateString()
                                                     : 'Never'}
                                             </TableCell>
@@ -490,7 +490,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                             Suspend
                         </MenuItem>
                     )}
-                    <MenuItem 
+                    <MenuItem
                         onClick={() => selectedUser && openActionDialog('delete', selectedUser)}
                         sx={{ color: 'error.main' }}
                     >
@@ -500,8 +500,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                 </Menu>
 
                 {/* Action Dialogs */}
-                <Dialog 
-                    open={actionDialog.open} 
+                <Dialog
+                    open={actionDialog.open}
                     onClose={closeActionDialog}
                     maxWidth="sm"
                     fullWidth
@@ -537,7 +537,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                         {/* Delete Dialog */}
                         {actionDialog.type === 'delete' && (
                             <Alert severity="error">
-                                Are you sure you want to delete user "{actionDialog.user?.full_name || actionDialog.user?.email}"? 
+                                Are you sure you want to delete user "{actionDialog.user?.full_name || actionDialog.user?.email}"?
                                 This action cannot be undone.
                             </Alert>
                         )}
@@ -656,9 +656,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                     <DialogActions>
                         <Button onClick={closeActionDialog}>Cancel</Button>
                         {actionDialog.type === 'suspend' && (
-                            <Button 
-                                onClick={handleSuspendUser} 
-                                variant="contained" 
+                            <Button
+                                onClick={handleSuspendUser}
+                                variant="contained"
                                 color="warning"
                                 disabled={!suspendReason.trim() || actionLoading}
                             >
@@ -666,9 +666,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                             </Button>
                         )}
                         {actionDialog.type === 'delete' && (
-                            <Button 
-                                onClick={handleDeleteUser} 
-                                variant="contained" 
+                            <Button
+                                onClick={handleDeleteUser}
+                                variant="contained"
                                 color="error"
                                 disabled={actionLoading}
                             >
@@ -676,8 +676,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                             </Button>
                         )}
                         {actionDialog.type === 'role' && (
-                            <Button 
-                                onClick={handleUpdateRole} 
+                            <Button
+                                onClick={handleUpdateRole}
                                 variant="contained"
                                 disabled={actionLoading}
                             >
@@ -685,8 +685,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
                             </Button>
                         )}
                         {actionDialog.type === 'notify' && (
-                            <Button 
-                                onClick={handleSendNotification} 
+                            <Button
+                                onClick={handleSendNotification}
                                 variant="contained"
                                 disabled={!notificationMessage.trim() || actionLoading}
                             >

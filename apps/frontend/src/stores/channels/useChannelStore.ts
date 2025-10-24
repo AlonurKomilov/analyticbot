@@ -132,7 +132,7 @@ export const useChannelStore = create<ChannelState>()(
         try {
           console.log('🔍 Attempting Telegram validation (optional)...');
           const validation = await get().validateChannel(usernameWithAt);
-          
+
           if (validation.valid) {
             console.log('✅ Telegram validation successful');
           } else {

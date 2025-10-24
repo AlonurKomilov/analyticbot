@@ -1,6 +1,6 @@
 /**
  * SuspendChannelDialog Component
- * 
+ *
  * Dialog for suspending a channel with reason.
  * Follows the same pattern as SuspendUserDialog for consistency.
  */

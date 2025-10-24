@@ -1,6 +1,6 @@
 /**
  * Channel Management Component
- * 
+ *
  * Admin dashboard for channel oversight and management.
  * Integrates with admin/channelsService.ts
  */
@@ -44,11 +44,11 @@ import {
     History as HistoryIcon,
     Assessment as StatsIcon
 } from '@mui/icons-material';
-import { 
-    adminChannelsService, 
-    type AdminChannelInfo, 
+import {
+    adminChannelsService,
+    type AdminChannelInfo,
     type ChannelStatistics,
-    type ChannelAuditLog 
+    type ChannelAuditLog
 } from '@/services/admin/channelsService';
 
 export interface ChannelManagementProps {
@@ -125,7 +125,7 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
     const openActionDialog = (type: 'suspend' | 'delete' | 'stats' | 'audit', channel: AdminChannelInfo) => {
         setActionDialog({ open: true, type, channel });
         handleMenuClose();
-        
+
         // Load additional data for stats and audit
         if (type === 'stats') {
             loadStatistics();
@@ -220,7 +220,7 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
         }
     };
 
-    const filteredChannels = channels.filter(channel => 
+    const filteredChannels = channels.filter(channel =>
         channel.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         channel.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         channel.channel_id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -313,23 +313,23 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                                             </TableCell>
                                             <TableCell>
                                                 {channel.status === 'suspended' ? (
-                                                    <Chip 
-                                                        label="Suspended" 
-                                                        color="error" 
+                                                    <Chip
+                                                        label="Suspended"
+                                                        color="error"
                                                         size="small"
                                                         icon={<BlockIcon />}
                                                     />
                                                 ) : channel.status === 'deleted' ? (
-                                                    <Chip 
-                                                        label="Deleted" 
-                                                        color="default" 
+                                                    <Chip
+                                                        label="Deleted"
+                                                        color="default"
                                                         size="small"
                                                         icon={<DeleteIcon />}
                                                     />
                                                 ) : (
-                                                    <Chip 
-                                                        label="Active" 
-                                                        color="success" 
+                                                    <Chip
+                                                        label="Active"
+                                                        color="success"
                                                         size="small"
                                                         icon={<ActiveIcon />}
                                                     />
@@ -398,7 +398,7 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                             Suspend
                         </MenuItem>
                     )}
-                    <MenuItem 
+                    <MenuItem
                         onClick={() => selectedChannel && openActionDialog('delete', selectedChannel)}
                         sx={{ color: 'error.main' }}
                     >
@@ -408,8 +408,8 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                 </Menu>
 
                 {/* Action Dialogs */}
-                <Dialog 
-                    open={actionDialog.open} 
+                <Dialog
+                    open={actionDialog.open}
                     onClose={closeActionDialog}
                     maxWidth="sm"
                     fullWidth
@@ -443,7 +443,7 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                         {/* Delete Dialog */}
                         {actionDialog.type === 'delete' && (
                             <Alert severity="error">
-                                Are you sure you want to delete channel "{actionDialog.channel?.title}"? 
+                                Are you sure you want to delete channel "{actionDialog.channel?.title}"?
                                 This action cannot be undone.
                             </Alert>
                         )}
@@ -522,9 +522,9 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                     <DialogActions>
                         <Button onClick={closeActionDialog}>Cancel</Button>
                         {actionDialog.type === 'suspend' && (
-                            <Button 
-                                onClick={handleSuspendChannel} 
-                                variant="contained" 
+                            <Button
+                                onClick={handleSuspendChannel}
+                                variant="contained"
                                 color="warning"
                                 disabled={!suspendReason.trim() || actionLoading}
                             >
@@ -532,9 +532,9 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
                             </Button>
                         )}
                         {actionDialog.type === 'delete' && (
-                            <Button 
-                                onClick={handleDeleteChannel} 
-                                variant="contained" 
+                            <Button
+                                onClick={handleDeleteChannel}
+                                variant="contained"
                                 color="error"
                                 disabled={actionLoading}
                             >

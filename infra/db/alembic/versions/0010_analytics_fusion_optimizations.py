@@ -15,9 +15,9 @@ depends_on = None
 
 def upgrade():
     """Add performance optimizations for Analytics Fusion API v2"""
-    
+
     from sqlalchemy import inspect
-    
+
     bind = op.get_bind()
     inspector = inspect(bind)
     existing_tables = inspector.get_table_names()
@@ -54,7 +54,9 @@ def upgrade():
 
     # Add indexes for channel_daily table for time series queries (skip if table doesn't exist)
     if "channel_daily" in existing_tables:
-        op.create_index("idx_channel_daily_channel_metric", "channel_daily", ["channel_id", "metric"])
+        op.create_index(
+            "idx_channel_daily_channel_metric", "channel_daily", ["channel_id", "metric"]
+        )
         op.create_index("idx_channel_daily_day", "channel_daily", ["day"])
         op.create_index("idx_channel_daily_metric_day", "channel_daily", ["metric", "day"])
 
@@ -81,7 +83,9 @@ def upgrade():
 
         # Index the materialized view
         op.create_index(
-            "idx_mv_channel_daily_recent", "mv_channel_daily_recent", ["channel_id", "metric", "day"]
+            "idx_mv_channel_daily_recent",
+            "mv_channel_daily_recent",
+            ["channel_id", "metric", "day"],
         )
 
     # Create materialized view for recent post metrics (skip if table doesn't exist)
@@ -98,14 +102,16 @@ def upgrade():
         """)
 
         # Index the post metrics materialized view
-        op.create_index("idx_mv_post_metrics_recent", "mv_post_metrics_recent", ["channel_id", "views"])
+        op.create_index(
+            "idx_mv_post_metrics_recent", "mv_post_metrics_recent", ["channel_id", "views"]
+        )
         op.create_index(
             "idx_mv_post_metrics_recent_views",
             "mv_post_metrics_recent",
-        ["views"],
-        postgresql_using="btree",
-        postgresql_ops={"views": "DESC"},
-    )
+            ["views"],
+            postgresql_using="btree",
+            postgresql_ops={"views": "DESC"},
+        )
 
 
 def downgrade():

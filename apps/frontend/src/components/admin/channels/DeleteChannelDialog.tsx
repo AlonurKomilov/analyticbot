@@ -1,6 +1,6 @@
 /**
  * DeleteChannelDialog Component
- * 
+ *
  * Confirmation dialog for deleting a channel.
  * Follows the same pattern as DeleteUserDialog for consistency.
  */
@@ -56,7 +56,7 @@ const DeleteChannelDialog: React.FC<DeleteChannelDialogProps> = ({
             }}
         >
             <Alert severity="error">
-                Are you sure you want to delete channel "{channel?.title}"? 
+                Are you sure you want to delete channel "{channel?.title}"?
                 This action cannot be undone.
             </Alert>
         </BaseDialog>

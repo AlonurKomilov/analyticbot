@@ -1,6 +1,6 @@
 /**
  * Channels Management Page
- * 
+ *
  * Comprehensive channel management interface for users to:
  * - View all their channels
  * - Add new channels
@@ -52,12 +52,12 @@ interface ChannelFormData {
 
 const ChannelsManagementPage: React.FC = () => {
     const { channels, isLoading, error, fetchChannels, addChannel, updateChannel, deleteChannel } = useChannelStore();
-    
+
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-    
+
     const [formData, setFormData] = useState<ChannelFormData>({
         name: '',
         description: '',
@@ -233,9 +233,9 @@ const ChannelsManagementPage: React.FC = () => {
                 <Grid container spacing={3}>
                     {channels.map((channel) => (
                         <Grid item xs={12} sm={6} md={4} key={channel.id}>
-                            <Card 
+                            <Card
                                 elevation={2}
-                                sx={{ 
+                                sx={{
                                     height: '100%',
                                     display: 'flex',
                                     flexDirection: 'column',
@@ -262,15 +262,15 @@ const ChannelsManagementPage: React.FC = () => {
                                     </Box>
 
                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                                        <Chip 
-                                            label={`ID: ${channel.id}`} 
-                                            size="small" 
-                                            variant="outlined" 
+                                        <Chip
+                                            label={`ID: ${channel.id}`}
+                                            size="small"
+                                            variant="outlined"
                                         />
                                         {channel.username && (
-                                            <Chip 
-                                                label={`@${channel.username}`} 
-                                                size="small" 
+                                            <Chip
+                                                label={`@${channel.username}`}
+                                                size="small"
                                                 color="primary"
                                                 variant="outlined"
                                             />
@@ -295,8 +295,8 @@ const ChannelsManagementPage: React.FC = () => {
 
                                 <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
                                     <Tooltip title="Edit channel">
-                                        <IconButton 
-                                            size="small" 
+                                        <IconButton
+                                            size="small"
                                             onClick={() => handleOpenEdit(channel)}
                                             color="primary"
                                         >
@@ -304,8 +304,8 @@ const ChannelsManagementPage: React.FC = () => {
                                         </IconButton>
                                     </Tooltip>
                                     <Tooltip title="Delete channel">
-                                        <IconButton 
-                                            size="small" 
+                                        <IconButton
+                                            size="small"
                                             onClick={() => handleOpenDelete(channel)}
                                             color="error"
                                         >
@@ -379,9 +379,9 @@ const ChannelsManagementPage: React.FC = () => {
                     <Button onClick={() => setCreateDialogOpen(false)} disabled={submitting}>
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleCreate} 
-                        variant="contained" 
+                    <Button
+                        onClick={handleCreate}
+                        variant="contained"
                         disabled={submitting || !formData.name.trim()}
                     >
                         {submitting ? <CircularProgress size={24} /> : 'Create Channel'}
@@ -449,9 +449,9 @@ const ChannelsManagementPage: React.FC = () => {
                     <Button onClick={() => setEditDialogOpen(false)} disabled={submitting}>
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleEdit} 
-                        variant="contained" 
+                    <Button
+                        onClick={handleEdit}
+                        variant="contained"
                         disabled={submitting || !formData.name.trim()}
                     >
                         {submitting ? <CircularProgress size={24} /> : 'Save Changes'}
@@ -474,9 +474,9 @@ const ChannelsManagementPage: React.FC = () => {
                     <Button onClick={() => setDeleteDialogOpen(false)} disabled={submitting}>
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={handleDelete} 
-                        color="error" 
+                    <Button
+                        onClick={handleDelete}
+                        color="error"
                         variant="contained"
                         disabled={submitting}
                     >

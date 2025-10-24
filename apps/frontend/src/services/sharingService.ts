@@ -1,9 +1,9 @@
 /**
  * Sharing Service
- * 
+ *
  * Integrates with backend /sharing/* endpoints for secure analytics sharing.
  * Provides token-based access control with TTL and audit trails.
- * 
+ *
  * Backend API: /sharing/create, /sharing/revoke, /sharing/{token}
  */
 
@@ -55,7 +55,7 @@ class SharingService {
 
     /**
      * Create a shareable link for analytics report
-     * 
+     *
      * @param reportType - Type of report (engagement, growth, overview, etc.)
      * @param channelId - Channel ID
      * @param ttl - Time-to-live (1h, 6h, 24h, 3d, 7d)
@@ -91,7 +91,7 @@ class SharingService {
 
     /**
      * Access a shared report via token
-     * 
+     *
      * @param shareToken - Secure share token
      * @returns Shared report data
      */
@@ -109,7 +109,7 @@ class SharingService {
 
     /**
      * Revoke a share link
-     * 
+     *
      * @param shareToken - Token to revoke
      * @returns Success message
      */
@@ -127,7 +127,7 @@ class SharingService {
 
     /**
      * Get list of all share links for a channel
-     * 
+     *
      * @param channelId - Channel ID
      * @returns List of share links
      */
@@ -145,7 +145,7 @@ class SharingService {
 
     /**
      * Get share link statistics
-     * 
+     *
      * @param shareToken - Share token
      * @returns Access statistics
      */
@@ -168,7 +168,7 @@ class SharingService {
 
     /**
      * Check if a share link is valid
-     * 
+     *
      * @param shareToken - Share token to validate
      * @returns Validation result
      */

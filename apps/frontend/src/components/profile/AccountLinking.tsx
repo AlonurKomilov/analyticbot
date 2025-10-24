@@ -1,6 +1,6 @@
 /**
  * 🔗 Account Linking Component
- * 
+ *
  * Allows users to link/unlink authentication methods:
  * - Link Telegram account to email/password users
  * - Add email/password to Telegram-only users
@@ -36,7 +36,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ user, onUpdate }
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    
+
     // Email/Password form for Telegram users
     const [emailPassword, setEmailPassword] = useState({
         email: '',
@@ -109,7 +109,7 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ user, onUpdate }
                     Your Login Methods
                 </Typography>
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {/* Email/Password Status */}
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -120,16 +120,16 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ user, onUpdate }
                             </Typography>
                         </Box>
                         {hasEmailPassword ? (
-                            <Chip 
-                                label={`✓ Active: ${user?.email}`} 
-                                color="success" 
-                                size="small" 
+                            <Chip
+                                label={`✓ Active: ${user?.email}`}
+                                color="success"
+                                size="small"
                             />
                         ) : (
-                            <Chip 
-                                label="Not Set" 
-                                color="default" 
-                                size="small" 
+                            <Chip
+                                label="Not Set"
+                                color="default"
+                                size="small"
                             />
                         )}
                     </Box>
@@ -143,16 +143,16 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ user, onUpdate }
                             </Typography>
                         </Box>
                         {hasTelegram ? (
-                            <Chip 
-                                label={`✓ Active: @${user?.telegram_username || 'linked'}`} 
-                                color="success" 
-                                size="small" 
+                            <Chip
+                                label={`✓ Active: @${user?.telegram_username || 'linked'}`}
+                                color="success"
+                                size="small"
                             />
                         ) : (
-                            <Chip 
-                                label="Not Linked" 
-                                color="default" 
-                                size="small" 
+                            <Chip
+                                label="Not Linked"
+                                color="default"
+                                size="small"
                             />
                         )}
                     </Box>

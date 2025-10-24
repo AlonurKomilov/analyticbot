@@ -1,6 +1,6 @@
 /**
  * UserAuditDialog Component
- * 
+ *
  * Dialog for displaying user audit logs.
  * Extracted from UserManagement.tsx god component.
  */
@@ -54,11 +54,11 @@ const UserAuditDialog: React.FC<UserAuditDialogProps> = ({
                 ) : auditLogs.length > 0 ? (
                     <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
                         {auditLogs.map((log, index) => (
-                            <Box 
-                                key={index} 
-                                sx={{ 
-                                    mb: spacing.md, 
-                                    pb: spacing.md, 
+                            <Box
+                                key={index}
+                                sx={{
+                                    mb: spacing.md,
+                                    pb: spacing.md,
                                     borderBottom: `1px solid ${colors.border.default}`,
                                     '&:last-child': {
                                         borderBottom: 'none',
@@ -74,9 +74,9 @@ const UserAuditDialog: React.FC<UserAuditDialogProps> = ({
                                     by {log.admin_email} • {new Date(log.timestamp).toLocaleString()}
                                 </Typography>
                                 {log.details && Object.keys(log.details).length > 0 && (
-                                    <Typography 
-                                        variant="caption" 
-                                        display="block" 
+                                    <Typography
+                                        variant="caption"
+                                        display="block"
                                         sx={{ mt: spacing.xs, fontFamily: 'monospace' }}
                                     >
                                         {JSON.stringify(log.details, null, 2)}

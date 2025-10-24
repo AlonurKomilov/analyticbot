@@ -1,13 +1,13 @@
 /**
  * User Management Component (REFACTORED)
- * 
+ *
  * Admin dashboard for user oversight and management.
- * 
+ *
  * REFACTORED from 703 lines to ~150 lines by:
  * - Extracting business logic to useUserManagement hook
  * - Extracting UI components (UserTable, UserSearchBar, dialogs)
  * - Using base components (BaseDialog, BaseDataTable)
- * 
+ *
  * This is now a pure orchestration component.
  */
 
@@ -48,7 +48,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
         searchTerm,
         page,
         rowsPerPage,
-        
+
         // Dialog state
         dialogState,
         suspendReason,
@@ -57,7 +57,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
         statistics,
         auditLogs,
         dialogLoading,
-        
+
         // Handlers
         setSearchTerm,
         setPage,
@@ -65,7 +65,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
         setSuspendReason,
         setNewRole,
         setNotificationMessage,
-        
+
         // Actions
         loadUsers,
         handleSearch,
@@ -74,7 +74,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onUserUpdated }) => {
         handleUpdateRole,
         handleDeleteUser,
         handleNotifyUser,
-        
+
         // Dialog actions
         openDialog,
         closeDialog,

@@ -1,6 +1,6 @@
 /**
  * User Management Components
- * 
+ *
  * Extracted components from UserManagement.tsx god component
  */
 

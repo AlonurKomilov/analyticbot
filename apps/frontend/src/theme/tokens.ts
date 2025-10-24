@@ -1,12 +1,12 @@
 /**
  * Design Tokens System
- * 
+ *
  * Centralized design tokens for consistent spacing, sizing, colors, shadows, and animations.
  * These tokens replace inline sx props and ensure design consistency across all components.
- * 
+ *
  * Usage:
  * import { spacing, colors, shadows } from '@/theme/tokens';
- * 
+ *
  * sx={{ padding: spacing.lg, color: colors.text.primary, boxShadow: shadows.md }}
  */
 
@@ -22,7 +22,7 @@ export const spacing = {
   lg: '24px',   // 3x base - section padding
   xl: '32px',   // 4x base - large section padding
   xxl: '48px',  // 6x base - major section spacing
-  
+
   // Semantic spacing
   section: '32px',      // Between major sections
   component: '16px',    // Between components
@@ -40,21 +40,21 @@ export const sizing = {
     comfortable: '48px', // Comfortable touch target
     large: '56px',      // Large touch target
   },
-  
+
   // Input heights
   input: {
     small: '36px',
     medium: '44px',
     large: '52px',
   },
-  
+
   // Button heights
   button: {
     small: '36px',
     medium: '44px',
     large: '52px',
   },
-  
+
   // Icon sizes
   icon: {
     xs: '16px',
@@ -63,7 +63,7 @@ export const sizing = {
     lg: '32px',
     xl: '48px',
   },
-  
+
   // Container widths
   container: {
     xs: '400px',
@@ -73,7 +73,7 @@ export const sizing = {
     xl: '1440px',
     full: '100%',
   },
-  
+
   // Dialog widths
   dialog: {
     xs: '400px',
@@ -101,7 +101,7 @@ export const colors = {
     dark: '#da3633',
     contrast: '#ffffff',
   },
-  
+
   // Semantic colors
   success: {
     main: '#3fb950',
@@ -127,7 +127,7 @@ export const colors = {
     dark: '#388bfd',
     bg: 'rgba(88, 166, 255, 0.1)',
   },
-  
+
   // Background colors
   background: {
     default: '#0d1117',
@@ -135,7 +135,7 @@ export const colors = {
     elevated: '#1c2128',
     overlay: 'rgba(13, 17, 23, 0.8)',
   },
-  
+
   // Text colors
   text: {
     primary: '#f0f6fc',
@@ -143,7 +143,7 @@ export const colors = {
     disabled: '#484f58',
     inverse: '#0d1117',
   },
-  
+
   // Border & divider colors
   border: {
     subtle: '#21262d',
@@ -151,7 +151,7 @@ export const colors = {
     emphasis: '#6e7681',
     focus: '#58a6ff',
   },
-  
+
   // State colors
   state: {
     hover: 'rgba(177, 186, 196, 0.08)',
@@ -172,7 +172,7 @@ export const shadows = {
   lg: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5)',
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
   xxl: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-  
+
   // Semantic shadows
   card: '0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4)',
   dialog: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
@@ -192,7 +192,7 @@ export const radius = {
   xl: '12px',
   xxl: '16px',
   full: '9999px',
-  
+
   // Semantic radius
   button: '6px',
   input: '6px',
@@ -213,7 +213,7 @@ export const animation = {
     slow: '350ms',
     slower: '500ms',
   },
-  
+
   // Easing functions
   easing: {
     linear: 'linear',
@@ -222,7 +222,7 @@ export const animation = {
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
     sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
   },
-  
+
   // Common transitions
   transition: {
     fast: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -240,7 +240,7 @@ export const typography = {
     default: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
     mono: '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace',
   },
-  
+
   // Font sizes
   fontSize: {
     xs: '0.75rem',    // 12px
@@ -251,7 +251,7 @@ export const typography = {
     xxl: '1.5rem',    // 24px
     xxxl: '2rem',     // 32px
   },
-  
+
   // Font weights
   fontWeight: {
     light: 300,
@@ -260,7 +260,7 @@ export const typography = {
     semibold: 600,
     bold: 700,
   },
-  
+
   // Line heights
   lineHeight: {
     tight: 1.25,
@@ -269,7 +269,7 @@ export const typography = {
     relaxed: 1.625,
     loose: 1.75,
   },
-  
+
   // Letter spacing
   letterSpacing: {
     tighter: '-0.05em',
@@ -308,15 +308,15 @@ const breakpointValues = {
 
 export const breakpoints = {
   values: breakpointValues,
-  
+
   // Media query helpers
-  up: (breakpoint: keyof typeof breakpointValues) => 
+  up: (breakpoint: keyof typeof breakpointValues) =>
     `@media (min-width: ${breakpointValues[breakpoint]}px)`,
-  
-  down: (breakpoint: keyof typeof breakpointValues) => 
+
+  down: (breakpoint: keyof typeof breakpointValues) =>
     `@media (max-width: ${breakpointValues[breakpoint] - 0.05}px)`,
-  
-  between: (start: keyof typeof breakpointValues, end: keyof typeof breakpointValues) => 
+
+  between: (start: keyof typeof breakpointValues, end: keyof typeof breakpointValues) =>
     `@media (min-width: ${breakpointValues[start]}px) and (max-width: ${breakpointValues[end] - 0.05}px)`,
 } as const;
 
@@ -330,7 +330,7 @@ export const grid = {
     tablet: 8,
     desktop: 12,
   },
-  
+
   // Grid gaps
   gap: {
     xs: spacing.xs,
@@ -339,7 +339,7 @@ export const grid = {
     lg: spacing.lg,
     xl: spacing.xl,
   },
-  
+
   // Container padding
   containerPadding: {
     mobile: spacing.md,
@@ -359,7 +359,7 @@ export const tokenExamples = {
     boxShadow: shadows.card,
     backgroundColor: colors.background.paper,
   },
-  
+
   // Button styling
   button: {
     padding: `${spacing.sm} ${spacing.md}`,
@@ -367,7 +367,7 @@ export const tokenExamples = {
     borderRadius: radius.button,
     transition: animation.transition.fast,
   },
-  
+
   // Input styling
   input: {
     height: sizing.input.medium,
@@ -375,7 +375,7 @@ export const tokenExamples = {
     borderRadius: radius.input,
     fontSize: typography.fontSize.md,
   },
-  
+
   // Dialog styling
   dialog: {
     borderRadius: radius.dialog,

@@ -1,6 +1,6 @@
 /**
  * AI Chat Interface Component
- * 
+ *
  * Conversational analytics interface for natural language queries.
  * Integrates with ai/chatService.ts
  */
@@ -42,9 +42,9 @@ export interface AIChatInterfaceProps {
     onInsightGenerated?: (insight: any) => void;
 }
 
-const AIChatInterface: React.FC<AIChatInterfaceProps> = ({ 
+const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
     channelId,
-    onInsightGenerated 
+    onInsightGenerated
 }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMessage, setInputMessage] = useState('');
@@ -69,7 +69,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
 
     const loadSuggestedQuestions = async () => {
         if (!channelId) return;
-        
+
         try {
             const response: SuggestedQuestionsResponse = await aiChatService.getSuggestedQuestions(channelId);
             setSuggestedQuestions(response.popular_questions);
@@ -184,8 +184,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                     </Box>
                     <Box>
                         <Tooltip title="Export conversation">
-                            <IconButton 
-                                size="small" 
+                            <IconButton
+                                size="small"
                                 onClick={handleExportConversation}
                                 disabled={!channelId || messages.length === 0}
                             >
@@ -193,8 +193,8 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Clear history">
-                            <IconButton 
-                                size="small" 
+                            <IconButton
+                                size="small"
                                 onClick={handleClearHistory}
                                 disabled={!channelId || messages.length === 0}
                             >
@@ -207,10 +207,10 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                 <Divider sx={{ mb: 2 }} />
 
                 {/* Messages Area */}
-                <Box 
-                    sx={{ 
-                        flexGrow: 1, 
-                        overflowY: 'auto', 
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        overflowY: 'auto',
                         mb: 2,
                         minHeight: 300,
                         maxHeight: 500
@@ -238,16 +238,16 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                     flexDirection: message.role === 'user' ? 'row-reverse' : 'row'
                                 }}
                             >
-                                <Avatar 
-                                    sx={{ 
-                                        width: 32, 
+                                <Avatar
+                                    sx={{
+                                        width: 32,
                                         height: 32,
                                         bgcolor: message.role === 'user' ? 'primary.main' : 'secondary.main'
                                     }}
                                 >
                                     {message.role === 'user' ? <UserIcon /> : <AIIcon />}
                                 </Avatar>
-                                
+
                                 <Paper
                                     elevation={1}
                                     sx={{
@@ -260,12 +260,12 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                                         {message.content}
                                     </Typography>
-                                    
+
                                     {/* Show metadata for AI responses */}
                                     {message.role === 'assistant' && message.metadata && (
                                         <Box sx={{ mt: 1 }}>
                                             {message.metadata.intent && (
-                                                <Chip 
+                                                <Chip
                                                     label={message.metadata.intent}
                                                     size="small"
                                                     icon={<InfoIcon />}
@@ -273,7 +273,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                                                 />
                                             )}
                                             {message.metadata.confidence && (
-                                                <Chip 
+                                                <Chip
                                                     label={`${(message.metadata.confidence * 100).toFixed(0)}% confident`}
                                                     size="small"
                                                     color={message.metadata.confidence > 0.7 ? 'success' : 'warning'}
@@ -286,7 +286,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                             </Box>
                         ))
                     )}
-                    
+
                     {isLoading && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                             <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
@@ -298,7 +298,7 @@ const AIChatInterface: React.FC<AIChatInterfaceProps> = ({
                             </Typography>
                         </Box>
                     )}
-                    
+
                     <div ref={messagesEndRef} />
                 </Box>
 

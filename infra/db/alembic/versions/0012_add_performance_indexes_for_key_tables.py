@@ -23,14 +23,14 @@ def upgrade() -> None:
     # op.execute("""
     # CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users (telegram_id);
     # """)
-    
+
     op.execute("""
     CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
     """)
     op.execute("""
     CREATE INDEX IF NOT EXISTS idx_channels_user_id ON channels (user_id);
     """)
-    
+
     # Skip post_metrics indexes - table does not exist
     # op.execute("""
     # CREATE INDEX IF NOT EXISTS idx_post_metrics_post_id_ts ON post_metrics (post_id, ts DESC);
@@ -38,7 +38,7 @@ def upgrade() -> None:
     # op.execute("""
     # CREATE INDEX IF NOT EXISTS idx_post_metrics_channel_id_ts ON post_metrics (channel_id, ts DESC);
     # """)
-    
+
     op.execute("""
     CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_id_status
     ON scheduled_posts (user_id, status);

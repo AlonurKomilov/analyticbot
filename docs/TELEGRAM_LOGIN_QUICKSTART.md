@@ -42,7 +42,7 @@ http://localhost:8000/docs
 
 # Should see 3 new endpoints:
 # POST /api/auth/telegram/login
-# GET /api/auth/telegram/callback  
+# GET /api/auth/telegram/callback
 # POST /api/auth/telegram/link
 ```
 
@@ -156,6 +156,6 @@ Need help? Check:
 
 ---
 
-**Time to complete:** ~5 minutes  
-**Difficulty:** Easy 🟢  
+**Time to complete:** ~5 minutes
+**Difficulty:** Easy 🟢
 **Status:** Production ready ✅

@@ -1,6 +1,6 @@
 /**
  * Chart Export Microservice
- * 
+ *
  * Single Responsibility: PNG chart image generation only
  * Separated from: CSV export, PDF export, batch operations
  */

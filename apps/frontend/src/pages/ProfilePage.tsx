@@ -436,13 +436,13 @@ const ProfilePage: React.FC = () => {
                             Manage how you sign in to your account. You can have multiple login methods for convenience.
                         </Typography>
 
-                        <AccountLinking 
-                            user={user} 
+                        <AccountLinking
+                            user={user}
                             onUpdate={async () => {
                                 // Refresh user data after linking/updating
                                 setSuccess('Login method updated successfully!');
                                 // You might want to refresh user data here
-                            }} 
+                            }}
                         />
                     </Box>
                 </TabPanel>

@@ -1,6 +1,6 @@
 /**
  * Base Components - Common Reusable Components
- * 
+ *
  * Centralized export for all base components.
  * These components consolidate duplicated patterns across the application.
  */

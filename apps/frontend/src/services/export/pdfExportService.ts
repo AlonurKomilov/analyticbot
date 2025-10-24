@@ -1,6 +1,6 @@
 /**
  * PDF Export Microservice
- * 
+ *
  * Single Responsibility: PDF report generation only
  * Separated from: CSV export, chart export, batch operations
  */

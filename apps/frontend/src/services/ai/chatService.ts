@@ -1,9 +1,9 @@
 /**
  * AI Chat Service
- * 
+ *
  * Conversational analytics interface with natural language processing.
  * Integrates with backend /ai/chat/* endpoints.
- * 
+ *
  * Features:
  * - Natural language question processing
  * - Intent recognition
@@ -109,7 +109,7 @@ class AIChatService {
 
     /**
      * Ask a natural language question about analytics
-     * 
+     *
      * @param channelId - Channel ID for context
      * @param question - User's natural language question
      * @param context - Optional context from previous questions
@@ -141,7 +141,7 @@ class AIChatService {
 
     /**
      * Get chat history for a channel
-     * 
+     *
      * @param channelId - Channel ID
      * @param limit - Maximum number of conversations to return
      * @returns Chat history with conversations
@@ -164,7 +164,7 @@ class AIChatService {
 
     /**
      * Get quick insight about channel performance
-     * 
+     *
      * @param channelId - Channel ID
      * @param insightType - Type of insight to generate
      * @returns Quick insight with key metrics
@@ -190,7 +190,7 @@ class AIChatService {
 
     /**
      * Get suggested questions for user
-     * 
+     *
      * @param channelId - Channel ID
      * @returns Categorized question suggestions
      */
@@ -208,7 +208,7 @@ class AIChatService {
 
     /**
      * Clear chat history for a channel
-     * 
+     *
      * @param channelId - Channel ID
      * @returns Success message
      */
@@ -226,7 +226,7 @@ class AIChatService {
 
     /**
      * Get AI chat service health status
-     * 
+     *
      * @returns Service health information
      */
     async getServiceHealth(): Promise<ServiceHealthResponse> {
@@ -243,7 +243,7 @@ class AIChatService {
 
     /**
      * Export chat conversation
-     * 
+     *
      * @param conversationId - Conversation ID to export
      * @param format - Export format (json or txt)
      * @returns Exported conversation data

@@ -1,6 +1,6 @@
 /**
  * UserStatsDialog Component
- * 
+ *
  * Dialog for displaying user statistics.
  * Extracted from UserManagement.tsx god component.
  */

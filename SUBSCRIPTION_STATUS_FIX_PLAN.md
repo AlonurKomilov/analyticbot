@@ -1,8 +1,8 @@
 # 🔧 Subscription & Status Systems - Fix Implementation Plan
 
-**Created:** October 24, 2025  
-**Related:** SUBSCRIPTION_STATUS_INVENTORY.md  
-**Estimated Total Effort:** 3-4 weeks  
+**Created:** October 24, 2025
+**Related:** SUBSCRIPTION_STATUS_INVENTORY.md
+**Estimated Total Effort:** 3-4 weeks
 **Risk Level:** Medium (requires API contract changes)
 
 ---
@@ -29,8 +29,8 @@
 
 ## 📋 Phase 1: Critical Payment & Subscription Fixes (Week 1)
 
-**Goal:** Fix API contract mismatches that could cause payment failures  
-**Risk:** High - touches payment flow  
+**Goal:** Fix API contract mismatches that could cause payment failures
+**Risk:** High - touches payment flow
 **Testing Required:** Full payment flow integration tests
 
 ### Task 1.1: Standardize Payment Status [Priority: CRITICAL]
@@ -53,7 +53,7 @@
 /**
  * Payment & Subscription Type Definitions
  * Aligned with backend enums (October 2025)
- * 
+ *
  * Backend sources:
  * - apps/bot/models/payment.py
  * - core/domain/payment/models.py
@@ -63,7 +63,7 @@
  * Payment status values matching backend PaymentStatus enum
  * CHANGED: 'completed' → 'succeeded' (Stripe standard)
  */
-export type PaymentStatus = 
+export type PaymentStatus =
   | 'pending'      // Payment initiated, awaiting processing
   | 'processing'   // Payment being processed by provider
   | 'succeeded'    // ✅ CHANGED: was 'completed'
@@ -110,7 +110,7 @@ import { PaymentStatus, normalizePaymentStatus } from '../../types/payment';
    ```typescript
    // Old code:
    if (payment.status === 'completed') { ... }
-   
+
    // New code:
    if (payment.status === 'succeeded') { ... }
    ```
@@ -146,7 +146,7 @@ import { PaymentStatus, normalizePaymentStatus } from '../../types/payment';
  * Subscription status values matching backend SubscriptionStatus enum
  * CHANGED: Standardized to American English spelling (canceled, not cancelled)
  */
-export type SubscriptionStatus = 
+export type SubscriptionStatus =
   | 'active'       // Subscription is active and current
   | 'canceled'     // ✅ CHANGED: was 'cancelled' (British spelling)
   | 'past_due'     // Payment failed, grace period
@@ -172,13 +172,13 @@ export function normalizeSubscriptionStatus(
     console.warn('SubscriptionStatus "cancelled" is deprecated, use "canceled"');
     return 'canceled';
   }
-  
+
   // Handle removed statuses
   if (status === 'inactive') {
     console.warn('SubscriptionStatus "inactive" is deprecated, mapping to "canceled"');
     return 'canceled';
   }
-  
+
   return status as SubscriptionStatus;
 }
 ```
@@ -197,7 +197,7 @@ import { SubscriptionStatus, normalizeSubscriptionStatus } from '../../types/pay
 // Update all API response handling:
 async getSubscription(subscriptionId: string): Promise<Subscription> {
   const response = await apiClient.get<Subscription>(`${this.baseURL}/detail/${subscriptionId}`);
-  
+
   // Normalize status from API
   return {
     ...response.data,
@@ -210,7 +210,7 @@ async getSubscription(subscriptionId: string): Promise<Subscription> {
 
 ```typescript
 // BEFORE:
-export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'incomplete' | 
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'incomplete' |
                                  'canceled' | 'cancelled' | 'incomplete_expired';
 
 // AFTER:
@@ -322,7 +322,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         description: 'Your subscription is active and all features are available.',
         severity: 'success'
       };
-    
+
     case 'trialing':
       return {
         title: 'Trial Period',
@@ -330,7 +330,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         action: 'Add Payment Method',
         severity: 'info'
       };
-    
+
     case 'past_due':
       return {
         title: 'Payment Past Due',
@@ -338,7 +338,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         action: 'Update Payment',
         severity: 'warning'
       };
-    
+
     case 'unpaid':
       return {
         title: 'Subscription Suspended',
@@ -346,7 +346,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         action: 'Update Payment',
         severity: 'error'
       };
-    
+
     case 'incomplete':
       return {
         title: 'Payment Incomplete',
@@ -354,7 +354,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         action: 'Complete Payment',
         severity: 'warning'
       };
-    
+
     case 'canceled':
       return {
         title: 'Subscription Canceled',
@@ -362,7 +362,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
         action: 'Resubscribe',
         severity: 'info'
       };
-    
+
     case 'paused':
       return {
         title: 'Subscription Paused',
@@ -384,7 +384,7 @@ export function getSubscriptionStatusMessage(status: SubscriptionStatus): Status
 
 ## 📋 Phase 2: User Tier System Alignment (Week 2)
 
-**Goal:** Standardize tier naming across production, tests, and frontend  
+**Goal:** Standardize tier naming across production, tests, and frontend
 **Risk:** Medium - affects feature access control
 
 ### Task 2.1: Fix Test Mock Tier Names [Priority: HIGH]
@@ -437,7 +437,7 @@ grep -r '"premium"' tests/
  * User subscription tiers
  * Determines feature access and limits
  */
-export type UserTier = 
+export type UserTier =
   | 'free'        // Free tier - basic features only
   | 'starter'     // Starter tier - enhanced features
   | 'pro'         // Pro tier - advanced features
@@ -473,7 +473,7 @@ export function getTierLimits(tier: UserTier): TierLimits {
         prioritySupport: false,
         apiAccess: false
       };
-    
+
     case 'starter':
       return {
         maxChannels: 3,
@@ -485,7 +485,7 @@ export function getTierLimits(tier: UserTier): TierLimits {
         prioritySupport: false,
         apiAccess: false
       };
-    
+
     case 'pro':
       return {
         maxChannels: 10,
@@ -497,7 +497,7 @@ export function getTierLimits(tier: UserTier): TierLimits {
         prioritySupport: false,
         apiAccess: true
       };
-    
+
     case 'enterprise':
       return {
         maxChannels: 9999, // Unlimited
@@ -634,7 +634,7 @@ export function hasTierAccess(userTier: UserTier, requiredTier: UserTier): boole
  */
 export function hasFeatureAccess(userTier: UserTier, feature: string): boolean {
   const limits = getTierLimits(userTier);
-  
+
   switch (feature) {
     case 'watermarks':
       return limits.watermarksEnabled;
@@ -656,7 +656,7 @@ export function hasFeatureAccess(userTier: UserTier, feature: string): boolean {
 
 ## 📋 Phase 3: User Status & Post Status (Week 2-3)
 
-**Goal:** Align user and post status definitions  
+**Goal:** Align user and post status definitions
 **Risk:** Low - mostly UI display improvements
 
 ### Task 3.1: Expand User Status from Boolean to Enum [Priority: MEDIUM]
@@ -680,7 +680,7 @@ class UserStatus(str, Enum):
  * User account status
  * Aligned with backend UserStatus enum
  */
-export type UserStatus = 
+export type UserStatus =
   | 'active'      // Account active and accessible
   | 'inactive'    // Account inactive but not deleted
   | 'suspended'   // Account suspended (violation/payment)
@@ -792,7 +792,7 @@ export const UserStatusBadge: React.FC<UserStatusBadgeProps> = ({ status }) => {
  * Post status - Frontend includes transition states
  * Backend PostStatus: draft, scheduled, published, failed, cancelled
  */
-export type PostStatus = 
+export type PostStatus =
   | 'draft'       // Post being edited
   | 'scheduled'   // Scheduled for future
   | 'publishing'  // ⚠️ FRONTEND-ONLY: Currently publishing (transition state)
@@ -820,10 +820,10 @@ export function mapBackendPostStatus(backendStatus: BackendPostStatus): PostStat
 ```typescript
 /**
  * Note: 'publishing' is a frontend-only transition state
- * 
+ *
  * Backend flow: scheduled → published (or failed)
  * Frontend flow: scheduled → publishing → published (or failed)
- * 
+ *
  * The 'publishing' state is shown in UI when:
  * - Post status is 'scheduled'
  * - Current time >= scheduled time
@@ -835,7 +835,7 @@ export function mapBackendPostStatus(backendStatus: BackendPostStatus): PostStat
 
 ## 📋 Phase 4: Type Safety & Validation (Week 3-4)
 
-**Goal:** Prevent future mismatches with automated validation  
+**Goal:** Prevent future mismatches with automated validation
 **Risk:** Low - infrastructure improvements
 
 ### Task 4.1: Create Shared OpenAPI Schema
@@ -946,10 +946,10 @@ from apps.bot.models.payment import PaymentStatus, SubscriptionStatus
 async def validate_status_enums(request, call_next):
     """Ensure API responses only contain valid enum values"""
     response = await call_next(request)
-    
+
     # Add validation logging
     # Could also add Pydantic validation to all response models
-    
+
     return response
 ```
 
@@ -966,12 +966,12 @@ describe('Payment Status Migration', () => {
     const payment = { status: 'succeeded' };
     expect(isPaymentSuccessful(payment)).toBe(true);
   });
-  
+
   it('should normalize legacy completed status', () => {
     const normalized = normalizePaymentStatus('completed');
     expect(normalized).toBe('succeeded');
   });
-  
+
   it('should handle all valid statuses', () => {
     const statuses: PaymentStatus[] = [
       'pending', 'processing', 'succeeded', 'failed', 'canceled', 'refunded'
@@ -990,7 +990,7 @@ describe('Subscription Status Migration', () => {
     const normalized = normalizeSubscriptionStatus('cancelled');
     expect(normalized).toBe('canceled');
   });
-  
+
   it('should handle all subscription states', () => {
     const sub = { status: 'trialing' as SubscriptionStatus };
     const message = getSubscriptionStatusMessage(sub.status);
@@ -1134,8 +1134,8 @@ After monitoring for 1-2 weeks:
 
 ---
 
-**Prepared by:** AI Assistant  
-**Review Required:** Team Lead, Backend Lead, Frontend Lead  
-**Approval Needed Before:** Starting Phase 1 implementation  
+**Prepared by:** AI Assistant
+**Review Required:** Team Lead, Backend Lead, Frontend Lead
+**Approval Needed Before:** Starting Phase 1 implementation
 
 **Questions?** Refer to SUBSCRIPTION_STATUS_INVENTORY.md for detailed analysis

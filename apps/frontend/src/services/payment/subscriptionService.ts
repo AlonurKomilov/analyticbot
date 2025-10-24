@@ -1,6 +1,6 @@
 /**
  * Subscription Management Microservice
- * 
+ *
  * Single Responsibility: Manage subscriptions only
  * Separated from: payments, payment methods, invoicing
  */

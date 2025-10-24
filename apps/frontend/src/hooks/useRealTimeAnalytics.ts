@@ -335,7 +335,7 @@ export const usePerformanceMetrics = (
 
             const metrics = metricsData as any;
             const trends = trendsData as any;
-            
+
             setMetrics(metrics);
             setTrends(trends.trends || []);
             setScore(metrics.performance_score || 0);
@@ -356,7 +356,7 @@ export const usePerformanceMetrics = (
             const interval = setInterval(fetchPerformanceData, 60000);
             return () => clearInterval(interval);
         }
-        
+
         return undefined;
     }, [channelId, fetchPerformanceData]);
 

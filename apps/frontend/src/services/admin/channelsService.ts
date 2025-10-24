@@ -1,9 +1,9 @@
 /**
  * Admin Channels Service
- * 
+ *
  * Channel administration and management for admins.
  * Integrates with backend /admin/channels/* endpoints.
- * 
+ *
  * Features:
  * - Channel oversight and monitoring
  * - Suspend/unsuspend channels
@@ -60,7 +60,7 @@ class AdminChannelsService {
 
     /**
      * Get all channels (admin view)
-     * 
+     *
      * @param page - Page number
      * @param limit - Items per page
      * @param status - Filter by status
@@ -92,7 +92,7 @@ class AdminChannelsService {
 
     /**
      * Get specific channel details (admin view)
-     * 
+     *
      * @param channelId - Channel ID
      * @returns Detailed channel information
      */
@@ -110,7 +110,7 @@ class AdminChannelsService {
 
     /**
      * Suspend a channel
-     * 
+     *
      * @param channelId - Channel ID to suspend
      * @param request - Suspension details
      * @returns Success message
@@ -133,7 +133,7 @@ class AdminChannelsService {
 
     /**
      * Unsuspend a channel
-     * 
+     *
      * @param channelId - Channel ID to unsuspend
      * @returns Success message
      */
@@ -153,7 +153,7 @@ class AdminChannelsService {
 
     /**
      * Force delete a channel (admin only)
-     * 
+     *
      * @param channelId - Channel ID to delete
      * @param reason - Deletion reason
      * @returns Success message
@@ -178,7 +178,7 @@ class AdminChannelsService {
 
     /**
      * Get channel audit log
-     * 
+     *
      * @param channelId - Channel ID
      * @param limit - Number of entries
      * @returns Audit log entries
@@ -201,7 +201,7 @@ class AdminChannelsService {
 
     /**
      * Get channel statistics (admin overview)
-     * 
+     *
      * @returns Channel statistics
      */
     async getChannelStatistics(): Promise<ChannelStatistics> {
@@ -218,7 +218,7 @@ class AdminChannelsService {
 
     /**
      * Search channels by keyword
-     * 
+     *
      * @param query - Search query
      * @param limit - Max results
      * @returns Matching channels

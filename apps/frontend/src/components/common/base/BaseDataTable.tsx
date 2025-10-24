@@ -1,9 +1,9 @@
 /**
  * BaseDataTable Component
- * 
+ *
  * Reusable data table with sorting, pagination, filtering, row selection, empty state, and loading state.
  * Consolidates 5+ table implementations across the application.
- * 
+ *
  * Features:
  * - Sorting (single/multi column)
  * - Pagination (client-side or server-side)
@@ -13,7 +13,7 @@
  * - Responsive design
  * - Accessibility (WCAG AAA)
  * - Uses design tokens
- * 
+ *
  * Usage:
  * ```tsx
  * <BaseDataTable
@@ -80,37 +80,37 @@ export interface BaseDataTableProps<T = any> {
   // Required
   columns: BaseColumn<T>[];
   data: T[];
-  
+
   // Optional - Data handling
   getRowId?: (row: T, index: number) => string | number;
   loading?: boolean;
   error?: string | null;
-  
+
   // Optional - Sorting
   sortBy?: string;
   sortDirection?: SortDirection;
   onSort?: (columnId: string, direction: SortDirection) => void;
-  
+
   // Optional - Pagination
   pagination?: BasePaginationConfig;
-  
+
   // Optional - Row selection
   selectable?: boolean;
   selectedRows?: Set<string | number>;
   onSelectionChange?: (selectedRows: Set<string | number>) => void;
-  
+
   // Optional - Row interaction
   onRowClick?: (row: T, index: number) => void;
-  
+
   // Optional - Empty state
   emptyStateTitle?: string;
   emptyStateDescription?: string;
   emptyStateAction?: React.ReactNode;
-  
+
   // Optional - Styling
   maxHeight?: string | number;
   stickyHeader?: boolean;
-  
+
   // Optional - Accessibility
   ariaLabel?: string;
 }
@@ -123,37 +123,37 @@ function BaseDataTable<T = any>({
   // Required
   columns,
   data,
-  
+
   // Optional - Data handling
   getRowId = (_, index) => index,
   loading = false,
   error = null,
-  
+
   // Optional - Sorting
   sortBy,
   sortDirection,
   onSort,
-  
+
   // Optional - Pagination
   pagination,
-  
+
   // Optional - Row selection
   selectable = false,
   selectedRows = new Set(),
   onSelectionChange,
-  
+
   // Optional - Row interaction
   onRowClick,
-  
+
   // Optional - Empty state
   emptyStateTitle = 'No data',
   emptyStateDescription = 'There are no items to display',
   emptyStateAction,
-  
+
   // Optional - Styling
   maxHeight,
   stickyHeader = false,
-  
+
   // Optional - Accessibility
   ariaLabel = 'Data table',
 }: BaseDataTableProps<T>) {

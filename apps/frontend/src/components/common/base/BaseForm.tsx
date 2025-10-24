@@ -1,9 +1,9 @@
 /**
  * BaseForm Component
- * 
+ *
  * Reusable form component with validation, error display, submit/cancel actions, and loading states.
  * Consolidates 15+ form patterns across the application.
- * 
+ *
  * Features:
  * - Form validation (built-in and custom)
  * - Error display (field-level and form-level)
@@ -12,7 +12,7 @@
  * - Keyboard shortcuts (Enter to submit, ESC to cancel)
  * - Accessibility (proper labels, error announcements)
  * - Uses design tokens
- * 
+ *
  * Usage:
  * ```tsx
  * <BaseForm
@@ -39,35 +39,35 @@ export interface BaseFormProps {
   // Required
   children: React.ReactNode;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void | Promise<void>;
-  
+
   // Optional - Actions
   onCancel?: () => void;
   submitLabel?: string;
   cancelLabel?: string;
   showCancelButton?: boolean;
-  
+
   // Optional - State
   loading?: boolean;
   disabled?: boolean;
-  
+
   // Optional - Errors
   error?: string | null;
   errors?: Record<string, string>;
-  
+
   // Optional - Configuration
   preventDefaultSubmit?: boolean;
   validateOnBlur?: boolean;
   showRequiredIndicator?: boolean;
-  
+
   // Optional - Layout
   direction?: 'column' | 'row';
   gap?: 'xs' | 'sm' | 'md' | 'lg';
   actionsPosition?: 'left' | 'center' | 'right';
-  
+
   // Optional - Styling
   fullWidth?: boolean;
   maxWidth?: string | number;
-  
+
   // Optional - Accessibility
   ariaLabel?: string;
 }
@@ -80,35 +80,35 @@ const BaseForm: React.FC<BaseFormProps> = ({
   // Required
   children,
   onSubmit,
-  
+
   // Optional - Actions
   onCancel,
   submitLabel = 'Submit',
   cancelLabel = 'Cancel',
   showCancelButton = !!onCancel,
-  
+
   // Optional - State
   loading = false,
   disabled = false,
-  
+
   // Optional - Errors
   error,
   errors,
-  
+
   // Optional - Configuration
   preventDefaultSubmit = true,
   // validateOnBlur = true, // Reserved for future use
   // showRequiredIndicator = true, // Reserved for future use
-  
+
   // Optional - Layout
   direction = 'column',
   gap = 'md',
   actionsPosition = 'right',
-  
+
   // Optional - Styling
   fullWidth = true,
   maxWidth,
-  
+
   // Optional - Accessibility
   ariaLabel = 'Form',
 }) => {

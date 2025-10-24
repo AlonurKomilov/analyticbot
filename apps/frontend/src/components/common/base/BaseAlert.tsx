@@ -1,9 +1,9 @@
 /**
  * BaseAlert Component
- * 
+ *
  * Reusable alert/notification component with severity variants and consistent styling.
  * Consolidates 12+ alert patterns across the application.
- * 
+ *
  * Features:
  * - Severity variants (info, success, warning, error)
  * - Dismissible option
@@ -13,7 +13,7 @@
  * - Auto-dismiss timer
  * - Accessibility (ARIA live regions, proper roles)
  * - Uses design tokens
- * 
+ *
  * Usage:
  * ```tsx
  * <BaseAlert
@@ -53,25 +53,25 @@ export interface BaseAlertProps {
   // Required
   severity: AlertSeverity;
   message: string | React.ReactNode;
-  
+
   // Optional - Content
   title?: string;
   icon?: React.ReactNode;
   hideIcon?: boolean;
-  
+
   // Optional - Actions
   action?: AlertAction;
   dismissible?: boolean;
   onDismiss?: () => void;
-  
+
   // Optional - Auto-dismiss
   autoDismiss?: boolean;
   autoDismissDuration?: number; // in milliseconds
-  
+
   // Optional - Styling
   variant?: 'standard' | 'filled' | 'outlined';
   fullWidth?: boolean;
-  
+
   // Optional - Accessibility
   role?: 'alert' | 'status';
   ariaLive?: 'polite' | 'assertive' | 'off';
@@ -125,25 +125,25 @@ const BaseAlert: React.FC<BaseAlertProps> = ({
   // Required
   severity,
   message,
-  
+
   // Optional - Content
   title,
   icon,
   hideIcon = false,
-  
+
   // Optional - Actions
   action,
   dismissible = false,
   onDismiss,
-  
+
   // Optional - Auto-dismiss
   autoDismiss = false,
   autoDismissDuration = 5000,
-  
+
   // Optional - Styling
   variant = 'standard',
   fullWidth = true,
-  
+
   // Optional - Accessibility
   role = severity === 'error' ? 'alert' : 'status',
   ariaLive = severity === 'error' ? 'assertive' : 'polite',
@@ -237,7 +237,7 @@ const BaseAlert: React.FC<BaseAlertProps> = ({
         borderRadius: radius.md,
         transition: animation.transition.normal,
         opacity: visible ? 1 : 0,
-        
+
         // Standard variant styling
         ...(variant === 'standard' && {
           backgroundColor: alertColors.bg,
@@ -247,7 +247,7 @@ const BaseAlert: React.FC<BaseAlertProps> = ({
             color: alertColors.main,
           },
         }),
-        
+
         // Filled variant styling
         ...(variant === 'filled' && {
           backgroundColor: alertColors.main,
@@ -256,7 +256,7 @@ const BaseAlert: React.FC<BaseAlertProps> = ({
             color: colors.primary.contrast,
           },
         }),
-        
+
         // Outlined variant styling
         ...(variant === 'outlined' && {
           backgroundColor: 'transparent',

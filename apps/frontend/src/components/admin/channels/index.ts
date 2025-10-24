@@ -1,6 +1,6 @@
 /**
  * Channel Management Components
- * 
+ *
  * Extracted components from ChannelManagement.tsx god component
  */
 

@@ -28,7 +28,7 @@ def upgrade() -> None:
     op.add_column("plans", sa.Column("currency", sa.String(3), nullable=True))
     op.execute("UPDATE plans SET currency = 'USD' WHERE currency IS NULL")
     op.alter_column("plans", "currency", nullable=False)
-    
+
     op.add_column("plans", sa.Column("is_active", sa.Boolean(), nullable=True))
     op.execute("UPDATE plans SET is_active = true WHERE is_active IS NULL")
     op.alter_column("plans", "is_active", nullable=False)

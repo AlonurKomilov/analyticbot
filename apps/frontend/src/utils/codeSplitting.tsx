@@ -336,7 +336,7 @@ export const createRouteComponent = <P extends RouteComponentProps>(
             <RouteComponent {...props} />
         </SmartSuspense>
     );
-    
+
     return RouteWrapper;
 };
 

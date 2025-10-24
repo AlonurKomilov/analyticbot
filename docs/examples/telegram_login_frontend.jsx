@@ -1,6 +1,6 @@
 /**
  * Telegram Login Widget Integration
- * 
+ *
  * This file shows how to add "Sign in with Telegram" to your React login page.
  * Works with the backend API we just created.
  */
@@ -83,7 +83,7 @@ export const TelegramLoginWidget = ({ onAuth }) => {
   };
 
   return (
-    <div 
+    <div
       id="telegram-widget-container"
       className="telegram-login-widget"
       style={{ marginTop: '20px' }}
@@ -103,7 +103,7 @@ export const TelegramLoginButton = ({ onAuth }) => {
 
     // Open Telegram OAuth URL
     const authUrl = `https://oauth.telegram.org/auth?bot_id=${TELEGRAM_BOT_USERNAME}&origin=${window.location.origin}&request_access=write&return_to=${window.location.origin}/auth/telegram/callback`;
-    
+
     // Open in popup or same window
     const popup = window.open(authUrl, 'telegram-login', 'width=600,height=600');
 
@@ -302,9 +302,9 @@ export const LoginPage = () => {
       </form>
 
       {/* Divider */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
         margin: '30px 0',
         gap: '10px'
       }}>
@@ -367,7 +367,7 @@ export const ProfileTelegramLink = () => {
       }
 
       const data = await response.json();
-      
+
       // Update user data
       const updatedUser = { ...user, telegram_id: data.telegram_id };
       localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -384,7 +384,7 @@ export const ProfileTelegramLink = () => {
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
       <h3>Telegram Integration</h3>
-      
+
       {isLinked ? (
         <div>
           <p style={{ color: 'green' }}>✓ Telegram account linked</p>
@@ -406,10 +406,10 @@ export const ProfileTelegramLink = () => {
 // ============================================================================
 
 const TelegramIcon = () => (
-  <svg 
-    width="24" 
-    height="24" 
-    viewBox="0 0 24 24" 
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
   >

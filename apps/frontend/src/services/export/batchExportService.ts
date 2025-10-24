@@ -1,6 +1,6 @@
 /**
  * Batch Export Microservice
- * 
+ *
  * Single Responsibility: Batch export job management only
  * Separated from: individual CSV/PNG/PDF exports
  */
@@ -120,33 +120,33 @@ class BatchExportService {
         maxWaitTime: number = 300000 // 5 minutes
     ): Promise<ExportJob> {
         const startTime = Date.now();
-        
+
         return new Promise((resolve, reject) => {
             const poll = async () => {
                 try {
                     const job = await this.getJobStatus(jobId);
-                    
+
                     if (job.status === 'completed') {
                         resolve(job);
                         return;
                     }
-                    
+
                     if (job.status === 'failed') {
                         reject(new Error(job.error || 'Export job failed'));
                         return;
                     }
-                    
+
                     if (Date.now() - startTime > maxWaitTime) {
                         reject(new Error('Export job timeout'));
                         return;
                     }
-                    
+
                     setTimeout(poll, pollInterval);
                 } catch (error) {
                     reject(error);
                 }
             };
-            
+
             poll();
         });
     }

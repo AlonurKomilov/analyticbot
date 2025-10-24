@@ -194,75 +194,69 @@ async def update_profile(
 ):
     """
     Update user profile information.
-    
+
     Supports updating: username, full_name, email, password
     """
     try:
         from apps.api.middleware.auth import get_user_repository
         from core.security_engine.models import pwd_context
-        
+
         body = await request.json()
         user_id = int(current_user["id"])
-        
+
         # Get repository
         user_repo = await get_user_repository()
-        
+
         # Build updates dict
         updates = {}
-        
+
         if "username" in body and body["username"]:
             updates["username"] = body["username"]
-            
+
         if "full_name" in body and body["full_name"]:
             updates["full_name"] = body["full_name"]
-            
+
         if "email" in body and body["email"]:
             # Validate email format
             import re
-            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+            email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             if not re.match(email_pattern, body["email"]):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid email format"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
                 )
             updates["email"] = body["email"]
-            
+
         if "password" in body and body["password"]:
             # Hash the new password
             hashed_password = pwd_context.hash(body["password"])
             updates["hashed_password"] = hashed_password
-        
+
         if not updates:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No valid fields to update"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="No valid fields to update"
             )
-        
+
         # Update user in database
         success = await user_repo.update_user(user_id, **updates)
-        
+
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update profile"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile"
             )
-        
+
         # Get updated user data
         updated_user = await user_repo.get_user_by_id(user_id)
-        
+
         logger.info(f"Profile updated for user {user_id}: {list(updates.keys())}")
-        
-        return {
-            "message": "Profile updated successfully",
-            "user": updated_user
-        }
-        
+
+        return {"message": "Profile updated successfully", "user": updated_user}
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Profile update error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update profile: {str(e)}"
+            detail=f"Failed to update profile: {str(e)}",
         )
-

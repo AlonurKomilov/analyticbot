@@ -112,7 +112,7 @@ export const useUserManagement = (onUserUpdated?: () => void) => {
 ```typescript
 const UserManagement = ({ onUserUpdated }) => {
   const { users, loading, ...rest } = useUserManagement(onUserUpdated);
-  
+
   return (
     <Card>
       <UserSearchBar {...searchProps} />

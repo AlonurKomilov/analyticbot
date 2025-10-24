@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
@@ -221,7 +222,7 @@ async def admin_login(
 async def admin_logout(current_admin: AdminUser = Depends(get_current_admin_user)):
     """
     Logout admin user (invalidate session).
-    
+
     Note: Session invalidation deferred to Week 2.
     Currently relies on JWT expiration only (stateless).
     Tracked in GitHub Issue #TBD: Implement session blacklist/invalidation
@@ -356,9 +357,7 @@ async def get_audit_logs(
 @router.get("/config", response_model=list[SystemConfigResponse])
 async def get_system_config(
     category: str | None = None,
-    current_admin: AdminUser = Depends(
-        lambda: require_admin_user(AdministrativeRole.OWNER.value)
-    ),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Get system configuration (Owner only)"""
@@ -384,9 +383,7 @@ async def update_system_config(
     key: str,
     config_update: ConfigUpdateRequest,
     request: Request,
-    current_admin: AdminUser = Depends(
-        lambda: require_admin_user(AdministrativeRole.OWNER.value)
-    ),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Update system configuration (Owner only)"""

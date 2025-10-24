@@ -1,9 +1,9 @@
 /**
  * Admin Users Service
- * 
+ *
  * User administration and management for admins.
  * Integrates with backend /admin/users/* endpoints.
- * 
+ *
  * Features:
  * - User oversight and monitoring
  * - Suspend/unsuspend users
@@ -88,7 +88,7 @@ class AdminUsersService {
 
     /**
      * Get all users (admin view)
-     * 
+     *
      * @param page - Page number
      * @param limit - Items per page
      * @param status - Filter by status
@@ -122,7 +122,7 @@ class AdminUsersService {
 
     /**
      * Get specific user details (admin view)
-     * 
+     *
      * @param userId - User ID
      * @returns Detailed user information
      */
@@ -140,7 +140,7 @@ class AdminUsersService {
 
     /**
      * Suspend a user
-     * 
+     *
      * @param userId - User ID to suspend
      * @param reasonOrRequest - Suspension reason string or request object
      * @param days - Optional suspension duration in days
@@ -155,7 +155,7 @@ class AdminUsersService {
             const request = typeof reasonOrRequest === 'string'
                 ? { reason: reasonOrRequest, duration_days: days }
                 : reasonOrRequest;
-            
+
             const response = await apiClient.post(
                 `${this.baseURL}/${userId}/suspend`,
                 request
@@ -169,7 +169,7 @@ class AdminUsersService {
 
     /**
      * Unsuspend a user
-     * 
+     *
      * @param userId - User ID to unsuspend
      * @returns Success message
      */
@@ -189,7 +189,7 @@ class AdminUsersService {
 
     /**
      * Update user role
-     * 
+     *
      * @param userId - User ID
      * @param role - New role
      * @returns Success message
@@ -212,7 +212,7 @@ class AdminUsersService {
 
     /**
      * Delete a user (admin only)
-     * 
+     *
      * @param userId - User ID to delete
      * @param reason - Deletion reason (optional)
      * @returns Success message
@@ -237,7 +237,7 @@ class AdminUsersService {
 
     /**
      * Get user audit log
-     * 
+     *
      * @param userId - User ID
      * @param limit - Number of entries
      * @returns Audit log entries
@@ -260,13 +260,13 @@ class AdminUsersService {
 
     /**
      * Get user statistics (admin overview)
-     * 
+     *
      * @param userId - Optional user ID for specific user stats
      * @returns User statistics
      */
     async getUserStatistics(userId?: number): Promise<UserStatistics> {
         try {
-            const url = userId 
+            const url = userId
                 ? `${this.baseURL}/${userId}/statistics`
                 : `${this.baseURL}/statistics`;
             const response = await apiClient.get<UserStatistics>(url);
@@ -279,7 +279,7 @@ class AdminUsersService {
 
     /**
      * Get user activity summary
-     * 
+     *
      * @param userId - User ID
      * @returns Activity summary
      */
@@ -297,7 +297,7 @@ class AdminUsersService {
 
     /**
      * Search users by keyword
-     * 
+     *
      * @param query - Search query (email, name, username)
      * @param limit - Max results
      * @returns Matching users
@@ -320,7 +320,7 @@ class AdminUsersService {
 
     /**
      * Send notification to user
-     * 
+     *
      * @param userId - User ID
      * @param message - Notification message
      * @param type - Notification type

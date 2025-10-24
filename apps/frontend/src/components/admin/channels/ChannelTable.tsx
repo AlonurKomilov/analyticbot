@@ -1,9 +1,9 @@
 /**
  * ChannelTable Component
- * 
+ *
  * Displays channels in a table format using BaseDataTable.
  * Follows the same pattern as UserTable for consistency.
- * 
+ *
  * Features:
  * - Sortable columns
  * - Pagination
@@ -54,7 +54,7 @@ const formatLastActivity = (dateString: string): string => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;

@@ -16,11 +16,11 @@
 The design tokens system provides a centralized, type-safe way to manage design values across the application. Instead of using inline values or magic numbers, we now use semantic tokens that ensure consistency and make it easier to update designs globally.
 
 ### Benefits:
-✅ **Consistency**: One source of truth for all design values  
-✅ **Maintainability**: Change once, update everywhere  
-✅ **Type Safety**: Full TypeScript support with autocomplete  
-✅ **Semantic Naming**: Clear, self-documenting token names  
-✅ **Accessibility**: Built-in WCAG AAA compliant values  
+✅ **Consistency**: One source of truth for all design values
+✅ **Maintainability**: Change once, update everywhere
+✅ **Type Safety**: Full TypeScript support with autocomplete
+✅ **Semantic Naming**: Clear, self-documenting token names
+✅ **Accessibility**: Built-in WCAG AAA compliant values
 
 ---
 
@@ -46,10 +46,10 @@ import theme from '@/theme';
 <Box sx={{ padding: '24px', backgroundColor: '#161b22', borderRadius: '8px' }}>
 
 // After (design tokens)
-<Box sx={{ 
-  padding: spacing.lg, 
-  backgroundColor: colors.background.paper, 
-  borderRadius: radius.card 
+<Box sx={{
+  padding: spacing.lg,
+  backgroundColor: colors.background.paper,
+  borderRadius: radius.card
 }}>
 ```
 
@@ -324,13 +324,13 @@ animation.transition.fast  // 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)'
 const UserManagement: React.FC = () => {
   return (
     <Box sx={{ padding: '24px' }}>
-      <Paper sx={{ 
+      <Paper sx={{
         padding: '24px',
         backgroundColor: '#161b22',
         borderRadius: '8px',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.4)',
       }}>
-        <Typography sx={{ 
+        <Typography sx={{
           fontSize: '1.5rem',
           fontWeight: 600,
           marginBottom: '16px',
@@ -338,9 +338,9 @@ const UserManagement: React.FC = () => {
         }}>
           User Management
         </Typography>
-        
-        <Box sx={{ 
-          display: 'flex', 
+
+        <Box sx={{
+          display: 'flex',
           gap: '16px',
           marginBottom: '24px',
         }}>
@@ -378,13 +378,13 @@ import { spacing, colors, radius, shadows, sizing, typography } from '@/theme/to
 const UserManagement: React.FC = () => {
   return (
     <Box sx={{ padding: spacing.lg }}>
-      <Paper sx={{ 
+      <Paper sx={{
         padding: spacing.lg,
         backgroundColor: colors.background.paper,
         borderRadius: radius.card,
         boxShadow: shadows.card,
       }}>
-        <Typography sx={{ 
+        <Typography sx={{
           fontSize: typography.fontSize.xxl,
           fontWeight: typography.fontWeight.semibold,
           marginBottom: spacing.md,
@@ -392,9 +392,9 @@ const UserManagement: React.FC = () => {
         }}>
           User Management
         </Typography>
-        
-        <Box sx={{ 
-          display: 'flex', 
+
+        <Box sx={{
+          display: 'flex',
           gap: spacing.md,
           marginBottom: spacing.lg,
         }}>
@@ -435,7 +435,7 @@ const UserManagement: React.FC = () => {
    ```typescript
    // Good
    padding: spacing.section  // Clear intent
-   
+
    // Avoid
    padding: spacing.xl       // Less clear
    ```
@@ -444,7 +444,7 @@ const UserManagement: React.FC = () => {
    ```typescript
    // Good
    minHeight: sizing.button.medium
-   
+
    // Bad
    minHeight: '44px'
    ```
@@ -465,7 +465,7 @@ const UserManagement: React.FC = () => {
    ```typescript
    // Bad
    sx={{ padding: spacing.md, margin: '20px' }}
-   
+
    // Good
    sx={{ padding: spacing.md, margin: spacing.lg }}
    ```
@@ -474,7 +474,7 @@ const UserManagement: React.FC = () => {
    ```typescript
    // Bad
    sx={{ padding: theme.spacing(3) }}
-   
+
    // Good
    sx={{ padding: spacing.lg }}
    ```
@@ -483,7 +483,7 @@ const UserManagement: React.FC = () => {
    ```typescript
    // Bad
    sx={{ padding: '18px' }} // Not in system
-   
+
    // Good - Use closest token
    sx={{ padding: spacing.md }} // 16px
    ```
@@ -495,20 +495,20 @@ const UserManagement: React.FC = () => {
 ### Pattern 1: Card with Header
 
 ```typescript
-<Paper sx={{ 
+<Paper sx={{
   padding: spacing.lg,
   backgroundColor: colors.background.paper,
   borderRadius: radius.card,
   boxShadow: shadows.card,
 }}>
-  <Typography sx={{ 
+  <Typography sx={{
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.semibold,
     marginBottom: spacing.md,
   }}>
     Card Title
   </Typography>
-  
+
   <Box sx={{ gap: spacing.element }}>
     {/* Content */}
   </Box>
@@ -518,7 +518,7 @@ const UserManagement: React.FC = () => {
 ### Pattern 2: Action Bar
 
 ```typescript
-<Box sx={{ 
+<Box sx={{
   display: 'flex',
   gap: spacing.md,
   padding: spacing.md,
@@ -559,7 +559,7 @@ const UserManagement: React.FC = () => {
     }
   }}
 >
-  <DialogTitle sx={{ 
+  <DialogTitle sx={{
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.semibold,
     padding: 0,
@@ -567,12 +567,12 @@ const UserManagement: React.FC = () => {
   }}>
     Dialog Title
   </DialogTitle>
-  
+
   <DialogContent sx={{ padding: 0, marginBottom: spacing.lg }}>
     {/* Content */}
   </DialogContent>
-  
-  <DialogActions sx={{ 
+
+  <DialogActions sx={{
     padding: 0,
     gap: spacing.sm,
   }}>

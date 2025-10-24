@@ -1,6 +1,6 @@
 /**
  * SuspendUserDialog Component
- * 
+ *
  * Dialog for suspending a user with reason.
  * Extracted from UserManagement.tsx god component.
  */

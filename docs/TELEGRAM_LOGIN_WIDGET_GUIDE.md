@@ -88,32 +88,32 @@ import hmac
 def validate_telegram_auth(data: dict, bot_token: str) -> bool:
     """
     Validate that auth data came from Telegram.
-    
+
     Returns True if valid, False otherwise.
     """
     # Extract hash
     received_hash = data.get('hash')
     if not received_hash:
         return False
-    
+
     # Create data check string
     check_data = []
     for key in sorted(data.keys()):
         if key != 'hash':
             check_data.append(f"{key}={data[key]}")
-    
+
     data_check_string = '\n'.join(check_data)
-    
+
     # Create secret key
     secret_key = hashlib.sha256(bot_token.encode()).digest()
-    
+
     # Calculate hash
     calculated_hash = hmac.new(
         secret_key,
         data_check_string.encode(),
         hashlib.sha256
     ).hexdigest()
-    
+
     # Compare hashes
     return calculated_hash == received_hash
 ```

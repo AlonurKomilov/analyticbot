@@ -1,6 +1,6 @@
 /**
  * DeleteUserDialog Component
- * 
+ *
  * Confirmation dialog for deleting a user.
  * Extracted from UserManagement.tsx god component.
  */
@@ -56,7 +56,7 @@ const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
             }}
         >
             <Alert severity="error">
-                Are you sure you want to delete user "{user?.full_name || user?.email}"? 
+                Are you sure you want to delete user "{user?.full_name || user?.email}"?
                 This action cannot be undone.
             </Alert>
         </BaseDialog>

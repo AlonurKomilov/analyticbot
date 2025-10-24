@@ -1,8 +1,8 @@
 /**
  * Theme System Entry Point
- * 
+ *
  * Exports the MUI theme and design tokens for use throughout the application.
- * 
+ *
  * Usage:
  * import theme from '@/theme';
  * import { spacing, colors, shadows } from '@/theme/tokens';

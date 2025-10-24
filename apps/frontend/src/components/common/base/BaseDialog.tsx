@@ -1,9 +1,9 @@
 /**
  * BaseDialog Component
- * 
+ *
  * Reusable dialog component with consistent layout, styling, and behavior.
  * Consolidates 20+ dialog patterns across the application.
- * 
+ *
  * Features:
  * - Title with optional close button
  * - Scrollable content area
@@ -14,7 +14,7 @@
  * - Keyboard shortcuts (ESC to close)
  * - Accessibility (focus trap, ARIA labels)
  * - Uses design tokens
- * 
+ *
  * Usage:
  * ```tsx
  * <BaseDialog
@@ -66,35 +66,35 @@ export interface BaseDialogProps {
   // Required
   open: boolean;
   onClose: () => void;
-  
+
   // Optional - Content
   title?: string | React.ReactNode;
   subtitle?: string;
   content?: React.ReactNode;
   children?: React.ReactNode; // Alternative to content
-  
+
   // Optional - Actions
   actions?: {
     cancel?: DialogAction;
     confirm?: DialogAction;
     additional?: DialogAction[];
   };
-  
+
   // Optional - Configuration
   size?: DialogSize;
   showCloseButton?: boolean;
   closeOnBackdropClick?: boolean;
   closeOnEscape?: boolean;
   dividers?: boolean; // Show dividers between sections
-  
+
   // Optional - Loading state
   loading?: boolean;
   loadingMessage?: string;
-  
+
   // Optional - Styling
   maxWidth?: string | number;
   fullScreen?: boolean;
-  
+
   // Optional - Accessibility
   ariaLabelledBy?: string;
   ariaDescribedBy?: string;
@@ -124,31 +124,31 @@ const BaseDialog: React.FC<BaseDialogProps> = ({
   // Required
   open,
   onClose,
-  
+
   // Optional - Content
   title,
   subtitle,
   content,
   children,
-  
+
   // Optional - Actions
   actions,
-  
+
   // Optional - Configuration
   size = 'md',
   showCloseButton = true,
   closeOnBackdropClick = true,
   closeOnEscape = true,
   dividers = false,
-  
+
   // Optional - Loading state
   loading = false,
   loadingMessage = 'Loading...',
-  
+
   // Optional - Styling
   maxWidth,
   fullScreen = false,
-  
+
   // Optional - Accessibility
   ariaLabelledBy = 'dialog-title',
   ariaDescribedBy = 'dialog-content',
@@ -250,7 +250,7 @@ const BaseDialog: React.FC<BaseDialogProps> = ({
             ) : (
               title
             )}
-            
+
             {subtitle && (
               <Typography
                 sx={{

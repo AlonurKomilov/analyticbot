@@ -1,6 +1,6 @@
 /**
  * ChannelStatsDialog Component
- * 
+ *
  * Dialog for displaying channel statistics.
  * Follows the same pattern as UserStatsDialog for consistency.
  */

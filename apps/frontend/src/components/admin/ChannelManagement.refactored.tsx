@@ -1,13 +1,13 @@
 /**
  * Channel Management Component (REFACTORED)
- * 
+ *
  * Admin dashboard for channel oversight and management.
- * 
+ *
  * REFACTORED from 551 lines to ~150 lines by:
  * - Extracting business logic to useChannelManagement hook
  * - Extracting UI components (ChannelTable, ChannelSearchBar, dialogs)
  * - Using base components (BaseDialog, BaseDataTable)
- * 
+ *
  * Follows the same pattern as UserManagement for consistency.
  * This is now a pure orchestration component.
  */
@@ -47,27 +47,27 @@ const ChannelManagement: React.FC<ChannelManagementProps> = ({ onChannelUpdated 
         searchTerm,
         page,
         rowsPerPage,
-        
+
         // Dialog state
         dialogState,
         suspendReason,
         statistics,
         auditLogs,
         dialogLoading,
-        
+
         // Handlers
         setSearchTerm,
         setPage,
         setRowsPerPage,
         setSuspendReason,
-        
+
         // Actions
         loadChannels,
         handleSearch,
         handleSuspendChannel,
         handleUnsuspendChannel,
         handleDeleteChannel,
-        
+
         // Dialog actions
         openDialog,
         closeDialog,

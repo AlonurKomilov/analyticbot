@@ -1,6 +1,6 @@
 /**
  * NotifyUserDialog Component
- * 
+ *
  * Dialog for sending notifications to a user.
  * Extracted from UserManagement.tsx god component.
  */

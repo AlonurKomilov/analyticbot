@@ -3,7 +3,7 @@
  *
  * React components for role-based UI rendering and permission checks.
  * Integrates with AuthContext to provide RBAC functionality.
- * 
+ *
  * Role Hierarchy (5-tier system):
  * viewer(0) < user(1) < moderator(2) < admin(3) < owner(5)
  */

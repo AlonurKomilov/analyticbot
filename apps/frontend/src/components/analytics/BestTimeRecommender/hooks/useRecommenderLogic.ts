@@ -4,8 +4,8 @@ import { useChannelStore } from '@/stores';
 import type { AIInsight } from '../utils/timeUtils';
 
 interface BestTimeRecommendations {
-    best_times?: Array<{ 
-        hour: number; 
+    best_times?: Array<{
+        hour: number;
         day: number;
         confidence: number;
         avg_engagement: number;
@@ -103,7 +103,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                 accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + bt.confidence, 0) / bestTimes.length)
             };
             setBestTimeRecommendations(formatted);
-            
+
             // Generate AI insights
             const insights = generateAIInsights(formatted);
             setAiInsights(insights);

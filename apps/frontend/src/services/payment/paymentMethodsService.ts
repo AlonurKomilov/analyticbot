@@ -1,6 +1,6 @@
 /**
  * Payment Methods Microservice
- * 
+ *
  * Single Responsibility: Manage user payment methods only
  * Separated from: payment processing, subscriptions, invoicing
  */

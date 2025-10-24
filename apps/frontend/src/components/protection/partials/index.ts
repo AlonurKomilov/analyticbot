@@ -1,6 +1,6 @@
 /**
  * Content Protection Partials
- * 
+ *
  * UI components for the ContentProtectionPanel tabs.
  */
 

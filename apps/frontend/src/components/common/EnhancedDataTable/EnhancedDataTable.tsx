@@ -239,7 +239,7 @@ export const EnhancedDataTable = <T extends Record<string, any> = any>({
         visibleColumns,
         processedData,
         paginatedData,
-        totalItems
+        totalRows
     } = tableData as any;
 
     // Selection management using custom hook
@@ -386,7 +386,7 @@ export const EnhancedDataTable = <T extends Record<string, any> = any>({
 
             {/* Pagination */}
             <TablePaginationControls
-                totalItems={totalItems}
+                totalItems={totalRows}
                 page={page}
                 pageSize={pageSize}
                 onPageChange={setPage}

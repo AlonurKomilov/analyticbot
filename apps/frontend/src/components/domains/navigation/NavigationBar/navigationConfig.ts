@@ -6,7 +6,8 @@ import {
     Add as AddIcon,
     Download as DownloadIcon,
     Share as ShareIcon,
-    Help as HelpIcon
+    Help as HelpIcon,
+    Tv as ChannelsIcon
 } from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
@@ -62,6 +63,15 @@ export const NAVIGATION_CONFIG: NavigationConfiguration = {
             icon: AddIcon,
             description: 'Create and schedule posts',
             keywords: ['create', 'post', 'compose', 'new'],
+            category: 'Core'
+        },
+        {
+            id: 'channels',
+            label: 'Channels',
+            path: '/channels',
+            icon: ChannelsIcon,
+            description: 'Manage your channels',
+            keywords: ['channels', 'manage', 'telegram', 'add', 'edit'],
             category: 'Core'
         },
         {

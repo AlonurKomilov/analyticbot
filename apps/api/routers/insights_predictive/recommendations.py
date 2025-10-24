@@ -12,7 +12,13 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from apps.api.middleware.auth import get_current_user, get_current_user_id
-from .dependencies import get_analytics_client, get_analytics_fusion_service, get_cache, get_predictive_orchestrator
+
+from .dependencies import (
+    get_analytics_client,
+    get_analytics_fusion_service,
+    get_cache,
+    get_predictive_orchestrator,
+)
 from .models import PredictionRequest
 
 logger = logging.getLogger(__name__)

@@ -130,7 +130,7 @@ async def add_image_watermark(
                 protection_level=ProtectionLevel.PREMIUM
                 if user_tier != UserTier.FREE
                 else ProtectionLevel.BASIC,
-                watermarked_file_url=f"/api/v1/content-protection/files/{watermarked_path.name}",
+                watermarked_file_url=f"/api/content-protection/files/{watermarked_path.name}",
                 processing_time_ms=int(protection_response.total_processing_time_ms),
                 timestamp=datetime.utcnow(),
             )

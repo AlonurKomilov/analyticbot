@@ -19,7 +19,7 @@ from core.common.cache_decorator import cache_endpoint
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/analytics",
+    prefix="",  # Fixed: No prefix here since main.py adds /analytics/channels
     tags=["Analytics - Channels"],
     responses={404: {"description": "Not found"}},
 )
@@ -37,7 +37,7 @@ class ChannelInfo(BaseModel):
     last_analytics_update: datetime | None = None
 
 
-@router.get("/channels", response_model=list[ChannelInfo])
+@router.get("", response_model=list[ChannelInfo])  # Fixed: Empty path since main.py adds /analytics/channels
 @cache_endpoint(prefix="analytics:channels", ttl=600)  # Cache for 10 minutes
 async def get_analytics_channels(request: Request):
     """
@@ -99,7 +99,7 @@ async def get_telegram_validation_service() -> TelegramValidationService:
     return await di_get_service()
 
 
-@router.post("/channels/validate", response_model=ChannelValidationResult)
+@router.post("/validate", response_model=ChannelValidationResult)  # Fixed: /analytics/channels/validate
 async def validate_telegram_channel(
     request_data: ValidateChannelRequest,
     telegram_service: TelegramValidationService = Depends(get_telegram_validation_service),

@@ -11,6 +11,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from apps.api.middleware.auth import get_current_user_id
+
 from .dependencies import get_predictive_orchestrator
 from .models import ContextualIntelligenceRequest, CrossChannelIntelligenceRequest
 

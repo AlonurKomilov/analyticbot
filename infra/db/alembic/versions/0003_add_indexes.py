@@ -10,20 +10,15 @@ from collections.abc import Sequence
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0003_add_indexes"
-down_revision: str | None = "0002_seed_plans"
+revision: str = "0003"
+down_revision: str | None = "0002"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
     # Composite / targeted indexes to speed scheduling & lookups
-    op.create_index(
-        "ix_scheduled_posts_status_schedule_time",
-        "scheduled_posts",
-        ["status", "schedule_time"],
-        postgresql_concurrently=False,
-    )
+    # Skip ix_scheduled_posts_status_schedule_time - already created in 0001
     op.create_index(
         "ix_scheduled_posts_user_created_at",
         "scheduled_posts",

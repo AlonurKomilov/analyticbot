@@ -3,13 +3,16 @@
  *
  * React components for role-based UI rendering and permission checks.
  * Integrates with AuthContext to provide RBAC functionality.
+ * 
+ * Role Hierarchy (5-tier system):
+ * viewer(0) < user(1) < moderator(2) < admin(3) < owner(5)
  */
 
 import React, { ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Types
-export type RoleType = 'guest' | 'readonly' | 'user' | 'analyst' | 'moderator' | 'admin' | 'superadmin';
+export type RoleType = 'viewer' | 'user' | 'moderator' | 'admin' | 'owner';
 export type PermissionType = string;
 
 interface RoleHierarchy {
@@ -43,10 +46,11 @@ interface RBACHook {
   userRole: RoleType;
   hasRole: (requiredRole: RoleType, requireExact?: boolean) => boolean;
   hasPermission: (permission: PermissionType) => boolean;
+  isOwner: boolean;
   isAdmin: boolean;
-  isAnalyst: boolean;
   isModerator: boolean;
   isUser: boolean;
+  isViewer: boolean;
   canRead: boolean;
   canCreate: boolean;
   canUpdate: boolean;
@@ -54,26 +58,22 @@ interface RBACHook {
   canExport: boolean;
 }
 
-// Role hierarchy for permission checks
+// Role hierarchy for permission checks (5-tier system)
 const ROLE_HIERARCHY: RoleHierarchy = {
-  'guest': 0,
-  'readonly': 1,
-  'user': 2,
-  'analyst': 3,
-  'moderator': 4,
-  'admin': 5,
-  'superadmin': 6
+  'viewer': 0,    // Public read-only
+  'user': 1,      // Authenticated users
+  'moderator': 2, // Support team
+  'admin': 3,     // Platform admins
+  'owner': 5      // System owner (level 5 to match backend)
 };
 
 // Permission mappings by role
 const ROLE_PERMISSIONS: RolePermissions = {
-  'guest': ['analytics:read', 'report:read'],
-  'readonly': ['analytics:read', 'report:read', 'user:read', 'settings:read'],
+  'viewer': ['analytics:read', 'report:read'],
   'user': ['analytics:read', 'analytics:create', 'report:read', 'report:create', 'user:read', 'settings:read'],
-  'analyst': ['analytics:read', 'analytics:create', 'analytics:update', 'analytics:export', 'report:read', 'report:create', 'report:update', 'report:share', 'user:read', 'settings:read'],
   'moderator': ['analytics:read', 'analytics:create', 'analytics:update', 'analytics:delete', 'analytics:export', 'report:read', 'report:create', 'report:update', 'report:delete', 'report:share', 'user:read', 'user:update', 'settings:read'],
   'admin': ['*'], // All permissions
-  'superadmin': ['*'] // All permissions
+  'owner': ['*']  // All permissions
 };
 
 /**
@@ -108,7 +108,7 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
     return <>{fallback}</>;
   }
 
-  const userRole = (user as any).role || 'guest';
+  const userRole = (user as any).role || 'viewer';
 
   // Check role requirement
   const hasRequiredRole = requireExact
@@ -132,7 +132,7 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return <>{fallback}</>;
   }
 
-  const userRole = (user as any).role || 'guest';
+  const userRole = (user as any).role || 'viewer';
   const hasRequiredPermission = hasPermission(userRole, requiredPermission);
 
   return hasRequiredPermission ? <>{children}</> : <>{fallback}</>;
@@ -150,18 +150,18 @@ export const AdminOnly: React.FC<GuardComponentProps> = ({ children, fallback = 
 };
 
 /**
- * AnalystOrHigher Component - Shows content for analyst role and above
+ * ModeratorOrHigher Component - Shows content for moderator role and above
  */
-export const AnalystOrHigher: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
+export const ModeratorOrHigher: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
   return (
-    <RoleGuard requiredRole="analyst" fallback={fallback}>
+    <RoleGuard requiredRole="moderator" fallback={fallback}>
       {children}
     </RoleGuard>
   );
 };
 
 /**
- * UserOrHigher Component - Shows content for user role and above (excludes guests)
+ * UserOrHigher Component - Shows content for user role and above (excludes viewers)
  */
 export const UserOrHigher: React.FC<GuardComponentProps> = ({ children, fallback = null }) => {
   return (
@@ -177,7 +177,7 @@ export const UserOrHigher: React.FC<GuardComponentProps> = ({ children, fallback
 export const useRBAC = (): RBACHook => {
   const { user } = useAuth();
 
-  const userRole: RoleType = ((user as any)?.role as RoleType) || 'guest';
+  const userRole: RoleType = ((user as any)?.role as RoleType) || 'viewer';
 
   return {
     user,
@@ -188,10 +188,11 @@ export const useRBAC = (): RBACHook => {
         : hasRole(userRole, requiredRole);
     },
     hasPermission: (permission: PermissionType): boolean => hasPermission(userRole, permission),
+    isOwner: hasRole(userRole, 'owner'),
     isAdmin: hasRole(userRole, 'admin'),
-    isAnalyst: hasRole(userRole, 'analyst'),
     isModerator: hasRole(userRole, 'moderator'),
     isUser: hasRole(userRole, 'user'),
+    isViewer: hasRole(userRole, 'viewer'),
     canRead: hasPermission(userRole, 'analytics:read'),
     canCreate: hasPermission(userRole, 'analytics:create'),
     canUpdate: hasPermission(userRole, 'analytics:update'),

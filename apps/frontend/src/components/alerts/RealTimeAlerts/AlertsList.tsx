@@ -24,7 +24,8 @@ import {
 
 interface Alert {
     id: string;
-    severity: 'error' | 'warning' | 'info';
+    type: 'info' | 'warning' | 'error' | 'critical';
+    severity?: 'error' | 'warning' | 'info';
     title: string;
     message: string;
     timestamp: string;
@@ -40,7 +41,8 @@ interface AlertsListProps {
 const severityConfig = {
     error: { icon: ErrorIcon, color: 'error' as const },
     warning: { icon: WarningIcon, color: 'warning' as const },
-    info: { icon: InfoIcon, color: 'info' as const }
+    info: { icon: InfoIcon, color: 'info' as const },
+    critical: { icon: ErrorIcon, color: 'error' as const }
 };
 
 const AlertsList: React.FC<AlertsListProps> = React.memo(({
@@ -55,7 +57,11 @@ const AlertsList: React.FC<AlertsListProps> = React.memo(({
         <Collapse in={isExpanded}>
             <Box sx={{ mt: 2 }}>
                 {displayedAlerts.map((alert) => {
-                    const { icon: Icon, color } = severityConfig[alert.severity];
+                    // Use severity if available, otherwise use type (which is the primary field from API)
+                    const alertLevel = alert.severity || alert.type;
+                    // Default to 'info' if alertLevel is not in config
+                    const config = severityConfig[alertLevel] || severityConfig.info;
+                    const { icon: Icon, color } = config;
 
                     return (
                         <Paper
@@ -76,7 +82,7 @@ const AlertsList: React.FC<AlertsListProps> = React.memo(({
                                         {alert.title}
                                     </Typography>
                                     <Chip
-                                        label={alert.severity.toUpperCase()}
+                                        label={alertLevel.toUpperCase()}
                                         size="small"
                                         color={color}
                                     />

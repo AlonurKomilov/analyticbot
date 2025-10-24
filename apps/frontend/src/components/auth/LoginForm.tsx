@@ -29,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { DESIGN_TOKENS } from '../../theme/designTokens';
+import { TelegramLoginButton } from './TelegramLoginButton';
 
 // Type definitions
 interface LoginFormProps {
@@ -256,6 +257,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             )}
                         </Button>
 
+                        {/* Divider */}
+                        <Divider sx={{ my: 2 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                or
+                            </Typography>
+                        </Divider>
+
+                        {/* Telegram Login Button */}
+                        <TelegramLoginButton disabled={isSubmitting} />
+
                         {/* Forgot Password Link */}
                         <Box sx={{ textAlign: 'center', mb: 2 }}>
                             <Link
@@ -279,7 +290,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                             <>
                                 <Divider sx={{ my: 2 }}>
                                     <Typography variant="body2" color="text.secondary">
-                                        or
+                                        Don't have an account?
                                     </Typography>
                                 </Divider>
 

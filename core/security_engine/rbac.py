@@ -371,7 +371,8 @@ class RBACManager:
             return True
         if resource_owner == user.id:
             return True
-        if user.role in ["admin", "moderator", "super_admin"]:  # Use string values for new system
+        # Admin roles can access all resources (updated for 5-role system)
+        if user.role in ["admin", "moderator", "owner"]:
             return True
         logger.debug(
             f"Resource permission denied: User {user.username} not owner of {resource_type}:{resource_id}"

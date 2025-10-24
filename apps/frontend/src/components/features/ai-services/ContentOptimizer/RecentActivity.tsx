@@ -44,7 +44,7 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ isOptimizing }) 
         }
       } else {
         // Real API implementation
-        // const response = await fetch('/api/optimizations/recent');
+        // const response = await fetch('/ai/optimization/recent');
         // const data = await response.json();
         // setOptimizations(data);
         setOptimizations([]); // Empty until real API implemented

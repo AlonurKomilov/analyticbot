@@ -27,6 +27,7 @@ interface AnalyticsState {
   postDynamics: PostDynamics | null;
   topPosts: TopPost[];
   engagementMetrics: EngagementMetrics | null;
+  bestTimes: BestTimeRecommendation[];
 
   // Loading states
   isLoadingOverview: boolean;
@@ -72,6 +73,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     postDynamics: null,
     topPosts: [],
     engagementMetrics: null,
+    bestTimes: [],
 
     // Loading states
     isLoadingOverview: false,
@@ -101,7 +103,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
       try {
         const overview = await apiClient.get<AnalyticsOverview>(
-          `/analytics/channels/${channelId}/overview`,
+          `/analytics/historical/overview/${channelId}`,
           { params: { period } }
         );
 
@@ -128,7 +130,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
 
       try {
         const growthMetrics = await apiClient.get<GrowthMetrics>(
-          `/analytics/channels/${channelId}/growth`,
+          `/analytics/historical/growth/${channelId}`,
           { params: { period } }
         );
 
@@ -184,7 +186,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         console.log('📊 Fetching post dynamics for channel:', channelId);
 
         const postDynamics = await apiClient.get<PostDynamics>(
-          `/analytics/channels/${channelId}/post-dynamics`,
+          `/analytics/posts/dynamics/post-dynamics/${channelId}`,
           { params: { period } }
         );
 
@@ -213,7 +215,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         console.log('🏆 Fetching top posts for channel:', channelId);
 
         const topPosts = await apiClient.get<TopPost[]>(
-          `/analytics/channels/${channelId}/top-posts`,
+          `/analytics/posts/dynamics/top-posts/${channelId}`,
           { params: { limit } }
         );
 
@@ -274,9 +276,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           `/analytics/channels/${channelId}/best-time`
         );
 
-        // Store recommendations in a custom property if needed
-        // For now, just logging success
+        // Store recommendations
         set({
+          bestTimes: recommendations,
           lastUpdate: Date.now(),
           isLoadingBestTime: false
         });
@@ -287,7 +289,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         const errorMessage = error instanceof Error ? error.message : 'Failed to load recommendations';
         set({
           bestTimeError: errorMessage,
-          isLoadingBestTime: false
+          isLoadingBestTime: false,
+          bestTimes: []
         });
       }
     },
@@ -306,6 +309,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         postDynamics: null,
         topPosts: [],
         engagementMetrics: null,
+        bestTimes: [],
         lastUpdate: null
       });
     },

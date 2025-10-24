@@ -156,7 +156,7 @@ async def get_current_admin_user(
 
 
 async def require_admin_user(
-    min_role: str = AdministrativeRole.SUPER_ADMIN.value,  # Use new role system
+    min_role: str = AdministrativeRole.OWNER.value,  # Use new role system (owner = highest)
     current_admin: AdminUser = Depends(get_current_admin_user),
 ) -> AdminUser:
     """Require minimum admin role"""
@@ -357,11 +357,11 @@ async def get_audit_logs(
 async def get_system_config(
     category: str | None = None,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.OWNER.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
-    """Get system configuration (Super Admin only)"""
+    """Get system configuration (Owner only)"""
     configs = await admin_service.get_system_config()
 
     return [
@@ -385,11 +385,11 @@ async def update_system_config(
     config_update: ConfigUpdateRequest,
     request: Request,
     current_admin: AdminUser = Depends(
-        lambda: require_admin_user(AdministrativeRole.SUPER_ADMIN.value)
+        lambda: require_admin_user(AdministrativeRole.OWNER.value)
     ),
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
-    """Update system configuration (Super Admin only)"""
+    """Update system configuration (Owner only)"""
     ip_address = request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(

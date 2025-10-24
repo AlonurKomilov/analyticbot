@@ -75,9 +75,11 @@ export const useChannelStore = create<ChannelState>()(
         const channelUsername = username.startsWith('@') ? username : `@${username}`;
         console.log('🔍 Validating Telegram channel:', channelUsername);
 
+        // Use shorter timeout (5s) since validation is optional
         const validationResult = await apiClient.post<ChannelValidationResponse>(
           '/analytics/channels/validate',
-          { username: channelUsername }
+          { username: channelUsername },
+          { timeout: 5000 } // 5 second timeout for optional validation
         );
 
         set({ isValidating: false });
@@ -125,20 +127,25 @@ export const useChannelStore = create<ChannelState>()(
         const usernameWithAt = `@${cleanUsername}`;
         console.log('📺 Adding channel:', usernameWithAt);
 
-        // Step 1: Validate with Telegram API first
-        const validation = await get().validateChannel(usernameWithAt);
-
-        if (!validation.valid) {
-          set({
-            isLoading: false,
-            error: validation.error || 'Channel validation failed'
-          });
-          throw new Error(validation.error || 'Channel validation failed');
+        // Step 1: Optional validation with Telegram API
+        // If validation fails or times out, we still continue with channel creation
+        try {
+          console.log('🔍 Attempting Telegram validation (optional)...');
+          const validation = await get().validateChannel(usernameWithAt);
+          
+          if (validation.valid) {
+            console.log('✅ Telegram validation successful');
+          } else {
+            console.warn('⚠️ Telegram validation failed, continuing anyway:', validation.error);
+          }
+        } catch (validationError) {
+          // Log but don't block channel creation
+          console.warn('⚠️ Telegram validation unavailable, continuing anyway:', validationError);
         }
 
         // Step 2: Add to database
         console.log('💾 Saving channel to database...');
-        const newChannel = await apiClient.post<Channel>('/analytics/channels', {
+        const newChannel = await apiClient.post<Channel>('/channels', {
           name: channelData.name,
           username: usernameWithAt,
           description: channelData.description
@@ -206,7 +213,7 @@ export const useChannelStore = create<ChannelState>()(
 
       try {
         console.log('🗑️ Deleting channel:', channelId);
-        await apiClient.delete(`/analytics/channels/${channelId}`);
+        await apiClient.delete(`/channels/${channelId}`);
 
         // Remove from local state
         set(state => ({

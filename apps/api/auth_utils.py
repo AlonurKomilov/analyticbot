@@ -162,17 +162,21 @@ class FastAPIAuthUtils:
         try:
             user_role = UserRole(user.get("role"))
 
-            # Role hierarchy: ADMIN > MODERATOR > ANALYST > USER > READONLY > GUEST
-            role_hierarchy = {
-                UserRole.GUEST: 0,
-                UserRole.READONLY: 1,
-                UserRole.USER: 2,
-                UserRole.ANALYST: 3,
-                UserRole.MODERATOR: 4,
-                UserRole.ADMIN: 5,
+            # Role hierarchy: OWNER > ADMIN > MODERATOR > USER > VIEWER
+            # Updated for new 5-role system
+            role_levels = {
+                UserRole.VIEWER: 0,
+                UserRole.USER: 1,
+                UserRole.MODERATOR: 2,
+                UserRole.ADMIN: 3,
+                UserRole.OWNER: 5,
+                # Legacy mappings for backwards compatibility
+                UserRole.GUEST: 0,  # Maps to VIEWER
+                UserRole.READONLY: 0,  # Maps to VIEWER
+                UserRole.ANALYST: 1,  # Maps to USER
             }
 
-            return role_hierarchy.get(user_role, 0) >= role_hierarchy.get(required_role, 0)
+            return role_levels.get(user_role, 0) >= role_levels.get(required_role, 0)
         except (ValueError, KeyError):
             return False
 

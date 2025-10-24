@@ -127,6 +127,18 @@ export const DESIGN_TOKENS = {
           padding: '16px',
           cursor: 'pointer',
           '&:hover': { elevation: 6, transform: 'translateY(-2px)' }
+        },
+        outlined: {
+          elevation: 0,
+          borderRadius: 12,
+          padding: '16px',
+          border: '1px solid rgba(0, 0, 0, 0.12)'
+        },
+        filled: {
+          elevation: 0,
+          borderRadius: 12,
+          padding: '16px',
+          backgroundColor: 'rgba(0, 0, 0, 0.04)'
         }
       }
     },
@@ -277,7 +289,7 @@ export const DESIGN_TOKENS = {
 
 type ButtonSize = 'small' | 'medium' | 'large';
 type ButtonVariant = 'primary' | 'secondary' | 'tertiary' | 'danger' | 'success';
-type CardVariant = 'default' | 'elevated' | 'interactive';
+type CardVariant = 'default' | 'elevated' | 'interactive' | 'outlined' | 'filled';
 type StatusType = 'success' | 'warning' | 'error' | 'info';
 type ChartType = 'primary' | 'secondary' | 'neutral' | 'gradient';
 

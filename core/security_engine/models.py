@@ -26,12 +26,12 @@ class UserRole(str, Enum):
     DEPRECATED: Legacy user role hierarchy - use ApplicationRole/AdministrativeRole instead.
 
     Migration mapping:
-    - GUEST → ApplicationRole.GUEST
+    - GUEST → ApplicationRole.VIEWER
     - USER → ApplicationRole.USER
-    - READONLY → ApplicationRole.USER + readonly_access permission
+    - READONLY → ApplicationRole.VIEWER + readonly_access permission
     - ANALYST → ApplicationRole.USER + view_analytics permission
     - MODERATOR → AdministrativeRole.MODERATOR
-    - ADMIN → AdministrativeRole.SUPER_ADMIN
+    - ADMIN → AdministrativeRole.ADMIN or OWNER
     """
 
     ADMIN = "admin"
@@ -125,15 +125,16 @@ class User:
                 self.migration_profile = "analyst_user"
 
     def _is_new_role_system(self) -> bool:
-        """Check if using new role system values"""
+        """Check if using new 5-role system values"""
         # Import here to avoid circular imports
         from .roles import AdministrativeRole, ApplicationRole
 
         new_role_values = [
-            ApplicationRole.GUEST.value,
+            ApplicationRole.VIEWER.value,
             ApplicationRole.USER.value,
             AdministrativeRole.MODERATOR.value,
-            AdministrativeRole.SUPER_ADMIN.value,
+            AdministrativeRole.ADMIN.value,
+            AdministrativeRole.OWNER.value,
         ]
         return self.role in new_role_values
 

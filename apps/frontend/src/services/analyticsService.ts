@@ -175,7 +175,7 @@ class RealAnalyticsAdapter {
 
     async getAnalyticsOverview(channelId: string): Promise<any> {
         try {
-            const response: any = await apiClient.get(`/analytics/overview/${channelId}`);
+            const response: any = await apiClient.get(`/analytics/historical/overview/${channelId}`);
             return response.data;
         } catch (error: any) {
             this.logger.warn('Real analytics failed, using fallback', error);
@@ -185,7 +185,7 @@ class RealAnalyticsAdapter {
 
     async getPostDynamics(channelId: string, period: string = '24h'): Promise<any> {
         try {
-            const response: any = await apiClient.get(`/analytics/post-dynamics/${channelId}`, {
+            const response: any = await apiClient.get(`/analytics/posts/dynamics/post-dynamics/${channelId}`, {
                 params: { period }
             });
             return response.data;
@@ -197,7 +197,7 @@ class RealAnalyticsAdapter {
 
     async getTopPosts(channelId: string, period: string = 'today', sortBy: string = 'views'): Promise<any> {
         try {
-            const response: any = await apiClient.get(`/analytics/top-posts/${channelId}`, {
+            const response: any = await apiClient.get(`/analytics/posts/dynamics/top-posts/${channelId}`, {
                 params: { period, sortBy }
             });
             return response.data;
@@ -209,7 +209,7 @@ class RealAnalyticsAdapter {
 
     async getEngagementMetrics(channelId: string, period: string = '7d'): Promise<any> {
         try {
-            const response: any = await apiClient.get(`/analytics/engagement/${channelId}`, {
+            const response: any = await apiClient.get(`/analytics/channels/${channelId}/engagement`, {
                 params: { period }
             });
             return response.data;
@@ -221,7 +221,7 @@ class RealAnalyticsAdapter {
 
     async getBestTime(channelId: string, timeframe: string = 'week'): Promise<any> {
         try {
-            const response: any = await apiClient.get(`/analytics/best-time/${channelId}`, {
+            const response: any = await apiClient.get(`/analytics/predictive/best-times/${channelId}`, {
                 params: { timeframe }
             });
             return response.data;

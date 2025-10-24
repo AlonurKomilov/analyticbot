@@ -43,11 +43,11 @@ interface CacheEntry<T = any> {
     metadata: CacheMetadata;
 }
 
-interface CachedData<T = any> extends T {
+type CachedData<T = any> = T & {
     _cached: boolean;
     _cacheTime: number;
     _cacheAge: number;
-}
+};
 
 interface CacheStats {
     totalEntries: number;
@@ -230,7 +230,7 @@ class OfflineStorage {
             const keys = await localforage.keys();
             const channels = new Set<string>();
 
-            keys.forEach(key => {
+            keys.forEach((key: string) => {
                 const parts = key.split('_');
                 if (parts.length >= 2) {
                     channels.add(parts[1]); // Channel ID is typically the second part
@@ -398,7 +398,7 @@ class OfflineStorage {
             for (const channelId of channels) {
                 try {
                     // Fetch fresh data and update cache
-                    const freshData = await apiClient.get(`/api/v2/analytics/channels/${channelId}/overview`);
+                    const freshData = await apiClient.get(`/analytics/historical/overview/${channelId}`);
                     await this.cacheAnalyticsData(channelId, freshData);
                     syncedCount++;
                 } catch (error) {

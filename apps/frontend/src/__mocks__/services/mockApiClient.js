@@ -148,7 +148,7 @@ class MockApiClient {
                 }
 
                 // Handle advanced recommendations
-                if (url.includes('/api/v2/analytics/advanced/recommendations/')) {
+                if (url.includes('/analytics/advanced/recommendations/')) {
                     return {
                         data: {
                             recommendations: [

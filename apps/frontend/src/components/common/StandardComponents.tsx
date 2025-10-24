@@ -121,7 +121,7 @@ export const StandardCard = React.forwardRef<HTMLDivElement, StandardCardProps>(
   interactive = false,
   ...props
 }, ref) => {
-  const cardProps = getCardProps(variant);
+  const cardProps = getCardProps(variant) as any;
 
   return (
     <MuiCard
@@ -129,7 +129,7 @@ export const StandardCard = React.forwardRef<HTMLDivElement, StandardCardProps>(
       elevation={cardProps.elevation}
       sx={{
         borderRadius: cardProps.borderRadius,
-        border: cardProps.border,
+        ...(cardProps.border && { border: cardProps.border }),
         cursor: interactive ? 'pointer' : 'default',
         ...createTransition('all', 'normal'),
         ...(interactive && {

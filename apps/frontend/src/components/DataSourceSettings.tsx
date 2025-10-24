@@ -63,14 +63,21 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
         return;
       }
 
-      // Otherwise, check health endpoint
+      // Otherwise, check health endpoint using the same base URL as apiClient
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // Increased to 5s
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || (window.location.protocol + '//' + window.location.hostname + ':11400');
+      // Use the same base URL logic as apiClient.ts
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 
+                        import.meta.env.VITE_API_URL || 
+                        'https://b2qz1m0n-11400.euw.devtunnels.ms'; // Fallback to devtunnel
+      
       const response = await fetch(`${apiBaseUrl}/health`, {
         method: 'GET',
-        signal: controller.signal
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+        },
       });
 
       clearTimeout(timeoutId);
@@ -85,7 +92,7 @@ const DataSourceSettings: React.FC<DataSourceSettingsProps> = ({ onDataSourceCha
       if (error.name !== 'AbortError') {
         // Only log unexpected API check errors in development
         if (import.meta.env.DEV && apiStatus !== 'offline') {
-          console.log('API check failed:', error.message);
+          console.log('API health check failed:', error.message);
         }
       }
       setApiStatus('offline');

@@ -21,21 +21,22 @@ import {
 import AlertsList from '../../alerts/RealTimeAlerts/AlertsList';
 import RuleManager from '../../alerts/RealTimeAlerts/RuleManager';
 
-interface Alert {
+interface SmartAlert {
     id: string;
     severity: 'error' | 'warning' | 'info';
     title: string;
     message: string;
     timestamp: string;
+    type?: 'info' | 'warning' | 'error' | 'critical';
 }
 
 // Simple alert generator (replace with actual util later)
-const generateSmartAlerts = (): Alert[] => {
+const generateSmartAlerts = (): SmartAlert[] => {
     return [];
 };
 
 const SmartAlertsPanel: React.FC = () => {
-    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [alerts, setAlerts] = useState<SmartAlert[]>([]);
     const [isExpanded, setIsExpanded] = useState(true);
     const [showRuleManager, setShowRuleManager] = useState(false);
 
@@ -111,7 +112,10 @@ const SmartAlertsPanel: React.FC = () => {
 
                 {/* Alerts List */}
                 <AlertsList
-                    alerts={alerts}
+                    alerts={alerts.map(alert => ({
+                        ...alert,
+                        type: alert.type || (alert.severity === 'error' ? 'error' : alert.severity === 'warning' ? 'warning' : 'info') as 'info' | 'warning' | 'error' | 'critical'
+                    }))}
                     isExpanded={isExpanded}
                     onDeleteAlert={handleDeleteAlert}
                     maxAlerts={5}

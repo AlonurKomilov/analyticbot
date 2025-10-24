@@ -9,7 +9,7 @@ import { apiClient } from '../api/client';
 // Mock data removed - should only be loaded dynamically in demo mode
 // See ContentOptimizerService.tsx for proper dynamic import pattern
 
-const AI_SERVICES_BASE = '/ai-services';
+const AI_SERVICES_BASE = '/ai/services';
 
 // =====================================
 // Types
@@ -181,7 +181,7 @@ export const PredictiveAnalyticsAPI = {
      */
     async generateForecast(channelId: string, options: ForecastOptions = {}): Promise<any> {
         try {
-            const response: any = await apiClient.post('/insights/predictive/forecast', {
+            const response: any = await apiClient.post('/analytics/predictive/forecast', {
                 channel_ids: [parseInt(channelId)],
                 prediction_type: options.modelType || 'engagement',
                 forecast_days: options.timeframe === '7d' ? 7 : options.timeframe === '30d' ? 30 : 7,
@@ -200,7 +200,7 @@ export const PredictiveAnalyticsAPI = {
      */
     async getInsights(channelId: string): Promise<any> {
         try {
-            const response: any = await apiClient.post('/insights/predictive/intelligence/contextual', {
+            const response: any = await apiClient.post('/analytics/predictive/intelligence/contextual', {
                 channel_id: parseInt(channelId),
                 intelligence_context: ['temporal', 'environmental', 'behavioral'],
                 analysis_period_days: 30,
@@ -221,7 +221,7 @@ export const PredictiveAnalyticsAPI = {
     async getTemporalPatterns(channelId: string, days: number = 90): Promise<any> {
         try {
             const response: any = await apiClient.get(
-                `/insights/predictive/intelligence/temporal/${channelId}?analysis_depth_days=${days}`
+                `/analytics/predictive/intelligence/temporal/${channelId}?analysis_depth_days=${days}`
             );
             return response.data || response;
         } catch (error) {
@@ -236,7 +236,7 @@ export const PredictiveAnalyticsAPI = {
      */
     async getCrossChannelIntelligence(channelIds: string[], options: any = {}): Promise<any> {
         try {
-            const response: any = await apiClient.post('/insights/predictive/intelligence/cross-channel', {
+            const response: any = await apiClient.post('/analytics/predictive/intelligence/cross-channel', {
                 channel_ids: channelIds.map(id => parseInt(id)),
                 correlation_depth_days: options.correlationDepth || 60,
                 include_competitive_intelligence: options.includeCompetitive !== false
@@ -254,7 +254,7 @@ export const PredictiveAnalyticsAPI = {
      */
     async healthCheck(): Promise<any> {
         try {
-            const response: any = await apiClient.get('/insights/predictive/intelligence/health');
+            const response: any = await apiClient.get('/analytics/predictive/intelligence/health');
             return response.data || response;
         } catch (error) {
             console.error('Predictive service health check failed:', error);

@@ -59,13 +59,20 @@ class AsyncpgUserRepository(IUserRepository):
         return dict(row) if row else {}
 
     async def update_user(self, user_id: int, **updates) -> bool:
-        """Update user information"""
+        """Update user information - supports all user fields"""
         set_clauses = []
         values = []
         param_count = 1
 
+        # Whitelist of updatable fields
+        allowed_fields = [
+            "username", "email", "full_name", "hashed_password", "role", 
+            "status", "plan_id", "last_login", "telegram_id", "telegram_username",
+            "telegram_photo_url", "telegram_verified"
+        ]
+
         for key, value in updates.items():
-            if key in ["username", "plan_id"]:
+            if key in allowed_fields and value is not None:
                 set_clauses.append(f"{key} = ${param_count}")
                 values.append(value)
                 param_count += 1

@@ -188,8 +188,8 @@ const UnifiedButton = React.forwardRef<HTMLButtonElement, UnifiedButtonProps>(({
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <StyledButton
-        variant={buttonProps.variant}
-        color={buttonProps.color}
+        variant={buttonProps.variant as 'text' | 'outlined' | 'contained'}
+        color={buttonProps.color as 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'}
         size={size}
         buttonVariant={buttonProps.color}
         loading={loading}

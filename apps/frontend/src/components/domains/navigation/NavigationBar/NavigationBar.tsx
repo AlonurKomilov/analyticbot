@@ -25,6 +25,7 @@ import ProfileMenu from './ProfileMenu';
 import NotificationMenu from './NotificationMenu';
 import SmartBreadcrumbs from './SmartBreadcrumbs';
 import MobileNavigationDrawer from './MobileNavigationDrawer';
+import DesktopSidebar from './DesktopSidebar';
 import GlobalDataSourceSwitch from '@components/common/GlobalDataSourceSwitch';
 
 /**
@@ -35,9 +36,12 @@ import GlobalDataSourceSwitch from '@components/common/GlobalDataSourceSwitch';
  * - ProfileMenu: User profile and settings dropdown
  * - NotificationMenu: Notifications badge and dropdown
  * - SmartBreadcrumbs: Dynamic breadcrumb navigation
- * - MobileNavigationDrawer: Mobile-specific navigation
+ * - MobileNavigationDrawer: Mobile-specific navigation drawer
+ * - DesktopSidebar: Permanent sidebar for desktop screens
  *
- * Reduced from 833 lines to ~200 lines while maintaining full functionality
+ * Responsive behavior:
+ * - Desktop: Shows permanent sidebar + top bar
+ * - Mobile: Shows hamburger menu + temporary drawer
  */
 const NavigationBar: React.FC = () => {
     const theme = useTheme();
@@ -64,6 +68,9 @@ const NavigationBar: React.FC = () => {
 
     return (
         <>
+            {/* Desktop Sidebar - shown on md and up */}
+            {!isMobile && <DesktopSidebar />}
+
             {/* Main AppBar */}
             <AppBar
                 position="fixed"

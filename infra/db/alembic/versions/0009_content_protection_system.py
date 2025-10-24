@@ -9,8 +9,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision = "0009_content_protection_system"
-down_revision = "0008_create_superadmin_system"
+revision = "0009"
+down_revision = "0008"
 branch_labels = None
 depends_on = None
 

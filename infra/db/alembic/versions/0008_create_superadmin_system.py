@@ -8,8 +8,8 @@ Create Date: 2025-01-27 10:30:00.000000
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0008_create_superadmin_system"
-down_revision = "0007_mtproto_stats_tables"
+revision = "0008"
+down_revision = "0007"
 branch_labels = None
 depends_on = None
 

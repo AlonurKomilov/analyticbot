@@ -208,8 +208,8 @@ export const preloadCriticalComponents = (): void => {
  * Preload components based on user interaction patterns
  */
 export const preloadByUserBehavior = (userRole: string = 'user'): void => {
-  if (userRole === 'admin' || userRole === 'superadmin') {
-    // Preload admin components for admin users
+  if (userRole === 'admin' || userRole === 'owner') {
+    // Preload admin components for admin/owner users
     AdminComponents.SuperAdminDashboard.preload();
     PageComponents.AdminDashboard.preload();
   }

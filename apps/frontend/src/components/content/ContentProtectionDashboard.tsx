@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 
 import WatermarkTool from './WatermarkTool';
-import TheftDetection from './TheftDetection';
+import ContentProtectionPanel from '../protection/ContentProtectionPanel';
 
 // Tab Panel Component
 interface TabPanelProps {
@@ -150,7 +150,7 @@ const ContentProtectionDashboard: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>
-                <TheftDetection />
+                <ContentProtectionPanel />
             </TabPanel>
 
             {/* Footer Info */}

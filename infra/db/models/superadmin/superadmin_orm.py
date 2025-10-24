@@ -1,6 +1,8 @@
 """
 SuperAdmin Management Panel - Database Models
 Enterprise-grade admin system with comprehensive user and system management
+
+Updated for 5-Role Hierarchical System: viewer < user < moderator < admin < owner
 """
 
 from datetime import datetime
@@ -18,7 +20,15 @@ class Base(DeclarativeBase):
 
 
 class AdminRole(str, Enum):
-    """Admin role hierarchy"""
+    """
+    DEPRECATED: Admin role hierarchy - use new 5-role system instead
+    
+    Migration to new system:
+    - SUPPORT → moderator (with customer_support permission)
+    - MODERATOR → moderator
+    - ADMIN → admin
+    - SUPER_ADMIN → owner
+    """
 
     SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
@@ -37,7 +47,12 @@ class UserStatus(str, Enum):
 
 
 class AdminUser(Base):
-    """SuperAdmin users with elevated privileges - Aligned with domain model"""
+    """
+    SuperAdmin users with elevated privileges - Aligned with 5-role domain model
+    
+    Role system: viewer < user < moderator < admin < owner
+    Default role: moderator (support team level)
+    """
 
     __tablename__ = "admin_users"
 
@@ -45,7 +60,9 @@ class AdminUser(Base):
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(20), nullable=False, default="moderator")
+    role: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="moderator"
+    )  # New 5-role system
 
     # Profile fields
     status: Mapped[str] = mapped_column(String(20), default="active")

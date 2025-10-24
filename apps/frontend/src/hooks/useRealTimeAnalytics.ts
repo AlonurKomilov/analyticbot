@@ -99,7 +99,7 @@ export const useRealTimeAnalytics = (
             setConnectionStatus('fetching');
 
             // Make API call for real-time data
-            const response = await apiClient.post('/api/v2/analytics/channel-data', {
+            const response = await apiClient.post('/analytics/channel-data', {
                 channel_id: channelId,
                 include_real_time: true,
                 format: 'detailed'
@@ -261,7 +261,7 @@ export const useQuickAnalytics = (
             setLoading(true);
             setError(null);
 
-            const response = await apiClient.post('/api/mobile/v1/analytics/quick', {
+            const response = await apiClient.post('/mobile/analytics/quick', {
                 channel_id: channelId,
                 widget_type: widgetType,
                 include_real_time: true
@@ -326,11 +326,11 @@ export const usePerformanceMetrics = (
             setError(null);
 
             const [metricsData, trendsData] = await Promise.all([
-                apiClient.post('/api/v2/analytics/metrics/performance', {
+                apiClient.post('/analytics/metrics/performance', {
                     channels: [channelId],
                     period: `${period}d`
                 }),
-                apiClient.get('/api/v2/analytics/trends/top-posts')
+                apiClient.get('/analytics/trends/top-posts')
             ]);
 
             const metrics = metricsData as any;

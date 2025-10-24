@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0005_payment_system"
-down_revision: str | Sequence[str] | None = "0004_unique_sent_posts"
+revision = "0005"
+down_revision: str | Sequence[str] | None = "0004"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -24,8 +24,14 @@ def upgrade() -> None:
     # Add pricing columns to existing plans table
     op.add_column("plans", sa.Column("price_monthly", sa.DECIMAL(10, 2), nullable=True))
     op.add_column("plans", sa.Column("price_yearly", sa.DECIMAL(10, 2), nullable=True))
-    op.add_column("plans", sa.Column("currency", sa.String(3), default="USD", nullable=False))
-    op.add_column("plans", sa.Column("is_active", sa.Boolean(), default=True, nullable=False))
+    # Add as nullable first, then set defaults and make NOT NULL
+    op.add_column("plans", sa.Column("currency", sa.String(3), nullable=True))
+    op.execute("UPDATE plans SET currency = 'USD' WHERE currency IS NULL")
+    op.alter_column("plans", "currency", nullable=False)
+    
+    op.add_column("plans", sa.Column("is_active", sa.Boolean(), nullable=True))
+    op.execute("UPDATE plans SET is_active = true WHERE is_active IS NULL")
+    op.alter_column("plans", "is_active", nullable=False)
 
     # Payment methods table
     op.create_table(

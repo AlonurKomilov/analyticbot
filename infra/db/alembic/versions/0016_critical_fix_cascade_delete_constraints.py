@@ -11,8 +11,8 @@ from collections.abc import Sequence
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0016_critical_fix_cascade_delete_constraints"
-down_revision: str | Sequence[str] | None = "0015_merge_analytics_and_performance"
+revision = "0016"
+down_revision: str | Sequence[str] | None = "0015"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -88,7 +88,7 @@ const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       // Load system statistics
-      const statsResponse = await fetch('/api/analytics/admin/system-stats', {
+      const statsResponse = await fetch('/admin/analytics/system-stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -100,7 +100,7 @@ const AdminDashboard: React.FC = () => {
       }
 
       // Load all channels
-      const channelsResponse = await fetch('/api/analytics/admin/all-channels', {
+      const channelsResponse = await fetch('/admin/analytics/all-channels', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -119,7 +119,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleDeleteChannel = async (channelId: string): Promise<void> => {
     try {
-      const response = await fetch(`/api/analytics/admin/channels/${channelId}`, {
+      const response = await fetch(`/admin/analytics/channels/${channelId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

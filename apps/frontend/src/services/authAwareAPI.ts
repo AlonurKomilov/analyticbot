@@ -6,7 +6,7 @@
 
 import { apiClient } from '../api/client';
 
-interface UserInfo {
+export interface UserInfo {
     user?: {
         username?: string;
         email?: string;
@@ -15,13 +15,13 @@ interface UserInfo {
     [key: string]: any;
 }
 
-interface LoginCredentials {
+export interface LoginCredentials {
     email?: string;
     username?: string;
     password: string;
 }
 
-interface LoginResponse {
+export interface LoginResponse {
     success: boolean;
     token?: string;
     user?: UserInfo;
@@ -30,7 +30,7 @@ interface LoginResponse {
     error?: string;
 }
 
-interface ServiceStatus {
+export interface ServiceStatus {
     initialized: boolean;
     authenticated: boolean;
     demoUser: boolean;
@@ -38,7 +38,7 @@ interface ServiceStatus {
     dataSource: string;
 }
 
-type DemoUserType = 'full_featured' | 'read_only' | 'limited' | 'admin';
+export type DemoUserType = 'full_featured' | 'read_only' | 'limited' | 'admin';
 
 class AuthAwareAPIService {
     private isInitialized: boolean = false;
@@ -126,25 +126,25 @@ class AuthAwareAPIService {
     }
 
     async getAnalyticsOverview(channelId: string): Promise<any> {
-        return this.makeRequest(`/analytics/overview/${channelId}`);
+        return this.makeRequest(`/analytics/historical/overview/${channelId}`);
     }
 
     async getPostDynamics(channelId: string, period: string = '24h'): Promise<any> {
-        return this.makeRequest(`/analytics/v2/post-dynamics/${channelId}?period=${period}`);
+        return this.makeRequest(`/analytics/posts/dynamics/post-dynamics/${channelId}?period=${period}`);
     }
 
     async getTopPosts(channelId: string, options: Record<string, any> = {}): Promise<any> {
         const queryParams = new URLSearchParams(options).toString();
-        const url = `/analytics/v2/top-posts/${channelId}${queryParams ? `?${queryParams}` : ''}`;
+        const url = `/analytics/posts/dynamics/top-posts/${channelId}${queryParams ? `?${queryParams}` : ''}`;
         return this.makeRequest(url);
     }
 
     async getBestTime(channelId: string, timeframe: string = 'week'): Promise<any> {
-        return this.makeRequest(`/analytics/v2/best-time/${channelId}?timeframe=${timeframe}`);
+        return this.makeRequest(`/analytics/predictive/best-times/${channelId}?timeframe=${timeframe}`);
     }
 
     async getEngagementMetrics(channelId: string, period: string = '7d'): Promise<any> {
-        return this.makeRequest(`/analytics/v2/engagement-metrics/${channelId}?period=${period}`);
+        return this.makeRequest(`/analytics/channels/${channelId}/engagement?period=${period}`);
     }
 
     /**

@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAnalyticsStore } from '@/stores';
-import { DEFAULT_DEMO_CHANNEL_ID } from '../../../../__mocks__/constants';
+import { useChannelStore } from '@/stores';
 import type { AIInsight } from '../utils/timeUtils';
 
 interface BestTimeRecommendations {
-    best_times?: Array<{ hour: number; confidence: number }>;
+    best_times?: Array<{ 
+        hour: number; 
+        day: number;
+        confidence: number;
+        avg_engagement: number;
+    }>;
+    accuracy?: number;
     [key: string]: any;
 }
 
@@ -25,29 +31,38 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     const [contentType, setContentType] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
     const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+    const [bestTimeRecommendations, setBestTimeRecommendations] = useState<BestTimeRecommendations | null>(null);
 
     // Get store methods and data
-    const { fetchBestTime, isLoadingBestTime } = useAnalyticsStore();
-    const [bestTimeRecommendations, _setBestTimeRecommendations] = useState<BestTimeRecommendations | null>(null);
+    const { fetchBestTime, isLoadingBestTime, bestTimes } = useAnalyticsStore();
+    const { selectedChannel } = useChannelStore();
 
     // Generate AI insights based on recommendations
     const generateAIInsights = (data: BestTimeRecommendations): AIInsight[] => {
         const insights: AIInsight[] = [
             {
                 type: 'time',
-                message: data.best_times?.[0] ? 'Juma kuni soat 20:00 da eng ko\'p faollik kuzatiladi' : 'Ma\'lumotlar tahlil qilinmoqda'
+                message: data.best_times?.[0] ? 'Juma kuni soat 20:00 da eng ko\'p faollik kuzatiladi' : 'Ma\'lumotlar tahlil qilinmoqda',
+                title: 'Optimal Posting Time',
+                description: data.best_times?.[0] ? 'Juma kuni soat 20:00 da eng ko\'p faollik kuzatiladi' : 'Ma\'lumotlar tahlil qilinmoqda'
             },
             {
                 type: 'audience',
-                message: 'Sizning auditoriyangiz kechqurun ko\'proq faol bo\'ladi'
+                message: 'Sizning auditoriyangiz kechqurun ko\'proq faol bo\'ladi',
+                title: 'Audience Activity',
+                description: 'Sizning auditoriyangiz kechqurun ko\'proq faol bo\'ladi'
             },
             {
                 type: 'content',
-                message: 'Hafta oxirida ko\'ngilochar kontent yuborishni tavsiya etamiz'
+                message: 'Hafta oxirida ko\'ngilochar kontent yuborishni tavsiya etamiz',
+                title: 'Content Strategy',
+                description: 'Hafta oxirida ko\'ngilochar kontent yuborishni tavsiya etamiz'
             },
             {
                 type: 'trend',
-                message: 'Faollik darajasi hafta davomida 15% oshgan'
+                message: 'Faollik darajasi hafta davomida 15% oshgan',
+                title: 'Engagement Trend',
+                description: 'Faollik darajasi hafta davomida 15% oshgan'
             }
         ];
 
@@ -56,24 +71,44 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
 
     // Load best time recommendations using store
     const loadRecommendations = useCallback(async () => {
+        // Don't fetch if no channel is selected
+        if (!selectedChannel?.id) {
+            console.warn('BestTimeRecommender: No channel selected, skipping fetch');
+            return;
+        }
+
         try {
             setError(null);
-            await fetchBestTime(DEFAULT_DEMO_CHANNEL_ID);
-
-            // For now, generate insights from mock data
-            // In production, this would come from the API response
-            if (bestTimeRecommendations) {
-                const insights = generateAIInsights(bestTimeRecommendations);
-                setAiInsights(insights);
-            }
-
+            console.log('BestTimeRecommender: Fetching for channel:', selectedChannel.id);
+            await fetchBestTime(selectedChannel.id);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
             console.error('Error loading recommendations:', err);
             setAiInsights([]);
         }
-    }, [timeFrame, contentType, fetchBestTime, bestTimeRecommendations]);
+    }, [fetchBestTime, selectedChannel]);
+
+    // Update recommendations when store data changes
+    useEffect(() => {
+        if (bestTimes && bestTimes.length > 0) {
+            // Convert BestTimeRecommendation[] to the expected format
+            const formatted: BestTimeRecommendations = {
+                best_times: bestTimes.map(bt => ({
+                    hour: bt.hour,
+                    day: typeof bt.day === 'string' ? parseInt(bt.day) : bt.day,
+                    confidence: bt.confidence,
+                    avg_engagement: bt.avgEngagement
+                })),
+                accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + bt.confidence, 0) / bestTimes.length)
+            };
+            setBestTimeRecommendations(formatted);
+            
+            // Generate AI insights
+            const insights = generateAIInsights(formatted);
+            setAiInsights(insights);
+        }
+    }, [bestTimes]);
 
     // Load data on mount and when filters change
     useEffect(() => {

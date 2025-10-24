@@ -8,8 +8,8 @@ Create Date: 2025-08-31 12:00:00.000000
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0007_mtproto_stats_tables"
-down_revision = "0006_deliveries_observability"
+revision = "0007"
+down_revision = "0006"
 branch_labels = None
 depends_on = None
 

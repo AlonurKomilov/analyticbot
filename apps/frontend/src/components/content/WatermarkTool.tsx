@@ -138,7 +138,7 @@ const WatermarkTool: React.FC = () => {
 
             // Use API endpoint
             const baseURL = process.env.REACT_APP_API_URL || '';
-            const response = await fetch(`${baseURL}/api/v1/content-protection/watermark/image`, {
+            const response = await fetch(`${baseURL}/content/protection/watermark/image`, {
                 method: 'POST',
                 body: formData,
                 headers: {

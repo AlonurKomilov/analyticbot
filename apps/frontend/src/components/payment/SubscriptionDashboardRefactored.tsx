@@ -96,16 +96,16 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
       setError(null);
 
       // Load subscription data
-      const subResponse = await paymentAPI.getUserSubscription(userId);
+      const subResponse = await paymentAPI.getUserSubscription(String(userId));
       setSubscription(subResponse.subscription);
 
       // Load payment history
-      const historyResponse = await paymentAPI.getPaymentHistory(userId, 10);
-      setPaymentHistory(historyResponse.payments || []);
+      const historyResponse = await paymentAPI.getPaymentHistory(String(userId), 10);
+      setPaymentHistory((historyResponse as any).payments || historyResponse || []);
 
       // Load usage data (if available)
       try {
-        const usageResponse = await (paymentAPI as any).getUsageData(userId);
+        const usageResponse = await (paymentAPI as any).getUsageData(String(userId));
         setUsage(usageResponse.usage);
       } catch (usageError) {
         // Usage data might not be available - not critical
@@ -123,7 +123,7 @@ const SubscriptionDashboard: React.FC<SubscriptionDashboardProps> = ({ userId })
     try {
       setCanceling(true);
       await paymentAPI.cancelSubscription({
-        user_id: userId,
+        subscription_id: String(subscription?.id || ''),
         immediate: immediate,
         ...feedback
       });

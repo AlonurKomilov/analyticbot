@@ -49,6 +49,7 @@ export { default as AccessibleFormField } from './AccessibleFormField';
 export { default as EnhancedDataTable } from './EnhancedDataTable';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as ExportButton } from './ExportButton';
+// Backwards-compatible ShareButton wrapper (keeps legacy imports working)
 export { default as ShareButton } from './ShareButton';
 export { default as ToastNotification } from './ToastNotification';
 

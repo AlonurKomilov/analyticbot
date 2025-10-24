@@ -192,8 +192,9 @@ class RoleHierarchyService:
         Validate if a user can assign a specific role to another user.
 
         Rules:
-        - SUPER_ADMIN can assign any role
-        - MODERATOR can assign USER and GUEST roles
+        - OWNER can assign any role
+        - ADMIN can assign roles below OWNER (viewer, user, moderator, admin)
+        - MODERATOR can assign USER and VIEWER roles
         - Users cannot assign roles
 
         Args:
@@ -206,9 +207,13 @@ class RoleHierarchyService:
         assigner_level = get_role_level(assigner_role)
         target_level = get_role_level(target_role)
 
-        # SUPER_ADMIN can assign any role
-        if assigner_role == AdministrativeRole.SUPER_ADMIN.value:
+        # OWNER can assign any role
+        if assigner_role == AdministrativeRole.OWNER.value:
             return True
+
+        # ADMIN can assign roles below OWNER
+        if assigner_role == AdministrativeRole.ADMIN.value:
+            return target_level < get_role_level(AdministrativeRole.OWNER.value)
 
         # MODERATOR can assign roles below their level
         if assigner_role == AdministrativeRole.MODERATOR.value:
@@ -227,10 +232,10 @@ class RoleHierarchyService:
         return {
             "hierarchy": [
                 {
-                    "role": ApplicationRole.GUEST.value,
-                    "level": get_role_level(ApplicationRole.GUEST.value),
+                    "role": ApplicationRole.VIEWER.value,
+                    "level": get_role_level(ApplicationRole.VIEWER.value),
                     "type": "application",
-                    "description": "Unauthenticated or limited access",
+                    "description": "Public read-only access",
                 },
                 {
                     "role": ApplicationRole.USER.value,
@@ -245,14 +250,20 @@ class RoleHierarchyService:
                     "description": "Content moderation and user management",
                 },
                 {
-                    "role": AdministrativeRole.SUPER_ADMIN.value,
-                    "level": get_role_level(AdministrativeRole.SUPER_ADMIN.value),
+                    "role": AdministrativeRole.ADMIN.value,
+                    "level": get_role_level(AdministrativeRole.ADMIN.value),
                     "type": "administrative",
-                    "description": "System administration and configuration",
+                    "description": "Platform administration",
+                },
+                {
+                    "role": AdministrativeRole.OWNER.value,
+                    "level": get_role_level(AdministrativeRole.OWNER.value),
+                    "type": "administrative",
+                    "description": "System owner with full control",
                 },
             ],
-            "total_roles": 4,
-            "administrative_roles": 2,
+            "total_roles": 5,
+            "administrative_roles": 3,
             "application_roles": 2,
         }
 

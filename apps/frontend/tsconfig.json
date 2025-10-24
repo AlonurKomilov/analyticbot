@@ -67,7 +67,9 @@
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "src/**/*.test.js",
-    "src/**/*.test.jsx"
+    "src/**/*.test.jsx",
+    "src/services/archive/**/*",
+    "src/**/__mocks__/**/*"
   ],
   "references": [
     { "path": "./tsconfig.node.json" }

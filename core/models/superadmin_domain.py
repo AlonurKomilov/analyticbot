@@ -4,7 +4,8 @@
 Framework-independent domain entities for admin management.
 No ORM dependencies - pure Python dataclasses for clean domain logic.
 
-Updated for 4-Role Hierarchical System with backwards compatibility.
+Updated for 5-Role Hierarchical System with backwards compatibility.
+Roles: viewer < user < moderator < admin < owner
 """
 
 from dataclasses import dataclass, field
@@ -21,8 +22,8 @@ class AdminRole(str, Enum):
     Migration mapping:
     - SUPPORT → AdministrativeRole.MODERATOR + customer_support permission
     - MODERATOR → AdministrativeRole.MODERATOR
-    - ADMIN → AdministrativeRole.SUPER_ADMIN
-    - SUPER_ADMIN → AdministrativeRole.SUPER_ADMIN
+    - ADMIN → AdministrativeRole.ADMIN
+    - SUPER_ADMIN → AdministrativeRole.OWNER
     """
 
     SUPER_ADMIN = "super_admin"
@@ -65,14 +66,15 @@ class AuditAction(str, Enum):
 
 @dataclass
 class AdminUser:
-    """Admin user domain entity - Updated for 4-Role System"""
+    """Admin user domain entity - Updated for 5-Role System"""
 
     id: UUID = field(default_factory=uuid4)
     username: str = ""
     email: str = ""
     password_hash: str = ""
 
-    # Role System - New hierarchical approach
+    # Role System - New 5-role hierarchical approach
+    # viewer < user < moderator < admin < owner
     role: str = "moderator"  # Default to AdministrativeRole.MODERATOR.value
     legacy_role: AdminRole | None = None  # For backwards compatibility
     additional_permissions: list[str] = field(default_factory=list)  # Extra permissions
@@ -124,14 +126,17 @@ class AdminUser:
                 self.migration_profile = "support_moderator"
 
     def _is_new_role_system(self) -> bool:
-        """Check if using new role system values"""
+        """Check if using new 5-role system values"""
         # Import here to avoid circular imports
         try:
-            from core.security_engine.roles import AdministrativeRole
+            from core.security_engine.roles import AdministrativeRole, ApplicationRole
 
             new_role_values = [
+                ApplicationRole.VIEWER.value,
+                ApplicationRole.USER.value,
                 AdministrativeRole.MODERATOR.value,
-                AdministrativeRole.SUPER_ADMIN.value,
+                AdministrativeRole.ADMIN.value,
+                AdministrativeRole.OWNER.value,
             ]
             return self.role in new_role_values
         except ImportError:
@@ -210,6 +215,10 @@ class AdminUser:
             "moderator": 2,
             "admin": 3,
             "super_admin": 4,
+            # New role mappings for fallback
+            "viewer": 0,
+            "user": 1,
+            "owner": 5,
         }
 
         current_role_str = self.role if isinstance(self.role, str) else self.role.value

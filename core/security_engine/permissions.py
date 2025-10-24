@@ -68,12 +68,13 @@ class RolePermissions:
 
 # Default permission sets for each role
 DEFAULT_ROLE_PERMISSIONS: dict[str, RolePermissions] = {
+    # Legacy role for backwards compatibility (maps to viewer)
     "guest": RolePermissions(
         role="guest",
         permissions={
             Permission.DEMO_ACCESS,
         },
-        description="Limited access for unauthenticated users",
+        description="DEPRECATED: Use 'viewer' instead. Limited access for unauthenticated users",
     ),
     "user": RolePermissions(
         role="user",
@@ -102,13 +103,30 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, RolePermissions] = {
         },
         description="Content moderation and user management",
     ),
+    "admin": RolePermissions(
+        role="admin",
+        permissions={
+            # Platform administration - most permissions except sensitive system config
+            *Permission.__members__.values()
+        },
+        description="Platform administration access",
+    ),
+    "owner": RolePermissions(
+        role="owner",
+        permissions={
+            # All permissions - system owner with full control
+            *Permission.__members__.values()
+        },
+        description="Full system ownership and control",
+    ),
+    # Legacy role for backwards compatibility
     "super_admin": RolePermissions(
         role="super_admin",
         permissions={
-            # All permissions - system administrator
+            # Maps to owner - full system administration access
             *Permission.__members__.values()
         },
-        description="Full system administration access",
+        description="DEPRECATED: Use 'owner' instead. Full system administration access",
     ),
 }
 

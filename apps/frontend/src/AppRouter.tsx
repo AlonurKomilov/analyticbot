@@ -27,6 +27,9 @@ const {
     ResetPasswordForm
 } = PageComponents;
 
+// Import ChannelsManagementPage directly (not lazily loaded yet)
+const ChannelsManagementPage = React.lazy(() => import('./components/pages/ChannelsManagementPage'));
+
 const {
     SuperAdminDashboard
 } = AdminComponents;
@@ -144,6 +147,18 @@ const AppRouter: React.FC = () => {
                                 />
                                 <Route path="/dashboard" element={<Navigate to="/" replace />} />
 
+                                {/* Channels Management Route */}
+                                <Route
+                                    path="/channels"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <ChannelsManagementPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
                                 {/* Post Creation Route */}
                                 <Route
                                     path="/create"
@@ -207,11 +222,11 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* SuperAdmin Dashboard - Highest level access */}
+                                {/* Owner Dashboard - Highest level access (formerly SuperAdmin) */}
                                 <Route
                                     path="/superadmin"
                                     element={
-                                        <ProtectedRoute requiredRole="superadmin">
+                                        <ProtectedRoute requiredRole="owner">
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <SuperAdminDashboard />
                                             </OptimizedSuspense>

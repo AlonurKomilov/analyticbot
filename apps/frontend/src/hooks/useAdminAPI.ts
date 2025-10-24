@@ -79,7 +79,7 @@ export const useAdminAPI = (): UseAdminAPIReturn => {
 
         try {
             const token = localStorage.getItem('adminToken');
-            const response = await fetch(`/api/v1/superadmin/${endpoint}`, {
+            const response = await fetch(`/admin/super/${endpoint}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',

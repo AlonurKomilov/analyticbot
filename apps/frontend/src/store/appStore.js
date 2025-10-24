@@ -575,7 +575,7 @@ export const useAppStore = create(
                     // Real API mode - NEVER fallback to mock/demo data
                     // Note: analytics/post-dynamics endpoint uses period parameter (24h, 7d, etc.)
                     // not from/to dates
-                    response = await apiClient.get(`/analytics/post-dynamics/${channelId}?period=${period}`);
+                    response = await apiClient.get(`/analytics/posts/dynamics/post-dynamics/${channelId}?period=${period}`);
                     console.log('✅ Post dynamics loaded from real API');
                     // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else{
@@ -629,7 +629,7 @@ export const useAppStore = create(
                         return { from: from.toISOString(), to: to.toISOString() };
                     };
 
-                    response = await apiClient.get(`/analytics/top-posts/${channelId}?period=${period}&sort=${sortBy}`);
+                    response = await apiClient.get(`/analytics/posts/dynamics/top-posts/${channelId}?period=${period}&sort=${sortBy}`);
                     console.log('✅ Top posts loaded from real API');
                     // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {
@@ -678,7 +678,7 @@ export const useAppStore = create(
                     // Real API mode - NEVER fallback to mock/demo data
                     // Convert demo_channel string to numeric ID for API
                     const numericChannelId = channelId === 'demo_channel' ? 1 : parseInt(channelId) || 1;
-                    response = await apiClient.get(`/insights/predictive/best-times/${numericChannelId}?timeframe=${timeframe}&content_type=${contentType}`);
+                    response = await apiClient.get(`/analytics/predictive/best-times/${numericChannelId}?timeframe=${timeframe}&content_type=${contentType}`);
                     console.log('✅ Best time recommendations loaded from real API');
 
                     // Normalize real API response: {success, channel_id, data, ...} -> consistent format
@@ -756,7 +756,7 @@ export const useAppStore = create(
                         return { from: from.toISOString(), to: to.toISOString() };
                     };
 
-                    response = await apiClient.get(`/insights/engagement/channels/${channelId}/engagement?period=${period}`);
+                    response = await apiClient.get(`/analytics/channels/${channelId}/engagement?period=${period}`);
                     console.log('✅ Engagement metrics loaded from real API');
                     // If API fails, error will be thrown and caught below - NO fallback to demo
                 } else {

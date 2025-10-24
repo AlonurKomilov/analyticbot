@@ -45,7 +45,7 @@ def require_permission(
 
     Args:
         permission: Single permission or list of permissions required
-        allow_admin_override: Whether SUPER_ADMIN can bypass permission checks
+        allow_admin_override: Whether OWNER can bypass permission checks
 
     Usage:
         @require_permission(Permission.VIEW_ANALYTICS)
@@ -73,8 +73,11 @@ def require_permission(
                 migration_profile=current_user.get("migration_profile"),
             )
 
-            # Admin override check
-            if allow_admin_override and user_info.role == AdministrativeRole.SUPER_ADMIN.value:
+            # Admin override check (OWNER and ADMIN can bypass)
+            if allow_admin_override and user_info.role in [
+                AdministrativeRole.OWNER.value,
+                AdministrativeRole.ADMIN.value,
+            ]:
                 logger.debug(
                     f"Admin override: {current_user.get('username')} accessing {func.__name__}"
                 )
@@ -134,7 +137,7 @@ def require_role(min_role: str | ApplicationRole | AdministrativeRole, allow_equ
             if not current_user:
                 raise AuthenticationError("Authentication required")
 
-            user_role = current_user.get("role", "guest")
+            user_role = current_user.get("role", "viewer")
             required_role = str(min_role)  # Convert to string directly
 
             # Check role hierarchy
@@ -165,10 +168,10 @@ def require_admin(allow_moderator: bool = True):
         allow_moderator: Whether MODERATOR role is sufficient
 
     Usage:
-        @require_admin()  # Allows MODERATOR and SUPER_ADMIN
-        @require_admin(allow_moderator=False)  # Only SUPER_ADMIN
+        @require_admin()  # Allows MODERATOR, ADMIN, and OWNER
+        @require_admin(allow_moderator=False)  # Only ADMIN and OWNER
     """
-    min_role = AdministrativeRole.MODERATOR if allow_moderator else AdministrativeRole.SUPER_ADMIN
+    min_role = AdministrativeRole.MODERATOR if allow_moderator else AdministrativeRole.ADMIN
     return require_role(min_role)
 
 
@@ -256,7 +259,7 @@ def check_user_role(user_dict: dict, min_role: str | ApplicationRole | Administr
     Returns:
         True if user has sufficient role, False otherwise
     """
-    user_role = user_dict.get("role", "guest")
+    user_role = user_dict.get("role", "viewer")
     required_role = str(min_role)  # Convert to string directly
     return has_role_or_higher(user_role, required_role)
 

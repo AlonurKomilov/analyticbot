@@ -147,7 +147,7 @@ const PaymentFormContent: React.FC<PaymentFormContentProps> = ({
 
       // Create subscription with the payment method
       const response = await paymentAPI.createSubscription({
-        user_id: userId,
+        user_id: String(userId),
         plan_id: planId,
         payment_method_id: paymentMethod.id,
         trial_days: trialDays

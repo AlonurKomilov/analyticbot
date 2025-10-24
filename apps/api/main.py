@@ -144,101 +144,116 @@ Comprehensive data export capabilities with secure sharing mechanisms.
     },
     license_info={"name": "Enterprise License", "url": "https://analyticbot.com/license"},
     openapi_tags=[
+        # Core System
         {
             "name": "Core",
             "description": "Essential system endpoints: health checks, initial data, and application lifecycle",
         },
+        
+        # AI Domain (All AI services consolidated)
         {
-            "name": "analytics-live",
-            "description": "⚡ Real-time Analytics: live metrics, performance scoring, and monitoring",
-        },
-        {
-            "name": "analytics-alerts",
-            "description": "🔔 Alert Management: thresholds, notifications, and alert system",
-        },
-        {
-            "name": "analytics-post-dynamics",
-            "description": "📊 Post Dynamics: time-series post performance tracking and analytics",
-        },
-        {
-            "name": "statistics-core",
-            "description": "📊 Core Statistics: historical metrics, growth trends, and data analysis",
-        },
-        {
-            "name": "statistics-reports",
-            "description": "📋 Statistical Reports: comprehensive analysis, comparisons, and trending",
-        },
-        {
-            "name": "insights-engagement",
-            "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content",
-        },
-        {
-            "name": "Analytics Orchestration v2",
-            "description": "🎼 Workflow Orchestration: comprehensive analytics pipelines and service coordination",
-        },
-        {
-            "name": "insights-predictive",
-            "description": "🔮 Predictive Analytics: AI/ML forecasting, recommendations, and predictions",
-        },
-        {
-            "name": "AI Services",
-            "description": "🤖 Artificial Intelligence: content optimization, churn prediction, security analysis",
-        },
-        {
-            "name": "AI Insights",
-            "description": "🧠 AI Insights: comprehensive insights orchestration, pattern analysis, predictions",
-        },
-        {
-            "name": "Optimization",
-            "description": "⚡ Optimization: performance analysis, recommendations, optimization application",
-        },
-        {
-            "name": "AI Chat",
+            "name": "AI - Chat",
             "description": "💬 AI Chat: conversational analytics, natural language queries, interactive insights",
         },
         {
-            "name": "Strategy",
-            "description": "📝 Strategy: content strategy generation, quick tips, implementation roadmaps",
+            "name": "AI - Insights",
+            "description": "🧠 AI Insights: comprehensive insights orchestration, pattern analysis, predictions",
         },
         {
-            "name": "Machine Learning",
+            "name": "AI - Services",
+            "description": "🤖 AI Services: churn prediction, content optimization, security analysis",
+        },
+        {
+            "name": "AI - Strategy",
+            "description": "� AI Strategy: content strategy generation, quick tips, implementation roadmaps",
+        },
+        {
+            "name": "AI - Competitive",
+            "description": "🏆 AI Competitive: competitor analysis, market intelligence, benchmarking",
+        },
+        {
+            "name": "AI - Optimization",
+            "description": "⚡ AI Optimization: performance analysis, recommendations, optimization cycles",
+        },
+        
+        # Analytics Domain (All analytics consolidated)
+        {
+            "name": "Analytics - Channels",
+            "description": "📊 Analytics Channels: channel listing and validation for analytics",
+        },
+        {
+            "name": "Analytics - Realtime",
+            "description": "⚡ Real-time Analytics: live metrics, performance scoring, monitoring",
+        },
+        {
+            "name": "Analytics - Alerts",
+            "description": "🔔 Alert Management: thresholds, notifications, alert system",
+        },
+        {
+            "name": "Analytics - Posts",
+            "description": "📝 Post Analytics: post dynamics, time-series performance tracking",
+        },
+        {
+            "name": "Analytics - Historical",
+            "description": "📊 Historical Statistics: growth trends, historical metrics, data analysis",
+        },
+        {
+            "name": "Analytics - Reports",
+            "description": "📋 Statistical Reports: comprehensive analysis, comparisons, trending",
+        },
+        {
+            "name": "Analytics - Engagement",
+            "description": "💬 Engagement Intelligence: audience insights, engagement patterns, trending content",
+        },
+        {
+            "name": "Analytics - Orchestration",
+            "description": "🎼 Workflow Orchestration: comprehensive analytics pipelines, service coordination",
+        },
+        {
+            "name": "Analytics - Predictive",
+            "description": "🔮 Predictive Analytics: AI/ML forecasting, recommendations, predictions",
+        },
+        {
+            "name": "Analytics - ML",
             "description": "🧠 ML Predictions: growth forecasting, engagement prediction (background tasks)",
         },
         {
+            "name": "Analytics - Trends",
+            "description": "� Trend Analytics: forecasting, anomaly detection, change points",
+        },
+        
+        # Content & Exports
+        {
+            "name": "Content - Protection",
+            "description": "�️ Content Protection: watermarking, theft detection, premium features",
+        },
+        {
             "name": "Exports",
-            "description": "📋 Data Export: CSV, PNG generation with customizable formatting",
+            "description": "� Data Export: CSV, PNG generation with customizable formatting",
         },
         {
             "name": "Sharing",
-            "description": "🔗 Secure Sharing: token-based access, revocation, and audit trails",
+            "description": "� Secure Sharing: token-based access, revocation, audit trails",
+        },
+        
+        # Admin & Auth
+        {
+            "name": "Authentication",
+            "description": "🔐 Auth: JWT tokens, user management, session handling",
+        },
+        {
+            "name": "Admin - Super",
+            "description": "👑 SuperAdmin: system management, user administration, configuration",
+        },
+        
+        # Payments & Mobile
+        {
+            "name": "Payments",
+            "description": "💰 Payments: Stripe integration, subscriptions, payment processing",
         },
         {
             "name": "Mobile",
-            "description": "📱 Mobile API: TWA-optimized endpoints for Telegram Web Apps",
-        },
-        {
-            "name": "Content Protection",
-            "description": "🛡️ Security: content verification, threat detection, and access control",
-        },
-        {
-            "name": "Payments",
-            "description": "💰 Billing: Stripe integration, subscriptions, and payment processing",
-        },
-        {
-            "name": "Authentication",
-            "description": "🔐 Auth: JWT tokens, user management, and session handling",
-        },
-        {
-            "name": "SuperAdmin Management",
-            "description": "👑 Admin: user management, system stats, and administrative controls",
-        },
-        {
-            "name": "Competitive Intelligence",
-            "description": "🏆 Market Intelligence: competitor analysis, discovery, and benchmarking",
-        },
-        {
-            "name": "Trend Analysis",
-            "description": "📈 Trend Analytics: forecasting, anomaly detection, and change points",
+            "description": "� Mobile API: TWA-optimized endpoints for Telegram Web Apps",
         },
     ],
 )
@@ -258,9 +273,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.api.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 # Add demo mode detection middleware
@@ -277,7 +293,8 @@ app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_system_router)  # Admin - System Management
 
-# ✅ PHASE 4: GRANULAR ANALYTICS DOMAIN ARCHITECTURE (NO GOD OBJECTS)
+# ✅ PHASE 4: ANALYTICS DOMAIN REORGANIZATION (October 22, 2025)
+# Consolidated analytics domain architecture - all analytics under /analytics/*
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
 from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
@@ -289,31 +306,29 @@ from apps.api.routers.statistics_core_router import router as statistics_core_ro
 from apps.api.routers.statistics_reports_router import router as statistics_reports_router
 from apps.demo.routers.main import router as demo_router
 
-app.include_router(analytics_channels_router)  # Channel list for analytics - /analytics/channels
-app.include_router(
-    analytics_live_router
-)  # Real-time live analytics (4 endpoints) - /analytics/live/*
-app.include_router(analytics_alerts_router)  # Alert management (8 endpoints) - /analytics/alerts/*
-app.include_router(
-    analytics_post_dynamics_router
-)  # Post dynamics time-series (2 endpoints) - /analytics/post-dynamics/* ✅ RESTORED
-app.include_router(
-    statistics_core_router
-)  # Historical statistics (5 endpoints) - /statistics/core/*
-app.include_router(
-    statistics_reports_router
-)  # Statistical reports (4 endpoints) - /statistics/reports/*
-app.include_router(
-    insights_engagement_router
-)  # Engagement intelligence (4 endpoints) - /insights/engagement/*
-app.include_router(
-    insights_orchestration_router
-)  # Workflow orchestration (3 endpoints) - /insights/orchestration/* ✅ RESTORED
-app.include_router(
-    insights_predictive_router
-)  # AI/ML predictions (4 endpoints) - /insights/predictive/*
-app.include_router(ml_predictions_router)  # ML background predictions (growth forecasting) - /ml/*
-app.include_router(demo_router)  # Consolidated demo/mock data endpoints
+# NEW: Organized analytics domain structure
+app.include_router(analytics_channels_router, prefix="/analytics/channels", tags=["Analytics - Channels"])
+app.include_router(analytics_live_router, prefix="/analytics/realtime", tags=["Analytics - Realtime"])  # Renamed from /live
+app.include_router(analytics_alerts_router, prefix="/analytics/alerts", tags=["Analytics - Alerts"])
+app.include_router(analytics_post_dynamics_router, prefix="/analytics/posts/dynamics", tags=["Analytics - Posts"])  # Better hierarchy
+app.include_router(statistics_core_router, prefix="/analytics/historical", tags=["Analytics - Historical"])  # Renamed from /statistics/core
+app.include_router(statistics_reports_router, prefix="/analytics/reports", tags=["Analytics - Reports"])  # Moved from /statistics/reports
+app.include_router(insights_engagement_router, prefix="/analytics/engagement", tags=["Analytics - Engagement"])  # Moved from /insights/engagement
+app.include_router(insights_orchestration_router, prefix="/analytics/orchestration", tags=["Analytics - Orchestration"])  # Moved from /insights/orchestration
+app.include_router(insights_predictive_router, prefix="/analytics/predictive", tags=["Analytics - Predictive"])  # Moved from /insights/predictive
+app.include_router(ml_predictions_router, prefix="/analytics/ml", tags=["Analytics - ML"])  # Moved from /ml
+
+# OLD: Backward compatibility (deprecated - will be removed in Q2 2026)
+app.include_router(analytics_live_router, prefix="/analytics/live", tags=["analytics-live (deprecated)"], deprecated=True)
+app.include_router(analytics_post_dynamics_router, prefix="/analytics/post-dynamics", tags=["analytics-post-dynamics (deprecated)"], deprecated=True)
+app.include_router(statistics_core_router, prefix="/statistics/core", tags=["statistics-core (deprecated)"], deprecated=True)
+app.include_router(statistics_reports_router, prefix="/statistics/reports", tags=["statistics-reports (deprecated)"], deprecated=True)
+app.include_router(insights_engagement_router, prefix="/insights/engagement", tags=["insights-engagement (deprecated)"], deprecated=True)
+app.include_router(insights_orchestration_router, prefix="/insights/orchestration", tags=["Analytics Orchestration v2 (deprecated)"], deprecated=True)
+app.include_router(insights_predictive_router, prefix="/insights/predictive", tags=["insights-predictive (deprecated)"], deprecated=True)
+app.include_router(ml_predictions_router, prefix="/ml", tags=["Machine Learning (deprecated)"], deprecated=True)
+
+app.include_router(demo_router)  # Demo endpoints
 
 # 🎯 PHASE 4: GRANULAR ANALYTICS ARCHITECTURE COMPLETE ✅
 # SUCCESSFULLY ELIMINATED GOD OBJECTS with 6 focused domain-separated routers:
@@ -337,40 +352,56 @@ app.include_router(demo_router)  # Consolidated demo/mock data endpoints
 # Original files archived with _ORIGINAL_BEFORE_GRANULAR_SPLIT suffix for reference
 # app.include_router(analytics_v2_router)      # ❌ REMOVED: Use /analytics/core/* + /analytics/insights/* instead
 # app.include_router(analytics_advanced_router) # ❌ REMOVED: Use /analytics/realtime/* + /analytics/alerts/* instead
-# ✅ KEEP THESE ROUTERS (No duplicates, still needed)
-# ❌ REMOVED: clean_analytics_router - endpoints migrated to proper domain routers (Sept 24, 2025)
-app.include_router(exports_router)  # Export functionality (unique)
-app.include_router(sharing_router)  # Share functionality (unique)
-app.include_router(mobile_router)  # Mobile-optimized endpoints (unique)
-app.include_router(content_protection_router)  # Content protection (unique)
-app.include_router(auth_router)  # Authentication (unique)
-app.include_router(superadmin_router)  # Super admin operations (unique)
-app.include_router(payment_router)  # Payment system (unique)
+# ✅ PHASE 8: REMAINING DOMAINS REORGANIZATION (October 22, 2025)
+# Standardizing naming conventions across all remaining domains
 
-# Include AI services router
+# Content Protection: /content-protection → /content/protection
+app.include_router(content_protection_router, prefix="/content/protection", tags=["Content - Protection"])  # NEW
+app.include_router(content_protection_router, prefix="/content-protection", tags=["Content Protection (deprecated)"], deprecated=True)  # OLD
+
+# Payments: /payment → /payments (plural for consistency)
+app.include_router(payment_router, prefix="/payments", tags=["Payments"])  # NEW
+app.include_router(payment_router, prefix="/payment", tags=["Payments (deprecated)"], deprecated=True)  # OLD
+
+# Admin: /superadmin → /admin/super (better hierarchy)
+app.include_router(superadmin_router, prefix="/admin/super", tags=["Admin - Super"])  # NEW
+app.include_router(superadmin_router, prefix="/superadmin", tags=["SuperAdmin Management (deprecated)"], deprecated=True)  # OLD
+
+# Auth, Channels, System, Health, Mobile, Exports, Sharing - Already well-organized
+app.include_router(auth_router)  # /auth/* - Already good
+app.include_router(exports_router)  # /exports/* - Already good
+app.include_router(sharing_router)  # /sharing/* - Already good
+app.include_router(mobile_router)  # /mobile/* - Already good
+
+# ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
+# Consolidating all AI services under /ai/* for better organization
 from apps.api.routers.ai_services_router import router as ai_services_router
-
-app.include_router(ai_services_router)
-
-# ✅ PHASE 5: NEW AI-POWERED ROUTERS (October 21, 2025)
-# Exposing previously internal orchestrator services via API
 from apps.api.routers.ai_chat_router import router as ai_chat_router
 from apps.api.routers.ai_insights_router import router as ai_insights_router
 from apps.api.routers.optimization_router import router as optimization_router
 from apps.api.routers.strategy_router import router as strategy_router
-
-app.include_router(ai_insights_router)  # AI Insights Orchestrator - /ai-insights/*
-app.include_router(optimization_router)  # Optimization Orchestrator - /optimization/*
-app.include_router(ai_chat_router)  # Conversational Analytics - /ai-chat/*
-app.include_router(strategy_router)  # Strategy Generation - /strategy/*
-
-# ✅ PHASE 6: BUSINESS INTELLIGENCE ROUTERS (Phase 2 - October 21, 2025)
-# Advanced analytics and market intelligence features
 from apps.api.routers.competitive_intelligence_router import router as competitive_router
 from apps.api.routers.trend_analysis_router import router as trends_router
 
-app.include_router(competitive_router)  # Competitive Intelligence - /competitive/*
-app.include_router(trends_router)  # Trend Analysis & Forecasting - /trends/*
+# NEW: Organized AI domain structure
+app.include_router(ai_chat_router, prefix="/ai/chat", tags=["AI - Chat"])  # Conversational AI
+app.include_router(ai_insights_router, prefix="/ai/insights", tags=["AI - Insights"])  # AI analysis
+app.include_router(ai_services_router, prefix="/ai/services", tags=["AI - Services"])  # Churn, content, security
+app.include_router(strategy_router, prefix="/ai/strategy", tags=["AI - Strategy"])  # Strategy generation
+app.include_router(competitive_router, prefix="/ai/competitive", tags=["AI - Competitive"])  # Market intelligence
+app.include_router(optimization_router, prefix="/ai/optimization", tags=["AI - Optimization"])  # Performance optimization
+
+# OLD: Backward compatibility (deprecated - will be removed in Q2 2026)
+app.include_router(ai_chat_router, prefix="/ai-chat", tags=["AI Chat (deprecated)"], deprecated=True)
+app.include_router(ai_insights_router, prefix="/ai-insights", tags=["AI Insights (deprecated)"], deprecated=True)
+app.include_router(ai_services_router, prefix="/ai-services", tags=["AI Services (deprecated)"], deprecated=True)
+app.include_router(strategy_router, prefix="/strategy", tags=["Strategy (deprecated)"], deprecated=True)
+app.include_router(competitive_router, prefix="/competitive", tags=["Competitive Intelligence (deprecated)"], deprecated=True)
+app.include_router(optimization_router, prefix="/optimization", tags=["Optimization (deprecated)"], deprecated=True)
+
+# Analytics Trends moved to analytics domain
+app.include_router(trends_router, prefix="/analytics/trends", tags=["Analytics - Trends"])  # NEW location
+app.include_router(trends_router, prefix="/trends", tags=["Trend Analysis (deprecated)"], deprecated=True)  # OLD location
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅
 # ===============================================

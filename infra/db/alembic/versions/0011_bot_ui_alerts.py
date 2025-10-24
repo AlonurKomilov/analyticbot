@@ -11,8 +11,8 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "0011_bot_ui_alerts"
-down_revision = "0010_analytics_fusion_optimizations"
+revision = "0011"
+down_revision = "0010"
 branch_labels = None
 depends_on = None
 

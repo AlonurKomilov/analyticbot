@@ -190,14 +190,14 @@ export class ApiDataProvider extends DataProvider {
     async getRecommendations(channelId) {
         const numericChannelId = this._convertChannelId(channelId);
         // Use the advanced analytics recommendations endpoint
-        const response = await this._makeRequest(`/api/v2/analytics/advanced/recommendations/${numericChannelId}`);
+        const response = await this._makeRequest(`/analytics/advanced/recommendations/${numericChannelId}`);
         return response;
     }
 
     async getAnalyticsOverview(channelId) {
         const numericChannelId = this._convertChannelId(channelId);
         // Use the analytics overview endpoint
-        const response = await this._makeRequest(`/analytics/channels/${numericChannelId}/overview`);
+        const response = await this._makeRequest(`/analytics/historical/overview/${numericChannelId}`);
         return response;
     }
 

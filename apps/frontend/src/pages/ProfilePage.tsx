@@ -30,9 +30,12 @@ import {
     Email as EmailIcon,
     Badge as BadgeIcon,
     Security as SecurityIcon,
-    Notifications as NotificationsIcon
+    Notifications as NotificationsIcon,
+    Link as LinkIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { AccountLinking } from '../components/profile/AccountLinking';
+import { apiClient } from '../api/client';
 
 interface ProfileData {
     username: string;
@@ -144,23 +147,27 @@ const ProfilePage: React.FC = () => {
         setSuccess('');
 
         try {
-            // Simulate API call to update profile
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Call real API to update profile
+            const response = await apiClient.put<{ message: string; user: any }>('/auth/profile', {
+                username: profileData.username,
+                full_name: profileData.fullName,
+                email: profileData.email
+            });
 
-            // Update user context
-            if (user?.id) {
+            // Update user context with response data
+            if (response && response.user && user) {
                 updateUser({
                     ...user,
-                    username: profileData.username,
-                    full_name: profileData.fullName,
-                    email: profileData.email
+                    username: response.user.username,
+                    full_name: response.user.full_name,
+                    email: response.user.email
                 });
             }
 
             setSuccess('Profile updated successfully!');
             setEditMode(false);
-        } catch (err) {
-            setError('Failed to update profile. Please try again.');
+        } catch (err: any) {
+            setError(err.message || 'Failed to update profile. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -273,6 +280,7 @@ const ProfilePage: React.FC = () => {
                     <Tabs value={activeTab} onChange={handleTabChange} aria-label="profile tabs">
                         <Tab label="Profile Information" icon={<PersonIcon />} />
                         <Tab label="Security" icon={<SecurityIcon />} />
+                        <Tab label="Login Methods" icon={<LinkIcon />} />
                         <Tab label="Preferences" icon={<NotificationsIcon />} />
                     </Tabs>
                 </Box>
@@ -418,8 +426,29 @@ const ProfilePage: React.FC = () => {
                     </Box>
                 </TabPanel>
 
-                {/* Preferences Tab */}
+                {/* Login Methods Tab */}
                 <TabPanel value={activeTab} index={2}>
+                    <Box sx={{ p: 3 }}>
+                        <Typography variant="h6" gutterBottom>
+                            Login Methods
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                            Manage how you sign in to your account. You can have multiple login methods for convenience.
+                        </Typography>
+
+                        <AccountLinking 
+                            user={user} 
+                            onUpdate={async () => {
+                                // Refresh user data after linking/updating
+                                setSuccess('Login method updated successfully!');
+                                // You might want to refresh user data here
+                            }} 
+                        />
+                    </Box>
+                </TabPanel>
+
+                {/* Preferences Tab */}
+                <TabPanel value={activeTab} index={3}>
                     <Box sx={{ p: 3 }}>
                         <Typography variant="h6" gutterBottom>
                             Account Preferences

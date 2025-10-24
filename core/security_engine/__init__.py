@@ -34,7 +34,7 @@ from .permissions import Permission, PermissionChecker, get_permissions_for_role
 from .rbac import RBACError, RBACManager
 from .role_hierarchy import RoleHierarchyService, UserRoleInfo, role_hierarchy_service
 
-# New 4-Role Hierarchical System
+# New 5-Role Hierarchical System: viewer < user < moderator < admin < owner
 from .roles import AdministrativeRole, ApplicationRole
 from .roles import AdminRole as LegacyAdminRole
 from .roles import UserRole as LegacyUserRole
@@ -58,7 +58,7 @@ __all__ = [
     "MFAError",
     "RBACManager",
     "RBACError",
-    # New 4-Role Hierarchical System
+    # New 5-Role Hierarchical System
     "ApplicationRole",
     "AdministrativeRole",
     "Permission",

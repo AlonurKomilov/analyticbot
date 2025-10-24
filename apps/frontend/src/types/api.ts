@@ -58,7 +58,7 @@ export interface RefreshTokenRequest {
   refresh_token: string;
 }
 
-export type UserRole = 'user' | 'admin' | 'superadmin';
+export type UserRole = 'viewer' | 'user' | 'moderator' | 'admin' | 'owner';
 
 export interface User {
   id: string;

@@ -5,21 +5,25 @@
  * based on historical performance data and AI analysis.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, Paper, Typography, Alert, CircularProgress } from '@mui/material';
 import TimeFrameFilters, { TimeFrame, ContentType } from './components/TimeFrameFilters';
 import BestTimeCards from './components/BestTimeCards';
 import AIInsightsPanel from './components/AIInsightsPanel';
 import RecommenderFooter from './components/RecommenderFooter';
+import { useRecommenderLogic } from './hooks/useRecommenderLogic';
 
 const BestTimeRecommender: React.FC = () => {
-    const [timeFrame, setTimeFrame] = useState<TimeFrame>('month');
-    const [contentType, setContentType] = useState<ContentType>('all');
-    const [isLoading] = useState(false);
-    const [error] = useState<string | null>(null);
-    const [recommendations] = useState<any>(null);
-    const [heatmapData] = useState<any>(null);
-    const [aiInsights] = useState<any>(null);
+    const {
+        timeFrame,
+        contentType,
+        loading,
+        error,
+        recommendations,
+        aiInsights,
+        setTimeFrame,
+        setContentType
+    } = useRecommenderLogic();
 
     if (error) {
         return (
@@ -48,44 +52,37 @@ const BestTimeRecommender: React.FC = () => {
 
             {/* Filters */}
             <TimeFrameFilters
-                timeFrame={timeFrame}
-                setTimeFrame={setTimeFrame}
-                contentType={contentType}
-                setContentType={setContentType}
+                timeFrame={timeFrame as TimeFrame}
+                setTimeFrame={(tf) => setTimeFrame(tf)}
+                contentType={contentType as ContentType}
+                setContentType={(ct) => setContentType(ct)}
             />
 
             {/* Loading State */}
-            {isLoading ? (
+            {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                     <CircularProgress aria-label="Loading recommendations" />
                 </Box>
             ) : (
                 <>
                     {/* Best Time Cards */}
-                    {recommendations && recommendations.length > 0 ? (
-                        <BestTimeCards recommendations={recommendations} />
+                    {recommendations && recommendations.best_times && recommendations.best_times.length > 0 ? (
+                        <BestTimeCards recommendations={recommendations as any} />
                     ) : (
                         <Alert severity="info" sx={{ my: 2 }}>
                             No recommendations available for the selected filters
                         </Alert>
                     )}
 
-                    {/* Heatmap Visualization */}
-                    {heatmapData && (
-                        <Box sx={{ mt: 3 }}>
-                            {/* HeatmapVisualization removed - component not available */}
-                        </Box>
-                    )}
-
                     {/* AI Insights */}
-                    {aiInsights && (
+                    {aiInsights && aiInsights.length > 0 && (
                         <Box sx={{ mt: 3 }}>
                             <AIInsightsPanel aiInsights={aiInsights} />
                         </Box>
                     )}
 
                     {/* Footer */}
-                    <RecommenderFooter recommendations={recommendations} />
+                    <RecommenderFooter recommendations={recommendations || undefined} />
                 </>
             )}
         </Paper>

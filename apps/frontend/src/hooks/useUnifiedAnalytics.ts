@@ -183,47 +183,47 @@ export const useUnifiedAnalytics = (
             const metricKeys: string[] = [];
 
             if (metrics.includes('overview')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/overview?period=30`));
+                apiCalls.push(apiClient.get(`/analytics/historical/overview/${channelId}?period=30`));
                 metricKeys.push('overview');
             }
 
             if (metrics.includes('growth')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/growth?period=30`));
+                apiCalls.push(apiClient.get(`/analytics/historical/growth/${channelId}?period=30`));
                 metricKeys.push('growth');
             }
 
             if (metrics.includes('engagement')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/engagement?period=30`));
+                apiCalls.push(apiClient.get(`/analytics/channels/${channelId}/engagement?period=30`));
                 metricKeys.push('engagement');
             }
 
             if (metrics.includes('performance')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/performance?period=30`));
+                apiCalls.push(apiClient.get(`/analytics/realtime/performance/${channelId}?period=30`));
                 metricKeys.push('performance');
             }
 
             if (metrics.includes('trends')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/trends?period=7`));
+                apiCalls.push(apiClient.get(`/analytics/channels/${channelId}/trends?period=7`));
                 metricKeys.push('trends');
             }
 
             if (metrics.includes('alerts')) {
-                apiCalls.push(apiClient.get(`/api/v2/analytics/channels/${channelId}/alerts`));
+                apiCalls.push(apiClient.get(`/analytics/alerts/${channelId}`));
                 metricKeys.push('alerts');
             }
 
             if (metrics.includes('users')) {
-                apiCalls.push(apiClient.get(`/api/v1/superadmin/users`));
+                apiCalls.push(apiClient.get(`/admin/super/users`));
                 metricKeys.push('users');
             }
 
             if (metrics.includes('system')) {
-                apiCalls.push(apiClient.get(`/api/v1/superadmin/system-status`));
+                apiCalls.push(apiClient.get(`/admin/super/system-status`));
                 metricKeys.push('system');
             }
 
             if (metrics.includes('quick')) {
-                apiCalls.push(apiClient.post('/api/mobile/v1/analytics/quick', {
+                apiCalls.push(apiClient.post('/mobile/analytics/quick', {
                     channel_id: channelId,
                     include_real_time: config.realTime
                 }));

@@ -30,14 +30,14 @@ export const handlers = [
   }),
 
   // Analytics endpoints
-  http.get('/api/v2/analytics/channels/:channelId/post-dynamics', async ({ request }) => {
+  http.get('/analytics/channels/:channelId/post-dynamics', async ({ request }) => {
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || '24h';
     const data = await getMockPostDynamics(period);
     return HttpResponse.json(data);
   }),
 
-  http.get('/api/v2/analytics/channels/:channelId/top-posts', async ({ request, params }) => {
+  http.get('/analytics/posts/dynamics/top-posts/:channelId', async ({ request, params }) => {
     const url = new URL(request.url);
 
     // Handle both period-based and date range-based requests
@@ -62,14 +62,14 @@ export const handlers = [
     return HttpResponse.json(data);
   }),
 
-  http.get('/api/v2/analytics/channels/:channelId/best-times', async ({ request }) => {
+  http.get('/analytics/predictive/best-times/:channelId', async ({ request }) => {
     const url = new URL(request.url);
     const timeframe = url.searchParams.get('timeframe') || 'week';
     const data = await getMockBestTime(timeframe);
     return HttpResponse.json(data);
   }),
 
-  http.get('/api/v2/analytics/channels/:channelId/engagement', async ({ request }) => {
+  http.get('/analytics/channels/:channelId/engagement', async ({ request }) => {
     const url = new URL(request.url);
     const period = url.searchParams.get('period') || '7d';
     const data = await getMockEngagementMetrics(period);

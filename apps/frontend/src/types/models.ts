@@ -7,7 +7,11 @@
 // User & Authentication Models
 // ============================================================================
 
-export type UserRole = 'user' | 'admin' | 'superadmin';
+/**
+ * User Role Hierarchy (5-tier system)
+ * viewer (0) < user (1) < moderator (2) < admin (3) < owner (4)
+ */
+export type UserRole = 'viewer' | 'user' | 'moderator' | 'admin' | 'owner';
 
 export interface User {
   id: string;

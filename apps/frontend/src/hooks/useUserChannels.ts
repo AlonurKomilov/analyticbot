@@ -73,7 +73,7 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         setError(null);
 
         try {
-            const response = (await (dataProvider as any)._makeRequest('/analytics/channels')) as Channel[];
+            const response = (await (dataProvider as any)._makeRequest('/channels')) as Channel[];
             setChannels(response || []);
             setLastFetch(new Date().toISOString());
 
@@ -102,7 +102,7 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         setError(null);
 
         try {
-            const newChannel = (await (dataProvider as any)._makeRequest('/analytics/channels', {
+            const newChannel = (await (dataProvider as any)._makeRequest('/channels', {
                 method: 'POST',
                 body: JSON.stringify(channelData)
             })) as Channel;
@@ -145,7 +145,7 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         }
 
         try {
-            const channel = (await (dataProvider as any)._makeRequest(`/analytics/channels/${channelId}`)) as Channel;
+            const channel = (await (dataProvider as any)._makeRequest(`/channels/${channelId}`)) as Channel;
             return channel;
         } catch (err) {
             console.error(`Failed to fetch channel ${channelId}:`, err);

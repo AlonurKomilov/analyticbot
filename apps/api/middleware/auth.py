@@ -178,7 +178,7 @@ async def require_admin_user(
         HTTPException: If user is not admin
     """
     user_role = current_user.get("role", "user")
-    if user_role not in ["admin", "superadmin"]:
+    if user_role not in ["admin", "owner"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return current_user
 
@@ -406,7 +406,7 @@ async def require_user_management_permission(
 async def require_admin_role_new(
     current_user: dict[str, Any] = Depends(get_current_user),
 ) -> dict[str, Any]:
-    """Require administrative role (MODERATOR or SUPER_ADMIN)."""
+    """Require administrative role (MODERATOR, ADMIN, or OWNER)."""
     from core.security_engine.roles import is_administrative_role
 
     user_role = current_user.get("role", "user")

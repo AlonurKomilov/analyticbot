@@ -39,7 +39,6 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/auth/me': 10000,
   '/auth/refresh': 10000,
   '/analytics/': 25000,
-  '/api/v2/': 25000,
   'default': 30000
 };
 
@@ -459,10 +458,10 @@ export class UnifiedApiClient {
     const { from, to } = this.getPeriodDateRange(period);
 
     const [overview, growth, reach, topPosts, realTime, alerts] = await Promise.all([
-      this.get(`/api/v2/analytics/channels/${numericChannelId}/overview?from=${from}&to=${to}`),
-      this.get(`/api/v2/analytics/channels/${numericChannelId}/growth?from=${from}&to=${to}`),
-      this.get(`/api/v2/analytics/channels/${numericChannelId}/reach?from=${from}&to=${to}`),
-      this.get(`/api/v2/analytics/channels/${numericChannelId}/top-posts?from=${from}&to=${to}`),
+      this.get(`/analytics/historical/overview/${numericChannelId}?from=${from}&to=${to}`),
+      this.get(`/analytics/historical/growth/${numericChannelId}?from=${from}&to=${to}`),
+      this.get(`/analytics/channels/${numericChannelId}/reach?from=${from}&to=${to}`),
+      this.get(`/analytics/historical/top-posts/${numericChannelId}?from=${from}&to=${to}`),
       this.getRealTimeMetrics(numericChannelId),
       this.checkAlerts(numericChannelId)
     ]);
@@ -483,7 +482,7 @@ export class UnifiedApiClient {
    */
   private async getRealTimeMetrics(channelId: number): Promise<any> {
     try {
-      return await this.get(`/api/v2/analytics/channels/${channelId}/real-time`);
+      return await this.get(`/analytics/channels/${channelId}/real-time`);
     } catch (error) {
       console.warn('Real-time metrics unavailable:', error);
       return { metrics: [], timestamp: new Date().toISOString() };
@@ -495,7 +494,7 @@ export class UnifiedApiClient {
    */
   private async checkAlerts(channelId: number): Promise<any> {
     try {
-      return await this.get(`/api/v2/analytics/channels/${channelId}/alerts`);
+      return await this.get(`/analytics/channels/${channelId}/alerts`);
     } catch (error) {
       console.warn('Alerts unavailable:', error);
       return { alerts: [], timestamp: new Date().toISOString() };
@@ -506,9 +505,7 @@ export class UnifiedApiClient {
    * Get storage files
    */
   async getStorageFiles(limit = 20, offset = 0): Promise<StorageFilesResponse> {
-    return this.get<StorageFilesResponse>(
-      `/api/v1/media/storage-files?limit=${limit}&offset=${offset}`
-    );
+    return this.get<StorageFilesResponse>(`/media/storage-files?limit=${limit}&offset=${offset}`);
   }
 
   /**
@@ -520,7 +517,7 @@ export class UnifiedApiClient {
     const { from, to } = this.getPeriodDateRange(periodDays);
 
     return this.get(
-      `/api/v2/analytics/channels/${numericChannelId}/export/${type}?from=${from}&to=${to}&format=csv`
+      `/exports/csv/${type}/${numericChannelId}?from=${from}&to=${to}&format=csv`
     );
   }
 

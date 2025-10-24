@@ -318,7 +318,9 @@ def cache_user_channels(ttl: int = CacheConfig.USER_CHANNELS_TTL):
 def cache_subscription_plans(ttl: int = CacheConfig.SUBSCRIPTION_PLANS_TTL):
     """Decorator for caching subscription plans"""
     return cache_result(
-        prefix=CacheConfig.PREFIX_SUBSCRIPTION, ttl=ttl, key_func=lambda **kwargs: "plans:all"
+        prefix=CacheConfig.PREFIX_SUBSCRIPTION,
+        ttl=ttl,
+        key_func=lambda **kwargs: "plans:all",
     )
 
 

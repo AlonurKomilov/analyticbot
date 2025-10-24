@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
@@ -184,7 +185,7 @@ async def admin_login(
 ):
     """Authenticate admin user and create session"""
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("User-Agent", "Unknown")
+    request.headers.get("User-Agent", "Unknown")
 
     # Authenticate user
     admin_session = await admin_service.authenticate_admin(
@@ -193,7 +194,8 @@ async def admin_login(
 
     if not admin_session:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # Get admin user from session
@@ -212,7 +214,7 @@ async def admin_login(
             "username": admin_user.username,
             "full_name": admin_user.full_name,
             "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "last_login": (admin_user.last_login.isoformat() if admin_user.last_login else None),
         },
     )
 
@@ -221,7 +223,7 @@ async def admin_login(
 async def admin_logout(current_admin: AdminUser = Depends(get_current_admin_user)):
     """
     Logout admin user (invalidate session).
-    
+
     Note: Session invalidation deferred to Week 2.
     Currently relies on JWT expiration only (stateless).
     Tracked in GitHub Issue #TBD: Implement session blacklist/invalidation
@@ -274,7 +276,7 @@ async def suspend_user(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
         UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
@@ -291,7 +293,7 @@ async def reactivate_user(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
@@ -390,7 +392,7 @@ async def update_system_config(
     admin_service: SuperAdminService = Depends(get_superadmin_service),
 ):
     """Update system configuration (Super Admin only)"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
         {key: config_update.value}, int(current_admin.id)

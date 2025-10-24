@@ -275,7 +275,11 @@ class OptimizationApplicationService(OptimizationApplicationProtocol):
 
         except Exception as e:
             logger.error(f"❌ Rollback failed for {optimization_id}: {e}")
-            return {"optimization_id": optimization_id, "status": "error", "error": str(e)}
+            return {
+                "optimization_id": optimization_id,
+                "status": "error",
+                "error": str(e),
+            }
 
     async def _apply_by_type(self, recommendation: OptimizationRecommendation) -> dict[str, Any]:
         """Apply optimization based on its type"""

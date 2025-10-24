@@ -13,7 +13,10 @@ from aiogram_i18n import I18nContext
 from apps.bot.keyboards.analytics import kb_alert_types, kb_alerts_main, kb_confirmation
 from apps.bot.middlewares.throttle import throttle
 from config.settings import Settings
-from core.repositories.alert_repository import AlertSubscription, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSubscription,
+    AlertSubscriptionRepository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -425,7 +428,7 @@ async def delete_alert_cancelled(callback: CallbackQuery, i18n: I18nContext):
     assert isinstance(callback.message, Message)
 
     await callback.message.edit_text(
-        "❌ **Alert Deletion Cancelled**\n\n" "The alert subscription was not deleted."
+        "❌ **Alert Deletion Cancelled**\n\nThe alert subscription was not deleted."
     )
     await callback.answer("Deletion cancelled")
 

@@ -200,7 +200,11 @@ class VersionComparator:
 
     async def _generate_comparison_summary(self, comparison: dict[str, Any]) -> dict[str, Any]:
         """Generate a summary of the comparison"""
-        summary = {"recommendation": "unknown", "key_findings": [], "overall_verdict": ""}
+        summary = {
+            "recommendation": "unknown",
+            "key_findings": [],
+            "overall_verdict": "",
+        }
 
         # Check improvements
         if "improvements" in comparison:

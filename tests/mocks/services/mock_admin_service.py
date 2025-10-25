@@ -37,8 +37,8 @@ class MockAdminService(AdminServiceProtocol):
             channels.append(
                 {
                     "id": f"channel_{user_id}_{i}",
-                    "name": f"Demo Channel {i+1}",
-                    "username": f"demo_channel_{i+1}",
+                    "name": f"Demo Channel {i + 1}",
+                    "username": f"demo_channel_{i + 1}",
                     "members_count": random.randint(100, 10000),
                     "type": random.choice(["public", "private"]),
                     "created_date": (
@@ -70,7 +70,7 @@ class MockAdminService(AdminServiceProtocol):
         for i in range(min(limit, random.randint(20, 50))):
             operations.append(
                 {
-                    "id": f"op_{i+1}",
+                    "id": f"op_{i + 1}",
                     "type": random.choice(operation_types),
                     "user_id": random.randint(100, 999),
                     "timestamp": (

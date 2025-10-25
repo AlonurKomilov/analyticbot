@@ -4,10 +4,6 @@ Shared imports and configuration
 """
 
 import logging
-from datetime import datetime
-from typing import Any
-
-import aiohttp
 
 # Shared logger
 logger = logging.getLogger(__name__)

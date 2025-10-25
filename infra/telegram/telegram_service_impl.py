@@ -85,7 +85,12 @@ class AiogramTelegramService(TelegramService):
             }
         except Exception as e:
             logger.error(f"Failed to send media to {chat_id}: {e}")
-            return {"success": False, "error": str(e), "chat_id": chat_id, "media_url": media_url}
+            return {
+                "success": False,
+                "error": str(e),
+                "chat_id": chat_id,
+                "media_url": media_url,
+            }
 
     async def get_chat_info(self, chat_id: str) -> dict[str, Any]:
         """Get chat information."""

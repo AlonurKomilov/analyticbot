@@ -1,16 +1,15 @@
 import React, { Suspense, useEffect, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
-import { ProtectedRoute, PublicRoute } from './components/guards';
+import { ProtectedRoute, PublicRoute } from '@features/auth/guards';
 
 // Import optimized lazy loading system
 import {
     PageComponents,
-    AdminComponents,
     ServiceComponents,
     UtilityComponents,
     preloadByRoute,
-    initializePerformanceOptimizations
+    initializePerformanceOptimizations,
 } from './utils/lazyLoading';
 
 // Import navigation system from domain structure
@@ -30,9 +29,10 @@ const {
 // Import ChannelsManagementPage directly (not lazily loaded yet)
 const ChannelsManagementPage = React.lazy(() => import('./pages/ChannelsManagementPage'));
 
-const {
-    SuperAdminDashboard
-} = AdminComponents;
+// AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
+// const {
+//     SuperAdminDashboard
+// } = AdminComponents;
 
 const {
     ServicesLayout,
@@ -43,10 +43,9 @@ const {
 } = ServiceComponents;
 
 const {
-    DataTablesShowcase,
+    // DataTablesShowcase and ServicesOverview archived
     SettingsPage,
     HelpPage,
-    ServicesOverview
 } = UtilityComponents;
 
 interface OptimizedSuspenseProps {
@@ -181,22 +180,23 @@ const AppRouter: React.FC = () => {
                                     }
                                 >
                                     <Route index element={<Navigate to="/services/overview" replace />} />
-                                    <Route path="overview" element={<ServicesOverview />} />
+                                    {/* ServicesOverview archived */}
+                                    {/* <Route path="overview" element={<ServicesOverview />} /> */}
                                     <Route path="content-optimizer" element={<ContentOptimizerService />} />
                                     <Route path="predictive-analytics" element={<PredictiveAnalyticsService />} />
                                     <Route path="churn-predictor" element={<ChurnPredictorService />} />
                                     <Route path="security-monitoring" element={<SecurityMonitoringService />} />
                                 </Route>
 
-                                {/* Enhanced Data Tables Showcase */}
-                                <Route
+                                {/* Enhanced Data Tables Showcase - ARCHIVED */}
+                                {/* <Route
                                     path="/tables"
                                     element={
                                         <ProtectedRoute>
                                             <DataTablesShowcase />
                                         </ProtectedRoute>
                                     }
-                                />
+                                /> */}
 
                                 {/* Analytics Dashboard */}
                                 <Route
@@ -222,8 +222,8 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* Owner Dashboard - Highest level access (formerly SuperAdmin) */}
-                                <Route
+                                {/* Owner Dashboard - ARCHIVED - Use /admin instead */}
+                                {/* <Route
                                     path="/superadmin"
                                     element={
                                         <ProtectedRoute requiredRole="owner">
@@ -232,7 +232,7 @@ const AppRouter: React.FC = () => {
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
-                                />
+                                /> */}
 
                                 {/* User Profile */}
                                 <Route

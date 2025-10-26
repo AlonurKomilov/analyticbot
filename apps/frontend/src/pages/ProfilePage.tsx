@@ -34,7 +34,7 @@ import {
     Link as LinkIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
-import { AccountLinking } from '@/components/profile/AccountLinking';
+import { AccountLinking } from '@features/auth/components/profile/AccountLinking';
 import { apiClient } from '@/api/client';
 
 interface ProfileData {

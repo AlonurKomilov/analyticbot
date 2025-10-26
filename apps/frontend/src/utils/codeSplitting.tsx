@@ -66,7 +66,7 @@ class BundleAnalyzer {
         if ('PerformanceObserver' in window) {
             this.observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach((entry) => {
-                    if (entry.name.includes('/js/') && entry.name.includes('.js')) {
+                    if (entry.name.includes('/js/') && entry.name.includes('')) {
                         const chunkName = this.extractChunkName(entry.name);
                         const resourceEntry = entry as PerformanceResourceTiming;
                         this.chunkSizes.set(chunkName, resourceEntry.transferSize || resourceEntry.encodedBodySize);

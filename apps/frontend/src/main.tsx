@@ -14,7 +14,7 @@ import * as Sentry from '@sentry/react';
 import App from './App.jsx';
 import { ErrorBoundary } from '@shared/components/feedback';
 import theme from './theme.js';
-import HealthStartupSplash from './components/HealthStartupSplash.jsx';
+import HealthStartupSplash from '@features/admin/components/HealthStartupSplash';
 
 // Suppress React DevTools suggestion in development
 if (import.meta.env.DEV) {

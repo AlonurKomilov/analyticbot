@@ -32,8 +32,8 @@ import { useChannelStore, usePostStore, useUIStore } from '@store';
 import { TouchTargetProvider } from '@shared/components/ui';
 
 // Enhanced layout components
-import EnhancedSection from '@/components/layout/EnhancedSection';
-import EnhancedCard from '@/components/layout/EnhancedCard.jsx';
+import EnhancedSection from '@shared/components/layout/EnhancedSection';
+import EnhancedCard from '@shared/components/layout/EnhancedCard';
 
 // Mobile responsive components
 import {
@@ -41,20 +41,20 @@ import {
   SwipeableTabNavigation,
   MobileCardStack,
   ResponsiveGrid
-} from '@/components/layout/MobileResponsiveEnhancements.jsx';
+} from '@shared/components/layout/MobileResponsiveEnhancements';
 
 // Tablet optimizations
 import {
   TabletDashboardLayout,
   TabletCollapsibleCard,
   TabletStatusBar
-} from '@/components/layout/TabletOptimizations.jsx';
+} from '@shared/components/layout/TabletOptimizations';
 
 // Existing components
 import { AnalyticsDashboard } from '@features/dashboard';
 import { SystemStatusWidget } from '@features/dashboard';
 import { AIServicesGrid } from '@features/ai-services';
-import AddChannel from '@/components/AddChannel.jsx';
+import AddChannel from '@shared/components/ui/AddChannel';
 import { ScheduledPostsList } from '@features/posts';
 
 interface MobileTab {

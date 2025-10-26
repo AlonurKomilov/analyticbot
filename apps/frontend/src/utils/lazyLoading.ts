@@ -120,10 +120,11 @@ export const PageComponents = {
  * Admin components with hover preloading
  */
 export const AdminComponents = {
-  SuperAdminDashboard: lazyWithPreload(
-    () => import('../components/domains/admin/SuperAdminDashboard.jsx'),
-    { preloadAfter: 3000, preloadOnHover: true }
-  ),
+  // SuperAdminDashboard archived - use @features/admin instead
+  // SuperAdminDashboard: lazyWithPreload(
+  //   () => import('../components/domains/admin/SuperAdminDashboard.jsx'),
+  //   { preloadAfter: 3000, preloadOnHover: true }
+  // ),
 };
 
 /**
@@ -160,10 +161,11 @@ export const ServiceComponents = {
  * Utility components with on-demand loading
  */
 export const UtilityComponents = {
-  DataTablesShowcase: lazyWithPreload(
-    () => import('../components/DataTablesShowcase.jsx'),
-    { preloadAfter: 5000 }
-  ),
+  // DataTablesShowcase and ServicesOverview archived
+  // DataTablesShowcase: lazyWithPreload(
+  //   () => import('../components/DataTablesShowcase.jsx'),
+  //   { preloadAfter: 5000 }
+  // ),
 
   SettingsPage: lazyWithPreload(
     () => import('../pages/SettingsPage.jsx'),
@@ -175,10 +177,10 @@ export const UtilityComponents = {
     { preloadOnHover: true }
   ),
 
-  ServicesOverview: lazyWithPreload(
-    () => import('../components/domains/services/ServicesOverview.jsx'),
-    { preloadAfter: 7000 }
-  ),
+  // ServicesOverview: lazyWithPreload(
+  //   () => import('../components/domains/services/ServicesOverview.jsx'),
+  //   { preloadAfter: 7000 }
+  // ),
 };
 
 /**
@@ -210,7 +212,7 @@ export const preloadCriticalComponents = (): void => {
 export const preloadByUserBehavior = (userRole: string = 'user'): void => {
   if (userRole === 'admin' || userRole === 'owner') {
     // Preload admin components for admin/owner users
-    AdminComponents.SuperAdminDashboard.preload();
+    // AdminComponents.SuperAdminDashboard.preload(); // Archived
     PageComponents.AdminDashboard.preload();
   }
 
@@ -230,7 +232,7 @@ export const preloadByRoute = (currentPath: string): void => {
   }
 
   if (currentPath.includes('/admin')) {
-    AdminComponents.SuperAdminDashboard.preload();
+    // AdminComponents.SuperAdminDashboard.preload(); // Archived
     PageComponents.AdminDashboard.preload();
   }
 

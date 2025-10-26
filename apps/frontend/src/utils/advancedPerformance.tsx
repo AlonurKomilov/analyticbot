@@ -490,7 +490,7 @@ export const bundleAnalyzer = {
     if ('performance' in window && 'getEntriesByType' in performance) {
       const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       const chunks = resources.filter(resource =>
-        resource.name.includes('.js') && resource.name.includes('chunk')
+        resource.name.includes('') && resource.name.includes('chunk')
       );
 
       return chunks.map(chunk => ({

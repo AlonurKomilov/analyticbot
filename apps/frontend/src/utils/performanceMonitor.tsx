@@ -122,7 +122,7 @@ class PerformanceMonitor {
         if ('PerformanceObserver' in window) {
             const observer = new PerformanceObserver((list) => {
                 list.getEntries().forEach((entry) => {
-                    if (entry.name.includes('.js') || entry.name.includes('.css')) {
+                    if (entry.name.includes('') || entry.name.includes('.css')) {
                         const chunkName = this.extractChunkName(entry.name);
                         if (chunkName) {
                             this.metrics.chunkLoadTimes.set(chunkName, entry.duration);

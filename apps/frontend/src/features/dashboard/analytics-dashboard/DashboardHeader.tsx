@@ -12,7 +12,7 @@ import {
     NavigateNext as NavigateNextIcon,
     Security as SecurityIcon
 } from '@mui/icons-material';
-import DataSourceSettings from '@/components/DataSourceSettings';
+import DataSourceSettings from '@shared/components/ui/DataSourceSettings';
 
 interface DashboardHeaderProps {
     showSettings: boolean;

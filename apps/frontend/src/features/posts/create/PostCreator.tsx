@@ -14,7 +14,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Box, Typography, Alert } from '@mui/material';
 import { useChannelStore, usePostStore, useMediaStore } from '@store';
 import { useLoadingState, useFormState } from '@/hooks';
-import MediaPreview from "@/components/MediaPreview.jsx";
+import MediaPreview from '@shared/components/ui/MediaPreview';
 import { useResponsive } from '@/theme/responsive.js';
 
 // Import decomposed sub-components

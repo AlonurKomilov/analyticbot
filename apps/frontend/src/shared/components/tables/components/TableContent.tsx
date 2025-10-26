@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { TableChart as TableIcon } from '@mui/icons-material';
 import { DENSITY_OPTIONS } from '../utils/tableUtils';
-import EmptyState from '@/components/EmptyState';
+import EmptyState from '@shared/components/feedback/EmptyState';
 
 interface Column {
     id: string;

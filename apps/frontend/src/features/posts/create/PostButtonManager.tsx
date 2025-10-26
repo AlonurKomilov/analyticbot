@@ -5,7 +5,7 @@
 import React from 'react';
 import { Box, Typography, List, ListItem, Chip } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
-import ButtonConstructor from '@/components/ButtonConstructor';
+import ButtonConstructor from '@shared/components/ui/ButtonConstructor';
 
 interface Button {
     text: string;

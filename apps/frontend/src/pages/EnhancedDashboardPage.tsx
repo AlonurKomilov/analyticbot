@@ -27,21 +27,21 @@ import { useChannelStore, usePostStore, useUIStore } from '@store';
 import { TouchTargetProvider } from '@shared/components/ui';
 
 // Enhanced layout components
-import EnhancedDashboardLayout from '@/components/layout/EnhancedDashboardLayout.jsx';
-import EnhancedSection from '@/components/layout/EnhancedSection';
+import EnhancedDashboardLayout from '@shared/components/layout/EnhancedDashboardLayout';
+import EnhancedSection from '@shared/components/layout/EnhancedSection';
 
 // Micro-interaction components
 import {
   StaggeredAnimation,
   FloatingElement,
   FeedbackAnimation
-} from '@/components/animations/MicroInteractions.jsx';
+} from '@shared/components/ui/animations/MicroInteractions';
 import {
   InteractiveIconButton
-} from '@/components/animations/InteractiveButtons.jsx';
+} from '@shared/components/ui/animations/InteractiveButtons';
 import {
   DashboardCard
-} from '@/components/animations/InteractiveCards.jsx';
+} from '@shared/components/ui/animations/InteractiveCards';
 
 // Mobile responsive dashboard
 import MobileResponsiveDashboard from './MobileResponsiveDashboard';
@@ -50,9 +50,9 @@ import MobileResponsiveDashboard from './MobileResponsiveDashboard';
 import { AnalyticsDashboard } from '@features/dashboard';
 import { SystemStatusWidget } from '@features/dashboard';
 import { AIServicesGrid } from '@features/ai-services';
-import AddChannel from '@/components/AddChannel.jsx';
+import AddChannel from '@shared/components/ui/AddChannel';
 import { ScheduledPostsList } from '@features/posts';
-import ChannelSelector from '@/components/ChannelSelector.jsx';
+import ChannelSelector from '@shared/components/ui/ChannelSelector';
 
 interface DataSourceStatus {
   label: string;

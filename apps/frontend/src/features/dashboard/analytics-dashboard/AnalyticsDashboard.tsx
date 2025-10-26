@@ -28,13 +28,13 @@ import LastUpdatedIndicator from './LastUpdatedIndicator';
 import ExportButtons from './ExportButtons';
 
 // Import existing components
-import PostViewDynamicsChart from '@/components/charts/PostViewDynamics';
+import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import { EnhancedTopPostsTable } from '@features/posts';
 import { BestTimeRecommender } from '@features/analytics';
 import { AdvancedAnalyticsDashboard } from '@features/analytics';
 import { RealTimeAlertsSystem } from '@features/alerts';
-import ContentProtectionDashboard from '@/components/content/ContentProtectionDashboard';
-import ApiFailureDialog from '@/components/dialogs/ApiFailureDialog';
+import ContentProtectionDashboard from '@features/posts/components/ContentProtectionDashboard';
+import ApiFailureDialog from '@shared/components/dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@store';
 import { useApiFailureDialog } from '@/hooks/useApiFailureDialog';
 

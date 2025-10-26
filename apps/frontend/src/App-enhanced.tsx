@@ -4,8 +4,8 @@ import { useChannelStore, usePostStore, useUIStore } from '@store';
 import { ErrorBoundary } from './utils/errors';
 import { ErrorFallback } from '@shared/components/feedback';
 import { PostCreator, ScheduledPostsList } from '@features/posts';
-import MediaPreview from './components/MediaPreview';
-import AddChannel from './components/AddChannel';
+import MediaPreview from '@shared/components/ui/MediaPreview';
+import AddChannel from '@shared/components/ui/AddChannel';
 
 const AppSkeleton: React.FC = React.memo(() => (
     <Stack spacing={3} sx={{ mt: 2 }}>

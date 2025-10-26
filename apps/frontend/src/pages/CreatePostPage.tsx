@@ -10,9 +10,9 @@ import { Box, Stack } from '@mui/material';
 import { TouchTargetProvider } from '@shared/components/ui';
 import { PageContainer, SectionHeader } from '@shared/components/ui';
 import { PostCreator } from '@features/posts';
-import EnhancedMediaUploader from '@/components/EnhancedMediaUploader.jsx';
-import MediaPreview from '@/components/MediaPreview';
-import StorageFileBrowser from '@/components/StorageFileBrowser.jsx';
+import EnhancedMediaUploader from '@shared/components/ui/EnhancedMediaUploader';
+import MediaPreview from '@shared/components/ui/MediaPreview';
+import StorageFileBrowser from '@shared/components/ui/StorageFileBrowser';
 import { usePostStore } from '@store';
 import { DESIGN_TOKENS } from '@/theme/designTokens.js';
 

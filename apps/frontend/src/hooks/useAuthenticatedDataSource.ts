@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { createAuthenticatedDataProvider } from '../providers/DataProvider.js';
 import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
 import type {

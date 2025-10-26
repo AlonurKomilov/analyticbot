@@ -135,7 +135,12 @@ export class ApiDataProvider extends DataProvider {
             clearTimeout(timeoutId);
             return response.ok;
         } catch (error) {
-            console.warn('API availability check failed:', error.message);
+            // Don't log timeout errors as warnings - they're expected when API is unavailable
+            if (error.name === 'AbortError') {
+                console.debug('API health check timed out (3s) - API may be unavailable');
+            } else {
+                console.warn('API availability check failed:', error.message);
+            }
             return false;
         }
     }

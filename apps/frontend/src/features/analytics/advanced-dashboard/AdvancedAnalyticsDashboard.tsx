@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Alert } from '@mui/material';
-import { useDataSource, useAllAnalytics } from '@shared/hooks';
+import { useAllAnalytics } from '@shared/hooks';
 
 // Import extracted components (JSX - not yet migrated)
 import DataSourceStatus from './DataSourceStatus';
@@ -38,8 +38,6 @@ interface Metrics {
 const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
     channelId
 }) => {
-    useDataSource(); // Initialize data source
-
     // Show info message if no channel selected
     if (!channelId) {
         return (
@@ -50,10 +48,8 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
             </Box>
         );
     }
-
-    const analyticsHook = useAllAnalytics(channelId);
-
-    const [trends, setTrends] = useState<any[]>([]);
+    
+    const analyticsHook = useAllAnalytics(channelId);    const [trends, setTrends] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
 
     // Extract values safely from hooks

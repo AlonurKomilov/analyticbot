@@ -29,8 +29,13 @@ import {
     Article as ArticleIcon,
     Settings as SettingsIcon,
     AdminPanelSettings as AdminIcon,
+    Psychology as AIIcon,
+    Payment as PaymentIcon,
+    Person as PersonIcon,
+    Tv as ChannelIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ROUTES } from '@config/routes';
 
 const DRAWER_WIDTH = 260;
 
@@ -41,11 +46,15 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-    { label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
-    { label: 'Analytics', path: '/analytics', icon: <AnalyticsIcon /> },
-    { label: 'Posts', path: '/posts', icon: <ArticleIcon /> },
-    { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
-    { label: 'Admin', path: '/admin', icon: <AdminIcon /> },
+    { label: 'Dashboard', path: ROUTES.DASHBOARD, icon: <DashboardIcon /> },
+    { label: 'Analytics', path: ROUTES.ANALYTICS, icon: <AnalyticsIcon /> },
+    { label: 'Channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
+    { label: 'Posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
+    { label: 'AI Services', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
+    { label: 'Payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
+    { label: 'Profile', path: ROUTES.PROFILE, icon: <PersonIcon /> },
+    { label: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },
+    { label: 'Admin', path: ROUTES.ADMIN, icon: <AdminIcon /> },
 ];
 
 const NavigationBar: React.FC = () => {

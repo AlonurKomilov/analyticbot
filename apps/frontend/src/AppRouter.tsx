@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { ProtectedRoute, PublicRoute } from '@features/auth/guards';
+import { ROUTES } from '@config/routes';
 
 // Import optimized lazy loading system
 import {
@@ -26,8 +27,23 @@ const {
     ResetPasswordForm
 } = PageComponents;
 
-// Import ChannelsManagementPage directly (not lazily loaded yet)
+// Lazy load additional pages
 const ChannelsManagementPage = React.lazy(() => import('./pages/ChannelsManagementPage'));
+const AIServicesPage = React.lazy(() => import('./pages/AIServicesPage'));
+const PredictiveAnalyticsPage = React.lazy(() => import('./pages/PredictiveAnalyticsPage'));
+const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
+const SubscriptionPage = React.lazy(() => import('./pages/SubscriptionPage'));
+const PaymentHistoryPage = React.lazy(() => import('./pages/PaymentHistoryPage'));
+const InvoicesPage = React.lazy(() => import('./pages/InvoicesPage'));
+const PostsPage = React.lazy(() => import('./pages/PostsPage'));
+const PostDetailsPage = React.lazy(() => import('./pages/PostDetailsPage'));
+const EditPostPage = React.lazy(() => import('./pages/EditPostPage'));
+const ScheduledPostsPage = React.lazy(() => import('./pages/ScheduledPostsPage'));
+const ChannelDetailsPage = React.lazy(() => import('./pages/ChannelDetailsPage'));
+const AddChannelPage = React.lazy(() => import('./pages/AddChannelPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const UnauthorizedPage = React.lazy(() => import('./pages/UnauthorizedPage'));
+const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));
 
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
@@ -47,6 +63,7 @@ const {
     SettingsPage,
     HelpPage,
 } = UtilityComponents;
+
 
 interface OptimizedSuspenseProps {
     children: ReactNode;
@@ -258,7 +275,7 @@ const AppRouter: React.FC = () => {
 
                                 {/* Help & Support */}
                                 <Route
-                                    path="/help"
+                                    path={ROUTES.HELP}
                                     element={
                                         <ProtectedRoute>
                                             <HelpPage />
@@ -266,8 +283,162 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
+                                {/* AI Services Routes - New */}
+                                <Route
+                                    path={ROUTES.AI_SERVICES}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <AIServicesPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.PREDICTIVE_ANALYTICS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <PredictiveAnalyticsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Payment & Subscription Routes */}
+                                <Route
+                                    path={ROUTES.PAYMENT}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <PaymentPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.SUBSCRIPTION}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <SubscriptionPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.PAYMENT_HISTORY}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="list">
+                                                <PaymentHistoryPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.INVOICES}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="list">
+                                                <InvoicesPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Posts Routes */}
+                                <Route
+                                    path={ROUTES.POSTS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="list">
+                                                <PostsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.POST_DETAILS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="content">
+                                                <PostDetailsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.EDIT_POST}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <EditPostPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.SCHEDULED_POSTS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="list">
+                                                <ScheduledPostsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Channel Routes */}
+                                <Route
+                                    path={ROUTES.CHANNEL_DETAILS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <ChannelDetailsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.ADD_CHANNEL}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <AddChannelPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Error Pages */}
+                                <Route
+                                    path={ROUTES.NOT_FOUND}
+                                    element={
+                                        <OptimizedSuspense>
+                                            <NotFoundPage />
+                                        </OptimizedSuspense>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.UNAUTHORIZED}
+                                    element={
+                                        <OptimizedSuspense>
+                                            <UnauthorizedPage />
+                                        </OptimizedSuspense>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.SERVER_ERROR}
+                                    element={
+                                        <OptimizedSuspense>
+                                            <ServerErrorPage />
+                                        </OptimizedSuspense>
+                                    }
+                                />
+
                                 {/* Fallback Routes */}
-                                <Route path="*" element={<Navigate to="/auth" replace />} />
+                                <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
                             </Routes>
                         </OptimizedSuspense>
                 </Box>

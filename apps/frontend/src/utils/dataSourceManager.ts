@@ -112,7 +112,7 @@ class DataSourceManager {
                                 'https://b2qz1m0n-11400.euw.devtunnels.ms';
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10s to match slow API response times
 
             const response = await fetch(`${API_BASE_URL}/health`, {
                 method: 'GET',

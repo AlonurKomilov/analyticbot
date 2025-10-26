@@ -71,8 +71,8 @@ export const CriticalComponents = {
   ),
 
   AnalyticsDashboard: lazyWithPreload(
-    () => import('../components/dashboard/AnalyticsDashboard/AnalyticsDashboard'),
-    { preloadAfter: 1000 }
+    () => import('../features/dashboard/analytics-dashboard/AnalyticsDashboard'),
+    { preloadAfter: 2000 }
   ),
 };
 
@@ -81,17 +81,17 @@ export const CriticalComponents = {
  */
 export const PageComponents = {
   DashboardPage: lazyWithPreload(
-    () => import('../components/pages/DashboardPage.jsx'),
+    () => import('../pages/DashboardPage.jsx'),
     { preloadAfter: 0 } // Critical page
   ),
 
   CreatePostPage: lazyWithPreload(
-    () => import('../components/pages/CreatePostPage.jsx'),
+    () => import('../pages/CreatePostPage.jsx'),
     { preloadAfter: 2000 }
   ),
 
   AnalyticsPage: lazyWithPreload(
-    () => import('../components/pages/AnalyticsPage.jsx'),
+    () => import('../pages/AnalyticsPage.jsx'),
     { preloadAfter: 1500 }
   ),
 
@@ -111,7 +111,7 @@ export const PageComponents = {
   ),
 
   ResetPasswordForm: lazyWithPreload(
-    () => import('../components/auth/ResetPasswordForm.jsx'),
+    () => import('../features/auth/login/ResetPasswordForm'),
     { preloadOnHover: true }
   ),
 };
@@ -136,7 +136,7 @@ export const ServiceComponents = {
   ),
 
   ContentOptimizerService: lazyWithPreload(
-    () => import('../components/features/ai-services/ContentOptimizer').then(m => ({ default: m.ContentOptimizerPage })),
+    () => import('../features/ai-services/ContentOptimizer').then(m => ({ default: m.ContentOptimizerPage })),
     { preloadAfter: 6000 }
   ),
 
@@ -151,7 +151,7 @@ export const ServiceComponents = {
   ),
 
   SecurityMonitoringService: lazyWithPreload(
-    () => import('../components/features/ai-services/SecurityMonitoring').then(m => ({ default: m.SecurityMonitoringPage })),
+    () => import('../features/ai-services/SecurityMonitoring').then(m => ({ default: m.SecurityMonitoringPage })),
     { preloadAfter: 12000 }
   ),
 };
@@ -166,12 +166,12 @@ export const UtilityComponents = {
   ),
 
   SettingsPage: lazyWithPreload(
-    () => import('../components/pages/SettingsPage.jsx'),
+    () => import('../pages/SettingsPage.jsx'),
     { preloadOnHover: true }
   ),
 
   HelpPage: lazyWithPreload(
-    () => import('../components/pages/HelpPage.jsx'),
+    () => import('../pages/HelpPage.jsx'),
     { preloadOnHover: true }
   ),
 

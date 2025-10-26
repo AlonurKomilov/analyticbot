@@ -8,20 +8,23 @@ import type {
   User,
   Channel,
   Post,
-  ScheduledPost,
   AnalyticsOverview,
   GrowthMetrics,
   TopPost,
   PostDynamics,
   MediaFile,
-  PendingMedia,
-  BestTimeRecommendation,
-  EngagementMetrics,
-  ChartConfig,
-  DataSource,
-  TimePeriod,
   Alert,
+} from './api';
+
+import type {
+  PendingMedia,
+  DataSource,
   NotificationType,
+  TimePeriod,
+  ChartConfig,
+  BestTimeRecommendation,
+  ScheduledPost,
+  EngagementMetrics,
 } from './models';
 
 // ============================================================================

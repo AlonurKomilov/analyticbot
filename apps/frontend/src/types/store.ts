@@ -15,12 +15,15 @@ import type {
   PostDynamics,
   EngagementMetrics,
   BestTimeRecommendation,
-  MediaFile,
   PendingMedia,
   DataSource,
   LoadingState,
   ValidationResult,
 } from './models';
+
+import type {
+  MediaFile,
+} from './api';
 
 // ============================================================================
 // Auth Store

@@ -1,10 +1,9 @@
 import React, { useMemo, useCallback } from 'react';
 import { Container, Box, Typography, Skeleton, Stack, Alert } from '@mui/material';
-import { useChannelStore, usePostStore, useUIStore } from './stores';
+import { useChannelStore, usePostStore, useUIStore } from '@store';
 import { ErrorBoundary } from './utils/errors';
-import { ErrorFallback } from './components/common/ErrorFallback';
-import PostCreator from './components/PostCreator';
-import ScheduledPostsList from './components/ScheduledPostsList';
+import { ErrorFallback } from '@shared/components/feedback';
+import { PostCreator, ScheduledPostsList } from '@features/posts';
 import MediaPreview from './components/MediaPreview';
 import AddChannel from './components/AddChannel';
 

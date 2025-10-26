@@ -3,12 +3,23 @@
  *
  * Single Responsibility: Process individual payments only
  * Separated from: payment methods, subscriptions, invoicing
+ *
+ * Phase 1 Update: Using centralized payment types
+ * - Changed 'completed' → 'succeeded' to match backend
+ *
+ * Phase 4 Update: Added runtime validation
+ * - Validate API responses to catch invalid data early
  */
 
 import apiClient from '../apiClient';
-
-export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
-export type PaymentProvider = 'stripe' | 'paypal' | 'crypto';
+import {
+    PaymentStatus,
+    PaymentProvider
+} from '../../types/payment';
+import {
+    validatePaymentResponse,
+    safeValidatePaymentsArray
+} from '../../validation/apiValidators';
 
 export interface PaymentData {
     amount: number;
@@ -39,6 +50,7 @@ class PaymentProcessingService {
 
     /**
      * Process a payment
+     * Returns payment with normalized and validated status
      */
     async process(userId: number, paymentData: PaymentData): Promise<Payment> {
         try {
@@ -46,7 +58,8 @@ class PaymentProcessingService {
                 `${this.baseURL}/process`,
                 { ...paymentData, user_id: userId }
             );
-            return response.data;
+            // Validate and normalize response
+            return validatePaymentResponse(response.data) as Payment;
         } catch (error) {
             console.error('Failed to process payment:', error);
             throw error;
@@ -55,13 +68,15 @@ class PaymentProcessingService {
 
     /**
      * Get payment status
+     * Validates and normalizes status from backend for backward compatibility
      */
     async getStatus(paymentId: string): Promise<Payment> {
         try {
             const response = await apiClient.get<Payment>(
                 `${this.baseURL}/status/${paymentId}`
             );
-            return response.data;
+            // Validate and normalize response
+            return validatePaymentResponse(response.data) as Payment;
         } catch (error) {
             console.error('Failed to get payment status:', error);
             throw error;
@@ -70,6 +85,7 @@ class PaymentProcessingService {
 
     /**
      * Get user's payment history
+     * Safely validates all payments in response
      */
     async getHistory(userId: number, limit: number = 50): Promise<Payment[]> {
         try {
@@ -77,7 +93,8 @@ class PaymentProcessingService {
                 `${this.baseURL}/history/${userId}`,
                 { params: { limit } }
             );
-            return response.data.payments || [];
+            // Safely validate array, filtering out any invalid payments
+            return safeValidatePaymentsArray(response.data.payments || []) as Payment[];
         } catch (error) {
             console.error('Failed to get payment history:', error);
             throw error;

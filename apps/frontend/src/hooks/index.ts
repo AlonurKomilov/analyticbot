@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useMediaStore, useUIStore } from '@/stores';
+import { useMediaStore, useUIStore } from '@store';
 
 // Export all major hooks with their types
 export { useAdminAPI, useAdminDashboard } from './useAdminAPI';

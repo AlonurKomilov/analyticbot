@@ -6,7 +6,7 @@ import {
     Box,
     Tooltip
 } from '@mui/material';
-import { IconButton } from '../../common/TouchTargetCompliance';
+import { IconButton } from '@shared/components/ui';
 import {
     ShowChart as ChartIcon,
     Refresh as RefreshIcon,

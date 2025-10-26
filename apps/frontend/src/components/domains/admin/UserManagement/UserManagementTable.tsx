@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import {
     Chip
 } from '@mui/material';
-import { EnhancedDataTable } from '../../../common/EnhancedDataTable';
+import { EnhancedDataTable } from '@shared/components/tables';
 import {
     UserAvatar,
     UserInfo,

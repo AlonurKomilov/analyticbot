@@ -58,7 +58,27 @@ export interface RefreshTokenRequest {
   refresh_token: string;
 }
 
+// ============================================================================
+// User Types
+// ============================================================================
+
 export type UserRole = 'viewer' | 'user' | 'moderator' | 'admin' | 'owner';
+
+/**
+ * User account status
+ * Aligned with backend UserStatus enum
+ *
+ * CHANGED: Expanded from boolean isActive to 5-state enum
+ */
+export type UserStatus =
+  | 'active'      // Account active and accessible
+  | 'inactive'    // Account inactive but not deleted
+  | 'suspended'   // Account suspended (violation/payment)
+  | 'pending'     // Account pending verification
+  | 'deleted';    // Account soft-deleted
+
+// Import UserTier from subscription types
+import { UserTier } from './subscription';
 
 export interface User {
   id: string;
@@ -67,7 +87,9 @@ export interface User {
   firstName?: string;
   lastName?: string;
   role: UserRole;
-  isActive: boolean;
+  tier?: UserTier;      // ✅ ADDED: User subscription tier
+  status: UserStatus;   // ✅ CHANGED: from isActive: boolean
+  isActive?: boolean;   // ✅ DEPRECATED: kept for backward compatibility, use status instead
   createdAt: string;
   updatedAt?: string;
   preferences?: UserPreferences;
@@ -135,7 +157,64 @@ export interface ChannelValidationResponse {
 // Post Types
 // ============================================================================
 
-export type PostStatus = 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed';
+// ============================================================================
+// Post Types
+// ============================================================================
+
+/**
+ * Post status - Frontend includes transition states
+ * Backend PostStatus: draft, scheduled, published, failed, cancelled
+ *
+ * Note: 'publishing' is a frontend-only transition state
+ *
+ * Backend flow: scheduled → published (or failed)
+ * Frontend flow: scheduled → publishing → published (or failed)
+ *
+ * The 'publishing' state is shown in UI when:
+ * - Post status is 'scheduled'
+ * - Current time >= scheduled time
+ * - Status hasn't updated to 'published' yet (polling delay)
+ *
+ * ADDED: 'cancelled' status for scheduled posts that were cancelled
+ */
+export type PostStatus =
+  | 'draft'       // Post being edited
+  | 'scheduled'   // Scheduled for future publication
+  | 'publishing'  // ⚠️ FRONTEND-ONLY: Currently publishing (transition state)
+  | 'published'   // Successfully published
+  | 'failed'      // Publishing failed
+  | 'cancelled';  // ✅ ADDED: Scheduled post cancelled
+
+/**
+ * Backend post status (for API compatibility)
+ * Backend doesn't have 'publishing' state
+ */
+export type BackendPostStatus = Exclude<PostStatus, 'publishing'>;
+
+/**
+ * Map backend status to frontend display status
+ * Optionally show 'publishing' for scheduled posts past their time
+ *
+ * @param backendStatus - Status from backend API
+ * @param scheduledTime - Optional scheduled time to determine if publishing
+ * @returns Frontend post status for display
+ */
+export function mapBackendPostStatus(
+  backendStatus: BackendPostStatus,
+  scheduledTime?: string
+): PostStatus {
+  // If scheduled and past scheduled time, show as publishing
+  if (backendStatus === 'scheduled' && scheduledTime) {
+    const scheduled = new Date(scheduledTime).getTime();
+    const now = Date.now();
+
+    if (now >= scheduled) {
+      return 'publishing';
+    }
+  }
+
+  return backendStatus;
+}
 
 export interface Post {
   id: string;

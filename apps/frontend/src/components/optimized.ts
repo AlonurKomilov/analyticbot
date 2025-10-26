@@ -5,16 +5,16 @@
 // HIGH-FREQUENCY IMPORTS (Always loaded)
 // =================
 
-// Common utilities and frequently used components
-export {
-    AccessibleButton,
-    AccessibleFormField,
-    ErrorBoundary,
-    ExportButton,
-    LoadingButton,
-    ShareButton,
-    ToastNotification
-} from './common';
+// Common utilities and frequently used components - NOW IN @shared
+// export {
+//     AccessibleButton,
+//     AccessibleFormField,
+//     ErrorBoundary,
+//     ExportButton,
+//     LoadingButton,
+//     ShareButton,
+//     ToastNotification
+// } from '@shared/components';
 
 // =================
 // DOMAIN-SPECIFIC EXPORTS (Lazy loaded)
@@ -23,7 +23,7 @@ export {
 // Use dynamic imports for large components to improve initial bundle size
 export const LazyAdminDashboard = () => import('./domains/admin/SuperAdminDashboard');
 export const LazyServicesOverview = () => import('./domains/services/ServicesOverview');
-export const LazyAnalyticsDashboard = () => import('./analytics/AdvancedAnalyticsDashboard');
+export const LazyAnalyticsDashboard = () => import('../features/analytics/advanced-dashboard');
 
 // =================
 // DIRECT EXPORTS (For compatibility)
@@ -37,7 +37,8 @@ export { default as NavigationBar } from './domains/navigation/NavigationBar';
 // =================
 // ANALYTICS BARREL
 // =================
-export * from './analytics';
+// MIGRATED TO @features/analytics
+// export * from './analytics';
 
 // =================
 // CHARTS BARREL

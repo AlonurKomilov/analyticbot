@@ -8,8 +8,8 @@
 import React, { useState, ReactNode } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { LoginForm, RegisterForm } from '../components/auth';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import { LoginForm, RegisterForm } from '@features/auth';
+import { LoadingSpinner } from '@shared/components/feedback';
 import { DESIGN_TOKENS } from '../theme/designTokens';
 
 interface AuthenticationWrapperProps {

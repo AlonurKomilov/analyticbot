@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUIStore } from '../stores';
+import { useUIStore } from '@store';
 
 /**
  * API Error type

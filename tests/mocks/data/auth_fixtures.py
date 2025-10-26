@@ -48,7 +48,7 @@ def create_mock_users_database() -> dict[str, dict]:
             "username": "Demo Viewer",
             "hashed_password": _hash_password("viewer123"),
             "is_demo": True,
-            "plan": "basic",
+            "plan": "start",  # ✅ FIXED: Changed from 'basic' to 'start'
             "demo_type": "read_only",
             "description": "Read-only demo account for viewing analytics",
         },
@@ -70,7 +70,7 @@ def create_mock_users_database() -> dict[str, dict]:
             "hashed_password": "$2b$12$admin_hash",
             "is_demo": True,
             "is_admin": True,
-            "plan": "enterprise",
+            "plan": "premium",  # ✅ FIXED: Changed from 'enterprise' to 'premium'
             "demo_type": "admin",
             "description": "Admin demo account with full system access",
         },

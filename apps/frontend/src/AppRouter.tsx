@@ -14,8 +14,8 @@ import {
 } from './utils/lazyLoading';
 
 // Import navigation system from domain structure
-import { NavigationProvider } from './components/common/NavigationProvider';
-import { PageLoader } from './components/common/PageLoader';
+import { NavigationProvider } from '@shared/components/navigation';
+import { PageLoader } from '@shared/components/feedback';
 
 const {
     DashboardPage,
@@ -28,7 +28,7 @@ const {
 } = PageComponents;
 
 // Import ChannelsManagementPage directly (not lazily loaded yet)
-const ChannelsManagementPage = React.lazy(() => import('./components/pages/ChannelsManagementPage'));
+const ChannelsManagementPage = React.lazy(() => import('./pages/ChannelsManagementPage'));
 
 const {
     SuperAdminDashboard

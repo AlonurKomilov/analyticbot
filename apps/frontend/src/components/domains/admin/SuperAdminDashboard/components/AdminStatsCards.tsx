@@ -11,7 +11,7 @@ import {
     Block as BlockIcon,
     Security as SecurityIcon
 } from '@mui/icons-material';
-import type { AdminStats } from '@hooks/useAdminAPI';
+import type { AdminStats } from '@/hooks/useAdminAPI';
 
 interface AdminStatsCardsProps {
     stats: AdminStats | null;

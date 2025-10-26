@@ -22,7 +22,7 @@ import {
     Speed as SpeedIcon,
     Storage as StorageIcon
 } from '@mui/icons-material';
-import { useMediaStore, useChannelStore } from '@/stores';
+import { useMediaStore, useChannelStore } from '@store';
 import { useTelegramWebApp } from '../hooks/index';
 
 interface UploadStats {

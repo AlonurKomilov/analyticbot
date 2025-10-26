@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { Button } from '../../common';
+import { Button } from '@shared/components';
 
 /**
  * Props for the ChartTypeSelector component

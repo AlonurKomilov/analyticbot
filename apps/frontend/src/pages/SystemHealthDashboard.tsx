@@ -23,8 +23,8 @@ import {
   Dashboard as DashboardIcon
 } from '@mui/icons-material';
 
-import { SystemHealthCheck } from '../components/common/SystemHealthCheck';
-import { runProductionReadinessCheck, formatReadinessReport } from '../utils/systemHealthCheck';
+import { SystemHealthCheck } from '@shared/components/navigation';
+import { runProductionReadinessCheck, formatReadinessReport } from '@/utils/systemHealthCheck';
 
 interface ProgressData {
   current?: number;

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import EnhancedTopPostsTable from '../../EnhancedTopPostsTable';
+import { EnhancedTopPostsTable } from '@features/posts';
 
 const PostsTableDemo: React.FC = () => {
     return (

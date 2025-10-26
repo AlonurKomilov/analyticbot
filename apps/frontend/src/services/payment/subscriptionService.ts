@@ -3,11 +3,23 @@
  *
  * Single Responsibility: Manage subscriptions only
  * Separated from: payments, payment methods, invoicing
+ *
+ * Phase 1 Update: Using centralized subscription types
+ * - Fixed 'cancelled' → 'canceled' (American spelling)
+ * - Added missing statuses: trialing, incomplete, unpaid
+ *
+ * Phase 4 Update: Added runtime validation
+ * - Validate API responses to catch invalid data early
  */
 
 import apiClient from '../apiClient';
-
-export type SubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'past_due';
+import {
+    SubscriptionStatus
+} from '../../types/payment';
+import {
+    validateSubscriptionResponse,
+    safeValidateSubscriptionsArray
+} from '../../validation/apiValidators';
 
 export interface SubscriptionData {
     plan_id: string;
@@ -24,6 +36,7 @@ export interface Subscription {
     current_period_start: string;
     current_period_end: string;
     cancel_at?: string;
+    trial_end?: string;           // ✅ ADDED: for trialing status support
     created_at: string;
 }
 
@@ -61,6 +74,7 @@ class SubscriptionService {
 
     /**
      * Create subscription
+     * Returns subscription with validated and normalized status
      */
     async create(userId: number, subscriptionData: SubscriptionData): Promise<Subscription> {
         try {
@@ -68,7 +82,8 @@ class SubscriptionService {
                 this.baseURL,
                 { ...subscriptionData, user_id: userId }
             );
-            return response.data;
+            // Validate and normalize response
+            return validateSubscriptionResponse(response.data) as Subscription;
         } catch (error) {
             console.error('Failed to create subscription:', error);
             throw error;
@@ -76,29 +91,31 @@ class SubscriptionService {
     }
 
     /**
-     * Get user's subscriptions
+     * Get user subscriptions
+     * Returns array of subscriptions with validated and normalized statuses
      */
     async getUserSubscriptions(userId: number): Promise<Subscription[]> {
         try {
-            const response = await apiClient.get<{ subscriptions: Subscription[] }>(
-                `${this.baseURL}/${userId}`
-            );
-            return response.data.subscriptions || [];
+            const response = await apiClient.get<Subscription[]>(`${this.baseURL}/user/${userId}`);
+            // Safely validate array, filtering out any invalid subscriptions
+            return safeValidateSubscriptionsArray(response.data) as Subscription[];
         } catch (error) {
-            console.error('Failed to get subscriptions:', error);
+            console.error('Failed to fetch user subscriptions:', error);
             throw error;
         }
     }
 
     /**
      * Get subscription details
+     * Returns subscription with validated and normalized status
      */
     async getSubscription(subscriptionId: string): Promise<Subscription> {
         try {
             const response = await apiClient.get<Subscription>(
                 `${this.baseURL}/detail/${subscriptionId}`
             );
-            return response.data;
+            // Validate and normalize response
+            return validateSubscriptionResponse(response.data) as Subscription;
         } catch (error) {
             console.error('Failed to get subscription:', error);
             throw error;

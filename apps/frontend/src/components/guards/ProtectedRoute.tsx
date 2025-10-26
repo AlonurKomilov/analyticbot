@@ -11,9 +11,9 @@
 import React, { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { hasRole, RoleType } from '../auth/RoleGuard'; // Import hierarchy checking function and type
+import { hasRole, type RoleType } from '@features/auth';
 import ProtectedLayout from '../layout/ProtectedLayout';
-import LoadingSpinner from '../common/LoadingSpinner';
+import { LoadingSpinner } from '@shared/components/feedback';
 
 interface ProtectedRouteProps {
     children: ReactNode;

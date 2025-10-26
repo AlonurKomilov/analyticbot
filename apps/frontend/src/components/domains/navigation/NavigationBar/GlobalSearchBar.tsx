@@ -12,7 +12,7 @@ import {
 import {
     Search as SearchIcon
 } from '@mui/icons-material';
-import GlobalSearchDialog from '@components/common/GlobalSearchDialog';
+import { GlobalSearchDialog } from '@shared/components/navigation';
 
 interface GlobalSearchBarProps extends Omit<BoxProps, 'onClick'> {
     className?: string;

@@ -33,9 +33,9 @@ import {
     Notifications as NotificationsIcon,
     Link as LinkIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { AccountLinking } from '../components/profile/AccountLinking';
-import { apiClient } from '../api/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { AccountLinking } from '@/components/profile/AccountLinking';
+import { apiClient } from '@/api/client';
 
 interface ProfileData {
     username: string;

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAnalyticsStore } from '@/stores';
+import { useAnalyticsStore } from '@store';
+import { useChannelStore } from '@store';
+import { useUIStore } from '@store';
 import { calculateSummaryStats, type Post, type SummaryStats } from '../utils/postTableUtils';
 import { DEFAULT_DEMO_CHANNEL_ID } from '../../../../__mocks__/constants';
 
@@ -29,32 +31,52 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
 
     // Get store methods and state
     const { fetchTopPosts, topPosts, isLoadingTopPosts } = useAnalyticsStore();
+    const { selectedChannel } = useChannelStore();
+    const { dataSource } = useUIStore();
+
+    // Determine which channel ID to use
+    // Priority: demo mode > selected channel > null
+    const channelId = dataSource === 'demo'
+        ? DEFAULT_DEMO_CHANNEL_ID
+        : (selectedChannel?.id?.toString() || null);
 
     // Load top posts data
     const loadTopPosts = useCallback(async () => {
+        // Don't load if no channel selected and not in demo mode
+        if (!channelId) {
+            console.info('💡 No channel selected - select a channel to view top posts');
+            setPosts([]);
+            setError(null);
+            return;
+        }
+
         try {
             setError(null);
-            await fetchTopPosts(DEFAULT_DEMO_CHANNEL_ID, 10);
+            await fetchTopPosts(channelId, 10);
             setPosts(topPosts || []);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
             console.error('Error loading top posts:', err);
+            // Set empty array on error to clear stale data
+            setPosts([]);
         }
-    }, [fetchTopPosts, topPosts]);
+    }, [fetchTopPosts, topPosts, channelId]);
 
-    // Load data on mount and when filters change
+    // Load data on mount and when channel/filters change
     useEffect(() => {
         loadTopPosts();
     }, [loadTopPosts]);
 
-    // No auto-mock generation - data should come from backend (including demo data)
+    // Show helpful message when no data available
     useEffect(() => {
-        if (!isLoadingTopPosts && posts.length === 0 && !error) {
-            console.info('No posts available - user should sign in to demo account for mock data');
-            // Don't auto-generate mock posts - let backend handle demo data through proper auth
+        if (!isLoadingTopPosts && posts.length === 0 && !error && channelId) {
+            const endpoint = channelId === DEFAULT_DEMO_CHANNEL_ID
+                ? '/unified-analytics/demo/top-posts'
+                : `/analytics/posts/dynamics/top-posts/${channelId}`;
+            console.info(`💡 No posts available - endpoint: ${endpoint}`);
         }
-    }, [isLoadingTopPosts, posts.length, error]);
+    }, [isLoadingTopPosts, posts.length, error, channelId]);
 
     // Calculate summary statistics
     const summaryStats = useMemo(() => {

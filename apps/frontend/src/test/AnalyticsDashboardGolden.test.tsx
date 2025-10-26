@@ -14,8 +14,8 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { server } from '../__mocks__/api/server.js';
 import { http, HttpResponse } from 'msw';
-import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard/AnalyticsDashboard';
-import { useUIStore } from '../stores';
+import { AnalyticsDashboard } from '@features/dashboard';
+import { useUIStore } from '@store';
 import React from 'react';
 
 // Test utilities

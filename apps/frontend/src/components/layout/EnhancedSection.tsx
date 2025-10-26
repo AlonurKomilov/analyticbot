@@ -10,7 +10,7 @@
 
 import React, { ReactNode } from 'react';
 import { Box, Typography, Divider, Tooltip } from '@mui/material';
-import { IconButton } from '../common/TouchTargetCompliance';
+import { IconButton } from '@shared/components/ui';
 import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon,

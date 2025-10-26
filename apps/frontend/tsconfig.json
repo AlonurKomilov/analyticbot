@@ -40,13 +40,13 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
-      "@utils/*": ["./src/utils/*"],
+      "@features/*": ["./src/features/*"],
+      "@shared/*": ["./src/shared/*"],
       "@store/*": ["./src/store/*"],
-      "@stores/*": ["./src/stores/*"],
-      "@hooks/*": ["./src/hooks/*"],
+      "@store": ["./src/store/index.ts"],
+      "@config/*": ["./src/config/*"],
+      "@theme/*": ["./src/theme/*"],
       "@api/*": ["./src/api/*"],
-      "@services/*": ["./src/services/*"],
       "@types/*": ["./src/types/*"],
       "@pages/*": ["./src/pages/*"]
     },
@@ -69,7 +69,8 @@
     "src/**/*.test.js",
     "src/**/*.test.jsx",
     "src/services/archive/**/*",
-    "src/**/__mocks__/**/*"
+    "src/**/__mocks__/**/*",
+    "src/archive/**/*"
   ],
   "references": [
     { "path": "./tsconfig.node.json" }

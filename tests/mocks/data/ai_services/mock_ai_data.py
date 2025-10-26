@@ -90,8 +90,7 @@ def get_churn_predictions(limit: int = 10) -> list[dict[str, Any]]:
     Consolidated from frontend churnPredictor.js
     """
     predictions = []
-    risk_levels = ["Low", "Medium", "High", "Critical"]
-    subscription_tiers = ["free", "basic", "premium", "enterprise"]
+    subscription_tiers = ["free", "start", "pro", "premium"]  # ✅ FIXED: Updated tier names
 
     for i in range(limit):
         churn_prob = random.uniform(0.1, 0.95)

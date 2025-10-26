@@ -8,10 +8,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Box, Container } from '@mui/material';
-import { LoginForm, RegisterForm } from '../components/auth';
-import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
-import { useAuth } from '../contexts/AuthContext';
-import { DESIGN_TOKENS } from '../theme/designTokens';
+import { LoginForm, RegisterForm, ForgotPasswordForm } from '@features/auth';
+import { useAuth } from '@/contexts/AuthContext';
+import { DESIGN_TOKENS } from '@/theme/designTokens';
 
 type AuthMode = 'login' | 'register' | 'forgot-password';
 

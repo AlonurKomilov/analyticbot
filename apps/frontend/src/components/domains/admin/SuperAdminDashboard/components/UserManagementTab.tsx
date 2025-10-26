@@ -20,7 +20,7 @@ import {
     Typography
 } from '@mui/material';
 import { Block as BlockIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-import type { AdminUser } from '@hooks/useAdminAPI';
+import type { AdminUser } from '@/hooks/useAdminAPI';
 
 interface UserManagementTabProps {
     users: AdminUser[];

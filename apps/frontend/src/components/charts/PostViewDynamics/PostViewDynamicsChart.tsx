@@ -6,7 +6,8 @@ import {
     Alert
 } from '@mui/material';
 import { BarChart as ChartIcon } from '@mui/icons-material';
-import { useAnalyticsStore } from '@/stores';
+import { useAnalyticsStore, useChannelStore, useUIStore } from '@store';
+import { DEFAULT_DEMO_CHANNEL_ID } from '@/__mocks__/constants';
 
 // Import extracted components
 import TimeRangeControls from './TimeRangeControls.jsx';
@@ -73,6 +74,8 @@ const PostViewDynamicsChart: React.FC = () => {
     // Get store function and state
     const { postDynamics, isLoadingPostDynamics } = useAnalyticsStore();
     const fetchPostDynamicsFromStore = useAnalyticsStore.getState().fetchPostDynamics;
+    const { selectedChannel } = useChannelStore();
+    const { dataSource } = useUIStore();
 
     // Use refs to track state and prevent unnecessary re-renders
     const isMountedRef = useRef<boolean>(true);
@@ -87,12 +90,26 @@ const PostViewDynamicsChart: React.FC = () => {
             return; // Already loading, skip duplicate request
         }
 
+        // Determine which channel ID to use based on data source mode
+        // Priority: demo mode > selected channel > null
+        const channelId = dataSource === 'demo'
+            ? DEFAULT_DEMO_CHANNEL_ID
+            : (selectedChannel?.id?.toString() || null);
+
+        if (!channelId) {
+            console.info('💡 No channel selected - select a channel to view post dynamics');
+            setError('info:Please select a channel to view post dynamics'); // Prefix with 'info:' for info alert
+            setData([]);
+            return;
+        }
+
         isLoadingRef.current = true;
         setError(null);
 
         try {
             const currentTimeRange = timeRangeRef.current;
-            await fetchPostDynamicsFromStore('1', currentTimeRange); // Channel ID 1 as default
+            console.log(`📊 Fetching post dynamics for channel: ${channelId}, timeRange: ${currentTimeRange}`);
+            await fetchPostDynamicsFromStore(channelId, currentTimeRange);
 
             if (isMountedRef.current && postDynamics) {
                 const dataArray = Array.isArray(postDynamics) ? postDynamics : [];
@@ -109,7 +126,7 @@ const PostViewDynamicsChart: React.FC = () => {
         } finally {
             isLoadingRef.current = false;
         }
-    }, [fetchPostDynamicsFromStore, postDynamics]); // Include dependencies
+    }, [fetchPostDynamicsFromStore, postDynamics, selectedChannel, dataSource]); // Include dependencies
 
     // Handle time range changes with debouncing
     const handleTimeRangeChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
@@ -152,7 +169,13 @@ const PostViewDynamicsChart: React.FC = () => {
 
     // Auto-refresh logic
     useEffect(() => {
-        if (!autoRefresh || refreshInterval === 'disabled') {
+        // Don't set up auto-refresh if no channel is selected
+        // Priority: demo mode > selected channel > null
+        const channelId = dataSource === 'demo'
+            ? DEFAULT_DEMO_CHANNEL_ID
+            : (selectedChannel?.id?.toString() || null);
+
+        if (!channelId || !autoRefresh || refreshInterval === 'disabled') {
             return;
         }
 
@@ -184,7 +207,7 @@ const PostViewDynamicsChart: React.FC = () => {
             }
             clearInterval(interval);
         };
-    }, [autoRefresh, refreshInterval, loadData]);
+    }, [autoRefresh, refreshInterval, loadData, selectedChannel, dataSource]);
 
     // Cleanup when component unmounts
     useEffect(() => {
@@ -257,10 +280,14 @@ const PostViewDynamicsChart: React.FC = () => {
 
     // Error state
     if (error) {
+        const isInfo = error.startsWith('info:');
+        const message = isInfo ? error.replace('info:', '') : error;
+        const severity = isInfo ? 'info' : 'error';
+
         return (
             <Paper>
-                <Alert severity="error">
-                    Error loading data: {error}
+                <Alert severity={severity}>
+                    {message}
                 </Alert>
             </Paper>
         );

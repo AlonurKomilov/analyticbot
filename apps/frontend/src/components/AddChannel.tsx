@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
-import { useChannelStore } from '@/stores';
-import UnifiedButton from './common/UnifiedButton';
+import { useChannelStore } from '@store';
+import { UnifiedButton } from '@shared/components/ui';
 
 interface Status {
     success: boolean;

@@ -33,7 +33,7 @@ import {
     Settings as SettingsIcon,
     Shield as ProtectionIcon
 } from '@mui/icons-material';
-import ModernCard from '../components/common/ModernCard';
+import { ModernCard } from '@shared/components/ui';
 import { SEMANTIC_SPACING } from '../theme/spacingSystem';
 import { apiClient } from '../api/client';
 

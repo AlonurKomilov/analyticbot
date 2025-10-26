@@ -144,18 +144,21 @@ export const getStatusColor = (status: string | null | undefined): StatusColor =
         'active': 'success',
         'live': 'success',
         'online': 'success',
-        'completed': 'success',
+        'succeeded': 'success',  // ✅ FIXED: Changed from 'completed' to 'succeeded'
         'approved': 'success',
 
         'scheduled': 'info',
         'pending': 'info',
         'processing': 'info',
         'in-progress': 'info',
+        'trialing': 'info',  // ✅ ADDED: for subscription trial status
 
         'draft': 'warning',
         'paused': 'warning',
         'review': 'warning',
         'waiting': 'warning',
+        'past_due': 'warning',  // ✅ ADDED: for subscription past due status
+        'unpaid': 'warning',    // ✅ ADDED: for subscription unpaid status
 
         'archived': 'default',
         'inactive': 'default',
@@ -164,7 +167,9 @@ export const getStatusColor = (status: string | null | undefined): StatusColor =
         'failed': 'error',
         'error': 'error',
         'rejected': 'error',
-        'cancelled': 'error'
+        'canceled': 'error',    // ✅ FIXED: Changed from 'cancelled' to 'canceled'
+        'incomplete': 'error',  // ✅ ADDED: for subscription incomplete status
+        'refunded': 'error'     // ✅ ADDED: for payment refunded status
     };
 
     return statusMap[status.toLowerCase()] || 'default';

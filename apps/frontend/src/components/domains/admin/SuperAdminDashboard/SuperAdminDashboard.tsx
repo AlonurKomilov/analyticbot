@@ -12,8 +12,8 @@ import {
 } from '@mui/icons-material';
 
 // Import unified admin hooks (new architecture)
-import { useAdminDashboard } from '@hooks/useAdminAPI';
-// import { useAdminAnalytics } from '@hooks/useSpecializedAnalytics';
+import { useAdminDashboard } from '@/hooks/useAdminAPI';
+// import { useAdminAnalytics } from '@/hooks/useSpecializedAnalytics';
 
 // Import modular components
 import AdminStatsCards from './components/AdminStatsCards';

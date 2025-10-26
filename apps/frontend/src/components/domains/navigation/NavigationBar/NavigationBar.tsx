@@ -16,8 +16,8 @@ import {
     Brightness7 as LightModeIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useNavigation } from '@components/common/NavigationProvider';
-import { Icon } from '@components/common/IconSystem';
+import { useNavigation } from '@shared/components/navigation';
+import { Icon } from '@shared/components/ui';
 
 // Import extracted components
 import GlobalSearchBar from './GlobalSearchBar';
@@ -26,7 +26,7 @@ import NotificationMenu from './NotificationMenu';
 import SmartBreadcrumbs from './SmartBreadcrumbs';
 import MobileNavigationDrawer from './MobileNavigationDrawer';
 import DesktopSidebar from './DesktopSidebar';
-import GlobalDataSourceSwitch from '@components/common/GlobalDataSourceSwitch';
+import { GlobalDataSourceSwitch } from '@shared/components/navigation';
 
 /**
  * Simplified NavigationBar Component

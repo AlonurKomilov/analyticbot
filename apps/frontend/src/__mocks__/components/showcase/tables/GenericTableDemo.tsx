@@ -7,7 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
+import { EnhancedDataTable } from '@shared/components/tables';
 
 interface GenericTableRow {
     id: number;

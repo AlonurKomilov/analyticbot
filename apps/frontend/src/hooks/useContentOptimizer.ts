@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { contentOptimizerService, ContentAnalysisResult, ContentOptimizerStats, OptimizationOptions } from '@services/ai/contentOptimizer';
+import { contentOptimizerService, ContentAnalysisResult, ContentOptimizerStats, OptimizationOptions } from '@/services/ai/contentOptimizer';
 
 export const useContentOptimizer = () => {
   const [isOptimizing, setIsOptimizing] = useState(false);

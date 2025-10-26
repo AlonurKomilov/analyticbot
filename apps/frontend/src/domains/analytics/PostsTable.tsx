@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { EnhancedDataTable } from '@components/common/EnhancedDataTable';
-import { useUIStore, useChannelStore, useAnalyticsStore } from '@/stores';
+import { EnhancedDataTable } from '@shared/components/tables';
+import { useUIStore, useChannelStore, useAnalyticsStore } from '@store';
 import {
     PostDisplayCell,
     ViewsCell,

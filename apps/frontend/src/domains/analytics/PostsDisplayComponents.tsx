@@ -14,7 +14,7 @@ import {
     Visibility as ViewsIcon,
     CalendarToday as CalendarIcon
 } from '@mui/icons-material';
-import { StatusChip } from '@components/common/IconSystem';
+import { StatusChip } from '@shared/components/ui';
 import { formatNumber, formatDate, calculateEngagementRate, getPerformanceScore, getPerformanceLevel } from './PostsUtils';
 
 interface PostRow {

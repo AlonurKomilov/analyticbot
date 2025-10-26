@@ -23,9 +23,9 @@ import {
     AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useNavigation } from '@components/common/NavigationProvider';
+import { useNavigation } from '@shared/components/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { AdminOnly } from '../../../auth/RoleGuard';
+import { AdminOnly } from '@features/auth';
 
 interface ProfileMenuProps {
     className?: string;
@@ -47,7 +47,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ className, ...props }) => {
     const navigate = useNavigate();
     const { isDarkMode, toggleTheme } = useNavigation();
     const { user: authUser, logout, isAuthenticated } = useAuth();
-    
+
     // Type assertion for user since AuthContext is still JSX
     const user = authUser as any;
 

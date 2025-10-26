@@ -12,7 +12,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import * as Sentry from '@sentry/react';
 
 import App from './App.jsx';
-import ErrorBoundary from './components/common/ErrorBoundary.jsx';
+import { ErrorBoundary } from '@shared/components/feedback';
 import theme from './theme.js';
 import HealthStartupSplash from './components/HealthStartupSplash.jsx';
 

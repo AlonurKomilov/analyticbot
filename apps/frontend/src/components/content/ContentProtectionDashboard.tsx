@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 
 import WatermarkTool from './WatermarkTool';
-import ContentProtectionPanel from '../protection/ContentProtectionPanel';
+import { ContentProtectionPanel } from '@features/protection';
 
 // Tab Panel Component
 interface TabPanelProps {
@@ -41,7 +41,11 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
     </div>
 );
 
-const ContentProtectionDashboard: React.FC = () => {
+interface ContentProtectionDashboardProps {
+    channelId?: string | null;
+}
+
+const ContentProtectionDashboard: React.FC<ContentProtectionDashboardProps> = ({ channelId }) => {
     const [activeTab, setActiveTab] = useState<number>(0);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
@@ -150,13 +154,17 @@ const ContentProtectionDashboard: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>
-                <ContentProtectionPanel />
+                <ContentProtectionPanel channelId={channelId || undefined} />
             </TabPanel>
 
             {/* Footer Info */}
             <Box sx={{ mt: 4, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                    Content Protection Suite - Secure your digital assets with enterprise-grade tools
+                    {channelId ? (
+                        `Content Protection for Channel: ${channelId}`
+                    ) : (
+                        'Content Protection Suite - Select a channel to enable protection features'
+                    )}
                 </Typography>
             </Box>
         </Container>

@@ -158,12 +158,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      '@components': resolve(__dirname, './src/components'),
-      '@utils': resolve(__dirname, './src/utils'),
+      '@features': resolve(__dirname, './src/features'),
+      '@shared': resolve(__dirname, './src/shared'),
       '@store': resolve(__dirname, './src/store'),
-      '@hooks': resolve(__dirname, './src/hooks'),
+      '@config': resolve(__dirname, './src/config'),
+      '@theme': resolve(__dirname, './src/theme'),
       '@api': resolve(__dirname, './src/api'),
-      '@services': resolve(__dirname, './src/services'),
       '@pages': resolve(__dirname, './src/pages'),
       '@types': resolve(__dirname, './src/types'),
       // Force single React instance

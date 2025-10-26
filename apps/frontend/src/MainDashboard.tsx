@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardPage from './components/pages/DashboardPage';
+import DashboardPage from './pages/DashboardPage';
 
 const MainDashboard: React.FC = () => {
     return <DashboardPage />;

@@ -17,7 +17,7 @@ import {
     Warning as WarningIcon
 } from '@mui/icons-material';
 import { formatDate } from '../utils/adminUtils';
-import type { AuditLog } from '@hooks/useAdminAPI';
+import type { AuditLog } from '@/hooks/useAdminAPI';
 
 interface OverviewTabProps {
     auditLogs?: AuditLog[];

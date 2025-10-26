@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NAVIGATION_CONFIG, type NavigationRoute } from './navigationConfig';
-import { Icon } from '@components/common/IconSystem';
+import { Icon } from '@shared/components/ui';
 
 const DRAWER_WIDTH = 260;
 

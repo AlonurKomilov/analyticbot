@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { useMediaStore } from '@/stores';
+import { useMediaStore } from '@store';
 
 interface PendingMedia {
     previewUrl?: string;

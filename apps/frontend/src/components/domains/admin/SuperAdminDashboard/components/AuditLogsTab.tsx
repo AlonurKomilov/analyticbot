@@ -11,7 +11,7 @@ import {
     Chip
 } from '@mui/material';
 import { formatDate } from '../utils/adminUtils';
-import type { AuditLog } from '@hooks/useAdminAPI';
+import type { AuditLog } from '@/hooks/useAdminAPI';
 
 interface AuditLogsTabProps {
     auditLogs?: AuditLog[];

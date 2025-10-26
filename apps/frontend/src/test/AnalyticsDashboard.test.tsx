@@ -3,7 +3,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { server } from '../__mocks__/api/server.js';
 import { http, HttpResponse } from 'msw';
-import AnalyticsDashboard from '../components/dashboard/AnalyticsDashboard/AnalyticsDashboard';
+import { AnalyticsDashboard } from '@features/dashboard';
 import React from 'react';
 
 // Mock child components (keep these for unit testing focus)

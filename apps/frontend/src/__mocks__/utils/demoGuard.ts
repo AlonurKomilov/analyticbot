@@ -6,7 +6,7 @@
  * demo mode restrictions, preventing mock code from running in production.
  */
 
-import { useUIStore } from '@/stores';
+import { useUIStore } from '@store';
 
 /**
  * Check if application is in demo mode

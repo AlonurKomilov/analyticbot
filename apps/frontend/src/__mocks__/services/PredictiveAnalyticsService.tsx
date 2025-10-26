@@ -32,7 +32,7 @@ import {
     TrendingFlat as FlatIcon,
     TrendingUp
 } from '@mui/icons-material';
-import ModernCard, { ModernCardHeader } from '@components/common/ModernCard.jsx';
+import { ModernCard, ModernCardHeader } from '@shared/components/ui';
 import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
 
 // Import mock data
@@ -46,7 +46,7 @@ import {
 /**
  * Mock Predictive Analytics Service Page
  * Demo implementation with mock data for demo users
- * 
+ *
  * NOTE: This is a MOCK/DEMO component for demonstration purposes only.
  * The real production implementation is located at:
  * /apps/frontend/src/services/PredictiveAnalyticsService.tsx

@@ -42,7 +42,7 @@ import {
   Security as SecurityIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Channel {
   id: string;

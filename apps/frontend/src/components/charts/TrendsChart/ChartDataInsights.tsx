@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { StatusChip } from '../../common';
+import { StatusChip } from '@shared/components';
 
 /**
  * Props for the ChartDataInsights component

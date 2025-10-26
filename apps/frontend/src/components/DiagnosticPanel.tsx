@@ -14,7 +14,7 @@ import {
     ExpandMore as ExpandMoreIcon,
     BugReport as BugIcon
 } from '@mui/icons-material';
-import { useAuthStore, useChannelStore, usePostStore, useAnalyticsStore, useUIStore } from '../stores';
+import { useAuthStore, useChannelStore, usePostStore, useAnalyticsStore, useUIStore } from '@store';
 
 interface ConsoleMessage {
     message: string;

@@ -163,13 +163,15 @@ class StatisticalAnalysisService:
                     ),
                 },
                 "practical_significance": {
-                    "percent_change": float(
-                        (np.mean(comparison_array) - np.mean(baseline_array))
-                        / np.mean(baseline_array)
-                        * 100
-                    )
-                    if np.mean(baseline_array) != 0
-                    else 0,
+                    "percent_change": (
+                        float(
+                            (np.mean(comparison_array) - np.mean(baseline_array))
+                            / np.mean(baseline_array)
+                            * 100
+                        )
+                        if np.mean(baseline_array) != 0
+                        else 0
+                    ),
                     "absolute_change": float(np.mean(comparison_array) - np.mean(baseline_array)),
                     "magnitude": self._classify_effect_magnitude(effect_size["cohens_d"]),
                 },
@@ -230,7 +232,7 @@ class StatisticalAnalysisService:
                 "statistic": float(t_stat),
                 "p_value": float(t_p),
                 "degrees_of_freedom": len(comparison_data) + len(baseline_data) - 2,
-                "test_type": "Welch's t-test" if not equal_variances else "Student's t-test",
+                "test_type": ("Welch's t-test" if not equal_variances else "Student's t-test"),
             }
 
             # 4. Mann-Whitney U test (non-parametric alternative)
@@ -253,9 +255,11 @@ class StatisticalAnalysisService:
             tests["recommendation"] = {
                 "recommended_test": recommended_test,
                 "recommended_p_value": float(recommended_p_value),
-                "reason": "Normal distribution"
-                if recommended_test == "t_test"
-                else "Non-normal distribution",
+                "reason": (
+                    "Normal distribution"
+                    if recommended_test == "t_test"
+                    else "Non-normal distribution"
+                ),
             }
 
             return tests
@@ -301,11 +305,14 @@ class StatisticalAnalysisService:
             return {"error": str(e)}
 
     def _calculate_confidence_intervals(
-        self, comparison_data: np.ndarray, baseline_data: np.ndarray, confidence_level: float
+        self,
+        comparison_data: np.ndarray,
+        baseline_data: np.ndarray,
+        confidence_level: float,
     ) -> dict:
         """Calculate confidence intervals for means and differences"""
         try:
-            alpha = 1 - confidence_level
+            1 - confidence_level
 
             # Confidence interval for comparison mean
             comparison_ci = stats.t.interval(
@@ -331,7 +338,10 @@ class StatisticalAnalysisService:
             diff_ci = stats.t.interval(confidence_level, df, loc=diff_mean, scale=diff_se)
 
             return {
-                "comparison_mean_ci": [float(comparison_ci[0]), float(comparison_ci[1])],
+                "comparison_mean_ci": [
+                    float(comparison_ci[0]),
+                    float(comparison_ci[1]),
+                ],
                 "baseline_mean_ci": [float(baseline_ci[0]), float(baseline_ci[1])],
                 "difference_ci": [float(diff_ci[0]), float(diff_ci[1])],
                 "confidence_level": confidence_level,

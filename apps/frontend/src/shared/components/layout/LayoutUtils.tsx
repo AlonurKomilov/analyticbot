@@ -124,10 +124,10 @@ interface ResponsiveWrapperProps extends BoxProps {
 /**
  * Responsive Content Wrapper
  */
-export const ResponsiveWrapper: React.FC<ResponsiveWrapperProps> = ({ 
-  children, 
-  maxWidth = 'xl', 
-  ...props 
+export const ResponsiveWrapper: React.FC<ResponsiveWrapperProps> = ({
+  children,
+  maxWidth = 'xl',
+  ...props
 }) => (
   <Box
     sx={{
@@ -150,9 +150,9 @@ interface HierarchyDividerProps {
 /**
  * Visual Divider with hierarchy support
  */
-export const HierarchyDivider: React.FC<HierarchyDividerProps> = ({ 
-  level = 1, 
-  spacing = 'md' 
+export const HierarchyDivider: React.FC<HierarchyDividerProps> = ({
+  level = 1,
+  spacing = 'md'
 }) => {
   const theme = useTheme();
   const spacingValue = DESIGN_TOKENS.spacing.section.gap[spacing];

@@ -33,7 +33,7 @@ import {
     Tv as ChannelIcon,
     Refresh as RefreshIcon
 } from '@mui/icons-material';
-import { useUserChannels } from '@/hooks/useUserChannels';
+import { useUserChannels } from '@shared/hooks';
 
 interface ChannelSelectorProps {
     onChannelChange?: ((channel: any) => void) | null;

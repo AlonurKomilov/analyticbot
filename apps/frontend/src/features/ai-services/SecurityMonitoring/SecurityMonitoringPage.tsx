@@ -11,7 +11,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SettingsIcon from '@mui/icons-material/Settings';
 
-import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { useSecurityMonitoring } from '@features/ai-services/hooks';
 import { SecurityHeader } from './SecurityHeader';
 import { SecurityStatsCards } from './SecurityStatsCards';
 import { ThreatAlerts } from './ThreatAlerts';

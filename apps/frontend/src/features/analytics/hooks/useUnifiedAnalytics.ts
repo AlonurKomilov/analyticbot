@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { apiClient } from '../api/client.js';
+import { apiClient } from '@/api/client';
 
 /**
  * Analytics preset type

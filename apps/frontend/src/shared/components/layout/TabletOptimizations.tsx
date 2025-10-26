@@ -253,9 +253,9 @@ export const TabletCollapsibleCard: React.FC<TabletCollapsibleCardProps> = ({
  * Tablet-Optimized Analytics Grid
  * Grid layout optimized for analytics widgets on tablets
  */
-export const TabletAnalyticsGrid: React.FC<TabletAnalyticsGridProps> = ({ 
-  widgets = [], 
-  spacing = 3 
+export const TabletAnalyticsGrid: React.FC<TabletAnalyticsGridProps> = ({
+  widgets = [],
+  spacing = 3
 }) => {
   const theme = useTheme();
   const isTablet = useMediaQuery(theme.breakpoints.between('md', 'lg'));

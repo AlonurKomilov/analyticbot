@@ -1,75 +1,105 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useMediaStore, useUIStore } from '@store';
 
-// Export all major hooks with their types
-export { useAdminAPI, useAdminDashboard } from './useAdminAPI';
+/**
+ * ⚠️ MIGRATION IN PROGRESS - Phase 3 Task 1.4
+ * Hooks have been reorganized into feature-specific and shared directories.
+ * This file now re-exports hooks from their new locations for backward compatibility.
+ * 
+ * New structure:
+ * - features/admin/hooks/ - Admin-specific hooks
+ * - features/analytics/hooks/ - Analytics hooks
+ * - features/ai-services/hooks/ - AI service hooks
+ * - features/protection/hooks/ - Content protection hooks
+ * - features/alerts/hooks/ - Alert system hooks
+ * - shared/hooks/ - Shared utility hooks
+ */
+
+// ============================================================================
+// FEATURE-SPECIFIC HOOKS (re-exported for backward compatibility)
+// ============================================================================
+
+// Admin hooks
+export { useAdminAPI, useAdminDashboard } from '@features/admin/hooks';
 export type {
     UseAdminAPIReturn,
     UseAdminDashboardReturn,
     AdminStats,
     AdminUser,
     AuditLog
-} from './useAdminAPI';
+} from '@features/admin/hooks';
 
-export { useUnifiedAnalytics, ANALYTICS_PRESETS } from './useUnifiedAnalytics';
-export type {
-    UseUnifiedAnalyticsReturn,
-    AnalyticsPresetType,
-    AnalyticsConfig,
-    ConnectionStatus,
-    AnalyticsData
-} from './useUnifiedAnalytics';
-
-export {
+// Analytics hooks
+export { 
+    useUnifiedAnalytics, 
+    ANALYTICS_PRESETS,
     useDashboardAnalytics,
     useAdminAnalytics,
     useMobileAnalytics,
     usePerformanceAnalytics,
     useHighFrequencyAnalytics,
-    useRealTimeAnalytics
-} from './useSpecializedAnalytics';
+    useRealTimeAnalytics,
+    useRealTimeAnalyticsHook,
+    useQuickAnalytics,
+    usePerformanceMetrics
+} from '@features/analytics/hooks';
 export type {
+    UseUnifiedAnalyticsReturn,
+    AnalyticsPresetType,
+    AnalyticsConfig,
+    ConnectionStatus,
+    AnalyticsData,
     DashboardData,
     AdminData,
     MobileData,
     PerformanceData,
-    RealTimeData
-} from './useSpecializedAnalytics';
-
-export { useRealTimeAnalytics as useRealTimeAnalyticsHook, useQuickAnalytics, usePerformanceMetrics } from './useRealTimeAnalytics';
-export type {
+    RealTimeData,
     UseRealTimeAnalyticsReturn,
     UseQuickAnalyticsReturn,
     UsePerformanceMetricsReturn,
     RealTimeAnalyticsOptions
-} from './useRealTimeAnalytics';
+} from '@features/analytics/hooks';
 
-export { useUserChannels, useSelectedChannel, useChannelAccess } from './useUserChannels';
+// AI Services hooks
+export { useContentOptimizer } from '@features/ai-services/hooks';
+export { usePredictiveAnalytics } from '@features/ai-services/hooks';
 export type {
-    UseUserChannelsReturn,
-    UseSelectedChannelReturn,
-    UseChannelAccessReturn,
-    Channel
-} from './useUserChannels';
+    UsePredictiveAnalyticsReturn,
+    UsePredictiveAnalyticsOptions
+} from '@features/ai-services/hooks';
+export { useSecurityMonitoring } from '@features/ai-services/hooks';
 
-export { useDataSource, useAnalytics, useTopPosts, useEngagementMetrics, useRecommendations, useAllAnalytics } from './useDataSource';
+// Protection hooks
+export { useContentProtection } from '@features/protection/hooks';
+
+// Alerts hooks
+export { useAlerts } from '@features/alerts/hooks';
 export type {
-    UseDataSourceReturn,
-    UseAnalyticsReturn,
-    DataProvider
-} from './useDataSource';
+    UseAlertsReturn,
+    UseAlertsOptions
+} from '@features/alerts/hooks';
+
+// ============================================================================
+// SHARED HOOKS (re-exported for backward compatibility)
+// ============================================================================
 
 export {
+    useDataSource,
+    useAnalytics,
+    useTopPosts,
+    useEngagementMetrics,
+    useRecommendations,
+    useAllAnalytics,
     useAuthenticatedDataProvider,
     useAuthenticatedAnalytics,
     useAuthenticatedTopPosts,
     useAuthenticatedEngagementMetrics,
     useAuthenticatedRecommendations,
     useAuthenticatedDataSourceStatus,
-    useAuthenticatedDataSource
-} from './useAuthenticatedDataSource';
-
-export {
+    useAuthenticatedDataSource,
+    useUserChannels,
+    useSelectedChannel,
+    useChannelAccess,
     useEnhancedResponsive,
     useSwipeGesture,
     useMobileDrawer,
@@ -77,31 +107,27 @@ export {
     useResponsiveGrid,
     useMobileSpacing,
     useAdaptiveTypography,
-    useOrientationChange
-} from './useMobileResponsive';
+    useOrientationChange,
+    useApiFailureDialog
+} from '@shared/hooks';
 export type {
+    UseDataSourceReturn,
+    UseAnalyticsReturn,
+    DataProvider,
+    UseUserChannelsReturn,
+    UseSelectedChannelReturn,
+    UseChannelAccessReturn,
+    Channel,
     DeviceType,
     ResponsiveConfig,
-    SwipeGestureOptions
-} from './useMobileResponsive';
-
-export { useApiFailureDialog } from './useApiFailureDialog';
-export type {
+    SwipeGestureOptions,
     UseApiFailureDialogReturn,
     APIError
-} from './useApiFailureDialog';
+} from '@shared/hooks';
 
-export { useAlerts } from './useAlerts';
-export type {
-    UseAlertsReturn,
-    UseAlertsOptions
-} from './useAlerts';
-
-export { usePredictiveAnalytics } from './usePredictiveAnalytics';
-export type {
-    UsePredictiveAnalyticsReturn,
-    UsePredictiveAnalyticsOptions
-} from './usePredictiveAnalytics';
+// ============================================================================
+// INLINE UTILITY HOOKS (keeping here for simplicity)
+// ============================================================================
 
 /**
  * Loading state return type

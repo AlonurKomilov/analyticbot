@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Tabs, Tab, Paper, Alert } from '@mui/material';
-import { useContentProtection } from '@/hooks/useContentProtection';
+import { useContentProtection } from '@features/protection/hooks';
 import TheftDetection from './watermark/TheftDetection';
 import TextWatermark from './watermark/TextWatermark';
 import ImageWatermark from './watermark/ImageWatermark';

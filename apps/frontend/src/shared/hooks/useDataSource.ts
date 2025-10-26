@@ -12,8 +12,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { productionDataProvider } from '../providers/DataProvider.js';
-import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+import { productionDataProvider } from '@/providers/DataProvider';
+import { DEFAULT_CHANNEL_ID } from '@config/constants';
 import type {
     AnalyticsOverview,
     Post,

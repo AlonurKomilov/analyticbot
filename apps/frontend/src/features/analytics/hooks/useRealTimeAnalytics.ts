@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { apiClient } from '../api/client.js';
+import { apiClient } from '@/api/client';
 
 /**
  * Real-time analytics options

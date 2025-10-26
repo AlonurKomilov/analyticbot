@@ -7,8 +7,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { createAuthenticatedDataProvider } from '../providers/DataProvider.js';
-import { DEFAULT_CHANNEL_ID } from '../config/constants.js';
+import { createAuthenticatedDataProvider } from '@/providers/DataProvider';
+import { DEFAULT_CHANNEL_ID } from '@config/constants';
 import type {
     AnalyticsOverview,
     Post,

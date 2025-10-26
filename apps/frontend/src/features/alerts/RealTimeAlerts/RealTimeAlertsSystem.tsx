@@ -30,7 +30,7 @@ import NewRuleDialog from './NewRuleDialog.jsx';
 import NotificationEngine from './NotificationEngine.jsx';
 
 // Import new hooks
-import { useAlerts } from '@/hooks/useAlerts';
+import { useAlerts } from '@features/alerts/hooks';
 
 // Type definitions
 interface RealTimeAlertsSystemProps {

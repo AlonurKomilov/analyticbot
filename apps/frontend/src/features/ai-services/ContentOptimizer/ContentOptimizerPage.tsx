@@ -13,7 +13,7 @@ import {
   Card
 } from '@mui/material';
 
-import { useContentOptimizer } from '@/hooks/useContentOptimizer';
+import { useContentOptimizer } from '@features/ai-services/hooks';
 import { ContentOptimizerHeader } from './ContentOptimizerHeader';
 import { ContentOptimizerStats } from './ContentOptimizerStats';
 import { RecentActivity } from './RecentActivity';

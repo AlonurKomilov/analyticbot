@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Alert } from '@mui/material';
-import { useDataSource, useAllAnalytics } from '@/hooks/useDataSource';
+import { useDataSource, useAllAnalytics } from '@shared/hooks';
 
 // Import extracted components (JSX - not yet migrated)
 import DataSourceStatus from './DataSourceStatus';

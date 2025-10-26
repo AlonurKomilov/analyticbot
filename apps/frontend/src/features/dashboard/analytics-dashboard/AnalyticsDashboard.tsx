@@ -36,7 +36,7 @@ import { RealTimeAlertsSystem } from '@features/alerts';
 import ContentProtectionDashboard from '@features/posts/components/ContentProtectionDashboard';
 import ApiFailureDialog from '@shared/components/dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@store';
-import { useApiFailureDialog } from '@/hooks/useApiFailureDialog';
+import { useApiFailureDialog } from '@shared/hooks';
 
 /**
  * AnalyticsDashboard - Refactored Orchestrator Component
@@ -207,7 +207,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
             <DataSourceBanner onSwitchToRealData={handleSwitchToRealData} />
 
             {/* Hero Metrics Section - Quick Win #1 */}
-            <HeroMetricsSection 
+            <HeroMetricsSection
                 totalViews={stats.averageViews}
                 totalPosts={stats.totalPosts}
                 engagementRate={stats.engagementRate}

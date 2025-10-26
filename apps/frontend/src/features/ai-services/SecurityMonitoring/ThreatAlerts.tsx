@@ -20,7 +20,7 @@ import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 
-import { SecurityAlert } from '@/services/ai/securityMonitoring';
+import { SecurityAlert } from '@features/ai-services/services';
 
 interface ThreatAlertsProps {
   alerts: SecurityAlert[];

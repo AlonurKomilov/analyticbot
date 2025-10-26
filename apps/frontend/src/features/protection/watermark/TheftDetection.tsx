@@ -6,7 +6,7 @@
 import React from 'react';
 import { Box, Typography, Button, Chip, Paper, List, ListItem, ListItemAvatar, Avatar, ListItemText, Divider, CircularProgress } from '@mui/material';
 import { Warning as WarningIcon, CheckCircle as SafeIcon, Search as ScanIcon } from '@mui/icons-material';
-import type { TheftDetectionResult } from '@/services/contentProtectionService';
+import type { TheftDetectionResult } from '@features/protection/services';
 import type { Dispatch, SetStateAction } from 'react';
 
 export interface TheftDetectionProps {

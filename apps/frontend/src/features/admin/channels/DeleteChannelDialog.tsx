@@ -8,7 +8,7 @@
 import React from 'react';
 import { Alert } from '@mui/material';
 import { BaseDialog } from '@shared/components/base';
-import type { AdminChannelInfo } from '@/services/admin/channelsService';
+import type { AdminChannelInfo } from '@features/admin/services';
 
 // =============================================================================
 // Types

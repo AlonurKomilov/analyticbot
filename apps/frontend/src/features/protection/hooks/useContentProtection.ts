@@ -11,7 +11,7 @@ import React, { useState, useCallback } from 'react';
 import {
     contentProtectionService,
     type TheftDetectionResult,
-} from '@/services/contentProtectionService';
+} from '@features/protection/services';
 
 export type UseContentProtectionReturn = {
     // global

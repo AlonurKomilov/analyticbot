@@ -17,7 +17,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningIcon from '@mui/icons-material/Warning';
 import ErrorIcon from '@mui/icons-material/Error';
 
-import { SecurityMonitor } from '@/services/ai/securityMonitoring';
+import { SecurityMonitor } from '@features/ai-services/services';
 
 interface ActiveMonitorsProps {
   monitors: SecurityMonitor[];

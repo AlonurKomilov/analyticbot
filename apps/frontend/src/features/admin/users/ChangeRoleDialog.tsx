@@ -8,7 +8,7 @@
 import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { BaseDialog } from '@shared/components/base';
-import type { AdminUserInfo } from '@/services/admin/usersService';
+import type { AdminUserInfo } from '@features/admin/services';
 import type { UserRole } from './hooks/useUserManagement';
 
 // =============================================================================

@@ -9,7 +9,7 @@ import {
   ForecastResult,
   AnalyticsInsight,
   ForecastOptions
-} from '@/services/ai/predictiveAnalytics';
+} from '@features/ai-services/services';
 
 export interface UsePredictiveAnalyticsOptions {
   channelId?: string;

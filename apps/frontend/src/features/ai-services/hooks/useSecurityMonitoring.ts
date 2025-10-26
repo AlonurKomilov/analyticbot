@@ -10,7 +10,7 @@ import {
   SecurityAlert,
   SecurityMonitor,
   SecurityAnalysisResult
-} from '@/services/ai/securityMonitoring';
+} from '@features/ai-services/services';
 
 export const useSecurityMonitoring = () => {
   const [stats, setStats] = useState<SecurityStats>({

@@ -19,7 +19,7 @@ import {
     type AdminChannelInfo,
     type ChannelStatistics,
     type ChannelAuditLog,
-} from '@/services/admin/channelsService';
+} from '@features/admin/services';
 
 // =============================================================================
 // Types

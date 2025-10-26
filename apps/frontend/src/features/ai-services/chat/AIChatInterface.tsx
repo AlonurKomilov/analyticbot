@@ -35,7 +35,7 @@ import {
     type ChatQuestionResponse,
     type ChatMessage,
     type SuggestedQuestionsResponse
-} from '@/services/ai/chatService';
+} from '@features/ai-services/services';
 
 export interface AIChatInterfaceProps {
     channelId?: number;

@@ -18,7 +18,7 @@ import { ThreatAlerts } from './ThreatAlerts';
 import { SecurityMetrics } from './SecurityMetrics';
 import { ActiveMonitors } from './ActiveMonitors';
 import { SecuritySettings } from './SecuritySettings';
-import { SecurityAlert } from '@/services/ai/securityMonitoring';
+import { SecurityAlert } from '@features/ai-services/services';
 import { useDemoMode, loadMockData } from '@/__mocks__/utils/demoGuard';
 
 // Mock data will be loaded dynamically based on demo mode

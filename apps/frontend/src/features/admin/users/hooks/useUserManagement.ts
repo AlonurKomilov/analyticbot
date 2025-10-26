@@ -35,7 +35,7 @@ import {
     type UserStatistics,
     type UserAuditLog,
     type UserRole,
-} from '@/services/admin/usersService';
+} from '@features/admin/services';
 
 // Re-export types for convenience
 export type { UserStatistics, UserAuditLog, UserRole };

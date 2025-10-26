@@ -27,7 +27,7 @@ import {
     Person as PersonIcon,
 } from '@mui/icons-material';
 import { BaseDataTable, BaseColumn } from '@shared/components/base';
-import type { AdminUserInfo } from '@/services/admin/usersService';
+import type { AdminUserInfo } from '@features/admin/services';
 import { spacing, colors, typography } from '@/theme/tokens';
 
 // =============================================================================

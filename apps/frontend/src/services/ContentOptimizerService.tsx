@@ -23,7 +23,7 @@ import {
     CheckCircle as SuccessIcon
 } from '@mui/icons-material';
 
-import { AIServicesAPI, ContentOptimizerAPI } from './aiServicesAPI';
+import { AIServicesAPI, ContentOptimizerAPI } from '@features/ai-services/api';
 import { useDemoMode, loadMockData } from '../__mocks__/utils/demoGuard';
 
 // Using Demo Guard utility for clean demo mode management

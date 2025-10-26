@@ -23,7 +23,7 @@ import {
     Assessment as StatsIcon,
 } from '@mui/icons-material';
 import { BaseDataTable, BaseColumn } from '@shared/components/base';
-import type { AdminChannelInfo } from '@/services/admin/channelsService';
+import type { AdminChannelInfo } from '@features/admin/services';
 import { spacing, colors, typography } from '@/theme/tokens';
 
 // =============================================================================

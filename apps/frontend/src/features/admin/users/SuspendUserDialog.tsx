@@ -8,7 +8,7 @@
 import React from 'react';
 import { TextField, Alert, Box } from '@mui/material';
 import { BaseDialog } from '@shared/components/base';
-import type { AdminUserInfo } from '@/services/admin/usersService';
+import type { AdminUserInfo } from '@features/admin/services';
 import { spacing } from '@/theme/tokens';
 
 // =============================================================================

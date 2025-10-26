@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { alertsService, Alert, AlertRule, LiveMonitoringMetrics } from '@/services/ai/alertsService';
+import { alertsService, Alert, AlertRule, LiveMonitoringMetrics } from '@features/ai-services/services';
 
 export interface UseAlertsOptions {
   channelId?: string;

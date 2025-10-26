@@ -47,7 +47,7 @@ import {
     sharingService,
     type ShareListItem,
     type TTLOption
-} from '@/services/sharingService';
+} from '@features/posts/services';
 
 export interface ShareLinkManagerProps {
     channelId?: string;

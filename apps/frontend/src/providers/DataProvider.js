@@ -265,7 +265,7 @@ export class ApiDataProvider extends DataProvider {
         console.log(`🎭 Getting demo fallback data for endpoint: ${endpoint}`);
 
         // Import unified analytics service for demo data
-        const { analyticsService } = await import('../services/analyticsService.js');
+        const { analyticsService } = await import('@features/analytics/services');
 
         if (endpoint.includes('/channels')) {
             console.log('   📺 Returning channels fallback data');

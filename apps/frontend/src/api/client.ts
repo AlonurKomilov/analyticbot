@@ -38,6 +38,8 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/auth/register': 10000,
   '/auth/me': 10000,
   '/auth/refresh': 10000,
+  '/analytics/channels': 60000, // Channels can take longer (60s)
+  '/channels': 60000, // Channel operations can take longer (60s)
   '/analytics/': 25000,
   'default': 30000
 };

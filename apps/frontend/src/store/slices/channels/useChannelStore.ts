@@ -57,7 +57,19 @@ export const useChannelStore = create<ChannelState>()(
         console.log('✅ Channels loaded:', channels?.length || 0);
       } catch (error) {
         console.error('❌ Failed to load channels:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load channels';
+        
+        // Provide helpful error message
+        let errorMessage = 'Failed to load channels';
+        if (error instanceof Error) {
+          if (error.message.includes('timeout')) {
+            errorMessage = 'API request timed out - please check your connection or try again';
+          } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+            errorMessage = 'Cannot connect to API - please check if the backend is running';
+          } else {
+            errorMessage = error.message;
+          }
+        }
+        
         set({
           channels: [],
           error: errorMessage,

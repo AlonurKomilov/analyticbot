@@ -48,7 +48,7 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
             </Box>
         );
     }
-    
+
     const analyticsHook = useAllAnalytics(channelId);    const [trends, setTrends] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
 

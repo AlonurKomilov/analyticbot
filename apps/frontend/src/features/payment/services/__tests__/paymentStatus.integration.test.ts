@@ -4,8 +4,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { PaymentStatus, normalizePaymentStatus } from '../../../types/payment';
-import { validatePaymentResponse } from '../../../validation/apiValidators';
+import { PaymentStatus, normalizePaymentStatus } from '@/types';
+import { validatePaymentResponse } from '@/validation/apiValidators';
 
 describe('Payment Status Integration Tests', () => {
   describe('Payment Status Normalization', () => {

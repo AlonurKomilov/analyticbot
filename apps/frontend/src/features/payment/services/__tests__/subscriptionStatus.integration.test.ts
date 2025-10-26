@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SubscriptionStatus, normalizeSubscriptionStatus } from '../../../types/payment';
-import { validateSubscriptionResponse } from '../../../validation/apiValidators';
-import { getSubscriptionStatusMessage } from '../../../utils/subscriptionMessages';
+import { SubscriptionStatus, normalizeSubscriptionStatus } from '@/types';
+import { validateSubscriptionResponse } from '@/validation/apiValidators';
+import { getSubscriptionStatusMessage } from '@shared/utils/subscriptionMessages';
 
 describe('Subscription Status Integration Tests', () => {
   describe('Subscription Status Normalization', () => {

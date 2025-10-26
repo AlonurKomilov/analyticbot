@@ -23,7 +23,7 @@ import {
   History,
   CalendarToday
 } from '@mui/icons-material';
-import { formatCurrency, formatDate, getStatusColor, getStatusIcon, calculateDaysUntilNextBilling } from '../utils/paymentUtils';
+import { formatCurrency, formatDate, getStatusColor, getStatusIcon, calculateDaysUntilNextBilling } from '@features/payment/utils/paymentUtils';
 
 interface PaymentMethod {
   last4?: string;

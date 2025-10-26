@@ -29,7 +29,7 @@ import {
   Schedule,
   Refresh
 } from '@mui/icons-material';
-import { formatCurrency, formatDate } from '../utils/paymentUtils';
+import { formatCurrency, formatDate } from '@features/payment/utils/paymentUtils';
 
 // Types
 type PaymentStatus = 'succeeded' | 'paid' | 'failed' | 'pending' | string;

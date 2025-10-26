@@ -38,11 +38,13 @@ export type {
 export type {
   User,
   UserRole,
+  UserStatus,
   UserPreferences,
   Channel,
   ChannelMetrics,
   Post,
   PostStatus,
+  BackendPostStatus,
   AnalyticsOverview,
   GrowthMetrics,
   GrowthDataPoint,
@@ -52,7 +54,52 @@ export type {
   MediaFile,
   MediaType,
   UploadProgress,
+  Alert,
+  AnalyticsPeriod,
 } from './api';
+
+// Functions from API types
+export {
+  mapBackendPostStatus,
+} from './api';
+
+// Payment & Subscription Types
+export type {
+  PaymentStatus,
+  LegacyPaymentStatus,
+  SubscriptionStatus,
+  LegacySubscriptionStatus,
+} from './payment';
+
+// Functions from payment types
+export {
+  normalizePaymentStatus,
+  normalizeSubscriptionStatus,
+  isPaymentSuccessful,
+  isPaymentTerminal,
+  isSubscriptionActive,
+} from './payment';
+
+// Subscription & Tier Types
+export type {
+  UserTier,
+  TierLimits,
+  TierDisplayInfo,
+} from './subscription';
+
+// Functions from subscription types
+export {
+  getTierLimits,
+  hasFeatureAccess,
+  hasTierAccess,
+  getTierUpgradeRecommendation,
+  isValidTier,
+  getTierByName,
+  compareTiers,
+  getAllTiers,
+  getTierBenefits,
+  TIER_DISPLAY_INFO,
+} from './subscription';
 
 // Utility Models
 export type {

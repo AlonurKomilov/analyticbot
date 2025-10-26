@@ -20,7 +20,7 @@ import type {
   HealthCheckResponse,
   StorageFilesResponse,
   ApiError
-} from '../types/api';
+} from '@/types';
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {

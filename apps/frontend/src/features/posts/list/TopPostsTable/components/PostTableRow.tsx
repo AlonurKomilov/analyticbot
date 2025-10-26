@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import PostMetricBadge from './PostMetricBadge';
 import PostActionMenu from './PostActionMenu';
-import { formatNumber, formatDate, calculateEngagementRate, type Post } from '../utils/postTableUtils';
+import { formatNumber, formatDate, calculateEngagementRate, type Post } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
 
 interface PostTableRowProps {
     post: Post;

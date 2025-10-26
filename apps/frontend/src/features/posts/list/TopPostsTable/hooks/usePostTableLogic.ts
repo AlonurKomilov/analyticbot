@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAnalyticsStore } from '@store';
 import { useChannelStore } from '@store';
 import { useUIStore } from '@store';
-import { calculateSummaryStats, type Post, type SummaryStats } from '../utils/postTableUtils';
+import { calculateSummaryStats, type Post, type SummaryStats } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
 import { DEFAULT_DEMO_CHANNEL_ID } from '@/__mocks__/constants';
 
 interface UsePostTableLogicReturn {

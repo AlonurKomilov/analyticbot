@@ -4,7 +4,7 @@
  * Provides user-friendly messages and action guidance for subscription statuses
  */
 
-import { SubscriptionStatus } from '../types/payment';
+import { SubscriptionStatus } from '@/types';
 
 /**
  * Status message interface

@@ -9,7 +9,7 @@ import {
     Visibility as ViewsIcon,
     TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
-import { formatNumber } from '../utils/postTableUtils';
+import { formatNumber } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
 
 interface SummaryStats {
     totalViews: number;

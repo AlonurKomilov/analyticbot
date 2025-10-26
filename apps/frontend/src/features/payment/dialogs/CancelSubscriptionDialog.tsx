@@ -24,7 +24,7 @@ import {
   Cancel
 } from '@mui/icons-material';
 import { Button } from '@shared/components';
-import { formatDate } from '../utils/paymentUtils';
+import { formatDate } from '@features/payment/utils/paymentUtils';
 
 interface Subscription {
   current_period_end?: string;

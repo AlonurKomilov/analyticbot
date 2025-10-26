@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { UserTier, getTierLimits, TIER_DISPLAY_INFO } from '../subscription';
-import { hasTierAccess, hasFeatureAccess } from '../../utils/tierComparison';
+import { hasTierAccess, hasFeatureAccess } from '@shared/utils/tierComparison';
 
 describe('User Tier System Integration Tests', () => {
   describe('Tier Definitions', () => {

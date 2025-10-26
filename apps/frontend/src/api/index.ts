@@ -71,7 +71,7 @@ export type {
   ExportFormat,
   ExportRequest,
   ExportResponse
-} from '../types/api';
+} from '@/types';
 
 // Default export (main client instance)
 export default apiClient;

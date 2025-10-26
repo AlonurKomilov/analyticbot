@@ -12,7 +12,7 @@ import {
   Cancel,
   HourglassEmpty
 } from '@mui/icons-material';
-import { SubscriptionStatus } from '../../../types/payment';
+import { SubscriptionStatus } from '@/types';
 
 export type StatusColor = 'success' | 'info' | 'warning' | 'error' | 'default';
 

@@ -5,7 +5,7 @@
  * Created: October 25, 2025
  */
 
-import { UserTier, getTierLimits, hasFeatureAccess as baseHasFeatureAccess } from '../types/subscription';
+import { UserTier, getTierLimits, hasFeatureAccess as baseHasFeatureAccess } from '@/types';
 
 /**
  * Tier hierarchy for comparisons

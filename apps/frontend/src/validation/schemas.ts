@@ -13,9 +13,9 @@
 import {
   PaymentStatus,
   SubscriptionStatus
-} from '../types/payment';
-import { UserTier } from '../types/subscription';
-import { UserStatus, PostStatus } from '../types/api';
+} from '@/types';
+import { UserTier } from '@/types';
+import { UserStatus, PostStatus } from '@/types';
 
 // ============================================================================
 // Payment & Subscription Schemas

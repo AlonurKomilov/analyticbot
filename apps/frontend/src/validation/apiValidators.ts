@@ -17,9 +17,9 @@ import {
   createValidationError
 } from './schemas';
 
-import { normalizePaymentStatus, normalizeSubscriptionStatus } from '../types/payment';
-import { normalizeUser } from '../utils/userMigration';
-import { normalizePost } from '../utils/postStatus';
+import { normalizePaymentStatus, normalizeSubscriptionStatus } from '@/types';
+import { normalizeUser } from '@shared/utils/userMigration';
+import { normalizePost } from '@shared/utils/postStatus';
 
 // ============================================================================
 // API Response Validators

@@ -31,7 +31,7 @@ import {
   Close
 } from '@mui/icons-material';
 import { Button } from '@shared/components';
-import { formatCurrency, formatDate } from '../utils/paymentUtils';
+import { formatCurrency, formatDate } from '@features/payment/utils/paymentUtils';
 
 type PaymentStatus = 'succeeded' | 'paid' | 'failed' | 'pending' | string;
 type StatusColor = 'success' | 'error' | 'warning' | 'default';

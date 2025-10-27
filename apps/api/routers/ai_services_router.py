@@ -206,9 +206,11 @@ async def predict_churn(
             churn_probability=prediction.churn_probability,
             risk_level=prediction.risk_level.value,
             key_factors=prediction.risk_factors,
-            recommendations=[f"Apply {strategy}" for strategy in prediction.protective_factors]
-            if request.include_recommendations
-            else [],
+            recommendations=(
+                [f"Apply {strategy}" for strategy in prediction.protective_factors]
+                if request.include_recommendations
+                else []
+            ),
         )
 
     except Exception as e:
@@ -238,7 +240,8 @@ async def get_churn_predictor_stats():
 
 @router.post("/security/analyze", response_model=SecurityAnalysisResponse)
 async def analyze_security(
-    request: SecurityAnalysisRequest, current_user_id: int = Depends(get_current_user_id)
+    request: SecurityAnalysisRequest,
+    current_user_id: int = Depends(get_current_user_id),
 ):
     """
     🔒 Analyze content and user behavior for security threats
@@ -252,7 +255,10 @@ async def analyze_security(
     try:
         # Check if this is a demo user and get appropriate demo data
         from tests.mocks.data.ai_services.mock_data import get_mock_security_analysis
-        from tests.mocks.data.auth_fixtures import get_demo_user_type_by_id, is_demo_user_by_id
+        from tests.mocks.data.auth_fixtures import (
+            get_demo_user_type_by_id,
+            is_demo_user_by_id,
+        )
 
         # Check if current user is a demo user (authenticated via JWT)
         if current_user_id and is_demo_user_by_id(str(current_user_id)):
@@ -272,32 +278,38 @@ async def analyze_security(
         # ✅ Issue #3 Phase 4: Basic security analysis implementation
         # For production users, provide basic heuristic-based analysis
         # Full AI/ML integration is a future enhancement (requires external services)
-        
+
         content = request.content if request.content else ""
         content_lower = content.lower()
-        
+
         # Basic heuristic checks
         detected_risks = []
         risk_score = 0
-        
+
         # Check for suspicious URLs
         suspicious_keywords = ["http://", "https://", "bit.ly", "tinyurl"]
         if any(keyword in content_lower for keyword in suspicious_keywords):
             detected_risks.append("External links detected - verify before clicking")
             risk_score += 20
-        
+
         # Check for financial/payment related content
         financial_keywords = ["payment", "credit card", "bank", "password", "login"]
         if any(keyword in content_lower for keyword in financial_keywords):
             detected_risks.append("Financial/sensitive information detected")
             risk_score += 15
-        
+
         # Check for urgency/scam indicators
-        urgency_keywords = ["urgent", "act now", "limited time", "click here", "verify account"]
+        urgency_keywords = [
+            "urgent",
+            "act now",
+            "limited time",
+            "click here",
+            "verify account",
+        ]
         if any(keyword in content_lower for keyword in urgency_keywords):
             detected_risks.append("Urgency indicators detected - potential phishing")
             risk_score += 25
-        
+
         # Calculate threat level and security score
         if risk_score >= 40:
             threat_level = "high"
@@ -308,7 +320,7 @@ async def analyze_security(
         else:
             threat_level = "low"
             security_score = max(0, 95 - risk_score)
-        
+
         # Generate recommendations
         recommendations = []
         if detected_risks:
@@ -321,11 +333,13 @@ async def analyze_security(
         else:
             recommendations.append("Content appears safe - no obvious threats detected")
             recommendations.append("Always practice good security hygiene")
-        
+
         return SecurityAnalysisResponse(
             threat_level=threat_level,
             security_score=security_score,
-            detected_risks=detected_risks if detected_risks else ["No immediate threats detected"],
+            detected_risks=(
+                detected_risks if detected_risks else ["No immediate threats detected"]
+            ),
             recommendations=recommendations,
         )
 
@@ -334,7 +348,8 @@ async def analyze_security(
     except Exception as e:
         logger.error(f"AI Security Analysis error: {e}")
         raise HTTPException(
-            status_code=500, detail="AI Security Analysis service temporarily unavailable"
+            status_code=500,
+            detail="AI Security Analysis service temporarily unavailable",
         )
 
 

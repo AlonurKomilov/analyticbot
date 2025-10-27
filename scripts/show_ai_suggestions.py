@@ -29,7 +29,7 @@ async def main():
             print(f"  • {issue_type}: {len(issue_list)}")
             # Show first few issues as examples
             for i, issue in enumerate(issue_list[:3]):
-                print(f"    {i+1}. {issue}")
+                print(f"    {i + 1}. {issue}")
             if len(issue_list) > 3:
                 print(f"    ... and {len(issue_list) - 3} more")
 

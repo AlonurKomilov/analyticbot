@@ -36,7 +36,7 @@ async def get_channel_repository() -> ChannelRepository:
 def get_chart_service() -> ChartServiceProtocol:
     """
     Get chart service instance from DI container.
-    
+
     ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
     container = get_container()
@@ -287,11 +287,13 @@ async def handle_schedule(
             try:
                 # Use new ScheduleManager (Clean Architecture)
                 await schedule_manager.create_scheduled_post(
-                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt,
                 )
             except Exception as e:
                 logger.warning(f"Failed to schedule post: {e}")
-                pass
         await message.reply(
             i18n.get(
                 "schedule-success",

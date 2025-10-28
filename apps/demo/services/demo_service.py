@@ -126,7 +126,11 @@ class DemoService:
         elif demo_type == "testing":
             # Include some errors for testing
             base_settings.update(
-                {"success_rate": 0.95, "error_simulation": True, "quality_level": "medium"}
+                {
+                    "success_rate": 0.95,
+                    "error_simulation": True,
+                    "quality_level": "medium",
+                }
             )
         elif demo_type == "limited":
             # Basic demo experience

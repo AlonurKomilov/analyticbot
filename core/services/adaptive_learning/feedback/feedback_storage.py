@@ -117,18 +117,22 @@ class FeedbackStorageService:
                 total_feedback = cursor.fetchone()[0]
 
                 # Count by type
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT feedback_type, COUNT(*)
                     FROM feedback
                     GROUP BY feedback_type
-                """)
+                """
+                )
                 feedback_by_type = dict(cursor.fetchall())
 
                 # Count recent feedback (last 24 hours)
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT COUNT(*) FROM feedback
                     WHERE timestamp > datetime('now', '-1 day')
-                """)
+                """
+                )
                 recent_feedback = cursor.fetchone()[0]
 
             return {
@@ -364,13 +368,15 @@ class FeedbackStorageService:
 
                 # Count items to be deleted
                 cursor.execute(
-                    "SELECT COUNT(*) FROM feedback WHERE timestamp < ?", (cutoff_date.isoformat(),)
+                    "SELECT COUNT(*) FROM feedback WHERE timestamp < ?",
+                    (cutoff_date.isoformat(),),
                 )
                 count_to_delete = cursor.fetchone()[0]
 
                 # Delete old feedback
                 cursor.execute(
-                    "DELETE FROM feedback WHERE timestamp < ?", (cutoff_date.isoformat(),)
+                    "DELETE FROM feedback WHERE timestamp < ?",
+                    (cutoff_date.isoformat(),),
                 )
 
                 conn.commit()
@@ -442,13 +448,15 @@ class FeedbackStorageService:
                 rating_stats = cursor.fetchone()
 
                 # Daily feedback volume (last 7 days)
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT DATE(timestamp) as day, COUNT(*)
                     FROM feedback
                     WHERE timestamp > datetime('now', '-7 days')
                     GROUP BY DATE(timestamp)
                     ORDER BY day
-                """)
+                """
+                )
                 daily_volume = dict(cursor.fetchall())
 
                 # Top users by feedback count
@@ -493,7 +501,8 @@ class FeedbackStorageService:
                 cursor = conn.cursor()
 
                 # Create feedback table
-                cursor.execute("""
+                cursor.execute(
+                    """
                     CREATE TABLE IF NOT EXISTS feedback (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         user_id TEXT NOT NULL,
@@ -506,7 +515,8 @@ class FeedbackStorageService:
                         metadata TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
 
                 # Create indexes for better performance
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON feedback(user_id)")
@@ -573,7 +583,7 @@ class FeedbackStorageService:
                             feedback.rating,
                             feedback.feedback_text,
                             feedback.timestamp.isoformat(),
-                            json.dumps(feedback.metadata) if feedback.metadata else None,
+                            (json.dumps(feedback.metadata) if feedback.metadata else None),
                         ),
                     )
 
@@ -591,7 +601,8 @@ class FeedbackStorageService:
             # Load feedback from last 7 days
             cutoff_date = datetime.utcnow() - timedelta(days=7)
             recent_feedback = await self.get_feedback(
-                time_range=(cutoff_date, datetime.utcnow()), limit=self.config.cache_size_limit
+                time_range=(cutoff_date, datetime.utcnow()),
+                limit=self.config.cache_size_limit,
             )
 
             # Organize by user

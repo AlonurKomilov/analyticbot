@@ -80,9 +80,12 @@ class FFmpegVideoProcessor:
             # Build FFmpeg command
             cmd = [
                 "ffmpeg",
-                "-i", str(input_path),
-                "-vf", filter_str,
-                "-codec:a", "copy",  # Copy audio without re-encoding
+                "-i",
+                str(input_path),
+                "-vf",
+                filter_str,
+                "-codec:a",
+                "copy",  # Copy audio without re-encoding
                 "-y",  # Overwrite output file
                 str(output_path),
             ]
@@ -98,16 +101,12 @@ class FFmpegVideoProcessor:
 
             if process.returncode != 0:
                 error_msg = stderr.decode() if stderr else "Unknown error"
-                raise RuntimeError(
-                    f"FFmpeg failed with code {process.returncode}: {error_msg}"
-                )
+                raise RuntimeError(f"FFmpeg failed with code {process.returncode}: {error_msg}")
 
             return str(output_path)
 
         except FileNotFoundError:
-            raise RuntimeError(
-                "FFmpeg not found. Please install FFmpeg to use video watermarking."
-            )
+            raise RuntimeError("FFmpeg not found. Please install FFmpeg to use video watermarking.")
         except Exception as e:
             raise RuntimeError(f"Failed to add watermark to video: {e}")
 

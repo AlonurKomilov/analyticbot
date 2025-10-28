@@ -133,7 +133,9 @@ class DataProcessor:
         return prepared_data
 
     def validate_data_quality(
-        self, data: list[dict[str, Any]], quality_thresholds: dict[str, float] | None = None
+        self,
+        data: list[dict[str, Any]],
+        quality_thresholds: dict[str, float] | None = None,
     ) -> dict[str, Any]:
         """
         Comprehensive data quality validation.
@@ -188,7 +190,9 @@ class DataProcessor:
         return quality_report
 
     def transform_data_for_learning(
-        self, data: list[dict[str, Any]], transformation_config: dict[str, Any] | None = None
+        self,
+        data: list[dict[str, Any]],
+        transformation_config: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """
         Apply transformations to prepare data for learning.
@@ -273,12 +277,16 @@ class DataProcessor:
             "total_samples_processed": sum(
                 batch.processed_data_size for batch in self.batch_history
             ),
-            "average_batch_size": np.mean([batch.batch_size for batch in self.batch_history])
-            if self.batch_history
-            else 0,
-            "average_quality_score": np.mean([batch.quality_score for batch in self.batch_history])
-            if self.batch_history
-            else 0,
+            "average_batch_size": (
+                np.mean([batch.batch_size for batch in self.batch_history])
+                if self.batch_history
+                else 0
+            ),
+            "average_quality_score": (
+                np.mean([batch.quality_score for batch in self.batch_history])
+                if self.batch_history
+                else 0
+            ),
             "data_statistics": self.data_statistics,
         }
 
@@ -345,7 +353,9 @@ class DataProcessor:
         self.data_statistics["last_update"] = datetime.now().isoformat()
 
     def _balanced_preparation(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Balanced preparation strategy."""
         if not existing_data:
@@ -367,7 +377,9 @@ class DataProcessor:
         }
 
     def _recent_focus_preparation(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Recent focus preparation strategy."""
         # Focus heavily on new data (90% new, 10% existing)
@@ -389,7 +401,9 @@ class DataProcessor:
         }
 
     def _all_data_preparation(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """All data preparation strategy."""
         combined_data = new_data + (existing_data or [])

@@ -72,10 +72,16 @@ class HealthCheck:
 
         # Register dependencies
         health_checker.register_dependency(
-            "mtproto_config", check_mtproto_config, DependencyType.SERVICE, critical=True
+            "mtproto_config",
+            check_mtproto_config,
+            DependencyType.SERVICE,
+            critical=True,
         )
         health_checker.register_dependency(
-            "telegram_client", check_tg_client, DependencyType.EXTERNAL_API, critical=True
+            "telegram_client",
+            check_tg_client,
+            DependencyType.EXTERNAL_API,
+            critical=True,
         )
 
         # Perform comprehensive health check
@@ -95,9 +101,11 @@ class HealthCheck:
                     "phase": "Enhanced Health Monitoring",
                     "legacy_components": {
                         "mtproto_app": "healthy",
-                        "tg_client": await self._check_tg_client_health()
-                        if settings.MTPROTO_ENABLED
-                        else "disabled",
+                        "tg_client": (
+                            await self._check_tg_client_health()
+                            if settings.MTPROTO_ENABLED
+                            else "disabled"
+                        ),
                         "configuration": self._check_configuration_health(settings),
                     },
                     "metadata": {
@@ -230,7 +238,11 @@ class HealthCheck:
             components["configuration"] = "disabled"
             components["tg_client"] = "disabled"
 
-        return {"ready": ready, "timestamp": datetime.now().isoformat(), "components": components}
+        return {
+            "ready": ready,
+            "timestamp": datetime.now().isoformat(),
+            "components": components,
+        }
 
     async def get_liveness_status(self) -> dict[str, Any]:
         """Get liveness status for deployment health checks.

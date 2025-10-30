@@ -144,8 +144,9 @@ fi
 
 case $SERVICE in
     "api"|"")
-        # Start API with hot reload - Development Environment Port 11400
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
+        # Start API with 2 workers - Development Environment Port 11400
+        # Note: --reload is disabled when using multiple workers
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --workers 2 --log-level debug' 11400
         ;;
     "bot")
         # Start Bot

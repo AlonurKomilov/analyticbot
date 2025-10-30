@@ -6,7 +6,6 @@ Manages post lifecycle and status transitions
 """
 
 import logging
-from datetime import datetime
 
 from .models import DeliveryResult, DeliveryStats
 from .protocols import AnalyticsRepository, ScheduleRepository
@@ -93,9 +92,7 @@ class DeliveryStatusTracker:
         """
         valid_statuses = {"pending", "delivered", "failed", "cancelled"}
         if new_status not in valid_statuses:
-            raise ValueError(
-                f"Invalid status: {new_status}. Must be one of {valid_statuses}"
-            )
+            raise ValueError(f"Invalid status: {new_status}. Must be one of {valid_statuses}")
 
         # Get current status to validate transition
         current_post = await self._schedule_repo.get_post_by_id(post_id)
@@ -112,9 +109,7 @@ class DeliveryStatusTracker:
             return False
 
         # Update status in repository
-        await self._schedule_repo.update_post_status(
-            post_id=post_id, status=new_status
-        )
+        await self._schedule_repo.update_post_status(post_id=post_id, status=new_status)
 
         # Store additional metadata for failed posts
         if new_status == "failed" and error_message:
@@ -124,9 +119,7 @@ class DeliveryStatusTracker:
         if new_status == "delivered" and message_id:
             await self._schedule_repo.store_message_id(post_id, message_id)
 
-        logger.info(
-            f"Updated post {post_id} status: {current_post.status} -> {new_status}"
-        )
+        logger.info(f"Updated post {post_id} status: {current_post.status} -> {new_status}")
         return True
 
     async def mark_as_cancelled(self, post_id: int, reason: str | None = None) -> bool:
@@ -161,9 +154,7 @@ class DeliveryStatusTracker:
             DeliveryStats with aggregated metrics
         """
         # Fetch counts from repository
-        total_posts = await self._schedule_repo.count_posts(
-            user_id=user_id, channel_id=channel_id
-        )
+        total_posts = await self._schedule_repo.count_posts(user_id=user_id, channel_id=channel_id)
 
         delivered_count = await self._schedule_repo.count_posts_by_status(
             status="delivered", user_id=user_id, channel_id=channel_id
@@ -205,9 +196,7 @@ class DeliveryStatusTracker:
         Returns:
             List of (post_id, error_message) tuples
         """
-        return await self._schedule_repo.get_failed_posts_with_errors(
-            user_id=user_id, limit=limit
-        )
+        return await self._schedule_repo.get_failed_posts_with_errors(user_id=user_id, limit=limit)
 
     def _is_valid_transition(self, current_status: str, new_status: str) -> bool:
         """
@@ -226,9 +215,7 @@ class DeliveryStatusTracker:
         allowed_transitions = self.VALID_TRANSITIONS.get(current_status, [])
         return new_status in allowed_transitions
 
-    async def cleanup_old_posts(
-        self, days_old: int = 30, statuses: list[str] | None = None
-    ) -> int:
+    async def cleanup_old_posts(self, days_old: int = 30, statuses: list[str] | None = None) -> int:
         """
         Clean up old posts in terminal states
 

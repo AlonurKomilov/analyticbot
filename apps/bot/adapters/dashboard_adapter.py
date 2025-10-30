@@ -57,7 +57,10 @@ class BotDashboardAdapter:
         """
         try:
             if not self.visualization_engine:
-                return {"success": False, "error": "Visualization engine not initialized"}
+                return {
+                    "success": False,
+                    "error": "Visualization engine not initialized",
+                }
 
             return await self.visualization_engine.create_line_chart(
                 df, x_column, y_column, title, theme
@@ -89,7 +92,10 @@ class BotDashboardAdapter:
         """
         try:
             if not self.visualization_engine:
-                return {"success": False, "error": "Visualization engine not initialized"}
+                return {
+                    "success": False,
+                    "error": "Visualization engine not initialized",
+                }
 
             return await self.visualization_engine.create_bar_chart(
                 df, x_column, y_column, title, orientation
@@ -123,7 +129,10 @@ class BotDashboardAdapter:
         """
         try:
             if not self.visualization_engine:
-                return {"success": False, "error": "Visualization engine not initialized"}
+                return {
+                    "success": False,
+                    "error": "Visualization engine not initialized",
+                }
 
             return await self.visualization_engine.create_scatter_plot(
                 df, x_column, y_column, title, color_column, size_column
@@ -132,9 +141,7 @@ class BotDashboardAdapter:
             logger.error(f"Failed to create scatter plot: {e}")
             return {"success": False, "error": str(e)}
 
-    async def create_heatmap(
-        self, df: pd.DataFrame, title: str | None = None
-    ) -> dict[str, Any]:
+    async def create_heatmap(self, df: pd.DataFrame, title: str | None = None) -> dict[str, Any]:
         """
         Create a heatmap visualization
 
@@ -147,7 +154,10 @@ class BotDashboardAdapter:
         """
         try:
             if not self.visualization_engine:
-                return {"success": False, "error": "Visualization engine not initialized"}
+                return {
+                    "success": False,
+                    "error": "Visualization engine not initialized",
+                }
 
             return await self.visualization_engine.create_heatmap(df, title)
         except Exception as e:

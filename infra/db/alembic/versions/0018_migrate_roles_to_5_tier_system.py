@@ -73,12 +73,14 @@ def upgrade():
     # Step 1: Check current role distribution
     print("\n📊 Step 1: Analyzing current role distribution...")
     result = connection.execute(
-        text(f"""
+        text(
+            f"""
             SELECT role, COUNT(*) as count
             FROM {admin_table}
             GROUP BY role
             ORDER BY count DESC
-        """)
+        """
+        )
     )
 
     role_counts = {row[0]: row[1] for row in result}
@@ -125,21 +127,25 @@ def upgrade():
             print(f"   Description: {description}")
 
             connection.execute(
-                text(f"""
+                text(
+                    f"""
                     UPDATE {admin_table}
                     SET role = :new_role
                     WHERE role = :old_role
-                """),
+                """
+                ),
                 {"new_role": new_role, "old_role": old_role},
             )
 
             # Verify migration
             verify_result = connection.execute(
-                text(f"""
+                text(
+                    f"""
                     SELECT COUNT(*)
                     FROM {admin_table}
                     WHERE role = :old_role
-                """),
+                """
+                ),
                 {"old_role": old_role},
             )
             remaining = verify_result.scalar()
@@ -157,12 +163,14 @@ def upgrade():
     print("\n✅ Step 4: Validating migration results...")
 
     result = connection.execute(
-        text(f"""
+        text(
+            f"""
             SELECT role, COUNT(*) as count
             FROM {admin_table}
             GROUP BY role
             ORDER BY count DESC
-        """)
+        """
+        )
     )
 
     new_role_counts = {row[0]: row[1] for row in result}
@@ -227,12 +235,14 @@ def downgrade():
     # Check current state
     print("\n📊 Current role distribution:")
     result = connection.execute(
-        text(f"""
+        text(
+            f"""
             SELECT role, COUNT(*) as count
             FROM {admin_table}
             GROUP BY role
             ORDER BY count DESC
-        """)
+        """
+        )
     )
 
     for row in result:
@@ -248,11 +258,13 @@ def downgrade():
 
     for new_role, old_role, description in rollbacks:
         result = connection.execute(
-            text(f"""
+            text(
+                f"""
                 SELECT COUNT(*)
                 FROM {admin_table}
                 WHERE role = :new_role
-            """),
+            """
+            ),
             {"new_role": new_role},
         )
         count = result.scalar()
@@ -261,11 +273,13 @@ def downgrade():
             print(f"   Rolling back '{new_role}' → '{old_role}' ({count} users)")
 
             connection.execute(
-                text(f"""
+                text(
+                    f"""
                     UPDATE {admin_table}
                     SET role = :old_role
                     WHERE role = :new_role
-                """),
+                """
+                ),
                 {"old_role": old_role, "new_role": new_role},
             )
 
@@ -276,12 +290,14 @@ def downgrade():
     # Validate rollback
     print("\n✅ Rollback validation:")
     result = connection.execute(
-        text(f"""
+        text(
+            f"""
             SELECT role, COUNT(*) as count
             FROM {admin_table}
             GROUP BY role
             ORDER BY count DESC
-        """)
+        """
+        )
     )
 
     print("   Role distribution after rollback:")

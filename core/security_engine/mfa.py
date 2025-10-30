@@ -46,7 +46,9 @@ class MFAManager:
     """
 
     def __init__(
-        self, cache: CachePort | None = None, security_events: SecurityEventsPort | None = None
+        self,
+        cache: CachePort | None = None,
+        security_events: SecurityEventsPort | None = None,
     ):
         self.config = get_security_config()
         self.cache = cache
@@ -501,7 +503,7 @@ class MFAManager:
         attempts_key = f"mfa_attempts:{user_id}"
 
         # Increment attempts counter
-        current_attempts = self._increment_in_cache(attempts_key)
+        self._increment_in_cache(attempts_key)
 
         # Note: For memory cache, we don't have TTL - attempts persist until restart
         # Apps layer should implement proper rate limiting with TTL via cache port

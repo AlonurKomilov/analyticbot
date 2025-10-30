@@ -50,14 +50,7 @@ class MockSpanContext:
 
 # Try to import OpenTelemetry components
 try:
-    from opentelemetry import trace
-    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-    from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
-    from opentelemetry.instrumentation.requests import RequestsInstrumentor
-    from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+    pass
 
     OTEL_AVAILABLE = True
 except ImportError:
@@ -105,7 +98,11 @@ class MTProtoTracer:
     @contextmanager
     def trace_request(self, method: str, account: str, dc: str) -> Generator[Any, None, None]:
         """Context manager for tracing MTProto requests."""
-        attributes = {"mtproto.method": method, "mtproto.account": account, "mtproto.dc": dc}
+        attributes = {
+            "mtproto.method": method,
+            "mtproto.account": account,
+            "mtproto.dc": dc,
+        }
 
         with self.trace_operation(f"request.{method}", **attributes) as span:
             yield span
@@ -263,7 +260,9 @@ _global_tracer: MTProtoTracer | None = None
 
 
 def initialize_global_tracer(
-    endpoint: str | None = None, sampling_ratio: float = 0.05, service_name: str = "mtproto"
+    endpoint: str | None = None,
+    sampling_ratio: float = 0.05,
+    service_name: str = "mtproto",
 ) -> MTProtoTracer:
     """Initialize global tracer instance."""
     global _global_tracer

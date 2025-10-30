@@ -120,7 +120,12 @@ class ChannelRepository(Protocol):
     """Channel repository interface using Protocol"""
 
     async def create_channel(
-        self, channel_id: int, user_id: int, title: str, username: str | None = None
+        self, 
+        channel_id: int, 
+        user_id: int, 
+        title: str, 
+        username: str | None = None,
+        description: str | None = None
     ) -> None:
         """Create a new channel"""
         ...
@@ -183,7 +188,7 @@ class ChannelRepository(Protocol):
         """
         ...
 
-    async def update_channel(self, channel_id: int, **kwargs) -> dict:
+    async def update_channel(self, channel_id: int, **kwargs) -> dict | None:
         """
         Update channel with provided fields
         
@@ -194,7 +199,7 @@ class ChannelRepository(Protocol):
             **kwargs: Fields to update (name, description, username, is_active, etc.)
         
         Returns:
-            Updated channel data
+            Updated channel dict or None if channel not found
         """
         ...
 

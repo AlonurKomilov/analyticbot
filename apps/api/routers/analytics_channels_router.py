@@ -12,6 +12,7 @@ from apps.api.services.telegram_validation_service import (
     ChannelValidationResult,
     TelegramValidationService,
 )
+from apps.api.middleware.auth import get_current_user  # Import auth dependency
 
 # ✅ PHASE 2: Redis caching for performance optimization
 from core.common.cache_decorator import cache_endpoint
@@ -41,7 +42,10 @@ class ChannelInfo(BaseModel):
     "", response_model=list[ChannelInfo]
 )  # Fixed: Empty path since main.py adds /analytics/channels
 @cache_endpoint(prefix="analytics:channels", ttl=600)  # Cache for 10 minutes
-async def get_analytics_channels(request: Request):
+async def get_analytics_channels(
+    request: Request,
+    current_user: dict = Depends(get_current_user)  # Use proper dependency
+):
     """
     ## 📺 Get User Channels for Analytics (CACHED)
 
@@ -73,15 +77,51 @@ async def get_analytics_channels(request: Request):
     ```
     """
     try:
-        # Authentication is handled by middleware
-        # Return empty list for now - user can add channels through the UI
-        logger.info("Fetching analytics channels")
-
-        # TODO: Implement actual database query
-        # For now, return empty list to allow dashboard to load
-        # Later this will query: SELECT * FROM channels WHERE user_id = current_user.id
-
-        return []
+        # Use current_user from dependency injection (proper auth)
+        user_id = current_user["id"]  # Extract ID from validated user dict
+        
+        logger.info(f"🔍 Fetching analytics channels for user_id={user_id}")
+        print(f"🔍 DEBUG: Fetching analytics channels for user_id={user_id}")  # Debug print
+        
+        # Get database pool from DI container
+        from apps.di import get_container
+        container = get_container()
+        pool = await container.database.asyncpg_pool()
+        
+        # Query user's channels from database
+        query = """
+            SELECT 
+                c.id,
+                c.title as name,
+                c.username,
+                c.created_at,
+                COUNT(sp.id) as total_posts
+            FROM channels c
+            LEFT JOIN scheduled_posts sp ON c.id = sp.channel_id
+            WHERE c.user_id = $1
+            GROUP BY c.id, c.title, c.username, c.created_at
+            ORDER BY c.created_at DESC
+        """
+        
+        async with pool.acquire() as conn:
+            rows = await conn.fetch(query, user_id)
+        
+        # Convert to response model
+        channels = [
+            ChannelInfo(
+                id=row["id"],
+                name=row["name"] or f"Channel {row['id']}",
+                username=row["username"],
+                subscriber_count=0,  # TODO: Fetch from Telegram API periodically
+                is_active=True,
+                created_at=row["created_at"],
+                last_analytics_update=None  # TODO: Track analytics update time
+            ).model_dump()  # ✅ Convert Pydantic model to dict for proper serialization
+            for row in rows
+        ]
+        
+        logger.info(f"Found {len(channels)} channels for user {user_id}")
+        return channels
 
     except Exception as e:
         logger.error(f"Failed to fetch analytics channels: {e}")

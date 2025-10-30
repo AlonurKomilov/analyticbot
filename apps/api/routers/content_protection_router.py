@@ -38,7 +38,8 @@ from core.services.bot.content.models import (
     WatermarkPosition,
 )
 
-router = APIRouter(prefix="/content", tags=["Content Protection"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["Content Protection"])
 
 
 @router.post("/watermark/image", response_model=APIContentProtectionResponse)

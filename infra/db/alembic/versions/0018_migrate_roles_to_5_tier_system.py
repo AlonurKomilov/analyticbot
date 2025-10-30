@@ -257,7 +257,7 @@ def downgrade():
         )
         count = result.scalar()
 
-        if count > 0:
+        if count is not None and count > 0:
             print(f"   Rolling back '{new_role}' → '{old_role}' ({count} users)")
 
             connection.execute(

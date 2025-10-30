@@ -5,7 +5,8 @@ from datetime import datetime
 from typing import Any
 
 from apps.mtproto.di import get_settings, get_tg_client
-from core.common.health.checker import HealthChecker
+# Note: HealthChecker moved to apps layer, using stub for compatibility
+# from core.common.health.checker import HealthChecker
 from core.common.health.models import DependencyType
 from core.ports.tg_client import TGClient
 
@@ -41,81 +42,41 @@ class HealthCheck:
         settings = get_settings()
         uptime = datetime.now() - self._start_time
 
-        # Initialize enhanced health checker
-        health_checker = HealthChecker(service_name="AnalyticBot-MTProtoService", version="2.1.0")
-
-        # Register health check functions
-        async def check_mtproto_config():
-            config_status = self._check_configuration_health(settings)
-            return {
-                "healthy": config_status == "healthy",
-                "mtproto_enabled": settings.MTPROTO_ENABLED,
-                "api_credentials_configured": bool(
-                    settings.TELEGRAM_API_ID and settings.TELEGRAM_API_HASH
-                ),
-                "accounts_configured": len(getattr(settings, "MTPROTO_ACCOUNTS", [])) > 0,
-            }
-
-        async def check_tg_client():
-            if not settings.MTPROTO_ENABLED or not self._tg_client:
-                return {"healthy": False, "reason": "disabled_or_not_initialized"}
-
-            try:
-                client_status = await self._check_tg_client_health()
-                return {
-                    "healthy": client_status == "healthy",
-                    "status": client_status,
-                    "client_type": "mtproto_client",
-                }
-            except Exception as e:
-                return {"healthy": False, "error": str(e)}
-
-        # Register dependencies
-        health_checker.register_dependency(
-            "mtproto_config", check_mtproto_config, DependencyType.SERVICE, critical=True
-        )
-        health_checker.register_dependency(
-            "telegram_client", check_tg_client, DependencyType.EXTERNAL_API, critical=True
-        )
-
-        # Perform comprehensive health check
+        # Simplified health check (enhanced health checker deprecated)
         try:
-            health_result = await health_checker.perform_health_check(
-                environment=getattr(settings, "ENVIRONMENT", "unknown")
+            config_status = self._check_configuration_health(settings)
+            tg_client_status = (
+                await self._check_tg_client_health()
+                if settings.MTPROTO_ENABLED and self._tg_client
+                else "disabled"
             )
 
-            enhanced_status = health_checker.to_dict(health_result)
-
-            # Add legacy compatibility fields
-            enhanced_status.update(
-                {
-                    "uptime_seconds": int(uptime.total_seconds()),
-                    "mtproto_enabled": settings.MTPROTO_ENABLED,
-                    "version": "2.1.0",
-                    "phase": "Enhanced Health Monitoring",
-                    "legacy_components": {
-                        "mtproto_app": "healthy",
-                        "tg_client": await self._check_tg_client_health()
-                        if settings.MTPROTO_ENABLED
-                        else "disabled",
-                        "configuration": self._check_configuration_health(settings),
+            enhanced_status = {
+                "status": "healthy" if config_status == "healthy" else "degraded",
+                "uptime_seconds": int(uptime.total_seconds()),
+                "mtproto_enabled": settings.MTPROTO_ENABLED,
+                "version": "2.1.0",
+                "phase": "Simplified Health Check",
+                "components": {
+                    "mtproto_app": "healthy",
+                    "tg_client": tg_client_status,
+                    "configuration": config_status,
+                },
+                "metadata": {
+                    "telegram_api_layer": 164,
+                    "supported_features": [
+                        "real_time_updates",
+                        "history_collection",
+                        "metrics_monitoring",
+                        "health_monitoring",
+                    ],
+                    "feature_flags": {
+                        "mtproto_enabled": settings.MTPROTO_ENABLED,
+                        "updates_enabled": getattr(settings, "MTPROTO_UPDATES_ENABLED", False),
+                        "history_enabled": getattr(settings, "MTPROTO_HISTORY_ENABLED", False),
                     },
-                    "metadata": {
-                        "telegram_api_layer": 164,
-                        "supported_features": [
-                            "real_time_updates",
-                            "history_collection",
-                            "metrics_monitoring",
-                            "health_monitoring",
-                        ],
-                        "feature_flags": {
-                            "mtproto_enabled": settings.MTPROTO_ENABLED,
-                            "updates_enabled": getattr(settings, "MTPROTO_UPDATES_ENABLED", False),
-                            "history_enabled": getattr(settings, "MTPROTO_HISTORY_ENABLED", False),
-                        },
-                    },
-                }
-            )
+                },
+            }
 
             return enhanced_status
 

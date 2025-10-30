@@ -149,25 +149,26 @@ class AuthAwareAPIService {
 
     /**
      * AI Services API methods
+     * ✅ FIXED: Using correct /ai/services/* paths
      */
     async analyzeContentSecurity(content: string): Promise<any> {
-        return this.makeRequest('/ai/security/analyze', {
+        return this.makeRequest('/ai/services/security/analyze', {
             method: 'POST',
             data: { content }
         });
     }
 
     async predictChurn(channelId: string): Promise<any> {
-        return this.makeRequest('/ai/churn/predict', {
+        return this.makeRequest('/ai/services/churn/analyze', {
             method: 'POST',
-            data: { channel_id: channelId }
+            data: { user_id: channelId, channel_id: channelId }
         });
     }
 
     async optimizeContent(content: string, options: Record<string, any> = {}): Promise<any> {
-        return this.makeRequest('/ai/content/optimize', {
+        return this.makeRequest('/ai/services/content/analyze', {
             method: 'POST',
-            data: { content, ...options }
+            data: { content, channel_id: options.channelId || 'demo', ...options }
         });
     }
 

@@ -20,7 +20,8 @@ from apps.api.middleware.auth import get_current_user_id
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai-insights", tags=["AI Insights"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["AI Insights"])
 
 
 # =====================================

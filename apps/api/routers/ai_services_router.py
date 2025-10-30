@@ -17,7 +17,8 @@ from core.services.churn_intelligence import ChurnIntelligenceOrchestratorServic
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/ai", tags=["AI Services"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["AI Services"])
 
 
 # =====================================

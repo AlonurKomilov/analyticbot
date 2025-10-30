@@ -142,7 +142,8 @@ export interface UpdateChannelRequest {
 }
 
 export interface ChannelValidationResponse {
-  valid: boolean;
+  // Legacy format (deprecated)
+  valid?: boolean;
   exists?: boolean;
   channelData?: {
     id: string;
@@ -151,6 +152,17 @@ export interface ChannelValidationResponse {
     description?: string;
   };
   error?: string;
+  
+  // New format (from backend ChannelValidationResult)
+  is_valid: boolean;
+  telegram_id?: number;
+  username?: string;
+  title?: string;
+  subscriber_count?: number;
+  description?: string;
+  is_verified?: boolean;
+  is_scam?: boolean;
+  error_message?: string;
 }
 
 // ============================================================================
@@ -426,6 +438,7 @@ export interface RequestConfig {
   signal?: AbortSignal;
   params?: Record<string, string | number | boolean>;
   onUploadProgress?: (progressEvent: UploadProgress) => void;
+  _retry?: boolean; // Internal flag to track retry attempts
 }
 
 export interface ApiClientConfig {

@@ -86,6 +86,16 @@ async def _create_sqlalchemy_engine(
     database_url: str, pool_size: int = 10, max_overflow: int = 20
 ) -> AsyncEngine:
     """Create SQLAlchemy async engine"""
+    # Log the database URL for debugging (mask password)
+    masked_url = database_url.replace(database_url.split('@')[0].split('://')[-1], '***')
+    logger.info(f"🔧 Creating SQLAlchemy engine with URL: {masked_url}")
+    
+    # Ensure we're using asyncpg driver
+    if not database_url.startswith("postgresql+asyncpg://"):
+        logger.warning(f"⚠️  DATABASE_URL does not start with 'postgresql+asyncpg://'")
+        logger.warning(f"⚠️  Converting '{database_url.split('://')[0]}' to 'postgresql+asyncpg'")
+        database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+    
     return create_async_engine(
         database_url,
         pool_size=pool_size,
@@ -172,6 +182,12 @@ class DatabaseContainer(containers.DeclarativeContainer):
     )
 
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)
+
+    # Backwards-compatibility alias: some parts of the codebase expect
+    # `async_session_maker` on the database container. Provide an alias
+    # to the new `session_factory` provider to avoid AttributeError at
+    # startup while keeping the clearer name.
+    async_session_maker = session_factory
 
     # ============================================================================
     # REPOSITORIES - Direct DI without Factory Anti-Pattern ✅

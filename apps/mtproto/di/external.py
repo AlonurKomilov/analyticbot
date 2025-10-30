@@ -34,7 +34,8 @@ class ExternalContainer(containers.DeclarativeContainer):
     # Health and monitoring
     health_server = providers.Singleton(HealthCheckServer, settings=settings)
 
-    tracer = providers.Singleton(MTProtoTracer, enabled=settings.provided.enable_tracing.as_(bool))
+    # Tracer - disabled by default (tracing can be enabled via MTProtoTracer if needed)
+    tracer = providers.Singleton(MTProtoTracer, enabled=False)
 
     # Rate limiting and fault injection
     rate_limiter = providers.Singleton(RateLimitManager, settings=settings)

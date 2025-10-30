@@ -94,16 +94,17 @@ const ChurnPredictorService: React.FC = () => {
             setError(null);
 
             try {
-                // Real API calls would go here
-                const [statsResponse, usersResponse, strategiesResponse] = await Promise.all([
-                    apiClient.get('/ai/churn/stats'),
-                    apiClient.get('/ai/churn/predictions'),
-                    apiClient.get('/ai/churn/strategies')
-                ]);
-
+                // ✅ FIXED: Using correct /ai/services/churn/* paths
+                // Note: Backend only has /stats and /analyze endpoints
+                // For now, fetch stats only until other endpoints are implemented
+                const statsResponse = await apiClient.get('/ai/services/churn/stats');
+                
                 setStats((statsResponse as any).data);
-                setRiskUsers((usersResponse as any).data);
-                setStrategies((strategiesResponse as any).data);
+                
+                // TODO: Backend doesn't have /predictions or /strategies endpoints yet
+                // Either implement these on backend or use mock data
+                setRiskUsers([]);  // Empty until backend implements this
+                setStrategies([]);  // Empty until backend implements this
             } catch (err) {
                 setError('Failed to load churn prediction data');
                 console.error('Churn data loading error:', err);

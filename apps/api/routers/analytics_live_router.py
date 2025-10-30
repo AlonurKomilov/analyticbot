@@ -19,7 +19,8 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/analytics/live", tags=["analytics-live"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["analytics-live"])
 
 
 # Analytics Client Dependency

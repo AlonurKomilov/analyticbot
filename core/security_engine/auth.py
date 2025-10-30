@@ -241,14 +241,15 @@ class SecurityManager:
         encoded_jwt = self.token_generator.generate_jwt_token(claims, expires_delta)
 
         # Cache token in Redis for fast validation (convert claims to dict)
+        # Convert datetime to Unix timestamp for JWT standard compliance
         token_dict = {
             "sub": user.id,
             "email": user.email,
             "username": user.username,
             "role": role_val,
             "status": status_val,
-            "exp": expire,
-            "iat": datetime.utcnow(),
+            "exp": int(expire.timestamp()),  # Must be Unix timestamp (int)
+            "iat": int(datetime.utcnow().timestamp()),  # Must be Unix timestamp (int)
             "jti": claims.token_id,
             "session_id": session_id,
             "mfa_verified": user.is_mfa_enabled and session_id is not None,
@@ -259,51 +260,62 @@ class SecurityManager:
         logger.info(f"Access token created for user {user.username} (ID: {user.id})")
         return encoded_jwt
 
-    def create_refresh_token(self, user_id: str, session_id: str) -> str:
+    def create_refresh_token(self, user_id: str, session_id: str, remember_me: bool = False) -> str:
         """
         Create refresh token for token renewal
+        
+        🆕 Phase 3.2: Added remember_me parameter for extended sessions
 
         Args:
             user_id: User ID
             session_id: Session ID
+            remember_me: If True, create long-lived token (30 days vs 7 days)
 
         Returns:
             Refresh token string
         """
-        expire = datetime.utcnow() + timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
+        # Determine token expiry based on remember_me flag
+        if remember_me:
+            # Import settings dynamically to avoid circular imports
+            try:
+                from config.settings import settings
+                expire_days = settings.AUTH_REMEMBER_ME_DAYS
+                logger.info(f"🔒 Creating long-lived refresh token ({expire_days} days) for user {user_id}")
+            except Exception:
+                expire_days = 30  # Fallback to 30 days
+        else:
+            expire_days = self.config.REFRESH_TOKEN_EXPIRE_DAYS
+        
+        expire = datetime.utcnow() + timedelta(days=expire_days)
 
-        to_encode = {
+        # Build JWT payload directly to include custom fields like remember_me
+        payload = {
             "sub": user_id,
             "session_id": session_id,
-            "exp": expire,
-            "iat": datetime.utcnow(),
+            "exp": int(expire.timestamp()),  # Unix timestamp for JWT standard
+            "iat": int(datetime.utcnow().timestamp()),
             "type": "refresh",
+            "remember_me": remember_me,  # Store remember_me flag in token
+            "jti": f"refresh_{secrets.token_urlsafe(8)}",
         }
 
-        # Use JWT adapter for refresh token generation
-        claims = TokenClaims(
-            user_id=user_id,
-            email="",  # Refresh tokens don't need user details
-            username="",
-            role="refresh",
-            status="active",
-            session_id=session_id,
-            token_id=f"refresh_{secrets.token_urlsafe(8)}",
+        # Encode directly using jose to preserve all custom fields
+        from jose import jwt as jose_jwt
+        refresh_token = jose_jwt.encode(
+            payload, 
+            self.config.REFRESH_SECRET_KEY, 
+            algorithm=self.config.ALGORITHM
         )
 
-        # For refresh tokens, we use a separate adapter instance with refresh secret
-        refresh_adapter = JoseJWTAdapter(
-            secret_key=self.config.REFRESH_SECRET_KEY, algorithm=self.config.ALGORITHM
-        )
-        refresh_token = refresh_adapter.generate_jwt_token(
-            claims, timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS)
-        )
-
-        # Store refresh token in Redis
+        # Store refresh token in Redis with appropriate TTL
         self._cache_set(
             f"refresh_token:{refresh_token}",
-            json.dumps({"user_id": user_id, "session_id": session_id}),
-            int(timedelta(days=self.config.REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()),
+            json.dumps({
+                "user_id": user_id,
+                "session_id": session_id,
+                "remember_me": remember_me
+            }),
+            int(timedelta(days=expire_days).total_seconds()),
         )
 
         return refresh_token
@@ -404,6 +416,18 @@ class SecurityManager:
             json.dumps(session_data, default=str),
             int(timedelta(hours=24).total_seconds()),
         )
+        # Also store a lookup by session token to support systems that reference
+        # sessions by token (legacy behavior). This writes the same session data
+        # under a token-based key so refresh flows that pass session.token work.
+        try:
+            self._cache_set(
+                f"session_token:{session.token}",
+                json.dumps(session_data, default=str),
+                int(timedelta(hours=24).total_seconds()),
+            )
+        except Exception:
+            # Best-effort: do not fail session creation if token mapping cannot be stored
+            logger.debug("Could not store session token mapping in cache (non-fatal)")
 
         # Track active sessions for user
         self._cache_add_to_set(f"user_sessions:{user.id}", session.id)
@@ -422,11 +446,27 @@ class SecurityManager:
             UserSession object or None
         """
         session_data = self._cache_get(f"session:{session_id}")
+        # If session is not found by ID, try legacy token-based lookup
         if not session_data or not isinstance(session_data, str):
-            return None
+            token_lookup = self._cache_get(f"session_token:{session_id}")
+            if token_lookup and isinstance(token_lookup, str):
+                session_data = token_lookup
+            else:
+                return None
 
         try:
             data = json.loads(session_data)
+            # Normalize datetime fields if they were serialized to strings
+            for dt_field in ("expires_at", "created_at", "last_activity", "logout_at"):
+                if dt_field in data and isinstance(data[dt_field], str):
+                    try:
+                        from datetime import datetime as _dt
+
+                        data[dt_field] = _dt.fromisoformat(data[dt_field])
+                    except Exception:
+                        # Fallback: leave as-is; UserSession will handle types or raise
+                        pass
+
             session = UserSession(**data)
 
             # Check if session is expired
@@ -630,15 +670,21 @@ class SecurityManager:
             logger.error(f"Error consuming reset token: {e}")
             return False
 
-    def refresh_access_token(self, refresh_token: str) -> str:
+    def refresh_access_token(self, refresh_token: str) -> dict[str, str]:
         """
-        Refresh access token using valid refresh token
-
+        Refresh access token using valid refresh token with rotation
+        
+        🔄 NEW: Implements refresh token rotation for enhanced security
+        - Validates old refresh token
+        - Issues new access token
+        - Issues new refresh token (rotation)
+        - Invalidates old refresh token
+        
         Args:
             refresh_token: Valid refresh token
 
         Returns:
-            New access token
+            Dictionary with new access_token and refresh_token
 
         Raises:
             AuthenticationError: If refresh token is invalid or expired
@@ -667,6 +713,10 @@ class SecurityManager:
                     "Session expired", status_code=401, error_code="SESSION_EXPIRED"
                 )
 
+            # 🔄 STEP 1: Invalidate old refresh token (rotation)
+            self._cache_delete(f"refresh_token:{refresh_token}")
+            logger.info(f"🔄 Rotated refresh token for user {user_id}")
+
             # Create new access token with minimal user data
             # In a real implementation, you'd fetch full user data from database
             from core.security_engine.models import AuthProvider, User, UserRole, UserStatus
@@ -681,15 +731,34 @@ class SecurityManager:
                 auth_provider=AuthProvider.LOCAL,  # This should come from database
             )
 
-            # Create new access token
+            # 🔄 STEP 2: Create new access token
             new_access_token = self.create_access_token(
                 user,
                 expires_delta=timedelta(minutes=self.config.ACCESS_TOKEN_EXPIRE_MINUTES),
                 session_id=session_id,
             )
 
-            logger.info(f"Access token refreshed for user {user_id}")
-            return new_access_token
+            # 🔄 STEP 3: Create new refresh token (rotation)
+            new_refresh_token = self.create_refresh_token(user_id, session_id)
+
+            # Log security event
+            self._log_security_event(
+                "token_rotation",
+                user_id=str(user_id),
+                details={
+                    "session_id": session_id,
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            )
+
+            logger.info(f"✅ Access token refreshed with rotation for user {user_id}")
+            
+            # 🔄 STEP 4: Return both tokens
+            return {
+                "access_token": new_access_token,
+                "refresh_token": new_refresh_token,
+                "token_type": "bearer"
+            }
 
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing refresh token data: {e}")
@@ -703,6 +772,67 @@ class SecurityManager:
             raise AuthenticationError(
                 "Token refresh failed", status_code=500, error_code="TOKEN_REFRESH_ERROR"
             )
+
+    def extend_session_on_activity(self, session_id: str, extension_minutes: int = 15) -> bool:
+        """
+        🆕 Phase 3.1: Extend session expiry time on user activity (sliding sessions)
+        
+        Implements sliding window sessions that extend on each user request,
+        preventing timeout during active usage.
+        
+        Args:
+            session_id: Active session ID to extend
+            extension_minutes: Minutes to extend session by (default: 15)
+            
+        Returns:
+            True if session was extended, False if session doesn't exist
+            
+        Example:
+            # In API middleware/dependency:
+            if settings.AUTH_SLIDING_SESSION_ENABLED:
+                security_manager.extend_session_on_activity(
+                    session_id=current_user.session_id,
+                    extension_minutes=settings.AUTH_SESSION_EXTENSION_MINUTES
+                )
+        """
+        try:
+            # Get current session data
+            session_key = f"session:{session_id}"
+            session_data_str = self._cache_get(session_key)
+            
+            if not session_data_str or not isinstance(session_data_str, str):
+                logger.debug(f"Session {session_id} not found for extension")
+                return False
+            
+            # Parse session data
+            session_data = json.loads(session_data_str)
+            
+            # Update last_activity timestamp
+            session_data["last_activity"] = datetime.utcnow().isoformat()
+            
+            # Extend session TTL in cache
+            ttl_seconds = int(extension_minutes * 60)
+            
+            # Update session in cache with new TTL
+            self._cache_set(
+                session_key,
+                json.dumps(session_data),
+                ttl_seconds  # Use TTL in seconds, not datetime
+            )
+            
+            logger.debug(
+                f"🕐 Extended session {session_id} by {extension_minutes} minutes "
+                f"(TTL: {ttl_seconds}s)"
+            )
+            
+            return True
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing session data for extension: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Error extending session {session_id}: {e}")
+            return False
 
     def revoke_user_sessions(self, user_id: str) -> int:
         """

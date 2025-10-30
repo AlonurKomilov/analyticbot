@@ -25,15 +25,15 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     Uses asyncpg connection for database operations
     """
 
-    def __init__(self, db_connection):
-        """Initialize with database connection (asyncpg connection or pool)"""
-        self.db = db_connection
+    def __init__(self, pool):
+        """Initialize with database connection pool"""
+        self.db = pool
 
     async def create(self, post: ScheduledPost) -> ScheduledPost:
         """Create a new scheduled post in PostgreSQL"""
         query = """
         INSERT INTO scheduled_posts (
-            user_id, channel_id, content, status, scheduled_at
+            user_id, channel_id, post_text, status, schedule_time
         ) VALUES (
             $1, $2, $3, $4, $5
         ) RETURNING *
@@ -44,11 +44,11 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
         result = await self.db.fetchrow(
             query,
-            str(post.user_id),  # Keep as string for VARCHAR(100)
-            str(post.channel_id),  # Keep as string for VARCHAR(100)
-            post.content,  # Map to content column
+            int(post.user_id),  # bigint in database
+            int(post.channel_id),  # bigint in database
+            post.content,  # Map to post_text column
             db_status,
-            post.scheduled_at,  # Map to scheduled_at column
+            post.scheduled_at,  # Map to schedule_time column
         )
 
         return self._row_to_scheduled_post(result)
@@ -428,24 +428,26 @@ class AsyncpgScheduleRepository(ScheduleRepository):
         )
 
     def _map_status_to_db(self, status: PostStatus) -> str:
-        """Map domain status to database status"""
+        """Map domain status to database status
+        
+        Database constraint: status IN ('pending', 'sent', 'error')
+        Domain model: SCHEDULED, PUBLISHED, FAILED, DRAFT, CANCELLED
+        """
         mapping = {
-            PostStatus.SCHEDULED: "scheduled",
-            PostStatus.PUBLISHED: "published",
-            PostStatus.FAILED: "failed",
-            PostStatus.DRAFT: "draft",
-            PostStatus.CANCELLED: "cancelled",
+            PostStatus.SCHEDULED: "pending",      # scheduled → pending
+            PostStatus.DRAFT: "pending",          # draft → pending
+            PostStatus.PUBLISHED: "sent",         # published → sent
+            PostStatus.FAILED: "error",           # failed → error
+            PostStatus.CANCELLED: "error",        # cancelled → error
         }
-        return mapping.get(status, "draft")
+        return mapping.get(status, "pending")
 
     def _map_status_from_db(self, db_status: str) -> PostStatus:
         """Map database status to domain status"""
         mapping = {
-            "draft": PostStatus.DRAFT,
-            "scheduled": PostStatus.SCHEDULED,
-            "published": PostStatus.PUBLISHED,
-            "failed": PostStatus.FAILED,
-            "cancelled": PostStatus.CANCELLED,
+            "pending": PostStatus.SCHEDULED,
+            "sent": PostStatus.PUBLISHED,
+            "error": PostStatus.FAILED,
         }
         return mapping.get(db_status, PostStatus.DRAFT)
 

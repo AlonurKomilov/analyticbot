@@ -23,7 +23,8 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/insights/engagement", tags=["insights-engagement"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["insights-engagement"])
 
 # === ENGAGEMENT INSIGHTS ===
 

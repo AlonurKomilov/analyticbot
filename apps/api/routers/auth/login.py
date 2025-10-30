@@ -102,12 +102,21 @@ async def login(
 
         # Generate tokens using centralized auth utilities
         access_token = auth_utils.create_access_token(user)
-        refresh_token = auth_utils.create_refresh_token(user.id, session.token)
+        
+        # 🆕 Phase 3.2: Create refresh token with remember_me parameter
+        refresh_token = auth_utils.create_refresh_token(
+            user.id, 
+            session.token,
+            remember_me=login_data.remember_me  # Pass remember_me from request
+        )
 
         # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
 
-        logger.info(f"Successful login for user: {user.username}")
+        logger.info(
+            f"Successful login for user: {user.username} "
+            f"(remember_me={login_data.remember_me})"
+        )
 
         return AuthResponse(
             access_token=access_token,
@@ -140,12 +149,19 @@ async def refresh_token(
 ):
     """
     Refresh access token using refresh token
+    
+    🔄 NEW: Returns rotated refresh token for enhanced security
     """
     try:
-        # Validate refresh token and get new access token
-        new_access_token = auth_utils.refresh_access_token(refresh_token)
+        # Validate refresh token and get new tokens (with rotation)
+        token_response = auth_utils.refresh_access_token(refresh_token)
 
-        return {"access_token": new_access_token, "token_type": "bearer", "expires_in": 30 * 60}
+        return {
+            "access_token": token_response["access_token"],
+            "refresh_token": token_response["refresh_token"],  # 🔄 Rotated token
+            "token_type": "bearer",
+            "expires_in": 30 * 60
+        }
 
     except Exception as e:
         logger.warning(f"Token refresh failed: {str(e)}")

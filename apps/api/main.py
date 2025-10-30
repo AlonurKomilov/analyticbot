@@ -60,6 +60,33 @@ async def lifespan(app: FastAPI):
             f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections"
         )
 
+        # ✅ MULTI-TENANT: Initialize bot manager with repository factory
+        try:
+            logger.info("🔧 Starting bot manager initialization...")
+            from apps.bot.multi_tenant.bot_manager import initialize_bot_manager
+            from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+            
+            # Get session factory from DI container
+            logger.info("🔧 Getting session factory from DI container...")
+            session_factory = await container.database.async_session_maker()
+            logger.info(f"🔧 Session factory obtained: {type(session_factory)}")
+            
+            # Create repository factory that generates fresh sessions per operation
+            logger.info("🔧 Creating repository factory...")
+            repository_factory = UserBotRepositoryFactory(session_factory)
+            logger.info(f"🔧 Repository factory created: {type(repository_factory)}")
+            
+            # Initialize bot manager with the factory
+            logger.info("🔧 Calling initialize_bot_manager...")
+            await initialize_bot_manager(repository_factory)
+            logger.info("✅ Multi-tenant bot manager initialized")
+        except Exception as bot_error:
+            import traceback
+            logger.error(f"❌ Bot manager initialization failed at: {bot_error.__class__.__name__}")
+            logger.error(f"❌ Error: {bot_error}")
+            logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
+            logger.info("Application will continue without bot manager")
+
         # ✅ PHASE 2: Initialize Redis cache for performance optimization
         try:
             from core.common.cache_decorator import init_cache_redis
@@ -101,6 +128,15 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
+        # ✅ MULTI-TENANT: Shutdown bot manager
+        try:
+            from apps.bot.multi_tenant.bot_manager import get_bot_manager
+            bot_manager = await get_bot_manager()
+            await bot_manager.stop()
+            logger.info("✅ Bot manager shutdown completed")
+        except Exception as bot_error:
+            logger.warning(f"⚠️ Bot manager shutdown failed: {bot_error}")
+        
         await cleanup_db_pool()
         logger.info("✅ Application shutdown completed")
     except Exception as e:
@@ -248,7 +284,15 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         },
         {
             "name": "Mobile",
-            "description": "� Mobile API: TWA-optimized endpoints for Telegram Web Apps",
+            "description": "📱 Mobile API: TWA-optimized endpoints for Telegram Web Apps",
+        },
+        {
+            "name": "User Bot Management",
+            "description": "🤖 Multi-Tenant Bots: user bot setup, verification, and management",
+        },
+        {
+            "name": "Admin Bot Management",
+            "description": "👑 Admin Bots: manage all user bots, suspend/activate, rate limiting",
         },
     ],
 )
@@ -438,6 +482,15 @@ app.include_router(auth_router)  # /auth/* - Already good
 app.include_router(exports_router)  # /exports/* - Already good
 app.include_router(sharing_router)  # /sharing/* - Already good
 app.include_router(mobile_router)  # /mobile/* - Already good
+
+# ✅ PHASE 4 MULTI-TENANT: User and Admin Bot Management (October 27, 2025)
+from apps.api.routers.user_bot_router import router as user_bot_router
+from apps.api.routers.admin_bot_router import router as admin_bot_router
+from apps.api.routers.user_mtproto_router import router as user_mtproto_router
+
+app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
+app.include_router(admin_bot_router, tags=["Admin Bot Management"])  # /api/admin/bots/*
+app.include_router(user_mtproto_router, tags=["User Bot Management"])  # /api/user-mtproto/*
 
 # ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidating all AI services under /ai/* for better organization

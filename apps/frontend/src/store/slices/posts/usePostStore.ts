@@ -84,10 +84,10 @@ export const usePostStore = create<PostState>()(
 
       try {
         // Get user ID from JWT token (check multiple possible keys)
-        const token = localStorage.getItem('access_token') || 
+        const token = localStorage.getItem('access_token') ||
                      localStorage.getItem('jwt_token') ||
                      localStorage.getItem('auth_token');
-        
+
         if (!token) {
           throw new Error('No authentication token found');
         }
@@ -152,10 +152,10 @@ export const usePostStore = create<PostState>()(
         console.log('🚀 Sending post immediately (raw data):', postData);
 
         // Get user ID from JWT token (check multiple keys)
-        const token = localStorage.getItem('access_token') || 
+        const token = localStorage.getItem('access_token') ||
                      localStorage.getItem('jwt_token') ||
                      localStorage.getItem('auth_token');
-        
+
         if (!token) {
           throw new Error('No authentication token found');
         }
@@ -211,10 +211,10 @@ export const usePostStore = create<PostState>()(
         console.log('📅 Scheduling post (raw data):', postData);
 
         // Get user ID from JWT token (check multiple keys)
-        const token = localStorage.getItem('access_token') || 
+        const token = localStorage.getItem('access_token') ||
                      localStorage.getItem('jwt_token') ||
                      localStorage.getItem('auth_token');
-        
+
         if (!token) {
           throw new Error('No authentication token found');
         }

@@ -8,16 +8,14 @@ Domain: System health, performance metrics, and core application functionality.
 
 import logging
 import os
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from apps.di import get_delivery_service, get_schedule_service
-from apps.api.deps_factory import (
-    get_initial_data_service,
-)
+
 from apps.api.middleware.auth import get_current_user_id
+from apps.di import get_delivery_service, get_schedule_service
 from apps.shared.models.twa import InitialDataResponse
 from core import DeliveryService, ScheduleService
 
@@ -133,10 +131,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
         return InitialDataResponse(
             user=User(id=user_id, username=f"user_{user_id}"),
-            channels=[
-                Channel(id=1, title="Demo Channel", username="@demo_channel")
-            ],
-            scheduled_posts=[]
+            channels=[Channel(id=1, title="Demo Channel", username="@demo_channel")],
+            scheduled_posts=[],
         )
 
     except Exception as e:
@@ -160,8 +156,10 @@ async def create_scheduled_post(
     - Scheduled post confirmation with ID and timing
     """
     try:
-        logger.info(f"📅 Scheduling post: user={request.user_id}, channel={request.channel_id}, time={request.scheduled_time}")
-        
+        logger.info(
+            f"📅 Scheduling post: user={request.user_id}, channel={request.channel_id}, time={request.scheduled_time}"
+        )
+
         # Use correct service method: create_scheduled_post
         scheduled_post = await schedule_service.create_scheduled_post(
             title=f"Scheduled post for {request.channel_id}",
@@ -202,33 +200,36 @@ async def send_post_now(
     - Success confirmation with message_id from Telegram
     """
     try:
-        logger.info(f"🚀 Sending post immediately: user={request.user_id}, channel={request.channel_id}")
-        
+        logger.info(
+            f"🚀 Sending post immediately: user={request.user_id}, channel={request.channel_id}"
+        )
+
         # Get Telegram bot token
-        bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o")
+        bot_token = os.getenv(
+            "TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o"
+        )
         telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        
+
         # Convert channel_id to negative for Telegram API
         telegram_chat_id = -request.channel_id
-        
+
         # Send to Telegram
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                telegram_api_url,
-                json={
-                    "chat_id": telegram_chat_id,
-                    "text": request.message
-                }
+                telegram_api_url, json={"chat_id": telegram_chat_id, "text": request.message}
             )
             response.raise_for_status()
             telegram_response = response.json()
-        
+
         if not telegram_response.get("ok"):
-            raise HTTPException(status_code=500, detail=f"Telegram API error: {telegram_response.get('description')}")
-        
+            raise HTTPException(
+                status_code=500,
+                detail=f"Telegram API error: {telegram_response.get('description')}",
+            )
+
         message_id = telegram_response["result"]["message_id"]
         logger.info(f"✅ Message sent to Telegram! Message ID: {message_id}")
-        
+
         # Save to database with status='sent' and schedule_time=NOW()
         scheduled_post = await schedule_service.create_scheduled_post(
             title=f"Immediate post for {request.channel_id}",
@@ -239,8 +240,10 @@ async def send_post_now(
             media_urls=[request.media_url] if request.media_url else [],
             media_types=[request.media_type] if request.media_type else [],
         )
-        
-        logger.info(f"✅ Post sent successfully: id={scheduled_post.id}, telegram_message_id={message_id}")
+
+        logger.info(
+            f"✅ Post sent successfully: id={scheduled_post.id}, telegram_message_id={message_id}"
+        )
         return {
             "success": True,
             "post_id": str(scheduled_post.id),
@@ -250,10 +253,12 @@ async def send_post_now(
         }
     except httpx.HTTPError as e:
         logger.error(f"❌ Telegram API request failed: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to send message to Telegram: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send message to Telegram: {str(e)}"
+        ) from e
     except Exception as e:
         logger.error(f"❌ Post send failed: {type(e).__name__}: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to send post: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send post: {str(e)}") from e
 
 
 @router.get("/schedule/{post_id}")
@@ -426,10 +431,10 @@ async def get_service_information():
         # Import analytics service using clean architecture pattern
         from apps.di import get_container
         from config.settings import settings
-        from core.protocols import AnalyticsServiceProtocol
 
         container = get_container()
-        analytics_service = await container.core_services.analytics_fusion_service()
+        # Verify analytics service is available
+        _ = await container.core_services.analytics_fusion_service()
 
         return {
             "analytics_service": {
@@ -447,4 +452,3 @@ async def get_service_information():
     except Exception as e:
         logger.error(f"Service info fetch failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to get service information")
-

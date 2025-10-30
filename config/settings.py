@@ -3,6 +3,7 @@ Enhanced configuration settings for AnalyticBot
 Centralized settings without framework dependencies
 """
 
+import json
 import os
 from dataclasses import dataclass, field
 from enum import Enum
@@ -116,6 +117,50 @@ class Settings:
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     PASSWORD_HASH_ROUNDS: int = 12
     RATE_LIMIT_PER_MINUTE: int = 60
+    
+    # Phase 2: Token Security Features
+    JWT_REFRESH_ROTATION_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("JWT_REFRESH_ROTATION_ENABLED", "true").lower() == "true"
+    )
+    AUTH_DEVICE_FINGERPRINT_REQUIRED: bool = field(
+        default_factory=lambda: os.getenv("AUTH_DEVICE_FINGERPRINT_REQUIRED", "true").lower() == "true"
+    )
+    AUTH_ANOMALY_DETECTION_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("AUTH_ANOMALY_DETECTION_ENABLED", "true").lower() == "true"
+    )
+    
+    # Phase 2: Anomaly Detection Thresholds
+    AUTH_MAX_LOGIN_ATTEMPTS_PER_HOUR: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_MAX_LOGIN_ATTEMPTS_PER_HOUR", "10"))
+    )
+    AUTH_MAX_DEVICES_PER_USER: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_MAX_DEVICES_PER_USER", "10"))
+    )
+    AUTH_MAX_IPS_PER_SESSION: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_MAX_IPS_PER_SESSION", "3"))
+    )
+    AUTH_DEVICE_TTL_DAYS: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_DEVICE_TTL_DAYS", "90"))
+    )
+    
+    # Phase 3: Advanced Session Features
+    AUTH_SLIDING_SESSION_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("AUTH_SLIDING_SESSION_ENABLED", "true").lower() == "true"
+    )
+    AUTH_SESSION_EXTENSION_MINUTES: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_SESSION_EXTENSION_MINUTES", "15"))
+    )
+    AUTH_REMEMBER_ME_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("AUTH_REMEMBER_ME_ENABLED", "true").lower() == "true"
+    )
+    AUTH_REMEMBER_ME_DAYS: int = field(
+        default_factory=lambda: int(os.getenv("AUTH_REMEMBER_ME_DAYS", "30"))
+    )
+    
+    # Multi-Tenant Bot Encryption (for user bot credentials)
+    ENCRYPTION_KEY: SecretStr = field(
+        default_factory=lambda: SecretStr(os.getenv("ENCRYPTION_KEY", ""))
+    )
 
     # Payment Gateways (Optional)
     STRIPE_SECRET_KEY: SecretStr | None = None
@@ -190,7 +235,6 @@ class Settings:
         cors_str = os.getenv("CORS_ORIGINS")
         if cors_str and cors_str != "*":
             try:
-                import json
                 parsed = json.loads(cors_str)
                 if isinstance(parsed, list):
                     self.CORS_ORIGINS = parsed

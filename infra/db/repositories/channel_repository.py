@@ -15,26 +15,33 @@ class AsyncpgChannelRepository:
         self.pool = pool
 
     async def create_channel(
-        self, channel_id: int, user_id: int, title: str, username: str | None = None
+        self, 
+        channel_id: int, 
+        user_id: int, 
+        title: str, 
+        username: str | None = None,
+        description: str | None = None
     ) -> None:
         """Adds a new channel to the database for a specific user.
 
-        If the channel already exists, its title and username are refreshed.
+        If the channel already exists, its title, username, and description are refreshed.
         """
 
         async with self.pool.acquire() as conn:
             await conn.execute(
                 """
-                INSERT INTO channels (id, user_id, title, username)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO channels (id, user_id, title, username, description)
+                VALUES ($1, $2, $3, $4, $5)
                 ON CONFLICT (id) DO UPDATE
                     SET title = EXCLUDED.title,
-                        username = EXCLUDED.username
+                        username = EXCLUDED.username,
+                        description = EXCLUDED.description
                 """,
                 channel_id,
                 user_id,
                 title,
                 username,
+                description,
             )
 
     async def get_channel_by_id(self, channel_id: int) -> dict[str, Any] | None:
@@ -55,7 +62,7 @@ class AsyncpgChannelRepository:
 
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
-                "SELECT id, title, username FROM channels WHERE user_id = $1",
+                "SELECT id, title, username, description, created_at FROM channels WHERE user_id = $1",
                 user_id,
             )
             return [dict(record) for record in records]
@@ -152,7 +159,7 @@ class AsyncpgChannelRepository:
                 channel_id,
             )
 
-    async def update_channel(self, channel_id: int, **kwargs) -> dict[str, Any]:
+    async def update_channel(self, channel_id: int, **kwargs) -> dict[str, Any] | None:
         """Update channel with provided fields"""
         if not kwargs:
             # If no updates, just return the current channel

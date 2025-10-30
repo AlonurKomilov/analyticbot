@@ -76,7 +76,7 @@ const PostCreator: React.FC = React.memo(() => {
     const handleSendNow = useCallback(async () => {
         // For immediate send, only validate text and channel (scheduleTime not required)
         const errors: Record<string, string> = {};
-        
+
         if (!formState.text.trim()) {
             errors.text = 'Post text is required';
         }
@@ -141,7 +141,7 @@ const PostCreator: React.FC = React.memo(() => {
     );
 
     // Determine if form can be submitted for immediate send (no scheduleTime required)
-    const canSendNow = useMemo(() => 
+    const canSendNow = useMemo(() =>
         !!(formState.text.trim() && formState.selectedChannel),
         [formState.text, formState.selectedChannel]
     );

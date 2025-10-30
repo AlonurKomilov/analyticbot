@@ -206,5 +206,28 @@ export type {
   UseUISelector,
 } from './store';
 
+// User Bot Types
+export type {
+  UserBotCredentials,
+  CreateBotRequest,
+  CreateBotResponse,
+  BotStatusResponse,
+  VerifyBotRequest,
+  VerifyBotResponse,
+  UpdateRateLimitRequest,
+  RateLimitUpdateResponse,
+  RemoveBotResponse,
+  AdminBotListItem,
+  AdminBotListResponse,
+  SuspendBotRequest,
+  SuspendBotResponse,
+  ActivateBotResponse,
+  AdminAccessResponse,
+  BotWizardStep,
+  BotWizardState,
+} from './userBot';
+
+export { BotStatus } from './userBot';
+
 // Note: All types are exported above via re-exports
 // No need for convenience re-exports to avoid duplicates

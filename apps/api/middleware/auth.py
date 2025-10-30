@@ -345,10 +345,10 @@ async def get_current_user_id_from_request(request) -> int:
                 user_id_str = claims.get("sub")
                 if user_id_str:
                     elapsed = (time.time() - start) * 1000
-                    logger.info(f"⏱️ get_current_user_id_from_request took {elapsed:.2f}ms (JWT)")
+                    logger.info(f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)")
                     return int(user_id_str)
             except Exception as token_error:
-                logger.warning(f"Failed to decode JWT token: {token_error}")
+                logger.error(f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}", exc_info=True)
                 # Return a default user ID instead of raising error
                 elapsed = (time.time() - start) * 1000
                 logger.info(

@@ -25,6 +25,7 @@ interface ChannelState {
     name: string;
     username: string;
     description?: string;
+    telegram_id?: string;  // Optional telegram_id as string (will be parsed to number)
   }) => Promise<void>;
   updateChannel: (channelId: string, data: Partial<Channel>) => Promise<void>;
   deleteChannel: (channelId: string) => Promise<void>;
@@ -34,8 +35,11 @@ interface ChannelState {
   clearValidationError: () => void;
 }
 
+// Request deduplication - prevent multiple simultaneous fetch requests
+let fetchChannelsPromise: Promise<void> | null = null;
+
 export const useChannelStore = create<ChannelState>()(
-  subscribeWithSelector((set, get) => ({
+  subscribeWithSelector((set) => ({
     // Initial state
     channels: [],
     selectedChannel: null,
@@ -46,36 +50,50 @@ export const useChannelStore = create<ChannelState>()(
 
     // Fetch all channels
     fetchChannels: async () => {
+      // ✅ Request deduplication: if a request is already in progress, return that promise
+      if (fetchChannelsPromise) {
+        console.log('🔄 Reusing existing fetchChannels request');
+        return fetchChannelsPromise;
+      }
+
       set({ isLoading: true, error: null });
 
-      try {
-        const channels = await apiClient.get<Channel[]>('/analytics/channels');
-        set({
-          channels: channels || [],
-          isLoading: false
-        });
-        console.log('✅ Channels loaded:', channels?.length || 0);
-      } catch (error) {
-        console.error('❌ Failed to load channels:', error);
-        
-        // Provide helpful error message
-        let errorMessage = 'Failed to load channels';
-        if (error instanceof Error) {
-          if (error.message.includes('timeout')) {
-            errorMessage = 'API request timed out - please check your connection or try again';
-          } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
-            errorMessage = 'Cannot connect to API - please check if the backend is running';
-          } else {
-            errorMessage = error.message;
+      // Create and store the fetch promise
+      fetchChannelsPromise = (async () => {
+        try {
+          const channels = await apiClient.get<Channel[]>('/analytics/channels');  // Using analytics endpoint
+          set({
+            channels: channels || [],
+            isLoading: false
+          });
+          console.log('✅ Channels loaded:', channels?.length || 0);
+        } catch (error) {
+          console.error('❌ Failed to load channels:', error);
+
+          // Provide helpful error message
+          let errorMessage = 'Failed to load channels';
+          if (error instanceof Error) {
+            if (error.message.includes('timeout')) {
+              errorMessage = 'API request timed out - please check your connection or try again';
+            } else if (error.message.includes('Network') || error.message.includes('Failed to fetch')) {
+              errorMessage = 'Cannot connect to API - please check if the backend is running';
+            } else {
+              errorMessage = error.message;
+            }
           }
+
+          set({
+            channels: [],
+            error: errorMessage,
+            isLoading: false
+          });
+        } finally {
+          // Clear the promise after completion (success or failure)
+          fetchChannelsPromise = null;
         }
-        
-        set({
-          channels: [],
-          error: errorMessage,
-          isLoading: false
-        });
-      }
+      })();
+
+      return fetchChannelsPromise;
     },
 
     // Validate Telegram channel
@@ -139,28 +157,59 @@ export const useChannelStore = create<ChannelState>()(
         const usernameWithAt = `@${cleanUsername}`;
         console.log('📺 Adding channel:', usernameWithAt);
 
-        // Step 1: Optional validation with Telegram API
-        // If validation fails or times out, we still continue with channel creation
-        try {
-          console.log('🔍 Attempting Telegram validation (optional)...');
-          const validation = await get().validateChannel(usernameWithAt);
+        // Step 1: Determine telegram_id priority:
+        // 1. User-provided telegram_id (if valid)
+        // 2. Validated telegram_id from Telegram API
+        // 3. Random fallback ID
+        let finalTelegramId: number;
+        
+        // Check if user provided a telegram_id
+        const userProvidedId = channelData.telegram_id ? parseInt(channelData.telegram_id, 10) : null;
+        if (userProvidedId && !isNaN(userProvidedId)) {
+          console.log('✅ Using user-provided Telegram ID:', userProvidedId);
+          finalTelegramId = userProvidedId;
+        } else {
+          // Step 2: Try OPTIONAL validation with Telegram API to get telegram_id
+          let validatedData: {
+            telegram_id: number;
+            title: string;
+            description: string;
+          } | null = null;
 
-          if (validation.valid) {
-            console.log('✅ Telegram validation successful');
-          } else {
-            console.warn('⚠️ Telegram validation failed, continuing anyway:', validation.errors);
+          try {
+            console.log('🔍 Validating with Telegram API (optional)...');
+            const validation = await apiClient.post<ChannelValidationResponse>(
+              '/channels/validate',
+              { username: usernameWithAt },
+              { timeout: 30000 }  // 30 second timeout
+            );
+
+            if (validation.is_valid && validation.telegram_id) {
+              console.log('✅ Telegram validation successful:', validation.title);
+              validatedData = {
+                telegram_id: validation.telegram_id,
+                title: validation.title || channelData.name,
+                description: validation.description || channelData.description || ''
+              };
+              finalTelegramId = validatedData.telegram_id;
+            } else {
+              console.warn('⚠️ Validation failed, will use fallback values');
+              finalTelegramId = Math.floor(Math.random() * 1000000000);
+            }
+          } catch (validationError) {
+            console.warn('⚠️ Telegram validation failed (MTProto may be disabled), continuing with fallback:', validationError);
+            // Continue without validation - use random fallback ID
+            finalTelegramId = Math.floor(Math.random() * 1000000000);
           }
-        } catch (validationError) {
-          // Log but don't block channel creation
-          console.warn('⚠️ Telegram validation unavailable, continuing anyway:', validationError);
         }
 
-        // Step 2: Add to database
-        console.log('💾 Saving channel to database...');
+        // Step 3: Create channel with determined telegram_id
+        console.log('💾 Saving channel to database with telegram_id:', finalTelegramId);
         const newChannel = await apiClient.post<Channel>('/channels', {
-          name: channelData.name,
+          name: channelData.name || usernameWithAt,
+          telegram_id: finalTelegramId,
           username: usernameWithAt,
-          description: channelData.description
+          description: channelData.description || ''
         });
 
         // Step 3: Add to local state

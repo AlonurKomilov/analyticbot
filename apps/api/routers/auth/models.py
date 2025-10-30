@@ -11,10 +11,15 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class LoginRequest(BaseModel):
-    """Login request model"""
+    """
+    Login request model
+    
+    🆕 Phase 3.2: Added remember_me parameter
+    """
 
     email: EmailStr
     password: str = Field(..., min_length=8)
+    remember_me: bool = Field(default=False, description="Keep user logged in for 30 days")
 
 
 class RegisterRequest(BaseModel):

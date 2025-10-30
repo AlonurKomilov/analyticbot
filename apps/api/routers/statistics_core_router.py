@@ -24,7 +24,8 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/statistics/core", tags=["statistics-core"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["statistics-core"])
 
 # === CORE STATISTICAL ENDPOINTS ===
 

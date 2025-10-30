@@ -94,7 +94,7 @@ class ChannelService:
         if len(channel_data.name) > 100:
             raise ValueError("Channel name cannot exceed 100 characters")
 
-        if channel_data.telegram_id <= 0:
+        if channel_data.telegram_id == 0:
             raise ValueError("Invalid Telegram ID")
 
         # Check for duplicate telegram_id
@@ -113,6 +113,7 @@ class ChannelService:
                 user_id=channel_data.user_id or 0,
                 title=channel_data.name.strip(),
                 username=channel_data.name.lower().replace(" ", "_"),
+                description=channel_data.description,
             )
 
             # Get the created channel back

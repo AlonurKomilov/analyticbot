@@ -10,7 +10,8 @@ from fastapi import APIRouter
 from . import intelligence, recommendations
 
 # Create main insights_predictive router
-router = APIRouter(prefix="/insights/predictive", tags=["insights-predictive"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["insights-predictive"])
 
 # Include all sub-routers
 router.include_router(recommendations.router)

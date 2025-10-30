@@ -324,8 +324,8 @@ async function checkDashboardEndpoint(signal: AbortSignal): Promise<HealthCheck>
     );
 
     try {
-        // Try to access without auth - should get 401 but proves endpoint exists
-        const response = await fetch(`${API_BASE_URL}/analytics/dashboard/overview/demo_channel`, {
+        // ✅ FIXED: Using correct /analytics/historical/overview/{channel_id} path
+        const response = await fetch(`${API_BASE_URL}/analytics/historical/overview/demo_channel`, {
             method: 'GET',
             signal
         });
@@ -333,13 +333,13 @@ async function checkDashboardEndpoint(signal: AbortSignal): Promise<HealthCheck>
         if (response.status === 401 || response.status === 403) {
             // Expected - endpoint exists but requires auth
             check.passed({
-                endpoint: 'analytics/dashboard/overview',
+                endpoint: 'analytics/historical/overview',
                 accessible: true,
                 requiresAuth: true
             });
         } else if (response.ok) {
             check.passed({
-                endpoint: 'analytics/dashboard/overview',
+                endpoint: 'analytics/historical/overview',
                 accessible: true,
                 requiresAuth: false
             });

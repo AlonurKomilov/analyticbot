@@ -27,14 +27,16 @@ const PredictiveAnalyticsService: React.FC = () => {
             setError(null);
 
             try {
-                // Real API calls would go here - responses are unused until implementation
-                await Promise.all([
-                    apiClient.get('/ai/predictive/stats'),
-                    apiClient.get('/ai/predictive/forecasts'),
-                    apiClient.get('/ai/predictive/insights'),
-                    apiClient.get('/ai/predictive/models')
-                ]);
+                // ✅ FIXED: Using correct /analytics/predictive/* paths
+                // Backend endpoints: /recommendations/{id}, /forecast, /best-times/{id}, /growth-forecast/{id}
+                // For now, call forecast endpoint only (others need channel ID)
+                await apiClient.post('/analytics/predictive/forecast', {
+                    channel_id: 'demo_channel',
+                    metrics: ['views', 'engagement'],
+                    days_ahead: 7
+                });
 
+                // TODO: Implement full predictive analytics UI with proper channel selection
                 // Data processing would happen here
             } catch (err) {
                 setError('Failed to load predictive analytics data');

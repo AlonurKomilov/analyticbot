@@ -45,6 +45,11 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const UnauthorizedPage = React.lazy(() => import('./pages/UnauthorizedPage'));
 const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));
 
+// Bot Management Pages
+const BotSetupPage = React.lazy(() => import('./pages/BotSetupPage'));
+const BotDashboardPage = React.lazy(() => import('./pages/BotDashboardPage'));
+const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManagementPage'));
+
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
 //     SuperAdminDashboard
@@ -175,18 +180,6 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* Post Creation Route */}
-                                <Route
-                                    path="/create"
-                                    element={
-                                        <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="form">
-                                                <CreatePostPage />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
-                                />
-
                                 {/* AI Services Routes */}
                                 <Route
                                     path="/services"
@@ -234,6 +227,38 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute requiredRole="admin">
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <AdminDashboard />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Bot Management Routes */}
+                                <Route
+                                    path="/bot/setup"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <BotSetupPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/bot/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <BotDashboardPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin/bots"
+                                    element={
+                                        <ProtectedRoute requiredRole="admin">
+                                            <OptimizedSuspense skeletonType="list">
+                                                <AdminBotManagementPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
@@ -347,7 +372,9 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* Posts Routes */}
+                                {/* Posts Routes - IMPORTANT: Specific routes MUST come before parameterized routes */}
+                                
+                                {/* Main posts hub */}
                                 <Route
                                     path={ROUTES.POSTS}
                                     element={
@@ -358,16 +385,30 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
+                                
+                                {/* Specific routes - MUST come before :id routes */}
                                 <Route
-                                    path={ROUTES.POST_DETAILS}
+                                    path={ROUTES.CREATE_POST}
                                     element={
                                         <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="content">
-                                                <PostDetailsPage />
+                                            <OptimizedSuspense skeletonType="form">
+                                                <CreatePostPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }
                                 />
+                                <Route
+                                    path={ROUTES.SCHEDULED_POSTS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="list">
+                                                <ScheduledPostsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                
+                                {/* Parameterized routes - MUST come after specific routes */}
                                 <Route
                                     path={ROUTES.EDIT_POST}
                                     element={
@@ -379,11 +420,11 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
                                 <Route
-                                    path={ROUTES.SCHEDULED_POSTS}
+                                    path={ROUTES.POST_DETAILS}
                                     element={
                                         <ProtectedRoute>
-                                            <OptimizedSuspense skeletonType="list">
-                                                <ScheduledPostsPage />
+                                            <OptimizedSuspense skeletonType="content">
+                                                <PostDetailsPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

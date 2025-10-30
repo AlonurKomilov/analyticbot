@@ -25,10 +25,8 @@ class ProcessorsContainer(containers.DeclarativeContainer):
     # Configuration
     settings = providers.Dependency(instance_of=MTProtoSettings)
 
-    # Metrics and monitoring
-    metrics = providers.Singleton(
-        MTProtoMetrics, enabled=settings.provided.enable_metrics.as_(bool)
-    )
+    # Metrics and monitoring - disabled by default (can be enabled via OBS_PROMETHEUS_ENABLED env var)
+    metrics = providers.Singleton(MTProtoMetrics, enabled=False)
 
     # Message processing services
     message_normalizer = providers.Factory(

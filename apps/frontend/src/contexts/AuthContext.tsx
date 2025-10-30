@@ -31,11 +31,11 @@ interface AuthContextValue {
     user: User | null;
     token: string | null;
     isAuthenticated: boolean;
-    isLoading: boolean;
-    login: (email: string, password: string) => Promise<LoginResponse>;
-    register: (userData: Record<string, any>) => Promise<RegisterResponse>;
+    login: (email: string, password: string, rememberMe?: boolean) => Promise<LoginResponse>;
     logout: () => Promise<void>;
+    register: (userData: Record<string, any>) => Promise<any>;
     refreshToken: () => Promise<boolean>;
+    isLoading: boolean;
     updateUser: (userData: User) => void;
 }
 
@@ -145,12 +145,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         initializeAuth();
     }, []);
 
-    // Login function
-    const login = useCallback(async (email: string, password: string): Promise<LoginResponse> => {
+    // Login function (🆕 Phase 3.2: Added remember_me parameter)
+    const login = useCallback(async (
+        email: string, 
+        password: string,
+        rememberMe: boolean = false
+    ): Promise<LoginResponse> => {
         try {
             setIsLoading(true);
 
-            const response = await apiClient.post('/auth/login', { email, password });
+            const response = await apiClient.post('/auth/login', { 
+                email, 
+                password,
+                remember_me: rememberMe  // 🆕 Pass remember_me to backend
+            });
             console.log('Login API full response:', response); // Debug log
 
             // Our apiClient returns data directly (not response.data like axios)

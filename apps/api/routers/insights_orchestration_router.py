@@ -15,7 +15,8 @@ from pydantic import BaseModel, Field
 from apps.api.di_analytics import get_analytics_fusion_service
 from core.protocols import AnalyticsFusionServiceProtocol
 
-router = APIRouter(prefix="/insights/orchestration", tags=["Analytics Orchestration v2"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["Analytics Orchestration v2"])
 logger = logging.getLogger(__name__)
 
 

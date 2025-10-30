@@ -30,65 +30,6 @@ from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
 
-
-# Dependency function for channel service
-def get_channel_service():
-    """Get channel management service instance - using mock for now"""
-
-    # Create a simple mock implementation to avoid complex dependencies
-    class MockChannelService:
-        async def get_channels(self, user_id: int):
-            return [
-                {
-                    "id": 1,
-                    "name": "Sample Channel",
-                    "telegram_id": 12345,
-                    "description": "Demo channel",
-                },
-                {
-                    "id": 2,
-                    "name": "Test Channel",
-                    "telegram_id": 67890,
-                    "description": "Test channel",
-                },
-            ]
-
-        async def create_channel(self, channel_data):
-            return {
-                "id": 99,
-                "name": channel_data.name,
-                "telegram_id": channel_data.telegram_id,
-                "description": channel_data.description,
-            }
-
-        async def get_channel(self, channel_id: int):
-            return {
-                "id": channel_id,
-                "name": f"Channel {channel_id}",
-                "telegram_id": 12345 + channel_id,
-                "description": "Sample channel",
-            }
-
-        async def update_channel(self, channel_id: int, channel_data):
-            return {
-                "id": channel_id,
-                "name": channel_data.name,
-                "telegram_id": channel_data.telegram_id,
-                "description": channel_data.description,
-            }
-
-        async def delete_channel(self, channel_id: int):
-            return {"success": True, "message": f"Channel {channel_id} deleted"}
-
-        async def transfer_ownership(self, channel_id: int, new_owner_id: int):
-            return {
-                "success": True,
-                "message": f"Channel {channel_id} transferred to user {new_owner_id}",
-            }
-
-    return MockChannelService()
-
-
 router = APIRouter(
     prefix="/channels", tags=["Channel Management"], responses={404: {"description": "Not found"}}
 )

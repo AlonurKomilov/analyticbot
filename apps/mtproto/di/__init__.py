@@ -13,7 +13,7 @@ from apps.mtproto.config import MTProtoSettings
 from apps.mtproto.di.collectors import CollectorsContainer
 from apps.mtproto.di.external import ExternalContainer
 from apps.mtproto.di.processors import ProcessorsContainer
-from apps.mtproto.di.storage import RepositoryContainer, StorageContainer
+from apps.mtproto.di.storage import StorageContainer
 from core.ports.tg_client import TGClient
 
 logger = logging.getLogger(__name__)
@@ -49,11 +49,11 @@ def get_settings(settings: MTProtoSettings = Provide[MTProtoContainer.settings])
     return settings
 
 
-@inject
-async def get_repositories() -> RepositoryContainer:
-    """Get repository container"""
-    container = MTProtoContainer()
-    return await container.storage.repositories()
+# @inject
+# async def get_repositories() -> RepositoryContainer:
+#     """Get repository container - DEPRECATED: RepositoryContainer removed"""
+#     container = MTProtoContainer()
+#     return await container.storage.repositories()
 
 
 def create_tg_client(settings: MTProtoSettings) -> TGClient:

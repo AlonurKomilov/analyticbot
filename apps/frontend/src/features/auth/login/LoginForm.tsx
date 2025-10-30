@@ -18,7 +18,9 @@ import {
     InputAdornment,
     IconButton,
     Link,
-    Divider
+    Divider,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import {
     Email as EmailIcon,
@@ -40,6 +42,7 @@ interface LoginFormProps {
 interface FormData {
     email: string;
     password: string;
+    rememberMe: boolean;  // 🆕 Phase 3.2: Remember me flag
 }
 
 interface FormErrors {
@@ -51,7 +54,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
     const { login, isLoading } = useAuth();
     const [formData, setFormData] = useState<FormData>({
         email: '',
-        password: ''
+        password: '',
+        rememberMe: false  // 🆕 Phase 3.2: Default to false
     });
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const [errors, setErrors] = useState<FormErrors>({});
@@ -114,7 +118,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
         setLoginError('');
 
         try {
-            const result = await login(formData.email, formData.password);
+            // 🆕 Phase 3.2: Pass rememberMe to login function
+            const result = await login(
+                formData.email, 
+                formData.password,
+                formData.rememberMe
+            );
 
             if (!result.success) {
                 setLoginError(result.error || 'Login failed. Please try again.');
@@ -231,6 +240,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
                                 )
                             }}
                             autoComplete="current-password"
+                        />
+
+                        {/* 🆕 Phase 3.2: Remember Me Checkbox */}
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={formData.rememberMe}
+                                    onChange={(e) => setFormData(prev => ({
+                                        ...prev,
+                                        rememberMe: e.target.checked
+                                    }))}
+                                    disabled={isSubmitting}
+                                    color="primary"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2" color="text.secondary">
+                                    Keep me signed in for 30 days
+                                </Typography>
+                            }
+                            sx={{ mb: 2 }}
                         />
 
                         {/* Login Button */}

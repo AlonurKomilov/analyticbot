@@ -21,7 +21,8 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/statistics/reports", tags=["statistics-reports"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["statistics-reports"])
 
 # === STATISTICAL REPORTS ===
 

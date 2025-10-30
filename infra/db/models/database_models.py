@@ -41,6 +41,7 @@ channels = sa.Table(
     ),
     sa.Column("title", sa.String(255)),
     sa.Column("username", sa.String(255), unique=True),
+    sa.Column("description", sa.Text, nullable=True),
     sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
 )
 

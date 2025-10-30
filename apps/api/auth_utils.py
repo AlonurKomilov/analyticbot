@@ -77,28 +77,42 @@ class FastAPIAuthUtils:
         expires_delta = timedelta(minutes=expires_minutes) if expires_minutes else None
         return self.security_manager.create_access_token(user, expires_delta)
 
-    def create_refresh_token(self, user_id: str | int, session_token: str) -> str:
+    def create_refresh_token(
+        self, 
+        user_id: str | int, 
+        session_token: str,
+        remember_me: bool = False
+    ) -> str:
         """
         Create refresh token for user session
+        
+        🆕 Phase 3.2: Added remember_me parameter
 
         Args:
             user_id: User ID (string or int)
             session_token: Session token
+            remember_me: If True, create long-lived token (30 days vs 7 days)
 
         Returns:
             JWT refresh token string
         """
-        return self.security_manager.create_refresh_token(str(user_id), session_token)
+        return self.security_manager.create_refresh_token(
+            str(user_id), 
+            session_token,
+            remember_me=remember_me
+        )
 
-    def refresh_access_token(self, refresh_token: str) -> str:
+    def refresh_access_token(self, refresh_token: str) -> dict[str, str]:
         """
-        Create new access token from refresh token
+        Create new access token from refresh token with rotation
+        
+        🔄 NEW: Returns both access_token and refresh_token (rotated)
 
         Args:
             refresh_token: Valid refresh token
 
         Returns:
-            New JWT access token
+            Dictionary with access_token, refresh_token, and token_type
 
         Raises:
             AuthError: If refresh token is invalid

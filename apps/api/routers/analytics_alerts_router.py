@@ -26,8 +26,8 @@ from apps.di import get_container
 
 logger = logging.getLogger(__name__)
 
-# Create alerts router
-router = APIRouter(prefix="/analytics/alerts", tags=["analytics-alerts"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["analytics-alerts"])
 
 # === ALERT MODELS ===
 

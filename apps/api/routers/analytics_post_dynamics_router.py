@@ -14,7 +14,8 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/analytics", tags=["analytics-post-dynamics"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["analytics-post-dynamics"])
 
 
 # Optional auth helper

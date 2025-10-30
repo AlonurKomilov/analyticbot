@@ -338,7 +338,7 @@ const ChannelsManagementPage: React.FC = () => {
                 </DialogTitle>
                 <DialogContent>
                     <Alert severity="warning" sx={{ mb: 2 }}>
-                        <strong>Important:</strong> This adds an existing Telegram channel to your analytics system. 
+                        <strong>Important:</strong> This adds an existing Telegram channel to your analytics system.
                         It does NOT create a new channel on Telegram. The channel must already exist.
                     </Alert>
 

@@ -142,7 +142,8 @@ class OptimizedAsyncPgPool:
         await self._initialize_optimizations()
 
         logger.info(
-            f"🚀 Optimized asyncpg pool initialized: {self.config.min_connections}-{self.config.max_connections} connections"
+            f"🚀 Optimized asyncpg pool initialized: "
+            f"{self.config.min_connections}-{self.config.max_connections} connections"
         )
         if self._pool is None:
             raise RuntimeError("Database pool not initialized")

@@ -22,7 +22,8 @@ from core.domain.payment import (
     SubscriptionData,
 )
 
-router = APIRouter(prefix="/payment", tags=["payment"])
+# ✅ FIXED: Removed prefix - now configured in main.py
+router = APIRouter(tags=["payment"])
 logger = logging.getLogger(__name__)
 
 

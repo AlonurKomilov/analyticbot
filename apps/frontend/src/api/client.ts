@@ -210,10 +210,10 @@ export class UnifiedApiClient {
   ): Promise<T> {
     // ✅ STEP 1: Proactively refresh token if expiring soon (before request)
     // Skip refresh for authentication endpoints (login, register, refresh)
-    const isAuthEndpoint = endpoint.includes('/auth/login') || 
-                           endpoint.includes('/auth/register') || 
+    const isAuthEndpoint = endpoint.includes('/auth/login') ||
+                           endpoint.includes('/auth/register') ||
                            endpoint.includes('/auth/refresh');
-    
+
     if (this.authStrategy === AuthStrategies.JWT && !isAuthEndpoint) {
       try {
         await tokenRefreshManager.refreshIfNeeded();
@@ -330,7 +330,7 @@ export class UnifiedApiClient {
       // Handle 401 Unauthorized - try token refresh and retry
       if (error instanceof ApiRequestError && error.response?.status === 401 && !options._retry) {
         console.warn('🔄 Got 401 Unauthorized - attempting token refresh...');
-        
+
         try {
           // ✅ STEP 2: Reactive refresh on 401 (refresh + retry)
           await tokenRefreshManager.handleAuthError(async () => {

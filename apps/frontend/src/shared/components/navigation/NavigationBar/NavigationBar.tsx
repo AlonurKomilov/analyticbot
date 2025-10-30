@@ -33,6 +33,7 @@ import {
     Payment as PaymentIcon,
     Person as PersonIcon,
     Tv as ChannelIcon,
+    SmartToy as BotIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
@@ -51,10 +52,13 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
     { label: 'Posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
     { label: 'AI Services', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
+    { label: 'Bot Setup', path: '/bot/setup', icon: <BotIcon /> },
+    { label: 'My Bot', path: '/bot/dashboard', icon: <BotIcon /> },
     { label: 'Payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
     { label: 'Profile', path: ROUTES.PROFILE, icon: <PersonIcon /> },
     { label: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },
     { label: 'Admin', path: ROUTES.ADMIN, icon: <AdminIcon /> },
+    { label: 'Admin Bots', path: '/admin/bots', icon: <AdminIcon /> },
 ];
 
 const NavigationBar: React.FC = () => {

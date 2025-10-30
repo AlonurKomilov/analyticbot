@@ -1,130 +1,174 @@
 /**
- * Posts Page
- * Note: This page is currently not connected to a backend endpoint.
- * The system tracks posts in two places:
- * 1. Scheduled Posts (future posts to be sent)
- * 2. Analytics (historical data for posts sent through the bot)
- * 
- * Use the "Scheduled Posts" page to manage upcoming posts.
+ * Posts Page - Unified post management
+ * Shows all posts (scheduled and sent) in one place
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Typography,
   Box,
   Button,
   Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  CircularProgress,
   Alert,
 } from '@mui/material';
-import { Schedule, Analytics, Info } from '@mui/icons-material';
+import { Add, Schedule, CheckCircle, Send } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
+import { usePostStore } from '@store';
+
+// Post interface for type safety - compatible with ScheduledPost
+interface Post {
+  id: string | number;
+  status: string;
+  schedule_time?: string | Date;
+  scheduled_at?: string | Date;
+  scheduledTime?: string;
+  channel_id?: number;
+  channelId?: string | number;
+  channel_name?: string;
+  post_text?: string;
+  message?: string;
+  content?: string;
+}
 
 const PostsPage: React.FC = () => {
+  const { scheduledPosts, isLoading, error, fetchScheduledPosts } = usePostStore();
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    // Fetch scheduled posts
+    fetchScheduledPosts();
+  }, [fetchScheduledPosts]);
+
+  useEffect(() => {
+    // Combine all posts (currently only scheduled posts available)
+    // In future, can merge with analytics data here
+    setAllPosts(scheduledPosts);
+  }, [scheduledPosts]);
+
+  const getStatusChip = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+      case 'scheduled':
+        return <Chip icon={<Schedule />} label="Scheduled" color="info" size="small" />;
+      case 'sent':
+      case 'published':
+        return <Chip icon={<CheckCircle />} label="Sent" color="success" size="small" />;
+      case 'failed':
+      case 'error':
+        return <Chip label="Failed" color="error" size="small" />;
+      default:
+        return <Chip label={status} size="small" />;
+    }
+  };
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleString();
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        {/* Header */}
-        <Typography variant="h4" component="h1" gutterBottom>
-          Posts
-        </Typography>
-
-        {/* Info Alert */}
-        <Alert severity="info" icon={<Info />} sx={{ mb: 3 }}>
-          <Typography variant="subtitle1" gutterBottom>
-            <strong>Post Management Architecture</strong>
+        {/* Header with Create Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1">
+            All Posts
           </Typography>
-          <Typography variant="body2" component="div">
-            The system tracks posts in two locations:
-            <ul style={{ marginTop: 8, marginBottom: 0 }}>
-              <li><strong>Scheduled Posts:</strong> Posts waiting to be sent (future)</li>
-              <li><strong>Analytics:</strong> Performance data for posts already sent through the bot</li>
-            </ul>
-          </Typography>
-        </Alert>
-
-        {/* Navigation Cards */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-          {/* Scheduled Posts Card */}
-          <Paper
-            elevation={2}
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              '&:hover': {
-                elevation: 4,
-                transform: 'translateY(-2px)',
-                transition: 'all 0.2s',
-              },
-            }}
+          <Button
+            component={Link}
+            to={ROUTES.CREATE_POST}
+            variant="contained"
+            startIcon={<Add />}
+            size="large"
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Schedule color="primary" fontSize="large" />
-              <Typography variant="h6">Scheduled Posts</Typography>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              View and manage posts that are scheduled to be published in the future.
-              Create, edit, or cancel upcoming posts.
-            </Typography>
-            <Button
-              component={Link}
-              to={ROUTES.SCHEDULED_POSTS}
-              variant="contained"
-              sx={{ mt: 'auto' }}
-            >
-              Go to Scheduled Posts
-            </Button>
-          </Paper>
-
-          {/* Analytics Card */}
-          <Paper
-            elevation={2}
-            sx={{
-              p: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              '&:hover': {
-                elevation: 4,
-                transform: 'translateY(-2px)',
-                transition: 'all 0.2s',
-              },
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Analytics color="primary" fontSize="large" />
-              <Typography variant="h6">Post Analytics</Typography>
-            </Box>
-                        <Typography variant="body2" color="text.secondary">
-              View historical data and insights for posts that have been sent through your bot.
-              Track engagement, views, and performance metrics.
-            </Typography>
-            <Button
-              component={Link}
-              to={ROUTES.ANALYTICS}
-              variant="contained"
-              sx={{ mt: 'auto' }}
-            >
-              Go to Analytics
-            </Button>
-          </Paper>
+            Create Post
+          </Button>
         </Box>
 
-        {/* Technical Note */}
-        <Alert severity="warning" sx={{ mt: 3 }}>
-          <Typography variant="body2">
-            <strong>Note:</strong> General post listing is not available because posts don't exist
-            as standalone entities. They're either scheduled (future) or tracked in analytics (past).
-            Analytics only show posts that were sent through the bot system.
-          </Typography>
-        </Alert>
+        {/* Error Alert */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+                        {/* Loading State */}
+        {isLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress />
+          </Box>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && allPosts.length === 0 && (
+          <Paper sx={{ p: 8, textAlign: 'center' }}>
+            <Send sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" gutterBottom color="text.secondary">
+              No posts yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Create your first post to get started
+            </Typography>
+            <Button
+              component={Link}
+              to={ROUTES.CREATE_POST}
+              variant="contained"
+              startIcon={<Add />}
+            >
+              Create Post
+            </Button>
+          </Paper>
+        )}
+
+        {/* Posts Table */}
+        {!isLoading && allPosts.length > 0 && (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Scheduled Date</TableCell>
+                  <TableCell>Channel</TableCell>
+                  <TableCell>Content Preview</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {allPosts.map((post) => (
+                  <TableRow key={post.id} hover>
+                    <TableCell>{getStatusChip(post.status)}</TableCell>
+                    <TableCell>{formatDate(post.schedule_time || post.scheduled_at || post.scheduledTime || '')}</TableCell>
+                    <TableCell>{post.channel_name || `Channel ${post.channel_id || post.channelId}`}</TableCell>
+                    <TableCell>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          maxWidth: 400,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {post.post_text || post.message || post.content || '-'}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     </Container>
   );
 };
 
-export { PostsPage };
 export default PostsPage;

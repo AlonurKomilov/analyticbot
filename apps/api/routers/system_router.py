@@ -230,16 +230,24 @@ async def send_post_now(
         message_id = telegram_response["result"]["message_id"]
         logger.info(f"✅ Message sent to Telegram! Message ID: {message_id}")
 
-        # Save to database with status='sent' and schedule_time=NOW()
-        scheduled_post = await schedule_service.create_scheduled_post(
+        # For immediate posts, save directly to DB bypassing schedule validation
+        # Use repository directly instead of service to avoid "past date" validation
+        from core.models import PostStatus, ScheduledPost
+
+        post = ScheduledPost(
             title=f"Immediate post for {request.channel_id}",
             content=request.message,
             channel_id=str(request.channel_id),
             user_id=str(request.user_id),
             scheduled_at=datetime.now(UTC),  # Current time for immediate posts
+            status=PostStatus.PUBLISHED,  # Mark as published immediately
+            tags=[],
             media_urls=[request.media_url] if request.media_url else [],
             media_types=[request.media_type] if request.media_type else [],
         )
+
+        # Save using repository (bypassing service validation)
+        scheduled_post = await schedule_service.schedule_repo.create(post)
 
         logger.info(
             f"✅ Post sent successfully: id={scheduled_post.id}, telegram_message_id={message_id}"
@@ -279,9 +287,14 @@ async def get_scheduled_post(
     try:
         from uuid import UUID
 
-        # Convert int to UUID and use correct service method: get_post
-        post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(post_id)
-        post = await schedule_service.get_post(post_uuid)
+        # Convert to UUID - if it's already a string, use it directly
+        if isinstance(post_id, int):
+            # For integer IDs, we need to query by ID field directly
+            # This is a temporary workaround - ideally all posts should use UUID
+            post_uuid = None
+        else:
+            post_uuid = UUID(str(post_id))
+        post = await schedule_service.get_post(post_uuid if post_uuid else post_id)
 
         if not post:
             raise HTTPException(status_code=404, detail="Scheduled post not found")
@@ -363,9 +376,12 @@ async def delete_scheduled_post(
     try:
         from uuid import UUID
 
-        # Convert int to UUID and use correct service method: delete_post
-        post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(post_id)
-        result = await schedule_service.delete_post(post_uuid)
+        # Convert to UUID - if it's already a string, use it directly
+        if isinstance(post_id, int):
+            post_uuid = None
+        else:
+            post_uuid = UUID(str(post_id))
+        result = await schedule_service.delete_post(post_uuid if post_uuid else post_id)
 
         if not result:
             raise HTTPException(status_code=404, detail="Scheduled post not found")

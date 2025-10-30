@@ -174,9 +174,19 @@ export class UnifiedApiClient {
   private isRetryableError(error: ApiRequestError): boolean {
     if (!error.response) return true; // Network errors are retryable
     const status = error.response.status;
-    // Don't retry timeouts (408) - they already waited long enough
-    // Only retry rate limits (429) and server errors (500+)
-    return status === 429 || status >= 500;
+
+    // Don't retry:
+    // - 4xx client errors (bad request, validation errors, etc.)
+    // - 408 timeouts (already waited long enough)
+    // - 500 internal server errors (likely validation/business logic failures)
+
+    // Only retry:
+    // - 429 rate limits (with backoff)
+    // - 502-504 gateway/proxy errors (temporary infrastructure issues)
+    if (status === 429) return true;
+    if (status >= 502 && status <= 504) return true;
+
+    return false;
   }
 
   /**

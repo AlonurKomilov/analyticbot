@@ -50,6 +50,9 @@ const BotSetupPage = React.lazy(() => import('./pages/BotSetupPage'));
 const BotDashboardPage = React.lazy(() => import('./pages/BotDashboardPage'));
 const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManagementPage'));
 
+// MTProto Setup Page
+const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
+
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
 //     SuperAdminDashboard
@@ -298,6 +301,18 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
+                                {/* MTProto Setup */}
+                                <Route
+                                    path="/settings/mtproto-setup"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="form">
+                                                <MTProtoSetupPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
                                 {/* Help & Support */}
                                 <Route
                                     path={ROUTES.HELP}
@@ -373,7 +388,7 @@ const AppRouter: React.FC = () => {
                                 />
 
                                 {/* Posts Routes - IMPORTANT: Specific routes MUST come before parameterized routes */}
-                                
+
                                 {/* Main posts hub */}
                                 <Route
                                     path={ROUTES.POSTS}
@@ -385,7 +400,7 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
-                                
+
                                 {/* Specific routes - MUST come before :id routes */}
                                 <Route
                                     path={ROUTES.CREATE_POST}
@@ -407,7 +422,7 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
-                                
+
                                 {/* Parameterized routes - MUST come after specific routes */}
                                 <Route
                                     path={ROUTES.EDIT_POST}

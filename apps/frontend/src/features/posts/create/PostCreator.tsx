@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Box, Typography, Alert } from '@mui/material';
+import { Box, Typography, Alert, Button, CircularProgress } from '@mui/material';
 import { useChannelStore, usePostStore, useMediaStore } from '@store';
 import { useLoadingState, useFormState } from '@/hooks';
 import MediaPreview from '@shared/components/ui/MediaPreview';
@@ -22,7 +22,6 @@ import PostContentInput from './PostContentInput.jsx';
 import ChannelSelector from './ChannelSelector.jsx';
 import ScheduleTimeInput from './ScheduleTimeInput.jsx';
 import PostButtonManager from './PostButtonManager';
-import PostSubmitButton from './PostSubmitButton.jsx';
 import { validatePostForm, canSubmitForm } from './PostFormValidation.js';
 
 interface Button {
@@ -39,7 +38,7 @@ interface FormState {
 
 const PostCreator: React.FC = React.memo(() => {
     const { channels } = useChannelStore();
-    const { schedulePost } = usePostStore();
+    const { schedulePost, sendNowPost } = usePostStore();
     const { pendingMedia } = useMediaStore();
 
     const responsive = useResponsive();
@@ -73,7 +72,42 @@ const PostCreator: React.FC = React.memo(() => {
         setButtons(prev => prev.filter((_, i) => i !== index));
     }, []);
 
-    // Main form submission handler
+    // Send post immediately (no scheduling)
+    const handleSendNow = useCallback(async () => {
+        // For immediate send, only validate text and channel (scheduleTime not required)
+        const errors: Record<string, string> = {};
+        
+        if (!formState.text.trim()) {
+            errors.text = 'Post text is required';
+        }
+        if (!formState.selectedChannel) {
+            errors.selectedChannel = 'Please select a channel';
+        }
+
+        if (Object.keys(errors).length > 0) return;
+
+        try {
+            const inline_buttons = buttons.length > 0
+                ? buttons.map(btn => [{ text: btn.text, url: btn.url }])
+                : undefined;
+
+            await sendNowPost({
+                text: formState.text,
+                selectedChannel: formState.selectedChannel,
+                scheduleTime: null,  // No schedule time for immediate send
+                inline_buttons,
+                media: pendingMedia ? pendingMedia : undefined
+            } as any);
+
+            // Reset form on success
+            resetForm();
+            setButtons([]);
+        } catch (err) {
+            console.error('Failed to send post:', err);
+        }
+    }, [formState, buttons, pendingMedia, sendNowPost, resetForm]);
+
+    // Schedule post for later
     const handleSchedulePost = useCallback(async () => {
         const errors = validatePostForm(formState);
 
@@ -100,10 +134,16 @@ const PostCreator: React.FC = React.memo(() => {
         }
     }, [formState, buttons, pendingMedia, schedulePost, resetForm]);
 
-    // Determine if form can be submitted
+    // Determine if form can be submitted for scheduled posts (requires scheduleTime)
     const canSubmit = useMemo(() =>
         canSubmitForm(formState, formErrors),
         [formState, formErrors]
+    );
+
+    // Determine if form can be submitted for immediate send (no scheduleTime required)
+    const canSendNow = useMemo(() => 
+        !!(formState.text.trim() && formState.selectedChannel),
+        [formState.text, formState.selectedChannel]
     );
 
     return (
@@ -202,18 +242,86 @@ const PostCreator: React.FC = React.memo(() => {
                 />
             </fieldset>
 
-            {/* Submit Section */}
+            {/* Submit Section - Two action buttons */}
             <Box sx={{
                 mt: { xs: 3, sm: 4 },
                 display: 'flex',
-                justifyContent: { xs: 'center', sm: 'flex-start' }
+                gap: 2,
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: { xs: 'stretch', sm: 'flex-start' }
             }}>
-                <PostSubmitButton
-                    onSubmit={handleSchedulePost}
-                    loading={loading}
-                    canSubmit={canSubmit}
-                />
+                {/* Send Now Button - Primary action */}
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSendNow}
+                    disabled={loading || !canSendNow}
+                    sx={{
+                        minWidth: { xs: '100%', sm: 140 },
+                        '&:focus-visible': {
+                            outline: '2px solid #fff',
+                            outlineOffset: '2px'
+                        }
+                    }}
+                    aria-describedby="send-now-help"
+                >
+                    {loading ? (
+                        <>
+                            <CircularProgress size={16} sx={{ mr: 1 }} aria-hidden="true" />
+                            Sending...
+                        </>
+                    ) : (
+                        'Send Now'
+                    )}
+                </Button>
+
+                {/* Schedule Post Button - Secondary action */}
+                <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleSchedulePost}
+                    disabled={loading || !canSubmit}
+                    sx={{
+                        minWidth: { xs: '100%', sm: 140 },
+                        '&:focus-visible': {
+                            outline: '2px solid #fff',
+                            outlineOffset: '2px'
+                        }
+                    }}
+                    aria-describedby="schedule-help"
+                >
+                    {loading ? (
+                        <>
+                            <CircularProgress size={16} sx={{ mr: 1 }} aria-hidden="true" />
+                            Scheduling...
+                        </>
+                    ) : (
+                        'Schedule Post'
+                    )}
+                </Button>
             </Box>
+
+            {/* Help text for validation */}
+            {!canSendNow && !loading && (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    id="send-now-help"
+                    sx={{ mt: 1, display: 'block' }}
+                >
+                    Enter post text and select a channel to send immediately
+                </Typography>
+            )}
+            {canSendNow && !canSubmit && !loading && (
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    id="schedule-help"
+                    sx={{ mt: 1, display: 'block' }}
+                >
+                    Set a schedule time to schedule this post
+                </Typography>
+            )}
         </Box>
     );
 });

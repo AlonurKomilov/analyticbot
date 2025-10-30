@@ -4,6 +4,7 @@
  *
  * Features:
  * - Multiple authentication strategies (JWT, TWA)
+ * - Automatic token refresh (proactive + reactive)
  * - Retry logic with exponential backoff
  * - Mock/real data source switching
  * - File upload capabilities
@@ -21,6 +22,8 @@ import type {
   StorageFilesResponse,
   ApiError
 } from '@/types';
+import { tokenRefreshManager } from '@/utils/tokenRefreshManager';
+import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
@@ -31,17 +34,23 @@ const DEFAULT_CONFIG: ApiClientConfig = {
   retryMultiplier: 2
 };
 
-// Endpoint-specific timeouts for better performance
+// Endpoint-specific timeouts optimized for production
+// Note: API responds in 17-173ms locally. DevTunnel adds ~500ms network latency.
+// Production deployment will eliminate DevTunnel and be much faster.
 const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/health': 5000,
   '/auth/login': 10000,
   '/auth/register': 10000,
   '/auth/me': 10000,
   '/auth/refresh': 10000,
-  '/analytics/channels': 60000, // Channels can take longer (60s)
-  '/channels': 60000, // Channel operations can take longer (60s)
-  '/analytics/': 25000,
-  'default': 30000
+  '/analytics/channels': 10000, // Reduced from 60s - analytics queries are cached
+  '/channels': 5000, // Reduced from 60s - simple database queries
+  '/system/schedule': 5000, // Reduced from 90s - database insert is fast
+  '/system/send': 10000, // Telegram API + database
+  '/schedule/': 5000, // Reduced from 90s - simple SELECT query
+  '/analytics/': 15000, // For complex analytics queries
+  '/api/user-bot/': 15000, // Reduced from 90s - bot operations with reasonable timeout
+  'default': 5000 // Reduced from 30s - fail fast for better UX
 };
 
 /**
@@ -118,15 +127,27 @@ export class UnifiedApiClient {
   private getAuthHeaders(): Record<string, string> {
     const headers = { ...this.defaultHeaders };
 
+    // 🔐 Add device fingerprint to all requests
+    const deviceId = getDeviceFingerprint();
+    headers['X-Device-ID'] = deviceId;
+
     switch (this.authStrategy) {
       case 'jwt': {
         // Check all possible token storage keys
         const token = localStorage.getItem('access_token') ||
+                     localStorage.getItem('auth_token') ||
                      localStorage.getItem('token') ||
                      localStorage.getItem('accessToken') ||
                      sessionStorage.getItem('access_token');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
+          if (import.meta.env.DEV) {
+            console.log('🔑 Using JWT token:', token.substring(0, 20) + '...');
+          }
+        } else {
+          if (import.meta.env.DEV) {
+            console.warn('⚠️ No JWT token found in storage');
+          }
         }
         break;
       }
@@ -153,7 +174,9 @@ export class UnifiedApiClient {
   private isRetryableError(error: ApiRequestError): boolean {
     if (!error.response) return true; // Network errors are retryable
     const status = error.response.status;
-    return status === 408 || status === 429 || status >= 500;
+    // Don't retry timeouts (408) - they already waited long enough
+    // Only retry rate limits (429) and server errors (500+)
+    return status === 429 || status >= 500;
   }
 
   /**
@@ -178,13 +201,27 @@ export class UnifiedApiClient {
   }
 
   /**
-   * Core request method with retry logic
+   * Core request method with retry logic and automatic token refresh
    */
   async request<T = unknown>(
     endpoint: string,
     options: RequestConfig = {},
     attempt = 1
   ): Promise<T> {
+    // ✅ STEP 1: Proactively refresh token if expiring soon (before request)
+    // Skip refresh for authentication endpoints (login, register, refresh)
+    const isAuthEndpoint = endpoint.includes('/auth/login') || 
+                           endpoint.includes('/auth/register') || 
+                           endpoint.includes('/auth/refresh');
+    
+    if (this.authStrategy === AuthStrategies.JWT && !isAuthEndpoint) {
+      try {
+        await tokenRefreshManager.refreshIfNeeded();
+      } catch (error) {
+        console.warn('⚠️ Proactive token refresh failed, continuing with request...');
+      }
+    }
+
     const controller = new AbortController();
     const requestTimeout = this.getTimeoutForEndpoint(endpoint);
     const timeoutId = setTimeout(() => {
@@ -288,6 +325,30 @@ export class UnifiedApiClient {
         const connectionError = new ApiRequestError('API is currently unavailable');
         connectionError.response = { status: 503, statusText: 'Service Unavailable' };
         throw connectionError;
+      }
+
+      // Handle 401 Unauthorized - try token refresh and retry
+      if (error instanceof ApiRequestError && error.response?.status === 401 && !options._retry) {
+        console.warn('🔄 Got 401 Unauthorized - attempting token refresh...');
+        
+        try {
+          // ✅ STEP 2: Reactive refresh on 401 (refresh + retry)
+          await tokenRefreshManager.handleAuthError(async () => {
+            // Mark as retry to prevent infinite loop
+            options._retry = true;
+            // Retry the request with new token
+            return this.request<T>(endpoint, options, attempt);
+          });
+        } catch (refreshError) {
+          // Token refresh failed - logout user
+          console.error('❌ Token refresh failed, logging out');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refresh_token');
+          sessionStorage.removeItem('authToken');
+          sessionStorage.removeItem('refresh_token');
+          window.location.href = '/login?reason=session_expired';
+          throw error;
+        }
       }
 
       // Retry logic

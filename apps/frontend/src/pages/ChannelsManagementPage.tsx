@@ -48,6 +48,7 @@ interface ChannelFormData {
     name: string;
     description: string;
     username: string;
+    telegram_id: string;  // Store as string for input, convert to number later
 }
 
 const ChannelsManagementPage: React.FC = () => {
@@ -61,7 +62,8 @@ const ChannelsManagementPage: React.FC = () => {
     const [formData, setFormData] = useState<ChannelFormData>({
         name: '',
         description: '',
-        username: ''
+        username: '',
+        telegram_id: ''
     });
     const [formError, setFormError] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -73,7 +75,7 @@ const ChannelsManagementPage: React.FC = () => {
 
     // Handle create dialog
     const handleOpenCreate = () => {
-        setFormData({ name: '', description: '', username: '' });
+        setFormData({ name: '', description: '', username: '', telegram_id: '' });
         setFormError('');
         setCreateDialogOpen(true);
     };
@@ -84,6 +86,11 @@ const ChannelsManagementPage: React.FC = () => {
             return;
         }
 
+        if (!formData.username.trim()) {
+            setFormError('Telegram username is required');
+            return;
+        }
+
         setSubmitting(true);
         setFormError('');
 
@@ -91,10 +98,11 @@ const ChannelsManagementPage: React.FC = () => {
             await addChannel({
                 name: formData.name.trim(),
                 username: formData.username.trim(),
-                description: formData.description.trim()
+                description: formData.description.trim(),
+                telegram_id: formData.telegram_id.trim()  // Pass telegram_id to store
             });
             setCreateDialogOpen(false);
-            setFormData({ name: '', description: '', username: '' });
+            setFormData({ name: '', description: '', username: '', telegram_id: '' });
         } catch (err: any) {
             setFormError(err.message || 'Failed to create channel');
         } finally {
@@ -108,7 +116,8 @@ const ChannelsManagementPage: React.FC = () => {
         setFormData({
             name: channel.name || '',
             description: channel.description || '',
-            username: channel.username || ''
+            username: channel.username || '',
+            telegram_id: channel.telegramId?.toString() || ''
         });
         setFormError('');
         setEditDialogOpen(true);
@@ -172,10 +181,10 @@ const ChannelsManagementPage: React.FC = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Box>
                         <Typography variant="h4" fontWeight={700} gutterBottom>
-                            Channels Management
+                            Channel Analytics Tracking
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
-                            Manage your Telegram channels and track their performance
+                            Add existing Telegram channels to track and analyze their performance
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -319,15 +328,20 @@ const ChannelsManagementPage: React.FC = () => {
                 </Grid>
             )}
 
-            {/* Create Channel Dialog */}
+            {/* Add Existing Channel Dialog */}
             <Dialog open={createDialogOpen} onClose={() => !submitting && setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <AddIcon />
-                        Add New Channel
+                        Add Existing Telegram Channel
                     </Box>
                 </DialogTitle>
                 <DialogContent>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        <strong>Important:</strong> This adds an existing Telegram channel to your analytics system. 
+                        It does NOT create a new channel on Telegram. The channel must already exist.
+                    </Alert>
+
                     {formError && (
                         <Alert severity="error" sx={{ mb: 2 }}>
                             {formError}
@@ -345,6 +359,7 @@ const ChannelsManagementPage: React.FC = () => {
                         onChange={handleInputChange('name')}
                         disabled={submitting}
                         required
+                        helperText="Friendly name for your reference (can be different from Telegram channel name)"
                         sx={{ mb: 2 }}
                     />
 
@@ -359,21 +374,56 @@ const ChannelsManagementPage: React.FC = () => {
                         value={formData.description}
                         onChange={handleInputChange('description')}
                         disabled={submitting}
+                        placeholder="Optional notes about this channel"
                         sx={{ mb: 2 }}
                     />
 
                     <TextField
                         margin="dense"
-                        label="Telegram Username (Optional)"
+                        label="Telegram Username"
                         type="text"
                         fullWidth
                         variant="outlined"
                         value={formData.username}
                         onChange={handleInputChange('username')}
                         disabled={submitting}
-                        helperText="Telegram channel username (e.g., @mychannel)"
+                        required
+                        helperText="Channel username (e.g., @abclegacynews)"
                         placeholder="@mychannel"
+                        sx={{ mb: 2 }}
                     />
+
+                    <TextField
+                        margin="dense"
+                        label="Telegram Channel ID (Optional)"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={formData.telegram_id}
+                        onChange={handleInputChange('telegram_id')}
+                        disabled={submitting}
+                        helperText="Numeric channel ID from Telegram (e.g., -1082618876654). Leave empty to auto-detect."
+                        placeholder="-1001234567890"
+                        sx={{ mb: 1 }}
+                    />
+
+                    <Alert severity="info" sx={{ mt: 1, mb: 2 }}>
+                        <strong>How to get Channel ID:</strong>
+                        <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                            <li>Forward a message from the channel to <strong>@userinfobot</strong></li>
+                            <li>The bot will show you the Channel ID (e.g., -1082618876654)</li>
+                            <li>Paste it in the field above</li>
+                        </ol>
+                    </Alert>
+
+                    <Alert severity="info" sx={{ mt: 0 }}>
+                        <strong>Requirements for Analytics:</strong>
+                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                            <li>The channel must already exist on Telegram</li>
+                            <li>Your bot must be added as an administrator to the channel</li>
+                            <li>This will track/monitor the channel for analytics only</li>
+                        </ul>
+                    </Alert>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setCreateDialogOpen(false)} disabled={submitting}>
@@ -382,9 +432,9 @@ const ChannelsManagementPage: React.FC = () => {
                     <Button
                         onClick={handleCreate}
                         variant="contained"
-                        disabled={submitting || !formData.name.trim()}
+                        disabled={submitting || !formData.name.trim() || !formData.username.trim()}
                     >
-                        {submitting ? <CircularProgress size={24} /> : 'Create Channel'}
+                        {submitting ? <CircularProgress size={24} /> : 'Add Channel'}
                     </Button>
                 </DialogActions>
             </Dialog>

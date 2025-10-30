@@ -7,8 +7,10 @@ Domain: System health, performance metrics, and core application functionality.
 """
 
 import logging
-from datetime import datetime
+import os
+from datetime import datetime, UTC
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from apps.di import get_delivery_service, get_schedule_service
@@ -49,6 +51,14 @@ class ScheduleRequest(BaseModel):
     channel_id: int
     message: str
     scheduled_time: datetime
+    media_type: str = "text"
+    media_url: str | None = None
+
+
+class SendNowRequest(BaseModel):
+    user_id: int
+    channel_id: int
+    message: str
     media_type: str = "text"
     media_url: str | None = None
 
@@ -150,6 +160,8 @@ async def create_scheduled_post(
     - Scheduled post confirmation with ID and timing
     """
     try:
+        logger.info(f"📅 Scheduling post: user={request.user_id}, channel={request.channel_id}, time={request.scheduled_time}")
+        
         # Use correct service method: create_scheduled_post
         scheduled_post = await schedule_service.create_scheduled_post(
             title=f"Scheduled post for {request.channel_id}",
@@ -161,6 +173,7 @@ async def create_scheduled_post(
             media_types=[request.media_type] if request.media_type else [],
         )
 
+        logger.info(f"✅ Post scheduled successfully: id={scheduled_post.id}")
         return {
             "success": True,
             "post_id": str(scheduled_post.id),
@@ -169,8 +182,78 @@ async def create_scheduled_post(
             "channel_id": request.channel_id,
         }
     except Exception as e:
-        logger.error(f"Post scheduling failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to schedule post")
+        logger.error(f"❌ Post scheduling failed: {type(e).__name__}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to schedule post: {str(e)}")
+
+
+@router.post("/send", response_model=dict)
+async def send_post_now(
+    request: SendNowRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+):
+    """
+    ## 🚀 Send Post Immediately
+
+    Send a post immediately to a Telegram channel (no scheduling).
+
+    **Parameters:**
+    - request: Post data with user_id, channel_id, and message
+
+    **Returns:**
+    - Success confirmation with message_id from Telegram
+    """
+    try:
+        logger.info(f"🚀 Sending post immediately: user={request.user_id}, channel={request.channel_id}")
+        
+        # Get Telegram bot token
+        bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o")
+        telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        
+        # Convert channel_id to negative for Telegram API
+        telegram_chat_id = -request.channel_id
+        
+        # Send to Telegram
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                telegram_api_url,
+                json={
+                    "chat_id": telegram_chat_id,
+                    "text": request.message
+                }
+            )
+            response.raise_for_status()
+            telegram_response = response.json()
+        
+        if not telegram_response.get("ok"):
+            raise HTTPException(status_code=500, detail=f"Telegram API error: {telegram_response.get('description')}")
+        
+        message_id = telegram_response["result"]["message_id"]
+        logger.info(f"✅ Message sent to Telegram! Message ID: {message_id}")
+        
+        # Save to database with status='sent' and schedule_time=NOW()
+        scheduled_post = await schedule_service.create_scheduled_post(
+            title=f"Immediate post for {request.channel_id}",
+            content=request.message,
+            channel_id=str(request.channel_id),
+            user_id=str(request.user_id),
+            scheduled_at=datetime.now(UTC),  # Current time for immediate posts
+            media_urls=[request.media_url] if request.media_url else [],
+            media_types=[request.media_type] if request.media_type else [],
+        )
+        
+        logger.info(f"✅ Post sent successfully: id={scheduled_post.id}, telegram_message_id={message_id}")
+        return {
+            "success": True,
+            "post_id": str(scheduled_post.id),
+            "message_id": message_id,
+            "message": "Post sent successfully",
+            "channel_id": request.channel_id,
+        }
+    except httpx.HTTPError as e:
+        logger.error(f"❌ Telegram API request failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to send message to Telegram: {str(e)}")
+    except Exception as e:
+        logger.error(f"❌ Post send failed: {type(e).__name__}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to send post: {str(e)}")
 
 
 @router.get("/schedule/{post_id}")

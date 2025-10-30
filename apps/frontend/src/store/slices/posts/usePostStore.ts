@@ -10,6 +10,18 @@ import { apiClient } from '@/api/client';
 import { ErrorHandler } from '@/utils/errorHandler';
 import type { Post, ScheduledPost, CreatePostRequest } from '@/types';
 
+// Internal type for PostCreator component data
+interface PostCreatorData {
+  text: string;
+  selectedChannel: string;
+  scheduleTime: string | null;
+  inline_buttons?: any[][];
+  media?: {
+    type: string;
+    url: string;
+  };
+}
+
 interface PostState {
   // State
   posts: Post[];
@@ -23,7 +35,8 @@ interface PostState {
   fetchPosts: (channelId?: string) => Promise<void>;
   fetchScheduledPosts: (channelId?: string) => Promise<void>;
   createPost: (postData: CreatePostRequest) => Promise<void>;
-  schedulePost: (postData: CreatePostRequest & { scheduledTime: string }) => Promise<void>;
+  sendNowPost: (postData: PostCreatorData) => Promise<void>;
+  schedulePost: (postData: PostCreatorData) => Promise<void>;
   updatePost: (postId: string, data: Partial<Post>) => Promise<void>;
   deletePost: (postId: string) => Promise<void>;
   cancelScheduledPost: (postId: string) => Promise<void>;
@@ -41,18 +54,19 @@ export const usePostStore = create<PostState>()(
     isScheduling: false,
     error: null,
 
-    // Fetch all posts
-    fetchPosts: async (channelId?: string) => {
+    // Fetch all posts - NOTE: Backend doesn't have a general /posts endpoint
+    // Posts only exist as either scheduled (future) or in analytics (past, sent via bot)
+    fetchPosts: async () => {
       set({ isLoading: true, error: null });
 
       try {
-        const endpoint = channelId ? `/posts?channel_id=${channelId}` : '/posts';
-        const posts = await apiClient.get<Post[]>(endpoint);
+        // For now, return empty array since there's no /posts endpoint
+        // Posts are tracked in analytics after being sent through the bot
+        console.log('ℹ️ No general /posts endpoint - posts are tracked in scheduled or analytics');
         set({
-          posts: posts || [],
+          posts: [],
           isLoading: false
         });
-        console.log('✅ Posts loaded:', posts?.length || 0);
       } catch (error) {
         console.error('❌ Failed to load posts:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to load posts';
@@ -64,14 +78,24 @@ export const usePostStore = create<PostState>()(
       }
     },
 
-    // Fetch scheduled posts
-    fetchScheduledPosts: async (channelId?: string) => {
+        // Fetch scheduled posts
+    fetchScheduledPosts: async () => {
       set({ isLoading: true, error: null });
 
       try {
-        const endpoint = channelId
-          ? `/posts/scheduled?channel_id=${channelId}`
-          : '/posts/scheduled';
+        // Get user ID from JWT token (check multiple possible keys)
+        const token = localStorage.getItem('access_token') || 
+                     localStorage.getItem('jwt_token') ||
+                     localStorage.getItem('auth_token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub;
+
+        const endpoint = `/schedule/user/${userId}`;
         const scheduledPosts = await apiClient.get<ScheduledPost[]>(endpoint);
         set({
           scheduledPosts: scheduledPosts || [],
@@ -83,8 +107,8 @@ export const usePostStore = create<PostState>()(
         const errorMessage = error instanceof Error ? error.message : 'Failed to load scheduled posts';
         set({
           scheduledPosts: [],
-          error: errorMessage,
-          isLoading: false
+          isLoading: false,
+          error: errorMessage
         });
       }
     },
@@ -120,14 +144,104 @@ export const usePostStore = create<PostState>()(
       }
     },
 
+    // Send post immediately (no scheduling)
+    sendNowPost: async (postData) => {
+      set({ isScheduling: true, error: null });
+
+      try {
+        console.log('🚀 Sending post immediately (raw data):', postData);
+
+        // Get user ID from JWT token (check multiple keys)
+        const token = localStorage.getItem('access_token') || 
+                     localStorage.getItem('jwt_token') ||
+                     localStorage.getItem('auth_token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // Decode JWT to get user_id
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub || payload.user_id || payload.id;
+
+        if (!userId) {
+          throw new Error('User ID not found in token');
+        }
+
+        // Transform frontend data to backend API format for immediate send
+        // Frontend sends: { text, selectedChannel, inline_buttons, media }
+        // Backend /send expects: { user_id, channel_id, message, media_type, media_url }
+        const backendPayload = {
+          user_id: parseInt(userId),
+          channel_id: parseInt(postData.selectedChannel),
+          message: postData.text,
+          media_type: postData.media?.type || 'text',
+          media_url: postData.media?.url || null,
+        };
+
+        console.log('🚀 Transformed payload for backend /send:', backendPayload);
+
+        const sentPost = await apiClient.post<ScheduledPost>('/system/send', backendPayload);
+
+        set(state => ({
+          scheduledPosts: [...state.scheduledPosts, sentPost],
+          isScheduling: false
+        }));
+
+        console.log('✅ Post sent immediately:', sentPost);
+      } catch (error) {
+        console.error('❌ Send post error:', error);
+        ErrorHandler.handleError(error as Error, {
+          component: 'PostStore',
+          action: 'sendNowPost',
+          postData
+        });
+
+        const errorMessage = error instanceof Error ? error.message : 'Failed to send post';
+        set({ error: errorMessage, isScheduling: false });
+        throw error;
+      }
+    },
+
     // Schedule a new post
     schedulePost: async (postData) => {
       set({ isScheduling: true, error: null });
 
       try {
-        console.log('📅 Scheduling post:', postData);
+        console.log('📅 Scheduling post (raw data):', postData);
 
-        const scheduledPost = await apiClient.post<ScheduledPost>('/posts/schedule', postData);
+        // Get user ID from JWT token (check multiple keys)
+        const token = localStorage.getItem('access_token') || 
+                     localStorage.getItem('jwt_token') ||
+                     localStorage.getItem('auth_token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // Decode JWT to get user_id
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub || payload.user_id || payload.id;
+
+        if (!userId) {
+          throw new Error('User ID not found in token');
+        }
+
+        // Transform frontend data to backend API format
+        // Frontend sends: { text, selectedChannel, scheduleTime, inline_buttons, media }
+        // Backend expects: { user_id, channel_id, message, scheduled_time, media_type, media_url }
+        const backendPayload = {
+          user_id: parseInt(userId),
+          channel_id: parseInt(postData.selectedChannel),
+          message: postData.text,
+          scheduled_time: postData.scheduleTime,
+          media_type: postData.media?.type || 'text',
+          media_url: postData.media?.url || null,
+        };
+
+        console.log('📅 Transformed payload for backend:', backendPayload);
+
+        const scheduledPost = await apiClient.post<ScheduledPost>('/system/schedule', backendPayload);
 
         set(state => ({
           scheduledPosts: [...state.scheduledPosts, scheduledPost],

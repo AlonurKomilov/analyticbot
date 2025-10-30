@@ -28,8 +28,8 @@ class ConnectionConfig:
     database: str
     host: str = "localhost"
     port: int = 5432
-    min_connections: int = 5
-    max_connections: int = 20
+    min_connections: int = 10
+    max_connections: int = 50  # Increased from 20 for better scalability
     connection_timeout: int = 30
     command_timeout: int = 60
     max_inactive_time: int = 300

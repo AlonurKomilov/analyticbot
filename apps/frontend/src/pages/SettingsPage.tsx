@@ -19,7 +19,8 @@ import {
     Notifications as NotificationsIcon,
     Security as SecurityIcon,
     Palette as ThemeIcon,
-    Language as LanguageIcon
+    Language as LanguageIcon,
+    SmartToy as BotIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,6 +32,13 @@ const SettingsPage: React.FC = () => {
     const navigate = useNavigate();
 
     const settingsSections = [
+        {
+            title: 'Bot Setup',
+            description: 'Configure your Telegram bot credentials and settings',
+            icon: <BotIcon />,
+            path: '/bot/setup',
+            available: true
+        },
         {
             title: 'MTProto Setup',
             description: 'Configure Telegram MTProto client for advanced features',
@@ -131,8 +139,9 @@ const SettingsPage: React.FC = () => {
             {/* Help Text */}
             <Paper sx={{ p: 2, mt: 3, bgcolor: 'info.lighter' }}>
                 <Typography variant="body2" color="text.secondary">
-                    💡 <strong>Tip:</strong> The MTProto Setup allows you to connect your Telegram account 
-                    for advanced features like reading channel history and analyzing posts.
+                    💡 <strong>Quick Start:</strong> Set up your bot credentials first in <strong>Bot Setup</strong>, 
+                    then optionally configure <strong>MTProto Setup</strong> for advanced features like reading 
+                    channel history and analyzing posts.
                 </Typography>
             </Paper>
         </Container>

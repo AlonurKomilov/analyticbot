@@ -28,6 +28,7 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
   onBack,
 }) => {
   const { verify, isVerifying, phoneCodeHash } = useMTProtoStore();
+    const { resendSetup, isSettingUp } = useMTProtoStore();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<Omit<MTProtoVerifyRequest, 'phone_code_hash'>>({
     verification_code: '',
@@ -146,11 +147,28 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
 
 
       <Box display="flex" justifyContent="space-between" mt={3}>
-        {onBack && (
-          <Button onClick={onBack} disabled={isVerifying}>
-            Back
+        <Box>
+          {onBack && (
+            <Button onClick={onBack} disabled={isVerifying || isSettingUp}>
+              Back
+            </Button>
+          )}
+          <Button
+            onClick={async () => {
+              if (!phoneCodeHash) return;
+              try {
+                await resendSetup();
+              } catch (e) {
+                console.error('Resend failed', e);
+              }
+            }}
+            disabled={isSettingUp}
+            sx={{ ml: 2 }}
+          >
+            {isSettingUp ? <CircularProgress size={18} /> : 'Resend code'}
           </Button>
-        )}
+        </Box>
+
         <Button
           type="submit"
           variant="contained"

@@ -12,7 +12,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field, validator
 from telethon import TelegramClient
-from telethon.errors import PhoneCodeExpiredError, PhoneCodeInvalidError, SessionPasswordNeededError
+from telethon.errors import (
+    FloodWaitError,
+    PhoneCodeExpiredError,
+    PhoneCodeInvalidError,
+    SessionPasswordNeededError,
+)
 from telethon.sessions import StringSession
 
 from apps.api.middleware.auth import get_current_user_id
@@ -290,6 +295,95 @@ async def setup_mtproto(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to setup MTProto: {str(e)}",
+        )
+
+
+@router.post(
+    "/resend",
+    response_model=MTProtoSetupResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {"model": ErrorResponse, "description": "No pending setup found"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+async def resend_mtproto_code(
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+):
+    """
+    Resend verification code using stored credentials
+
+    This endpoint retrieves the user's stored MTProto credentials
+    and re-sends the verification code without requiring them to 
+    re-enter their API credentials.
+    """
+    try:
+        # Get stored credentials
+        credentials = await repository.get_by_user_id(user_id)
+
+        if not credentials or not credentials.telegram_api_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No pending MTProto setup found. Please call /setup first.",
+            )
+
+        # Decrypt credentials
+        encryption = get_encryption_service()
+        if not credentials.telegram_api_hash:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto API hash not configured",
+            )
+        
+        if not credentials.telegram_phone:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phone number not configured",
+            )
+
+        api_hash = encryption.decrypt(credentials.telegram_api_hash)
+        phone = credentials.telegram_phone
+
+        # Create temporary client to resend code
+        session = StringSession()
+        client = TelegramClient(
+            session,
+            api_id=credentials.telegram_api_id,
+            api_hash=api_hash,
+        )
+
+        await client.connect()
+
+        try:
+            # Request new verification code
+            result = await client.send_code_request(phone)
+            phone_code_hash = result.phone_code_hash
+
+            logger.info(f"Verification code resent for user {user_id}")
+
+            return MTProtoSetupResponse(
+                success=True,
+                phone_code_hash=phone_code_hash,
+                message="Verification code resent successfully. Please check your Telegram app.",
+            )
+
+        finally:
+            await safe_disconnect(client)
+
+    except HTTPException:
+        raise
+    except FloodWaitError as e:
+        logger.error(f"FloodWaitError while resending code for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many requests. Please wait {e.seconds} seconds before trying again.",
+        )
+    except Exception as e:
+        logger.error(f"Error resending verification code for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to resend verification code: {str(e)}",
         )
 
 

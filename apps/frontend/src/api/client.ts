@@ -50,6 +50,7 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/schedule/': 5000, // Reduced from 90s - simple SELECT query
   '/analytics/': 15000, // For complex analytics queries
   '/api/user-bot/': 15000, // Reduced from 90s - bot operations with reasonable timeout
+  '/api/user-mtproto': 30000, // MTProto setup/verify needs longer timeout (network + Telegram latency)
   'default': 5000 // Reduced from 30s - fail fast for better UX
 };
 

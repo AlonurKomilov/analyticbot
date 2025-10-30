@@ -30,6 +30,14 @@ export async function setupMTProto(data: MTProtoSetupRequest): Promise<MTProtoSe
 }
 
 /**
+ * Resend verification code using stored credentials
+ */
+export async function resendMTProto(): Promise<MTProtoSetupResponse> {
+  const response = await apiClient.post<MTProtoSetupResponse>('/api/user-mtproto/resend', {});
+  return response;
+}
+
+/**
  * Verify MTProto setup with code from Telegram
  */
 export async function verifyMTProto(data: MTProtoVerifyRequest): Promise<MTProtoActionResponse> {

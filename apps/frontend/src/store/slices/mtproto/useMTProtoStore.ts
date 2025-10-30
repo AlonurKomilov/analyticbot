@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import {
   getMTProtoStatus,
   setupMTProto,
+  resendMTProto,
   verifyMTProto,
   disconnectMTProto,
   removeMTProto,
@@ -28,6 +29,8 @@ interface MTProtoState {
 
   // Phone code hash from setup (needed for verification)
   phoneCodeHash: string | null;
+  // Last setup payload (so user can resend code without retyping credentials)
+  lastSetupData: MTProtoSetupRequest | null;
 
   // Loading states
   isLoading: boolean;
@@ -42,6 +45,8 @@ interface MTProtoState {
   // Actions
   fetchStatus: () => Promise<void>;
   setup: (data: MTProtoSetupRequest) => Promise<string | null>; // Returns phone_code_hash
+  // Resend last setup request (re-send verification code using last entered credentials)
+  resendSetup: () => Promise<string | null>;
   verify: (data: MTProtoVerifyRequest) => Promise<void>;
   disconnect: () => Promise<void>;
   remove: () => Promise<void>;
@@ -57,6 +62,7 @@ interface MTProtoState {
 const initialState = {
   status: null,
   phoneCodeHash: null,
+  lastSetupData: null,
   isLoading: false,
   isSettingUp: false,
   isVerifying: false,
@@ -94,6 +100,8 @@ export const useMTProtoStore = create<MTProtoState>()(
         set({ isSettingUp: true, error: null });
         try {
           const response = await setupMTProto(data);
+          // store last setup payload so user can easily resend code
+          set({ lastSetupData: data });
           set({
             phoneCodeHash: response.phone_code_hash,
             isSettingUp: false
@@ -102,6 +110,24 @@ export const useMTProtoStore = create<MTProtoState>()(
           return response.phone_code_hash;
         } catch (error: any) {
           const errorMessage = error.response?.data?.detail || error.message || 'Failed to setup MTProto';
+          set({ error: errorMessage, isSettingUp: false });
+          toast.error(`❌ ${errorMessage}`);
+          return null;
+        }
+      },
+
+      /**
+       * Resend verification code using dedicated backend endpoint
+       */
+      resendSetup: async () => {
+        set({ isSettingUp: true, error: null });
+        try {
+          const response = await resendMTProto();
+          set({ phoneCodeHash: response.phone_code_hash, isSettingUp: false });
+          toast.success('📱 Verification code re-sent to your phone!');
+          return response.phone_code_hash;
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.detail || error.message || 'Failed to resend verification code';
           set({ error: errorMessage, isSettingUp: false });
           toast.error(`❌ ${errorMessage}`);
           return null;

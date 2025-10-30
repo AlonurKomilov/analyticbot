@@ -163,42 +163,97 @@ case $SERVICE in
         cd ../..
         ;;
     "tunnel")
-        # Start CloudFlare Tunnel for public access (3-10x faster than DevTunnel)
-        if ! command -v cloudflared &> /dev/null; then
-            echo -e "${RED}❌ cloudflared not installed${NC}"
-            echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
-            exit 1
-        fi
-
-        # Stop any existing CloudFlare tunnel first
-        if pgrep -f "cloudflared tunnel --url" > /dev/null; then
-            echo -e "${YELLOW}🔄 Stopping existing CloudFlare Tunnel...${NC}"
-            pkill -f "cloudflared tunnel --url" || true
+        # Start tunnel - Check for permanent tunnel first, fallback to random
+        
+        # Check if permanent Cloudflare tunnel is configured
+        if [ -f ".tunnel-info" ]; then
+            source .tunnel-info
+            echo -e "${BLUE}🌐 Starting PERMANENT Cloudflare Tunnel: ${TUNNEL_NAME}${NC}"
+            
+            # Stop any existing tunnel
+            pkill -f "cloudflared tunnel" || true
             sleep 2
-        fi
-
-        echo -e "${BLUE}🌐 Starting CloudFlare Tunnel...${NC}"
-        nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
-        local tunnel_pid=$!
-        echo $tunnel_pid > "logs/dev_tunnel.pid"
-
-        echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
-        sleep 5
-
-        # Extract tunnel URL
-        if [ -f "logs/dev_tunnel.log" ]; then
-            TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+            
+            # Start named tunnel
+            nohup cloudflared tunnel run $TUNNEL_NAME > logs/dev_tunnel.log 2>&1 &
+            tunnel_pid=$!
+            echo $tunnel_pid > "logs/dev_tunnel.pid"
+            
+            echo -e "${GREEN}✅ Permanent tunnel started!${NC}"
+            echo -e "${GREEN}🌐 Your PERMANENT URL: ${TUNNEL_URL}${NC}"
+            echo -e "${BLUE}💡 This URL never changes!${NC}"
+            echo ""
+            echo -e "${YELLOW}📝 Your frontend should already have:${NC}"
+            echo -e "   VITE_API_BASE_URL=${TUNNEL_URL}"
+            
+        # Check if ngrok is configured
+        elif [ -f ".ngrok-config" ]; then
+            source .ngrok-config
+            echo -e "${BLUE}🌐 Starting ngrok tunnel...${NC}"
+            
+            # Stop any existing ngrok
+            pkill ngrok || true
+            sleep 2
+            
+            # Start ngrok in background
+            nohup $NGROK_CMD > logs/dev_tunnel.log 2>&1 &
+            tunnel_pid=$!
+            echo $tunnel_pid > "logs/dev_tunnel.pid"
+            
+            sleep 3
+            
+            # Get URL from ngrok API
+            TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'https://[^"]*ngrok[^"]*' | head -1)
+            
             if [ ! -z "$TUNNEL_URL" ]; then
-                echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
+                echo -e "${GREEN}✅ ngrok tunnel started!${NC}"
                 echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
-                echo -e "${BLUE}💡 Update apps/frontend/.env.local with:${NC}"
-                echo -e "   VITE_API_BASE_URL=${TUNNEL_URL}"
                 echo ""
-                echo -e "${YELLOW}📝 Run this command to update .env.local automatically:${NC}"
+                echo -e "${YELLOW}📝 Update frontend .env.local:${NC}"
                 echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
             else
-                echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+                echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check: http://localhost:4040${NC}"
+            fi
+            
+        # Fallback to random Cloudflare tunnel (TEMPORARY URL)
+        else
+            echo -e "${YELLOW}⚠️  No permanent tunnel configured${NC}"
+            echo -e "${BLUE}💡 Setup permanent tunnel:${NC}"
+            echo -e "   Cloudflare: ./scripts/setup-cloudflare-tunnel.sh (FREE, RECOMMENDED)"
+            echo -e "   ngrok:      ./scripts/setup-ngrok.sh (Paid for permanent URL)"
+            echo ""
+            echo -e "${BLUE}🌐 Starting temporary CloudFlare Tunnel (URL changes every restart)...${NC}"
+            
+            if ! command -v cloudflared &> /dev/null; then
+                echo -e "${RED}❌ cloudflared not installed${NC}"
+                echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
+                exit 1
+            fi
+
+            # Stop any existing tunnel
+            pkill -f "cloudflared tunnel" || true
+            sleep 2
+
+            nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
+            tunnel_pid=$!
+            echo $tunnel_pid > "logs/dev_tunnel.pid"
+
+            echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
+            sleep 5
+
+            # Extract tunnel URL
+            if [ -f "logs/dev_tunnel.log" ]; then
+                TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+                if [ ! -z "$TUNNEL_URL" ]; then
+                    echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
+                    echo -e "${YELLOW}⚠️  TEMPORARY URL (changes every restart): ${TUNNEL_URL}${NC}"
+                    echo ""
+                    echo -e "${YELLOW}📝 Update .env.local:${NC}"
+                    echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                    echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                else
+                    echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+                fi
             fi
         fi
         ;;

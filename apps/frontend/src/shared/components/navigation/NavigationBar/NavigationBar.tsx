@@ -52,7 +52,6 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Channels', path: ROUTES.CHANNELS, icon: <ChannelIcon /> },
     { label: 'Posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
     { label: 'AI Services', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
-    { label: 'Bot Setup', path: '/bot/setup', icon: <BotIcon /> },
     { label: 'My Bot', path: '/bot/dashboard', icon: <BotIcon /> },
     { label: 'Payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
     { label: 'Profile', path: ROUTES.PROFILE, icon: <PersonIcon /> },

@@ -6,7 +6,6 @@ using protocol-based ports to remain independent of specific backends.
 """
 
 import logging
-from typing import Any
 
 from core.services.bot.metrics.models import (
     CeleryTaskMetric,

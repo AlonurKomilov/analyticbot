@@ -218,7 +218,7 @@ class MTProtoPerformanceTest:
 
             logger.info(
                 f"Rate limiting test: target={target_rps:.1f} RPS, "
-                f"actual={actual_rps:.1f} RPS, accuracy={100-rps_accuracy:.1f}%"
+                f"actual={actual_rps:.1f} RPS, accuracy={100 - rps_accuracy:.1f}%"
             )
 
         metrics.end_time = time.time()
@@ -257,7 +257,7 @@ class MTProtoPerformanceTest:
 
             if new_proxy != initial_proxy:
                 metrics.successful_requests = 1
-                logger.info(f"Proxy failover successful in {failover_time*1000:.1f}ms")
+                logger.info(f"Proxy failover successful in {failover_time * 1000:.1f}ms")
             else:
                 metrics.failed_requests = 1
                 metrics.errors.append("Proxy did not change after failures")
@@ -465,11 +465,11 @@ class MTProtoPerformanceTest:
             # P95 latency SLO
             if metrics.p95_response_time * 1000 > self.slos["max_p95_latency_ms"]:
                 compliance["p95_latency"] = (
-                    f"FAIL: {metrics.p95_response_time*1000:.1f}ms > {self.slos['max_p95_latency_ms']}ms"
+                    f"FAIL: {metrics.p95_response_time * 1000:.1f}ms > {self.slos['max_p95_latency_ms']}ms"
                 )
                 analysis["overall_status"] = "FAIL"
             else:
-                compliance["p95_latency"] = f"PASS: {metrics.p95_response_time*1000:.1f}ms"
+                compliance["p95_latency"] = f"PASS: {metrics.p95_response_time * 1000:.1f}ms"
 
             # RPS SLO
             if metrics.requests_per_second < self.slos["min_rps"]:

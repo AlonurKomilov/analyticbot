@@ -173,14 +173,19 @@ class LearningTaskService(LearningProtocol):
             # Create task object
             from datetime import datetime
 
-            from core.services.adaptive_learning.protocols.learning_protocols import LearningTask
+            from core.services.adaptive_learning.protocols.learning_protocols import (
+                LearningTask,
+            )
 
             task = LearningTask(
                 task_id=f"train_{model_id}_{int(datetime.utcnow().timestamp())}",
                 model_id=model_id,
                 strategy=strategy,
                 data_source="training_data",
-                parameters={"training_data": training_data, "validation_data": validation_data},
+                parameters={
+                    "training_data": training_data,
+                    "validation_data": validation_data,
+                },
             )
 
             # Create task
@@ -259,11 +264,16 @@ class LearningTaskService(LearningProtocol):
             return None
 
     async def update_model_incremental(
-        self, model_id: str, new_data: list[dict[str, Any]], learning_rate: float = 0.001
+        self,
+        model_id: str,
+        new_data: list[dict[str, Any]],
+        learning_rate: float = 0.001,
     ) -> bool:
         """Update model incrementally with new data"""
         try:
-            from core.services.adaptive_learning.protocols.learning_protocols import LearningTask
+            from core.services.adaptive_learning.protocols.learning_protocols import (
+                LearningTask,
+            )
 
             task = LearningTask(
                 task_id=f"incremental_{model_id}_{int(datetime.utcnow().timestamp())}",
@@ -289,7 +299,9 @@ class LearningTaskService(LearningProtocol):
     ) -> dict[str, float]:
         """Evaluate model performance on test data"""
         try:
-            from core.services.adaptive_learning.protocols.learning_protocols import LearningTask
+            from core.services.adaptive_learning.protocols.learning_protocols import (
+                LearningTask,
+            )
 
             # Create evaluation task (using validation data field)
             task = LearningTask(
@@ -350,9 +362,9 @@ class LearningTaskService(LearningProtocol):
                 "task_boundaries": context.task_boundaries,
                 "learning_statistics": context.learning_statistics,
                 "adaptation_history_length": len(context.adaptation_history),
-                "last_adaptation": context.adaptation_history[-1]
-                if context.adaptation_history
-                else None,
+                "last_adaptation": (
+                    context.adaptation_history[-1] if context.adaptation_history else None
+                ),
             }
 
         except Exception as e:

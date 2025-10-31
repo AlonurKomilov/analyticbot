@@ -109,7 +109,11 @@ async def performance():
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
-@router.get("/initial-data", response_model=InitialDataResponse, summary="Application Startup Data")
+@router.get(
+    "/initial-data",
+    response_model=InitialDataResponse,
+    summary="Application Startup Data",
+)
 async def initial_data(request: Request, user_id: int = Depends(get_current_user_id)):
     """
     ## 🚀 Application Startup Data
@@ -142,7 +146,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
 @router.post("/schedule", response_model=dict)
 async def create_scheduled_post(
-    request: ScheduleRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: ScheduleRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 📅 Create Scheduled Post
@@ -186,7 +191,8 @@ async def create_scheduled_post(
 
 @router.post("/send", response_model=dict)
 async def send_post_now(
-    request: SendNowRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: SendNowRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 🚀 Send Post Immediately
@@ -216,7 +222,8 @@ async def send_post_now(
         # Send to Telegram
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                telegram_api_url, json={"chat_id": telegram_chat_id, "text": request.message}
+                telegram_api_url,
+                json={"chat_id": telegram_chat_id, "text": request.message},
             )
             response.raise_for_status()
             telegram_response = response.json()
@@ -330,12 +337,12 @@ async def get_user_scheduled_posts(
                 {
                     "id": str(post.id),
                     "channel_id": post.channel_id,
-                    "message": post.content[:100] + "..."
-                    if len(post.content) > 100
-                    else post.content,
+                    "message": (
+                        post.content[:100] + "..." if len(post.content) > 100 else post.content
+                    ),
                     "scheduled_time": post.scheduled_at.isoformat(),
                     "status": post.status.value,
-                    "created_at": post.created_at.isoformat() if post.created_at else None,
+                    "created_at": (post.created_at.isoformat() if post.created_at else None),
                 }
                 for post in posts
             ],
@@ -384,7 +391,9 @@ async def delete_scheduled_post(
 
 
 @router.get("/delivery/stats")
-async def get_delivery_stats(delivery_service: DeliveryService = Depends(get_delivery_service)):
+async def get_delivery_stats(
+    delivery_service: DeliveryService = Depends(get_delivery_service),
+):
     """
     ## 📊 Delivery Statistics
 

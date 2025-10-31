@@ -101,7 +101,6 @@ class MonitoringProtocol(ABC):
         Returns:
             True if metric was successfully tracked
         """
-        pass
 
     @abstractmethod
     async def get_metrics(
@@ -121,7 +120,6 @@ class MonitoringProtocol(ABC):
         Returns:
             List of performance metrics
         """
-        pass
 
     @abstractmethod
     async def set_alert_threshold(
@@ -143,7 +141,6 @@ class MonitoringProtocol(ABC):
         Returns:
             True if threshold was successfully set
         """
-        pass
 
     @abstractmethod
     async def get_active_alerts(
@@ -159,7 +156,6 @@ class MonitoringProtocol(ABC):
         Returns:
             List of active alerts
         """
-        pass
 
     @abstractmethod
     async def resolve_alert(self, alert_id: str) -> bool:
@@ -172,7 +168,6 @@ class MonitoringProtocol(ABC):
         Returns:
             True if alert was successfully resolved
         """
-        pass
 
     @abstractmethod
     async def get_model_health_status(self, model_id: str) -> dict[str, Any]:
@@ -185,7 +180,6 @@ class MonitoringProtocol(ABC):
         Returns:
             Dictionary containing health status information
         """
-        pass
 
 
 class PerformanceTrackerProtocol(ABC):
@@ -214,7 +208,6 @@ class PerformanceTrackerProtocol(ABC):
         Returns:
             Dictionary containing trend analysis results
         """
-        pass
 
     @abstractmethod
     async def detect_performance_degradation(
@@ -230,7 +223,6 @@ class PerformanceTrackerProtocol(ABC):
         Returns:
             Dictionary containing degradation detection results
         """
-        pass
 
     @abstractmethod
     async def get_performance_summary(
@@ -246,7 +238,6 @@ class PerformanceTrackerProtocol(ABC):
         Returns:
             Dictionary containing performance summary
         """
-        pass
 
 
 class MonitoringInfrastructureProtocol(ABC):
@@ -268,7 +259,6 @@ class MonitoringInfrastructureProtocol(ABC):
         Returns:
             True if initialization was successful
         """
-        pass
 
     @abstractmethod
     async def get_monitoring_status(self) -> dict[str, Any]:
@@ -278,7 +268,6 @@ class MonitoringInfrastructureProtocol(ABC):
         Returns:
             Dictionary containing monitoring status
         """
-        pass
 
     @abstractmethod
     async def cleanup_old_metrics(self, retention_days: int) -> int:
@@ -291,7 +280,6 @@ class MonitoringInfrastructureProtocol(ABC):
         Returns:
             Number of metrics cleaned up
         """
-        pass
 
 
 class MonitoringServiceProtocol(ABC):
@@ -313,7 +301,6 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             True if monitoring started successfully
         """
-        pass
 
     @abstractmethod
     async def stop_monitoring(self, model_ids: list[str] | None = None) -> bool:
@@ -326,7 +313,6 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             True if monitoring stopped successfully
         """
-        pass
 
     @abstractmethod
     async def record_performance_metric(self, metric: PerformanceMetric) -> bool:
@@ -339,7 +325,6 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             True if metric was recorded successfully
         """
-        pass
 
     @abstractmethod
     async def get_performance_summary(
@@ -355,7 +340,6 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             Dictionary containing performance summary
         """
-        pass
 
     @abstractmethod
     async def detect_performance_issues(self, model_id: str) -> list[dict[str, Any]]:
@@ -368,7 +352,6 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             List of detected issues
         """
-        pass
 
     @abstractmethod
     async def get_current_metrics(self, model_id: str) -> Optional["PerformanceMetrics"]:
@@ -381,4 +364,3 @@ class MonitoringServiceProtocol(ABC):
         Returns:
             Current performance metrics or None if not available
         """
-        pass

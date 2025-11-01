@@ -212,7 +212,13 @@ async def get_demo_top_posts(
 
         demo_info = {
             "data_type": "curated_samples",
-            "metrics_included": ["views", "reactions", "shares", "comments", "engagement_rate"],
+            "metrics_included": [
+                "views",
+                "reactions",
+                "shares",
+                "comments",
+                "engagement_rate",
+            ],
             "ranking_algorithm": "engagement_score_weighted",
             "note": "Real system uses ML algorithms to identify optimal content patterns",
         }
@@ -331,7 +337,7 @@ async def demonstrate_clean_architecture():
 
         # Demonstrate service resolution through DI - get analytics service as example
         try:
-            analytics_service = await container.core_services.analytics_fusion_service()
+            await container.core_services.analytics_fusion_service()
             service_info = {"type": "AnalyticsFusionService", "status": "available"}
         except Exception as e:
             service_info = {"type": "unavailable", "status": f"error: {str(e)}"}
@@ -353,7 +359,10 @@ async def demonstrate_clean_architecture():
                 "location": "apps/di/",
                 "services_available": service_info,
             },
-            "sample_data": {"admin_stats": admin_stats, "user_permissions": sample_permissions},
+            "sample_data": {
+                "admin_stats": admin_stats,
+                "user_permissions": sample_permissions,
+            },
             "benefits": [
                 "Testable business logic",
                 "Swappable implementations",

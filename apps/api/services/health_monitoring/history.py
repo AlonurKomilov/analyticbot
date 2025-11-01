@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from apps.api.services.health_monitoring.base import (
-    HealthStatus,
     MAX_HISTORY_SIZE,
+    HealthStatus,
     SystemHealth,
 )
 

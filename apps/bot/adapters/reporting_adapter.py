@@ -4,7 +4,6 @@ Follows Clean Architecture: Apps layer adapter wrapping Core business logic
 """
 
 import logging
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -86,7 +85,12 @@ class BotReportingAdapter:
         """
         try:
             return await self.reporting_system.schedule_report(
-                schedule_name, data_generator, template, schedule_time, output_format, email_recipients
+                schedule_name,
+                data_generator,
+                template,
+                schedule_time,
+                output_format,
+                email_recipients,
             )
         except Exception as e:
             logger.error(f"Failed to schedule report: {e}")

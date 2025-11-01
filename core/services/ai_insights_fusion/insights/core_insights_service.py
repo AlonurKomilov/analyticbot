@@ -173,7 +173,10 @@ class CoreInsightsService(CoreInsightsProtocol):
             # Prepare analysis data
             analysis_data = {
                 "channel_id": channel_id,
-                "time_range": {"start": start_date.isoformat(), "end": end_date.isoformat()},
+                "time_range": {
+                    "start": start_date.isoformat(),
+                    "end": end_date.isoformat(),
+                },
                 "posts": posts or [],
                 "daily_metrics": daily_data or [],
                 "posts_count": len(posts) if posts else 0,

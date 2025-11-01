@@ -171,21 +171,23 @@ class ChannelService:
     async def update_channel_status(self, channel_id: int, is_active: bool) -> None:
         """
         Update channel active status (suspend/unsuspend)
-        
+
         ✅ Issue #3 Phase 4: Added for channel suspension functionality
-        
+
         Args:
             channel_id: Channel ID to update
             is_active: New active status (True=active, False=suspended)
-        
+
         Raises:
             ValueError: If channel_id is invalid
         """
         if channel_id <= 0:
             raise ValueError("Channel ID must be positive")
-        
-        self.logger.info(f"Updating channel {channel_id} status to {'active' if is_active else 'suspended'}")
-        
+
+        self.logger.info(
+            f"Updating channel {channel_id} status to {'active' if is_active else 'suspended'}"
+        )
+
         try:
             await self.channel_repo.update_channel_status(channel_id, is_active)
         except Exception as e:
@@ -195,27 +197,27 @@ class ChannelService:
     async def update_channel(self, channel_id: int, **kwargs) -> Channel:
         """
         Update channel with provided fields
-        
+
         ✅ Issue #3 Phase 4: Added for channel update functionality
-        
+
         Args:
             channel_id: Channel ID to update
             **kwargs: Fields to update (name, description, username, is_active, etc.)
-        
+
         Returns:
             Updated channel entity
-        
+
         Raises:
             ValueError: If channel_id is invalid or channel not found
         """
         if channel_id <= 0:
             raise ValueError("Channel ID must be positive")
-        
+
         if not kwargs:
             raise ValueError("No fields provided for update")
-        
+
         self.logger.info(f"Updating channel {channel_id} with fields: {list(kwargs.keys())}")
-        
+
         try:
             updated_record = await self.channel_repo.update_channel(channel_id, **kwargs)
             if not updated_record:

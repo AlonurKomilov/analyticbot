@@ -190,7 +190,10 @@ class SecurityManager:
             logger.info(f"Security event: {event_type} - User: {user_id} - Details: {details}")
 
     def create_access_token(
-        self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
+        self,
+        user: User,
+        expires_delta: timedelta | None = None,
+        session_id: str | None = None,
     ) -> str:
         """
         Create JWT access token with user claims
@@ -263,7 +266,7 @@ class SecurityManager:
     def create_refresh_token(self, user_id: str, session_id: str, remember_me: bool = False) -> str:
         """
         Create refresh token for token renewal
-        
+
         🆕 Phase 3.2: Added remember_me parameter for extended sessions
 
         Args:
@@ -279,13 +282,16 @@ class SecurityManager:
             # Import settings dynamically to avoid circular imports
             try:
                 from config.settings import settings
+
                 expire_days = settings.AUTH_REMEMBER_ME_DAYS
-                logger.info(f"🔒 Creating long-lived refresh token ({expire_days} days) for user {user_id}")
+                logger.info(
+                    f"🔒 Creating long-lived refresh token ({expire_days} days) for user {user_id}"
+                )
             except Exception:
                 expire_days = 30  # Fallback to 30 days
         else:
             expire_days = self.config.REFRESH_TOKEN_EXPIRE_DAYS
-        
+
         expire = datetime.utcnow() + timedelta(days=expire_days)
 
         # Build JWT payload directly to include custom fields like remember_me
@@ -301,20 +307,21 @@ class SecurityManager:
 
         # Encode directly using jose to preserve all custom fields
         from jose import jwt as jose_jwt
+
         refresh_token = jose_jwt.encode(
-            payload, 
-            self.config.REFRESH_SECRET_KEY, 
-            algorithm=self.config.ALGORITHM
+            payload, self.config.REFRESH_SECRET_KEY, algorithm=self.config.ALGORITHM
         )
 
         # Store refresh token in Redis with appropriate TTL
         self._cache_set(
             f"refresh_token:{refresh_token}",
-            json.dumps({
-                "user_id": user_id,
-                "session_id": session_id,
-                "remember_me": remember_me
-            }),
+            json.dumps(
+                {
+                    "user_id": user_id,
+                    "session_id": session_id,
+                    "remember_me": remember_me,
+                }
+            ),
             int(timedelta(days=expire_days).total_seconds()),
         )
 
@@ -384,7 +391,10 @@ class SecurityManager:
             raise AuthenticationError("Could not validate credentials", 401)
 
     def create_user_session(
-        self, user: User, auth_request: AuthRequest, device_info: dict[str, Any] | None = None
+        self,
+        user: User,
+        auth_request: AuthRequest,
+        device_info: dict[str, Any] | None = None,
     ) -> UserSession:
         """
         Create new user session with security tracking
@@ -568,7 +578,7 @@ class SecurityManager:
         try:
             # Use adapter to decode token (ignore expiration for revocation)
             try:
-                claims = self.token_generator.verify_jwt_token(token)
+                self.token_generator.verify_jwt_token(token)
                 # For revocation, we need the expiration time, so we'll use a fallback
                 # Since we can't easily get exp from claims, we'll revoke for a default period
                 seconds_until_exp = 3600  # 1 hour default
@@ -673,13 +683,13 @@ class SecurityManager:
     def refresh_access_token(self, refresh_token: str) -> dict[str, str]:
         """
         Refresh access token using valid refresh token with rotation
-        
+
         🔄 NEW: Implements refresh token rotation for enhanced security
         - Validates old refresh token
         - Issues new access token
         - Issues new refresh token (rotation)
         - Invalidates old refresh token
-        
+
         Args:
             refresh_token: Valid refresh token
 
@@ -694,7 +704,9 @@ class SecurityManager:
             refresh_data_str = self._cache_get(f"refresh_token:{refresh_token}")
             if not refresh_data_str or not isinstance(refresh_data_str, str):
                 raise AuthenticationError(
-                    "Invalid refresh token", status_code=401, error_code="INVALID_REFRESH_TOKEN"
+                    "Invalid refresh token",
+                    status_code=401,
+                    error_code="INVALID_REFRESH_TOKEN",
                 )
 
             refresh_data = json.loads(refresh_data_str)
@@ -703,7 +715,9 @@ class SecurityManager:
 
             if not user_id or not session_id:
                 raise AuthenticationError(
-                    "Invalid refresh token data", status_code=401, error_code="INVALID_TOKEN_DATA"
+                    "Invalid refresh token data",
+                    status_code=401,
+                    error_code="INVALID_TOKEN_DATA",
                 )
 
             # Verify session still exists
@@ -719,7 +733,12 @@ class SecurityManager:
 
             # Create new access token with minimal user data
             # In a real implementation, you'd fetch full user data from database
-            from core.security_engine.models import AuthProvider, User, UserRole, UserStatus
+            from core.security_engine.models import (
+                AuthProvider,
+                User,
+                UserRole,
+                UserStatus,
+            )
 
             # Mock user object for token creation - replace with actual user lookup
             user = User(
@@ -747,46 +766,50 @@ class SecurityManager:
                 user_id=str(user_id),
                 details={
                     "session_id": session_id,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
 
             logger.info(f"✅ Access token refreshed with rotation for user {user_id}")
-            
+
             # 🔄 STEP 4: Return both tokens
             return {
                 "access_token": new_access_token,
                 "refresh_token": new_refresh_token,
-                "token_type": "bearer"
+                "token_type": "bearer",
             }
 
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing refresh token data: {e}")
             raise AuthenticationError(
-                "Invalid refresh token", status_code=401, error_code="INVALID_TOKEN_FORMAT"
+                "Invalid refresh token",
+                status_code=401,
+                error_code="INVALID_TOKEN_FORMAT",
             )
         except AuthenticationError:
             raise
         except Exception as e:
             logger.error(f"Error refreshing access token: {e}")
             raise AuthenticationError(
-                "Token refresh failed", status_code=500, error_code="TOKEN_REFRESH_ERROR"
+                "Token refresh failed",
+                status_code=500,
+                error_code="TOKEN_REFRESH_ERROR",
             )
 
     def extend_session_on_activity(self, session_id: str, extension_minutes: int = 15) -> bool:
         """
         🆕 Phase 3.1: Extend session expiry time on user activity (sliding sessions)
-        
+
         Implements sliding window sessions that extend on each user request,
         preventing timeout during active usage.
-        
+
         Args:
             session_id: Active session ID to extend
             extension_minutes: Minutes to extend session by (default: 15)
-            
+
         Returns:
             True if session was extended, False if session doesn't exist
-            
+
         Example:
             # In API middleware/dependency:
             if settings.AUTH_SLIDING_SESSION_ENABLED:
@@ -799,34 +822,34 @@ class SecurityManager:
             # Get current session data
             session_key = f"session:{session_id}"
             session_data_str = self._cache_get(session_key)
-            
+
             if not session_data_str or not isinstance(session_data_str, str):
                 logger.debug(f"Session {session_id} not found for extension")
                 return False
-            
+
             # Parse session data
             session_data = json.loads(session_data_str)
-            
+
             # Update last_activity timestamp
             session_data["last_activity"] = datetime.utcnow().isoformat()
-            
+
             # Extend session TTL in cache
             ttl_seconds = int(extension_minutes * 60)
-            
+
             # Update session in cache with new TTL
             self._cache_set(
                 session_key,
                 json.dumps(session_data),
-                ttl_seconds  # Use TTL in seconds, not datetime
+                ttl_seconds,  # Use TTL in seconds, not datetime
             )
-            
+
             logger.debug(
                 f"🕐 Extended session {session_id} by {extension_minutes} minutes "
                 f"(TTL: {ttl_seconds}s)"
             )
-            
+
             return True
-            
+
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing session data for extension: {e}")
             return False

@@ -279,7 +279,10 @@ class QueryOptimizer:
 
     @staticmethod
     async def execute_batch(
-        pool: OptimizedAsyncPgPool, query: str, params_list: list[tuple], batch_size: int = 100
+        pool: OptimizedAsyncPgPool,
+        query: str,
+        params_list: list[tuple],
+        batch_size: int = 100,
     ) -> list[Any]:
         """Execute batch operations efficiently"""
         results = []

@@ -109,21 +109,40 @@ class AIChatService:
             word in question_lower
             for word in ["why", "drop", "decline", "down", "low", "poor", "falling"]
         ):
-            return {"type": "performance_question", "focus": "decline", "confidence": 0.8}
+            return {
+                "type": "performance_question",
+                "focus": "decline",
+                "confidence": 0.8,
+            }
 
         # Comparison questions (compare, vs, versus, better, worse)
         if any(
             word in question_lower
             for word in ["compare", "vs", "versus", "better", "worse", "difference"]
         ):
-            return {"type": "comparison_question", "focus": "comparison", "confidence": 0.8}
+            return {
+                "type": "comparison_question",
+                "focus": "comparison",
+                "confidence": 0.8,
+            }
 
         # Recommendation requests (should, recommend, suggest, improve, optimize)
         if any(
             word in question_lower
-            for word in ["should", "recommend", "suggest", "improve", "optimize", "how to"]
+            for word in [
+                "should",
+                "recommend",
+                "suggest",
+                "improve",
+                "optimize",
+                "how to",
+            ]
         ):
-            return {"type": "recommendation_request", "focus": "optimization", "confidence": 0.9}
+            return {
+                "type": "recommendation_request",
+                "focus": "optimization",
+                "confidence": 0.9,
+            }
 
         # Trend inquiries (trend, growing, trending, pattern)
         if any(
@@ -136,7 +155,11 @@ class AIChatService:
         if any(
             word in question_lower for word in ["when", "time", "best time", "schedule", "timing"]
         ):
-            return {"type": "timing_question", "focus": "optimization", "confidence": 0.9}
+            return {
+                "type": "timing_question",
+                "focus": "optimization",
+                "confidence": 0.9,
+            }
 
         # Content questions (what, which, content, post)
         if any(word in question_lower for word in ["what", "which", "content", "post", "type"]):

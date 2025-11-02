@@ -129,7 +129,10 @@ class DeploymentManager:
             return False
 
     async def rollback_deployment(
-        self, model_id: str, deployment_stage: DeploymentStage, target_version: str | None = None
+        self,
+        model_id: str,
+        deployment_stage: DeploymentStage,
+        target_version: str | None = None,
     ) -> bool:
         """Rollback to previous or specific version"""
         if not self.enable_rollback:
@@ -174,7 +177,10 @@ class DeploymentManager:
             success = await self.deploy_version(
                 rollback_version_id,
                 DeploymentStage.ROLLBACK,
-                deployment_config={"rollback": True, "original_stage": deployment_stage.value},
+                deployment_config={
+                    "rollback": True,
+                    "original_stage": deployment_stage.value,
+                },
                 auto_activate=True,
             )
 

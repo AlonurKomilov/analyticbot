@@ -28,7 +28,9 @@ class AuthError(HTTPException):
 
     def __init__(self, detail: str, status_code: int = status.HTTP_401_UNAUTHORIZED):
         super().__init__(
-            status_code=status_code, detail=detail, headers={"WWW-Authenticate": "Bearer"}
+            status_code=status_code,
+            detail=detail,
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
@@ -78,14 +80,11 @@ class FastAPIAuthUtils:
         return self.security_manager.create_access_token(user, expires_delta)
 
     def create_refresh_token(
-        self, 
-        user_id: str | int, 
-        session_token: str,
-        remember_me: bool = False
+        self, user_id: str | int, session_token: str, remember_me: bool = False
     ) -> str:
         """
         Create refresh token for user session
-        
+
         🆕 Phase 3.2: Added remember_me parameter
 
         Args:
@@ -97,15 +96,13 @@ class FastAPIAuthUtils:
             JWT refresh token string
         """
         return self.security_manager.create_refresh_token(
-            str(user_id), 
-            session_token,
-            remember_me=remember_me
+            str(user_id), session_token, remember_me=remember_me
         )
 
     def refresh_access_token(self, refresh_token: str) -> dict[str, str]:
         """
         Create new access token from refresh token with rotation
-        
+
         🔄 NEW: Returns both access_token and refresh_token (rotated)
 
         Args:

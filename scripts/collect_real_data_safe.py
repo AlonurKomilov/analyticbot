@@ -187,7 +187,7 @@ async def main():
         # Collect data from each channel with rate limiting
         total_collected = 0
         for i, channel in enumerate(settings.MTPROTO_PEERS):
-            print(f"\n📊 Processing channel {i+1}/{len(settings.MTPROTO_PEERS)}: {channel}")
+            print(f"\n📊 Processing channel {i + 1}/{len(settings.MTPROTO_PEERS)}: {channel}")
             collected = await collect_channel_data_safe(
                 client=client,
                 repos=repos,

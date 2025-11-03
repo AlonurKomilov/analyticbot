@@ -6,12 +6,13 @@ Coordinates with VideoProcessorPort for actual video manipulation.
 """
 
 import time
+
 from core.services.bot.content.models import (
     WatermarkConfig,
-    WatermarkResult,
     WatermarkPosition,
+    WatermarkResult,
 )
-from core.services.bot.content.protocols import VideoProcessorPort, FileSystemPort
+from core.services.bot.content.protocols import FileSystemPort, VideoProcessorPort
 
 
 class VideoWatermarkService:
@@ -162,9 +163,18 @@ class VideoWatermarkService:
 
         # Named colors (FFmpeg supports these)
         named_colors = {
-            "white", "black", "red", "green", "blue",
-            "yellow", "cyan", "magenta", "gray", "grey",
-            "orange", "purple",
+            "white",
+            "black",
+            "red",
+            "green",
+            "blue",
+            "yellow",
+            "cyan",
+            "magenta",
+            "gray",
+            "grey",
+            "orange",
+            "purple",
         }
 
         color_lower = color.lower().strip()

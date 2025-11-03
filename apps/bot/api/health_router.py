@@ -55,11 +55,17 @@ bot_health_checker.register_dependency(
 )
 
 bot_health_checker.register_dependency(
-    "telegram_api", check_telegram_api_health, DependencyType.EXTERNAL_API, critical=True
+    "telegram_api",
+    check_telegram_api_health,
+    DependencyType.EXTERNAL_API,
+    critical=True,
 )
 
 bot_health_checker.register_dependency(
-    "storage_channel", check_storage_channel_health, DependencyType.STORAGE, critical=False
+    "storage_channel",
+    check_storage_channel_health,
+    DependencyType.STORAGE,
+    critical=False,
 )
 
 

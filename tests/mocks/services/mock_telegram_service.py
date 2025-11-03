@@ -114,7 +114,7 @@ class MockTelegramService(TelegramAPIServiceProtocol):
 
         # Additional demo channels
         for i in range(3):
-            channel_id = f"demo_channel_{i+1}"
+            channel_id = f"demo_channel_{i + 1}"
             channels[channel_id] = self._generate_channel_info(channel_id)
 
         return channels
@@ -153,7 +153,7 @@ class MockTelegramService(TelegramAPIServiceProtocol):
         content_types = ["text", "photo", "video", "document", "poll"]
 
         for i in range(count):
-            post_id = f"{channel_id}_post_{i+1}"
+            post_id = f"{channel_id}_post_{i + 1}"
             content_type = random.choice(content_types)
 
             post = {

@@ -252,7 +252,12 @@ class AnalyticsPostTracker:
         Returns:
             Statistics dictionary
         """
-        stats: dict[str, int | float] = {"processed": 0, "updated": 0, "errors": 0, "skipped": 0}
+        stats: dict[str, int | float] = {
+            "processed": 0,
+            "updated": 0,
+            "errors": 0,
+            "skipped": 0,
+        }
 
         for i in range(0, len(posts), self._batch_size):
             batch = posts[i : i + self._batch_size]

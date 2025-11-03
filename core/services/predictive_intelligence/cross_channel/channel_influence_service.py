@@ -85,7 +85,10 @@ class ChannelInfluenceService:
                     if source_id != target_id:
                         # Calculate influence metrics
                         influence_data = await self._calculate_influence_metrics(
-                            channels_data[source_id], channels_data[target_id], source_id, target_id
+                            channels_data[source_id],
+                            channels_data[target_id],
+                            source_id,
+                            target_id,
                         )
 
                         influence_map[str(source_id)][str(target_id)] = influence_data
@@ -127,7 +130,10 @@ class ChannelInfluenceService:
 
         # Calculate overall influence score
         influence_score = self._calculate_influence_score(
-            audience_influence, content_influence, timing_influence, engagement_correlation
+            audience_influence,
+            content_influence,
+            timing_influence,
+            engagement_correlation,
         )
 
         # Determine influence type

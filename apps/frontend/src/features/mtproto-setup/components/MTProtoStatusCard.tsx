@@ -122,12 +122,12 @@ export const MTProtoStatusCard: React.FC = () => {
                 )}
                 <Box>
                   <Typography variant="subtitle1" fontWeight={600}>
-                    Global MTProto Access
+                    MTProto Feature Control
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {globalEnabled
-                      ? 'MTProto is active - reading channel history'
-                      : 'MTProto is disabled - using bot API only'
+                      ? 'Feature enabled - can read channel history'
+                      : 'Feature disabled - bot API only'
                     }
                   </Typography>
                 </Box>
@@ -208,17 +208,22 @@ export const MTProtoStatusCard: React.FC = () => {
             </Box>
           )}
 
-          {/* Connection Status */}
+          {/* Connection Status - Session State */}
           <Box display="flex" alignItems="center" gap={1}>
             {status.connected ? (
               <CloudDone color="success" />
             ) : (
-              <CloudOff color="disabled" />
+              <CloudOff color="warning" />
             )}
             <Typography>
-              <strong>Connected:</strong> {status.connected ? 'Yes' : 'No'}
+              <strong>Session Status:</strong> {status.connected ? 'Active' : 'Disconnected'}
             </Typography>
           </Box>
+          {!status.connected && globalEnabled && (
+            <Typography variant="caption" color="warning.main" sx={{ ml: 4, display: 'block' }}>
+              ⚠️ Session disconnected - you may need to reconnect or verify again
+            </Typography>
+          )}
 
           {/* Last Used */}
           {status.last_used && (

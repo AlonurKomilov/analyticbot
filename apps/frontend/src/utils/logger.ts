@@ -45,7 +45,7 @@ class Logger {
    */
   log(...args: any[]): void {
     if (this.shouldLog('log')) {
-      logger.log(this.formatMessage('LOG'), ...args);
+      console.log(this.formatMessage('LOG'), ...args);
     }
   }
 
@@ -54,7 +54,7 @@ class Logger {
    */
   info(...args: any[]): void {
     if (this.shouldLog('info')) {
-      logger.info(this.formatMessage('INFO'), ...args);
+      console.info(this.formatMessage('INFO'), ...args);
     }
   }
 
@@ -63,7 +63,7 @@ class Logger {
    */
   warn(...args: any[]): void {
     if (this.shouldLog('warn') || !this.isDev) {
-      logger.warn(this.formatMessage('WARN'), ...args);
+      console.warn(this.formatMessage('WARN'), ...args);
     }
   }
 
@@ -72,7 +72,7 @@ class Logger {
    */
   error(...args: any[]): void {
     // Always log errors, even in production
-    logger.error(this.formatMessage('ERROR'), ...args);
+    console.error(this.formatMessage('ERROR'), ...args);
 
     // Send to Sentry in production
     if (!this.isDev && typeof window !== 'undefined') {
@@ -100,7 +100,7 @@ class Logger {
    */
   debug(...args: any[]): void {
     if (this.shouldLog('debug') && this.isDev) {
-      logger.log(this.formatMessage('DEBUG'), ...args);
+      console.log(this.formatMessage('DEBUG'), ...args);
     }
   }
 
@@ -110,9 +110,9 @@ class Logger {
   group(label: string, collapsed: boolean = false): void {
     if (this.isDev) {
       if (collapsed) {
-        logger.log(this.formatMessage('GROUP'), label);
+        console.groupCollapsed(this.formatMessage('GROUP'), label);
       } else {
-        logger.log(this.formatMessage('GROUP'), label);
+        console.group(this.formatMessage('GROUP'), label);
       }
     }
   }
@@ -122,7 +122,7 @@ class Logger {
    */
   groupEnd(): void {
     if (this.isDev) {
-      logger.log();
+      console.groupEnd();
     }
   }
 
@@ -131,7 +131,7 @@ class Logger {
    */
   table(data: any): void {
     if (this.isDev) {
-      logger.log(data);
+      console.table(data);
     }
   }
 
@@ -140,7 +140,7 @@ class Logger {
    */
   time(label: string): void {
     if (this.isDev) {
-      logger.log(this.config.prefix ? `${this.config.prefix} ${label}` : label);
+      console.time(this.config.prefix ? `${this.config.prefix} ${label}` : label);
     }
   }
 
@@ -149,7 +149,7 @@ class Logger {
    */
   timeEnd(label: string): void {
     if (this.isDev) {
-      logger.log(this.config.prefix ? `${this.config.prefix} ${label}` : label);
+      console.timeEnd(this.config.prefix ? `${this.config.prefix} ${label}` : label);
     }
   }
 

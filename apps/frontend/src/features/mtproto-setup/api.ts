@@ -75,7 +75,7 @@ export async function getChannelMTProtoSetting(channelId: number): Promise<{
     channel_id: number;
     created_at?: string;
     updated_at?: string
-  }>(`/api/user-mtproto/channels/${channelId}`);
+  }>(`/api/user-mtproto/channels/${channelId}/settings`);
   return response;
 }
 

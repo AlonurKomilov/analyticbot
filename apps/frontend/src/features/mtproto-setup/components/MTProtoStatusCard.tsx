@@ -40,6 +40,8 @@ export const MTProtoStatusCard: React.FC = () => {
     console.log('🔍 MTProto Status Debug:', {
       connected: status?.connected,
       actively_connected: status?.actively_connected,
+      mtproto_enabled: status?.mtproto_enabled,
+      has_mtproto_enabled_field: 'mtproto_enabled' in (status || {}),
       should_show_button: status?.connected && !status?.actively_connected,
       full_status: status
     });
@@ -50,7 +52,13 @@ export const MTProtoStatusCard: React.FC = () => {
 
   // Sync toggle state when status changes (after API refresh)
   useEffect(() => {
+    console.log('🔄 Toggle Sync Effect:', {
+      status_mtproto_enabled: status?.mtproto_enabled,
+      current_globalEnabled: globalEnabled,
+      will_update: status?.mtproto_enabled !== undefined
+    });
     if (status?.mtproto_enabled !== undefined) {
+      console.log('✅ Updating globalEnabled to:', status.mtproto_enabled);
       setGlobalEnabled(status.mtproto_enabled);
     }
   }, [status?.mtproto_enabled]);

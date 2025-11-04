@@ -48,7 +48,8 @@ export const MTProtoStatusCard: React.FC = () => {
   }, [status]);
 
   // Global toggle state - track if user is actively toggling
-  const [globalEnabled, setGlobalEnabled] = useState(status?.mtproto_enabled ?? true);
+  // ✅ FIXED: Default to false if status not loaded yet (fail-secure)
+  const [globalEnabled, setGlobalEnabled] = useState(status?.mtproto_enabled ?? false);
   const [isUserToggling, setIsUserToggling] = useState(false); // Prevent race conditions
 
   // Sync toggle state when status changes (but NOT during user toggle action)

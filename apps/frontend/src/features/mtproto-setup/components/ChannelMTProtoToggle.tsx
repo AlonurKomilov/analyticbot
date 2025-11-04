@@ -18,7 +18,7 @@ import {
   SignalCellularAlt as MTProtoIcon,
   SignalCellularOff as MTProtoOffIcon
 } from '@mui/icons-material';
-import { getChannelMTProtoSetting, toggleChannelMTProto } from '@/features/mtproto-setup/api';
+import { getChannelMTProtoSetting, toggleChannelMTProto, getMTProtoStatus } from '@/features/mtproto-setup/api';
 import { logger } from '@/utils/logger';
 
 interface ChannelMTProtoToggleProps {
@@ -35,35 +35,57 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
   channelName,
   compact = false
 }) => {
-  const [enabled, setEnabled] = useState<boolean>(true); // Default to enabled
+  const [enabled, setEnabled] = useState<boolean | null>(null); // null = not loaded yet
+  const [globalEnabled, setGlobalEnabled] = useState<boolean>(false); // Global MTProto setting
   const [isLoading, setIsLoading] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [isUserToggling, setIsUserToggling] = useState(false); // Prevent race conditions
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Load current setting on mount
+  // Load current setting on mount and when channelId changes
+  // BUT block during user toggle to prevent race conditions
   useEffect(() => {
+    if (isUserToggling) {
+      console.log(`⏸️ Channel ${channelId}: Skipping reload - user is toggling`);
+      return;
+    }
+    console.log(`🔄 Channel ${channelId}: Loading setting...`);
     loadSetting();
-  }, [channelId]);
+  }, [channelId, isUserToggling]);
 
   const loadSetting = async () => {
     setIsLoading(true);
     setError(null);
     try {
+      // FIRST: Get global MTProto setting (the source of truth for defaults)
+      const status = await getMTProtoStatus();
+      const globalSetting = status.mtproto_enabled ?? false;
+      setGlobalEnabled(globalSetting);
+      
+      console.log('🌐 Global MTProto setting:', globalSetting);
+
+      // SECOND: Try to get per-channel override
       const numericChannelId = typeof channelId === 'string' ? parseInt(channelId, 10) : channelId;
-      const result = await getChannelMTProtoSetting(numericChannelId);
-      setEnabled(result.mtproto_enabled);
-    } catch (err: any) {
-      // 404 means no per-channel setting exists yet - use global default (enabled)
-      if (err.status === 404) {
-        logger.log(`No per-channel setting for ${channelId}, using global default (enabled)`);
-        setEnabled(true);
-      } else {
-        logger.error(`Failed to load MTProto setting for channel ${channelId}:`, err);
-        // Default to enabled on error (fail-open for better UX)
-        setEnabled(true);
-        setError('Failed to load MTProto status');
+      try {
+        const result = await getChannelMTProtoSetting(numericChannelId);
+        console.log(`📌 Channel ${channelId} has override:`, result.mtproto_enabled);
+        setEnabled(result.mtproto_enabled);
+      } catch (err: any) {
+        if (err.status === 404) {
+          // 404 = no per-channel override, inherit from global setting
+          console.log(`📌 Channel ${channelId} inherits global:`, globalSetting);
+          setEnabled(globalSetting); // ✅ Use global setting, NOT hardcoded true!
+        } else {
+          throw err; // Re-throw non-404 errors
+        }
       }
+    } catch (err: any) {
+      logger.error(`Failed to load MTProto setting for channel ${channelId}:`, err);
+      // On error, default to false (fail-secure, not fail-open)
+      setEnabled(false);
+      setGlobalEnabled(false);
+      setError('Failed to load MTProto status');
     } finally {
       setIsLoading(false);
     }
@@ -71,25 +93,42 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
 
   const handleToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;
+    
+    console.log(`🎚️ Channel ${channelId} toggle clicked:`, { from: enabled, to: newValue });
+    
+    // 🔒 LOCK: Prevent race conditions
+    setIsUserToggling(true);
     setIsToggling(true);
     setError(null);
 
+    // ⚡ INSTANT: Update UI immediately (optimistic)
+    setEnabled(newValue);
+
     try {
+      console.log(`📤 Sending channel toggle request for ${channelId}:`, { enabled: newValue });
       const numericChannelId = typeof channelId === 'string' ? parseInt(channelId, 10) : channelId;
       await toggleChannelMTProto(numericChannelId, newValue);
-      setEnabled(newValue);
+      console.log(`✅ Channel toggle API succeeded for ${channelId}`);
+      
       setSuccessMessage(
         newValue
           ? `MTProto enabled for ${channelName}`
           : `MTProto disabled for ${channelName}`
       );
+      
+      // ⏱️ WAIT: Let backend fully process (prevent stale data)
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
     } catch (err: any) {
+      console.error(`❌ Channel toggle failed for ${channelId}:`, err);
       logger.error(`Failed to toggle MTProto for channel ${channelId}:`, err);
       setError(err.message || 'Failed to toggle MTProto');
       // Revert on error
       setEnabled(!newValue);
     } finally {
       setIsToggling(false);
+      // 🔓 UNLOCK: Allow future updates
+      setIsUserToggling(false);
     }
   };
 
@@ -111,9 +150,10 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
               <FormControlLabel
                 control={
                   <Switch
-                    checked={enabled ?? true}
+                    key={`channel-${channelId}-toggle-${enabled}`}
+                    checked={enabled ?? globalEnabled}
                     onChange={handleToggle}
-                    disabled={isToggling || isLoading}
+                    disabled={isToggling || isLoading || enabled === null}
                     size="small"
                     color="primary"
                   />
@@ -178,9 +218,10 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
           <CircularProgress size={24} />
         ) : (
           <Switch
-            checked={enabled ?? true}
+            key={`channel-${channelId}-toggle-${enabled}`}
+            checked={enabled ?? globalEnabled}
             onChange={handleToggle}
-            disabled={isToggling || isLoading}
+            disabled={isToggling || isLoading || enabled === null}
             color="primary"
           />
         )}

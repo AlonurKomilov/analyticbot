@@ -33,7 +33,9 @@ router = APIRouter(tags=["insights-engagement"])
 async def get_channel_engagement_insights(
     channel_id: int,
     period: str = Query(
-        "24h", regex="^(24h|7d|30d|90d)$", description="Time period for engagement analysis"
+        "24h",
+        regex="^(24h|7d|30d|90d)$",
+        description="Time period for engagement analysis",
     ),
     metrics_type: str = Query(
         "comprehensive",
@@ -62,7 +64,11 @@ async def get_channel_engagement_insights(
         await require_channel_access(channel_id, current_user["id"])
 
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "period": period, "metrics_type": metrics_type}
+        cache_params = {
+            "channel_id": channel_id,
+            "period": period,
+            "metrics_type": metrics_type,
+        }
         cache_key = cache.generate_cache_key("engagement_insights", cache_params)
 
         # Try cache first
@@ -114,7 +120,9 @@ async def get_channel_engagement_insights(
 async def get_channel_audience_insights(
     channel_id: int,
     analysis_depth: str = Query(
-        "standard", regex="^(basic|standard|detailed)$", description="Depth of audience analysis"
+        "standard",
+        regex="^(basic|standard|detailed)$",
+        description="Depth of audience analysis",
     ),
     include_demographics: bool = Query(True, description="Include demographic analysis"),
     include_behavior: bool = Query(True, description="Include behavioral insights"),
@@ -206,7 +214,9 @@ async def get_trending_content_analysis(
     to_: Annotated[datetime, Query(alias="to")],
     window_hours: int = Query(default=48, ge=1, le=168, description="Analysis window in hours"),
     method: str = Query(
-        default="zscore", regex="^(zscore|ewma|hybrid)$", description="Trending detection method"
+        default="zscore",
+        regex="^(zscore|ewma|hybrid)$",
+        description="Trending detection method",
     ),
     min_engagement: float = Query(0.01, ge=0, le=1, description="Minimum engagement threshold"),
     service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
@@ -288,7 +298,9 @@ async def get_engagement_patterns_analysis(
     channel_id: int,
     days: int = Query(30, ge=7, le=90, description="Days for pattern analysis"),
     pattern_type: str = Query(
-        "temporal", regex="^(temporal|content|user)$", description="Type of pattern analysis"
+        "temporal",
+        regex="^(temporal|content|user)$",
+        description="Type of pattern analysis",
     ),
     current_user: dict = Depends(get_current_user),
     analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
@@ -312,7 +324,11 @@ async def get_engagement_patterns_analysis(
         await require_channel_access(channel_id, current_user["id"])
 
         # Generate cache key
-        cache_params = {"channel_id": channel_id, "days": days, "pattern_type": pattern_type}
+        cache_params = {
+            "channel_id": channel_id,
+            "days": days,
+            "pattern_type": pattern_type,
+        }
         cache_key = cache.generate_cache_key("engagement_patterns", cache_params)
 
         # Try cache first

@@ -120,7 +120,6 @@ class LearningProtocol(ABC):
         Returns:
             True if task was successfully created
         """
-        pass
 
     @abstractmethod
     async def execute_learning_task(self, task_id: str) -> bool:
@@ -133,7 +132,6 @@ class LearningProtocol(ABC):
         Returns:
             True if task execution started successfully
         """
-        pass
 
     @abstractmethod
     async def get_learning_progress(self, task_id: str) -> LearningProgress | None:
@@ -146,7 +144,6 @@ class LearningProtocol(ABC):
         Returns:
             Learning progress or None if task not found
         """
-        pass
 
     @abstractmethod
     async def cancel_learning_task(self, task_id: str) -> bool:
@@ -159,7 +156,6 @@ class LearningProtocol(ABC):
         Returns:
             True if task was successfully cancelled
         """
-        pass
 
     @abstractmethod
     async def get_active_tasks(self, model_id: str | None = None) -> list[LearningTask]:
@@ -172,7 +168,6 @@ class LearningProtocol(ABC):
         Returns:
             List of active learning tasks
         """
-        pass
 
 
 class OnlineLearnerProtocol(ABC):
@@ -198,7 +193,6 @@ class OnlineLearnerProtocol(ABC):
         Returns:
             Model update information
         """
-        pass
 
     @abstractmethod
     async def incremental_fit(
@@ -218,7 +212,6 @@ class OnlineLearnerProtocol(ABC):
         Returns:
             Dictionary containing fitting results
         """
-        pass
 
     @abstractmethod
     async def adapt_to_feedback(
@@ -234,7 +227,6 @@ class OnlineLearnerProtocol(ABC):
         Returns:
             Dictionary containing adaptation results
         """
-        pass
 
     @abstractmethod
     async def validate_model_performance(
@@ -250,7 +242,6 @@ class OnlineLearnerProtocol(ABC):
         Returns:
             Dictionary containing performance metrics
         """
-        pass
 
 
 class ModelVersioningProtocol(ABC):
@@ -276,7 +267,6 @@ class ModelVersioningProtocol(ABC):
         Returns:
             True if checkpoint was successfully created
         """
-        pass
 
     @abstractmethod
     async def rollback_model(self, model_id: str, target_version: str) -> bool:
@@ -290,7 +280,6 @@ class ModelVersioningProtocol(ABC):
         Returns:
             True if rollback was successful
         """
-        pass
 
     @abstractmethod
     async def get_model_versions(self, model_id: str) -> list[ModelUpdate]:
@@ -303,7 +292,6 @@ class ModelVersioningProtocol(ABC):
         Returns:
             List of model versions
         """
-        pass
 
     @abstractmethod
     async def compare_model_versions(
@@ -320,7 +308,6 @@ class ModelVersioningProtocol(ABC):
         Returns:
             Dictionary containing comparison results
         """
-        pass
 
 
 class IncrementalUpdaterProtocol(ABC):
@@ -349,7 +336,6 @@ class IncrementalUpdaterProtocol(ABC):
         Returns:
             Schedule ID
         """
-        pass
 
     @abstractmethod
     async def perform_incremental_update(
@@ -365,7 +351,6 @@ class IncrementalUpdaterProtocol(ABC):
         Returns:
             Model update information
         """
-        pass
 
     @abstractmethod
     async def get_update_schedule(self, model_id: str) -> dict[str, Any]:
@@ -378,7 +363,6 @@ class IncrementalUpdaterProtocol(ABC):
         Returns:
             Dictionary containing schedule information
         """
-        pass
 
 
 # Additional deployment-related classes and protocols
@@ -421,7 +405,11 @@ class LearningContext:
     updated_at: datetime = field(default_factory=datetime.utcnow)
     last_updated: str = ""
     learning_statistics: dict[str, Any] = field(
-        default_factory=lambda: {"total_updates": 0, "average_loss": 0.0, "last_update": None}
+        default_factory=lambda: {
+            "total_updates": 0,
+            "average_loss": 0.0,
+            "last_update": None,
+        }
     )
     memory_buffer: list[Any] = field(default_factory=list)
     adaptation_history: list[Any] = field(default_factory=list)
@@ -456,20 +444,21 @@ class ModelDeploymentProtocol(ABC):
 
     @abstractmethod
     async def deploy_model(
-        self, model_id: str, version: str, strategy: DeploymentStrategy, metadata: ModelMetadata
+        self,
+        model_id: str,
+        version: str,
+        strategy: DeploymentStrategy,
+        metadata: ModelMetadata,
     ) -> str:
         """Deploy model with specified strategy"""
-        pass
 
     @abstractmethod
     async def get_deployment_status(self, deployment_id: str) -> DeploymentStatus:
         """Get deployment status"""
-        pass
 
     @abstractmethod
     async def rollback_deployment(self, deployment_id: str, reason: str) -> bool:
         """Rollback deployment"""
-        pass
 
 
 class ModelUpdateProtocol(ABC):
@@ -484,19 +473,15 @@ class ModelUpdateProtocol(ABC):
         target_metadata: ModelMetadata,
     ) -> str | None:
         """Plan model deployment"""
-        pass
 
     @abstractmethod
     async def execute_deployment(self, plan_id: str) -> str | None:
         """Execute deployment plan"""
-        pass
 
     @abstractmethod
     async def get_deployment_status(self, execution_id: str) -> dict[str, Any] | None:
         """Get deployment status"""
-        pass
 
     @abstractmethod
     async def trigger_rollback(self, model_id: str, target_version: str, reason: str) -> str | None:
         """Trigger rollback"""
-        pass

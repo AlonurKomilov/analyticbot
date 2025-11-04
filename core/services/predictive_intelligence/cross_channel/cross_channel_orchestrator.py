@@ -381,7 +381,14 @@ class CrossChannelOrchestrator(CrossChannelAnalysisProtocol):
         """
         import random
 
-        platforms = ["telegram", "youtube", "twitter", "instagram", "discord", "linkedin"]
+        platforms = [
+            "telegram",
+            "youtube",
+            "twitter",
+            "instagram",
+            "discord",
+            "linkedin",
+        ]
 
         return {
             "channel_id": channel_id,

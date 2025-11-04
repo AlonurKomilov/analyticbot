@@ -122,7 +122,10 @@ class TestingFrameworkValidator:
                     valid_files.append(str(test_file.relative_to(self.project_root)))
                 except SyntaxError as e:
                     syntax_errors.append(
-                        {"file": str(test_file.relative_to(self.project_root)), "error": str(e)}
+                        {
+                            "file": str(test_file.relative_to(self.project_root)),
+                            "error": str(e),
+                        }
                     )
                 except Exception as e:
                     syntax_errors.append(
@@ -144,7 +147,14 @@ class TestingFrameworkValidator:
         print("🔍 Validating pytest test collection...")
 
         return self.run_command(
-            [str(self.venv_python), "-m", "pytest", "--collect-only", "--quiet", "tests/"],
+            [
+                str(self.venv_python),
+                "-m",
+                "pytest",
+                "--collect-only",
+                "--quiet",
+                "tests/",
+            ],
             "Pytest test collection validation",
         )
 
@@ -198,7 +208,8 @@ except Exception as e:
 """
 
         return self.run_command(
-            [str(self.venv_python), "-c", validation_script], "E2E test infrastructure validation"
+            [str(self.venv_python), "-c", validation_script],
+            "E2E test infrastructure validation",
         )
 
     def validate_framework_completeness(self) -> dict[str, Any]:
@@ -211,7 +222,10 @@ except Exception as e:
         integration_dir = self.project_root / "tests" / "integration"
         e2e_dir = self.project_root / "tests" / "e2e"
 
-        for test_dir, module_name in [(integration_dir, "integration"), (e2e_dir, "e2e")]:
+        for test_dir, module_name in [
+            (integration_dir, "integration"),
+            (e2e_dir, "e2e"),
+        ]:
             if not test_dir.exists():
                 test_counts[module_name] = 0
                 continue

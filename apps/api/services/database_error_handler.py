@@ -80,13 +80,16 @@ class DatabaseErrorHandler:
             "user_id": user_id,
             "request_path": str(request.url.path) if request else "unknown",
             "request_method": request.method if request else "unknown",
-            "user_agent": request.headers.get("user-agent", "unknown") if request else "unknown",
+            "user_agent": (request.headers.get("user-agent", "unknown") if request else "unknown"),
             "fallback_activated": fallback_activated,
-            "is_demo_user": getattr(request.state, "is_demo", False) if request else False,
+            "is_demo_user": (getattr(request.state, "is_demo", False) if request else False),
         }
 
         # Log based on severity
-        if error_type in [DatabaseErrorType.CONNECTION_FAILED, DatabaseErrorType.POOL_EXHAUSTED]:
+        if error_type in [
+            DatabaseErrorType.CONNECTION_FAILED,
+            DatabaseErrorType.POOL_EXHAUSTED,
+        ]:
             logger.critical(f"🚨 Critical database error: {audit_data}")
         elif error_type in [DatabaseErrorType.TIMEOUT, DatabaseErrorType.QUERY_FAILED]:
             logger.error(f"❌ Database error: {audit_data}")
@@ -147,7 +150,10 @@ class DatabaseErrorHandler:
         # For real users, always return proper HTTP errors
         if error_type == DatabaseErrorType.DATA_NOT_FOUND:
             raise HTTPException(status_code=404, detail="Requested resource not found")
-        elif error_type in [DatabaseErrorType.CONNECTION_FAILED, DatabaseErrorType.POOL_EXHAUSTED]:
+        elif error_type in [
+            DatabaseErrorType.CONNECTION_FAILED,
+            DatabaseErrorType.POOL_EXHAUSTED,
+        ]:
             raise HTTPException(
                 status_code=503,
                 detail="Database service temporarily unavailable. Please try again later.",
@@ -156,7 +162,8 @@ class DatabaseErrorHandler:
             raise HTTPException(status_code=504, detail="Request timeout. Please try again.")
         elif error_type == DatabaseErrorType.CONSTRAINT_VIOLATION:
             raise HTTPException(
-                status_code=409, detail="Data conflict. Please check your input and try again."
+                status_code=409,
+                detail="Data conflict. Please check your input and try again.",
             )
         else:
             raise HTTPException(

@@ -8,6 +8,7 @@
     "build": "tsc && vite build",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "lint:a11y": "eslint . --ext .jsx,.js --config .eslintrc-a11y.json",
     "preview": "vite preview",
     "test": "vitest",

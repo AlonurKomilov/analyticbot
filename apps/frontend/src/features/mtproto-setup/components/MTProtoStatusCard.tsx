@@ -73,6 +73,10 @@ export const MTProtoStatusCard: React.FC = () => {
 
   const handleGlobalToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;
+    console.log('🎚️ Toggle clicked:', { from: globalEnabled, to: newValue });
+    
+    // Immediately update UI for responsive feedback
+    setGlobalEnabled(newValue);
     setIsToggling(true);
     setToggleError(null);
     setToggleSuccess(null);
@@ -80,7 +84,6 @@ export const MTProtoStatusCard: React.FC = () => {
     try {
       // Call API to toggle global MTProto setting (backend expects POST)
       await toggleGlobalMTProto(newValue);
-      setGlobalEnabled(newValue);
       setToggleSuccess(
         newValue
           ? 'MTProto enabled globally for all channels'
@@ -181,6 +184,7 @@ export const MTProtoStatusCard: React.FC = () => {
               <FormControlLabel
                 control={
                   <Switch
+                    key={`mtproto-toggle-${globalEnabled}`}
                     checked={globalEnabled}
                     onChange={handleGlobalToggle}
                     disabled={isToggling}

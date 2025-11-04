@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
+import compression from 'vite-plugin-compression'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,7 +11,28 @@ export default defineConfig({
       // Use standard React JSX runtime for better compatibility
       jsxRuntime: 'automatic',
       jsxImportSource: 'react'
-    })
+    }),
+    // Bundle analyzer - generates stats.html
+    visualizer({
+      filename: './dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+    // Gzip compression
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 10240, // Only compress files > 10KB
+      deleteOriginFile: false,
+    }),
+    // Brotli compression
+    compression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 10240, // Only compress files > 10KB
+      deleteOriginFile: false,
+    }),
   ],
 
   // Environment variable prefix

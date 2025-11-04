@@ -29,8 +29,8 @@ import {
   SignalCellularOff as MTProtoOffIcon,
 } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
-import { apiClient } from '@/api/client';
 import { logger } from '@/utils/logger';
+import { toggleGlobalMTProto } from '../api';
 
 export const MTProtoStatusCard: React.FC = () => {
   const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove } = useMTProtoStore();
@@ -55,8 +55,8 @@ export const MTProtoStatusCard: React.FC = () => {
     setToggleSuccess(null);
 
     try {
-      // Call API to toggle global MTProto setting
-      await apiClient.put('/api/user-mtproto/toggle', { enabled: newValue });
+      // Call API to toggle global MTProto setting (backend expects POST)
+      await toggleGlobalMTProto(newValue);
       setGlobalEnabled(newValue);
       setToggleSuccess(
         newValue

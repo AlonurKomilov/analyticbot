@@ -62,6 +62,17 @@ export async function removeMTProto(): Promise<MTProtoActionResponse> {
 }
 
 /**
+ * Toggle global MTProto feature (enable/disable for the user)
+ * Note: backend exposes this as POST /api/user-mtproto/toggle
+ */
+export async function toggleGlobalMTProto(enabled: boolean): Promise<MTProtoActionResponse> {
+  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/toggle', {
+    enabled,
+  });
+  return response;
+}
+
+/**
  * Get MTProto setting for a specific channel
  */
 export async function getChannelMTProtoSetting(channelId: number): Promise<{

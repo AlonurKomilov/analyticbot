@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:analyze": "tsc && vite build && open dist/stats.html",
     "type-check": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -58,9 +59,11 @@
     "jest-axe": "^8.0.0",
     "jsdom": "^26.1.0",
     "msw": "^2.11.2",
+    "rollup-plugin-visualizer": "^6.0.5",
     "terser": "^5.43.1",
     "typescript": "^5.9.3",
     "vite": "^6.3.5",
+    "vite-plugin-compression": "^0.5.1",
     "vitest": "^3.2.4"
   }
 }

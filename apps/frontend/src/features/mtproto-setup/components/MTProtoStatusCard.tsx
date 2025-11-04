@@ -3,7 +3,7 @@
  * Displays current MTProto configuration status with GLOBAL TOGGLE
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -35,23 +35,26 @@ import { toggleGlobalMTProto, connectMTProto } from '../api';
 export const MTProtoStatusCard: React.FC = () => {
   const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove, fetchStatus } = useMTProtoStore();
 
-  // Global MTProto enable/disable state
-  const [globalEnabled, setGlobalEnabled] = useState<boolean>(true);
+  // Debug: Log the status to see what we're receiving
+  useEffect(() => {
+    console.log('🔍 MTProto Status Debug:', {
+      connected: status?.connected,
+      actively_connected: status?.actively_connected,
+      should_show_button: status?.connected && !status?.actively_connected,
+      full_status: status
+    });
+  }, [status]);
+
+  // Global toggle state
+  const [globalEnabled, setGlobalEnabled] = useState(status?.mtproto_enabled ?? true);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
 
-  // Connect state
+  // Connect button state
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
-
-  // Load global setting when status loads
-  React.useEffect(() => {
-    if (status?.mtproto_enabled !== undefined) {
-      setGlobalEnabled(status.mtproto_enabled);
-    }
-  }, [status?.mtproto_enabled]);
 
   const handleGlobalToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;

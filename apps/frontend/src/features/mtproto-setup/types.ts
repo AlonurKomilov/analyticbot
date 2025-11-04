@@ -19,7 +19,8 @@ export interface MTProtoStatusResponse {
   verified: boolean;
   phone: string | null;
   api_id: number | null;
-  connected: boolean;
+  connected: boolean; // True if session ready OR actively connected
+  actively_connected?: boolean; // True only if client is in active pool
   last_used: string | null;
   can_read_history: boolean;
   mtproto_enabled?: boolean; // Global MTProto enable/disable flag

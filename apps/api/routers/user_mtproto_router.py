@@ -117,7 +117,8 @@ class MTProtoStatusResponse(BaseModel):
     verified: bool
     phone: str | None = None  # Masked
     api_id: int | None = None
-    connected: bool = False
+    connected: bool = False  # True if session ready (exists in DB)
+    actively_connected: bool = False  # True if client in active pool
     last_used: datetime | None = None
     can_read_history: bool = False
     mtproto_enabled: bool = True  # New field for toggle state
@@ -236,22 +237,23 @@ async def get_mtproto_status(
         verified = configured and has_session
 
         # Check if client is actively connected in the pool
-        # If verified (has session), treat as "ready to connect" even if not in pool
-        connected = False
+        connected = False  # True if session ready (exists in DB)
+        actively_connected = False  # True if client in active pool
         last_used = None
 
         if verified:
+            # Session exists in DB - mark as "ready"
+            connected = True
+            
             try:
                 mtproto_service = get_user_mtproto_service()
                 # Check if client exists in pool and is actively connected
                 if user_id in mtproto_service._client_pool:
                     client = mtproto_service._client_pool[user_id]
-                    connected = client._is_connected
+                    actively_connected = client._is_connected
                     last_used = client.last_used
+                    logger.debug(f"User {user_id} has active client in pool (connected={actively_connected})")
                 else:
-                    # Session exists in DB but not in active pool
-                    # Mark as "ready" (will auto-connect on first use)
-                    connected = True  # Session is ready, will connect when needed
                     logger.debug(f"User {user_id} has verified session (not in active pool yet)")
             except Exception as e:
                 logger.warning(f"Error checking MTProto connection for user {user_id}: {e}")
@@ -269,9 +271,10 @@ async def get_mtproto_status(
             verified=verified,
             phone=phone,
             api_id=credentials.telegram_api_id if configured else None,
-            connected=connected and mtproto_enabled,
+            connected=connected and mtproto_enabled,  # True if session ready
+            actively_connected=actively_connected and mtproto_enabled,  # True if in active pool
             last_used=last_used,
-            can_read_history=verified and connected and mtproto_enabled,
+            can_read_history=verified and actively_connected and mtproto_enabled,
             mtproto_enabled=mtproto_enabled,  # Return the actual toggle state
         )
 

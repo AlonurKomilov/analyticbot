@@ -238,19 +238,34 @@ export const MTProtoStatusCard: React.FC = () => {
 
           {/* Connection Status - Session State */}
           <Box display="flex" alignItems="center" gap={1}>
-            {status.connected ? (
+            {status.actively_connected ? (
               <CloudDone color="success" />
+            ) : status.connected ? (
+              <CloudDone color="info" />
             ) : (
               <CloudOff color="disabled" />
             )}
             <Typography>
-              <strong>Session Status:</strong> {status.connected ? 'Ready' : 'Not Ready'}
+              <strong>Session Status:</strong>{' '}
+              {status.actively_connected
+                ? 'Connected'
+                : status.connected
+                ? 'Ready'
+                : 'Not Ready'}
             </Typography>
           </Box>
-          {status.connected && (
+
+          {/* Status-specific message and actions */}
+          {status.actively_connected && (
+            <Typography variant="caption" color="success.main" sx={{ ml: 4, display: 'block' }}>
+              ✅ Active connection - reading channel history in real-time
+            </Typography>
+          )}
+
+          {status.connected && !status.actively_connected && (
             <Box sx={{ ml: 4 }}>
-              <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
-                ✅ Session is ready - will auto-connect when reading channel history
+              <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
+                💤 Session ready - will connect automatically when needed
               </Typography>
               <Button
                 variant="outlined"

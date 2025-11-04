@@ -676,6 +676,77 @@ async def verify_mtproto(
 
 
 @router.post(
+    "/connect",
+    response_model=MTProtoActionResponse,
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {"model": ErrorResponse, "description": "No MTProto configuration or not verified"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+async def connect_mtproto(
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+):
+    """
+    Manually connect MTProto client and add to active pool
+    
+    This creates an active Telegram connection and adds the client to the
+    service pool. Use this when you want immediate "Active" status instead
+    of lazy "Ready" status.
+    """
+    try:
+        # Check credentials exist and are verified
+        credentials = await repository.get_by_user_id(user_id)
+        
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No MTProto configuration found. Please configure MTProto first.",
+            )
+        
+        if not credentials.is_verified or not credentials.session_string:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto not verified. Please complete verification first.",
+            )
+        
+        if not credentials.mtproto_enabled:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto is disabled. Please enable it first.",
+            )
+        
+        # Get MTProto service and connect client
+        mtproto_service = get_user_mtproto_service()
+        
+        # This will create client and add to pool if not exists, or reconnect if exists
+        client = await mtproto_service.get_user_client(user_id)
+        
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create MTProto client. Check your configuration.",
+            )
+        
+        logger.info(f"MTProto client connected manually for user {user_id}")
+        
+        return MTProtoActionResponse(
+            success=True,
+            message="MTProto client connected successfully. You can now read channel history.",
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error connecting MTProto for user {user_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to connect MTProto: {str(e)}",
+        )
+
+
+@router.post(
     "/disconnect",
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,

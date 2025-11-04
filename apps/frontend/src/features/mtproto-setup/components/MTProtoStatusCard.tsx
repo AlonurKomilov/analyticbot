@@ -30,16 +30,21 @@ import {
 } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
 import { logger } from '@/utils/logger';
-import { toggleGlobalMTProto } from '../api';
+import { toggleGlobalMTProto, connectMTProto } from '../api';
 
 export const MTProtoStatusCard: React.FC = () => {
-  const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove } = useMTProtoStore();
+  const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove, fetchStatus } = useMTProtoStore();
 
   // Global MTProto enable/disable state
   const [globalEnabled, setGlobalEnabled] = useState<boolean>(true);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
+
+  // Connect state
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
 
   // Load global setting when status loads
   React.useEffect(() => {
@@ -65,6 +70,9 @@ export const MTProtoStatusCard: React.FC = () => {
       );
 
       logger.log(`Global MTProto toggled: ${newValue}`);
+      
+      // Refetch status to update connection state
+      await fetchStatus();
     } catch (err: any) {
       logger.error('Failed to toggle global MTProto:', err);
       setToggleError(err.message || 'Failed to toggle MTProto');
@@ -72,6 +80,26 @@ export const MTProtoStatusCard: React.FC = () => {
       setGlobalEnabled(!newValue);
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    setConnectError(null);
+    setConnectSuccess(null);
+
+    try {
+      await connectMTProto();
+      setConnectSuccess('MTProto client connected successfully!');
+      logger.log('MTProto client connected manually');
+      
+      // Refetch status to show active connection
+      await fetchStatus();
+    } catch (err: any) {
+      logger.error('Failed to connect MTProto:', err);
+      setConnectError(err.message || 'Failed to connect MTProto client');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -220,9 +248,33 @@ export const MTProtoStatusCard: React.FC = () => {
             </Typography>
           </Box>
           {status.connected && (
-            <Typography variant="caption" color="success.main" sx={{ ml: 4, display: 'block' }}>
-              ✅ Session is ready - will auto-connect when reading channel history
-            </Typography>
+            <Box sx={{ ml: 4 }}>
+              <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
+                ✅ Session is ready - will auto-connect when reading channel history
+              </Typography>
+              <Button
+                variant="outlined"
+                color="primary"
+                size="small"
+                onClick={handleConnect}
+                disabled={isConnecting}
+                sx={{ mt: 1 }}
+              >
+                {isConnecting ? 'Connecting...' : 'Connect Now'}
+              </Button>
+              
+              {/* Connect feedback */}
+              {connectSuccess && (
+                <Alert severity="success" sx={{ mt: 1, py: 0.5 }} onClose={() => setConnectSuccess(null)}>
+                  {connectSuccess}
+                </Alert>
+              )}
+              {connectError && (
+                <Alert severity="error" sx={{ mt: 1, py: 0.5 }} onClose={() => setConnectError(null)}>
+                  {connectError}
+                </Alert>
+              )}
+            </Box>
           )}
 
           {/* Last Used */}

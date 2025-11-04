@@ -73,6 +73,15 @@ export async function toggleGlobalMTProto(enabled: boolean): Promise<MTProtoActi
 }
 
 /**
+ * Manually connect MTProto client and add to active pool
+ * Use this to establish an immediate active connection instead of lazy loading
+ */
+export async function connectMTProto(): Promise<MTProtoActionResponse> {
+  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/connect', {});
+  return response;
+}
+
+/**
  * Get MTProto setting for a specific channel
  */
 export async function getChannelMTProtoSetting(channelId: number): Promise<{

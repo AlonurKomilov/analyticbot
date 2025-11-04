@@ -47,21 +47,30 @@ export const MTProtoStatusCard: React.FC = () => {
     });
   }, [status]);
 
-  // Global toggle state
+  // Global toggle state - track if user is actively toggling
   const [globalEnabled, setGlobalEnabled] = useState(status?.mtproto_enabled ?? true);
+  const [isUserToggling, setIsUserToggling] = useState(false); // Prevent race conditions
 
-  // Sync toggle state when status changes (after API refresh)
+  // Sync toggle state when status changes (but NOT during user toggle action)
   useEffect(() => {
+    // Don't override if user is actively toggling
+    if (isUserToggling) {
+      console.log('⏸️ Skipping sync - user is toggling');
+      return;
+    }
+    
     console.log('🔄 Toggle Sync Effect:', {
       status_mtproto_enabled: status?.mtproto_enabled,
       current_globalEnabled: globalEnabled,
-      will_update: status?.mtproto_enabled !== undefined
+      will_update: status?.mtproto_enabled !== undefined && !isUserToggling
     });
+    
     if (status?.mtproto_enabled !== undefined) {
-      console.log('✅ Updating globalEnabled to:', status.mtproto_enabled);
+      console.log('✅ Syncing globalEnabled to:', status.mtproto_enabled);
       setGlobalEnabled(status.mtproto_enabled);
     }
-  }, [status?.mtproto_enabled]);
+  }, [status?.mtproto_enabled, isUserToggling]);
+  
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
@@ -75,6 +84,9 @@ export const MTProtoStatusCard: React.FC = () => {
     const newValue = event.target.checked;
     console.log('🎚️ Toggle clicked:', { from: globalEnabled, to: newValue });
     
+    // Mark that user is actively toggling - prevent race conditions
+    setIsUserToggling(true);
+    
     // Immediately update UI for responsive feedback
     setGlobalEnabled(newValue);
     setIsToggling(true);
@@ -83,7 +95,10 @@ export const MTProtoStatusCard: React.FC = () => {
 
     try {
       // Call API to toggle global MTProto setting (backend expects POST)
+      console.log('📤 Sending toggle request:', { enabled: newValue });
       await toggleGlobalMTProto(newValue);
+      console.log('✅ Toggle API succeeded');
+      
       setToggleSuccess(
         newValue
           ? 'MTProto enabled globally for all channels'
@@ -93,7 +108,13 @@ export const MTProtoStatusCard: React.FC = () => {
       logger.log(`Global MTProto toggled: ${newValue}`);
 
       // Refetch status to update connection state
+      console.log('🔄 Refetching status...');
       await fetchStatus();
+      console.log('✅ Status refetched');
+      
+      // Wait a bit to ensure backend has processed and returned new state
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
     } catch (err: any) {
       logger.error('Failed to toggle global MTProto:', err);
       setToggleError(err.message || 'Failed to toggle MTProto');
@@ -101,6 +122,8 @@ export const MTProtoStatusCard: React.FC = () => {
       setGlobalEnabled(!newValue);
     } finally {
       setIsToggling(false);
+      // Re-enable sync after toggle completes
+      setIsUserToggling(false);
     }
   };
 

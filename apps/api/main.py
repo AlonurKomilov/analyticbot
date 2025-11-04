@@ -65,23 +65,24 @@ async def lifespan(app: FastAPI):
             logger.info("🔧 Starting bot manager initialization...")
             from apps.bot.multi_tenant.bot_manager import initialize_bot_manager
             from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
-            
+
             # Get session factory from DI container
             logger.info("🔧 Getting session factory from DI container...")
             session_factory = await container.database.async_session_maker()
             logger.info(f"🔧 Session factory obtained: {type(session_factory)}")
-            
+
             # Create repository factory that generates fresh sessions per operation
             logger.info("🔧 Creating repository factory...")
             repository_factory = UserBotRepositoryFactory(session_factory)
             logger.info(f"🔧 Repository factory created: {type(repository_factory)}")
-            
+
             # Initialize bot manager with the factory
             logger.info("🔧 Calling initialize_bot_manager...")
             await initialize_bot_manager(repository_factory)
             logger.info("✅ Multi-tenant bot manager initialized")
         except Exception as bot_error:
             import traceback
+
             logger.error(f"❌ Bot manager initialization failed at: {bot_error.__class__.__name__}")
             logger.error(f"❌ Error: {bot_error}")
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
@@ -92,19 +93,20 @@ async def lifespan(app: FastAPI):
             logger.info("🔧 Starting MTProto service initialization...")
             from apps.mtproto.multi_tenant.user_mtproto_service import init_user_mtproto_service
             from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
-            
-            # Get session factory from DI container  
+
+            # Get session factory from DI container
             session_factory = await container.database.async_session_maker()
-            
+
             # Create repository factory (same pattern as bot manager)
             repository_factory = UserBotRepositoryFactory(session_factory)
-            
+
             # Initialize MTProto service with factory pattern
             # The service will create fresh repository instances with their own sessions as needed
             init_user_mtproto_service(user_bot_repo_factory=repository_factory)
             logger.info("✅ MTProto service initialized - full channel history access enabled")
         except Exception as mtproto_error:
             import traceback
+
             logger.error(f"❌ MTProto service initialization failed: {mtproto_error}")
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
             logger.info("Application will continue without MTProto service")
@@ -153,21 +155,23 @@ async def lifespan(app: FastAPI):
         # ✅ MULTI-TENANT: Shutdown bot manager
         try:
             from apps.bot.multi_tenant.bot_manager import get_bot_manager
+
             bot_manager = await get_bot_manager()
             await bot_manager.stop()
             logger.info("✅ Bot manager shutdown completed")
         except Exception as bot_error:
             logger.warning(f"⚠️ Bot manager shutdown failed: {bot_error}")
-        
+
         # ✅ MULTI-TENANT: Shutdown MTProto service
         try:
             from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+
             mtproto_service = get_user_mtproto_service()
             await mtproto_service.shutdown()
             logger.info("✅ MTProto service shutdown completed")
         except Exception as mtproto_error:
             logger.warning(f"⚠️ MTProto service shutdown failed: {mtproto_error}")
-        
+
         await cleanup_db_pool()
         logger.info("✅ Application shutdown completed")
     except Exception as e:
@@ -517,8 +521,8 @@ app.include_router(sharing_router)  # /sharing/* - Already good
 app.include_router(mobile_router)  # /mobile/* - Already good
 
 # ✅ PHASE 4 MULTI-TENANT: User and Admin Bot Management (October 27, 2025)
-from apps.api.routers.user_bot_router import router as user_bot_router
 from apps.api.routers.admin_bot_router import router as admin_bot_router
+from apps.api.routers.user_bot_router import router as user_bot_router
 from apps.api.routers.user_mtproto_router import router as user_mtproto_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*

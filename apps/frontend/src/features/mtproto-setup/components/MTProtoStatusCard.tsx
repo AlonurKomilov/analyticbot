@@ -34,7 +34,7 @@ import { toggleGlobalMTProto } from '../api';
 
 export const MTProtoStatusCard: React.FC = () => {
   const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove } = useMTProtoStore();
-  
+
   // Global MTProto enable/disable state
   const [globalEnabled, setGlobalEnabled] = useState<boolean>(true);
   const [isToggling, setIsToggling] = useState(false);
@@ -63,7 +63,7 @@ export const MTProtoStatusCard: React.FC = () => {
           ? 'MTProto enabled globally for all channels'
           : 'MTProto disabled globally - per-channel settings still apply'
       );
-      
+
       logger.log(`Global MTProto toggled: ${newValue}`);
     } catch (err: any) {
       logger.error('Failed to toggle global MTProto:', err);
@@ -146,7 +146,7 @@ export const MTProtoStatusCard: React.FC = () => {
                 sx={{ m: 0 }}
               />
             </Box>
-            
+
             {/* Persistent inline feedback */}
             {toggleError && (
               <Alert severity="error" sx={{ mt: 1 }} onClose={() => setToggleError(null)}>
@@ -213,15 +213,15 @@ export const MTProtoStatusCard: React.FC = () => {
             {status.connected ? (
               <CloudDone color="success" />
             ) : (
-              <CloudOff color="warning" />
+              <CloudOff color="disabled" />
             )}
             <Typography>
-              <strong>Session Status:</strong> {status.connected ? 'Active' : 'Disconnected'}
+              <strong>Session Status:</strong> {status.connected ? 'Ready' : 'Not Ready'}
             </Typography>
           </Box>
-          {!status.connected && globalEnabled && (
-            <Typography variant="caption" color="warning.main" sx={{ ml: 4, display: 'block' }}>
-              ⚠️ Session disconnected - you may need to reconnect or verify again
+          {status.connected && (
+            <Typography variant="caption" color="success.main" sx={{ ml: 4, display: 'block' }}>
+              ✅ Session is ready - will auto-connect when reading channel history
             </Typography>
           )}
 

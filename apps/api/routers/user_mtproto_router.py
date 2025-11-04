@@ -38,19 +38,22 @@ router = APIRouter(
 # Store pending verification sessions to fix phone_code_hash expiry issue
 # Key: user_id, Value: (session_string, timestamp)
 # ============================================================================
-from typing import Dict, Tuple
 from time import time
 
-_pending_sessions: Dict[int, Tuple[str, float]] = {}
+_pending_sessions: dict[int, tuple[str, float]] = {}
+
 
 def store_pending_session(user_id: int, session_string: str):
     """Store session string for pending verification (expires after 10 minutes)"""
     _pending_sessions[user_id] = (session_string, time())
     # Clean up old sessions (older than 10 minutes)
     current_time = time()
-    expired_users = [uid for uid, (_, timestamp) in _pending_sessions.items() if current_time - timestamp > 600]
+    expired_users = [
+        uid for uid, (_, timestamp) in _pending_sessions.items() if current_time - timestamp > 600
+    ]
     for uid in expired_users:
         del _pending_sessions[uid]
+
 
 def get_pending_session(user_id: int) -> str | None:
     """Get pending session string if exists and not expired"""
@@ -61,6 +64,7 @@ def get_pending_session(user_id: int) -> str | None:
         else:
             del _pending_sessions[user_id]
     return None
+
 
 def clear_pending_session(user_id: int):
     """Clear pending session after successful verification"""
@@ -231,18 +235,24 @@ async def get_mtproto_status(
         configured = has_api_id and has_api_hash
         verified = configured and has_session
 
-        # Check if client is connected (only check pool, don't connect)
+        # Check if client is actively connected in the pool
+        # If verified (has session), treat as "ready to connect" even if not in pool
         connected = False
         last_used = None
 
         if verified:
             try:
                 mtproto_service = get_user_mtproto_service()
-                # Only check if client exists in pool, don't try to connect
+                # Check if client exists in pool and is actively connected
                 if user_id in mtproto_service._client_pool:
                     client = mtproto_service._client_pool[user_id]
                     connected = client._is_connected
                     last_used = client.last_used
+                else:
+                    # Session exists in DB but not in active pool
+                    # Mark as "ready" (will auto-connect on first use)
+                    connected = True  # Session is ready, will connect when needed
+                    logger.debug(f"User {user_id} has verified session (not in active pool yet)")
             except Exception as e:
                 logger.warning(f"Error checking MTProto connection for user {user_id}: {e}")
 
@@ -252,7 +262,7 @@ async def get_mtproto_status(
             phone = phone[:4] + "****" + phone[-3:]
 
         # Check if MTProto is enabled
-        mtproto_enabled = getattr(credentials, 'mtproto_enabled', True)
+        mtproto_enabled = getattr(credentials, "mtproto_enabled", True)
 
         return MTProtoStatusResponse(
             configured=configured,
@@ -306,33 +316,45 @@ async def setup_mtproto(
         await client.connect()
 
         # Send code request
-        logger.info(f"Sending initial verification code to phone: {request.telegram_phone[:4]}****{request.telegram_phone[-3:]}")
+        logger.info(
+            f"Sending initial verification code to phone: {request.telegram_phone[:4]}****{request.telegram_phone[-3:]}"
+        )
         result = await client.send_code_request(request.telegram_phone)
         phone_code_hash = result.phone_code_hash
-        
+
         # Store session string for later verification (CRITICAL FIX for phone_code_hash expiry)
         session_string = session.save()
         store_pending_session(user_id, session_string)
-        logger.info(f"Stored pending session for user {user_id} (session will expire in 10 minutes)")
-        
+        logger.info(
+            f"Stored pending session for user {user_id} (session will expire in 10 minutes)"
+        )
+
         # Log delivery method
         delivery_info = f"code_type={type(result.type).__name__}"
-        if hasattr(result, 'next_type') and result.next_type:
+        if hasattr(result, "next_type") and result.next_type:
             delivery_info += f", next_type={type(result.next_type).__name__}"
-        logger.info(f"Initial code sent for user {user_id}, {delivery_info}, phone_code_hash={phone_code_hash[:8]}...")
+        logger.info(
+            f"Initial code sent for user {user_id}, {delivery_info}, phone_code_hash={phone_code_hash[:8]}..."
+        )
 
         # Check if email setup is required
-        if type(result.type).__name__ == 'SentCodeTypeSetUpEmailRequired':
+        if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
             await safe_disconnect(client)
-            logger.warning(f"User {user_id} needs to complete email verification in Telegram account")
-            
+            logger.warning(
+                f"User {user_id} needs to complete email verification in Telegram account"
+            )
+
             # Check if alternative sign-in methods are available
             alt_methods = []
-            if hasattr(result.type, 'google_signin_allowed') and getattr(result.type, 'google_signin_allowed', False):
+            if hasattr(result.type, "google_signin_allowed") and getattr(
+                result.type, "google_signin_allowed", False
+            ):
                 alt_methods.append("Google Sign-In")
-            if hasattr(result.type, 'apple_signin_allowed') and getattr(result.type, 'apple_signin_allowed', False):
+            if hasattr(result.type, "apple_signin_allowed") and getattr(
+                result.type, "apple_signin_allowed", False
+            ):
                 alt_methods.append("Apple Sign-In")
-            
+
             detail_msg = (
                 "⚠️ Email Verification Required\n\n"
                 "Telegram requires email verification before API access. This is a one-time security check.\n\n"
@@ -343,10 +365,10 @@ async def setup_mtproto(
                 "4. Wait a few minutes, then try again\n\n"
                 f"Note: SMS code will be sent after email verification (next_type: {type(result.next_type).__name__})"
             )
-            
+
             if alt_methods:
                 detail_msg += f"\n\nAlternative: Use {' or '.join(alt_methods)} in Telegram app for instant verification."
-            
+
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=detail_msg,
@@ -424,7 +446,7 @@ async def resend_mtproto_code(
     Resend verification code using stored credentials
 
     This endpoint retrieves the user's stored MTProto credentials
-    and re-sends the verification code without requiring them to 
+    and re-sends the verification code without requiring them to
     re-enter their API credentials.
     """
     try:
@@ -444,7 +466,7 @@ async def resend_mtproto_code(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="MTProto API hash not configured",
             )
-        
+
         if not credentials.telegram_phone:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -462,7 +484,7 @@ async def resend_mtproto_code(
         else:
             logger.info(f"Creating new session for user {user_id}")
             session = StringSession()
-            
+
         client = TelegramClient(
             session,
             api_id=credentials.telegram_api_id,
@@ -476,19 +498,21 @@ async def resend_mtproto_code(
             logger.info(f"Sending verification code to phone: {phone[:4]}****{phone[-3:]}")
             result = await client.send_code_request(phone)
             phone_code_hash = result.phone_code_hash
-            
+
             # Store/update session string
             session_string = session.save()
             store_pending_session(user_id, session_string)
 
             # Log delivery method
             delivery_info = f"code_type={type(result.type).__name__}"
-            if hasattr(result, 'next_type') and result.next_type:
+            if hasattr(result, "next_type") and result.next_type:
                 delivery_info += f", next_type={type(result.next_type).__name__}"
-            logger.info(f"Verification code resent for user {user_id}, {delivery_info}, phone_code_hash={phone_code_hash[:8]}...")
+            logger.info(
+                f"Verification code resent for user {user_id}, {delivery_info}, phone_code_hash={phone_code_hash[:8]}..."
+            )
 
             # Check if email setup is required
-            if type(result.type).__name__ == 'SentCodeTypeSetUpEmailRequired':
+            if type(result.type).__name__ == "SentCodeTypeSetUpEmailRequired":
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Your Telegram account requires an email address to be set up. Please open your Telegram app, go to Settings → Privacy and Security → Email, and add an email address. Then try again.",
@@ -563,7 +587,7 @@ async def verify_mtproto(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Session expired. Please click 'Resend code' to get a new verification code.",
             )
-        
+
         logger.info(f"Reusing stored session for user {user_id} verification")
         session = StringSession(pending_session_str)
         client = TelegramClient(
@@ -582,7 +606,9 @@ async def verify_mtproto(
                     status_code=status.HTTP_400_BAD_REQUEST, detail="No phone number configured"
                 )
 
-            logger.info(f"Attempting to verify user {user_id} with code={request.verification_code}, phone_code_hash={request.phone_code_hash[:8]}...")
+            logger.info(
+                f"Attempting to verify user {user_id} with code={request.verification_code}, phone_code_hash={request.phone_code_hash[:8]}..."
+            )
             await client.sign_in(
                 phone=phone,
                 code=request.verification_code,
@@ -606,8 +632,8 @@ async def verify_mtproto(
             await safe_disconnect(client)
             logger.warning(f"PhoneCodeInvalidError for user {user_id}: {e}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Invalid verification code. Please check the code and try again."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid verification code. Please check the code and try again.",
             )
 
         except PhoneCodeExpiredError as e:
@@ -761,12 +787,12 @@ async def toggle_mtproto(
 ):
     """
     Enable or disable MTProto functionality
-    
+
     When disabled:
     - MTProto client will be disconnected
     - Channel history reading will be unavailable
     - Only bot-based operations will work
-    
+
     When enabled:
     - MTProto client can reconnect
     - Full channel history access restored
@@ -774,13 +800,13 @@ async def toggle_mtproto(
     try:
         # Get credentials
         credentials = await repository.get_by_user_id(user_id)
-        
+
         if not credentials:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No MTProto configuration found. Please configure MTProto first.",
             )
-        
+
         # If disabling, disconnect client
         if not payload.enabled and credentials.mtproto_enabled:
             try:
@@ -789,7 +815,7 @@ async def toggle_mtproto(
                 logger.info(f"Disconnected MTProto client for user {user_id} (disabled)")
             except Exception as e:
                 logger.warning(f"Error disconnecting MTProto service for user {user_id}: {e}")
-        
+
         # Update flag
         previous_state = credentials.mtproto_enabled
         credentials.mtproto_enabled = payload.enabled
@@ -797,8 +823,8 @@ async def toggle_mtproto(
 
         # Audit log the change
         try:
-            from apps.di import get_container
             from apps.api.services.mtproto_audit_service import MTProtoAuditService
+            from apps.di import get_container
 
             container = get_container()
             session_factory = await container.database.async_session_maker()
@@ -813,15 +839,15 @@ async def toggle_mtproto(
                 )
         except Exception as e:
             logger.warning(f"Failed to write MTProto audit log for user {user_id}: {e}")
-        
+
         action = "enabled" if payload.enabled else "disabled"
         logger.info(f"MTProto {action} for user {user_id}")
 
         return MTProtoActionResponse(
             success=True,
-            message=f"MTProto {action} successfully. {'Full history access is now available.' if payload.enabled else 'Only bot-based operations are available.'}"
+            message=f"MTProto {action} successfully. {'Full history access is now available.' if payload.enabled else 'Only bot-based operations are available.'}",
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -851,7 +877,7 @@ async def get_all_channel_settings(
 ):
     """
     Get all per-channel MTProto settings for the user
-    
+
     Returns the global MTProto enabled flag plus any per-channel overrides.
     If no per-channel setting exists, the channel inherits the global setting.
     """
@@ -908,7 +934,7 @@ async def get_channel_setting(
 ):
     """
     Get MTProto setting for a specific channel
-    
+
     If no per-channel setting exists, returns 404 (channel uses global default).
     """
     try:
@@ -962,15 +988,15 @@ async def toggle_channel_mtproto(
 ):
     """
     Enable or disable MTProto for a specific channel
-    
+
     Creates or updates a per-channel override. Even if global MTProto is enabled,
     you can disable it for specific channels, and vice versa (though global=disabled
     will still prevent access).
     """
     try:
+        from apps.api.services.mtproto_audit_service import MTProtoAuditService
         from apps.di import get_container
         from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
-        from apps.api.services.mtproto_audit_service import MTProtoAuditService
 
         # Get credentials to ensure user has MTProto configured
         credentials = await repository.get_by_user_id(user_id)
@@ -1014,7 +1040,7 @@ async def toggle_channel_mtproto(
         return MTProtoActionResponse(
             success=True,
             message=f"MTProto {action} for channel {channel_id}. "
-            f"{'This channel can now read history (if global MTProto is also enabled).' if payload.enabled else 'This channel cannot read history.'}"
+            f"{'This channel can now read history (if global MTProto is also enabled).' if payload.enabled else 'This channel cannot read history.'}",
         )
 
     except HTTPException:
@@ -1042,7 +1068,7 @@ async def delete_channel_setting(
 ):
     """
     Delete per-channel MTProto setting (reverts to global default)
-    
+
     After deletion, the channel will inherit the global MTProto enabled/disabled state.
     """
     try:

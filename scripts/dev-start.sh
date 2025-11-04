@@ -164,47 +164,47 @@ case $SERVICE in
         ;;
     "tunnel")
         # Start tunnel - Check for permanent tunnel first, fallback to random
-        
+
         # Check if permanent Cloudflare tunnel is configured
         if [ -f ".tunnel-info" ]; then
             source .tunnel-info
             echo -e "${BLUE}🌐 Starting PERMANENT Cloudflare Tunnel: ${TUNNEL_NAME}${NC}"
-            
+
             # Stop any existing tunnel
             pkill -f "cloudflared tunnel" || true
             sleep 2
-            
+
             # Start named tunnel
             nohup cloudflared tunnel run $TUNNEL_NAME > logs/dev_tunnel.log 2>&1 &
             tunnel_pid=$!
             echo $tunnel_pid > "logs/dev_tunnel.pid"
-            
+
             echo -e "${GREEN}✅ Permanent tunnel started!${NC}"
             echo -e "${GREEN}🌐 Your PERMANENT URL: ${TUNNEL_URL}${NC}"
             echo -e "${BLUE}💡 This URL never changes!${NC}"
             echo ""
             echo -e "${YELLOW}📝 Your frontend should already have:${NC}"
             echo -e "   VITE_API_BASE_URL=${TUNNEL_URL}"
-            
+
         # Check if ngrok is configured
         elif [ -f ".ngrok-config" ]; then
             source .ngrok-config
             echo -e "${BLUE}🌐 Starting ngrok tunnel...${NC}"
-            
+
             # Stop any existing ngrok
             pkill ngrok || true
             sleep 2
-            
+
             # Start ngrok in background
             nohup $NGROK_CMD > logs/dev_tunnel.log 2>&1 &
             tunnel_pid=$!
             echo $tunnel_pid > "logs/dev_tunnel.pid"
-            
+
             sleep 3
-            
+
             # Get URL from ngrok API
             TUNNEL_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'https://[^"]*ngrok[^"]*' | head -1)
-            
+
             if [ ! -z "$TUNNEL_URL" ]; then
                 echo -e "${GREEN}✅ ngrok tunnel started!${NC}"
                 echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
@@ -214,7 +214,7 @@ case $SERVICE in
             else
                 echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check: http://localhost:4040${NC}"
             fi
-            
+
         # Fallback to random Cloudflare tunnel (TEMPORARY URL)
         else
             echo -e "${YELLOW}⚠️  No permanent tunnel configured${NC}"
@@ -223,7 +223,7 @@ case $SERVICE in
             echo -e "   ngrok:      ./scripts/setup-ngrok.sh (Paid for permanent URL)"
             echo ""
             echo -e "${BLUE}🌐 Starting temporary CloudFlare Tunnel (URL changes every restart)...${NC}"
-            
+
             if ! command -v cloudflared &> /dev/null; then
                 echo -e "${RED}❌ cloudflared not installed${NC}"
                 echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
@@ -249,7 +249,7 @@ case $SERVICE in
                     echo -e "${YELLOW}⚠️  TEMPORARY URL (changes every restart): ${TUNNEL_URL}${NC}"
                     echo ""
                     echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
-                    
+
                     # Automatically update frontend config with new tunnel URL
                     if [ -f "scripts/update-tunnel-url.sh" ]; then
                         ./scripts/update-tunnel-url.sh
@@ -287,7 +287,7 @@ case $SERVICE in
 
             # Auto-update frontend .env.local with tunnel URL
             echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
-            
+
             if [ -f "scripts/update-tunnel-url.sh" ]; then
                 # Run the auto-update script
                 ./scripts/update-tunnel-url.sh
@@ -314,16 +314,16 @@ case $SERVICE in
             echo -e "${YELLOW}⚠️  cloudflared not installed - skipping tunnel${NC}"
             echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
         fi
-        
+
         echo ""
         echo -e "${BLUE}🚀 Starting backend services...${NC}"
-        
+
         # Now start all services with the updated tunnel URL in .env.local
         start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
         sleep 2
         start_service "bot" 'python -m apps.bot.run_bot' ""
         sleep 2
-        
+
         echo ""
         echo -e "${BLUE}🚀 Starting frontend with updated tunnel URL...${NC}"
         cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..

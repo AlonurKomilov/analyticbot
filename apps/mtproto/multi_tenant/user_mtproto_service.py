@@ -121,12 +121,14 @@ class UserMTProtoService:
         else:
             raise RuntimeError("No repository or factory configured")
 
-    async def get_user_client(self, user_id: int, channel_id: int | None = None) -> UserMTProtoClient | None:
+    async def get_user_client(
+        self, user_id: int, channel_id: int | None = None
+    ) -> UserMTProtoClient | None:
         """
         Get or create MTProto client for user.
         Returns None if user hasn't configured MTProto or if MTProto is disabled
         (either globally or for the specific channel).
-        
+
         Args:
             user_id: User ID
             channel_id: Optional channel ID to check per-channel settings
@@ -257,16 +259,16 @@ class UserMTProtoService:
     async def _is_mtproto_enabled(self, user_id: int, channel_id: int | None = None) -> bool:
         """
         Check if MTProto is enabled for a user (and optionally a specific channel).
-        
+
         Logic:
         - If global mtproto_enabled is False, return False
         - If channel_id is provided, check per-channel setting
         - If no per-channel setting exists, default to enabled (inherit global)
-        
+
         Args:
             user_id: User ID
             channel_id: Optional channel ID for per-channel check
-            
+
         Returns:
             True if MTProto is enabled, False otherwise
         """
@@ -275,28 +277,30 @@ class UserMTProtoService:
             credentials = await self._get_user_credentials(user_id)
             if not credentials:
                 return False
-            
-            global_enabled = getattr(credentials, 'mtproto_enabled', True)
+
+            global_enabled = getattr(credentials, "mtproto_enabled", True)
             if not global_enabled:
                 # Global disabled overrides everything
                 return False
-            
+
             # If no channel specified, return global setting
             if channel_id is None:
                 return True
-            
+
             # Check per-channel setting
             from apps.di import get_container
             from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
-            
+
             container = get_container()
             session_factory = await container.database.async_session_maker()
             async with session_factory() as session:
                 channel_repo = ChannelMTProtoRepository(session)
                 return await channel_repo.is_channel_enabled(user_id, channel_id, global_enabled)
-                
+
         except Exception as e:
-            logger.error(f"Error checking MTProto enabled status for user {user_id}, channel {channel_id}: {e}")
+            logger.error(
+                f"Error checking MTProto enabled status for user {user_id}, channel {channel_id}: {e}"
+            )
             # Default to disabled on error (fail-safe)
             return False
 
@@ -314,15 +318,16 @@ class UserMTProtoService:
 _user_mtproto_service: UserMTProtoService | None = None
 
 
-def init_user_mtproto_service(user_bot_repo: IUserBotRepository | None = None, user_bot_repo_factory=None) -> UserMTProtoService:
+def init_user_mtproto_service(
+    user_bot_repo: IUserBotRepository | None = None, user_bot_repo_factory=None
+) -> UserMTProtoService:
     """
     Initialize global UserMTProtoService instance.
     Accepts either a repository or a factory (factory preferred for long-running services).
     """
     global _user_mtproto_service
     _user_mtproto_service = UserMTProtoService(
-        user_bot_repo=user_bot_repo,
-        user_bot_repo_factory=user_bot_repo_factory
+        user_bot_repo=user_bot_repo, user_bot_repo_factory=user_bot_repo_factory
     )
     return _user_mtproto_service
 

@@ -9,7 +9,6 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Float,
-    ForeignKey,
     Integer,
     String,
     Text,
@@ -73,9 +72,7 @@ class AdminBotActionORM(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     admin_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     # Foreign key constraint exists in database
-    target_user_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False
-    )
+    target_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     details: Mapped[dict | None] = mapped_column(JSONB)
     timestamp: Mapped[datetime] = mapped_column(
@@ -90,9 +87,7 @@ class MTProtoAuditLog(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     # Foreign key constraint exists in database (see migration f7ffb0be449f)
-    user_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, index=True
-    )
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     action: Mapped[str] = mapped_column(String(50), nullable=False)
     previous_state: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
@@ -112,12 +107,8 @@ class ChannelMTProtoSettings(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     # Foreign key constraints exist in database (see migration 169d798b7035)
-    user_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False, index=True
-    )
-    channel_id: Mapped[int] = mapped_column(
-        BigInteger, nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    channel_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     mtproto_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.now

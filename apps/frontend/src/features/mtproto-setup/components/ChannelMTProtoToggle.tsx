@@ -12,8 +12,7 @@ import {
   Tooltip,
   CircularProgress,
   Typography,
-  Alert,
-  Snackbar
+  Alert
 } from '@mui/material';
 import {
   SignalCellularAlt as MTProtoIcon,
@@ -95,69 +94,59 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
   };
 
   if (compact) {
-    // Compact inline version for channel cards
+    // Compact inline version for channel cards with PERSISTENT inline feedback
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {isLoading ? (
-          <CircularProgress size={20} />
-        ) : (
-          <Tooltip
-            title={
-              enabled
-                ? 'MTProto enabled - full history access'
-                : 'MTProto disabled - bot-only access'
-            }
-          >
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={enabled ?? true}
-                  onChange={handleToggle}
-                  disabled={isToggling || isLoading}
-                  size="small"
-                  color="primary"
-                />
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {isLoading ? (
+            <CircularProgress size={20} />
+          ) : (
+            <Tooltip
+              title={
+                enabled
+                  ? 'MTProto enabled - full history access'
+                  : 'MTProto disabled - bot-only access'
               }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  {enabled ? (
-                    <MTProtoIcon sx={{ fontSize: 16, color: 'success.main' }} />
-                  ) : (
-                    <MTProtoOffIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
-                  )}
-                  <Typography variant="caption" color="text.secondary">
-                    MTProto
-                  </Typography>
-                </Box>
-              }
-              sx={{ m: 0 }}
-            />
-          </Tooltip>
+            >
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={enabled ?? true}
+                    onChange={handleToggle}
+                    disabled={isToggling || isLoading}
+                    size="small"
+                    color="primary"
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {enabled ? (
+                      <MTProtoIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                    ) : (
+                      <MTProtoOffIcon sx={{ fontSize: 16, color: 'text.disabled' }} />
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      MTProto
+                    </Typography>
+                  </Box>
+                }
+                sx={{ m: 0 }}
+              />
+            </Tooltip>
+          )}
+        </Box>
+
+        {/* PERSISTENT inline feedback instead of closing toasts */}
+        {error && (
+          <Alert severity="error" sx={{ py: 0.5, px: 1 }} onClose={() => setError(null)}>
+            <Typography variant="caption">{error}</Typography>
+          </Alert>
         )}
-
-        {/* Error snackbar */}
-        <Snackbar
-          open={!!error}
-          autoHideDuration={4000}
-          onClose={() => setError(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert severity="error" onClose={() => setError(null)}>
-            {error}
+        {successMessage && (
+          <Alert severity="success" sx={{ py: 0.5, px: 1 }} onClose={() => setSuccessMessage(null)}>
+            <Typography variant="caption">{successMessage}</Typography>
           </Alert>
-        </Snackbar>
-
-        {/* Success snackbar */}
-        <Snackbar
-          open={!!successMessage}
-          autoHideDuration={3000}
-          onClose={() => setSuccessMessage(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert severity="success" onClose={() => setSuccessMessage(null)}>
-            {successMessage}
-          </Alert>
-        </Snackbar>
+        )}
       </Box>
     );
   }

@@ -41,6 +41,7 @@ import {
     TrendingUp as TrendingUpIcon,
     Info as InfoIcon
 } from '@mui/icons-material';
+import { ChannelMTProtoToggle } from '@/features/mtproto-setup/components/ChannelMTProtoToggle';
 import { useChannelStore } from '@store';
 import { Channel } from '@/types';
 
@@ -299,6 +300,17 @@ const ChannelsManagementPage: React.FC = () => {
                                         </Box>
                                     )}
                                 </CardContent>
+
+                                <Divider />
+
+                                {/* MTProto Toggle Section - FULL WIDTH FOR COMFORT */}
+                                <Box sx={{ p: 2, bgcolor: 'grey.50' }}>
+                                    <ChannelMTProtoToggle
+                                        channelId={channel.id}
+                                        channelName={channel.name}
+                                        compact
+                                    />
+                                </Box>
 
                                 <Divider />
 

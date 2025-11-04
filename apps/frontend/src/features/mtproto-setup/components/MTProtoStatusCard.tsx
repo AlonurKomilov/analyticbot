@@ -1,9 +1,9 @@
 /**
  * MTProto Status Card Component
- * Displays current MTProto configuration status
+ * Displays current MTProto configuration status with GLOBAL TOGGLE
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -14,6 +14,9 @@ import {
   Stack,
   CircularProgress,
   Alert,
+  Switch,
+  FormControlLabel,
+  Divider,
 } from '@mui/material';
 import {
   CheckCircle,
@@ -22,11 +25,55 @@ import {
   AccountCircle,
   CloudDone,
   CloudOff,
+  SignalCellularAlt as MTProtoOnIcon,
+  SignalCellularOff as MTProtoOffIcon,
 } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
+import { apiClient } from '@/api/client';
+import { logger } from '@/utils/logger';
 
 export const MTProtoStatusCard: React.FC = () => {
   const { status, isLoading, isDisconnecting, isRemoving, error, disconnect, remove } = useMTProtoStore();
+  
+  // Global MTProto enable/disable state
+  const [globalEnabled, setGlobalEnabled] = useState<boolean>(true);
+  const [isToggling, setIsToggling] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
+  const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
+
+  // Load global setting when status loads
+  React.useEffect(() => {
+    if (status?.mtproto_enabled !== undefined) {
+      setGlobalEnabled(status.mtproto_enabled);
+    }
+  }, [status?.mtproto_enabled]);
+
+  const handleGlobalToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = event.target.checked;
+    setIsToggling(true);
+    setToggleError(null);
+    setToggleSuccess(null);
+
+    try {
+      // Call API to toggle global MTProto setting
+      await apiClient.put('/api/user-mtproto/toggle', { enabled: newValue });
+      setGlobalEnabled(newValue);
+      setToggleSuccess(
+        newValue
+          ? 'MTProto enabled globally for all channels'
+          : 'MTProto disabled globally - per-channel settings still apply'
+      );
+      
+      logger.log(`Global MTProto toggled: ${newValue}`);
+    } catch (err: any) {
+      logger.error('Failed to toggle global MTProto:', err);
+      setToggleError(err.message || 'Failed to toggle MTProto');
+      // Revert on error
+      setGlobalEnabled(!newValue);
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -62,6 +109,59 @@ export const MTProtoStatusCard: React.FC = () => {
         <Typography variant="h6" gutterBottom>
           MTProto Configuration Status
         </Typography>
+
+        {/* GLOBAL MTPROTO TOGGLE - PROMINENT AND CLEAR */}
+        {status.configured && status.verified && (
+          <Box sx={{ my: 3, p: 2, bgcolor: globalEnabled ? 'success.lighter' : 'grey.100', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {globalEnabled ? (
+                  <MTProtoOnIcon sx={{ fontSize: 32, color: 'success.main' }} />
+                ) : (
+                  <MTProtoOffIcon sx={{ fontSize: 32, color: 'text.disabled' }} />
+                )}
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Global MTProto Access
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {globalEnabled
+                      ? 'MTProto is active - reading channel history'
+                      : 'MTProto is disabled - using bot API only'
+                    }
+                  </Typography>
+                </Box>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={globalEnabled}
+                    onChange={handleGlobalToggle}
+                    disabled={isToggling}
+                    color="primary"
+                    size="medium"
+                  />
+                }
+                label=""
+                sx={{ m: 0 }}
+              />
+            </Box>
+            
+            {/* Persistent inline feedback */}
+            {toggleError && (
+              <Alert severity="error" sx={{ mt: 1 }} onClose={() => setToggleError(null)}>
+                {toggleError}
+              </Alert>
+            )}
+            {toggleSuccess && (
+              <Alert severity="success" sx={{ mt: 1 }} onClose={() => setToggleSuccess(null)}>
+                {toggleSuccess}
+              </Alert>
+            )}
+          </Box>
+        )}
+
+        <Divider sx={{ my: 2 }} />
 
         <Stack spacing={2} mt={2}>
           {/* Configuration Status */}

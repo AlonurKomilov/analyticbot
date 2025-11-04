@@ -22,6 +22,7 @@ export interface MTProtoStatusResponse {
   connected: boolean;
   last_used: string | null;
   can_read_history: boolean;
+  mtproto_enabled?: boolean; // Global MTProto enable/disable flag
 }
 
 export interface MTProtoSetupResponse {

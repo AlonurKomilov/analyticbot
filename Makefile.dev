@@ -6,12 +6,13 @@
 dev-help:
 	@echo "🔥 Development Commands (venv-based)"
 	@echo "===================================="
-	@echo "  dev-install    - Install dependencies in venv"
-	@echo "  dev-start      - Start development servers + CloudFlare Tunnel"
-	@echo "  dev-stop       - Stop all development services"
-	@echo "  dev-tunnel     - Start CloudFlare Tunnel only (public access)"
-	@echo "  dev-status     - Check service status"
-	@echo "  dev-logs       - Show development logs"
+	@echo "  dev-install       - Install dependencies in venv"
+	@echo "  dev-start         - Start development servers + CloudFlare Tunnel"
+	@echo "  dev-stop          - Stop all development services"
+	@echo "  dev-tunnel        - Start CloudFlare Tunnel only (public access)"
+	@echo "  dev-tunnel-status - Show current tunnel URL and frontend config"
+	@echo "  dev-status        - Check service status"
+	@echo "  dev-logs          - Show development logs"
 	@echo "  dev-migrate    - Run database migrations"
 	@echo "  dev-test       - Run tests in venv"
 	@echo "  dev-clean      - Clean development artifacts"
@@ -40,6 +41,24 @@ dev-stop:
 dev-tunnel:
 	@echo "🌐 Starting CloudFlare Tunnel for public access..."
 	./scripts/dev-start.sh tunnel
+
+dev-tunnel-status:
+	@echo "🌐 CloudFlare Tunnel Status"
+	@echo "==========================="
+	@if [ -f ".tunnel-current" ]; then \
+		cat .tunnel-current; \
+		echo ""; \
+		echo "Frontend .env.local:"; \
+		grep "^VITE_API_BASE_URL=" apps/frontend/.env.local || echo "  (not set)"; \
+		echo ""; \
+		echo "Recent tunnel updates:"; \
+		tail -n 5 logs/tunnel-update.log 2>/dev/null || echo "  (no updates logged yet)"; \
+		echo ""; \
+		echo "Tunnel process:"; \
+		ps aux | grep -E "cloudflared tunnel" | grep -v grep || echo "  (not running)"; \
+	else \
+		echo "❌ No tunnel info found. Run: make -f Makefile.dev dev-start"; \
+	fi
 
 dev-status:
 	@echo "📊 Checking development status..."

@@ -36,6 +36,7 @@ class UserBotCredentials:
     telegram_api_hash: str | None = None
     telegram_phone: str | None = None
     session_string: str | None = None
+    mtproto_enabled: bool = True  # Allow user to enable/disable MTProto functionality
 
     # Status
     status: BotStatus = BotStatus.PENDING

@@ -87,7 +87,7 @@ function App(): React.ReactElement {
                     <AddChannel />
                     <MediaPreview />
                     <PostCreator />
-                    <ScheduledPostsList />
+                    <ScheduledPostsList posts={[]} onDelete={() => {}} />
                 </Box>
             )}
         </Container>

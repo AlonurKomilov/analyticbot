@@ -124,10 +124,12 @@ const AppRouter: React.FC = () => {
 
     return (
         <Router
-            future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true
-            }}
+            {...{
+                future: {
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true
+                }
+            } as any}
         >
             <NavigationProvider>
                 <RoutePreloader />

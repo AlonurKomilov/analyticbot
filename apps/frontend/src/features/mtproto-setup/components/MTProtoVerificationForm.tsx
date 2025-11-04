@@ -17,6 +17,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
 import type { MTProtoVerifyRequest } from '../types';
+import { logger } from '@/utils/logger';
 
 interface MTProtoVerificationFormProps {
   onSuccess: () => void;
@@ -79,7 +80,7 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
       if (error.message?.includes('2FA') || error.message?.includes('password')) {
         setNeeds2FA(true);
       }
-      console.error('Verification failed:', error);
+      logger.error('Verification failed:', error);
     }
   };
 
@@ -159,7 +160,7 @@ export const MTProtoVerificationForm: React.FC<MTProtoVerificationFormProps> = (
               try {
                 await resendSetup();
               } catch (e) {
-                console.error('Resend failed', e);
+                logger.error('Resend failed', e);
               }
             }}
             disabled={isSettingUp}

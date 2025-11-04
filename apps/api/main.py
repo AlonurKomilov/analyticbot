@@ -87,6 +87,28 @@ async def lifespan(app: FastAPI):
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
             logger.info("Application will continue without bot manager")
 
+        # ✅ MULTI-TENANT: Initialize MTProto service for full channel history access
+        try:
+            logger.info("🔧 Starting MTProto service initialization...")
+            from apps.mtproto.multi_tenant.user_mtproto_service import init_user_mtproto_service
+            from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+            
+            # Get session factory from DI container  
+            session_factory = await container.database.async_session_maker()
+            
+            # Create repository factory (same pattern as bot manager)
+            repository_factory = UserBotRepositoryFactory(session_factory)
+            
+            # Initialize MTProto service with factory pattern
+            # The service will create fresh repository instances with their own sessions as needed
+            init_user_mtproto_service(user_bot_repo_factory=repository_factory)
+            logger.info("✅ MTProto service initialized - full channel history access enabled")
+        except Exception as mtproto_error:
+            import traceback
+            logger.error(f"❌ MTProto service initialization failed: {mtproto_error}")
+            logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
+            logger.info("Application will continue without MTProto service")
+
         # ✅ PHASE 2: Initialize Redis cache for performance optimization
         try:
             from core.common.cache_decorator import init_cache_redis
@@ -136,6 +158,15 @@ async def lifespan(app: FastAPI):
             logger.info("✅ Bot manager shutdown completed")
         except Exception as bot_error:
             logger.warning(f"⚠️ Bot manager shutdown failed: {bot_error}")
+        
+        # ✅ MULTI-TENANT: Shutdown MTProto service
+        try:
+            from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+            mtproto_service = get_user_mtproto_service()
+            await mtproto_service.shutdown()
+            logger.info("✅ MTProto service shutdown completed")
+        except Exception as mtproto_error:
+            logger.warning(f"⚠️ MTProto service shutdown failed: {mtproto_error}")
         
         await cleanup_db_pool()
         logger.info("✅ Application shutdown completed")
@@ -308,9 +339,11 @@ app.add_middleware(
 )
 
 # Add CORS middleware with explicit configuration
+# Support both specific origins and tunnel wildcards
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.api.CORS_ORIGINS,
+    allow_origins=settings.api.CORS_ORIGINS if settings.api.CORS_ORIGINS != "*" else ["*"],
+    allow_origin_regex=r"https://.*\.(trycloudflare\.com|devtunnels\.ms)",  # Allow Cloudflare and Microsoft Dev Tunnels
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],

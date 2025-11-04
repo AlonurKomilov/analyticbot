@@ -248,9 +248,17 @@ case $SERVICE in
                     echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
                     echo -e "${YELLOW}⚠️  TEMPORARY URL (changes every restart): ${TUNNEL_URL}${NC}"
                     echo ""
-                    echo -e "${YELLOW}📝 Update .env.local:${NC}"
-                    echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                    echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                    echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
+                    
+                    # Automatically update frontend config with new tunnel URL
+                    if [ -f "scripts/update-tunnel-url.sh" ]; then
+                        ./scripts/update-tunnel-url.sh
+                    else
+                        # Fallback: manual update instructions
+                        echo -e "${YELLOW}📝 Update .env.local manually:${NC}"
+                        echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                        echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                    fi
                 else
                     echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
                 fi
@@ -258,15 +266,7 @@ case $SERVICE in
         fi
         ;;
     "all")
-        # Start all services - Development Environment Ports 11xxx
-        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
-        sleep 2
-        start_service "bot" 'python -m apps.bot.run_bot' ""
-        sleep 2
-        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
-        sleep 2
-
-        # Start CloudFlare Tunnel for public access
+        # Start CloudFlare Tunnel FIRST (before frontend) so .env.local gets updated
         echo ""
         echo -e "${BLUE}🌐 Starting CloudFlare Tunnel for public access...${NC}"
 
@@ -285,25 +285,48 @@ case $SERVICE in
             echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
             sleep 5
 
-            # Extract tunnel URL
-            if [ -f "logs/dev_tunnel.log" ]; then
-                TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
-                if [ ! -z "$TUNNEL_URL" ]; then
-                    echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
-                    echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
-                    echo ""
-                    echo -e "${YELLOW}📝 To use this tunnel, update your frontend:${NC}"
-                    echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                    echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                    echo -e "   Then restart frontend: ./scripts/dev-start.sh stop && make dev-start"
-                else
-                    echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+            # Auto-update frontend .env.local with tunnel URL
+            echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
+            
+            if [ -f "scripts/update-tunnel-url.sh" ]; then
+                # Run the auto-update script
+                ./scripts/update-tunnel-url.sh
+                echo ""
+                echo -e "${GREEN}✅ Frontend configuration updated automatically!${NC}"
+            else
+                # Fallback: manual instructions if update script missing
+                if [ -f "logs/dev_tunnel.log" ]; then
+                    TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+                    if [ ! -z "$TUNNEL_URL" ]; then
+                        echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
+                        echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
+                        echo ""
+                        echo -e "${YELLOW}📝 To use this tunnel, update your frontend manually:${NC}"
+                        echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                        echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
+                        echo -e "   Then restart frontend: ./scripts/dev-start.sh stop && make dev-start"
+                    else
+                        echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
+                    fi
                 fi
             fi
         else
             echo -e "${YELLOW}⚠️  cloudflared not installed - skipping tunnel${NC}"
             echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
         fi
+        
+        echo ""
+        echo -e "${BLUE}🚀 Starting backend services...${NC}"
+        
+        # Now start all services with the updated tunnel URL in .env.local
+        start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --reload --log-level debug --reload-exclude venv --reload-exclude .venv --reload-exclude "*/__pycache__/*"' 11400
+        sleep 2
+        start_service "bot" 'python -m apps.bot.run_bot' ""
+        sleep 2
+        
+        echo ""
+        echo -e "${BLUE}🚀 Starting frontend with updated tunnel URL...${NC}"
+        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
         ;;
     "stop")
         # Stop all development services

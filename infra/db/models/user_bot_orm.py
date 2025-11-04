@@ -42,6 +42,7 @@ class UserBotCredentialsORM(Base):
     telegram_api_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     telegram_phone: Mapped[str | None] = mapped_column(String(20))
     session_string: Mapped[str | None] = mapped_column(Text)
+    mtproto_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
 
     # Status
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
@@ -71,11 +72,60 @@ class AdminBotActionORM(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     admin_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    # Foreign key constraint exists in database
     target_user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        BigInteger, nullable=False
     )
     action: Mapped[str] = mapped_column(String(100), nullable=False)
     details: Mapped[dict | None] = mapped_column(JSONB)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.now, index=True
+    )
+
+
+class MTProtoAuditLog(Base):
+    """ORM model for MTProto audit log"""
+
+    __tablename__ = "mtproto_audit_log"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    # Foreign key constraint exists in database (see migration f7ffb0be449f)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, index=True
+    )
+    channel_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    previous_state: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    new_state: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    event_metadata: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.now, index=True
+    )
+
+
+class ChannelMTProtoSettings(Base):
+    """ORM model for per-channel MTProto settings"""
+
+    __tablename__ = "channel_mtproto_settings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    # Foreign key constraints exist in database (see migration 169d798b7035)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, nullable=False, index=True
+    )
+    channel_id: Mapped[int] = mapped_column(
+        BigInteger, nullable=False
+    )
+    mtproto_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "channel_id", name="unique_user_channel_mtproto_setting"),
     )

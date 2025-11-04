@@ -18,6 +18,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
 import type { MTProtoSetupRequest } from '../types';
+import { logger } from '@/utils/logger';
 
 interface MTProtoCredentialsFormProps {
   onSuccess: () => void;
@@ -79,7 +80,7 @@ export const MTProtoCredentialsForm: React.FC<MTProtoCredentialsFormProps> = ({
       }
     } catch (error) {
       // Error already handled by store
-      console.error('Setup failed:', error);
+      logger.error('Setup failed:', error);
     }
   };
 

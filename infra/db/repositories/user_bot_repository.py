@@ -70,6 +70,7 @@ class UserBotRepository(IUserBotRepository):
         orm.telegram_api_hash = credentials.telegram_api_hash
         orm.telegram_phone = credentials.telegram_phone
         orm.session_string = credentials.session_string
+        orm.mtproto_enabled = credentials.mtproto_enabled
         orm.status = credentials.status.value
         orm.is_verified = credentials.is_verified
         orm.rate_limit_rps = credentials.rate_limit_rps

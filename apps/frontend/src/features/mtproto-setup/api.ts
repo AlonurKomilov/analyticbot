@@ -60,3 +60,38 @@ export async function removeMTProto(): Promise<MTProtoActionResponse> {
   const response = await apiClient.delete<MTProtoActionResponse>('/api/user-mtproto/remove');
   return response;
 }
+
+/**
+ * Get MTProto setting for a specific channel
+ */
+export async function getChannelMTProtoSetting(channelId: number): Promise<{
+  mtproto_enabled: boolean;
+  channel_id: number;
+  created_at?: string;
+  updated_at?: string
+}> {
+  const response = await apiClient.get<{
+    mtproto_enabled: boolean;
+    channel_id: number;
+    created_at?: string;
+    updated_at?: string
+  }>(`/api/user-mtproto/channels/${channelId}`);
+  return response;
+}
+
+/**
+ * Toggle MTProto for a specific channel
+ */
+export async function toggleChannelMTProto(
+  channelId: number,
+  enabled: boolean
+): Promise<{ mtproto_enabled: boolean; channel_id: number; updated_at: string }> {
+  const response = await apiClient.post<{
+    mtproto_enabled: boolean;
+    channel_id: number;
+    updated_at: string
+  }>(`/api/user-mtproto/channels/${channelId}/toggle`, {
+    enabled
+  });
+  return response;
+}

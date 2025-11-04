@@ -112,9 +112,8 @@ class UserMTProtoService:
     async def _get_user_credentials(self, user_id: int):
         """Get user credentials using either repo or factory"""
         if self.user_bot_repo_factory:
-            # Use factory to create fresh repository with its own session
-            async with self.user_bot_repo_factory.create() as repo:
-                return await repo.get_by_user_id(user_id)
+            # Factory IS the repository - it handles sessions internally
+            return await self.user_bot_repo_factory.get_by_user_id(user_id)
         elif self.user_bot_repo:
             # Use existing repository
             return await self.user_bot_repo.get_by_user_id(user_id)

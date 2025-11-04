@@ -47,6 +47,13 @@ export const MTProtoStatusCard: React.FC = () => {
 
   // Global toggle state
   const [globalEnabled, setGlobalEnabled] = useState(status?.mtproto_enabled ?? true);
+
+  // Sync toggle state when status changes (after API refresh)
+  useEffect(() => {
+    if (status?.mtproto_enabled !== undefined) {
+      setGlobalEnabled(status.mtproto_enabled);
+    }
+  }, [status?.mtproto_enabled]);
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
@@ -73,7 +80,7 @@ export const MTProtoStatusCard: React.FC = () => {
       );
 
       logger.log(`Global MTProto toggled: ${newValue}`);
-      
+
       // Refetch status to update connection state
       await fetchStatus();
     } catch (err: any) {
@@ -95,7 +102,7 @@ export const MTProtoStatusCard: React.FC = () => {
       await connectMTProto();
       setConnectSuccess('MTProto client connected successfully!');
       logger.log('MTProto client connected manually');
-      
+
       // Refetch status to show active connection
       await fetchStatus();
     } catch (err: any) {
@@ -280,7 +287,7 @@ export const MTProtoStatusCard: React.FC = () => {
               >
                 {isConnecting ? 'Connecting...' : 'Connect Now'}
               </Button>
-              
+
               {/* Connect feedback */}
               {connectSuccess && (
                 <Alert severity="success" sx={{ mt: 1, py: 0.5 }} onClose={() => setConnectSuccess(null)}>

@@ -12,6 +12,7 @@ from typing import Literal
 
 class WatermarkPosition(str, Enum):
     """Predefined watermark positions"""
+
     TOP_LEFT = "top-left"
     TOP_RIGHT = "top-right"
     BOTTOM_LEFT = "bottom-left"
@@ -21,6 +22,7 @@ class WatermarkPosition(str, Enum):
 
 class RiskLevel(str, Enum):
     """Content theft risk levels"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -33,6 +35,7 @@ class WatermarkConfig:
 
     Immutable configuration object that defines how watermarks should be applied.
     """
+
     text: str
     position: WatermarkPosition = WatermarkPosition.BOTTOM_RIGHT
     opacity: float = 0.7
@@ -58,6 +61,7 @@ class WatermarkResult:
     Contains information about the success of the operation, the output file path,
     and any errors that occurred.
     """
+
     success: bool
     output_path: str | None = None
     error: str | None = None
@@ -77,6 +81,7 @@ class TheftAnalysis:
     Provides information about suspicious patterns, risk level,
     and recommendations for the content.
     """
+
     suspicious_patterns: list[str] = field(default_factory=list)
     risk_level: RiskLevel = RiskLevel.LOW
     recommendations: list[str] = field(default_factory=list)
@@ -101,6 +106,7 @@ class ContentProtectionRequest:
 
     Specifies what type of content needs protection and the desired configuration.
     """
+
     content_type: Literal["image", "video", "text"]
     file_path: str | None = None
     text_content: str | None = None
@@ -123,6 +129,7 @@ class ContentProtectionResponse:
 
     Contains results of watermarking, theft analysis, and any errors.
     """
+
     success: bool
     watermark_result: WatermarkResult | None = None
     theft_analysis: TheftAnalysis | None = None

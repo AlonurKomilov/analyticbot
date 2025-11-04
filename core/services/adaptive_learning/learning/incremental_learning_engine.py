@@ -43,13 +43,19 @@ class IncrementalLearningEngine:
     ) -> LearningContext:
         """Create a new learning context"""
         context = LearningContext(
-            model_id=model_id, task_id=task_id, strategy=strategy, metadata=metadata or {}
+            model_id=model_id,
+            task_id=task_id,
+            strategy=strategy,
+            metadata=metadata or {},
         )
         self.active_contexts[task_id] = context
         return context
 
     def update_model_incremental(
-        self, context: LearningContext, training_data: Any, validation_data: Any | None = None
+        self,
+        context: LearningContext,
+        training_data: Any,
+        validation_data: Any | None = None,
     ) -> ModelUpdate:
         """Perform incremental model update"""
         try:
@@ -140,7 +146,10 @@ class IncrementalLearningEngine:
         return None
 
     def perform_incremental_update(
-        self, context: LearningContext, training_data: Any, validation_data: Any | None = None
+        self,
+        context: LearningContext,
+        training_data: Any,
+        validation_data: Any | None = None,
     ) -> dict[str, Any]:
         """Perform incremental update and return result as dict"""
         try:
@@ -160,7 +169,11 @@ class IncrementalLearningEngine:
             }
         except Exception as e:
             logger.error(f"❌ Incremental update failed: {e}")
-            return {"success": False, "error": str(e), "status": UpdateStatus.FAILED.value}
+            return {
+                "success": False,
+                "error": str(e),
+                "status": UpdateStatus.FAILED.value,
+            }
 
     def get_engine_stats(self) -> dict[str, Any]:
         """Get engine statistics"""

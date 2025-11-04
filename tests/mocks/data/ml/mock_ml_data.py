@@ -62,7 +62,11 @@ def get_mock_churn_prediction(user_id: int) -> dict[str, Any]:
 
     if churn_prob < 0.3:
         risk_level = "low"
-        factors = ["High engagement rate", "Regular posting schedule", "Growing follower count"]
+        factors = [
+            "High engagement rate",
+            "Regular posting schedule",
+            "Growing follower count",
+        ]
     elif churn_prob < 0.7:
         risk_level = "medium"
         factors = ["Moderate engagement", "Irregular posting", "Stable follower count"]
@@ -76,7 +80,7 @@ def get_mock_churn_prediction(user_id: int) -> dict[str, Any]:
         "confidence": 0.82,
         "key_factors": factors,
         "recommendations": [
-            "Increase posting frequency" if churn_prob > 0.5 else "Maintain current strategy",
+            ("Increase posting frequency" if churn_prob > 0.5 else "Maintain current strategy"),
             "Focus on engagement-driven content",
             "Monitor competitor activities",
         ],

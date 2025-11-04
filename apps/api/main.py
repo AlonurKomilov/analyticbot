@@ -17,7 +17,9 @@ from apps.api.routers.auth import router as auth_router
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
-from apps.api.routers.content_protection_router import router as content_protection_router
+from apps.api.routers.content_protection_router import (
+    router as content_protection_router,
+)
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
@@ -30,10 +32,9 @@ from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 
+# ✅ CLEAN ARCHITECTURE: Use DI container
 # ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
 from apps.di import cleanup_container as cleanup_db_pool
-
-# ✅ CLEAN ARCHITECTURE: Use DI container
 from apps.di import get_container
 from config import settings
 
@@ -64,24 +65,27 @@ async def lifespan(app: FastAPI):
         try:
             logger.info("🔧 Starting bot manager initialization...")
             from apps.bot.multi_tenant.bot_manager import initialize_bot_manager
-            from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
-            
+            from infra.db.repositories.user_bot_repository_factory import (
+                UserBotRepositoryFactory,
+            )
+
             # Get session factory from DI container
             logger.info("🔧 Getting session factory from DI container...")
             session_factory = await container.database.async_session_maker()
             logger.info(f"🔧 Session factory obtained: {type(session_factory)}")
-            
+
             # Create repository factory that generates fresh sessions per operation
             logger.info("🔧 Creating repository factory...")
             repository_factory = UserBotRepositoryFactory(session_factory)
             logger.info(f"🔧 Repository factory created: {type(repository_factory)}")
-            
+
             # Initialize bot manager with the factory
             logger.info("🔧 Calling initialize_bot_manager...")
             await initialize_bot_manager(repository_factory)
             logger.info("✅ Multi-tenant bot manager initialized")
         except Exception as bot_error:
             import traceback
+
             logger.error(f"❌ Bot manager initialization failed at: {bot_error.__class__.__name__}")
             logger.error(f"❌ Error: {bot_error}")
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
@@ -131,12 +135,13 @@ async def lifespan(app: FastAPI):
         # ✅ MULTI-TENANT: Shutdown bot manager
         try:
             from apps.bot.multi_tenant.bot_manager import get_bot_manager
+
             bot_manager = await get_bot_manager()
             await bot_manager.stop()
             logger.info("✅ Bot manager shutdown completed")
         except Exception as bot_error:
             logger.warning(f"⚠️ Bot manager shutdown failed: {bot_error}")
-        
+
         await cleanup_db_pool()
         logger.info("✅ Application shutdown completed")
     except Exception as e:
@@ -178,7 +183,10 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         "url": "https://t.me/abccontrol_bot",
         "email": "support@analyticbot.com",
     },
-    license_info={"name": "Enterprise License", "url": "https://analyticbot.com/license"},
+    license_info={
+        "name": "Enterprise License",
+        "url": "https://analyticbot.com/license",
+    },
     openapi_tags=[
         # Core System
         {
@@ -304,7 +312,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 # Production performance middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
-    TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"]
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.analyticbot.com", "*"],
 )
 
 # Add CORS middleware with explicit configuration
@@ -335,35 +344,53 @@ app.include_router(admin_system_router)  # Admin - System Management
 # ✅ PHASE 4: ANALYTICS DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidated analytics domain architecture - all analytics under /analytics/*
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
-from apps.api.routers.analytics_channels_router import router as analytics_channels_router
+from apps.api.routers.analytics_channels_router import (
+    router as analytics_channels_router,
+)
 from apps.api.routers.analytics_live_router import router as analytics_live_router
-from apps.api.routers.analytics_post_dynamics_router import router as analytics_post_dynamics_router
-from apps.api.routers.insights_engagement_router import router as insights_engagement_router
-from apps.api.routers.insights_orchestration_router import router as insights_orchestration_router
+from apps.api.routers.analytics_post_dynamics_router import (
+    router as analytics_post_dynamics_router,
+)
+from apps.api.routers.insights_engagement_router import (
+    router as insights_engagement_router,
+)
+from apps.api.routers.insights_orchestration_router import (
+    router as insights_orchestration_router,
+)
 from apps.api.routers.insights_predictive import router as insights_predictive_router
 from apps.api.routers.statistics_core_router import router as statistics_core_router
-from apps.api.routers.statistics_reports_router import router as statistics_reports_router
+from apps.api.routers.statistics_reports_router import (
+    router as statistics_reports_router,
+)
 from apps.demo.routers.main import router as demo_router
 
 # NEW: Organized analytics domain structure
 app.include_router(
-    analytics_channels_router, prefix="/analytics/channels", tags=["Analytics - Channels"]
+    analytics_channels_router,
+    prefix="/analytics/channels",
+    tags=["Analytics - Channels"],
 )
 app.include_router(
     analytics_live_router, prefix="/analytics/realtime", tags=["Analytics - Realtime"]
 )  # Renamed from /live
 app.include_router(analytics_alerts_router, prefix="/analytics/alerts", tags=["Analytics - Alerts"])
 app.include_router(
-    analytics_post_dynamics_router, prefix="/analytics/posts/dynamics", tags=["Analytics - Posts"]
+    analytics_post_dynamics_router,
+    prefix="/analytics/posts/dynamics",
+    tags=["Analytics - Posts"],
 )  # Better hierarchy
 app.include_router(
-    statistics_core_router, prefix="/analytics/historical", tags=["Analytics - Historical"]
+    statistics_core_router,
+    prefix="/analytics/historical",
+    tags=["Analytics - Historical"],
 )  # Renamed from /statistics/core
 app.include_router(
     statistics_reports_router, prefix="/analytics/reports", tags=["Analytics - Reports"]
 )  # Moved from /statistics/reports
 app.include_router(
-    insights_engagement_router, prefix="/analytics/engagement", tags=["Analytics - Engagement"]
+    insights_engagement_router,
+    prefix="/analytics/engagement",
+    tags=["Analytics - Engagement"],
 )  # Moved from /insights/engagement
 app.include_router(
     insights_orchestration_router,
@@ -371,7 +398,9 @@ app.include_router(
     tags=["Analytics - Orchestration"],
 )  # Moved from /insights/orchestration
 app.include_router(
-    insights_predictive_router, prefix="/analytics/predictive", tags=["Analytics - Predictive"]
+    insights_predictive_router,
+    prefix="/analytics/predictive",
+    tags=["Analytics - Predictive"],
 )  # Moved from /insights/predictive
 app.include_router(
     ml_predictions_router, prefix="/analytics/ml", tags=["Analytics - ML"]
@@ -421,7 +450,10 @@ app.include_router(
     deprecated=True,
 )
 app.include_router(
-    ml_predictions_router, prefix="/ml", tags=["Machine Learning (deprecated)"], deprecated=True
+    ml_predictions_router,
+    prefix="/ml",
+    tags=["Machine Learning (deprecated)"],
+    deprecated=True,
 )
 
 app.include_router(demo_router)  # Demo endpoints
@@ -453,7 +485,9 @@ app.include_router(demo_router)  # Demo endpoints
 
 # Content Protection: /content-protection → /content/protection
 app.include_router(
-    content_protection_router, prefix="/content/protection", tags=["Content - Protection"]
+    content_protection_router,
+    prefix="/content/protection",
+    tags=["Content - Protection"],
 )  # NEW
 app.include_router(
     content_protection_router,
@@ -483,9 +517,10 @@ app.include_router(exports_router)  # /exports/* - Already good
 app.include_router(sharing_router)  # /sharing/* - Already good
 app.include_router(mobile_router)  # /mobile/* - Already good
 
+from apps.api.routers.admin_bot_router import router as admin_bot_router
+
 # ✅ PHASE 4 MULTI-TENANT: User and Admin Bot Management (October 27, 2025)
 from apps.api.routers.user_bot_router import router as user_bot_router
-from apps.api.routers.admin_bot_router import router as admin_bot_router
 from apps.api.routers.user_mtproto_router import router as user_mtproto_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
@@ -497,7 +532,9 @@ app.include_router(user_mtproto_router, tags=["User Bot Management"])  # /api/us
 from apps.api.routers.ai_chat_router import router as ai_chat_router
 from apps.api.routers.ai_insights_router import router as ai_insights_router
 from apps.api.routers.ai_services_router import router as ai_services_router
-from apps.api.routers.competitive_intelligence_router import router as competitive_router
+from apps.api.routers.competitive_intelligence_router import (
+    router as competitive_router,
+)
 from apps.api.routers.optimization_router import router as optimization_router
 from apps.api.routers.strategy_router import router as strategy_router
 from apps.api.routers.trend_analysis_router import router as trends_router
@@ -523,10 +560,16 @@ app.include_router(
     ai_chat_router, prefix="/ai-chat", tags=["AI Chat (deprecated)"], deprecated=True
 )
 app.include_router(
-    ai_insights_router, prefix="/ai-insights", tags=["AI Insights (deprecated)"], deprecated=True
+    ai_insights_router,
+    prefix="/ai-insights",
+    tags=["AI Insights (deprecated)"],
+    deprecated=True,
 )
 app.include_router(
-    ai_services_router, prefix="/ai-services", tags=["AI Services (deprecated)"], deprecated=True
+    ai_services_router,
+    prefix="/ai-services",
+    tags=["AI Services (deprecated)"],
+    deprecated=True,
 )
 app.include_router(
     strategy_router, prefix="/strategy", tags=["Strategy (deprecated)"], deprecated=True
@@ -538,7 +581,10 @@ app.include_router(
     deprecated=True,
 )
 app.include_router(
-    optimization_router, prefix="/optimization", tags=["Optimization (deprecated)"], deprecated=True
+    optimization_router,
+    prefix="/optimization",
+    tags=["Optimization (deprecated)"],
+    deprecated=True,
 )
 
 # Analytics Trends moved to analytics domain
@@ -546,7 +592,10 @@ app.include_router(
     trends_router, prefix="/analytics/trends", tags=["Analytics - Trends"]
 )  # NEW location
 app.include_router(
-    trends_router, prefix="/trends", tags=["Trend Analysis (deprecated)"], deprecated=True
+    trends_router,
+    prefix="/trends",
+    tags=["Trend Analysis (deprecated)"],
+    deprecated=True,
 )  # OLD location
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅

@@ -144,13 +144,20 @@ async def get_post_dynamics(
 
         # Convert channel_id to int if possible
         try:
-            channel_id_int = int(channel_id)
+            int(channel_id)
         except (ValueError, TypeError):
             # Use demo channel if invalid
-            channel_id_int = 0
+            pass
 
         # Determine number of points based on period
-        period_hours = {"1h": 1, "6h": 6, "12h": 12, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
+        period_hours = {
+            "1h": 1,
+            "6h": 6,
+            "12h": 12,
+            "24h": 24,
+            "7d": 24 * 7,
+            "30d": 24 * 30,
+        }
         total_hours = period_hours.get(period, 24)
 
         # Generate data points (one per hour for simplicity)
@@ -237,8 +244,8 @@ async def get_top_posts(
         posts = []
         for i in range(10):
             post = {
-                "id": f"post_{i+1}",
-                "title": f"Post Title {i+1}",
+                "id": f"post_{i + 1}",
+                "title": f"Post Title {i + 1}",
                 "views": random.randint(500, 5000),
                 "likes": random.randint(50, 500),
                 "shares": random.randint(10, 100),

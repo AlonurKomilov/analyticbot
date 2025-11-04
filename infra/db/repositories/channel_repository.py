@@ -15,12 +15,12 @@ class AsyncpgChannelRepository:
         self.pool = pool
 
     async def create_channel(
-        self, 
-        channel_id: int, 
-        user_id: int, 
-        title: str, 
+        self,
+        channel_id: int,
+        user_id: int,
+        title: str,
         username: str | None = None,
-        description: str | None = None
+        description: str | None = None,
     ) -> None:
         """Adds a new channel to the database for a specific user.
 

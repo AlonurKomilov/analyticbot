@@ -15,7 +15,12 @@ class ModelingConfig:
 
     # Confidence thresholds
     confidence_thresholds: dict[str, float] = field(
-        default_factory=lambda: {"very_high": 0.85, "high": 0.70, "medium": 0.55, "low": 0.40}
+        default_factory=lambda: {
+            "very_high": 0.85,
+            "high": 0.70,
+            "medium": 0.55,
+            "low": 0.40,
+        }
     )
 
     # Prediction horizons

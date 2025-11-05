@@ -238,8 +238,8 @@ export class ApiDataProvider extends DataProvider {
                 throw new Error(`Unsupported HTTP method: ${method}`);
             }
 
-            // apiClient returns response.data directly
-            return response.data;
+            // apiClient returns the data directly (not wrapped in response.data)
+            return response;
         } catch (error) {
             // ONLY provide fallback for explicitly marked demo users
             const isDemoUser = localStorage.getItem('is_demo_user') === 'true';

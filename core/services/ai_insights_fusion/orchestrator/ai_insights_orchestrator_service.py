@@ -126,7 +126,9 @@ class AIInsightsOrchestratorService(AIInsightsOrchestratorProtocol):
             if self.service_integration:
                 logger.info("🔗 Step 4: Integrating with AI services")
                 integration_result = await self.service_integration.integrate_all_services(
-                    orchestration_result, include_narrative=True, include_anomaly=True
+                    orchestration_result,
+                    include_narrative=True,
+                    include_anomaly=True,
                 )
                 orchestration_result["service_integration"] = integration_result.get(
                     "service_integration_summary", {}
@@ -424,7 +426,7 @@ class AIInsightsOrchestratorService(AIInsightsOrchestratorProtocol):
         Delegates to pattern-focused workflow.
         """
         config = pattern_config or {}
-        days_analyzed = config.get("days_analyzed", 30)
+        config.get("days_analyzed", 30)
 
         # Use custom workflow focused on patterns
         workflow_config = {
@@ -445,7 +447,7 @@ class AIInsightsOrchestratorService(AIInsightsOrchestratorProtocol):
         Delegates to prediction-focused workflow.
         """
         config = prediction_config or {}
-        days_analyzed = config.get("days_analyzed", 30)
+        config.get("days_analyzed", 30)
 
         # Use custom workflow focused on predictions
         workflow_config = {

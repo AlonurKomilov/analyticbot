@@ -13,7 +13,7 @@ from .base import SCALERS, logger, np, pd
 class DataTransformationMixin:
     """
     Mixin class providing data transformation capabilities.
-    
+
     Features:
     - Feature scaling (standard, robust, minmax)
     - Logarithmic transformations

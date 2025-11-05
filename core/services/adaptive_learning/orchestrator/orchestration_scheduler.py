@@ -273,7 +273,10 @@ class OrchestrationScheduler:
             strategy = schedule_config["strategy"]
 
             # Skip if not a drift-checking strategy
-            if strategy not in [OrchestrationStrategy.REACTIVE, OrchestrationStrategy.HYBRID]:
+            if strategy not in [
+                OrchestrationStrategy.REACTIVE,
+                OrchestrationStrategy.HYBRID,
+            ]:
                 return False
 
             # Check if enough time has passed since last drift check
@@ -290,7 +293,9 @@ class OrchestrationScheduler:
 
             # Trigger drift-based workflow
             workflow_id = await self.workflow_manager.create_workflow(
-                model_id=model_id, strategy=strategy, triggered_by="scheduled_drift_check"
+                model_id=model_id,
+                strategy=strategy,
+                triggered_by="scheduled_drift_check",
             )
 
             if workflow_id:
@@ -315,7 +320,10 @@ class OrchestrationScheduler:
             strategy = schedule_config["strategy"]
 
             # Skip if not a feedback-checking strategy
-            if strategy not in [OrchestrationStrategy.CONTINUOUS, OrchestrationStrategy.HYBRID]:
+            if strategy not in [
+                OrchestrationStrategy.CONTINUOUS,
+                OrchestrationStrategy.HYBRID,
+            ]:
                 return False
 
             # Check if enough time has passed since last feedback check
@@ -357,12 +365,16 @@ class OrchestrationScheduler:
                     model_id: {
                         "strategy": config["strategy"].value,
                         "auto_learning": config["auto_learning"],
-                        "next_drift_check": config.get("next_drift_check", "").isoformat()
-                        if config.get("next_drift_check")
-                        else None,
-                        "next_feedback_check": config.get("next_feedback_check", "").isoformat()
-                        if config.get("next_feedback_check")
-                        else None,
+                        "next_drift_check": (
+                            config.get("next_drift_check", "").isoformat()
+                            if config.get("next_drift_check")
+                            else None
+                        ),
+                        "next_feedback_check": (
+                            config.get("next_feedback_check", "").isoformat()
+                            if config.get("next_feedback_check")
+                            else None
+                        ),
                     }
                     for model_id, config in self.scheduled_updates.items()
                 },

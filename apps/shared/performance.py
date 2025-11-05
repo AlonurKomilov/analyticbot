@@ -75,10 +75,8 @@ class PerformanceTimer:
             else:
                 # Fallback: dynamic import (will be removed when DI is complete)
                 logger.warning("Performance recorder not injected, using fallback")
-                from infra.db.performance import performance_timer as infra_timer_func
 
                 # The infra performance_timer might have a record method or similar
-                pass
         except ImportError:
             # Infra performance system not available - that's fine
             pass
@@ -113,7 +111,10 @@ class PerformanceMetricsCollector:
 
             # Record metrics
             metrics = PerformanceMetrics(
-                operation=operation_name, duration_ms=duration_ms, status=status, metadata=metadata
+                operation=operation_name,
+                duration_ms=duration_ms,
+                status=status,
+                metadata=metadata,
             )
             self._metrics.append(metrics)
 

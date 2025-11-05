@@ -263,8 +263,9 @@ async def get_mtproto_status(
         if phone and len(phone) > 6:
             phone = phone[:4] + "****" + phone[-3:]
 
-        # Check if MTProto is enabled
-        mtproto_enabled = getattr(credentials, "mtproto_enabled", True)
+        # Check if MTProto is enabled - use credentials value directly (no default!)
+        # ✅ FIXED: Don't default to True - respect database value
+        mtproto_enabled = credentials.mtproto_enabled
 
         return MTProtoStatusResponse(
             configured=configured,

@@ -277,7 +277,8 @@ class UserMTProtoService:
             if not credentials:
                 return False
 
-            global_enabled = getattr(credentials, "mtproto_enabled", True)
+            # ✅ FIXED: Use credentials value directly (no default!)
+            global_enabled = credentials.mtproto_enabled
             if not global_enabled:
                 # Global disabled overrides everything
                 return False

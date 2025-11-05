@@ -27,6 +27,7 @@ class UserBotRepository(IUserBotRepository):
             telegram_api_hash=credentials.telegram_api_hash,
             telegram_phone=credentials.telegram_phone,
             session_string=credentials.session_string,
+            mtproto_enabled=credentials.mtproto_enabled,  # ✅ Include mtproto toggle state
             status=credentials.status.value,
             is_verified=credentials.is_verified,
             rate_limit_rps=credentials.rate_limit_rps,
@@ -147,6 +148,7 @@ class UserBotRepository(IUserBotRepository):
             bot_id=orm.bot_id,
             telegram_phone=orm.telegram_phone,
             session_string=orm.session_string,
+            mtproto_enabled=orm.mtproto_enabled,  # ✅ CRITICAL FIX: Include this field!
             status=BotStatus(orm.status),
             is_verified=orm.is_verified,
             rate_limit_rps=orm.rate_limit_rps,

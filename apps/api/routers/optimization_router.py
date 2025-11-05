@@ -82,7 +82,8 @@ class RecommendationRequest(BaseModel):
         default=None, description="Pre-analyzed performance data (optional)"
     )
     priority: str = Field(
-        default="all", description="Recommendation priority: critical, high, medium, all"
+        default="all",
+        description="Recommendation priority: critical, high, medium, all",
     )
 
 
@@ -517,7 +518,8 @@ async def get_service_health(orchestrator=Depends(get_optimization_orchestrator)
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service health check failed"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service health check failed",
         )
 
 

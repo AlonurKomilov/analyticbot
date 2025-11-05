@@ -13,7 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 class LoginRequest(BaseModel):
     """
     Login request model
-    
+
     🆕 Phase 3.2: Added remember_me parameter
     """
 

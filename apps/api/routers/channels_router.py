@@ -134,8 +134,10 @@ async def get_user_channels(
     - List of user's channels with basic information
     """
     try:
+        logger.info(f"Fetching channels for user {current_user.get('id')}")
         with performance_timer("user_channels_fetch"):
             channels = await channel_service.get_user_channels(user_id=current_user["id"])
+            logger.info(f"Successfully fetched {len(channels)} channels")
 
             return [
                 ChannelListResponse(
@@ -149,9 +151,11 @@ async def get_user_channels(
                 )
                 for channel in channels
             ]
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"User channels fetch failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch user channels")
+        logger.error(f"User channels fetch failed for user {current_user.get('id')}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user channels: {str(e)}")
 
 
 @router.post("", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)

@@ -229,16 +229,19 @@ class ChannelManagementService:
             HTTPException: If operation fails
         """
         try:
+            self.logger.info(f"Fetching channels for user {user_id}")
             channels = await self.core_service.get_user_channels(user_id)
+            self.logger.info(f"Found {len(channels)} channels for user {user_id}")
             return [self._map_domain_to_response(channel) for channel in channels]
 
         except ValueError as e:
+            self.logger.error(f"ValueError getting channels for user {user_id}: {e}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
         except Exception as e:
-            self.logger.error(f"Error getting channels for user {user_id}: {e}")
+            self.logger.error(f"Exception getting channels for user {user_id}: {e}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to get user channels",
+                detail=f"Failed to get user channels: {str(e)}",
             )
 
     def _map_domain_to_response(self, channel) -> ChannelResponse:

@@ -4,7 +4,8 @@ import {
     Breadcrumbs,
     Link,
     Collapse,
-    Alert
+    Alert,
+    Box
 } from '@mui/material';
 import {
     Home as HomeIcon,
@@ -13,6 +14,7 @@ import {
     Security as SecurityIcon
 } from '@mui/icons-material';
 import DataSourceSettings from '@shared/components/ui/DataSourceSettings';
+import ChannelSelector from '@shared/components/ui/ChannelSelector';
 
 interface DashboardHeaderProps {
     showSettings: boolean;
@@ -64,6 +66,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = React.memo(({
             <div aria-live="polite" aria-atomic="true" className="sr-only">
                 Analytics dashboard loaded
             </div>
+
+            {/* Channel Selector - Primary Action */}
+            <Box sx={{ mb: 3 }}>
+                <ChannelSelector
+                    showCreateButton={true}
+                    showRefreshButton={true}
+                    size="medium"
+                    fullWidth={true}
+                />
+            </Box>
 
             {/* Data Source Settings - Collapsible */}
             <Collapse in={showSettings}>

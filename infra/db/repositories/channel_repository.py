@@ -15,12 +15,12 @@ class AsyncpgChannelRepository:
         self.pool = pool
 
     async def create_channel(
-        self, 
-        channel_id: int, 
-        user_id: int, 
-        title: str, 
+        self,
+        channel_id: int,
+        user_id: int,
+        title: str,
         username: str | None = None,
-        description: str | None = None
+        description: str | None = None,
     ) -> None:
         """Adds a new channel to the database for a specific user.
 
@@ -58,11 +58,27 @@ class AsyncpgChannelRepository:
             return await conn.fetchval("SELECT COUNT(*) FROM channels WHERE user_id = $1", user_id)
 
     async def get_user_channels(self, user_id: int) -> list[dict[str, Any]]:
-        """Retrieve all channels registered by a user."""
+        """Retrieve all channels registered by a user.
+
+        Note: The 'id' column in the database IS the Telegram channel ID.
+        The Channel entity uses 'id' as the database PK and 'telegram_id' as the Telegram ID,
+        so we map the database 'id' to both fields in the mapper.
+        """
 
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
-                "SELECT id, title, username, description, created_at FROM channels WHERE user_id = $1",
+                """
+                SELECT
+                    id,
+                    title,
+                    username,
+                    COALESCE(description, '') as description,
+                    created_at,
+                    user_id
+                FROM channels
+                WHERE user_id = $1
+                ORDER BY created_at DESC
+                """,
                 user_id,
             )
             return [dict(record) for record in records]

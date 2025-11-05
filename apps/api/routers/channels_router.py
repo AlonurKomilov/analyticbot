@@ -56,6 +56,7 @@ class ChannelUpdateRequest(BaseModel):
 
 class ValidateChannelRequest(BaseModel):
     """Request model for channel validation"""
+
     username: str
 
 
@@ -65,6 +66,7 @@ class ValidateChannelRequest(BaseModel):
 async def get_telegram_validation_service_dep():
     """Dependency to get telegram validation service"""
     from apps.api.di_analytics import get_telegram_validation_service as di_get_service
+
     return await di_get_service()
 
 
@@ -114,10 +116,7 @@ async def validate_telegram_channel(
 
     except Exception as e:
         logger.error(f"Failed to validate channel: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 
 @router.get("", response_model=list[ChannelListResponse])
@@ -154,7 +153,9 @@ async def get_user_channels(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"User channels fetch failed for user {current_user.get('id')}: {e}", exc_info=True)
+        logger.error(
+            f"User channels fetch failed for user {current_user.get('id')}: {e}", exc_info=True
+        )
         raise HTTPException(status_code=500, detail=f"Failed to fetch user channels: {str(e)}")
 
 

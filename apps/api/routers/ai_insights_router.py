@@ -372,8 +372,8 @@ async def get_service_health(orchestrator=Depends(get_ai_insights_orchestrator))
     """
     try:
         components = {
-            "core_insights": "available" if orchestrator.core_insights else "unavailable",
-            "pattern_analysis": "available" if orchestrator.pattern_analysis else "unavailable",
+            "core_insights": ("available" if orchestrator.core_insights else "unavailable"),
+            "pattern_analysis": ("available" if orchestrator.pattern_analysis else "unavailable"),
             "predictive_analysis": (
                 "available" if orchestrator.predictive_analysis else "unavailable"
             ),
@@ -397,7 +397,8 @@ async def get_service_health(orchestrator=Depends(get_ai_insights_orchestrator))
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service health check failed"
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service health check failed",
         )
 
 

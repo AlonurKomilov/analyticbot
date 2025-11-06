@@ -85,11 +85,15 @@ async def _create_extended_repository(repo_type: str) -> Any:
 
             return AsyncpgPlanRepository(connection)
         elif repo_type == "schedule":
-            from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+            from infra.db.repositories.schedule_repository import (
+                AsyncpgScheduleRepository,
+            )
 
             return AsyncpgScheduleRepository(connection)
         elif repo_type == "payment":
-            from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+            from infra.db.repositories.payment_repository import (
+                AsyncpgPaymentRepository,
+            )
 
             return AsyncpgPaymentRepository(connection)
         else:
@@ -149,7 +153,7 @@ def _create_guard_service(user_repository=None, **kwargs):
         redis_client = None
         try:
             from apps.shared.di import get_container
-            container = get_container()
+            get_container()
             # Try to get redis client if available
             # Most installations won't have Redis, so we'll use in-memory fallback
             redis_client = None  # For now, default to in-memory
@@ -191,10 +195,12 @@ def _create_payment_microservices(payment_repository=None, **kwargs):
             PaymentMethodService,
             PaymentOrchestratorService,
             PaymentProcessingService,
-            WebhookService,
         )
         from infra.services.payment import (
             SubscriptionService as PaymentSubscriptionService,
+        )
+        from infra.services.payment import (
+            WebhookService,
         )
 
         if payment_repository is None:
@@ -301,7 +307,9 @@ def _create_ml_service(service_name: str) -> Any | None:
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":
             # Create ChurnPredictor using the new churn intelligence service
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.churn_intelligence import (
+                ChurnIntelligenceOrchestratorService,
+            )
 
             try:
                 orchestrator = ChurnIntelligenceOrchestratorService()
@@ -319,7 +327,9 @@ def _create_ml_service(service_name: str) -> Any | None:
 
                 # Only create if all dependencies are available
                 if prediction_service and content_optimizer and churn_predictor:
-                    from apps.bot.services.adapters.bot_ml_facade import create_bot_ml_facade
+                    from apps.bot.services.adapters.bot_ml_facade import (
+                        create_bot_ml_facade,
+                    )
 
                     return create_bot_ml_facade()
                 else:

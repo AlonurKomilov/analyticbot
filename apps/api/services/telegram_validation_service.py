@@ -13,11 +13,10 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel
 
 # Use protocol for Clean Architecture compliance
-from core.protocols.infrastructure_protocols import TelegramClientProtocol
 
 # Type checking only - for IDE support
 if TYPE_CHECKING:
-    from infra.tg.telethon_client import TelethonTGClient
+    pass
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +45,7 @@ class TelegramValidationService:
 
         Args:
             telethon_client: Telegram client for API access
-        
+
         Note: Uses Any type since TelegramClientProtocol doesn't have all methods yet.
         Future: Expand TelegramClientProtocol with get_full_channel(), _started, _client
         The important part is dependency injection - type can be refined later.
@@ -54,9 +53,7 @@ class TelegramValidationService:
         self.client = telethon_client
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    async def validate_channel_by_username(
-        self, username: str
-    ) -> ChannelValidationResult:
+    async def validate_channel_by_username(self, username: str) -> ChannelValidationResult:
         """
         Validate a Telegram channel by username and fetch metadata
 
@@ -191,9 +188,7 @@ class TelegramValidationService:
             self.logger.error(f"Error getting metadata for channel {telegram_id}: {e}")
             return {"error": str(e)}
 
-    async def check_user_admin_access(
-        self, username: str, user_id: int
-    ) -> tuple[bool, str]:
+    async def check_user_admin_access(self, username: str, user_id: int) -> tuple[bool, str]:
         """
         Check if a user has admin access to a channel
 

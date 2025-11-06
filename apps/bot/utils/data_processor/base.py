@@ -9,7 +9,6 @@ import io
 import json
 import logging
 import warnings
-from typing import Any
 
 import aiofiles
 import numpy as np

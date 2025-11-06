@@ -25,7 +25,7 @@ class PaymentGateway(Enum):
 class PaymentAdapterFactory:
     """
     Factory for creating payment adapters with configuration-based switching.
-    
+
     Clean Architecture: Abstracts payment provider details from business logic.
     """
 
@@ -59,11 +59,15 @@ class PaymentAdapterFactory:
         logger.info(f"Creating new payment adapter: {gateway_name}")
 
         if gateway == PaymentGateway.STRIPE:
-            from apps.bot.services.adapters.stripe_payment_adapter import StripePaymentAdapter
+            from apps.bot.services.adapters.stripe_payment_adapter import (
+                StripePaymentAdapter,
+            )
 
             adapter = StripePaymentAdapter(**kwargs)
         elif gateway == PaymentGateway.MOCK:
-            from apps.bot.services.adapters.mock_payment_adapter import MockPaymentAdapter
+            from apps.bot.services.adapters.mock_payment_adapter import (
+                MockPaymentAdapter,
+            )
 
             adapter = MockPaymentAdapter(**kwargs)
         else:
@@ -128,8 +132,7 @@ class PaymentAdapterFactory:
             return PaymentGateway(payment_provider)
         except ValueError:
             logger.warning(
-                f"Unknown payment provider '{payment_provider}' in settings, "
-                f"defaulting to MOCK"
+                f"Unknown payment provider '{payment_provider}' in settings, defaulting to MOCK"
             )
             return PaymentGateway.MOCK
 

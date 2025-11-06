@@ -127,6 +127,9 @@ async def require_channel_access(
             container = get_container()
             channel_repo = await container.database.channel_repo()  # ✅ FIXED: Correct DI method
 
+        # Type guard: ensure channel_repo is not None before using it
+        assert channel_repo is not None, "Channel repository must be available"
+
         # Get all channels owned by the user
         user_channels = await channel_repo.get_user_channels(user_id)
         user_channel_ids = [ch["id"] for ch in user_channels]

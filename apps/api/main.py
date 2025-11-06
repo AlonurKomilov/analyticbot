@@ -26,6 +26,7 @@ from apps.api.routers.health_router import router as health_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.payment_router import router as payment_router
+from apps.api.routers.posts_router import router as posts_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
@@ -365,6 +366,7 @@ app.include_router(system_router)  # Core system operations (performance, schedu
 app.include_router(health_router)  # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
 app.include_router(channels_router)  # Channel management (CRUD)
+app.include_router(posts_router, prefix="/api")  # Posts management (MTProto collected data)
 app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_system_router)  # Admin - System Management

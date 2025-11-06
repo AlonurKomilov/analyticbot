@@ -125,7 +125,7 @@ async def require_channel_access(
         if channel_repo is None:
             from apps.di import get_container
             container = get_container()
-            channel_repo = await container.get_channel_repository()
+            channel_repo = await container.database.channel_repo()  # ✅ FIXED: Correct DI method
 
         # Get all channels owned by the user
         user_channels = await channel_repo.get_user_channels(user_id)

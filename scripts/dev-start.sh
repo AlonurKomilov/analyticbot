@@ -325,6 +325,11 @@ case $SERVICE in
         sleep 2
 
         echo ""
+        echo -e "${BLUE}🚀 Starting MTProto data collection worker...${NC}"
+        start_service "mtproto_worker" 'python -m apps.mtproto.worker --interval 10' ""
+        sleep 1
+
+        echo ""
         echo -e "${BLUE}🚀 Starting frontend with updated tunnel URL...${NC}"
         cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
         ;;

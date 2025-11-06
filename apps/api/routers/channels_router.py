@@ -290,8 +290,6 @@ async def delete_channel(
     - Deletion confirmation
     """
     try:
-        # Verify channel access and delete permissions
-        await require_channel_access(channel_id, current_user["id"])
         # Verify user has access to this channel
         await require_channel_access(channel_id, current_user["id"])
 

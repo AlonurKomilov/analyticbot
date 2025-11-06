@@ -123,6 +123,29 @@ class UserBotRepository(IUserBotRepository):
         result = await self.session.execute(query)
         return result.scalar_one()
 
+    async def get_all_mtproto_enabled_users(self) -> list[dict]:
+        """Get all users with MTProto enabled.
+
+        Returns:
+            List of user dictionaries with basic info (id, user_id, telegram_phone, mtproto_enabled)
+        """
+        query = select(UserBotCredentialsORM).where(
+            UserBotCredentialsORM.mtproto_enabled == True  # noqa: E712
+        )
+
+        result = await self.session.execute(query)
+        orms = result.scalars().all()
+
+        return [
+            {
+                "id": orm.id,
+                "user_id": orm.user_id,
+                "telegram_phone": orm.telegram_phone,
+                "mtproto_enabled": orm.mtproto_enabled,
+            }
+            for orm in orms
+        ]
+
     async def log_admin_action(self, action: AdminBotAction) -> None:
         """Log admin action"""
         orm = AdminBotActionORM(

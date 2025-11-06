@@ -10,6 +10,8 @@ import re
 from datetime import datetime
 from typing import Any
 
+from telethon import utils
+
 logger = logging.getLogger(__name__)
 
 # URL regex pattern for link extraction
@@ -47,19 +49,24 @@ def normalize_message(message: Any) -> dict[str, Any]:
         is_supergroup = False
 
         if peer:
-            # Handle different peer types
-            if hasattr(peer, "channel_id"):
-                channel_id = peer.channel_id
-            elif hasattr(peer, "chat_id"):
-                channel_id = peer.chat_id
-            elif hasattr(peer, "user_id"):
-                channel_id = peer.user_id
+            # Use Telethon's official utility to convert peer to display ID
+            # This handles all peer types correctly:
+            # - Channels/Supergroups: adds -100 prefix (e.g., -1002678877654)
+            # - Regular chats: returns negative chat_id (e.g., -123456)
+            # - Users: returns positive user_id (e.g., 844338517)
+            display_id = utils.get_peer_id(peer)
+            # Store as positive ID in our database
+            channel_id = abs(display_id)
 
         # Try to get channel info from message
         if hasattr(message, "chat"):
             chat = message.chat
             if chat:
-                channel_id = channel_id or getattr(chat, "id", None)
+                # If we didn't get channel_id from peer, use chat.id
+                if channel_id is None:
+                    raw_id = getattr(chat, "id", None)
+                    if raw_id:
+                        channel_id = abs(raw_id)
                 channel_username = getattr(chat, "username", None)
                 channel_title = getattr(chat, "title", None)
                 is_supergroup = getattr(chat, "megagroup", False)
@@ -169,7 +176,7 @@ def normalize_update(update: Any) -> dict[str, Any] | None:
         return None
 
 
-def extract_links(text: str, entities: list[Any] = None) -> list[str]:
+def extract_links(text: str, entities: list[Any] | None = None) -> list[str]:
     """Extract links from message text and entities.
 
     Args:

@@ -61,8 +61,17 @@ async def test_mtproto_ingestion():
             "SELECT * FROM user_bot_credentials WHERE user_id = $1", 844338517
         )
         if user_creds:
-            has_session = user_creds.get("telegram_session_encrypted") is not None
-            print(f"   MTProto credentials: {'✅ Has session' if has_session else '❌ No session'}")
+            has_session = user_creds.get("session_string") is not None and len(str(user_creds.get("session_string", ""))) > 0
+            has_api_id = user_creds.get("telegram_api_id") is not None
+            has_phone = user_creds.get("telegram_phone") is not None
+            is_enabled = user_creds.get("mtproto_enabled", False)
+            
+            print("   MTProto credentials:")
+            print(f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('telegram_api_id', 'N/A')}")
+            print(f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('telegram_phone', 'N/A')}")
+            print(f"      Session: {'✅ Has session' if has_session else '❌ No session'}")
+            print(f"      Enabled: {'✅' if is_enabled else '❌'}")
+            
             if not has_session:
                 print("   ⚠️  User needs to complete MTProto setup first!")
                 await conn.close()
@@ -95,12 +104,11 @@ async def test_mtproto_ingestion():
         )
 
         # Create repository factory
-        repo_factory = UserBotRepositoryFactory(db_pool)
-        user_bot_repo = repo_factory.create()
+        repo_factory = UserBotRepositoryFactory(db_pool)  # type: ignore
 
         # Create MTProto service
         mtproto_service = UserMTProtoService(
-            user_bot_repository=user_bot_repo, encryption_service=encryption_service
+            user_bot_repo_factory=repo_factory  # type: ignore
         )
 
         print("   ✅ MTProto service initialized")
@@ -109,19 +117,21 @@ async def test_mtproto_ingestion():
         # Step 3: Try to get user's MTProto client
         print("3️⃣ Getting user's MTProto client...")
         try:
-            client = await mtproto_service.get_user_client(user_id=844338517)
-            if client:
+            user_client = await mtproto_service.get_user_client(user_id=844338517)
+            if user_client:
                 print("   ✅ MTProto client retrieved")
+                # Get underlying Telethon client
+                client = user_client.client  # type: ignore
 
                 # Test: Get channel info
                 print()
                 print("4️⃣ Fetching channel information...")
                 try:
                     # Get channel entity
-                    channel_entity = await client.get_entity("@abc_legacy_news")
-                    print(f"   ✅ Channel: {channel_entity.title}")
-                    print(f"      ID: {channel_entity.id}")
-                    print(f"      Username: @{channel_entity.username}")
+                    channel_entity = await client.get_entity("@abc_legacy_news")  # type: ignore
+                    print(f"   ✅ Channel: {channel_entity.title}")  # type: ignore
+                    print(f"      ID: {channel_entity.id}")  # type: ignore
+                    print(f"      Username: @{channel_entity.username}")  # type: ignore
                     print(
                         f"      Participants: {getattr(channel_entity, 'participants_count', 'N/A')}"
                     )
@@ -129,13 +139,13 @@ async def test_mtproto_ingestion():
 
                     # Test: Fetch recent messages
                     print("5️⃣ Fetching recent messages (last 10)...")
-                    messages = await client.get_messages("@abc_legacy_news", limit=10)
-                    print(f"   ✅ Retrieved {len(messages)} messages")
+                    messages = await client.get_messages("@abc_legacy_news", limit=10)  # type: ignore
+                    print(f"   ✅ Retrieved {len(messages)} messages")  # type: ignore
 
                     if messages:
                         print()
                         print("   📝 Sample messages:")
-                        for i, msg in enumerate(messages[:3], 1):
+                        for i, msg in enumerate(messages[:3], 1):  # type: ignore
                             print(f"      {i}. Message ID: {msg.id}")
                             print(f"         Date: {msg.date}")
                             print(f"         Views: {getattr(msg, 'views', 'N/A')}")
@@ -174,7 +184,7 @@ async def test_mtproto_ingestion():
             traceback.print_exc()
 
         finally:
-            await db_pool.close()
+            await db_pool.close()  # type: ignore
 
     except Exception as e:
         print(f"   ❌ Error initializing MTProto: {e}")

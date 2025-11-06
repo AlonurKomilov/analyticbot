@@ -86,3 +86,9 @@ class UserBotRepositoryFactory(IUserBotRepository):
             repo = UserBotRepository(session)
             await repo.log_admin_action(action)
             await session.commit()
+
+    async def get_all_mtproto_enabled_users(self) -> list[dict]:
+        """Get all users with MTProto enabled"""
+        async with self.session_factory() as session:
+            repo = UserBotRepository(session)
+            return await repo.get_all_mtproto_enabled_users()

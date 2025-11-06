@@ -16,18 +16,20 @@ class HistoryCollector:
     Implements idempotent history collection with rate limiting and error handling.
     """
 
-    def __init__(self, tg_client: TGClient, repos: Any, settings: MTProtoSettings):
+    def __init__(self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None):
         """Initialize the history collector.
 
         Args:
             tg_client: Telegram client implementation
             repos: Repository container with channel_repo, post_repo, metrics_repo, parsers
             settings: MTProto configuration settings
+            user_id: User ID for multi-tenant channel ownership (optional)
         """
         self.logger = logging.getLogger(__name__)
         self.tg_client = tg_client
         self.repos = repos
         self.settings = settings
+        self.user_id = user_id
 
         # Get parsers from repos container (provided via DI)
         self.parsers = getattr(repos, "parsers", None)
@@ -76,11 +78,11 @@ class HistoryCollector:
         self.logger.info(f"History backfill complete: {stats}")
         return stats
 
-    async def _process_peer_history(self, peer: str, limit: int) -> dict[str, int]:
+    async def _process_peer_history(self, peer: str | int, limit: int) -> dict[str, int]:
         """Process history for a single peer.
 
         Args:
-            peer: Channel username or ID
+            peer: Channel username or ID (str or int)
             limit: Maximum messages to collect
 
         Returns:
@@ -93,10 +95,9 @@ class HistoryCollector:
 
             # Resolve peer to get channel ID
             try:
-                # In a real implementation, we'd resolve the peer to get channel info
-                # For now, we'll use the peer string as-is
+                # Handle both string and int peer identifiers
                 peer_id = peer
-                if isinstance(peer, str) and not peer.isdigit():
+                if isinstance(peer, str) and not peer.lstrip("-").isdigit():
                     # This is a username, we'd need to resolve it
                     # For now, we'll skip username resolution in this stub
                     self.logger.warning(f"Username resolution not implemented: {peer}")
@@ -128,12 +129,11 @@ class HistoryCollector:
                 try:
                     chunk_limit = min(chunk_size, limit - messages_processed)
 
-                    # Get messages in chunks using proper async iteration
-                    messages_iterator = await self.tg_client.iter_history(
-                        peer, offset_id=offset_id, limit=chunk_limit
-                    )
+                    # Get messages in chunks using proper async iteration (don't await async generators)
                     messages = []
-                    async for message in messages_iterator:
+                    async for message in self.tg_client.iter_history(  # type: ignore
+                        peer, offset_id=offset_id, limit=chunk_limit
+                    ):
                         messages.append(message)
 
                         # Update offset for next iteration
@@ -160,13 +160,20 @@ class HistoryCollector:
                                 peer_stats["skipped"] += 1
                                 continue
 
-                            # Ensure channel exists
-                            await self.repos.channel_repo.ensure_channel(**normalized["channel"])
+                            # Ensure channel exists (pass user_id for new channels)
+                            self.logger.debug(f"Ensuring channel: {normalized['channel']}")
+                            await self.repos.channel_repo.ensure_channel(
+                                **normalized["channel"],
+                                user_id=self.user_id
+                            )
+                            self.logger.debug(f"Channel ensured successfully")
 
                             # Upsert post
+                            self.logger.debug(f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}")
                             post_result = await self.repos.post_repo.upsert_post(
                                 **normalized["post"]
                             )
+                            self.logger.debug(f"Post upsert result: {post_result}")
 
                             # Add metrics snapshot
                             await self.repos.metrics_repo.add_or_update_snapshot(
@@ -227,9 +234,8 @@ class HistoryCollector:
 
         try:
             messages = []
-            # Get async iterator properly
-            messages_iterator = await self.tg_client.iter_history(channel_username, limit=limit)
-            async for message in messages_iterator:
+            # Get async iterator (don't await async generators)
+            async for message in self.tg_client.iter_history(channel_username, limit=limit):  # type: ignore
                 # Use parser from DI or fallback to lazy import
                 if self.parsers and hasattr(self.parsers, "normalize_message"):
                     normalized = self.parsers.normalize_message(message)
@@ -244,7 +250,7 @@ class HistoryCollector:
             return messages
 
         except Exception as e:
-            self.logger.error(f"Failed to collect history from {channel_username}: {e}")
+            self.logger.error(f"Failed to collect history from {channel_username}: {e}", exc_info=True)
             return []
 
     async def collect_batch_history(

@@ -101,6 +101,7 @@ class AsyncpgChannelRepository:
         username: str | None = None,
         title: str | None = None,
         is_supergroup: bool = False,
+        user_id: int | None = None,
     ) -> dict[str, Any]:
         """Ensure channel exists with UPSERT behavior for MTProto ingestion.
 
@@ -109,26 +110,41 @@ class AsyncpgChannelRepository:
             username: Channel username (without @)
             title: Channel title/name
             is_supergroup: Whether channel is a supergroup
+            user_id: User ID who owns/added this channel (optional, uses existing or skips insert if None)
 
         Returns:
             Dictionary with channel information
         """
         async with self.pool.acquire() as conn:
-            # Use UPSERT to handle existing channels
-            await conn.execute(
-                """
-                INSERT INTO channels (id, title, username, user_id)
-                VALUES ($1, $2, $3, $4)
-                ON CONFLICT (id) DO UPDATE SET
-                    title = COALESCE(EXCLUDED.title, channels.title),
-                    username = COALESCE(EXCLUDED.username, channels.username),
-                    updated_at = NOW()
-                """,
-                channel_id,
-                title or username or f"Channel_{channel_id}",
-                username,
-                0,  # Default user_id for MTProto channels
-            )
+            # Check if channel already exists
+            existing = await conn.fetchrow("SELECT user_id FROM channels WHERE id = $1", channel_id)
+            
+            if existing:
+                # Update existing channel (don't change user_id)
+                await conn.execute(
+                    """
+                    UPDATE channels SET
+                        title = COALESCE($2, title),
+                        username = COALESCE($3, username),
+                        updated_at = NOW()
+                    WHERE id = $1
+                    """,
+                    channel_id,
+                    title,
+                    username,
+                )
+            elif user_id is not None:
+                # Insert new channel only if user_id is provided
+                await conn.execute(
+                    """
+                    INSERT INTO channels (id, title, username, user_id)
+                    VALUES ($1, $2, $3, $4)
+                    """,
+                    channel_id,
+                    title or username or f"Channel_{channel_id}",
+                    username,
+                    user_id,
+                )
 
             # Return the channel record
             record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", channel_id)

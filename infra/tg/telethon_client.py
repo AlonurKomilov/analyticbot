@@ -97,7 +97,7 @@ class TelethonTGClient:
 
             # Set raw mode for minimal parsing overhead
             if hasattr(self._client, "parse_mode"):
-                self._client.parse_mode = None  # Use setattr for dynamic assignment
+                self._client.parse_mode = None  # type: ignore
 
             # Start the client
             if hasattr(self._client, "start") and callable(self._client.start):

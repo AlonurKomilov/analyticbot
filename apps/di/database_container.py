@@ -41,6 +41,7 @@ from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
 from infra.db.repositories.user_repository import AsyncpgUserRepository
+from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
 # Import other repositories (no protocols yet)
 from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
@@ -260,6 +261,12 @@ class DatabaseContainer(containers.DeclarativeContainer):
     edges_repo = providers.Factory(
         AsyncpgEdgesRepository,
         pool=asyncpg_pool,
+    )
+
+    # User Bot Credentials Repository (for MTProto) - uses factory pattern with session maker
+    user_bot_repo = providers.Singleton(
+        UserBotRepositoryFactory,
+        session_factory=async_session_maker,
     )
 
     # Alert repositories (from core)

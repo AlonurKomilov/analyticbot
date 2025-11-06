@@ -103,16 +103,16 @@ async def get_current_user(
 
 async def require_channel_access(
     channel_id: int,
-    current_user: dict[str, Any] = Depends(get_current_user),
-    channel_repo: ChannelRepository = Depends(get_channel_repository),
+    user_id: int,  # ✅ FIXED: Changed from current_user dict to user_id int
+    channel_repo: ChannelRepository | None = None,  # ✅ FIXED: Made optional, will get from DI if not provided
 ) -> int:
     """
     Validate that the current user has access to the specified channel
 
     Args:
         channel_id: Channel ID to validate access for
-        current_user: Current authenticated user
-        channel_repo: Channel repository for database access
+        user_id: User ID to check access for
+        channel_repo: Channel repository for database access (optional, will be created if not provided)
 
     Returns:
         channel_id if access is granted
@@ -121,7 +121,11 @@ async def require_channel_access(
         HTTPException: If user doesn't have access to the channel
     """
     try:
-        user_id = current_user["id"]
+        # If channel_repo not provided, get it from DI
+        if channel_repo is None:
+            from apps.di import get_container
+            container = get_container()
+            channel_repo = await container.get_channel_repository()
 
         # Get all channels owned by the user
         user_channels = await channel_repo.get_user_channels(user_id)
@@ -142,7 +146,7 @@ async def require_channel_access(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Channel access validation error: {str(e)}")
+        logger.error(f"Channel access validation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error validating channel access",

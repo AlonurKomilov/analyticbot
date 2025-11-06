@@ -51,15 +51,14 @@ class AsyncpgPostMetricsRepository:
                 """
                 INSERT INTO post_metrics (
                     channel_id, msg_id, views, forwards, replies_count,
-                    reactions, reactions_count, snapshot_time, created_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+                    reactions, reactions_count, snapshot_time
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 ON CONFLICT (channel_id, msg_id, snapshot_time) DO UPDATE SET
                     views = GREATEST(post_metrics.views, EXCLUDED.views),
                     forwards = GREATEST(post_metrics.forwards, EXCLUDED.forwards),
                     replies_count = GREATEST(post_metrics.replies_count, EXCLUDED.replies_count),
                     reactions = EXCLUDED.reactions,
-                    reactions_count = EXCLUDED.reactions_count,
-                    updated_at = NOW()
+                    reactions_count = EXCLUDED.reactions_count
                 """,
                 channel_id,
                 msg_id,

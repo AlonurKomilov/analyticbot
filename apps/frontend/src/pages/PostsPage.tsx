@@ -22,8 +22,11 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Button,
 } from '@mui/material';
-import { TrendingUp, Visibility, Reply, Share } from '@mui/icons-material';
+import { TrendingUp, Visibility, Reply, Share, Add } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@config/routes';
 import { useChannelStore } from '@store';
 import { apiClient } from '@api/client';
 
@@ -64,8 +67,16 @@ const PostsPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<number | 'all'>('all');
-  const { channels } = useChannelStore();
+  const { channels, fetchChannels } = useChannelStore();
   const pageSize = 50;
+
+  // Fetch channels on mount if not already loaded
+  useEffect(() => {
+    if (channels.length === 0) {
+      void fetchChannels();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchPosts = async () => {
     setIsLoading(true);
@@ -75,8 +86,10 @@ const PostsPage: React.FC = () => {
       if (selectedChannel !== 'all') {
         params.channel_id = selectedChannel;
       }
-      
+
+      console.log('📡 API Request params:', params);
       const response = await apiClient.get<PostsResponse>('/api/posts', { params });
+      console.log('📥 API Response:', { total: response.total, postsCount: response.posts.length, firstPostId: response.posts[0]?.msg_id });
       setPosts(response.posts);
       setTotal(response.total);
       setTotalPages(Math.ceil(response.total / pageSize));
@@ -89,7 +102,9 @@ const PostsPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPosts();
+    console.log('🔄 Fetching posts - page:', page, 'selectedChannel:', selectedChannel);
+    void fetchPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, selectedChannel]);
 
   const formatDate = (date: string) => {
@@ -100,14 +115,25 @@ const PostsPage: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            All Posts
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Real-time posts collected from your Telegram channels via MTProto
-          </Typography>
+        {/* Header with Create Post Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              All Posts
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Real-time posts collected from your Telegram channels via MTProto
+            </Typography>
+          </Box>
+          <Button
+            component={Link}
+            to={ROUTES.SCHEDULED_POSTS}
+            variant="contained"
+            startIcon={<Add />}
+            size="large"
+          >
+            Create Post
+          </Button>
         </Box>
 
         {/* Error Alert */}
@@ -123,9 +149,9 @@ const PostsPage: React.FC = () => {
           </Box>
         )}
 
-        {/* Channel Filter */}
-        <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
-          <FormControl sx={{ minWidth: 200 }}>
+        {/* Channel Filter and Stats */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <FormControl sx={{ minWidth: 250 }}>
             <InputLabel>Filter by Channel</InputLabel>
             <Select
               value={selectedChannel}
@@ -135,17 +161,33 @@ const PostsPage: React.FC = () => {
                 setPage(1);
               }}
             >
-              <MenuItem value="all">All Channels</MenuItem>
+              <MenuItem value="all">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography>All Channels</Typography>
+                  {channels.length > 0 && (
+                    <Typography variant="caption" color="text.secondary">
+                      ({channels.length} channels)
+                    </Typography>
+                  )}
+                </Box>
+              </MenuItem>
               {channels.map((channel: any) => (
                 <MenuItem key={channel.id} value={channel.id}>
-                  {channel.title || channel.username || channel.name}
+                  {channel.title || channel.username || channel.name || `Channel ${channel.id}`}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <Typography variant="body2" color="text.secondary">
-            Total: {total} posts
-          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Total:</strong> {total} posts
+            </Typography>
+            {selectedChannel !== 'all' && (
+              <Typography variant="body2" color="primary.main">
+                (Filtered)
+              </Typography>
+            )}
+          </Box>
         </Box>
 
         {/* Empty State */}

@@ -17,18 +17,22 @@ class UpdatesCollector:
     and proper shutdown support.
     """
 
-    def __init__(self, tg_client: TGClient, repos: Any, settings: MTProtoSettings):
+    def __init__(
+        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+    ):
         """Initialize the updates collector.
 
         Args:
             tg_client: Telegram client implementation
             repos: Repository container with channel_repo, post_repo, metrics_repo, parsers
             settings: MTProto configuration settings
+            user_id: User ID for multi-tenant channel ownership (optional)
         """
         self.logger = logging.getLogger(__name__)
         self.tg_client = tg_client
         self.repos = repos
         self.settings = settings
+        self.user_id = user_id
 
         # Get parsers from repos container (provided via DI)
         self.parsers = getattr(repos, "parsers", None)
@@ -86,7 +90,14 @@ class UpdatesCollector:
 
                         normalized = normalize_update(update)
 
-                    if not normalized:
+                    # Check if normalization failed (returns None on error)
+                    if normalized is None:
+                        self.logger.warning("Failed to normalize update, skipping")
+                        self._stats["updates_skipped"] += 1
+                        continue
+
+                    # Skip if no valid channel data
+                    if not normalized.get("channel"):
                         self._stats["updates_skipped"] += 1
                         continue
 
@@ -113,9 +124,11 @@ class UpdatesCollector:
             normalized: Normalized update dictionary
         """
         try:
-            # Ensure channel exists
+            # Ensure channel exists (pass user_id for new channels in multi-tenant setup)
             if normalized.get("channel"):
-                await self.repos.channel_repo.ensure_channel(**normalized["channel"])
+                await self.repos.channel_repo.ensure_channel(
+                    **normalized["channel"], user_id=self.user_id
+                )
 
             # Upsert post data
             if normalized.get("post"):

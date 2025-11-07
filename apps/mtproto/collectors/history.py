@@ -16,7 +16,9 @@ class HistoryCollector:
     Implements idempotent history collection with rate limiting and error handling.
     """
 
-    def __init__(self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None):
+    def __init__(
+        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+    ):
         """Initialize the history collector.
 
         Args:
@@ -156,20 +158,27 @@ class HistoryCollector:
 
                                 normalized = normalize_message(message)
 
-                            if not normalized or not normalized.get("channel"):
+                            # Check if normalization failed (returns None on error)
+                            if normalized is None:
+                                self.logger.warning("Failed to normalize message, skipping")
+                                peer_stats["skipped"] += 1
+                                continue
+
+                            if not normalized.get("channel"):
                                 peer_stats["skipped"] += 1
                                 continue
 
                             # Ensure channel exists (pass user_id for new channels)
                             self.logger.debug(f"Ensuring channel: {normalized['channel']}")
                             await self.repos.channel_repo.ensure_channel(
-                                **normalized["channel"],
-                                user_id=self.user_id
+                                **normalized["channel"], user_id=self.user_id
                             )
-                            self.logger.debug(f"Channel ensured successfully")
+                            self.logger.debug("Channel ensured successfully")
 
                             # Upsert post
-                            self.logger.debug(f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}")
+                            self.logger.debug(
+                                f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}"
+                            )
                             post_result = await self.repos.post_repo.upsert_post(
                                 **normalized["post"]
                             )
@@ -250,7 +259,9 @@ class HistoryCollector:
             return messages
 
         except Exception as e:
-            self.logger.error(f"Failed to collect history from {channel_username}: {e}", exc_info=True)
+            self.logger.error(
+                f"Failed to collect history from {channel_username}: {e}", exc_info=True
+            )
             return []
 
     async def collect_batch_history(

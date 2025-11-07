@@ -23,7 +23,7 @@ URL_PATTERN = re.compile(
 TELEGRAM_LINK_PATTERN = re.compile(r"t\.me/[a-zA-Z0-9_]+(?:/\d+)?")
 
 
-def normalize_message(message: Any) -> dict[str, Any]:
+def normalize_message(message: Any) -> dict[str, Any] | None:
     """Normalize a Telethon message object to a plain dictionary.
 
     Args:
@@ -34,6 +34,7 @@ def normalize_message(message: Any) -> dict[str, Any]:
         - channel: channel information
         - post: message/post information
         - metrics: engagement metrics
+        Returns None if normalization fails.
     """
     try:
         # Extract basic message info
@@ -123,33 +124,12 @@ def normalize_message(message: Any) -> dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Error normalizing message {getattr(message, 'id', 'unknown')}: {e}")
-        # Return safe fallback
-        return {
-            "channel": {
-                "channel_id": 0,
-                "username": "error",
-                "title": "Parse Error",
-                "is_supergroup": False,
-            },
-            "post": {
-                "channel_id": 0,
-                "msg_id": 0,
-                "date": datetime.utcnow(),
-                "text": "",
-                "links_json": [],
-            },
-            "metrics": {
-                "channel_id": 0,
-                "msg_id": 0,
-                "views": 0,
-                "forwards": 0,
-                "replies_count": 0,
-                "reactions_json": [],
-                "reactions_count": 0,
-                "ts": datetime.utcnow(),
-            },
-        }
+        logger.error(
+            f"Error normalizing message {getattr(message, 'id', 'unknown')}: {e}", exc_info=True
+        )
+        # Return None instead of invalid data with channel_id=0
+        # Callers should check for None and skip processing
+        return None
 
 
 def normalize_update(update: Any) -> dict[str, Any] | None:

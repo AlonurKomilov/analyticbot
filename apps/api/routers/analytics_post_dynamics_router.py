@@ -138,48 +138,83 @@ async def get_post_dynamics(
             logger.info(f"Cache hit for post dynamics: {cache_key}")
             return cached_data
 
-        # For demo/development: Generate mock data
-        # In production, this would query the database
+        # Get real data from database
         data_points = []
 
-        # Convert channel_id to int if possible
+        # Convert channel_id to int
         try:
             channel_id_int = int(channel_id)
         except (ValueError, TypeError):
-            # Use demo channel if invalid
-            channel_id_int = 0
+            raise HTTPException(status_code=400, detail="Invalid channel ID")
 
-        # Determine number of points based on period
-        period_hours = {"1h": 1, "6h": 6, "12h": 12, "24h": 24, "7d": 24 * 7, "30d": 24 * 30}
-        total_hours = period_hours.get(period, 24)
+        # Get database pool
+        from apps.di import get_container
 
-        # Generate data points (one per hour for simplicity)
-        num_points = min(total_hours, 100)  # Cap at 100 points
-        interval_hours = total_hours / num_points
+        container = get_container()
+        pool = await container.database.asyncpg_pool()
 
-        import random
+        async with pool.acquire() as conn:
+            # Query post_metrics for the time period, grouped by time buckets
+            # Determine bucket size based on period
+            if period in ["1h", "6h", "12h"]:
+                # Hourly buckets for short periods
+                bucket_interval = "1 hour"
+                time_format = "HH24:MI"
+            elif period == "24h":
+                # 2-hour buckets for 24h
+                bucket_interval = "2 hours"
+                time_format = "HH24:MI"
+            else:
+                # Daily buckets for longer periods
+                bucket_interval = "1 day"
+                time_format = "YYYY-MM-DD"
 
-        base_views = 1000
-        base_likes = 80
-        base_shares = 30
-        base_comments = 15
+            query = """
+                SELECT
+                    date_trunc($1, snapshot_time) as time_bucket,
+                    AVG(views)::int as avg_views,
+                    AVG(forwards)::int as avg_forwards,
+                    AVG(replies_count)::int as avg_replies,
+                    AVG(reactions_count)::int as avg_reactions,
+                    COUNT(DISTINCT msg_id) as post_count
+                FROM post_metrics
+                WHERE channel_id = $2
+                    AND snapshot_time >= $3
+                    AND snapshot_time <= $4
+                GROUP BY time_bucket
+                ORDER BY time_bucket ASC
+            """
 
-        for i in range(num_points):
-            point_time = from_date + timedelta(hours=i * interval_hours)
+            # Map period to PostgreSQL interval for date_trunc
+            trunc_map = {
+                "1h": "hour",
+                "6h": "hour",
+                "12h": "hour",
+                "24h": "hour",
+                "7d": "day",
+                "30d": "day",
+            }
+            trunc_unit = trunc_map.get(period, "hour")
 
-            # Add some variance to make it realistic
-            variance = random.uniform(0.7, 1.3)
-            trend = 1 + (i / num_points) * 0.2  # Slight upward trend
+            records = await conn.fetch(query, trunc_unit, channel_id_int, from_date, to_date)
 
-            data_point = PostDynamicsPoint(
-                timestamp=point_time,
-                time=point_time.strftime("%H:%M"),
-                views=int(base_views * variance * trend),
-                likes=int(base_likes * variance * trend),
-                shares=int(base_shares * variance * trend),
-                comments=int(base_comments * variance * trend),
-            )
-            data_points.append(data_point)
+            for record in records:
+                data_point = PostDynamicsPoint(
+                    timestamp=record["time_bucket"],
+                    time=record["time_bucket"].strftime(
+                        "%H:%M" if trunc_unit == "hour" else "%Y-%m-%d"
+                    ),
+                    views=record["avg_views"] or 0,
+                    likes=record["avg_reactions"] or 0,  # Using reactions as "likes"
+                    shares=record["avg_forwards"] or 0,
+                    comments=record["avg_replies"] or 0,
+                )
+                data_points.append(data_point)
+
+        # If no data, return empty array instead of mock data
+        if not data_points:
+            logger.warning(f"No post metrics found for channel {channel_id} in period {period}")
+            return []
 
         # Convert to dict for response
         response_data = [point.model_dump() for point in data_points]

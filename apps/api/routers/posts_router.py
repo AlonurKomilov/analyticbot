@@ -18,6 +18,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["posts"])
 
 
+@router.get("/posts/debug/current-user")
+async def debug_current_user(current_user: dict = Depends(get_current_user)):
+    """Debug endpoint to see who is currently logged in"""
+    return {
+        "user_id": current_user.get("id"),
+        "username": current_user.get("username"),
+        "email": current_user.get("email"),
+        "message": "This is your current authenticated user",
+    }
+
+
 class PostMetrics(BaseModel):
     """Post metrics data"""
 
@@ -55,15 +66,18 @@ class PostsListResponse(BaseModel):
 async def get_db_pool():
     """Get database pool from container"""
     container = get_container()
-    if hasattr(container, "database") and hasattr(container.database, "_pool"):
-        return container.database._pool
-    raise HTTPException(status_code=500, detail="Database pool not available")
+    try:
+        pool = await container.database.asyncpg_pool()
+        return pool
+    except Exception as e:
+        logger.error(f"Failed to get database pool: {e}")
+        raise HTTPException(status_code=500, detail="Database pool not available")
 
 
 @router.get("/posts", response_model=PostsListResponse)
 async def get_all_posts(
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(50, ge=1, le=100, description="Items per page"),
+    page_size: int = Query(50, ge=1, le=100, description="Number of posts per page"),
     channel_id: int | None = Query(None, description="Filter by channel ID"),
     current_user: dict = Depends(get_current_user),
     db_pool=Depends(get_db_pool),
@@ -74,6 +88,23 @@ async def get_all_posts(
     """
     try:
         offset = (page - 1) * page_size
+
+        print(f"\n{'='*80}")
+        print("POSTS API REQUEST")
+        print(f"{'='*80}")
+        print(f"Page: {page}")
+        print(f"Page Size: {page_size}")
+        print(f"Offset: {offset}")
+        print(f"Channel ID: {channel_id}")
+        print(f"Current User: {current_user}")
+        print(f"Current User ID: {current_user['id']}")
+        print(f"{'='*80}\n")
+
+        logger.info(
+            f"=== Posts Request === page={page}, page_size={page_size}, offset={offset}, channel_id={channel_id}"
+        )
+        logger.info(f"Current user: {current_user}")
+        logger.info(f"Current user ID: {current_user['id']}")
 
         # Build query based on filters
         where_clause = "WHERE p.channel_id IN (SELECT id FROM channels WHERE user_id = $1)"
@@ -89,8 +120,13 @@ async def get_all_posts(
             total = await conn.fetchval(count_query, *params)
 
             # Get posts with latest metrics
-            query = f"""
-                SELECT 
+            # Build LIMIT and OFFSET with proper PostgreSQL parameter syntax
+            limit_param_idx = len(params) + 1
+            offset_param_idx = len(params) + 2
+
+            query = (
+                f"""
+                SELECT
                     p.channel_id,
                     p.msg_id,
                     p.date,
@@ -114,11 +150,25 @@ async def get_all_posts(
                 ) pm ON true
                 {where_clause}
                 ORDER BY p.date DESC
-                LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}
-            """
+                LIMIT $"""
+                + str(limit_param_idx)
+                + """ OFFSET $"""
+                + str(offset_param_idx)
+            )
             params.extend([page_size, offset])
 
+            # Debug logging
+            logger.info("=== PAGINATION DEBUG ===")
+            logger.info(f"Page: {page}, PageSize: {page_size}, Offset: {offset}")
+            logger.info(f"limit_param_idx: {limit_param_idx}, offset_param_idx: {offset_param_idx}")
+            logger.info(f"Full params list: {params}")
+            logger.info(
+                f"Query tail: ...ORDER BY p.date DESC LIMIT ${limit_param_idx} OFFSET ${offset_param_idx}"
+            )
+            logger.info(f"Full Query: {query}")
+
             records = await conn.fetch(query, *params)
+            logger.info(f"Records fetched: {len(records)}")
 
             posts = []
             for record in records:
@@ -181,7 +231,7 @@ async def get_post(
             # Get post with latest metrics
             record = await conn.fetchrow(
                 """
-                SELECT 
+                SELECT
                     p.channel_id,
                     p.msg_id,
                     p.date,

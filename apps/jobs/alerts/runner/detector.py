@@ -34,7 +34,7 @@ class AlertDetector:
         """Detect spike alerts (unusual high activity)"""
         channel_id = alert_config["channel_id"]
         threshold = alert_config["threshold"]
-        period = alert_config.get("period", DEFAULT_PERIOD_HOURS)
+        alert_config.get("period", DEFAULT_PERIOD_HOURS)
 
         try:
             # Get overview data for the last period
@@ -99,7 +99,7 @@ class AlertDetector:
         """Detect quiet alerts (unusual low activity)"""
         channel_id = alert_config["channel_id"]
         threshold = alert_config["threshold"]
-        period = alert_config.get("period", DEFAULT_PERIOD_HOURS)
+        alert_config.get("period", DEFAULT_PERIOD_HOURS)
 
         try:
             async with aiohttp.ClientSession() as session:

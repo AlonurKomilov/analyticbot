@@ -310,21 +310,20 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
         logger.info(f"Repository factory retrieved: {type(repository_factory)}")
 
         # Create repositories through factory (no direct infra imports!)
-        channel_daily_repo = repository_factory.create_channel_daily_repository()
-        post_repo = repository_factory.create_post_repository()
-        metrics_repo = repository_factory.create_post_metrics_repository()
-        edges_repo = repository_factory.create_edges_repository()
-        stats_raw_repo = repository_factory.create_stats_raw_repository()
+        repository_factory.create_channel_daily_repository()
+        repository_factory.create_post_repository()
+        repository_factory.create_post_metrics_repository()
+        repository_factory.create_edges_repository()
+        repository_factory.create_stats_raw_repository()
 
         logger.info("✅ Repositories created through factory pattern")
 
         # Initialize cache with error handling
         try:
-            cache_adapter = await init_cache_adapter()
+            await init_cache_adapter()
             logger.info("✅ Cache adapter initialized")
         except Exception as cache_error:
             logger.warning(f"Cache initialization failed: {cache_error}")
-            cache_adapter = None
 
         # Create data access service for the new microservices architecture
         # TODO: Properly integrate repository_factory with DataAccessService

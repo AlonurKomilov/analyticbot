@@ -38,13 +38,17 @@ class MTProtoContainer(containers.DeclarativeContainer):
 
 # Convenience functions for backward compatibility
 @inject
-def get_tg_client(tg_client: TGClient = Provide[MTProtoContainer.collectors.tg_client]) -> TGClient:
+def get_tg_client(
+    tg_client: TGClient = Provide[MTProtoContainer.collectors.tg_client],
+) -> TGClient:
     """Get Telegram client instance"""
     return tg_client
 
 
 @inject
-def get_settings(settings: MTProtoSettings = Provide[MTProtoContainer.settings]) -> MTProtoSettings:
+def get_settings(
+    settings: MTProtoSettings = Provide[MTProtoContainer.settings],
+) -> MTProtoSettings:
     """Get MTProto settings"""
     return settings
 
@@ -84,7 +88,7 @@ async def initialize_application(settings: MTProtoSettings) -> Any:
     # Initialize external services
     await container.external.health_server().start()
     # Resource providers are automatically initialized
-    global_tracer = await container.external.global_tracer()
+    await container.external.global_tracer()
 
     logger.info("🚀 MTProto application initialized with decomposed containers")
     return container

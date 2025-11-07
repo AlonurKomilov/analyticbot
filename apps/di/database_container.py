@@ -22,37 +22,32 @@ from sqlalchemy.ext.asyncio import (
 # ✅ PHASE 2 FIX: Import protocol instead of concrete implementation
 from core.protocols import DatabaseManagerProtocol
 
-# ✅ PHASE 3 FIX (Oct 19, 2025): Import repository protocols for type hints
-from core.protocols import (
-    AdminRepositoryProtocol,
-    AnalyticsRepositoryProtocol,
-    ChannelDailyRepositoryProtocol,
-    ChannelRepositoryProtocol,
-    PostMetricsRepositoryProtocol,
-    StatsRawRepositoryProtocol,
-    UserRepositoryProtocol,
+# Import other repositories (no protocols yet)
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
 )
+from core.repositories.shared_reports_repository import SharedReportsRepository
+
+# Still need concrete implementation for instantiation
+from infra.db.connection_manager import db_manager
 
 # ✅ PHASE 3 FIX: Import concrete repository implementations
 from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
-from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
-from infra.db.repositories.user_repository import AsyncpgUserRepository
-
-# Import other repositories (no protocols yet)
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
-from core.repositories.shared_reports_repository import SharedReportsRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
+from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
+from infra.db.repositories.user_repository import AsyncpgUserRepository
 
-# Still need concrete implementation for instantiation
-from infra.db.connection_manager import DatabaseManager, db_manager
+# ✅ PHASE 3 FIX (Oct 19, 2025): Import repository protocols for type hints
+
 
 logger = logging.getLogger(__name__)
 
@@ -87,15 +82,15 @@ async def _create_sqlalchemy_engine(
 ) -> AsyncEngine:
     """Create SQLAlchemy async engine"""
     # Log the database URL for debugging (mask password)
-    masked_url = database_url.replace(database_url.split('@')[0].split('://')[-1], '***')
+    masked_url = database_url.replace(database_url.split("@")[0].split("://")[-1], "***")
     logger.info(f"🔧 Creating SQLAlchemy engine with URL: {masked_url}")
-    
+
     # Ensure we're using asyncpg driver
     if not database_url.startswith("postgresql+asyncpg://"):
-        logger.warning(f"⚠️  DATABASE_URL does not start with 'postgresql+asyncpg://'")
+        logger.warning("⚠️  DATABASE_URL does not start with 'postgresql+asyncpg://'")
         logger.warning(f"⚠️  Converting '{database_url.split('://')[0]}' to 'postgresql+asyncpg'")
         database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
-    
+
     return create_async_engine(
         database_url,
         pool_size=pool_size,
@@ -104,7 +99,9 @@ async def _create_sqlalchemy_engine(
     )
 
 
-async def _create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+async def _create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     """Create SQLAlchemy session factory"""
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -165,7 +162,8 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Database URL from environment or configuration
     database_url = providers.Callable(
         lambda: os.getenv(
-            "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "DATABASE_URL",
+            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
         )
     )
 
@@ -178,7 +176,10 @@ class DatabaseContainer(containers.DeclarativeContainer):
     asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
-        _create_sqlalchemy_engine, database_url=database_url, pool_size=10, max_overflow=20
+        _create_sqlalchemy_engine,
+        database_url=database_url,
+        pool_size=10,
+        max_overflow=20,
     )
 
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)

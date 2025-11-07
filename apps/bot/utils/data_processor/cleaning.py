@@ -13,7 +13,7 @@ from .base import IMPUTERS, logger, np, pd, stats
 class DataCleaningMixin:
     """
     Mixin class providing data cleaning capabilities.
-    
+
     Features:
     - Duplicate removal
     - Missing value handling (multiple strategies)
@@ -153,6 +153,7 @@ class DataCleaningMixin:
 
 
 # Utility functions
+
 
 def validate_data(df: pd.DataFrame) -> pd.DataFrame:
     """Basic data validation and cleaning"""

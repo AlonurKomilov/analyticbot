@@ -229,7 +229,11 @@ class RecommendationEngineService(RecommendationEngineProtocol):
                 description="Content quality has declined below baseline. Focus on higher-value content creation.",
                 expected_impact="15-25% improvement in engagement",
                 implementation_effort="Medium - requires content strategy review",
-                success_metrics=["engagement_rate", "content_quality_score", "audience_retention"],
+                success_metrics=[
+                    "engagement_rate",
+                    "content_quality_score",
+                    "audience_retention",
+                ],
                 confidence_score=0.85,
                 created_at=datetime.now(),
             )
@@ -275,7 +279,11 @@ class RecommendationEngineService(RecommendationEngineProtocol):
                 description="Current posting frequency is below optimal levels. Increase to 1-2 posts per day.",
                 expected_impact="20-30% growth rate improvement",
                 implementation_effort="Medium - requires content planning",
-                success_metrics=["posting_frequency", "growth_rate", "audience_engagement"],
+                success_metrics=[
+                    "posting_frequency",
+                    "growth_rate",
+                    "audience_engagement",
+                ],
                 confidence_score=0.90,
                 created_at=datetime.now(),
             )
@@ -333,7 +341,11 @@ class RecommendationEngineService(RecommendationEngineProtocol):
             description="Respond to comments actively and create content that encourages discussion.",
             expected_impact="15-25% community engagement improvement",
             implementation_effort="Medium - requires ongoing commitment",
-            success_metrics=["comment_response_rate", "discussion_threads", "audience_retention"],
+            success_metrics=[
+                "comment_response_rate",
+                "discussion_threads",
+                "audience_retention",
+            ],
             confidence_score=0.78,
             created_at=datetime.now(),
         )
@@ -358,7 +370,11 @@ class RecommendationEngineService(RecommendationEngineProtocol):
                 description="Implement cross-promotion and collaboration strategies to boost growth.",
                 expected_impact="30-50% growth acceleration",
                 implementation_effort="High - requires strategic partnerships",
-                success_metrics=["growth_rate", "subscriber_acquisition", "reach_expansion"],
+                success_metrics=[
+                    "growth_rate",
+                    "subscriber_acquisition",
+                    "reach_expansion",
+                ],
                 confidence_score=0.75,
                 created_at=datetime.now(),
             )

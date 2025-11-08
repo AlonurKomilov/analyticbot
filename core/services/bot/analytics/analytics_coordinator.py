@@ -6,7 +6,9 @@ Orchestrates all analytics modules and provides high-level business API
 import logging
 from typing import Any
 
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 from core.services.bot.analytics.cache_manager import AnalyticsCacheManager
 from core.services.bot.analytics.data_aggregator import AnalyticsDataAggregator
 from core.services.bot.analytics.post_tracker import AnalyticsPostTracker

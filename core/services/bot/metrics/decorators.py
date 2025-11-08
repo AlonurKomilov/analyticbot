@@ -8,14 +8,8 @@ and record metrics, using DI for metrics services.
 import functools
 import logging
 import time
-from typing import Any, Callable, TypeVar
-
-from core.services.bot.metrics.models import (
-    CeleryTaskMetric,
-    DatabaseQueryMetric,
-    HTTPRequestMetric,
-    TelegramAPIMetric,
-)
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +51,7 @@ def metrics_timer(
             try:
                 result = await func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = "failed"
                 raise
             finally:
@@ -78,7 +72,7 @@ def metrics_timer(
             try:
                 result = func(*args, **kwargs)
                 return result
-            except Exception as e:
+            except Exception:
                 status = "failed"
                 raise
             finally:

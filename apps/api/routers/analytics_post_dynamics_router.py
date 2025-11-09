@@ -158,16 +158,13 @@ async def get_post_dynamics(
             # Determine bucket size based on period
             if period in ["1h", "6h", "12h"]:
                 # Hourly buckets for short periods
-                bucket_interval = "1 hour"
                 time_format = "HH24:MI"
             elif period == "24h":
                 # 2-hour buckets for 24h
-                bucket_interval = "2 hours"
                 time_format = "HH24:MI"
             else:
                 # Daily buckets for longer periods
-                bucket_interval = "1 day"
-                time_format = "YYYY-MM-DD"
+                pass
 
             query = """
                 SELECT
@@ -272,8 +269,8 @@ async def get_top_posts(
         posts = []
         for i in range(10):
             post = {
-                "id": f"post_{i+1}",
-                "title": f"Post Title {i+1}",
+                "id": f"post_{i + 1}",
+                "title": f"Post Title {i + 1}",
                 "views": random.randint(500, 5000),
                 "likes": random.randint(50, 500),
                 "shares": random.randint(10, 100),

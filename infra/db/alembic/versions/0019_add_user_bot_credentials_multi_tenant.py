@@ -97,7 +97,10 @@ def upgrade() -> None:
         sa.Column("action", sa.String(100), nullable=False),
         sa.Column("details", postgresql.JSONB(), nullable=True),
         sa.Column(
-            "timestamp", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")
+            "timestamp",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("now()"),
         ),
         # Primary key
         sa.PrimaryKeyConstraint("id"),

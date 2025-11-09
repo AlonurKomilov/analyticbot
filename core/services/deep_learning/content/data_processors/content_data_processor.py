@@ -39,7 +39,12 @@ class ContentDataProcessor:
         self.lowercase = lowercase
 
         # Special tokens
-        self.special_tokens = special_tokens or {"<PAD>": 0, "<UNK>": 1, "<START>": 2, "<END>": 3}
+        self.special_tokens = special_tokens or {
+            "<PAD>": 0,
+            "<UNK>": 1,
+            "<START>": 2,
+            "<END>": 3,
+        }
 
         # Vocabulary mappings
         self.word_to_idx: dict[str, int] = {}
@@ -177,7 +182,7 @@ class ContentDataProcessor:
             "unique_words": len(vocab_words),
             "vocab_size": len(self.word_to_idx),
             "total_tokens": total_tokens,
-            "coverage": len(vocab_words) / len(word_counts) if len(word_counts) > 0 else 0,
+            "coverage": (len(vocab_words) / len(word_counts) if len(word_counts) > 0 else 0),
             "min_freq": self.min_word_freq,
         }
 

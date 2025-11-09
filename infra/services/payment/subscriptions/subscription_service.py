@@ -12,6 +12,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
+from apps.bot.models.payment import BillingCycle as AdapterBillingCycle
+from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     BillingCycle,
     Money,
@@ -19,9 +21,6 @@ from core.domain.payment import (
     SubscriptionData,
     SubscriptionStatus,
 )
-from apps.bot.models.payment import BillingCycle as AdapterBillingCycle
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
-
 from core.protocols.payment.payment_protocols import (
     SubscriptionProtocol,
     SubscriptionResult,
@@ -57,7 +56,10 @@ class SubscriptionService(SubscriptionProtocol):
             payment_method_id=subscription_data["payment_method_id"],
             status=subscription_data["status"],
             billing_cycle=subscription_data["billing_cycle"],
-            amount=Money(amount=subscription_data["amount"], currency=subscription_data["currency"]),
+            amount=Money(
+                amount=subscription_data["amount"],
+                currency=subscription_data["currency"],
+            ),
             current_period_start=subscription_data["current_period_start"],
             current_period_end=subscription_data["current_period_end"],
             trial_ends_at=subscription_data.get("trial_ends_at"),
@@ -89,7 +91,8 @@ class SubscriptionService(SubscriptionProtocol):
             validation_result = await self._validate_subscription_data(subscription_data)
             if not validation_result["is_valid"]:
                 return SubscriptionResult(
-                    success=False, error_message=f"Validation failed: {validation_result['errors']}"
+                    success=False,
+                    error_message=f"Validation failed: {validation_result['errors']}",
                 )
 
             # Get plan details
@@ -550,4 +553,8 @@ class SubscriptionService(SubscriptionProtocol):
                 "adapter_name": self.payment_adapter.get_adapter_name(),
             }
         except Exception as e:
-            return {"service": "SubscriptionService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "SubscriptionService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

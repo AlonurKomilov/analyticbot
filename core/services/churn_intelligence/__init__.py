@@ -26,7 +26,9 @@ Protocol Interfaces:
 
 from .behavioral_analysis_service import BehavioralAnalysisService
 from .churn_prediction_service import ChurnPredictionService
-from .orchestrator.churn_orchestrator_service import ChurnIntelligenceOrchestratorService
+from .orchestrator.churn_orchestrator_service import (
+    ChurnIntelligenceOrchestratorService,
+)
 from .protocols import (
     BehavioralAnalysisProtocol,
     ChurnAnalytics,

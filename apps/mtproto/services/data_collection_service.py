@@ -25,7 +25,7 @@ class TelegramClientAdapter:
 
     def __init__(self, telegram_client: Any):
         """Initialize adapter with existing TelegramClient.
-        
+
         Args:
             telegram_client: Telethon TelegramClient instance
         """
@@ -33,11 +33,9 @@ class TelegramClientAdapter:
 
     async def start(self) -> None:
         """Start client (no-op as client is already started)."""
-        pass
 
     async def stop(self) -> None:
         """Stop client (handled by UserMTProtoClient)."""
-        pass
 
     async def is_connected(self) -> bool:
         """Check if client is connected."""
@@ -47,12 +45,12 @@ class TelegramClientAdapter:
         self, peer: Any, *, offset_id: int = 0, limit: int = 200
     ) -> AsyncIterator[Any]:
         """Iterate through message history.
-        
+
         Args:
             peer: The target peer (username or ID)
             offset_id: Start from this message ID
             limit: Maximum messages to fetch
-            
+
         Yields:
             Message objects
         """
@@ -63,7 +61,7 @@ class TelegramClientAdapter:
         except Exception as e:
             logger.warning(f"Could not resolve entity for {peer}: {e}")
             # Continue with original peer, might still work
-        
+
         async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
             yield message
 
@@ -183,7 +181,7 @@ class MTProtoDataCollectionService:
             channel_repo = await self.container.database.channel_repo()
             post_repo = await self.container.database.post_repo()
             metrics_repo = await self.container.database.metrics_repo()
-            
+
             repos = ReposWrapper(channel_repo, post_repo, metrics_repo)
 
             # Wrap the TelegramClient with our adapter to match TGClient protocol
@@ -214,12 +212,13 @@ class MTProtoDataCollectionService:
                         # Make negative
                         peer_identifier = -int(channel_id_str)
 
-                    logger.info(f"  📡 Syncing channel: {channel_name} (DB ID: {channel_id}, Telegram ID: {peer_identifier})")
+                    logger.info(
+                        f"  📡 Syncing channel: {channel_name} (DB ID: {channel_id}, Telegram ID: {peer_identifier})"
+                    )
 
                     # Use _process_peer_history for storage (internal method handles DB upserts)
                     stats = await collector._process_peer_history(
-                        peer=peer_identifier,
-                        limit=limit_per_channel
+                        peer=peer_identifier, limit=limit_per_channel
                     )
 
                     messages_collected = stats.get("ingested", 0) + stats.get("updated", 0)
@@ -292,7 +291,9 @@ class MTProtoDataCollectionService:
 
             # Process each user
             for user in users:
-                user_id = user.get("user_id") or user.get("id")  # user_id is the actual user ID, not record ID
+                user_id = user.get("user_id") or user.get(
+                    "id"
+                )  # user_id is the actual user ID, not record ID
                 logger.info(f"📊 Processing user {user_id}...")
 
                 result = await self.collect_user_channel_history(user_id, limit_per_channel)

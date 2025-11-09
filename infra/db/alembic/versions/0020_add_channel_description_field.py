@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "0020_add_channel_description"
-down_revision = "0019_add_user_bot_credentials"
+revision = "0020"
+down_revision = "0019"
 branch_labels = None
 depends_on = None
 

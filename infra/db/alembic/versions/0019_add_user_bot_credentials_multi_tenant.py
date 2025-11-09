@@ -23,10 +23,15 @@ REQUIREMENTS:
 
 import sqlalchemy as sa
 from alembic import op
+
+# revision identifiers, used by Alembic.
+revision = "0019"
+down_revision = "0018"
+
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "0019_add_user_bot_credentials"
+revision = "0019"
 down_revision = "0018"  # Fixed: matches actual revision ID
 branch_labels = None
 depends_on = None

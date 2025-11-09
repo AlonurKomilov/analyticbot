@@ -86,9 +86,22 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
         if hasattr(message, "reactions") and message.reactions:
             if hasattr(message.reactions, "results"):
                 for reaction in message.reactions.results:
+                    # Convert reaction object to JSON-serializable format
+                    reaction_obj = getattr(reaction, "reaction", "")
+
+                    # Handle different reaction types (emoji, custom emoji, etc.)
+                    if hasattr(reaction_obj, "emoticon"):  # ReactionEmoji
+                        reaction_str = reaction_obj.emoticon
+                    elif hasattr(reaction_obj, "document_id"):  # ReactionCustomEmoji
+                        reaction_str = f"custom_{reaction_obj.document_id}"
+                    elif isinstance(reaction_obj, str):  # Already a string
+                        reaction_str = reaction_obj
+                    else:  # Unknown type, convert to string
+                        reaction_str = str(reaction_obj) if reaction_obj else ""
+
                     reactions.append(
                         {
-                            "reaction": getattr(reaction, "reaction", ""),
+                            "reaction": reaction_str,
                             "count": getattr(reaction, "count", 0),
                         }
                     )

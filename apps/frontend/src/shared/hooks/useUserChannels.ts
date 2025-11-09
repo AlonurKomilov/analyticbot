@@ -74,18 +74,13 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
 
         try {
             const response = (await (dataProvider as any)._makeRequest('/channels')) as Channel[];
-            console.log('🔍 DEBUG: Raw API response:', response);
-            console.log('🔍 DEBUG: Response is array?', Array.isArray(response));
-            console.log('🔍 DEBUG: Response length:', response?.length);
-            console.log('🔍 DEBUG: First channel:', response?.[0]);
-            
+
             setChannels(response || []);
             setLastFetch(new Date().toISOString());
 
             // Auto-select first channel if none selected and channels exist
             if (!selectedChannel && response && response.length > 0) {
                 const firstChannel = response[0];
-                console.log('🔍 DEBUG: Auto-selecting first channel:', firstChannel);
                 setSelectedChannel(firstChannel);
                 onChannelChange?.(firstChannel);
             }

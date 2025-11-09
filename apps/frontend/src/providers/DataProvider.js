@@ -3,7 +3,7 @@
  * This file contains NO mock logic - only production data
  */
 
-import { apiClient } from '../api/client.js';
+import { apiClient } from '../api/client';
 
 /**
  * Abstract base class for data providers

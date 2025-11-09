@@ -1,7 +1,7 @@
 """Add foreign key constraint to posts table
 
-Revision ID: 0027_add_posts_fk
-Revises: 0023_create_mtproto_posts_table
+Revision ID: 0026_add_posts_fk
+Revises: 0025_add_channel_mtproto_settings
 Create Date: 2025-11-06 10:00:00.000000
 
 This migration adds referential integrity between posts and channels tables.
@@ -9,8 +9,8 @@ This migration adds referential integrity between posts and channels tables.
 
 from alembic import op
 
-revision = "0027"
-down_revision = "0023"  # Correctly references migration 0023
+revision = "0026"
+down_revision = "0025"  # Correctly references migration 0025
 branch_labels = None
 depends_on = None
 

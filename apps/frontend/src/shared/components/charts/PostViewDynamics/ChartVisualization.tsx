@@ -41,6 +41,7 @@ interface ChartConfig {
 interface ChartVisualizationProps {
     data: ChartDataItem[];
     timeRange: string;
+    onChartClick?: (data: any) => void;
 }
 
 /**
@@ -48,6 +49,16 @@ interface ChartVisualizationProps {
  */
 const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
     if (!active || !payload || !payload.length) return null;
+
+    // Convert UTC timestamp to local time for display
+    const localTime = label ? new Date(label).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    }) : label;
 
     return (
         <Box
@@ -61,7 +72,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
             }}
         >
             <Typography variant="body2" fontWeight="medium">
-                {label}
+                {localTime}
             </Typography>
             {payload.map((entry, index) => (
                 <Typography
@@ -87,12 +98,34 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
  * @param {Array} props.data - Chart data array with timestamp and views
  * @param {string} props.timeRange - Current time range for chart formatting
  */
-const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, timeRange }) => {
+const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, timeRange, onChartClick }) => {
     const theme = useTheme<Theme>();
+
+    // Log when component receives click handler
+    console.log('🎨 ChartVisualization: onChartClick =', onChartClick ? 'defined' : 'undefined');
 
     // Memoized chart configuration based on time range and theme
     const chartConfig: ChartConfig = useMemo(() => {
         const isDark = theme.palette.mode === 'dark';
+
+        // Auto-detect granularity from data timestamps
+        let granularity: 'minute' | 'hour' | 'day' = 'day';
+        if (data.length >= 2) {
+            const firstDate = new Date(data[0].timestamp);
+            const secondDate = new Date(data[1].timestamp);
+            const diffMs = Math.abs(secondDate.getTime() - firstDate.getTime());
+            const diffMinutes = diffMs / (1000 * 60);
+
+            if (diffMinutes <= 1.5) {
+                granularity = 'minute'; // ~1 minute apart
+            } else if (diffMinutes <= 90) {
+                granularity = 'hour'; // ~1 hour apart
+            } else {
+                granularity = 'day'; // ~1 day apart
+            }
+        }
+
+        console.log('📊 Chart granularity detected:', granularity, 'from', data.length, 'data points');
 
         return {
             strokeColor: theme.palette.primary.main,
@@ -100,34 +133,32 @@ const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data
             textColor: theme.palette.text.secondary,
             tickFormatter: (value: string): string => {
                 const date = new Date(value);
-                switch (timeRange) {
-                    case '1h':
-                    case '6h':
-                        return date.toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                    case '24h':
-                        return date.toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                    case '7d':
-                        return date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                        });
-                    case '30d':
-                        return date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric'
-                        });
-                    default:
-                        return date.toLocaleString();
+
+                // Use detected granularity for formatting
+                if (granularity === 'minute') {
+                    // Minute view: show time with minutes
+                    return date.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                } else if (granularity === 'hour') {
+                    // Hour view: show time with hours
+                    return date.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                } else {
+                    // Day view: show date
+                    return date.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
                 }
             }
         };
-    }, [theme, timeRange]);
+    }, [theme, data]);
 
     // Memoized processed data
     const processedData: ProcessedDataItem[] = useMemo(() => {
@@ -156,6 +187,16 @@ const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data
                         left: 20,
                         bottom: 20,
                     }}
+                    onClick={(data) => {
+                        console.log('📊 Chart clicked!', data);
+                        if (onChartClick) {
+                            console.log('📊 Calling onChartClick handler...');
+                            onChartClick(data);
+                        } else {
+                            console.log('📊 No onChartClick handler defined');
+                        }
+                    }}
+                    style={{ cursor: onChartClick ? 'pointer' : 'default' }}
                 >
                     <CartesianGrid
                         strokeDasharray="3 3"

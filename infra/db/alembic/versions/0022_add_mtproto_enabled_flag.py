@@ -5,28 +5,28 @@ Revises: 0021_make_mtproto_optional
 Create Date: 2025-11-03 06:30:22.366895
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '0022_add_mtproto_enabled_flag'
-down_revision: Union[str, Sequence[str], None] = '0021_make_mtproto_optional'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "0022"
+down_revision: str | Sequence[str] | None = "0021"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
     """Add mtproto_enabled flag to user_bot_credentials table."""
     # Add mtproto_enabled column (default True to keep existing functionality)
     op.add_column(
-        'user_bot_credentials',
-        sa.Column('mtproto_enabled', sa.Boolean(), nullable=False, server_default=sa.true())
+        "user_bot_credentials",
+        sa.Column("mtproto_enabled", sa.Boolean(), nullable=False, server_default=sa.true()),
     )
 
 
 def downgrade() -> None:
     """Remove mtproto_enabled flag from user_bot_credentials table."""
-    op.drop_column('user_bot_credentials', 'mtproto_enabled')
+    op.drop_column("user_bot_credentials", "mtproto_enabled")

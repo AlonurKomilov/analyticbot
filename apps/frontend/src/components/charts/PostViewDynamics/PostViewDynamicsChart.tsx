@@ -91,8 +91,8 @@ const PostViewDynamicsChart: React.FC = () => {
         }
 
         // Determine which channel ID to use based on data source mode
-        // Priority: demo mode > selected channel > null
-        const channelId = dataSource === 'demo'
+        // 'api' = Real API with real channel, 'demo'/'mock' = Demo mode with demo channel
+        const channelId = (dataSource === 'demo' || dataSource === 'mock')
             ? DEFAULT_DEMO_CHANNEL_ID
             : (selectedChannel?.id?.toString() || null);
 
@@ -170,8 +170,8 @@ const PostViewDynamicsChart: React.FC = () => {
     // Auto-refresh logic
     useEffect(() => {
         // Don't set up auto-refresh if no channel is selected
-        // Priority: demo mode > selected channel > null
-        const channelId = dataSource === 'demo'
+        // demo/mock = use demo channel, api = use selected channel
+        const channelId = (dataSource === 'demo' || dataSource === 'mock')
             ? DEFAULT_DEMO_CHANNEL_ID
             : (selectedChannel?.id?.toString() || null);
 

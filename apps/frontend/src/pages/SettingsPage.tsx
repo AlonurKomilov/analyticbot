@@ -1,26 +1,27 @@
 import React from 'react';
-import { 
-    Box, 
-    Typography, 
-    Container, 
-    Paper, 
-    List, 
-    ListItem, 
-    ListItemButton, 
-    ListItemIcon, 
+import {
+    Box,
+    Typography,
+    Container,
+    Paper,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
     ListItemText,
     Divider,
     Card,
     CardContent
 } from '@mui/material';
-import { 
+import {
     PhoneAndroid as PhoneIcon,
     AccountCircle as AccountIcon,
     Notifications as NotificationsIcon,
     Security as SecurityIcon,
     Palette as ThemeIcon,
     Language as LanguageIcon,
-    SmartToy as BotIcon
+    SmartToy as BotIcon,
+    Timeline as MonitoringIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,6 +45,13 @@ const SettingsPage: React.FC = () => {
             description: 'Configure Telegram MTProto client for advanced features',
             icon: <PhoneIcon />,
             path: '/settings/mtproto-setup',
+            available: true
+        },
+        {
+            title: 'MTProto Monitoring',
+            description: 'Monitor your MTProto session health and data collection progress',
+            icon: <MonitoringIcon />,
+            path: '/settings/mtproto-monitoring',
             available: true
         },
         {
@@ -111,11 +119,11 @@ const SettingsPage: React.FC = () => {
                                                         {section.title}
                                                     </Typography>
                                                     {!section.available && (
-                                                        <Typography 
-                                                            variant="caption" 
-                                                            sx={{ 
-                                                                px: 1, 
-                                                                py: 0.25, 
+                                                        <Typography
+                                                            variant="caption"
+                                                            sx={{
+                                                                px: 1,
+                                                                py: 0.25,
                                                                 bgcolor: 'action.disabledBackground',
                                                                 borderRadius: 1,
                                                                 fontStyle: 'italic'
@@ -139,8 +147,8 @@ const SettingsPage: React.FC = () => {
             {/* Help Text */}
             <Paper sx={{ p: 2, mt: 3, bgcolor: 'info.lighter' }}>
                 <Typography variant="body2" color="text.secondary">
-                    💡 <strong>Quick Start:</strong> Set up your bot credentials first in <strong>Bot Setup</strong>, 
-                    then optionally configure <strong>MTProto Setup</strong> for advanced features like reading 
+                    💡 <strong>Quick Start:</strong> Set up your bot credentials first in <strong>Bot Setup</strong>,
+                    then optionally configure <strong>MTProto Setup</strong> for advanced features like reading
                     channel history and analyzing posts.
                 </Typography>
             </Paper>

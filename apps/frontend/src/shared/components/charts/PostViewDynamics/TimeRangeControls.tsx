@@ -8,7 +8,7 @@ import {
     SelectChangeEvent
 } from '@mui/material';
 
-export type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d';
+export type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d' | '90d' | 'all';
 export type RefreshInterval = '30s' | '1m' | '5m' | '10m';
 
 interface TimeRangeControlsProps {
@@ -56,6 +56,8 @@ const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
                     <MenuItem value="24h">Last 24 Hours</MenuItem>
                     <MenuItem value="7d">Last 7 Days</MenuItem>
                     <MenuItem value="30d">Last 30 Days</MenuItem>
+                    <MenuItem value="90d">Last 90 Days</MenuItem>
+                    <MenuItem value="all">All Time</MenuItem>
                 </Select>
             </FormControl>
 

@@ -72,8 +72,8 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
     const { clearAnalytics, postDynamics, topPosts } = useAnalyticsStore();
 
     // Determine channel ID based on data source mode
-    // Priority: demo mode > selected channel > null
-    const channelId = dataSource === 'demo'
+    // 'api' = Real API with real channel, 'demo'/'mock' = Demo mode with demo channel
+    const channelId = (dataSource === 'demo' || dataSource === 'mock')
         ? 'demo_channel'
         : (selectedChannel?.id?.toString() || null);
 

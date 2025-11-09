@@ -81,22 +81,12 @@ const ChannelSelector: React.FC<ChannelSelectorProps> = ({
     const [creating, setCreating] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    // Debug logging
-    console.log('🎯 ChannelSelector: channels =', channels);
-    console.log('🎯 ChannelSelector: channels.length =', channels.length);
-    console.log('🎯 ChannelSelector: loading =', loading);
-    console.log('🎯 ChannelSelector: error =', error);
-    console.log('🎯 ChannelSelector: selectedChannel =', selectedChannel);
-
     // Filter channels based on search term
     const filteredChannels = channels.filter(channel =>
         !searchTerm ||
         channel.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         channel.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
-    console.log('🎯 ChannelSelector: filteredChannels =', filteredChannels);
-    console.log('🎯 ChannelSelector: filteredChannels.length =', filteredChannels.length);
 
     // Handle channel selection
     const handleChannelSelect = (event: SelectChangeEvent<string>): void => {

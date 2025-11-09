@@ -7,7 +7,7 @@ for all users with MTProto enabled.
 
 Usage:
     python -m apps.mtproto.worker [options]
-    
+
 Options:
     --interval MINUTES    Collection interval in minutes (default: 10)
     --once               Run collection once and exit
@@ -92,10 +92,16 @@ async def main():
             # Run once and exit
             logger.info("🔄 Running single collection cycle...")
 
+            # Get configured limit
+            limit = service.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
+            logger.info(f"📊 Using limit: {limit} messages per channel")
+
             if args.user_id:
-                result = await service.collect_user_channel_history(args.user_id)
+                result = await service.collect_user_channel_history(
+                    args.user_id, limit_per_channel=limit
+                )
             else:
-                result = await service.collect_all_users()
+                result = await service.collect_all_users(limit_per_channel=limit)
 
             if result.get("success"):
                 logger.info(f"✅ Collection successful: {result}")

@@ -525,11 +525,15 @@ app.include_router(mobile_router)  # /mobile/* - Already good
 # ✅ PHASE 4 MULTI-TENANT: User and Admin Bot Management (October 27, 2025)
 from apps.api.routers.admin_bot_router import router as admin_bot_router
 from apps.api.routers.user_bot_router import router as user_bot_router
+from apps.api.routers.user_mtproto_monitoring_router import router as user_mtproto_monitoring_router
 from apps.api.routers.user_mtproto_router import router as user_mtproto_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
 app.include_router(admin_bot_router, tags=["Admin Bot Management"])  # /api/admin/bots/*
 app.include_router(user_mtproto_router, tags=["User Bot Management"])  # /api/user-mtproto/*
+app.include_router(
+    user_mtproto_monitoring_router, tags=["MTProto Monitoring"]
+)  # /api/user-mtproto/monitoring/*
 
 # ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidating all AI services under /ai/* for better organization

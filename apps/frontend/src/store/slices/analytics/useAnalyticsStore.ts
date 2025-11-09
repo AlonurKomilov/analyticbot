@@ -60,7 +60,7 @@ interface AnalyticsState {
   fetchOverview: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchGrowthMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchReachMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
-  fetchPostDynamics: (channelId: string, period?: TimePeriod) => Promise<void>;
+  fetchPostDynamics: (channelId: string, period?: TimePeriod, customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }) => Promise<void>;
   fetchTopPosts: (channelId: string, limit?: number) => Promise<void>;
   fetchEngagementMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchBestTime: (channelId: string) => Promise<void>;
@@ -184,21 +184,41 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch post dynamics (views/likes/shares over time)
-    fetchPostDynamics: async (channelId: string, period: TimePeriod = '7d') => {
+    fetchPostDynamics: async (channelId: string, period: TimePeriod = '7d', customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }) => {
       set({ isLoadingPostDynamics: true, postDynamicsError: null });
 
       try {
-        console.log('📊 Fetching post dynamics for channel:', channelId);
+        console.log('📊 Store: Fetching post dynamics for channel:', channelId, 'period:', period, 'customDateRange:', customDateRange, 'customTimeRange:', customTimeRange);
 
         // Use demo endpoint for demo_channel, real endpoint for actual channels
         const endpoint = channelId === 'demo_channel'
           ? '/demo/analytics/post-dynamics'
           : `/analytics/posts/dynamics/post-dynamics/${channelId}`;
 
+        console.log('📡 Store: API endpoint:', endpoint);
+
+        // Build params with optional date/time range for drill-down
+        const params: any = { period };
+        if (customTimeRange) {
+          // Minute-level drill-down
+          params.start_time = customTimeRange.start_time;
+          params.end_time = customTimeRange.end_time;
+        } else if (customDateRange) {
+          // Hour-level drill-down
+          params.start_date = customDateRange.start_date;
+          params.end_date = customDateRange.end_date;
+        }
+
+        console.log('📡 Store: API params:', params);
+
         const postDynamics = await apiClient.get<PostDynamics>(
           endpoint,
-          { params: { period } }
+          { params }
         );
+
+        console.log('✅ Store: Post dynamics response:', postDynamics);
+        console.log('✅ Store: Is array?', Array.isArray(postDynamics));
+        console.log('✅ Store: Length:', Array.isArray(postDynamics) ? postDynamics.length : 'N/A');
 
         set({
           postDynamics,
@@ -206,9 +226,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingPostDynamics: false
         });
 
-        console.log('✅ Post dynamics loaded');
+        console.log('✅ Store: Post dynamics saved to store');
       } catch (error) {
-        console.error('❌ Failed to load post dynamics:', error);
+        console.error('❌ Store: Failed to load post dynamics:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to load post dynamics';
         set({
           postDynamicsError: errorMessage,

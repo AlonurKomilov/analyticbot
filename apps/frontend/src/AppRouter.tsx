@@ -52,6 +52,7 @@ const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManageme
 
 // MTProto Setup Page
 const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
+const MTProtoMonitoringPage = React.lazy(() => import('./pages/MTProtoMonitoringPage'));
 
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
@@ -310,6 +311,18 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="form">
                                                 <MTProtoSetupPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* MTProto Monitoring */}
+                                <Route
+                                    path="/settings/mtproto-monitoring"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <MTProtoMonitoringPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

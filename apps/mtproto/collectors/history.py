@@ -117,104 +117,99 @@ class HistoryCollector:
                 peer_stats["errors"] += 1
                 return peer_stats
 
-            # Get last processed message ID for incremental sync
-            last_msg_id = await self.repos.post_repo.max_msg_id(channel_id)
-            offset_id = last_msg_id or 0
+            # For full collection, start from the beginning (offset_id=0)
+            # iter_history goes from newest to oldest, so offset_id=0 means start from the very newest
+            offset_id = 0
 
-            self.logger.debug(f"Starting from message ID {offset_id} for channel {channel_id}")
+            self.logger.info(f"Starting full collection for channel {channel_id} (limit={limit})")
 
             # Collect messages in chunks
             messages_processed = 0
             chunk_size = min(200, limit)  # Process in smaller chunks
 
-            while messages_processed < limit:
+            # Use iter_history to get all messages from newest to oldest
+            # Don't use offset_id manipulation - let iter_history handle pagination naturally
+            messages = []
+            message_count = 0
+
+            self.logger.info(f"Fetching up to {limit} messages from Telegram...")
+
+            async for message in self.tg_client.iter_history(peer, limit=limit):  # type: ignore
+                messages.append(message)
+                message_count += 1
+
+                # Log progress every 100 messages
+                if message_count % 100 == 0:
+                    self.logger.info(f"  Fetched {message_count} messages so far...")
+
+            self.logger.info(f"✅ Fetched {len(messages)} total messages from Telegram")
+
+            if not messages:
+                self.logger.info(f"No messages found for peer {peer}")
+                return peer_stats
+
+            # Log message ID range
+            msg_ids = [m.id for m in messages if hasattr(m, "id")]
+            if msg_ids:
+                self.logger.info(f"  Message ID range: {min(msg_ids)} to {max(msg_ids)}")
+
+            # Process all fetched messages
+            messages_processed = 0
+            for message in messages:
                 try:
-                    chunk_limit = min(chunk_size, limit - messages_processed)
+                    # Normalize message to dict format using parser from DI
+                    if self.parsers and hasattr(self.parsers, "normalize_message"):
+                        normalized = self.parsers.normalize_message(message)
+                    else:
+                        # Fallback: lazy import if parsers not available via DI
+                        from infra.tg.parsers import normalize_message
 
-                    # Get messages in chunks using proper async iteration (don't await async generators)
-                    messages = []
-                    async for message in self.tg_client.iter_history(  # type: ignore
-                        peer, offset_id=offset_id, limit=chunk_limit
-                    ):
-                        messages.append(message)
+                        normalized = normalize_message(message)
 
-                        # Update offset for next iteration
-                        if hasattr(message, "id"):
-                            offset_id = max(offset_id, message.id)
+                    # Check if normalization failed (returns None on error)
+                    if normalized is None:
+                        self.logger.warning("Failed to normalize message, skipping")
+                        peer_stats["skipped"] += 1
+                        continue
 
-                    if not messages:
-                        self.logger.debug(f"No more messages for peer {peer}")
-                        break
+                    if not normalized.get("channel"):
+                        peer_stats["skipped"] += 1
+                        continue
 
-                    # Process messages in this chunk
-                    for message in messages:
-                        try:
-                            # Normalize message to dict format using parser from DI
-                            if self.parsers and hasattr(self.parsers, "normalize_message"):
-                                normalized = self.parsers.normalize_message(message)
-                            else:
-                                # Fallback: lazy import if parsers not available via DI
-                                from infra.tg.parsers import normalize_message
+                    # Ensure channel exists (pass user_id for new channels)
+                    self.logger.debug(f"Ensuring channel: {normalized['channel']}")
+                    await self.repos.channel_repo.ensure_channel(
+                        **normalized["channel"], user_id=self.user_id
+                    )
+                    self.logger.debug("Channel ensured successfully")
 
-                                normalized = normalize_message(message)
+                    # Upsert post
+                    self.logger.debug(
+                        f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}"
+                    )
+                    post_result = await self.repos.post_repo.upsert_post(**normalized["post"])
+                    self.logger.debug(f"Post upsert result: {post_result}")
 
-                            # Check if normalization failed (returns None on error)
-                            if normalized is None:
-                                self.logger.warning("Failed to normalize message, skipping")
-                                peer_stats["skipped"] += 1
-                                continue
+                    # Add metrics snapshot
+                    await self.repos.metrics_repo.add_or_update_snapshot(**normalized["metrics"])
 
-                            if not normalized.get("channel"):
-                                peer_stats["skipped"] += 1
-                                continue
+                    # Update statistics
+                    if post_result.get("inserted"):
+                        peer_stats["ingested"] += 1
+                    elif post_result.get("updated"):
+                        peer_stats["updated"] += 1
+                    else:
+                        peer_stats["skipped"] += 1
 
-                            # Ensure channel exists (pass user_id for new channels)
-                            self.logger.debug(f"Ensuring channel: {normalized['channel']}")
-                            await self.repos.channel_repo.ensure_channel(
-                                **normalized["channel"], user_id=self.user_id
-                            )
-                            self.logger.debug("Channel ensured successfully")
+                    messages_processed += 1
 
-                            # Upsert post
-                            self.logger.debug(
-                                f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}"
-                            )
-                            post_result = await self.repos.post_repo.upsert_post(
-                                **normalized["post"]
-                            )
-                            self.logger.debug(f"Post upsert result: {post_result}")
-
-                            # Add metrics snapshot
-                            await self.repos.metrics_repo.add_or_update_snapshot(
-                                **normalized["metrics"]
-                            )
-
-                            # Update statistics
-                            if post_result.get("inserted"):
-                                peer_stats["ingested"] += 1
-                            elif post_result.get("updated"):
-                                peer_stats["updated"] += 1
-                            else:
-                                peer_stats["skipped"] += 1
-
-                            messages_processed += 1
-
-                            # Rate limiting
-                            await asyncio.sleep(self.settings.MTPROTO_SLEEP_THRESHOLD / 1000)
-
-                        except Exception as e:
-                            self.logger.error(f"Error processing message in peer {peer}: {e}")
-                            peer_stats["errors"] += 1
-                            continue
-
-                    # Inter-chunk delay
-                    if messages:
-                        await asyncio.sleep(self.settings.MTPROTO_SLEEP_THRESHOLD)
+                    # Rate limiting
+                    await asyncio.sleep(self.settings.MTPROTO_SLEEP_THRESHOLD / 1000)
 
                 except Exception as e:
-                    self.logger.error(f"Error fetching chunk for peer {peer}: {e}")
+                    self.logger.error(f"Error processing message in peer {peer}: {e}")
                     peer_stats["errors"] += 1
-                    break
+                    continue
 
             self.logger.info(f"Completed peer {peer}: {peer_stats}")
 

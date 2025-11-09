@@ -9,7 +9,7 @@ import asyncio
 import logging
 import signal
 from collections.abc import AsyncIterator
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from apps.di import get_container
@@ -25,7 +25,7 @@ class TelegramClientAdapter:
 
     def __init__(self, telegram_client: Any):
         """Initialize adapter with existing TelegramClient.
-        
+
         Args:
             telegram_client: Telethon TelegramClient instance
         """
@@ -47,12 +47,12 @@ class TelegramClientAdapter:
         self, peer: Any, *, offset_id: int = 0, limit: int = 200
     ) -> AsyncIterator[Any]:
         """Iterate through message history.
-        
+
         Args:
             peer: The target peer (username or ID)
             offset_id: Start from this message ID
             limit: Maximum messages to fetch
-            
+
         Yields:
             Message objects
         """
@@ -63,7 +63,7 @@ class TelegramClientAdapter:
         except Exception as e:
             logger.warning(f"Could not resolve entity for {peer}: {e}")
             # Continue with original peer, might still work
-        
+
         async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
             yield message
 
@@ -130,6 +130,112 @@ class MTProtoDataCollectionService:
 
         logger.info("✅ MTProto Data Collection Service initialized")
 
+    async def _log_collection_start(self, user_id: int, total_channels: int):
+        """Log collection start event to audit log.
+
+        Args:
+            user_id: User ID
+            total_channels: Total number of channels to collect from
+        """
+        try:
+            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                audit_service = MTProtoAuditService(audit_session)
+                await audit_service.log_event(
+                    user_id=user_id,
+                    action="collection_start",
+                    metadata={
+                        "total_channels": total_channels,
+                        "start_time": datetime.now(UTC).isoformat(),
+                    },
+                )
+        except Exception as e:
+            logger.warning(f"Failed to log collection start for user {user_id}: {e}")
+
+    async def _log_collection_progress(
+        self,
+        user_id: int,
+        channel_id: int,
+        channel_name: str,
+        messages_collected: int,
+        channels_processed: int,
+        total_channels: int,
+        errors: int = 0,
+    ):
+        """Log collection progress event to audit log.
+
+        Args:
+            user_id: User ID
+            channel_id: Channel ID
+            channel_name: Channel name
+            messages_collected: Messages collected for this channel
+            channels_processed: Number of channels processed so far
+            total_channels: Total number of channels
+            errors: Error count for this channel
+        """
+        try:
+            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                audit_service = MTProtoAuditService(audit_session)
+                await audit_service.log_event(
+                    user_id=user_id,
+                    action="collection_progress",
+                    channel_id=channel_id,
+                    metadata={
+                        "channel_name": channel_name,
+                        "messages_collected": messages_collected,
+                        "channels_processed": channels_processed,
+                        "total_channels": total_channels,
+                        "errors": errors,
+                        "progress_time": datetime.now(UTC).isoformat(),
+                    },
+                )
+        except Exception as e:
+            logger.warning(
+                f"Failed to log collection progress for user {user_id}, channel {channel_id}: {e}"
+            )
+
+    async def _log_collection_end(
+        self,
+        user_id: int,
+        total_messages: int,
+        channels_synced: int,
+        total_channels: int,
+        errors: int = 0,
+    ):
+        """Log collection end event to audit log.
+
+        Args:
+            user_id: User ID
+            total_messages: Total messages collected across all channels
+            channels_synced: Number of channels successfully synced
+            total_channels: Total number of channels
+            errors: Total error count
+        """
+        try:
+            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+
+            session_factory = await self.container.database.async_session_maker()
+            async with session_factory() as audit_session:
+                audit_service = MTProtoAuditService(audit_session)
+                await audit_service.log_event(
+                    user_id=user_id,
+                    action="collection_end",
+                    metadata={
+                        "total_messages": total_messages,
+                        "channels_synced": channels_synced,
+                        "total_channels": total_channels,
+                        "errors": errors,
+                        "end_time": datetime.now(UTC).isoformat(),
+                    },
+                )
+        except Exception as e:
+            logger.warning(f"Failed to log collection end for user {user_id}: {e}")
+
     async def collect_user_channel_history(self, user_id: int, limit_per_channel: int = 50) -> dict:
         """Collect history for all channels of a specific user.
 
@@ -171,6 +277,9 @@ class MTProtoDataCollectionService:
 
             logger.info(f"📥 Collecting history for user {user_id}: {len(channels)} channels")
 
+            # Log collection start
+            await self._log_collection_start(user_id, len(channels))
+
             # Create a repos object for the collector
             class ReposWrapper:
                 def __init__(self, channel_repo, post_repo, metrics_repo):
@@ -183,7 +292,7 @@ class MTProtoDataCollectionService:
             channel_repo = await self.container.database.channel_repo()
             post_repo = await self.container.database.post_repo()
             metrics_repo = await self.container.database.metrics_repo()
-            
+
             repos = ReposWrapper(channel_repo, post_repo, metrics_repo)
 
             # Wrap the TelegramClient with our adapter to match TGClient protocol
@@ -197,8 +306,10 @@ class MTProtoDataCollectionService:
             errors = []
 
             # Collect from each channel
-            for channel in channels:
+            for idx, channel in enumerate(channels):
                 channel_name = "Unknown"
+                channel_id = None
+                channel_errors = 0
                 try:
                     channel_id = channel.get("id") or channel.get("telegram_id")
                     channel_name = channel.get("title") or channel.get("name", "Unknown")
@@ -214,12 +325,13 @@ class MTProtoDataCollectionService:
                         # Make negative
                         peer_identifier = -int(channel_id_str)
 
-                    logger.info(f"  📡 Syncing channel: {channel_name} (DB ID: {channel_id}, Telegram ID: {peer_identifier})")
+                    logger.info(
+                        f"  📡 Syncing channel: {channel_name} (DB ID: {channel_id}, Telegram ID: {peer_identifier})"
+                    )
 
                     # Use _process_peer_history for storage (internal method handles DB upserts)
                     stats = await collector._process_peer_history(
-                        peer=peer_identifier,
-                        limit=limit_per_channel
+                        peer=peer_identifier, limit=limit_per_channel
                     )
 
                     messages_collected = stats.get("ingested", 0) + stats.get("updated", 0)
@@ -230,12 +342,45 @@ class MTProtoDataCollectionService:
                         f"  ✅ Channel {channel_name}: {messages_collected} messages stored (ingested: {stats.get('ingested', 0)}, updated: {stats.get('updated', 0)})"
                     )
 
+                    # Log progress for this channel
+                    await self._log_collection_progress(
+                        user_id=user_id,
+                        channel_id=channel_id,
+                        channel_name=channel_name,
+                        messages_collected=messages_collected,
+                        channels_processed=idx + 1,
+                        total_channels=len(channels),
+                        errors=channel_errors,
+                    )
+
                 except Exception as e:
                     logger.error(f"  ❌ Error syncing channel {channel_name}: {e}")
                     errors.append(f"Channel {channel_name}: {str(e)}")
+                    channel_errors = 1
+
+                    # Still log progress even on error
+                    if channel_id:
+                        await self._log_collection_progress(
+                            user_id=user_id,
+                            channel_id=channel_id,
+                            channel_name=channel_name,
+                            messages_collected=0,
+                            channels_processed=idx + 1,
+                            total_channels=len(channels),
+                            errors=channel_errors,
+                        )
 
             # Disconnect user client
             await user_client.disconnect()
+
+            # Log collection end
+            await self._log_collection_end(
+                user_id=user_id,
+                total_messages=total_messages,
+                channels_synced=synced_channels,
+                total_channels=len(channels),
+                errors=len(errors),
+            )
 
             logger.info(
                 f"✅ User {user_id} collection complete: "
@@ -249,11 +394,19 @@ class MTProtoDataCollectionService:
                 "total_channels": len(channels),
                 "total_messages": total_messages,
                 "errors": errors,
-                "sync_time": datetime.utcnow().isoformat(),
+                "sync_time": datetime.now(UTC).isoformat(),
             }
 
         except Exception as e:
             logger.error(f"❌ Error collecting data for user {user_id}: {e}")
+            # Try to log the error end state
+            try:
+                await self._log_collection_end(
+                    user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
+                )
+            except:
+                pass  # Ignore logging errors during error handling
+
             return {
                 "success": False,
                 "user_id": user_id,
@@ -292,7 +445,9 @@ class MTProtoDataCollectionService:
 
             # Process each user
             for user in users:
-                user_id = user.get("user_id") or user.get("id")  # user_id is the actual user ID, not record ID
+                user_id = user.get("user_id") or user.get(
+                    "id"
+                )  # user_id is the actual user ID, not record ID
                 logger.info(f"📊 Processing user {user_id}...")
 
                 result = await self.collect_user_channel_history(user_id, limit_per_channel)
@@ -314,7 +469,7 @@ class MTProtoDataCollectionService:
                 "total_users": len(users),
                 "total_messages": total_messages,
                 "results": all_results,
-                "sync_time": datetime.utcnow().isoformat(),
+                "sync_time": datetime.now(UTC).isoformat(),
             }
 
         except Exception as e:
@@ -351,23 +506,50 @@ class MTProtoDataCollectionService:
 
         try:
             while self.running:
-                logger.info("🔄 Starting collection cycle...")
+                collection_start = datetime.now(UTC)
+                logger.info(
+                    f"🔄 Starting collection cycle at {collection_start.strftime('%H:%M:%S')}..."
+                )
 
-                # Run collection for all users
-                result = await self.collect_all_users(limit_per_channel=50)
+                # Run collection for all users using configured limit
+                limit = self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
+                logger.info(f"📊 Using history limit: {limit} messages per channel")
+                result = await self.collect_all_users(limit_per_channel=limit)
+
+                collection_end = datetime.now(UTC)
+                collection_duration = (collection_end - collection_start).total_seconds()
 
                 if result.get("success"):
                     logger.info(
                         f"✅ Collection cycle complete: "
                         f"{result.get('users_processed', 0)} users, "
-                        f"{result.get('total_messages', 0)} messages"
+                        f"{result.get('total_messages', 0)} messages, "
+                        f"took {collection_duration:.1f}s"
                     )
                 else:
                     logger.error(f"❌ Collection cycle failed: {result.get('reason', 'unknown')}")
 
-                # Wait for next cycle
-                logger.info(f"⏳ Waiting {interval_minutes} minutes until next cycle...")
-                await asyncio.sleep(interval_seconds)
+                # Calculate wait time: ensure minimum gap between collections
+                # If collection took 5 minutes and interval is 10 minutes, wait only 5 more minutes
+                # This maintains 10-minute intervals between START times, not END times
+                remaining_wait = max(
+                    60, interval_seconds - collection_duration
+                )  # Minimum 60 seconds cooldown
+
+                logger.info(
+                    f"⏳ Collection took {collection_duration:.1f}s, "
+                    f"waiting {remaining_wait:.1f}s until next cycle... "
+                    f"(target interval: {interval_minutes}min between starts)"
+                )
+
+                if collection_duration > interval_seconds:
+                    logger.warning(
+                        f"⚠️  Collection took {collection_duration/60:.1f}min, "
+                        f"longer than configured interval of {interval_minutes}min! "
+                        f"Collections will run back-to-back with {remaining_wait}s cooldown."
+                    )
+
+                await asyncio.sleep(remaining_wait)
 
         except Exception as e:
             logger.error(f"❌ Service error: {e}")

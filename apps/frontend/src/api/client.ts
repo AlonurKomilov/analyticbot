@@ -27,7 +27,7 @@ import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms',
+  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:11400',
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   maxRetries: 3,
   retryDelay: 1000,
@@ -243,8 +243,19 @@ export class UnifiedApiClient {
     }, requestTimeout);
 
     try {
-      // Construct full URL
-      const url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
+      // Construct full URL with query parameters
+      let url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
+
+      // Append query parameters if provided
+      if (options.params && Object.keys(options.params).length > 0) {
+        const queryString = new URLSearchParams(
+          Object.entries(options.params).reduce((acc, [key, value]) => {
+            acc[key] = String(value);
+            return acc;
+          }, {} as Record<string, string>)
+        ).toString();
+        url = `${url}?${queryString}`;
+      }
 
       if (import.meta.env.DEV) {
         console.log(`🌐 API Request: ${options.method || 'GET'} ${url} (timeout: ${requestTimeout}ms)`);

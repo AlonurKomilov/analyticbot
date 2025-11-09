@@ -32,7 +32,7 @@ export interface ChurnPrediction {
 }
 
 // Time periods
-export type TimePeriod = '24h' | '7d' | '30d' | '90d' | 'custom';
+export type TimePeriod = '1h' | '6h' | '12h' | '24h' | '7d' | '30d' | '90d' | 'all' | 'custom';
 
 // Chart configuration
 export interface ChartConfig {

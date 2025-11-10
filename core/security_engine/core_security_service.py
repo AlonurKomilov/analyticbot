@@ -50,7 +50,10 @@ class CoreSecurityService(SecurityService):
         self.security_events = security_events
 
     def create_access_token(
-        self, user: User, expires_delta: timedelta | None = None, session_id: str | None = None
+        self,
+        user: User,
+        expires_delta: timedelta | None = None,
+        session_id: str | None = None,
     ) -> str:
         """Create JWT access token with user claims"""
         if expires_delta:
@@ -176,8 +179,8 @@ class CoreSecurityService(SecurityService):
             "ip_address": session.ip_address,
             "user_agent": session.user_agent,
             "device_info": session.device_info,
-            "created_at": session.created_at.isoformat() if session.created_at else None,
-            "last_activity": session.last_activity.isoformat() if session.last_activity else None,
+            "created_at": (session.created_at.isoformat() if session.created_at else None),
+            "last_activity": (session.last_activity.isoformat() if session.last_activity else None),
             "is_active": session.is_active,
         }
 
@@ -214,12 +217,16 @@ class CoreSecurityService(SecurityService):
                 ip_address=session_data.get("ip_address"),
                 user_agent=session_data.get("user_agent"),
                 device_info=session_data.get("device_info"),
-                created_at=datetime.fromisoformat(session_data["created_at"])
-                if session_data.get("created_at")
-                else None,
-                last_activity=datetime.fromisoformat(session_data["last_activity"])
-                if session_data.get("last_activity")
-                else None,
+                created_at=(
+                    datetime.fromisoformat(session_data["created_at"])
+                    if session_data.get("created_at")
+                    else None
+                ),
+                last_activity=(
+                    datetime.fromisoformat(session_data["last_activity"])
+                    if session_data.get("last_activity")
+                    else None
+                ),
                 is_active=session_data.get("is_active", True),
             )
 
@@ -418,9 +425,11 @@ class CoreSecurityService(SecurityService):
             session_id=data.get("session_id"),
             mfa_verified=data.get("mfa_verified", False),
             auth_provider=data.get("auth_provider", "local"),
-            issued_at=datetime.fromisoformat(data["issued_at"]) if data.get("issued_at") else None,
-            expires_at=datetime.fromisoformat(data["expires_at"])
-            if data.get("expires_at")
-            else None,
+            issued_at=(
+                datetime.fromisoformat(data["issued_at"]) if data.get("issued_at") else None
+            ),
+            expires_at=(
+                datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None
+            ),
             token_id=data.get("token_id"),
         )

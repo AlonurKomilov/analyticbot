@@ -6,7 +6,11 @@ Complete drift detection capabilities with clean architecture.
 All drift-related services and components are contained within this microservice.
 """
 
-from .drift_coordinator import ComprehensiveDriftAnalysis, DriftCoordinator, DriftCoordinatorConfig
+from .drift_coordinator import (
+    ComprehensiveDriftAnalysis,
+    DriftCoordinator,
+    DriftCoordinatorConfig,
+)
 from .drift_detection_service import DriftDetectionService
 from .multivariate_analyzer import (
     DimensionalityReductionResult,

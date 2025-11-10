@@ -27,7 +27,9 @@ async def collect_channel_data():
     try:
         # Import after path setup
         from apps.di import get_container
-        from apps.mtproto.services.data_collection_service import MTProtoDataCollectionService
+        from apps.mtproto.services.data_collection_service import (
+            MTProtoDataCollectionService,
+        )
 
         # Get user ID from your session (you'll need to replace this)
         # For now, let's get it from the database

@@ -45,9 +45,9 @@ class TestImportGraph:
                 # File reading issues should not fail the test
                 continue
 
-        assert (
-            len(forbidden_imports) == 0
-        ), f"Found forbidden imports in core: {forbidden_imports[:3]}"
+        assert len(forbidden_imports) == 0, (
+            f"Found forbidden imports in core: {forbidden_imports[:3]}"
+        )
 
     def test_infra_has_no_forbidden_imports(self):
         """Infra layer should not import from apps."""
@@ -71,9 +71,9 @@ class TestImportGraph:
                 # File reading issues should not fail the test
                 continue
 
-        assert (
-            len(forbidden_imports) == 0
-        ), f"Found forbidden imports in infra: {forbidden_imports[:3]}"
+        assert len(forbidden_imports) == 0, (
+            f"Found forbidden imports in infra: {forbidden_imports[:3]}"
+        )
 
     def test_clean_architecture_directories_exist(self):
         """Essential clean architecture directories should exist."""
@@ -130,11 +130,17 @@ class TestDomainService:
                 service_source = inspect.getsource(service_class)
 
                 # Check for framework imports that should not be in core
-                forbidden_frameworks = ["aiogram", "fastapi", "celery", "flask", "django"]
+                forbidden_frameworks = [
+                    "aiogram",
+                    "fastapi",
+                    "celery",
+                    "flask",
+                    "django",
+                ]
                 for framework in forbidden_frameworks:
-                    assert (
-                        framework not in service_source.lower()
-                    ), f"Domain service {service_class.__name__} contains {framework} framework code"
+                    assert framework not in service_source.lower(), (
+                        f"Domain service {service_class.__name__} contains {framework} framework code"
+                    )
 
         except ImportError:
             pytest.skip("Core services not available for framework check")
@@ -164,23 +170,23 @@ class TestDependencyInjection:
                 import_errors.append(f"{container_name}: {e}")
 
         # At least one container should work
-        assert (
-            len(successful_imports) > 0
-        ), f"No DI containers could be imported. Errors: {import_errors}"
+        assert len(successful_imports) > 0, (
+            f"No DI containers could be imported. Errors: {import_errors}"
+        )
 
     def test_dependency_injector_unified(self):
         """All containers should use dependency-injector (not punq)."""
         try:
             # Test that we can import dependency_injector
-            from dependency_injector import containers, providers
+            pass
 
             # Test that containers use the right base class
             from apps.jobs.di import JobsContainer
 
             # Should be a dependency_injector container
-            assert hasattr(
-                JobsContainer, "providers"
-            ), "JobsContainer should be a dependency-injector container"
+            assert hasattr(JobsContainer, "providers"), (
+                "JobsContainer should be a dependency-injector container"
+            )
 
         except ImportError as e:
             pytest.skip(f"Dependency injection components not available: {e}")

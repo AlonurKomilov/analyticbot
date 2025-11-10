@@ -51,7 +51,7 @@ class JoseJWTAdapter(TokenGeneratorPort):
             "role": claims.role,
             "status": claims.status,
             "exp": expire_timestamp,  # Must be Unix timestamp (int)
-            "iat": iat_timestamp,      # Must be Unix timestamp (int)
+            "iat": iat_timestamp,  # Must be Unix timestamp (int)
             "session_id": claims.session_id,
             "mfa_verified": claims.mfa_verified,
             "auth_provider": claims.auth_provider,

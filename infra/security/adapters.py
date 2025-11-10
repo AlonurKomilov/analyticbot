@@ -141,12 +141,12 @@ class JWTTokenGenerator(TokenGeneratorPort):
                 session_id=payload.get("session_id"),
                 mfa_verified=payload.get("mfa_verified", False),
                 auth_provider=payload.get("auth_provider", "local"),
-                issued_at=datetime.fromtimestamp(payload.get("iat"))
-                if payload.get("iat")
-                else None,
-                expires_at=datetime.fromtimestamp(payload.get("exp"))
-                if payload.get("exp")
-                else None,
+                issued_at=(
+                    datetime.fromtimestamp(payload.get("iat")) if payload.get("iat") else None
+                ),
+                expires_at=(
+                    datetime.fromtimestamp(payload.get("exp")) if payload.get("exp") else None
+                ),
                 token_id=payload.get("jti"),
             )
 

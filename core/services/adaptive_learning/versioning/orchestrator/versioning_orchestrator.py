@@ -184,7 +184,10 @@ class VersioningOrchestrator:
     ) -> list[ModelVersion]:
         """Get versions with filters"""
         return await self.version_manager.get_versions(
-            model_id=model_id, status=status, deployment_stage=deployment_stage, limit=limit
+            model_id=model_id,
+            status=status,
+            deployment_stage=deployment_stage,
+            limit=limit,
         )
 
     async def load_model_version(self, version_id: str) -> Any | None:
@@ -215,11 +218,16 @@ class VersioningOrchestrator:
         )
 
     async def rollback_deployment(
-        self, model_id: str, deployment_stage: DeploymentStage, target_version: str | None = None
+        self,
+        model_id: str,
+        deployment_stage: DeploymentStage,
+        target_version: str | None = None,
     ) -> bool:
         """Rollback deployment"""
         return await self.deployment_manager.rollback_deployment(
-            model_id=model_id, deployment_stage=deployment_stage, target_version=target_version
+            model_id=model_id,
+            deployment_stage=deployment_stage,
+            target_version=target_version,
         )
 
     async def get_active_deployment(
@@ -253,7 +261,7 @@ class VersioningOrchestrator:
                 try:
                     # Get all models
                     all_versions = await self.version_manager.get_versions()
-                    model_ids = set(v.model_id for v in all_versions)
+                    model_ids = {v.model_id for v in all_versions}
 
                     # Cleanup each model
                     for model_id in model_ids:

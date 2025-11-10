@@ -472,7 +472,10 @@ def _create_watermark_service(image_processor=None, file_system=None, **kwargs):
     try:
         from typing import cast
 
-        from core.services.bot.content.protocols import FileSystemPort, ImageProcessorPort
+        from core.services.bot.content.protocols import (
+            FileSystemPort,
+            ImageProcessorPort,
+        )
         from core.services.bot.content.watermark_service import WatermarkService
 
         if not all([image_processor, file_system]):
@@ -493,8 +496,13 @@ def _create_video_watermark_service(video_processor=None, file_system=None, **kw
     try:
         from typing import cast
 
-        from core.services.bot.content.protocols import FileSystemPort, VideoProcessorPort
-        from core.services.bot.content.video_watermark_service import VideoWatermarkService
+        from core.services.bot.content.protocols import (
+            FileSystemPort,
+            VideoProcessorPort,
+        )
+        from core.services.bot.content.video_watermark_service import (
+            VideoWatermarkService,
+        )
 
         if not all([video_processor, file_system]):
             logger.warning("Cannot create video watermark service: missing dependencies")
@@ -521,10 +529,14 @@ def _create_content_protection_service(
     try:
         from typing import cast
 
-        from core.services.bot.content.content_protection_service import ContentProtectionService
+        from core.services.bot.content.content_protection_service import (
+            ContentProtectionService,
+        )
         from core.services.bot.content.protocols import FileSystemPort, SubscriptionPort
         from core.services.bot.content.theft_detector import TheftDetectorService
-        from core.services.bot.content.video_watermark_service import VideoWatermarkService
+        from core.services.bot.content.video_watermark_service import (
+            VideoWatermarkService,
+        )
         from core.services.bot.content.watermark_service import WatermarkService
 
         if not all(
@@ -649,7 +661,10 @@ def _create_system_metrics_service(metrics_backend=None, system_monitor=None, **
         from typing import cast
 
         from core.services.bot.metrics import SystemMetricsService
-        from core.services.bot.metrics.protocols import MetricsBackendPort, SystemMetricsPort
+        from core.services.bot.metrics.protocols import (
+            MetricsBackendPort,
+            SystemMetricsPort,
+        )
 
         if not metrics_backend or not system_monitor:
             logger.warning("Cannot create system metrics service: missing dependencies")

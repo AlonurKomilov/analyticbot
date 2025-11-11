@@ -92,43 +92,75 @@ export const MTProtoMonitoringPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false); // Background refresh indicator
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
-  const fetchMonitoringData = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchMonitoringData = async (isBackgroundRefresh = false) => {
+    // Only show loading spinner on initial load, not on background refreshes
+    if (!isBackgroundRefresh) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
+    // Don't clear error on background refresh to avoid flicker
+    if (!isBackgroundRefresh) {
+      setError(null);
+    }
 
     try {
-      console.log('📊 Fetching MTProto monitoring data...');
+      console.log(`📊 ${isBackgroundRefresh ? 'Background' : 'Initial'} fetch MTProto monitoring data...`);
       const response: any = await apiClient.get('/api/user-mtproto/monitoring/overview');
-      console.log('📊 Monitoring response:', response);
 
       // apiClient.get() returns the data directly, not wrapped in response.data
       if (!response) {
         console.error('❌ Empty response received');
-        setError('No monitoring data received from server');
-        setData(null);
+        if (!isBackgroundRefresh) {
+          setError('No monitoring data received from server');
+          setData(null);
+        }
         return;
       }
 
+      // Update data silently without showing loading
       setData(response as MonitoringData);
-      console.log('✅ Monitoring data loaded successfully');
+      setLastUpdate(new Date());
+
+      // Clear any previous errors on successful refresh
+      if (error) {
+        setError(null);
+      }
+
+      console.log('✅ Monitoring data updated successfully');
     } catch (err: any) {
       const errorMsg = err.response?.data?.detail || err.message || 'Failed to fetch monitoring data';
       console.error('❌ Monitoring fetch error:', err);
       console.error('❌ Error details:', errorMsg);
-      setError(errorMsg);
-      setData(null);
+
+      // Only show error on initial load or if data is null
+      if (!isBackgroundRefresh || !data) {
+        setError(errorMsg);
+        setData(null);
+      } else {
+        // On background refresh failure, just log it but keep existing data
+        console.warn('Background refresh failed, keeping existing data');
+      }
     } finally {
-      console.log('📊 Setting loading to false');
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchMonitoringData();
+    // Initial load
+    fetchMonitoringData(false);
 
+    // Setup auto-refresh with background updates
     if (autoRefresh) {
-      const interval = setInterval(fetchMonitoringData, 300000); // Refresh every 30 seconds
+      const interval = setInterval(() => {
+        fetchMonitoringData(true); // Background refresh - no loading spinner
+      }, 1000); // Refresh every 1 second for real-time updates
+
       return () => clearInterval(interval);
     }
     return undefined;
@@ -183,7 +215,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
           {error}
         </Alert>
         <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-          <Button variant="contained" onClick={fetchMonitoringData}>
+          <Button variant="contained" onClick={() => fetchMonitoringData(false)}>
             Retry
           </Button>
           <Button variant="outlined" onClick={() => window.open(import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:11400', '_blank')}>
@@ -205,7 +237,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
           No monitoring data available. Please ensure MTProto is configured.
         </Alert>
         <Box sx={{ mt: 2 }}>
-          <Button variant="outlined" onClick={fetchMonitoringData}>
+          <Button variant="outlined" onClick={() => fetchMonitoringData(false)}>
             Retry
           </Button>
         </Box>
@@ -218,11 +250,38 @@ export const MTProtoMonitoringPage: React.FC = () => {
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
-          <Typography variant="h4" component="h1" gutterBottom>
-            MTProto Monitoring
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h4" component="h1">
+              MTProto Monitoring
+            </Typography>
+            {/* Subtle live indicator - pulsing dot */}
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: isRefreshing ? 'primary.main' : 'success.main',
+                animation: isRefreshing ? 'pulse 1s ease-in-out infinite' : 'none',
+                boxShadow: isRefreshing
+                  ? '0 0 8px rgba(25, 118, 210, 0.6)'
+                  : '0 0 6px rgba(46, 125, 50, 0.4)',
+                '@keyframes pulse': {
+                  '0%, 100%': {
+                    opacity: 1,
+                    transform: 'scale(1)',
+                  },
+                  '50%': {
+                    opacity: 0.6,
+                    transform: 'scale(1.2)',
+                  },
+                },
+              }}
+              title={isRefreshing ? 'Updating data...' : 'Live - Connected'}
+            />
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Real-time collection status and session health
+            {lastUpdate && ` • Last updated: ${lastUpdate.toLocaleTimeString()}`}
           </Typography>
         </Box>
         <Box display="flex" gap={2} alignItems="center">
@@ -234,12 +293,12 @@ export const MTProtoMonitoringPage: React.FC = () => {
                 color="primary"
               />
             }
-            label="Auto-refresh"
+            label="Live updates"
           />
           <Button
             variant="outlined"
             startIcon={<Refresh />}
-            onClick={fetchMonitoringData}
+            onClick={() => fetchMonitoringData(false)}
           >
             Refresh
           </Button>
@@ -430,18 +489,30 @@ export const MTProtoMonitoringPage: React.FC = () => {
                     Running for: <strong>{formatTimeAgo(data.worker_status.collection_start_time)}</strong>
                   </Typography>
                 )}
-                <Typography variant="body2" gutterBottom>
-                  Progress: <strong>{data.worker_status.channels_processed} / {data.worker_status.channels_total}</strong> channels
-                  {' '}({((data.worker_status.channels_processed / data.worker_status.channels_total) * 100).toFixed(0)}%)
-                </Typography>
-                <LinearProgress
-                  variant="determinate"
-                  value={(data.worker_status.channels_processed / data.worker_status.channels_total) * 100}
-                  sx={{ my: 1, height: 6, borderRadius: 1 }}
-                />
+                {/* Only show progress if we have valid channel counts */}
+                {data.worker_status.channels_total > 0 ? (
+                  <>
+                    <Typography variant="body2" gutterBottom>
+                      Progress: <strong>{data.worker_status.channels_processed || 0} / {data.worker_status.channels_total}</strong> channels
+                      {' '}({((data.worker_status.channels_processed || 0) / data.worker_status.channels_total * 100).toFixed(0)}%)
+                    </Typography>
+                    <LinearProgress
+                      variant="determinate"
+                      value={((data.worker_status.channels_processed || 0) / data.worker_status.channels_total) * 100}
+                      sx={{ my: 1, height: 6, borderRadius: 1 }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Typography variant="body2" gutterBottom color="text.secondary">
+                      Progress: <strong>Initializing...</strong>
+                    </Typography>
+                    <LinearProgress sx={{ my: 1, height: 6, borderRadius: 1 }} />
+                  </>
+                )}
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Typography variant="caption" color="text.secondary">
-                    Messages collected: {data.worker_status.messages_collected_current_run}
+                    Messages collected: {data.worker_status.messages_collected_current_run || 0}
                     {data.worker_status.errors_current_run > 0 && (
                       <span style={{ color: '#f44336', marginLeft: 8 }}>
                         • Errors: {data.worker_status.errors_current_run}

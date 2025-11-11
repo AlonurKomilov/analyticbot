@@ -1,0 +1,14 @@
+[Unit]
+Description=AnalyticBot Orphaned Process Cleanup Service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/abcdeveloper/projects/analyticbot/scripts/cleanup_orphaned_processes.sh
+User=abcdeveloper
+Group=abcdeveloper
+StandardOutput=append:/var/log/analyticbot_cleanup.log
+StandardError=append:/var/log/analyticbot_cleanup.log
+
+[Install]
+WantedBy=multi-user.target

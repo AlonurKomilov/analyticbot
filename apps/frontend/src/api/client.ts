@@ -243,18 +243,23 @@ export class UnifiedApiClient {
     }, requestTimeout);
 
     try {
-      // Construct full URL with query parameters
+      // Construct full URL and append query params (if any)
       let url = this.config.baseURL ? `${this.config.baseURL}${endpoint}` : endpoint;
-
-      // Append query parameters if provided
-      if (options.params && Object.keys(options.params).length > 0) {
-        const queryString = new URLSearchParams(
-          Object.entries(options.params).reduce((acc, [key, value]) => {
-            acc[key] = String(value);
-            return acc;
-          }, {} as Record<string, string>)
-        ).toString();
-        url = `${url}?${queryString}`;
+      // Support options.params (query parameters) similar to axios
+      if (options.params && typeof options.params === 'object') {
+        const searchParams = new URLSearchParams();
+        for (const [k, v] of Object.entries(options.params)) {
+          if (v === undefined || v === null) continue;
+          if (Array.isArray(v)) {
+            v.forEach(item => searchParams.append(k, String(item)));
+          } else {
+            searchParams.append(k, String(v));
+          }
+        }
+        const qs = searchParams.toString();
+        if (qs) {
+          url = `${url}${url.includes('?') ? '&' : '?'}${qs}`;
+        }
       }
 
       if (import.meta.env.DEV) {

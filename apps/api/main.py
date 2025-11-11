@@ -377,6 +377,7 @@ from apps.api.routers.analytics_alerts_router import router as analytics_alerts_
 from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
 from apps.api.routers.analytics_post_dynamics_router import router as analytics_post_dynamics_router
+from apps.api.routers.analytics_top_posts_router import router as analytics_top_posts_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
 from apps.api.routers.insights_orchestration_router import router as insights_orchestration_router
 from apps.api.routers.insights_predictive import router as insights_predictive_router
@@ -394,7 +395,10 @@ app.include_router(
 app.include_router(analytics_alerts_router, prefix="/analytics/alerts", tags=["Analytics - Alerts"])
 app.include_router(
     analytics_post_dynamics_router, prefix="/analytics/posts/dynamics", tags=["Analytics - Posts"]
-)  # Better hierarchy
+)  # Post view dynamics and time-series
+app.include_router(
+    analytics_top_posts_router, prefix="/analytics/posts", tags=["Analytics - Top Posts"]
+)  # Top performing posts rankings
 app.include_router(
     statistics_core_router, prefix="/analytics/historical", tags=["Analytics - Historical"]
 )  # Renamed from /statistics/core

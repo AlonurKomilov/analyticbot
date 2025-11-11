@@ -107,7 +107,8 @@ async def get_all_posts(
         logger.info(f"Current user ID: {current_user['id']}")
 
         # Build query based on filters
-        where_clause = "WHERE p.channel_id IN (SELECT id FROM channels WHERE user_id = $1)"
+        # Exclude deleted messages by default
+        where_clause = "WHERE p.channel_id IN (SELECT id FROM channels WHERE user_id = $1) AND p.is_deleted = FALSE"
         params: list[Any] = [current_user["id"]]
 
         if channel_id:

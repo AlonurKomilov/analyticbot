@@ -30,7 +30,8 @@ import {
     TextField,
     CircularProgress,
     Tooltip,
-    Divider
+    Divider,
+    Skeleton
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -39,17 +40,49 @@ import {
     Refresh as RefreshIcon,
     Tv as ChannelIcon,
     TrendingUp as TrendingUpIcon,
-    Info as InfoIcon
+    Info as InfoIcon,
+    People as PeopleIcon,
+    Article as ArticleIcon,
+    Visibility as VisibilityIcon,
+    CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { ChannelMTProtoToggle } from '@/features/mtproto-setup/components/ChannelMTProtoToggle';
 import { useChannelStore } from '@store';
 import { Channel } from '@/types';
+import { apiClient } from '@/api/client';
 
 interface ChannelFormData {
     name: string;
     description: string;
     username: string;
     telegram_id: string;  // Store as string for input, convert to number later
+}
+
+interface ChannelStats {
+    id: number;
+    name: string;
+    username: string | null;
+    subscriber_count: number;
+    post_count: number;
+    total_views: number;
+    avg_views_per_post: number;
+    latest_post_date: string | null;
+    is_active: boolean;
+    created_at: string;
+}
+
+interface AggregateStats {
+    total_channels: number;
+    total_subscribers: number;
+    total_posts: number;
+    total_views: number;
+    active_channels: number;
+    avg_views_per_post: number;
+}
+
+interface StatisticsResponse {
+    aggregate: AggregateStats;
+    channels: ChannelStats[];
 }
 
 const ChannelsManagementPage: React.FC = () => {
@@ -59,6 +92,10 @@ const ChannelsManagementPage: React.FC = () => {
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+
+    // Statistics state
+    const [statistics, setStatistics] = useState<StatisticsResponse | null>(null);
+    const [statsLoading, setStatsLoading] = useState(true);
 
     const [formData, setFormData] = useState<ChannelFormData>({
         name: '',
@@ -72,7 +109,28 @@ const ChannelsManagementPage: React.FC = () => {
     // Load channels on mount
     useEffect(() => {
         fetchChannels();
+        fetchStatistics();
     }, [fetchChannels]);
+
+    // Fetch statistics
+    const fetchStatistics = async () => {
+        setStatsLoading(true);
+        try {
+            const response = await apiClient.get('/channels/statistics/overview');
+            setStatistics(response as StatisticsResponse);
+        } catch (err: any) {
+            console.error('Failed to fetch statistics:', err);
+            // Statistics error is not critical - just log it
+        } finally {
+            setStatsLoading(false);
+        }
+    };
+
+    // Refresh both channels and statistics
+    const handleRefresh = () => {
+        fetchChannels();
+        fetchStatistics();
+    };
 
     // Handle create dialog
     const handleOpenCreate = () => {
@@ -189,10 +247,10 @@ const ChannelsManagementPage: React.FC = () => {
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Tooltip title="Refresh channels">
+                        <Tooltip title="Refresh channels and statistics">
                             <span>
-                                <IconButton onClick={fetchChannels} disabled={isLoading}>
-                                    {isLoading ? <CircularProgress size={24} /> : <RefreshIcon />}
+                                <IconButton onClick={handleRefresh} disabled={isLoading || statsLoading}>
+                                    {(isLoading || statsLoading) ? <CircularProgress size={24} /> : <RefreshIcon />}
                                 </IconButton>
                             </span>
                         </Tooltip>
@@ -208,6 +266,136 @@ const ChannelsManagementPage: React.FC = () => {
                 </Box>
                 <Divider />
             </Box>
+
+            {/* Statistics Overview Cards */}
+            {statsLoading ? (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {[1, 2, 3, 4].map((i) => (
+                        <Grid item xs={12} sm={6} md={3} key={i}>
+                            <Card elevation={2}>
+                                <CardContent>
+                                    <Skeleton variant="text" width="60%" height={24} />
+                                    <Skeleton variant="text" width="80%" height={48} sx={{ mt: 1 }} />
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            ) : statistics ? (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                    {/* Total Channels */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card
+                            elevation={2}
+                            sx={{
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-4px)' }
+                            }}
+                        >
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography variant="h6" fontWeight={600}>
+                                        Total Channels
+                                    </Typography>
+                                    <ChannelIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                                <Typography variant="h3" fontWeight={700}>
+                                    {statistics.aggregate.total_channels}
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    {statistics.aggregate.active_channels} active
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Total Subscribers */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card
+                            elevation={2}
+                            sx={{
+                                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                color: 'white',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-4px)' }
+                            }}
+                        >
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography variant="h6" fontWeight={600}>
+                                        Total Subscribers
+                                    </Typography>
+                                    <PeopleIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                                <Typography variant="h3" fontWeight={700}>
+                                    {statistics.aggregate.total_subscribers.toLocaleString()}
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    Across all channels
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Total Posts */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card
+                            elevation={2}
+                            sx={{
+                                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                                color: 'white',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-4px)' }
+                            }}
+                        >
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography variant="h6" fontWeight={600}>
+                                        Total Posts
+                                    </Typography>
+                                    <ArticleIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                                <Typography variant="h3" fontWeight={700}>
+                                    {statistics.aggregate.total_posts.toLocaleString()}
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    Published content
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Total Views */}
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Card
+                            elevation={2}
+                            sx={{
+                                background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                                color: 'white',
+                                transition: 'transform 0.2s',
+                                '&:hover': { transform: 'translateY(-4px)' }
+                            }}
+                        >
+                            <CardContent>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Typography variant="h6" fontWeight={600}>
+                                        Total Views
+                                    </Typography>
+                                    <VisibilityIcon sx={{ fontSize: 40, opacity: 0.8 }} />
+                                </Box>
+                                <Typography variant="h3" fontWeight={700}>
+                                    {statistics.aggregate.total_views.toLocaleString()}
+                                </Typography>
+                                <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
+                                    Avg {statistics.aggregate.avg_views_per_post.toLocaleString()} per post
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            ) : null}
 
             {/* Error Display */}
             {error && (
@@ -287,18 +475,88 @@ const ChannelsManagementPage: React.FC = () => {
                                         )}
                                     </Box>
 
-                                    {/* Channel Stats (if available) */}
-                                    {channel.metrics && (
-                                        <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.50', borderRadius: 1 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <TrendingUpIcon sx={{ fontSize: 16, color: 'success.main' }} />
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {channel.metrics.totalPosts || 0} posts
-                                                    {channel.metrics.totalViews && ` • ${channel.metrics.totalViews} views`}
-                                                </Typography>
+                                    {/* Enhanced Channel Statistics */}
+                                    {(() => {
+                                        const channelStats = statistics?.channels.find(s => s.id === Number(channel.id));
+                                        if (!channelStats) {
+                                            return (
+                                                <Box sx={{ mt: 2, p: 1.5, bgcolor: 'grey.100', borderRadius: 1 }}>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        No statistics available yet
+                                                    </Typography>
+                                                </Box>
+                                            );
+                                        }
+
+                                        return (
+                                            <Box sx={{ mt: 2 }}>
+                                                {/* Statistics Grid */}
+                                                <Grid container spacing={1}>
+                                                    {/* Subscribers */}
+                                                    <Grid item xs={6}>
+                                                        <Paper sx={{ p: 1.5, bgcolor: 'primary.50', textAlign: 'center' }}>
+                                                            <PeopleIcon sx={{ fontSize: 20, color: 'primary.main', mb: 0.5 }} />
+                                                            <Typography variant="h6" fontWeight={700} color="primary.main">
+                                                                {channelStats.subscriber_count.toLocaleString()}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                Subscribers
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+
+                                                    {/* Posts */}
+                                                    <Grid item xs={6}>
+                                                        <Paper sx={{ p: 1.5, bgcolor: 'info.50', textAlign: 'center' }}>
+                                                            <ArticleIcon sx={{ fontSize: 20, color: 'info.main', mb: 0.5 }} />
+                                                            <Typography variant="h6" fontWeight={700} color="info.main">
+                                                                {channelStats.post_count.toLocaleString()}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                Posts
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+
+                                                    {/* Total Views */}
+                                                    <Grid item xs={6}>
+                                                        <Paper sx={{ p: 1.5, bgcolor: 'success.50', textAlign: 'center' }}>
+                                                            <VisibilityIcon sx={{ fontSize: 20, color: 'success.main', mb: 0.5 }} />
+                                                            <Typography variant="h6" fontWeight={700} color="success.main">
+                                                                {channelStats.total_views.toLocaleString()}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                Total Views
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+
+                                                    {/* Avg Views */}
+                                                    <Grid item xs={6}>
+                                                        <Paper sx={{ p: 1.5, bgcolor: 'warning.50', textAlign: 'center' }}>
+                                                            <TrendingUpIcon sx={{ fontSize: 20, color: 'warning.main', mb: 0.5 }} />
+                                                            <Typography variant="h6" fontWeight={700} color="warning.main">
+                                                                {channelStats.avg_views_per_post.toLocaleString()}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                Avg Views
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                </Grid>
+
+                                                {/* Latest Post Date */}
+                                                {channelStats.latest_post_date && (
+                                                    <Box sx={{ mt: 1.5, p: 1, bgcolor: 'grey.50', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main' }} />
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Latest post: {new Date(channelStats.latest_post_date).toLocaleDateString()}
+                                                        </Typography>
+                                                    </Box>
+                                                )}
                                             </Box>
-                                        </Box>
-                                    )}
+                                        );
+                                    })()}
                                 </CardContent>
 
                                 <Divider />

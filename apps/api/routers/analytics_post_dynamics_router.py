@@ -4,7 +4,7 @@ Handles post view dynamics and time-series analytics for posts
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
@@ -157,13 +157,31 @@ async def get_post_dynamics(
             # Minute-level drill-down for specific hour
             from_date = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
             to_date = datetime.fromisoformat(end_time.replace("Z", "+00:00"))
+
+            # Ensure timezone-aware (should already be, but safety check)
+            if from_date.tzinfo is None:
+                from_date = from_date.replace(tzinfo=UTC)
+            if to_date.tzinfo is None:
+                to_date = to_date.replace(tzinfo=UTC)
+
             period = "minute_drill_down"
         elif start_date and end_date:
             # Custom date range for day drill-down (hourly breakdown)
+            # Parse date and ensure it has timezone (assume UTC if not provided)
             from_date = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
             to_date = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
-            # Set to end of the day (23:59:59)
-            to_date = to_date.replace(hour=23, minute=59, second=59)
+
+            # If parsed as naive datetime, make it timezone-aware (UTC)
+            if from_date.tzinfo is None:
+                from_date = from_date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=UTC)
+            if to_date.tzinfo is None:
+                to_date = to_date.replace(
+                    hour=23, minute=59, second=59, microsecond=999999, tzinfo=UTC
+                )
+            else:
+                # Set to end of the day (23:59:59)
+                to_date = to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+
             period = "drill_down"
         else:
             from_date, to_date = parse_period(period)
@@ -245,6 +263,7 @@ async def get_post_dynamics(
                 WHERE p.channel_id = $2
                     AND p.date >= $3
                     AND p.date <= $4
+                    AND p.is_deleted = FALSE
                 GROUP BY time_bucket
                 ORDER BY time_bucket ASC
             """
@@ -261,9 +280,8 @@ async def get_post_dynamics(
                     # Get the hour timestamp (asyncpg returns timezone-aware datetime)
                     hour_timestamp = record["time_bucket"]
                     # Create a normalized key (hour only, no minutes/seconds)
-                    hour_key = hour_timestamp.replace(
-                        minute=0, second=0, microsecond=0, tzinfo=None
-                    )
+                    # Keep timezone info to match with generated hours
+                    hour_key = hour_timestamp.replace(minute=0, second=0, microsecond=0)
                     records_dict[hour_key] = {
                         "time_bucket": hour_timestamp,
                         "avg_views": record["avg_views"],
@@ -274,12 +292,9 @@ async def get_post_dynamics(
                     }
 
                 # Generate all 24 hours for the selected date
-                current_hour = from_date.replace(
-                    hour=0, minute=0, second=0, microsecond=0, tzinfo=None
-                )
-                end_hour = from_date.replace(
-                    hour=23, minute=0, second=0, microsecond=0, tzinfo=None
-                )
+                # Keep timezone info to prevent naive/aware datetime mixing
+                current_hour = from_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_hour = from_date.replace(hour=23, minute=0, second=0, microsecond=0)
 
                 records = []
                 while current_hour <= end_hour:
@@ -318,16 +333,20 @@ async def get_post_dynamics(
                     }
 
                 # Generate all 60 minutes for the selected hour
-                current_minute = from_date.replace(second=0, microsecond=0, tzinfo=None)
-                end_minute = to_date.replace(second=0, microsecond=0, tzinfo=None)
+                # IMPORTANT: Keep timezone info to prevent display confusion
+                current_minute = from_date.replace(second=0, microsecond=0)
+                end_minute = to_date.replace(second=0, microsecond=0)
 
                 records = []
                 while current_minute <= end_minute:
-                    if current_minute in records_dict:
+                    # Create normalized key without timezone for lookup
+                    minute_key = current_minute.replace(tzinfo=None)
+                    if minute_key in records_dict:
                         # Use existing record with real data
-                        records.append(records_dict[current_minute])
+                        records.append(records_dict[minute_key])
                     else:
                         # Create zero-filled record for missing minute
+                        # Keep timezone info in time_bucket for correct display
                         records.append(
                             {
                                 "time_bucket": current_minute,
@@ -378,86 +397,3 @@ async def get_post_dynamics(
     except Exception as e:
         logger.error(f"Post dynamics fetch failed for channel {channel_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to fetch post dynamics: {str(e)}")
-
-
-@router.get("/top-posts/{channel_id}")
-async def get_top_posts(
-    channel_id: str,
-    request: Request,
-    period: str = Query(default="today", regex="^(today|week|month)$"),
-    sortBy: str = Query(default="views", regex="^(views|likes|shares|comments)$"),
-    service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
-    cache=Depends(get_cache),
-):
-    """
-    ## 🏆 Top Performing Posts
-
-    Get the top performing posts for a channel based on selected metric.
-
-    **Parameters:**
-    - `channel_id`: Channel identifier
-    - `period`: Time period (today, week, month)
-    - `sortBy`: Sort metric (views, likes, shares, comments)
-
-    **Returns:**
-    - Array of top posts with performance metrics
-    """
-    try:
-        # Generate cache key
-        cache_params = {
-            "channel_id": channel_id,
-            "period": period,
-            "sortBy": sortBy,
-        }
-        cache_key = cache.generate_cache_key("top_posts", cache_params)
-
-        # Try cache first
-        cached_data = await cache.get_json(cache_key)
-        if cached_data:
-            return cached_data
-
-        # Generate mock top posts data
-        import random
-
-        posts = []
-        for i in range(10):
-            post = {
-                "id": f"post_{i+1}",
-                "title": f"Post Title {i+1}",
-                "views": random.randint(500, 5000),
-                "likes": random.randint(50, 500),
-                "shares": random.randint(10, 100),
-                "comments": random.randint(5, 50),
-                "published_at": (
-                    datetime.utcnow() - timedelta(days=random.randint(0, 30))
-                ).isoformat(),
-            }
-            posts.append(post)
-
-        # Sort by selected metric - ensure key returns a comparable numeric value
-        def _sort_key(item: dict[str, object]) -> float:
-            val = item.get(sortBy, 0)
-            if isinstance(val, (int, float)):
-                return float(val)
-            try:
-                return float(val)  # type: ignore[arg-type]
-            except Exception:
-                return 0.0
-
-        posts.sort(key=_sort_key, reverse=True)
-
-        response_data = {
-            "posts": posts,
-            "period": period,
-            "sortBy": sortBy,
-            "total": len(posts),
-        }
-
-        # Cache for 10 minutes
-        await cache.set_json(cache_key, response_data, ttl_s=600)
-
-        return response_data
-
-    except Exception as e:
-        logger.error(f"Top posts fetch failed for channel {channel_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch top posts: {str(e)}")

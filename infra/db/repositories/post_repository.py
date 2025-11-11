@@ -22,6 +22,8 @@ class AsyncpgPostRepository:
         date: datetime,
         text: str = "",
         links_json: list | None = None,
+        is_deleted: bool = False,
+        deleted_at: datetime | None = None,
     ) -> dict[str, Any]:
         """Insert or update a post with UPSERT behavior.
 
@@ -31,6 +33,8 @@ class AsyncpgPostRepository:
             date: Message date
             text: Message text content
             links_json: List of extracted links (ignored for now, table doesn't have links column)
+            is_deleted: Whether the message is deleted
+            deleted_at: When the message was deleted
 
         Returns:
             Dictionary with upsert result information
@@ -42,30 +46,36 @@ class AsyncpgPostRepository:
             )
 
             if existing:
-                # Update existing post
+                # Update existing post - restore if was deleted and now exists again
                 await conn.execute(
                     """
                     UPDATE posts SET
                         text = $3,
+                        is_deleted = $4,
+                        deleted_at = $5,
                         updated_at = NOW()
                     WHERE channel_id = $1 AND msg_id = $2
                     """,
                     channel_id,
                     msg_id,
                     text,
+                    is_deleted,
+                    deleted_at,
                 )
                 return {"inserted": False, "updated": True}
             else:
                 # Insert new post
                 await conn.execute(
                     """
-                    INSERT INTO posts (channel_id, msg_id, date, text, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, NOW(), NOW())
+                    INSERT INTO posts (channel_id, msg_id, date, text, is_deleted, deleted_at, created_at, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
                     """,
                     channel_id,
                     msg_id,
                     date,
                     text,
+                    is_deleted,
+                    deleted_at,
                 )
                 return {"inserted": True, "updated": False}
 

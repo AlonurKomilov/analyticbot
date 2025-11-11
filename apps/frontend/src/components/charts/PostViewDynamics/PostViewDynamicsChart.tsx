@@ -65,7 +65,7 @@ interface SummaryStats {
  */
 const PostViewDynamicsChart: React.FC = () => {
     // Main component state
-    const [timeRange, setTimeRange] = useState<TimeRange>('24h');
+    const [timeRange, setTimeRange] = useState<TimeRange>('90d');  // Default to 90d to show more data
     const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<DataPoint[]>([]);
     const [autoRefresh] = useState<boolean>(true);

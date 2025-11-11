@@ -36,6 +36,136 @@ class HistoryCollector:
         # Get parsers from repos container (provided via DI)
         self.parsers = getattr(repos, "parsers", None)
 
+    async def _detect_and_mark_deleted_messages(
+        self, channel_id: int, fetched_message_ids: list[int]
+    ) -> int:
+        """Detect messages that exist in DB but not in Telegram (deleted messages).
+
+        Mark them as deleted with soft delete (is_deleted=TRUE, deleted_at=NOW).
+
+        Args:
+            channel_id: Channel ID to check
+            fetched_message_ids: List of message IDs that currently exist in Telegram
+
+        Returns:
+            Count of messages marked as deleted
+        """
+        if not fetched_message_ids or not self.user_id:
+            return 0
+
+        try:
+            from apps.di import get_container
+
+            container = get_container()
+            pool = await container.database.asyncpg_pool()
+
+            async with pool.acquire() as conn:
+                # Find messages in DB that weren't in the fetched list and aren't already marked deleted
+                result = await conn.execute(
+                    """
+                    UPDATE posts
+                    SET is_deleted = TRUE,
+                        deleted_at = NOW(),
+                        updated_at = NOW()
+                    WHERE channel_id = $1
+                        AND msg_id NOT IN (SELECT unnest($2::bigint[]))
+                        AND is_deleted = FALSE
+                    """,
+                    abs(channel_id),
+                    fetched_message_ids,
+                )
+
+                # Extract count from result (format: "UPDATE 5")
+                deleted_count = (
+                    int(result.split()[-1]) if result and result.startswith("UPDATE") else 0
+                )
+
+                return deleted_count
+
+        except Exception as e:
+            self.logger.warning(f"Failed to detect deleted messages: {e}")
+            return 0
+
+    async def _log_collection_progress(
+        self,
+        channel_id: int,
+        phase: str,
+        current: int,
+        total: int,
+        session_num: int = None,
+        total_sessions: int = None,
+        messages_in_session: int = None,
+        session_limit: int = None,
+        speed_msgs_per_sec: float = None,
+        eta_seconds: int = None,
+        channel_name: str = None,
+    ):
+        """Log detailed collection progress to audit log for frontend tracking.
+
+        Args:
+            channel_id: Channel being collected
+            phase: Collection phase ('fetching', 'processing', 'complete')
+            current: Current message count
+            total: Total messages expected
+            session_num: Current session number (for multi-session collections)
+            total_sessions: Total sessions needed
+            messages_in_session: Messages collected in current session
+            session_limit: Message limit per session
+            speed_msgs_per_sec: Collection speed
+            eta_seconds: Estimated time to completion
+            channel_name: Optional channel name for display
+        """
+        if not self.user_id:
+            return
+
+        try:
+            from apps.mtproto.audit import log_mtproto_event
+
+            metadata = {
+                "channel_id": channel_id,
+                "phase": phase,
+                "messages_current": current,
+                "messages_total": total,
+                "progress_percent": round((current / total * 100) if total > 0 else 0, 2),
+            }
+
+            # Add channel name if provided
+            if channel_name:
+                metadata["channel_name"] = channel_name
+
+            # Add session tracking if provided
+            if session_num is not None and total_sessions is not None:
+                metadata["session_current"] = session_num
+                metadata["session_total"] = total_sessions
+                metadata["session_progress_percent"] = round(
+                    (session_num / total_sessions * 100) if total_sessions > 0 else 0, 2
+                )
+
+            # Add current session details
+            if messages_in_session is not None and session_limit is not None:
+                metadata["session_messages_current"] = messages_in_session
+                metadata["session_messages_limit"] = session_limit
+                metadata["session_messages_percent"] = round(
+                    (messages_in_session / session_limit * 100) if session_limit > 0 else 0, 2
+                )
+
+            # Add performance metrics
+            if speed_msgs_per_sec is not None:
+                metadata["speed_messages_per_second"] = round(speed_msgs_per_sec, 2)
+
+            if eta_seconds is not None:
+                metadata["eta_seconds"] = eta_seconds
+                metadata["eta_minutes"] = round(eta_seconds / 60, 1)
+
+            await log_mtproto_event(
+                user_id=self.user_id,
+                action="collection_progress_detail",
+                channel_id=channel_id,
+                metadata=metadata,
+            )
+        except Exception as e:
+            self.logger.warning(f"Failed to log progress: {e}")
+
     async def backfill_history_for_peers(
         self, peers: Sequence[str], limit_per_peer: int | None = None
     ) -> dict[str, Any]:
@@ -123,26 +253,97 @@ class HistoryCollector:
 
             self.logger.info(f"Starting full collection for channel {channel_id} (limit={limit})")
 
-            # Collect messages in chunks
-            messages_processed = 0
-            chunk_size = min(200, limit)  # Process in smaller chunks
+            # Get channel name for progress tracking
+            channel_name = f"Channel {channel_id}"
+            try:
+                # Query channel name from database
+                from apps.di import get_container
+
+                container = get_container()
+                pool = await container.database.asyncpg_pool()
+                async with pool.acquire() as conn:
+                    result = await conn.fetchrow(
+                        "SELECT title FROM channels WHERE id = $1", abs(channel_id)
+                    )
+                    if result and result["title"]:
+                        channel_name = result["title"]
+            except Exception as e:
+                self.logger.debug(f"Could not fetch channel name: {e}")
+
+            # Get total message count from channel for better progress tracking
+            # First, let's estimate total messages by checking database
+            try:
+                existing_count = (
+                    await self.repos.post_repo.count_posts_by_channel(channel_id)
+                    if hasattr(self.repos.post_repo, "count_posts_by_channel")
+                    else 0
+                )
+            except:
+                existing_count = 0
+
+            # Estimate sessions needed (limit is per session)
+            estimated_total = max(existing_count, limit)  # Use existing count as baseline
+            estimated_sessions = max(1, (estimated_total + limit - 1) // limit)  # Ceiling division
+            current_session = 1
 
             # Use iter_history to get all messages from newest to oldest
             # Don't use offset_id manipulation - let iter_history handle pagination naturally
             messages = []
             message_count = 0
+            fetch_start_time = datetime.now()
 
-            self.logger.info(f"Fetching up to {limit} messages from Telegram...")
+            self.logger.info(
+                f"📥 Fetching up to {limit:,} messages from Telegram (Session {current_session}/{estimated_sessions})..."
+            )
+
+            # Log initial progress
+            await self._log_collection_progress(
+                channel_id=channel_id,
+                phase="fetching",
+                current=0,
+                total=limit,
+                session_num=current_session,
+                total_sessions=estimated_sessions,
+                messages_in_session=0,
+                session_limit=limit,
+                channel_name=channel_name,
+            )
 
             async for message in self.tg_client.iter_history(peer, limit=limit):  # type: ignore
                 messages.append(message)
                 message_count += 1
 
-                # Log progress every 100 messages
-                if message_count % 100 == 0:
-                    self.logger.info(f"  Fetched {message_count} messages so far...")
+                # Log progress every 500 messages for better granularity
+                if message_count % 500 == 0:
+                    elapsed = (datetime.now() - fetch_start_time).total_seconds()
+                    speed = message_count / elapsed if elapsed > 0 else 0
+                    eta = int((limit - message_count) / speed) if speed > 0 else 0
 
-            self.logger.info(f"✅ Fetched {len(messages)} total messages from Telegram")
+                    self.logger.info(
+                        f"  📊 Fetched {message_count:,}/{limit:,} messages ({message_count/limit*100:.1f}%) - {speed:.1f} msg/s"
+                    )
+
+                    # Log detailed progress
+                    await self._log_collection_progress(
+                        channel_id=channel_id,
+                        phase="fetching",
+                        current=message_count,
+                        total=limit,
+                        session_num=current_session,
+                        total_sessions=estimated_sessions,
+                        messages_in_session=message_count,
+                        session_limit=limit,
+                        speed_msgs_per_sec=speed,
+                        eta_seconds=eta,
+                        channel_name=channel_name,
+                    )
+
+            fetch_duration = (datetime.now() - fetch_start_time).total_seconds()
+            fetch_speed = len(messages) / fetch_duration if fetch_duration > 0 else 0
+
+            self.logger.info(
+                f"✅ Fetched {len(messages):,} total messages in {fetch_duration:.1f}s ({fetch_speed:.1f} msg/s)"
+            )
 
             if not messages:
                 self.logger.info(f"No messages found for peer {peer}")
@@ -151,10 +352,25 @@ class HistoryCollector:
             # Log message ID range
             msg_ids = [m.id for m in messages if hasattr(m, "id")]
             if msg_ids:
-                self.logger.info(f"  Message ID range: {min(msg_ids)} to {max(msg_ids)}")
+                self.logger.info(f"  Message ID range: {min(msg_ids):,} to {max(msg_ids):,}")
 
-            # Process all fetched messages
+            # Process all fetched messages with progress tracking
+            self.logger.info(f"💾 Processing {len(messages):,} messages to database...")
+            process_start_time = datetime.now()
             messages_processed = 0
+            total_to_process = len(messages)
+
+            # Log initial processing progress
+            await self._log_collection_progress(
+                channel_id=channel_id,
+                phase="processing",
+                current=0,
+                total=total_to_process,
+                session_num=current_session,
+                total_sessions=estimated_sessions,
+                channel_name=channel_name,
+            )
+
             for message in messages:
                 try:
                     # Normalize message to dict format using parser from DI
@@ -187,6 +403,11 @@ class HistoryCollector:
                     self.logger.debug(
                         f"Upserting post: channel_id={normalized['post']['channel_id']}, msg_id={normalized['post']['msg_id']}"
                     )
+
+                    # Add is_deleted=FALSE to restore if message was previously marked deleted
+                    normalized["post"]["is_deleted"] = False
+                    normalized["post"]["deleted_at"] = None
+
                     post_result = await self.repos.post_repo.upsert_post(**normalized["post"])
                     self.logger.debug(f"Post upsert result: {post_result}")
 
@@ -203,6 +424,32 @@ class HistoryCollector:
 
                     messages_processed += 1
 
+                    # Log progress every 500 messages during processing
+                    if messages_processed % 500 == 0:
+                        elapsed = (datetime.now() - process_start_time).total_seconds()
+                        speed = messages_processed / elapsed if elapsed > 0 else 0
+                        eta = (
+                            int((total_to_process - messages_processed) / speed) if speed > 0 else 0
+                        )
+
+                        self.logger.info(
+                            f"  💾 Processed {messages_processed:,}/{total_to_process:,} "
+                            f"({messages_processed/total_to_process*100:.1f}%) - {speed:.1f} msg/s"
+                        )
+
+                        # Log detailed processing progress
+                        await self._log_collection_progress(
+                            channel_id=channel_id,
+                            phase="processing",
+                            current=messages_processed,
+                            total=total_to_process,
+                            session_num=current_session,
+                            total_sessions=estimated_sessions,
+                            speed_msgs_per_sec=speed,
+                            eta_seconds=eta,
+                            channel_name=channel_name,
+                        )
+
                     # Rate limiting
                     await asyncio.sleep(self.settings.MTPROTO_SLEEP_THRESHOLD / 1000)
 
@@ -210,6 +457,42 @@ class HistoryCollector:
                     self.logger.error(f"Error processing message in peer {peer}: {e}")
                     peer_stats["errors"] += 1
                     continue
+
+            # Log final processing stats
+            process_duration = (datetime.now() - process_start_time).total_seconds()
+            process_speed = messages_processed / process_duration if process_duration > 0 else 0
+            total_duration = fetch_duration + process_duration
+
+            self.logger.info(
+                f"✅ Processing complete: {messages_processed:,} messages in {process_duration:.1f}s "
+                f"({process_speed:.1f} msg/s)"
+            )
+            self.logger.info(
+                f"📊 Total session time: {total_duration:.1f}s (fetch: {fetch_duration:.1f}s, process: {process_duration:.1f}s)"
+            )
+
+            # Log completion progress
+            await self._log_collection_progress(
+                channel_id=channel_id,
+                phase="complete",
+                current=messages_processed,
+                total=messages_processed,
+                session_num=current_session,
+                total_sessions=estimated_sessions,
+                speed_msgs_per_sec=process_speed,
+                eta_seconds=0,
+                channel_name=channel_name,
+            )
+
+            # Detect deleted messages (soft delete)
+            deleted_count = await self._detect_and_mark_deleted_messages(
+                channel_id=channel_id, fetched_message_ids=msg_ids
+            )
+            if deleted_count > 0:
+                self.logger.info(
+                    f"🗑️ Marked {deleted_count} deleted messages for channel {channel_id}"
+                )
+                peer_stats["deleted"] = deleted_count
 
             self.logger.info(f"Completed peer {peer}: {peer_stats}")
 

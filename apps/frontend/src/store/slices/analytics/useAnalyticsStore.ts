@@ -247,28 +247,45 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         // Use demo endpoint for demo_channel, real endpoint for actual channels
         const endpoint = channelId === 'demo_channel'
           ? '/demo/analytics/top-posts'
-          : `/analytics/posts/dynamics/top-posts/${channelId}`;
+          : `/analytics/posts/top-posts/${channelId}`;  // Updated path to new router
 
-        const topPosts = await apiClient.get<TopPost[]>(endpoint, {
+        const response = await apiClient.get<any[]>(endpoint, {
           params: {
-            channel_id: channelId,
             limit,
-            sort_by: 'views'
+            sort_by: 'views',
+            period: '30d'  // Default to 30 days
           }
         });
 
         // Handle both direct array response and wrapped response
-        const postsData = Array.isArray(topPosts)
-          ? topPosts
-          : (topPosts as any)?.data?.posts || (topPosts as any)?.posts || [];
+        const rawPosts = Array.isArray(response)
+          ? response
+          : (response as any)?.data?.posts || (response as any)?.posts || [];
+
+        // Transform backend response to frontend format
+        // Backend: { msg_id, date, text, views, forwards, replies_count, reactions_count, engagement_rate }
+        // Frontend: { id, content, views, shares, reactions, likes, comments, engagementRate, publishedTime }
+        const transformedPosts = rawPosts.map((post: any) => ({
+          id: post.msg_id || post.id,
+          content: post.text || post.content || '',
+          views: post.views || 0,
+          shares: post.forwards || post.shares || 0,
+          reactions: post.reactions_count || post.reactions || 0,
+          likes: post.reactions_count || post.likes || 0, // Use reactions as likes
+          comments: post.replies_count || post.comments || 0,
+          engagementRate: post.engagement_rate || 0,
+          publishedTime: post.date || post.publishedTime || post.created_at,
+          // Keep original fields for compatibility
+          ...post
+        }));
 
         set({
-          topPosts: postsData,
+          topPosts: transformedPosts,
           lastUpdate: Date.now(),
           isLoadingTopPosts: false
         });
 
-        console.log('✅ Top posts loaded:', postsData?.length || 0);
+        console.log('✅ Top posts loaded:', transformedPosts?.length || 0);
       } catch (error) {
         console.error('❌ Failed to load top posts:', error);
 

@@ -88,17 +88,15 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
 };
 
 /**
- * ChartVisualization - Memoized Recharts line chart component
+ * ChartVisualization - Renders the post dynamics chart using Recharts
  *
- * Renders post view dynamics data using Recharts with responsive design.
- * Heavily optimized for performance with proper memoization to prevent
- * unnecessary re-renders in multi-user dashboard scenarios.
+ * Memoized to prevent unnecessary re-renders in multi-user dashboard scenarios.
  *
  * @param {Object} props - Component props
  * @param {Array} props.data - Chart data array with timestamp and views
- * @param {string} props.timeRange - Current time range for chart formatting
+ * @param {string} props.timeRange - Current time range for chart formatting (unused, kept for API compatibility)
  */
-const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, timeRange, onChartClick }) => {
+const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, onChartClick }) => {
     const theme = useTheme<Theme>();
 
     // Log when component receives click handler

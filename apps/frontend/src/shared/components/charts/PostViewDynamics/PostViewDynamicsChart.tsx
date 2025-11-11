@@ -67,7 +67,7 @@ interface SummaryStats {
  */
 const PostViewDynamicsChart: React.FC = () => {
     // Main component state
-    const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+    const [timeRange, setTimeRange] = useState<TimeRange>('90d');  // Default to 90d to show more historical data
     const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<DataPoint[]>([]);
     const [autoRefresh] = useState<boolean>(true);
@@ -121,23 +121,54 @@ const PostViewDynamicsChart: React.FC = () => {
 
         try {
             const currentTimeRange = timeRangeRef.current;
-            console.log(`📊 Fetching post dynamics for channel: ${channelId}, timeRange: ${currentTimeRange}, drillDownDate: ${drillDownDate}`);
+            console.log(`📊 Fetching post dynamics for channel: ${channelId}, timeRange: ${currentTimeRange}, drillDownDate: ${drillDownDate}, drillDownHour: ${drillDownHour}`);
 
-            // 2-level drill-down logic (minutes removed - no minute-level data available):
-            // 1. If drilling into a specific day, pass start_date/end_date for hourly breakdown
-            // 2. Otherwise, use standard period
+            // 3-level drill-down logic:
+            // 1. If drilling into a specific hour, pass start_time/end_time for minute breakdown
+            // 2. If drilling into a specific day, pass start_date/end_date for hourly breakdown
+            // 3. Otherwise, use standard period
+            const customTimeRange = drillDownHour ? {
+                start_time: drillDownHour,
+                end_time: new Date(new Date(drillDownHour).getTime() + 60 * 60 * 1000 - 1000).toISOString() // +1 hour - 1 second
+            } : undefined;
 
-            const customDateRange = drillDownDate ? {
+            const customDateRange = drillDownDate && !drillDownHour ? {
                 start_date: drillDownDate,
                 end_date: drillDownDate
             } : undefined;
 
-            await fetchPostDynamicsFromStore(channelId, currentTimeRange, customDateRange, undefined);
+            await fetchPostDynamicsFromStore(channelId, currentTimeRange, customDateRange, customTimeRange);
 
             // Get the latest data from store after fetch
             const latestPostDynamics = useAnalyticsStore.getState().postDynamics;
             console.log('📥 PostDynamics: Received data =', latestPostDynamics);
             console.log('📥 PostDynamics: Is array?', Array.isArray(latestPostDynamics));
+
+            // Debug minute-level data to understand time jumps
+            if (drillDownHour && Array.isArray(latestPostDynamics)) {
+                console.log('🕐 MINUTE-LEVEL DEBUG:');
+                console.log('🕐 Total data points:', latestPostDynamics.length);
+                console.log('🕐 First 5 timestamps (UTC):');
+                latestPostDynamics.slice(0, 5).forEach((point, idx) => {
+                    const utc = new Date(point.timestamp);
+                    const local = new Date(point.timestamp).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: true
+                    });
+                    console.log(`🕐   [${idx}] UTC: ${utc.toISOString()} | Local: ${local} | Views: ${point.views}`);
+                });
+                console.log('🕐 Last 5 timestamps:');
+                latestPostDynamics.slice(-5).forEach((point, idx) => {
+                    const utc = new Date(point.timestamp);
+                    const local = new Date(point.timestamp).toLocaleString('en-US', {
+                        month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: true
+                    });
+                    console.log(`🕐   [${latestPostDynamics.length - 5 + idx}] UTC: ${utc.toISOString()} | Local: ${local} | Views: ${point.views}`);
+                });
+            }
 
             // Handle both object and array responses
             let dataArray: DataPoint[] = [];
@@ -174,7 +205,7 @@ const PostViewDynamicsChart: React.FC = () => {
             isLoadingRef.current = false;
             console.log('🔓 PostDynamics: Set isLoadingRef = false');
         }
-    }, [selectedChannel, dataSource, drillDownDate]); // Re-run when drilling down (removed drillDownHour)
+    }, [selectedChannel, dataSource, drillDownDate, drillDownHour]); // Re-run when drilling down
 
     // Handle time range changes with debouncing
     const handleTimeRangeChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
@@ -223,14 +254,20 @@ const PostViewDynamicsChart: React.FC = () => {
         console.log('🎯 Clicked timestamp from activeLabel:', clickedTimestamp);
         const clickedDate = new Date(clickedTimestamp);
 
-        // 2-level drill-down logic (minutes disabled - we don't have minute-level data):
-        // - If in hour view (drillDownDate exists): Already at deepest level, do nothing
+        // 3-level drill-down logic:
+        // - If in minute view (drillDownHour exists): Already at deepest level, do nothing
+        // - If in hour view (drillDownDate exists): Drill into specific hour → minute view
         // - If in day view (90d, 30d, etc): Drill into specific day → hour view
 
-        if (drillDownDate) {
-            // Already showing hours for a specific day, can't drill deeper
-            console.log('⚠️  Already at hour level (deepest available), cannot drill deeper');
+        if (drillDownHour) {
+            // Already showing minutes, can't drill deeper
+            console.log('⚠️  Already at minute level, cannot drill deeper');
             return;
+        } else if (drillDownDate) {
+            // Currently showing hours for a specific day, drill into specific hour
+            const hourTimestamp = clickedDate.toISOString();
+            console.log(`🔍 Drilling into hour: ${hourTimestamp}`);
+            setDrillDownHour(hourTimestamp);
         } else if (timeRange !== '1h' && timeRange !== '6h' && timeRange !== '12h' && timeRange !== '24h') {
             // Currently showing days, drill into specific day
             const dateStr = clickedDate.toISOString().split('T')[0]; // Get YYYY-MM-DD
@@ -239,15 +276,17 @@ const PostViewDynamicsChart: React.FC = () => {
         } else {
             console.log('⚠️  Already in hourly view, not drilling down');
         }
-    }, [timeRange, drillDownDate, drillDownHour]);
-
-    // Handle back navigation from drill-down
+    }, [timeRange, drillDownDate, drillDownHour]);    // Handle back navigation from drill-down
     const handleBackClick = useCallback(() => {
         console.log('⬅️  Navigating back from drill-down');
-        // Only one level of drill-down (day → hour), so always go back to day view
-        setDrillDownDate(null);
-        setDrillDownHour(null);
-    }, []);
+        if (drillDownHour) {
+            // Go back from minute view to hour view
+            setDrillDownHour(null);
+        } else {
+            // Go back from hour view to day view
+            setDrillDownDate(null);
+        }
+    }, [drillDownHour]);
 
     // Initial load when component mounts or when selectedChannel/dataSource changes
     useEffect(() => {
@@ -454,8 +493,8 @@ const PostViewDynamicsChart: React.FC = () => {
                         Post View Dynamics
                     </Typography>
 
-                    {/* Drill-down breadcrumb - 2 levels only (day → hour) */}
-                    {drillDownDate && (
+                    {/* Drill-down breadcrumb - 3 levels: day → hour → minute */}
+                    {(drillDownDate || drillDownHour) && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
                             <Button
                                 size="small"
@@ -463,17 +502,31 @@ const PostViewDynamicsChart: React.FC = () => {
                                 onClick={handleBackClick}
                                 variant="outlined"
                             >
-                                Back to {timeRange} overview
+                                Back to {drillDownHour ? 'hourly view' : `${timeRange} overview`}
                             </Button>
-                            <Chip
-                                label={`Viewing: ${new Date(drillDownDate!).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                })} (Hourly)`}
-                                color="primary"
-                                variant="outlined"
-                            />
+                            {drillDownHour ? (
+                                <Chip
+                                    label={`Viewing: ${new Date(drillDownHour).toLocaleString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                    })} (Minutes)`}
+                                    color="secondary"
+                                    variant="outlined"
+                                />
+                            ) : (
+                                <Chip
+                                    label={`Viewing: ${new Date(drillDownDate!).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })} (Hourly)`}
+                                    color="primary"
+                                    variant="outlined"
+                                />
+                            )}
                         </Box>
                     )}
                 </Box>
@@ -498,11 +551,13 @@ const PostViewDynamicsChart: React.FC = () => {
                 }} />
             )}
 
-            {/* Hint for drill-down discoverability */}
-            {!drillDownDate && chartData && chartData.length > 0 && (
+            {/* Hint for drill-down discoverability - 3 levels: day → hour → minute */}
+            {!drillDownHour && chartData && chartData.length > 0 && (
                 <Box sx={{ mt: 2, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
-                        label="Tip: Click any data point to view hourly breakdown"
+                        label={drillDownDate
+                            ? "Tip: Click any hour to view minute-by-minute breakdown"
+                            : "Tip: Click any data point to view hourly breakdown"}
                         color="primary"
                         variant="outlined"
                         size="small"
@@ -525,7 +580,7 @@ const PostViewDynamicsChart: React.FC = () => {
                     <ChartVisualization
                         data={chartData}
                         timeRange={timeRange}
-                        onChartClick={!drillDownDate ? handleChartClick : undefined}
+                        onChartClick={!drillDownHour ? handleChartClick : undefined}
                     />
                 </>
             )}

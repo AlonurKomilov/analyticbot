@@ -490,12 +490,12 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
             user_id,
         )
 
-        # Get most recent progress event
+        # Get most recent progress event (new detailed format)
         last_progress = await conn.fetchrow(
             """
             SELECT timestamp, metadata, channel_id
             FROM mtproto_audit_log
-            WHERE user_id = $1 AND action = 'collection_progress'
+            WHERE user_id = $1 AND action = 'collection_progress_detail'
             ORDER BY timestamp DESC
             LIMIT 1
             """,
@@ -562,34 +562,45 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
             start_metadata.get("total_channels", 0) if isinstance(start_metadata, dict) else 0
         )
 
-        # Get progress from most recent progress event
+        # Get progress from most recent detailed progress event
         if last_progress and last_progress["timestamp"] > last_start["timestamp"]:
             progress_metadata = last_progress["metadata"] if last_progress["metadata"] else {}
-            channels_processed = (
-                progress_metadata.get("channels_processed", 0)
-                if isinstance(progress_metadata, dict)
-                else 0
-            )
-            current_channel = (
-                progress_metadata.get("channel_name")
-                if isinstance(progress_metadata, dict)
-                else None
-            )
-            messages_collected_current_run = (
-                progress_metadata.get("messages_collected", 0)
-                if isinstance(progress_metadata, dict)
-                else 0
-            )
-            errors_current_run = (
-                progress_metadata.get("errors", 0) if isinstance(progress_metadata, dict) else 0
-            )
 
-            # Estimate time remaining based on progress
-            if channels_total > 0 and channels_processed > 0:
-                elapsed_seconds = (now - collection_start_time).total_seconds()
-                avg_seconds_per_channel = elapsed_seconds / channels_processed
-                remaining_channels = channels_total - channels_processed
-                estimated_time_remaining = int(avg_seconds_per_channel * remaining_channels)
+            if isinstance(progress_metadata, dict):
+                # Use new detailed progress format
+                current_channel = progress_metadata.get("channel_name")
+
+                # If no channel name in metadata, get it from channel_id
+                if not current_channel and last_progress.get("channel_id"):
+                    channel_row = await conn.fetchrow(
+                        "SELECT title FROM channels WHERE id = $1", abs(last_progress["channel_id"])
+                    )
+                    if channel_row:
+                        current_channel = channel_row["title"]
+
+                # Calculate channels processed from progress (we have 1 channel in this case)
+                channels_processed = (
+                    1
+                    if progress_metadata.get("phase") in ["fetching", "processing", "complete"]
+                    else 0
+                )
+
+                # Get messages from detailed progress
+                messages_collected_current_run = progress_metadata.get("messages_current", 0)
+
+                # Get errors if available
+                errors_current_run = progress_metadata.get("errors", 0)
+
+                # Calculate ETA from progress
+                eta_seconds = progress_metadata.get("eta_seconds")
+                if eta_seconds:
+                    estimated_time_remaining = int(eta_seconds)
+                elif channels_total > 0 and channels_processed > 0:
+                    # Fallback to old calculation
+                    elapsed_seconds = (now - collection_start_time).total_seconds()
+                    avg_seconds_per_channel = elapsed_seconds / channels_processed
+                    remaining_channels = channels_total - channels_processed
+                    estimated_time_remaining = int(avg_seconds_per_channel * remaining_channels)
 
     # Calculate last_run and next_run
     if last_end:

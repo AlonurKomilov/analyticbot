@@ -1,0 +1,11 @@
+[Unit]
+Description=Run AnalyticBot cleanup every hour
+Requires=analyticbot-cleanup.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Unit=analyticbot-cleanup.service
+
+[Install]
+WantedBy=timers.target

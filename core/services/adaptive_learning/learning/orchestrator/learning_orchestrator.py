@@ -12,7 +12,9 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from core.services.adaptive_learning.learning.context.context_manager import ContextManager
+from core.services.adaptive_learning.learning.context.context_manager import (
+    ContextManager,
+)
 from core.services.adaptive_learning.learning.data.data_processor import DataProcessor
 from core.services.adaptive_learning.learning.memory.memory_manager import MemoryManager
 from core.services.adaptive_learning.learning.model.model_operator import ModelOperator
@@ -21,7 +23,9 @@ from core.services.adaptive_learning.learning.models import (
     MemoryBuffer,
     ModelEvaluation,
 )
-from core.services.adaptive_learning.learning.strategy.learning_strategy import LearningStrategy
+from core.services.adaptive_learning.learning.strategy.learning_strategy import (
+    LearningStrategy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -339,7 +343,10 @@ class LearningOrchestrator:
     # Backwards compatibility methods
 
     async def learn_incrementally(
-        self, new_data: list[dict[str, Any]], model: Any = None, learning_rate: float | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        model: Any = None,
+        learning_rate: float | None = None,
     ) -> dict[str, Any]:
         """Legacy method for backwards compatibility."""
         learning_context = {"learning_rate": learning_rate} if learning_rate else {}

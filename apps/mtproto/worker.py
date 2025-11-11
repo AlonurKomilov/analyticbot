@@ -7,7 +7,7 @@ for all users with MTProto enabled.
 
 Usage:
     python -m apps.mtproto.worker [options]
-    
+
 Options:
     --interval MINUTES    Collection interval in minutes (default: 10)
     --once               Run collection once and exit

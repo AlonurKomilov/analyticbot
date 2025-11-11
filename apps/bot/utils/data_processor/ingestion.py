@@ -11,7 +11,7 @@ from .base import aiofiles, create_engine, io, json, logger, pd, requests
 class DataIngestionMixin:
     """
     Mixin class providing data ingestion capabilities.
-    
+
     Supports ingestion from:
     - CSV files
     - JSON files and URLs
@@ -169,6 +169,7 @@ class DataIngestionMixin:
 
 # Utility functions
 
+
 def detect_source_type(source: str) -> str:
     """Auto-detect source type from file extension or URL pattern"""
     if source.startswith("http"):
@@ -198,7 +199,6 @@ def auto_detect_types(df: pd.DataFrame) -> pd.DataFrame:
                 continue
             except Exception as e:
                 logger.debug(f"Failed to convert column {col} to datetime: {e}")
-                pass
 
             # Try numeric
             try:
@@ -206,7 +206,6 @@ def auto_detect_types(df: pd.DataFrame) -> pd.DataFrame:
                 continue
             except Exception as e:
                 logger.debug(f"Failed to convert column {col} to numeric: {e}")
-                pass
 
     return df
 

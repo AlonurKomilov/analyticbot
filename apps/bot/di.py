@@ -32,9 +32,7 @@ from typing import Any
 from dependency_injector import containers, providers
 
 from apps.bot.config import Settings as BotSettings
-from apps.di import (  # noqa: E402
-    get_container as get_unified_container,
-)
+from apps.di import get_container as get_unified_container  # noqa: E402
 
 # Emit deprecation warning when module is imported
 warnings.warn(
@@ -84,11 +82,15 @@ async def _create_extended_repository(repo_type: str) -> Any:
 
             return AsyncpgPlanRepository(connection)
         elif repo_type == "schedule":
-            from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
+            from infra.db.repositories.schedule_repository import (
+                AsyncpgScheduleRepository,
+            )
 
             return AsyncpgScheduleRepository(connection)
         elif repo_type == "payment":
-            from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
+            from infra.db.repositories.payment_repository import (
+                AsyncpgPaymentRepository,
+            )
 
             return AsyncpgPaymentRepository(connection)
         else:
@@ -310,7 +312,9 @@ def _create_ml_service(service_name: str) -> Any | None:
             return None
         elif service_name == "ChurnPredictor":
             # Create ChurnPredictor using the new churn intelligence service
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.churn_intelligence import (
+                ChurnIntelligenceOrchestratorService,
+            )
 
             try:
                 orchestrator = ChurnIntelligenceOrchestratorService()
@@ -439,7 +443,9 @@ class BotContainer(containers.DeclarativeContainer):
     guard_service = providers.Factory(_create_guard_service, user_repository=user_repo)
 
     subscription_service = providers.Factory(
-        _create_subscription_service, user_repository=user_repo, plan_repository=plan_repo
+        _create_subscription_service,
+        user_repository=user_repo,
+        plan_repository=plan_repo,
     )
 
     # ✅ NEW: Payment Microservices Architecture
@@ -462,7 +468,9 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     channel_management_service = providers.Factory(
-        _create_channel_management_service, channel_repository=channel_repo, bot=bot_client
+        _create_channel_management_service,
+        channel_repository=channel_repo,
+        bot=bot_client,
     )
 
     # ML Services (optional)

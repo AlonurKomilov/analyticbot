@@ -125,7 +125,8 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
 
     except Exception as e:
         logger.error(
-            f"Error normalizing message {getattr(message, 'id', 'unknown')}: {e}", exc_info=True
+            f"Error normalizing message {getattr(message, 'id', 'unknown')}: {e}",
+            exc_info=True,
         )
         # Return None instead of invalid data with channel_id=0
         # Callers should check for None and skip processing

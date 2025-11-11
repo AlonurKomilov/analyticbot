@@ -118,7 +118,7 @@ class AsyncpgChannelRepository:
         async with self.pool.acquire() as conn:
             # Check if channel already exists
             existing = await conn.fetchrow("SELECT user_id FROM channels WHERE id = $1", channel_id)
-            
+
             if existing:
                 # Update existing channel (don't change user_id)
                 await conn.execute(

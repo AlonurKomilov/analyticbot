@@ -34,7 +34,9 @@ class AsyncpgRepositoryFactory(AbstractRepositoryFactory):
 
     def create_channel_daily_repository(self) -> Any:
         """Create AsyncPG channel daily repository"""
-        from infra.db.repositories.channel_daily_repository import AsyncpgChannelDailyRepository
+        from infra.db.repositories.channel_daily_repository import (
+            AsyncpgChannelDailyRepository,
+        )
 
         return AsyncpgChannelDailyRepository(self.pool)
 
@@ -46,7 +48,9 @@ class AsyncpgRepositoryFactory(AbstractRepositoryFactory):
 
     def create_post_metrics_repository(self) -> Any:
         """Create AsyncPG post metrics repository"""
-        from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
+        from infra.db.repositories.post_metrics_repository import (
+            AsyncpgPostMetricsRepository,
+        )
 
         return AsyncpgPostMetricsRepository(self.pool)
 

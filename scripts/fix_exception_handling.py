@@ -33,7 +33,11 @@ def find_unsafe_exception_handling():
                 for match in matches:
                     line_num = content[: match.start()].count("\n") + 1
                     issues.append(
-                        {"file": str(py_file), "line": line_num, "pattern": match.group()}
+                        {
+                            "file": str(py_file),
+                            "line": line_num,
+                            "pattern": match.group(),
+                        }
                     )
         except Exception:
             continue

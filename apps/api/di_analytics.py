@@ -289,11 +289,10 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
 
         # Initialize cache with error handling
         try:
-            cache_adapter = await init_cache_adapter()
+            await init_cache_adapter()
             logger.info("✅ V2 cache adapter initialized")
         except Exception as cache_error:
             logger.warning(f"V2 cache initialization failed: {cache_error}")
-            cache_adapter = None
 
         # Create Repository Manager and Data Access Service for new architecture
         from core.services.analytics_fusion.infrastructure.data_access import (
@@ -403,17 +402,13 @@ async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
 
 async def get_telethon_client():
     """Get Telethon Telegram client with MTProto configuration"""
-    from infra.tg.telethon_client import TelethonTGClient
     # Import directly from config module to avoid DI container initialization
-    import sys
     import importlib.util
 
+    from infra.tg.telethon_client import TelethonTGClient
+
     # Load MTProtoSettings directly without triggering __init__.py
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "mtproto",
-        "config.py"
-    )
+    config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mtproto", "config.py")
     spec = importlib.util.spec_from_file_location("mtproto_config", config_path)
     if spec and spec.loader:
         mtproto_config = importlib.util.module_from_spec(spec)

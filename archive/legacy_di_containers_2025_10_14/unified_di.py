@@ -202,7 +202,9 @@ def _create_dispatcher():
 async def _create_analytics_batch_processor(**kwargs):
     """Create core analytics batch processor (pure business logic)"""
     try:
-        from core.services.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+        from core.services.analytics.analytics_batch_processor import (
+            AnalyticsBatchProcessor,
+        )
 
         # AnalyticsBatchProcessor doesn't require repository - it's a utility processor
         return AnalyticsBatchProcessor()  # type: ignore
@@ -318,10 +320,12 @@ def _create_payment_orchestrator(payment_repository=None, **kwargs):
             PaymentMethodService,
             PaymentOrchestratorService,
             PaymentProcessingService,
-            WebhookService,
         )
         from infra.services.payment import (
             SubscriptionService as PaymentSubscriptionService,
+        )
+        from infra.services.payment import (
+            WebhookService,
         )
 
         if payment_repository is None:
@@ -425,7 +429,9 @@ def _create_ml_service(service_name: str) -> Any | None:
 
             return create_bot_ml_facade()
         elif service_name == "ChurnPredictor":
-            from core.services.churn_intelligence import ChurnIntelligenceOrchestratorService
+            from core.services.churn_intelligence import (
+                ChurnIntelligenceOrchestratorService,
+            )
 
             try:
                 return ChurnIntelligenceOrchestratorService()

@@ -33,11 +33,9 @@ class TelegramClientAdapter:
 
     async def start(self) -> None:
         """Start client (no-op as client is already started)."""
-        pass
 
     async def stop(self) -> None:
         """Stop client (handled by UserMTProtoClient)."""
-        pass
 
     async def is_connected(self) -> bool:
         """Check if client is connected."""
@@ -402,7 +400,11 @@ class MTProtoDataCollectionService:
             # Try to log the error end state
             try:
                 await self._log_collection_end(
-                    user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
+                    user_id=user_id,
+                    total_messages=0,
+                    channels_synced=0,
+                    total_channels=0,
+                    errors=1,
                 )
             except:
                 pass  # Ignore logging errors during error handling
@@ -544,7 +546,7 @@ class MTProtoDataCollectionService:
 
                 if collection_duration > interval_seconds:
                     logger.warning(
-                        f"⚠️  Collection took {collection_duration/60:.1f}min, "
+                        f"⚠️  Collection took {collection_duration / 60:.1f}min, "
                         f"longer than configured interval of {interval_minutes}min! "
                         f"Collections will run back-to-back with {remaining_wait}s cooldown."
                     )

@@ -49,7 +49,12 @@ class PredictiveWorkflowOrchestratorService:
                 "fallback_sequential": True,
             },
             "workflow_priorities": {
-                "comprehensive": ["contextual", "temporal", "modeling", "cross_channel"],
+                "comprehensive": [
+                    "contextual",
+                    "temporal",
+                    "modeling",
+                    "cross_channel",
+                ],
                 "performance_focused": ["temporal", "modeling", "contextual"],
                 "prediction_focused": ["modeling", "temporal", "cross_channel"],
                 "analysis_focused": ["contextual", "cross_channel", "temporal"],
@@ -225,7 +230,11 @@ class PredictiveWorkflowOrchestratorService:
                     temporal_result = {}
 
                 modeling_result = await self.service_executor.execute_predictive_modeling(
-                    request, context, contextual_result, temporal_result, workflow_id
+                    request,
+                    context,
+                    contextual_result,
+                    temporal_result,
+                    workflow_id,
                 )
                 independent_results["modeling"] = modeling_result
                 if workflow_id in self.active_workflows:
@@ -288,7 +297,11 @@ class PredictiveWorkflowOrchestratorService:
                         temporal_result = {}
 
                     result = await self.service_executor.execute_predictive_modeling(
-                        request, context, contextual_result, temporal_result, workflow_id
+                        request,
+                        context,
+                        contextual_result,
+                        temporal_result,
+                        workflow_id,
                     )
                     results["modeling"] = result
 

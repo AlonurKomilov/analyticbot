@@ -71,7 +71,8 @@ async def get_top_posts(
     request: Request,
     period: str = Query(default="30d", regex="^(today|7d|30d|90d|all)$"),
     sort_by: str = Query(
-        default="views", regex="^(views|forwards|replies_count|reactions_count|engagement_rate)$"
+        default="views",
+        regex="^(views|forwards|replies_count|reactions_count|engagement_rate)$",
     ),
     limit: int = Query(default=10, ge=1, le=50),
     service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
@@ -204,13 +205,14 @@ async def get_top_posts(
             post_data = TopPostMetrics(
                 msg_id=record["msg_id"],
                 date=record["date"].isoformat() if record["date"] else "",
-                text=record["text"][:200] if record["text"] else "",  # Truncate for API response
+                text=(record["text"][:200] if record["text"] else ""),  # Truncate for API response
                 views=record["views"] or 0,
                 forwards=record["forwards"] or 0,
                 replies_count=record["replies_count"] or 0,
                 reactions_count=record["reactions_count"] or 0,
                 engagement_rate=round(
-                    float(record["engagement_rate"]) if record["engagement_rate"] else 0, 2
+                    (float(record["engagement_rate"]) if record["engagement_rate"] else 0),
+                    2,
                 ),
             )
             top_posts.append(post_data)

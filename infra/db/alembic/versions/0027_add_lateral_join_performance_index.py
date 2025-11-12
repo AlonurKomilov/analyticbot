@@ -39,10 +39,12 @@ def upgrade() -> None:
     # - After: Each LATERAL subquery uses index scan + LIMIT 1 (much faster)
     # - Expected improvement: 3-4x faster on posts/analytics APIs
 
-    op.execute("""
+    op.execute(
+        """
         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_post_metrics_lateral_lookup
         ON post_metrics (channel_id, msg_id, snapshot_time DESC);
-    """)
+    """
+    )
 
     # Analyze table to update query planner statistics
     op.execute("ANALYZE post_metrics;")

@@ -33,7 +33,9 @@ __author__ = "Analytics Bot Team"
 try:
     from .orchestrator import AnalyticsOrchestratorService
 except ImportError:
-    from .orchestrator.analytics_orchestrator_service import AnalyticsOrchestratorService
+    from .orchestrator.analytics_orchestrator_service import (
+        AnalyticsOrchestratorService,
+    )
 
 # Individual microservices
 from .core import AnalyticsCoreService
@@ -56,7 +58,9 @@ from .protocols import (
 # Import monitoring and reporting from alerts_fusion (temporary until we create proper services)
 # TODO: Create proper ReportingService and LiveMonitoringService in analytics_fusion
 try:
-    from core.services.alerts_fusion.live_monitoring_service import LiveMonitoringService
+    from core.services.alerts_fusion.live_monitoring_service import (
+        LiveMonitoringService,
+    )
 except ImportError:
     LiveMonitoringService = None  # type: ignore
 

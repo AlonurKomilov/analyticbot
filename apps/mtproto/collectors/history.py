@@ -17,7 +17,11 @@ class HistoryCollector:
     """
 
     def __init__(
-        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+        self,
+        tg_client: TGClient,
+        repos: Any,
+        settings: MTProtoSettings,
+        user_id: int | None = None,
     ):
         """Initialize the history collector.
 
@@ -146,7 +150,8 @@ class HistoryCollector:
                 metadata["session_messages_current"] = messages_in_session
                 metadata["session_messages_limit"] = session_limit
                 metadata["session_messages_percent"] = round(
-                    (messages_in_session / session_limit * 100) if session_limit > 0 else 0, 2
+                    ((messages_in_session / session_limit * 100) if session_limit > 0 else 0),
+                    2,
                 )
 
             # Add performance metrics
@@ -180,7 +185,13 @@ class HistoryCollector:
         """
         if not self.settings.MTPROTO_ENABLED or not self.settings.MTPROTO_HISTORY_ENABLED:
             self.logger.info("History collection disabled by feature flags")
-            return {"status": "disabled", "ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
+            return {
+                "status": "disabled",
+                "ingested": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": 0,
+            }
 
         limit_per_peer = limit_per_peer or self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
         stats = {"ingested": 0, "updated": 0, "skipped": 0, "errors": 0}
@@ -249,7 +260,6 @@ class HistoryCollector:
 
             # For full collection, start from the beginning (offset_id=0)
             # iter_history goes from newest to oldest, so offset_id=0 means start from the very newest
-            offset_id = 0
 
             self.logger.info(f"Starting full collection for channel {channel_id} (limit={limit})")
 
@@ -320,7 +330,7 @@ class HistoryCollector:
                     eta = int((limit - message_count) / speed) if speed > 0 else 0
 
                     self.logger.info(
-                        f"  📊 Fetched {message_count:,}/{limit:,} messages ({message_count/limit*100:.1f}%) - {speed:.1f} msg/s"
+                        f"  📊 Fetched {message_count:,}/{limit:,} messages ({message_count / limit * 100:.1f}%) - {speed:.1f} msg/s"
                     )
 
                     # Log detailed progress
@@ -434,7 +444,7 @@ class HistoryCollector:
 
                         self.logger.info(
                             f"  💾 Processed {messages_processed:,}/{total_to_process:,} "
-                            f"({messages_processed/total_to_process*100:.1f}%) - {speed:.1f} msg/s"
+                            f"({messages_processed / total_to_process * 100:.1f}%) - {speed:.1f} msg/s"
                         )
 
                         # Log detailed processing progress
@@ -503,7 +513,10 @@ class HistoryCollector:
         return peer_stats
 
     async def collect_channel_history(
-        self, channel_username: str, limit: int = 100, offset_date: datetime | None = None
+        self,
+        channel_username: str,
+        limit: int = 100,
+        offset_date: datetime | None = None,
     ) -> list[dict[str, Any]]:
         """Legacy method for backward compatibility.
 

@@ -20,7 +20,6 @@ class AnalyticsDataAggregator:
 
     def __init__(self):
         """Initialize data aggregator"""
-        pass
 
     def simple_group_posts(self, posts: list[dict]) -> dict[int, list[dict]]:
         """

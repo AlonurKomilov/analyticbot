@@ -308,7 +308,7 @@ class VersionStorageService:
 
             return {
                 "service": "version_storage",
-                "status": "healthy" if storage_exists and storage_writable else "unhealthy",
+                "status": ("healthy" if storage_exists and storage_writable else "unhealthy"),
                 "storage_path": str(self.storage_path),
                 "storage_exists": storage_exists,
                 "storage_writable": storage_writable,

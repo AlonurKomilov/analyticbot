@@ -210,6 +210,54 @@ class HistoryCollector:
         self.logger.info(f"History backfill complete: {stats}")
         return stats
 
+    async def _update_channel_metadata(self, channel_id: int) -> None:
+        """Update channel metadata (subscriber count, title, etc.) from Telegram.
+
+        Args:
+            channel_id: Telegram channel ID to update
+        """
+        try:
+            self.logger.info(f"📊 Fetching channel metadata for {channel_id}...")
+
+            # Get full channel info from Telegram
+            full_channel_response = await self.tg_client.get_full_channel(channel_id)
+
+            if full_channel_response:
+                # Telethon returns a messages.ChatFull object with full_chat attribute
+                full_chat = getattr(full_channel_response, "full_chat", None)
+                if full_chat:
+                    subscriber_count = getattr(full_chat, "participants_count", 0)
+
+                    self.logger.info(
+                        f"✅ Channel {channel_id} has {subscriber_count:,} subscribers"
+                    )
+
+                    # Update channel in database using repository pool
+                    pool = self.repos.channel_repo.pool
+
+                    async with pool.acquire() as conn:
+                        await conn.execute(
+                            """
+                            UPDATE channels
+                            SET subscriber_count = $1,
+                                updated_at = NOW()
+                            WHERE id = $2
+                            """,
+                            subscriber_count,
+                            abs(channel_id),  # Use absolute value for DB
+                        )
+                    self.logger.info(
+                        f"💾 Updated subscriber_count={subscriber_count:,} in database for channel {abs(channel_id)}"
+                    )
+                else:
+                    self.logger.warning(f"No full_chat data in response for {channel_id}")
+            else:
+                self.logger.warning(f"Could not fetch full channel info for {channel_id}")
+
+        except Exception as e:
+            self.logger.warning(f"Failed to update channel metadata for {channel_id}: {e}")
+            # Don't fail collection if metadata update fails
+
     async def _process_peer_history(self, peer: str | int, limit: int) -> dict[str, int]:
         """Process history for a single peer.
 
@@ -246,6 +294,9 @@ class HistoryCollector:
                 self.logger.error(f"Failed to resolve peer {peer}: {e}")
                 peer_stats["errors"] += 1
                 return peer_stats
+
+            # Update channel metadata (subscriber count, etc.) before collecting messages
+            await self._update_channel_metadata(channel_id)
 
             # For full collection, start from the beginning (offset_id=0)
             # iter_history goes from newest to oldest, so offset_id=0 means start from the very newest

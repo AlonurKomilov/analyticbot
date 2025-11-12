@@ -50,6 +50,7 @@ class PostDynamicsPoint(BaseModel):
     likes: int
     shares: int
     comments: int
+    post_count: int = 0  # Number of posts in this time bucket
 
 
 class PostDynamicsResponse(BaseModel):
@@ -377,6 +378,7 @@ async def get_post_dynamics(
                     likes=record["avg_reactions"] or 0,  # Using reactions as "likes"
                     shares=record["avg_forwards"] or 0,
                     comments=record["avg_replies"] or 0,
+                    post_count=record.get("post_count", 0),
                 )
                 data_points.append(data_point)
 

@@ -3,15 +3,12 @@
  * Consolidates table logic from TopPostsTable.jsx into reusable configuration
  */
 
-import React, { MouseEvent } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
     Chip,
     IconButton,
-    Menu,
-    MenuItem,
-    Avatar,
     Link,
     ChipPropsColorOverrides
 } from '@mui/material';
@@ -23,10 +20,9 @@ import {
     Comment as CommentIcon,
     CalendarToday as CalendarIcon,
     MoreVert as MoreIcon,
-    TrendingUp as TrendingIcon,
-    Image as ImageIcon
+    TrendingUp as TrendingIcon
 } from '@mui/icons-material';
-import { formatNumber, formatDate, calculateEngagementRate } from '@/utils/formatters';
+import { formatNumber, calculateEngagementRate } from '@/utils/formatters';
 
 // ============================================================================
 // Type Definitions
@@ -77,19 +73,17 @@ interface DateCellProps {
 
 interface PostActionsCellProps {
     post: Post;
-    onMenuClick: (event: MouseEvent<HTMLButtonElement>, postId: string | number) => void;
-    anchorEl: HTMLElement | null;
-    selectedPostId: string | number | null;
-    onMenuClose: () => void;
+    onMenuClick: (element: HTMLElement, postId: string | number) => void;
 }
 
 interface TableColumn {
     id: string;
-    label: string;
+    header: string;
     align?: 'left' | 'center' | 'right';
     minWidth?: number;
     sortable?: boolean;
-    renderCell: (value: any, row: Post, index?: number) => React.ReactNode;
+    Cell?: React.ComponentType<{ value: any; row: Post; rowIndex?: number }>;  // Use rowIndex like EnhancedDataTable
+    accessor?: (row: Post) => any;
 }
 
 interface TableConfig {
@@ -111,44 +105,56 @@ interface TableConfig {
 // Post Display Components for Table Cells
 // ============================================================================
 
-export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ post }) => (
-    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: 350 }}>
-        {post.media && post.media.length > 0 && (
-            <Avatar
-                variant="rounded"
-                sx={{ width: 48, height: 48, flexShrink: 0 }}
-                src={post.media[0].url}
-            >
-                <ImageIcon />
-            </Avatar>
-        )}
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography
-                variant="body2"
-                sx={{
-                    fontWeight: 500,
-                    lineHeight: 1.4,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                }}
-            >
-                {post.text || 'No text content'}
-            </Typography>
-            {post.post_url && (
-                <Link
-                    href={post.post_url}
-                    target="_blank"
-                    variant="caption"
-                    sx={{ color: 'primary.main', textDecoration: 'none' }}
+export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ post }) => {
+    // Use msg_id if available, otherwise fall back to id
+    const postId = post.msg_id || post.id;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: 400 }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+                {/* Message ID Badge */}
+                {postId && (
+                    <Chip
+                        label={`#${postId}`}
+                        size="small"
+                        sx={{
+                            mb: 0.5,
+                            fontFamily: 'monospace',
+                            fontSize: '0.75rem'
+                        }}
+                    />
+                )}
+
+                {/* Post Text */}
+                <Typography
+                    variant="body2"
+                    sx={{
+                        fontWeight: 500,
+                        lineHeight: 1.4,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        mt: 0.5
+                    }}
                 >
-                    View Original
-                </Link>
-            )}
+                    {post.text || 'No text content'}
+                </Typography>
+
+                {post.post_url && (
+                    <Link
+                        href={post.post_url}
+                        target="_blank"
+                        variant="caption"
+                        sx={{ color: 'primary.main', textDecoration: 'none', mt: 0.5, display: 'block' }}
+                    >
+                        View Original
+                    </Link>
+                )}
+            </Box>
         </Box>
-    </Box>
-);
+    );
+};
 
 export const MetricCell: React.FC<MetricCellProps> = ({
     value,
@@ -165,7 +171,11 @@ export const MetricCell: React.FC<MetricCellProps> = ({
 );
 
 export const EngagementCell: React.FC<EngagementCellProps> = ({ post }) => {
-    const engagementRate = calculateEngagementRate(post);
+    // Use backend's engagement_rate if available, otherwise calculate
+    const engagementRate = post.engagement_rate !== undefined
+        ? post.engagement_rate
+        : calculateEngagementRate(post);
+
     const getEngagementColor = (rate: number): string => {
         if (rate >= 5) return 'success.main';
         if (rate >= 2) return 'warning.main';
@@ -212,83 +222,103 @@ export const StatusCell: React.FC<StatusCellProps> = ({ post }) => {
     );
 };
 
-export const DateCell: React.FC<DateCellProps> = ({ date }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-        <CalendarIcon fontSize="small" sx={{ color: 'text.secondary' }} />
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {formatDate(date)}
-        </Typography>
-    </Box>
-);
+export const DateCell: React.FC<DateCellProps> = ({ date }) => {
+    // Format date to a more readable format
+    const formatDateReadable = (dateString: string): string => {
+        if (!dateString) return 'Unknown';
+
+        try {
+            const postDate = new Date(dateString);
+            const now = new Date();
+            const diffInHours = (now.getTime() - postDate.getTime()) / (1000 * 60 * 60);
+
+            // If less than 24 hours, show relative time
+            if (diffInHours < 24) {
+                if (diffInHours < 1) {
+                    return `${Math.floor(diffInHours * 60)}m ago`;
+                }
+                return `${Math.floor(diffInHours)}h ago`;
+            }
+
+            // If less than 7 days, show days ago
+            if (diffInHours < 168) {
+                return `${Math.floor(diffInHours / 24)}d ago`;
+            }
+
+            // Otherwise show formatted date: "Jan 15, 2025"
+            return postDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        } catch (e) {
+            return 'Invalid date';
+        }
+    };
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+            <CalendarIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {formatDateReadable(date)}
+            </Typography>
+        </Box>
+    );
+};
 
 export const PostActionsCell: React.FC<PostActionsCellProps> = ({
     post,
-    onMenuClick,
-    anchorEl,
-    selectedPostId,
-    onMenuClose
-}) => (
-    <>
+    onMenuClick
+}) => {
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        event.stopPropagation();
+        // Pass the button element directly, not the event
+        onMenuClick(event.currentTarget as any, post.msg_id || post.id);
+    };
+
+    return (
         <IconButton
             size="small"
-            onClick={(event) => onMenuClick(event, post.id)}
-            aria-label={`Actions for post ${post.id}`}
+            onClick={handleClick}
+            aria-label={`Actions for post ${post.msg_id || post.id}`}
         >
             <MoreIcon />
         </IconButton>
-        <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl) && selectedPostId === post.id}
-            onClose={onMenuClose}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        >
-            <MenuItem onClick={onMenuClose}>View Details</MenuItem>
-            <MenuItem onClick={onMenuClose}>Edit Post</MenuItem>
-            <MenuItem onClick={onMenuClose}>Duplicate</MenuItem>
-            <MenuItem onClick={onMenuClose} sx={{ color: 'error.main' }}>
-                Delete
-            </MenuItem>
-        </Menu>
-    </>
-);
+    );
+};
 
 // ============================================================================
 // Column Configuration for EnhancedDataTable
 // ============================================================================
 
-export const createTopPostsColumns = (
-    anchorEl: HTMLElement | null,
-    selectedPostId: string | number | null,
-    onMenuClick: (event: MouseEvent<HTMLButtonElement>, postId: string | number) => void,
-    onMenuClose: () => void
-): TableColumn[] => [
+export const createTopPostsColumns = (): TableColumn[] => [
     {
         id: 'rank',
-        label: 'Rank',
+        header: 'Rank',
         align: 'center',
         minWidth: 80,
         sortable: false,
-        renderCell: (_value: any, _row: Post, index: number = 0) => (
+        Cell: ({ rowIndex = 0 }: { value: any; row: Post; rowIndex?: number }) => (
             <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                #{index + 1}
+                #{rowIndex + 1}
             </Typography>
         )
     },
     {
         id: 'post',
-        label: 'Post',
-        minWidth: 300,
+        header: 'Post Content',
+        minWidth: 350,
         sortable: false,
-        renderCell: (_value: any, row: Post) => <PostDisplayCell post={row} />
+        Cell: ({ row }: { row: Post }) => <PostDisplayCell post={row} />
     },
     {
         id: 'views',
-        label: 'Views',
+        header: 'Views',
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (_value: any, row: Post) => (
+        Cell: ({ row }: { row: Post }) => (
             <MetricCell
                 value={row.views || 0}
                 icon={ViewsIcon}
@@ -298,13 +328,13 @@ export const createTopPostsColumns = (
     },
     {
         id: 'likes',
-        label: 'Likes',
+        header: 'Reactions',
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (_value: any, row: Post) => (
+        Cell: ({ row }: { row: Post }) => (
             <MetricCell
-                value={row.likes || 0}
+                value={row.reactions_count || row.likes || 0}
                 icon={LikeIcon}
                 color="error.main"
             />
@@ -312,13 +342,13 @@ export const createTopPostsColumns = (
     },
     {
         id: 'shares',
-        label: 'Shares',
+        header: 'Forwards',
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (_value: any, row: Post) => (
+        Cell: ({ row }: { row: Post }) => (
             <MetricCell
-                value={row.shares || 0}
+                value={row.forwards || row.shares || 0}
                 icon={ShareIcon}
                 color="info.main"
             />
@@ -326,13 +356,13 @@ export const createTopPostsColumns = (
     },
     {
         id: 'comments',
-        label: 'Comments',
+        header: 'Replies',
         align: 'center',
         minWidth: 120,
         sortable: true,
-        renderCell: (_value: any, row: Post) => (
+        Cell: ({ row }: { row: Post }) => (
             <MetricCell
-                value={row.comments || 0}
+                value={row.replies_count || row.comments || 0}
                 icon={CommentIcon}
                 color="warning.main"
             />
@@ -340,43 +370,19 @@ export const createTopPostsColumns = (
     },
     {
         id: 'engagement',
-        label: 'Engagement %',
+        header: 'Engagement',
         align: 'center',
         minWidth: 140,
         sortable: true,
-        renderCell: (_value: any, row: Post) => <EngagementCell post={row} />
-    },
-    {
-        id: 'status',
-        label: 'Status',
-        align: 'center',
-        minWidth: 120,
-        sortable: true,
-        renderCell: (_value: any, row: Post) => <StatusCell post={row} />
+        Cell: ({ row }: { row: Post }) => <EngagementCell post={row} />
     },
     {
         id: 'date',
-        label: 'Published',
+        header: 'Date',
         align: 'center',
-        minWidth: 140,
+        minWidth: 160,
         sortable: true,
-        renderCell: (_value: any, row: Post) => <DateCell date={row.date || row.created_at || ''} />
-    },
-    {
-        id: 'actions',
-        label: 'Actions',
-        align: 'center',
-        minWidth: 100,
-        sortable: false,
-        renderCell: (_value: any, row: Post) => (
-            <PostActionsCell
-                post={row}
-                onMenuClick={onMenuClick}
-                anchorEl={anchorEl}
-                selectedPostId={selectedPostId}
-                onMenuClose={onMenuClose}
-            />
-        )
+        Cell: ({ row }: { row: Post }) => <DateCell date={row.date || row.created_at || ''} />
     }
 ];
 

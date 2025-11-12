@@ -11,7 +11,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
-import { generateMockTopPosts } from '@/__mocks__/data/mockTopPosts';
 
 import type {
   AnalyticsOverview,
@@ -61,7 +60,7 @@ interface AnalyticsState {
   fetchGrowthMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchReachMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchPostDynamics: (channelId: string, period?: TimePeriod, customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }) => Promise<void>;
-  fetchTopPosts: (channelId: string, limit?: number) => Promise<void>;
+  fetchTopPosts: (channelId: string, limit?: number, period?: string, sortBy?: string) => Promise<void>;
   fetchEngagementMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchBestTime: (channelId: string) => Promise<void>;
   setPeriod: (period: TimePeriod) => void;
@@ -238,11 +237,11 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch top performing posts
-    fetchTopPosts: async (channelId: string, limit: number = 10) => {
+    fetchTopPosts: async (channelId: string, limit: number = 10, period: string = '30d', sortBy: string = 'views') => {
       set({ isLoadingTopPosts: true, topPostsError: null });
 
       try {
-        console.log('🏆 Fetching top posts for channel:', channelId);
+        console.log('🏆 Fetching top posts for channel:', channelId, 'period:', period, 'sortBy:', sortBy);
 
         // Use demo endpoint for demo_channel, real endpoint for actual channels
         const endpoint = channelId === 'demo_channel'
@@ -252,8 +251,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         const response = await apiClient.get<any[]>(endpoint, {
           params: {
             limit,
-            sort_by: 'views',
-            period: '30d'  // Default to 30 days
+            sort_by: sortBy,
+            period: period
           }
         });
 
@@ -289,17 +288,15 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       } catch (error) {
         console.error('❌ Failed to load top posts:', error);
 
-        // Fallback to client-side mock data when backend unavailable
-        console.info('💡 Using client-side fallback mock data (backend unavailable)');
-        const fallbackPosts = generateMockTopPosts(limit);
-
+        // Set error state so UI can show it
         set({
-          topPosts: fallbackPosts,
-          topPostsError: null, // Clear error since we have fallback data
-          isLoadingTopPosts: false
+          topPostsError: error instanceof Error ? error.message : 'Failed to load top posts',
+          isLoadingTopPosts: false,
+          // Keep existing posts instead of clearing them
+          // topPosts: [] // Don't clear - let UI decide whether to show stale data or error
         });
 
-        console.log('✅ Using fallback data:', fallbackPosts.length, 'posts');
+        console.log('⚠️ Error occurred, keeping existing posts (if any)');
       }
     },
 

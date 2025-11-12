@@ -10,9 +10,9 @@ import {
 } from '@mui/material';
 
 /**
- * Time filter options
+ * Time filter options - aligned with Post Dynamics
  */
-export type TimeFilter = 'today' | 'yesterday' | 'week' | 'month';
+export type TimeFilter = '1h' | '6h' | '24h' | '7d' | '30d' | '90d' | 'all';
 
 /**
  * Sort by options
@@ -74,10 +74,13 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
                     label="Time Period"
                     onChange={handleTimeFilterChange}
                 >
-                    <MenuItem value="today">Today</MenuItem>
-                    <MenuItem value="yesterday">Yesterday</MenuItem>
-                    <MenuItem value="week">This Week</MenuItem>
-                    <MenuItem value="month">This Month</MenuItem>
+                    <MenuItem value="1h">Last Hour</MenuItem>
+                    <MenuItem value="6h">Last 6 Hours</MenuItem>
+                    <MenuItem value="24h">Last 24 Hours</MenuItem>
+                    <MenuItem value="7d">Last 7 Days</MenuItem>
+                    <MenuItem value="30d">Last 30 Days</MenuItem>
+                    <MenuItem value="90d">Last 90 Days</MenuItem>
+                    <MenuItem value="all">All Time</MenuItem>
                 </Select>
             </FormControl>
 

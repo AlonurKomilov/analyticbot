@@ -401,38 +401,62 @@ async def get_stats_raw_repository() -> AsyncpgStatsRawRepository:
     return AsyncpgStatsRawRepository(pool)  # type: ignore
 
 
+# Global Telethon client cache
+_telethon_client_cache = None
+_telethon_client_lock = None
+
+
 async def get_telethon_client():
-    """Get Telethon Telegram client with MTProto configuration"""
-    from infra.tg.telethon_client import TelethonTGClient
-    # Import directly from config module to avoid DI container initialization
-    import sys
-    import importlib.util
+    """Get Telethon Telegram client with MTProto configuration (cached singleton)"""
+    global _telethon_client_cache, _telethon_client_lock
 
-    # Load MTProtoSettings directly without triggering __init__.py
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        "mtproto",
-        "config.py"
-    )
-    spec = importlib.util.spec_from_file_location("mtproto_config", config_path)
-    if spec and spec.loader:
-        mtproto_config = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mtproto_config)
-        MTProtoSettings = mtproto_config.MTProtoSettings
-    else:
-        raise ImportError("Could not load MTProtoSettings")
+    # Use cached client if available
+    if _telethon_client_cache is not None:
+        return _telethon_client_cache
 
-    # Load MTProto settings from environment
-    settings = MTProtoSettings()
+    # Initialize lock if needed
+    if _telethon_client_lock is None:
+        import asyncio
 
-    # Create and return Telethon client
-    client = TelethonTGClient(settings)
+        _telethon_client_lock = asyncio.Lock()
 
-    # Start the client if MTProto is enabled
-    if settings.MTPROTO_ENABLED:
-        await client.start()
+    # Ensure only one client is created (thread-safe)
+    async with _telethon_client_lock:
+        # Double-check after acquiring lock
+        if _telethon_client_cache is not None:
+            return _telethon_client_cache
 
-    return client
+        import importlib.util
+
+        # Import directly from config module to avoid DI container initialization
+        from infra.tg.telethon_client import TelethonTGClient
+
+        # Load MTProtoSettings directly without triggering __init__.py
+        config_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "mtproto", "config.py"
+        )
+        spec = importlib.util.spec_from_file_location("mtproto_config", config_path)
+        if spec and spec.loader:
+            mtproto_config = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mtproto_config)
+            MTProtoSettings = mtproto_config.MTProtoSettings
+        else:
+            raise ImportError("Could not load MTProtoSettings")
+
+        # Load MTProto settings from environment
+        settings = MTProtoSettings()
+
+        # Create Telethon client
+        client = TelethonTGClient(settings)
+
+        # Start the client if MTProto is enabled
+        if settings.MTPROTO_ENABLED:
+            await client.start()
+
+        # Cache the client for reuse
+        _telethon_client_cache = client
+
+        return client
 
 
 async def get_telegram_validation_service():

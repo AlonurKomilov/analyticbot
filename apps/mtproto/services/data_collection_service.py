@@ -15,6 +15,7 @@ from typing import Any
 from apps.di import get_container
 from apps.mtproto.collectors.history import HistoryCollector
 from apps.mtproto.config import MTProtoSettings
+from apps.mtproto.connection_pool import get_connection_pool
 from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
 
 logger = logging.getLogger(__name__)
@@ -80,8 +81,15 @@ class TelegramClientAdapter:
         return await self._client.load_async_graph(token, x)
 
     async def get_full_channel(self, channel: Any) -> Any:
-        """Get full channel information."""
-        return await self._client.get_full_channel(channel)
+        """Get full channel information including participant count."""
+        from telethon.tl.functions.channels import GetFullChannelRequest
+
+        # Resolve entity first
+        entity = await self._client.get_entity(channel)
+
+        # Get full channel info
+        full_channel = await self._client(GetFullChannelRequest(entity))
+        return full_channel
 
     async def get_me(self) -> Any:
         """Get information about the current user."""
@@ -246,6 +254,25 @@ class MTProtoDataCollectionService:
         Returns:
             Dictionary with collection results
         """
+        # Get connection pool
+        pool = get_connection_pool()
+
+        # Try to acquire session (will fail if user already has active session)
+        if not await pool.acquire_session(user_id):
+            logger.warning(f"⏭️  Skipping user {user_id} - already has active collection session")
+            return {
+                "success": False,
+                "user_id": user_id,
+                "reason": "session_already_active",
+                "channels_synced": 0,
+                "total_messages": 0,
+            }
+
+        session_start = datetime.now(UTC)
+        total_messages = 0
+        synced_channels = 0
+        errors = 0
+
         try:
             # Get user's MTProto client
             user_client = await self.user_mtproto_service.get_user_client(user_id)  # type: ignore
@@ -261,6 +288,7 @@ class MTProtoDataCollectionService:
 
             # Connect to Telegram
             await user_client.connect()
+            logger.info(f"🔌 Connected MTProto for user {user_id}")
 
             # Get user's channels from database
             channels = await self.channel_repo.get_user_channels(user_id)
@@ -301,9 +329,7 @@ class MTProtoDataCollectionService:
             # Create collector with adapted client and user_id for multi-tenant ownership
             collector = HistoryCollector(tg_client_adapter, repos, self.settings, user_id=user_id)  # type: ignore
 
-            total_messages = 0
-            synced_channels = 0
-            errors = []
+            error_list = []
 
             # Collect from each channel
             for idx, channel in enumerate(channels):
@@ -355,8 +381,9 @@ class MTProtoDataCollectionService:
 
                 except Exception as e:
                     logger.error(f"  ❌ Error syncing channel {channel_name}: {e}")
-                    errors.append(f"Channel {channel_name}: {str(e)}")
+                    error_list.append(f"Channel {channel_name}: {str(e)}")
                     channel_errors = 1
+                    errors += 1
 
                     # Still log progress even on error
                     if channel_id:
@@ -370,8 +397,9 @@ class MTProtoDataCollectionService:
                             errors=channel_errors,
                         )
 
-            # Disconnect user client
+            # Disconnect user client - AUTO CLOSE after collection
             await user_client.disconnect()
+            logger.info(f"🔌 Disconnected MTProto for user {user_id}")
 
             # Log collection end
             await self._log_collection_end(
@@ -379,26 +407,30 @@ class MTProtoDataCollectionService:
                 total_messages=total_messages,
                 channels_synced=synced_channels,
                 total_channels=len(channels),
-                errors=len(errors),
+                errors=len(error_list),
             )
 
+            session_duration = (datetime.now(UTC) - session_start).total_seconds()
             logger.info(
                 f"✅ User {user_id} collection complete: "
-                f"{synced_channels}/{len(channels)} channels, {total_messages} messages"
+                f"{synced_channels}/{len(channels)} channels, "
+                f"{total_messages} messages in {session_duration:.1f}s"
             )
 
             return {
-                "success": len(errors) < len(channels),
+                "success": len(error_list) < len(channels),
                 "user_id": user_id,
                 "channels_synced": synced_channels,
                 "total_channels": len(channels),
                 "total_messages": total_messages,
-                "errors": errors,
+                "errors": error_list,
                 "sync_time": datetime.now(UTC).isoformat(),
+                "duration_seconds": session_duration,
             }
 
         except Exception as e:
             logger.error(f"❌ Error collecting data for user {user_id}: {e}")
+            errors += 1
             # Try to log the error end state
             try:
                 await self._log_collection_end(
@@ -414,6 +446,15 @@ class MTProtoDataCollectionService:
                 "channels_synced": 0,
                 "total_messages": 0,
             }
+
+        finally:
+            # ALWAYS release session in connection pool
+            await pool.release_session(
+                user_id=user_id,
+                channels_processed=synced_channels,
+                messages_collected=total_messages,
+                errors=errors,
+            )
 
     async def collect_all_users(self, limit_per_channel: int = 50) -> dict:
         """Collect channel history for all users with MTProto enabled.

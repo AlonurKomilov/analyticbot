@@ -49,11 +49,11 @@ def parse_period(period: str) -> tuple[datetime, datetime]:
         from_date = now - timedelta(days=3650)
         return from_date, now
 
-    if period == "today":
-        from_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        return from_date, now
-
+    # Time-based periods
     period_map = {
+        "1h": timedelta(hours=1),
+        "6h": timedelta(hours=6),
+        "24h": timedelta(hours=24),
         "7d": timedelta(days=7),
         "30d": timedelta(days=30),
         "90d": timedelta(days=90),
@@ -69,7 +69,7 @@ def parse_period(period: str) -> tuple[datetime, datetime]:
 async def get_top_posts(
     channel_id: str,
     request: Request,
-    period: str = Query(default="30d", regex="^(today|7d|30d|90d|all)$"),
+    period: str = Query(default="30d", regex="^(1h|6h|24h|7d|30d|90d|all)$"),
     sort_by: str = Query(
         default="views", regex="^(views|forwards|replies_count|reactions_count|engagement_rate)$"
     ),
@@ -84,7 +84,7 @@ async def get_top_posts(
 
     **Parameters:**
     - `channel_id`: Channel identifier
-    - `period`: Time period (today, 7d, 30d, 90d, all)
+    - `period`: Time period (1h, 6h, 24h, 7d, 30d, 90d, all)
     - `sort_by`: Sort metric (views, forwards, replies_count, reactions_count, engagement_rate)
     - `limit`: Number of posts to return (1-50, default 10)
 
@@ -234,7 +234,7 @@ async def get_top_posts(
 async def get_top_posts_summary(
     channel_id: str,
     request: Request,
-    period: str = Query(default="30d", regex="^(today|7d|30d|90d|all)$"),
+    period: str = Query(default="30d", regex="^(1h|6h|24h|7d|30d|90d|all)$"),
     service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
     cache=Depends(get_cache),
 ):
@@ -245,7 +245,7 @@ async def get_top_posts_summary(
 
     **Parameters:**
     - `channel_id`: Channel identifier
-    - `period`: Time period (today, 7d, 30d, 90d, all)
+    - `period`: Time period (1h, 6h, 24h, 7d, 30d, 90d, all)
 
     **Returns:**
     - Aggregated metrics across all top posts

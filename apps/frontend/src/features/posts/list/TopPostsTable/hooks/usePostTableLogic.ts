@@ -22,7 +22,7 @@ interface UsePostTableLogicReturn {
 }
 
 export const usePostTableLogic = (): UsePostTableLogicReturn => {
-    const [timeFilter, setTimeFilter] = useState<string>('today');
+    const [timeFilter, setTimeFilter] = useState<string>('30d');  // Changed default to 30d
     const [sortBy, setSortBy] = useState<string>('views');
     const [error, setError] = useState<string | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
@@ -40,6 +40,25 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
         ? DEFAULT_DEMO_CHANNEL_ID
         : (selectedChannel?.id?.toString() || null);
 
+    // Map frontend filter values to backend period values
+    // Now directly compatible - no mapping needed!
+    const mapTimFilterToPeriod = (filter: string): string => {
+        // Frontend now uses same values as backend: 1h, 6h, 24h, 7d, 30d, 90d, all
+        return filter;
+    };
+
+    // Map frontend sort values to backend sort_by values
+    const mapSortByToBackend = (sort: string): string => {
+        const mapping: Record<string, string> = {
+            'views': 'views',
+            'likes': 'reactions_count',
+            'shares': 'forwards',
+            'comments': 'replies_count',
+            'engagement': 'engagement_rate'
+        };
+        return mapping[sort] || 'views';
+    };
+
     // Load top posts data
     const loadTopPosts = useCallback(async () => {
         // Don't load if no channel selected and not in demo mode
@@ -52,16 +71,22 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
 
         try {
             setError(null);
-            await fetchTopPosts(channelId, 10);
-            setPosts(topPosts || []);
+            const period = mapTimFilterToPeriod(timeFilter);
+            const backendSortBy = mapSortByToBackend(sortBy);
+            await fetchTopPosts(channelId, 10, period, backendSortBy);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
             console.error('Error loading top posts:', err);
-            // Set empty array on error to clear stale data
-            setPosts([]);
         }
-    }, [fetchTopPosts, topPosts, channelId]);
+    }, [fetchTopPosts, channelId, timeFilter, sortBy]); // Removed topPosts from dependencies!
+
+    // Sync topPosts from store to local state
+    useEffect(() => {
+        if (topPosts) {
+            setPosts(topPosts);
+        }
+    }, [topPosts]);
 
     // Load data on mount and when channel/filters change
     useEffect(() => {

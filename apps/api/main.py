@@ -5,6 +5,7 @@ Unified FastAPI application with layered architecture and secure configuration
 
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
@@ -360,6 +361,24 @@ app.add_middleware(
 from apps.demo.middleware import DemoMiddleware
 
 app.add_middleware(DemoMiddleware)
+
+
+# Add root /health endpoint for frontend compatibility (redirects to /health/)
+@app.get("/health", tags=["Core"], include_in_schema=False)
+async def root_health_check():
+    """Root health endpoint - redirects to /health/ for frontend compatibility"""
+    from fastapi.responses import JSONResponse
+
+    # Return same format as /health/ endpoint
+    return JSONResponse(
+        content={
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "analyticbot",
+            "version": "7.5.0",
+        }
+    )
+
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
 app.include_router(system_router)  # Core system operations (performance, scheduling)

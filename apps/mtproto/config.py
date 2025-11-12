@@ -1,4 +1,5 @@
 import os
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -85,6 +86,32 @@ class MTProtoSettings(BaseSettings):
         default=2.5, description="Global requests per second limit across all accounts"
     )
 
+    # Connection Pool Configuration (Auto-Close System)
+    MTPROTO_MAX_CONCURRENT_USERS: int = Field(
+        default=10,
+        description="Maximum concurrent user sessions in MTProto connection pool (system-wide limit)",
+    )
+
+    MTPROTO_MAX_CONNECTIONS_PER_USER: int = Field(
+        default=1,
+        description="Maximum concurrent connections per user (prevents duplicate workers)",
+    )
+
+    MTPROTO_SESSION_TIMEOUT: int = Field(
+        default=600,
+        description="Maximum session duration in seconds before auto-close (10 minutes default)",
+    )
+
+    MTPROTO_CONNECTION_TIMEOUT: int = Field(
+        default=300,
+        description="Connection establishment timeout in seconds (5 minutes default)",
+    )
+
+    MTPROTO_IDLE_TIMEOUT: int = Field(
+        default=180,
+        description="Idle timeout before disconnecting inactive connection (3 minutes default)",
+    )
+
     # Proxy pool configuration (Phase 4.6)
     MTPROTO_PROXIES: list[str] = Field(
         default_factory=list,
@@ -122,6 +149,38 @@ class MTProtoSettings(BaseSettings):
     )
 
     MTPROTO_RETRY_MAX: int = Field(default=5, description="Maximum number of retry attempts")
+
+    # Connection Pool Configuration (Phase 4.6+)
+    MTPROTO_MAX_CONNECTIONS: int = Field(
+        default=10,
+        description="Maximum concurrent MTProto connections system-wide. Increase for larger servers.",
+    )
+
+    MTPROTO_MAX_CONNECTIONS_PER_USER: int = Field(
+        default=1, description="Maximum concurrent connections per user (recommended: 1)"
+    )
+
+    MTPROTO_SESSION_TIMEOUT: int = Field(
+        default=600, description="Session timeout in seconds (auto-close if exceeded)"
+    )
+
+    MTPROTO_CONNECTION_TIMEOUT: int = Field(
+        default=300, description="Connection establishment timeout in seconds"
+    )
+
+    MTPROTO_IDLE_TIMEOUT: int = Field(default=180, description="Idle connection timeout in seconds")
+
+    MTPROTO_CLEANUP_INTERVAL: int = Field(
+        default=300, description="Cleanup task interval in seconds"
+    )
+
+    MTPROTO_DB_POOL_MIN_SIZE: int = Field(
+        default=5, description="Minimum database connection pool size per worker"
+    )
+
+    MTPROTO_DB_POOL_MAX_SIZE: int = Field(
+        default=15, description="Maximum database connection pool size per worker"
+    )
 
     # Observability configuration (Phase 4.6)
     PROMETHEUS_PORT: int = Field(

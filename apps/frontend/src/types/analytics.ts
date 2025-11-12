@@ -68,6 +68,8 @@ export interface PostDynamicsDataPoint {
   forwards?: number;
   reactions?: number;
   engagement?: number;
+  post_count?: number;  // Number of posts in this time bucket
+  postCount?: number;   // Alternative camelCase naming
 }
 
 export interface PostDynamicsData {

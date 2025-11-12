@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Paper, Box, Alert } from '@mui/material';
 import { EnhancedDataTable } from '@shared/components/tables';
 import PostTableFilters from './components/PostTableFilters';
@@ -18,22 +18,8 @@ const TopPostsTable: React.FC = () => {
         setSortBy
     } = usePostTableLogic();
 
-    // Menu state for actions
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedPostId, setSelectedPostId] = useState<string | number | null>(null);
-
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>, postId: string | number) => {
-        setAnchorEl(event.currentTarget);
-        setSelectedPostId(postId);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setSelectedPostId(null);
-    };
-
-    // Create columns with current menu state
-    const columns = createTopPostsColumns(anchorEl, selectedPostId, handleMenuClick, handleMenuClose);
+    // Create columns without menu click handler
+    const columns = createTopPostsColumns();
 
     return (
         <Paper sx={{ p: 3, borderRadius: 2 }}>

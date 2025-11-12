@@ -3,8 +3,18 @@
  */
 
 export interface Post {
-    id?: string | number;
+    // Backend fields (from analytics_top_posts_router.py)
+    msg_id?: number;
+    date?: string;
+    text?: string;
     views?: number;
+    forwards?: number;
+    replies_count?: number;
+    reactions_count?: number;
+    engagement_rate?: number;
+
+    // Legacy fields (for backward compatibility)
+    id?: string | number;
     likes?: number;
     shares?: number;
     comments?: number;
@@ -63,15 +73,24 @@ export const formatDate = (dateString: string | undefined): string => {
 };
 
 // Calculate engagement rate
-export const calculateEngagementRate = (post: Post): string => {
-    const totalEngagement = (post.likes || 0) + (post.shares || 0) + (post.comments || 0);
+export const calculateEngagementRate = (post: Post): number => {
+    // If backend already calculated it, use that value
+    if (post.engagement_rate !== undefined) {
+        return post.engagement_rate;
+    }
+
+    // Otherwise calculate from metrics (supports both old and new field names)
+    const reactions = post.reactions_count || post.likes || 0;
+    const forwards = post.forwards || post.shares || 0;
+    const replies = post.replies_count || post.comments || 0;
+    const totalEngagement = reactions + forwards + replies;
     const views = post.views || 1;
-    return ((totalEngagement / views) * 100).toFixed(1);
+    return (totalEngagement / views) * 100;
 };
 
 // Get performance badge data
 export const getPerformanceBadge = (post: Post): PerformanceBadge => {
-    const engagementRate = parseFloat(calculateEngagementRate(post));
+    const engagementRate = calculateEngagementRate(post);
     const views = post.views || 0;
 
     if (engagementRate > 10 && views > 10000) {
@@ -90,10 +109,10 @@ export const calculateSummaryStats = (posts: Post[] | null | undefined): Summary
     if (!posts || !Array.isArray(posts) || posts.length === 0) return null;
 
     const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
-    const totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
-    const totalShares = posts.reduce((sum, post) => sum + (post.shares || 0), 0);
-    const totalComments = posts.reduce((sum, post) => sum + (post.comments || 0), 0);
-    const avgEngagement = posts.reduce((sum, post) => sum + parseFloat(calculateEngagementRate(post)), 0) / posts.length;
+    const totalLikes = posts.reduce((sum, post) => sum + (post.reactions_count || post.likes || 0), 0);
+    const totalShares = posts.reduce((sum, post) => sum + (post.forwards || post.shares || 0), 0);
+    const totalComments = posts.reduce((sum, post) => sum + (post.replies_count || post.comments || 0), 0);
+    const avgEngagement = posts.reduce((sum, post) => sum + calculateEngagementRate(post), 0) / posts.length;
 
     return {
         totalViews,

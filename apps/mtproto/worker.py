@@ -24,6 +24,11 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from apps.mtproto.connection_pool import (
+    ConnectionPoolConfig,
+    init_connection_pool,
+    shutdown_connection_pool,
+)
 from apps.mtproto.services.data_collection_service import MTProtoDataCollectionService
 
 
@@ -73,8 +78,19 @@ async def main():
     setup_logging(args.log_level)
     logger = logging.getLogger(__name__)
 
-    # Create service
+    # Create service first to get settings
     service = MTProtoDataCollectionService()
+
+    # Initialize connection pool from settings
+    pool_config = ConnectionPoolConfig.from_settings(service.settings)
+    await init_connection_pool(pool_config)
+
+    logger.info(
+        f"✅ MTProto connection pool initialized: "
+        f"max_users={pool_config.MAX_TOTAL_CONNECTIONS}, "
+        f"max_per_user={pool_config.MAX_CONNECTIONS_PER_USER}, "
+        f"session_timeout={pool_config.SESSION_TIMEOUT}s"
+    )
 
     try:
         # Initialize service
@@ -82,10 +98,19 @@ async def main():
 
         if args.status:
             # Show status and exit
+            from apps.mtproto.connection_pool import get_connection_pool
+
             status = await service.get_status()
+            pool_metrics = get_connection_pool().get_metrics_summary()
+
             logger.info("📊 MTProto Service Status:")
             for key, value in status.items():
                 logger.info(f"   {key}: {value}")
+
+            logger.info("📊 Connection Pool Metrics:")
+            for key, value in pool_metrics.items():
+                logger.info(f"   {key}: {value}")
+
             sys.exit(0)
 
         elif args.once:
@@ -140,6 +165,8 @@ async def main():
 
     finally:
         await service.shutdown()
+        await shutdown_connection_pool()
+        logger.info("✅ Shutdown complete")
 
 
 if __name__ == "__main__":

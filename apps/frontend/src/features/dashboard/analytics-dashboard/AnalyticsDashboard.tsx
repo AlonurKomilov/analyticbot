@@ -69,7 +69,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
     // Store integration
     const { setDataSource, dataSource } = useUIStore();
     const { loadChannels, selectedChannel } = useChannelStore() as any;
-    const { clearAnalytics, postDynamics, topPosts } = useAnalyticsStore();
+    const { clearAnalytics, postDynamics } = useAnalyticsStore();
 
     // Determine channel ID based on data source mode
     // 'api' = Real API with real channel, 'demo'/'mock' = Demo mode with demo channel
@@ -90,9 +90,13 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
 
         // Calculate from actual data
         const postsData = Array.isArray(postDynamics) ? postDynamics : [];
-        const totalPosts = topPosts?.length || 0;
 
-        if (postsData.length === 0 && totalPosts === 0) {
+        // Sum up post_count from all time buckets to get total posts
+        const totalPosts = postsData.reduce((sum: number, point: any) =>
+            sum + (point.post_count || point.postCount || 0), 0
+        );
+
+        if (postsData.length === 0) {
             return {
                 totalPosts: '0',
                 averageViews: '0',
@@ -102,14 +106,18 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
         }
 
         const totalViews = postsData.reduce((sum: number, post: any) => sum + (post.views || 0), 0);
-        const avgViews = postsData.length > 0 ? Math.round(totalViews / postsData.length) : 0;
+        const avgViews = totalPosts > 0 ? Math.round(totalViews / totalPosts) : 0;
         const peakViews = Math.max(...postsData.map((post: any) => post.views || 0), 0);
 
-        // Calculate engagement rate from top posts
-        const totalEngagement = topPosts?.reduce((sum: number, post: any) =>
-            sum + (post.likes || 0) + (post.shares || 0) + (post.reactions || 0), 0
-        ) || 0;
-        const engagementRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100) : 0;
+        // Calculate engagement rate from post dynamics data
+        const totalEngagement = postsData.reduce((sum: number, post: any) =>
+            sum + (post.reactions_count || post.reactions || 0) +
+                  (post.forwards || post.shares || 0) +
+                  (post.replies_count || post.replies || post.comments || 0), 0
+        );
+        const engagementRate = totalViews > 0
+            ? ((totalEngagement / totalViews) * 100)
+            : 0;
 
         // Format numbers
         const formatNumber = (num: number): string => {

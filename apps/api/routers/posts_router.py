@@ -89,16 +89,16 @@ async def get_all_posts(
     try:
         offset = (page - 1) * page_size
 
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print("POSTS API REQUEST")
-        print(f"{'='*80}")
+        print(f"{'=' * 80}")
         print(f"Page: {page}")
         print(f"Page Size: {page_size}")
         print(f"Offset: {offset}")
         print(f"Channel ID: {channel_id}")
         print(f"Current User: {current_user}")
         print(f"Current User ID: {current_user['id']}")
-        print(f"{'='*80}\n")
+        print(f"{'=' * 80}\n")
 
         logger.info(
             f"=== Posts Request === page={page}, page_size={page_size}, offset={offset}, channel_id={channel_id}"

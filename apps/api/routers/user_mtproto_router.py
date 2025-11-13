@@ -244,7 +244,7 @@ async def get_mtproto_status(
         if verified:
             # Session exists in DB - mark as "ready"
             connected = True
-            
+
             try:
                 mtproto_service = get_user_mtproto_service()
                 # Check if client exists in pool and is actively connected
@@ -252,7 +252,9 @@ async def get_mtproto_status(
                     client = mtproto_service._client_pool[user_id]
                     actively_connected = client._is_connected
                     last_used = client.last_used
-                    logger.debug(f"User {user_id} has active client in pool (connected={actively_connected})")
+                    logger.debug(
+                        f"User {user_id} has active client in pool (connected={actively_connected})"
+                    )
                 else:
                     logger.debug(f"User {user_id} has verified session (not in active pool yet)")
             except Exception as e:
@@ -282,7 +284,8 @@ async def get_mtproto_status(
     except Exception as e:
         logger.error(f"Error getting MTProto status for user {user_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MTProto status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MTProto status",
         )
 
 
@@ -552,7 +555,10 @@ async def resend_mtproto_code(
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid verification code or password"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid verification code or password",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -580,7 +586,8 @@ async def verify_mtproto(
         encryption = get_encryption_service()
         if not credentials.telegram_api_hash:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="MTProto credentials not configured"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto credentials not configured",
             )
         api_hash = encryption.decrypt(credentials.telegram_api_hash)
 
@@ -607,7 +614,8 @@ async def verify_mtproto(
             phone = credentials.telegram_phone
             if not phone:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="No phone number configured"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No phone number configured",
                 )
 
             logger.info(
@@ -684,7 +692,10 @@ async def verify_mtproto(
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        400: {"model": ErrorResponse, "description": "No MTProto configuration or not verified"},
+        400: {
+            "model": ErrorResponse,
+            "description": "No MTProto configuration or not verified",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -694,7 +705,7 @@ async def connect_mtproto(
 ):
     """
     Manually connect MTProto client and add to active pool
-    
+
     This creates an active Telegram connection and adds the client to the
     service pool. Use this when you want immediate "Active" status instead
     of lazy "Ready" status.
@@ -702,44 +713,44 @@ async def connect_mtproto(
     try:
         # Check credentials exist and are verified
         credentials = await repository.get_by_user_id(user_id)
-        
+
         if not credentials:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No MTProto configuration found. Please configure MTProto first.",
             )
-        
+
         if not credentials.is_verified or not credentials.session_string:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="MTProto not verified. Please complete verification first.",
             )
-        
+
         if not credentials.mtproto_enabled:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="MTProto is disabled. Please enable it first.",
             )
-        
+
         # Get MTProto service and connect client
         mtproto_service = get_user_mtproto_service()
-        
+
         # This will create client and add to pool if not exists, or reconnect if exists
         client = await mtproto_service.get_user_client(user_id)
-        
+
         if not client:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create MTProto client. Check your configuration.",
             )
-        
+
         logger.info(f"MTProto client connected manually for user {user_id}")
-        
+
         return MTProtoActionResponse(
             success=True,
             message="MTProto client connected successfully. You can now read channel history.",
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -792,7 +803,8 @@ async def disconnect_mtproto(
     except Exception as e:
         logger.error(f"Error disconnecting MTProto for user {user_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to disconnect MTProto"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to disconnect MTProto",
         )
 
 
@@ -958,7 +970,9 @@ async def get_all_channel_settings(
     """
     try:
         from apps.di import get_container
-        from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+        from infra.db.repositories.channel_mtproto_repository import (
+            ChannelMTProtoRepository,
+        )
 
         # Get global setting
         credentials = await repository.get_by_user_id(user_id)
@@ -999,7 +1013,10 @@ async def get_all_channel_settings(
     response_model=ChannelMTProtoSettingResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        404: {"model": ErrorResponse, "description": "Setting not found (uses global default)"},
+        404: {
+            "model": ErrorResponse,
+            "description": "Setting not found (uses global default)",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -1014,7 +1031,9 @@ async def get_channel_setting(
     """
     try:
         from apps.di import get_container
-        from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+        from infra.db.repositories.channel_mtproto_repository import (
+            ChannelMTProtoRepository,
+        )
 
         container = get_container()
         session_factory = await container.database.async_session_maker()
@@ -1071,7 +1090,9 @@ async def toggle_channel_mtproto(
     try:
         from apps.api.services.mtproto_audit_service import MTProtoAuditService
         from apps.di import get_container
-        from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+        from infra.db.repositories.channel_mtproto_repository import (
+            ChannelMTProtoRepository,
+        )
 
         # Get credentials to ensure user has MTProto configured
         credentials = await repository.get_by_user_id(user_id)
@@ -1148,7 +1169,9 @@ async def delete_channel_setting(
     """
     try:
         from apps.di import get_container
-        from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+        from infra.db.repositories.channel_mtproto_repository import (
+            ChannelMTProtoRepository,
+        )
 
         container = get_container()
         session_factory = await container.database.async_session_maker()

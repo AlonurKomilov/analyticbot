@@ -117,7 +117,7 @@ async def test_bot_manager():
     try:
         # This will fail because we're using fake tokens
         # But we can test the caching logic
-        bot1 = await manager.get_user_bot(1)
+        await manager.get_user_bot(1)
         print("❌ Unexpected: Bot initialized with fake token\n")
     except Exception as e:
         print(f"✅ Expected error with fake token: {type(e).__name__}\n")

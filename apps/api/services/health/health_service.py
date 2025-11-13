@@ -58,7 +58,10 @@ class HealthService(HealthMonitoringService):
             health_checks.extend(
                 [
                     ("database_connection", self.database_health.check_connection()),
-                    ("database_performance", self.database_health.check_query_performance()),
+                    (
+                        "database_performance",
+                        self.database_health.check_query_performance(),
+                    ),
                 ]
             )
 

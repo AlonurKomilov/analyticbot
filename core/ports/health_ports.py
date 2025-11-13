@@ -53,12 +53,10 @@ class DatabaseHealthPort(ABC):
     @abstractmethod
     async def check_connection(self) -> ComponentHealth:
         """Check database connection health"""
-        pass
 
     @abstractmethod
     async def check_query_performance(self) -> ComponentHealth:
         """Check database query performance"""
-        pass
 
 
 class CacheHealthPort(ABC):
@@ -67,12 +65,10 @@ class CacheHealthPort(ABC):
     @abstractmethod
     async def check_connection(self) -> ComponentHealth:
         """Check cache connection health"""
-        pass
 
     @abstractmethod
     async def check_memory_usage(self) -> ComponentHealth:
         """Check cache memory usage"""
-        pass
 
 
 class ExternalServiceHealthPort(ABC):
@@ -81,7 +77,6 @@ class ExternalServiceHealthPort(ABC):
     @abstractmethod
     async def check_service(self, url: str, timeout: float = 5.0) -> ComponentHealth:
         """Check external service health via HTTP"""
-        pass
 
 
 class SystemResourcesPort(ABC):
@@ -90,17 +85,14 @@ class SystemResourcesPort(ABC):
     @abstractmethod
     async def check_cpu_usage(self) -> ComponentHealth:
         """Check CPU usage"""
-        pass
 
     @abstractmethod
     async def check_memory_usage(self) -> ComponentHealth:
         """Check memory usage"""
-        pass
 
     @abstractmethod
     async def check_disk_usage(self, path: str = "/") -> ComponentHealth:
         """Check disk usage"""
-        pass
 
 
 class HealthMonitoringService(ABC):
@@ -109,14 +101,11 @@ class HealthMonitoringService(ABC):
     @abstractmethod
     async def check_system_health(self) -> SystemHealth:
         """Perform comprehensive system health check"""
-        pass
 
     @abstractmethod
     async def check_component_health(self, component_name: str) -> ComponentHealth:
         """Check health of specific component"""
-        pass
 
     @abstractmethod
     def register_health_check(self, name: str, check_func: Any, timeout: float = 5.0) -> None:
         """Register custom health check"""
-        pass

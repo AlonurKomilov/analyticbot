@@ -45,12 +45,12 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
     const [directToChannel, setDirectToChannel] = useState<boolean>(false);
     const [uploadStats, setUploadStats] = useState<UploadStats | null>(null);
 
-    // File validation
+    // File validation - matches backend allowed types
     const validateFile = useCallback((file: File): boolean => {
         const maxSize = 50 * 1024 * 1024; // 50MB
         const allowedTypes = [
             'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-            'video/mp4', 'video/webm', 'video/mov',
+            'video/mp4', 'video/webm', 'video/quicktime',  // Changed from video/mov to video/quicktime
             'application/pdf', 'text/plain'
         ];
 
@@ -59,7 +59,7 @@ const EnhancedMediaUploader: React.FC = React.memo(() => {
         }
 
         if (!allowedTypes.includes(file.type)) {
-            throw new Error(`Unsupported file type: ${file.type}`);
+            throw new Error(`Unsupported file type: ${file.type}. Allowed types: images (JPEG, PNG, GIF, WebP), videos (MP4, WebM, MOV), PDF, and text files.`);
         }
 
         return true;

@@ -2,6 +2,9 @@
 
 # Script to automatically update frontend .env.local with current Cloudflare tunnel URL
 # This fixes the issue where Cloudflare free tunnels get new URLs on each restart
+# 
+# ⚠️  DISABLED FOR PRODUCTION: Using permanent domain (analyticbot.org) with proxy
+# This script is kept for reference but no longer updates .env.local
 
 set -e
 
@@ -16,6 +19,18 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+echo -e "${YELLOW}⚠️  This script is disabled - using production domain (analyticbot.org)${NC}"
+echo -e "${BLUE}💡 Frontend now uses relative URLs via Vite proxy${NC}"
+echo -e "${GREEN}✅ Production domain: https://analyticbot.org${NC}"
+echo ""
+echo -e "${BLUE}If you need to check tunnel status:${NC}"
+echo -e "   cat .tunnel-current"
+echo ""
+exit 0
+
+# OLD CODE BELOW - KEPT FOR REFERENCE BUT NOT EXECUTED
+# ======================================================
 
 echo -e "${BLUE}🔍 Checking for Cloudflare tunnel URL...${NC}"
 

@@ -10,6 +10,7 @@ export { useChannelStore } from './slices/channels/useChannelStore';
 export { usePostStore } from './slices/posts/usePostStore';
 export { useAnalyticsStore } from './slices/analytics/useAnalyticsStore';
 export { useMediaStore } from './slices/media/useMediaStore';
+export { useTelegramStorageStore } from './slices/storage/useTelegramStorageStore';
 export { useUIStore } from './slices/ui/useUIStore';
 export { useUserBotStore, useBot, useAllBots, useBotLoading, useBotError } from './slices/userBot/useUserBotStore';
 export { useMTProtoStore, useMTProtoStatus, useMTProtoLoading, useMTProtoError } from './slices/mtproto/useMTProtoStore';

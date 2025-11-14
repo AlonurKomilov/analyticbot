@@ -27,12 +27,12 @@ const RecommenderFooter: React.FC<RecommenderFooterProps> = ({ recommendations }
             borderColor: 'divider'
         }}>
             <Typography variant="caption" color="text.secondary">
-                AI analysis updated at {new Date().toLocaleTimeString()}
+                Analysis updated at {new Date().toLocaleTimeString()}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
                 <Chip
                     size="small"
-                    label={<><span aria-hidden="true">🤖</span> AI Powered</>}
+                    label={<><span aria-hidden="true">📊</span> Performance Analytics</>}
                     color="primary"
                     variant="outlined"
                 />

@@ -7,12 +7,13 @@
 
 import React, { useState } from 'react';
 import { Box, Stack } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 import { TouchTargetProvider } from '@shared/components/ui';
 import { PageContainer, SectionHeader } from '@shared/components/ui';
 import { PostCreator } from '@features/posts';
 import EnhancedMediaUploader from '@shared/components/ui/EnhancedMediaUploader';
 import MediaPreview from '@shared/components/ui/MediaPreview';
-import StorageFileBrowser from '@shared/components/ui/StorageFileBrowser';
+import { TelegramStorageBrowser } from '@features/storage';
 import { usePostStore } from '@store';
 import { DESIGN_TOKENS } from '@/theme/designTokens.js';
 
@@ -23,8 +24,14 @@ interface MediaItem {
 }
 
 const CreatePostPage: React.FC = () => {
+  const location = useLocation();
   const [localSelectedMedia, setLocalSelectedMedia] = useState<MediaItem[]>([]);
   const { schedulePost } = usePostStore();
+  
+  // Extract initial values from navigation state (from Best Time Recommendations)
+  const initialChannelId = location.state?.channelId;
+  const initialScheduledTime = location.state?.scheduledTime;
+  const fromRecommendation = location.state?.fromRecommendation;
 
   const handleRemoveMedia = (index: number): void => {
     const newMedia = [...localSelectedMedia];
@@ -50,7 +57,12 @@ const CreatePostPage: React.FC = () => {
           {/* Main Content - Post Creator */}
           <Box>
             <PostCreator
-              {...{ onSchedule: schedulePost } as any}
+              {...{ 
+                onSchedule: schedulePost,
+                initialChannelId,
+                initialScheduledTime,
+                fromRecommendation
+              } as any}
             />
           </Box>
 
@@ -71,9 +83,17 @@ const CreatePostPage: React.FC = () => {
             )}
 
             <Box>
-              <SectionHeader level={3}>File Browser</SectionHeader>
-              <StorageFileBrowser
-                {...{ onFileSelect: setLocalSelectedMedia } as any}
+              <SectionHeader level={3}>Storage Browser</SectionHeader>
+              <TelegramStorageBrowser
+                onSelectFile={(file) => {
+                  const mediaItem: MediaItem = {
+                    id: file.id.toString(),
+                    url: file.preview_url || '',
+                    type: file.file_type
+                  };
+                  setLocalSelectedMedia(prev => [...prev, mediaItem]);
+                }}
+                selectionMode={true}
               />
             </Box>
           </Stack>

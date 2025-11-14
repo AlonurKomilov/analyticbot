@@ -31,10 +31,10 @@ const ChannelSelector: React.FC<ChannelSelectorProps> = ({
     error,
     disabled = false
 }) => {
-    // Memoized channel options
+    // Memoized channel options - convert ID to string for consistency
     const channelOptions = useMemo<ChannelOption[]>(() =>
         channels.map(channel => ({
-            value: channel.id,
+            value: String(channel.id),
             label: channel.title || channel.username || 'Unknown Channel'
         })),
         [channels]
@@ -55,7 +55,7 @@ const ChannelSelector: React.FC<ChannelSelectorProps> = ({
             </InputLabel>
             <Select
                 labelId="channel-select-label"
-                value={selectedChannel || ''}
+                value={selectedChannel ? String(selectedChannel) : ''}
                 onChange={handleChange}
                 label="Select Channel"
                 aria-describedby={error ? "channel-error" : "channel-help"}

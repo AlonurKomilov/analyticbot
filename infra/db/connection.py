@@ -28,8 +28,10 @@ async def create_connection_pool() -> Pool:
         logger.info("Creating database connection pool")
         _connection_pool = await asyncpg.create_pool(
             database_url,
-            min_size=1,
-            max_size=10,
+            min_size=10,
+            max_size=20,
+            max_queries=50000,
+            max_inactive_connection_lifetime=300,
             command_timeout=60,
         )
 

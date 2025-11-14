@@ -8,7 +8,7 @@ import {
     type HealthReport
 } from './systemHealthCheck';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 
 type DataSource = 'api' | 'mock';
 

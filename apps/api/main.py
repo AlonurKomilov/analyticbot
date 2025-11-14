@@ -19,6 +19,8 @@ from apps.api.routers.auth import router as auth_router
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
 from apps.api.routers.content_protection_router import router as content_protection_router
+from apps.api.routers.media_router import router as media_router
+from apps.api.routers.telegram_storage_router import router as telegram_storage_router
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
@@ -222,6 +224,10 @@ Comprehensive data export capabilities with secure sharing mechanisms.
             "name": "Core",
             "description": "Essential system endpoints: health checks, initial data, and application lifecycle",
         },
+        {
+            "name": "Telegram Storage",
+            "description": "☁️ Telegram Storage: user-owned channel storage, zero-cost file hosting, media management",
+        },
         # AI Domain (All AI services consolidated)
         {
             "name": "AI - Chat",
@@ -386,6 +392,8 @@ app.include_router(health_router)  # Comprehensive health monitoring (consolidat
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
 app.include_router(channels_router)  # Channel management (CRUD)
 app.include_router(posts_router, prefix="/api")  # Posts management (MTProto collected data)
+app.include_router(media_router)  # Media upload and management
+app.include_router(telegram_storage_router, prefix="/api")  # Telegram storage (user-owned channels)
 app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_system_router)  # Admin - System Management

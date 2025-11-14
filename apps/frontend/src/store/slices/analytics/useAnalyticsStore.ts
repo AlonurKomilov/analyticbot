@@ -330,15 +330,25 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch best time to post recommendations
-    fetchBestTime: async (channelId: string) => {
+    fetchBestTime: async (channelId: string, days?: number) => {
       set({ isLoadingBestTime: true, bestTimeError: null });
 
       try {
-        console.log('⏰ Fetching best time recommendations for channel:', channelId);
+        console.log('⏰ Fetching best time recommendations for channel:', channelId, 'days:', days || 90);
 
-        const recommendations = await apiClient.get<BestTimeRecommendation[]>(
-          `/analytics/channels/${channelId}/best-time`
-        );
+        // Use correct endpoint that matches backend
+        const url = days 
+          ? `/analytics/predictive/best-times/${channelId}?days=${days}`
+          : `/analytics/predictive/best-times/${channelId}`;
+        
+        const response = await apiClient.get<any>(url);
+
+        // Extract best_times array from response.data (API wraps in data object)
+        const recommendations = response.data?.best_times || [];
+        
+        console.log('📊 Raw API response:', response);
+        console.log('📊 Response data:', response.data);
+        console.log('📊 Extracted recommendations:', recommendations);
 
         // Store recommendations
         set({

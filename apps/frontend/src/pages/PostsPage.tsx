@@ -127,7 +127,7 @@ const PostsPage: React.FC = () => {
           </Box>
           <Button
             component={Link}
-            to={ROUTES.SCHEDULED_POSTS}
+            to={ROUTES.CREATE_POST}
             variant="contained"
             startIcon={<Add />}
             size="large"

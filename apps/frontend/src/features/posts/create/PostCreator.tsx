@@ -35,7 +35,17 @@ interface FormState {
     hasMedia: boolean;
 }
 
-const PostCreator: React.FC = React.memo(() => {
+interface PostCreatorProps {
+    initialChannelId?: string;
+    initialScheduledTime?: string;
+    fromRecommendation?: boolean;
+}
+
+const PostCreator: React.FC<PostCreatorProps> = React.memo(({ 
+    initialChannelId, 
+    initialScheduledTime, 
+    fromRecommendation 
+}) => {
     const { channels } = useChannelStore();
     const { schedulePost, sendNowPost } = usePostStore();
     const { pendingMedia } = useMediaStore();
@@ -51,8 +61,18 @@ const PostCreator: React.FC = React.memo(() => {
     });
 
     const [buttons, setButtons] = useState<Button[]>([]);
-    const [isScheduleMode, setIsScheduleMode] = useState(false);
+    const [isScheduleMode, setIsScheduleMode] = useState(!!initialScheduledTime);
     const { loading, error } = useLoadingState('schedulePost');
+
+    // Initialize form with recommended values from Best Time Recommendations
+    useEffect(() => {
+        if (fromRecommendation && initialChannelId) {
+            updateField('selectedChannel', String(initialChannelId));
+        }
+        if (fromRecommendation && initialScheduledTime) {
+            updateField('scheduleTime', initialScheduledTime);
+        }
+    }, [fromRecommendation, initialChannelId, initialScheduledTime, updateField]);
 
     // Update hasMedia when pendingMedia changes
     const prevMediaFile = React.useRef(pendingMedia?.file);

@@ -27,7 +27,7 @@ import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:11400',
+  baseURL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '',
   timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   maxRetries: 3,
   retryDelay: 1000,
@@ -44,7 +44,7 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/auth/me': 10000,
   '/auth/refresh': 10000,
   '/analytics/channels': 10000, // Reduced from 60s - analytics queries are cached
-  '/channels': 5000, // Reduced from 60s - simple database queries
+  '/channels': 15000, // Increased from 5s - can be slow with many channels or MTProto sync
   '/system/schedule': 5000, // Reduced from 90s - database insert is fast
   '/system/send': 10000, // Telegram API + database
   '/schedule/': 5000, // Reduced from 90s - simple SELECT query
@@ -278,9 +278,16 @@ export class UnifiedApiClient {
 
       // Add body for non-GET requests
       if (options.body && requestConfig.method !== 'GET') {
-        requestConfig.body = typeof options.body === 'string'
-          ? options.body
-          : JSON.stringify(options.body);
+        // Handle FormData separately - don't stringify it
+        if (options.body instanceof FormData) {
+          requestConfig.body = options.body;
+          // Remove Content-Type header to let browser set it with boundary
+          delete (requestConfig.headers as Record<string, string>)['Content-Type'];
+        } else {
+          requestConfig.body = typeof options.body === 'string'
+            ? options.body
+            : JSON.stringify(options.body);
+        }
       }
 
       const response = await fetch(url, requestConfig);

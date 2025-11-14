@@ -7,7 +7,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // Create base API client
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

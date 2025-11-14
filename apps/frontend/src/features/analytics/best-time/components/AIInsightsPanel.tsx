@@ -33,7 +33,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ aiInsights }) => {
                     No Recommendations Available
                 </Typography>
                 <Typography variant="body2">
-                    Insufficient data to generate AI recommendations
+                    Insufficient data to generate performance recommendations
                 </Typography>
             </Box>
         );
@@ -42,7 +42,7 @@ const AIInsightsPanel: React.FC<AIInsightsPanelProps> = ({ aiInsights }) => {
     return (
         <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-                🧠 AI Recommendations & Insights
+                💡 Data-Driven Insights
             </Typography>
             <List>
                 {aiInsights.map((insight, index) => (

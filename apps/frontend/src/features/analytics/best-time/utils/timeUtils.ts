@@ -13,8 +13,8 @@ export interface AIInsight {
     [key: string]: any;
 }
 
-// Days of week (Uzbek)
-export const daysOfWeek: string[] = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba'];
+// Days of week (matches PostgreSQL EXTRACT(DOW): 0=Sunday, 1=Monday, ..., 6=Saturday)
+export const daysOfWeek: string[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // Format hour to readable time string
 export const formatHour = (hour: number): string => {

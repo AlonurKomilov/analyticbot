@@ -393,3 +393,4 @@ archive/
 backup_*
 
 venv/
+backups/*.sql

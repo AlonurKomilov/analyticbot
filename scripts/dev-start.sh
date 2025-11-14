@@ -234,34 +234,53 @@ case $SERVICE in
             pkill -f "cloudflared tunnel" || true
             sleep 2
 
-            nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
-            tunnel_pid=$!
-            echo $tunnel_pid > "logs/dev_tunnel.pid"
+            # Start tunnel with retry logic (CloudFlare API can be slow)
+            tunnel_started=false
+            for attempt in {1..3}; do
+                echo -e "${BLUE}🔄 Starting tunnel (attempt $attempt/3)...${NC}"
+                nohup cloudflared tunnel --url http://localhost:11300 > logs/dev_tunnel.log 2>&1 &
+                tunnel_pid=$!
+                echo $tunnel_pid > "logs/dev_tunnel.pid"
 
-            echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
-            sleep 5
+                echo -e "${BLUE}⏳ Waiting for tunnel URL (10 seconds)...${NC}"
+                sleep 10
+
+                # Check if tunnel actually started successfully
+                if [ -f "logs/dev_tunnel.log" ]; then
+                    TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
+                    if [ ! -z "$TUNNEL_URL" ] && kill -0 $tunnel_pid 2>/dev/null; then
+                        tunnel_started=true
+                        echo -e "${GREEN}✅ CloudFlare Tunnel started successfully!${NC}"
+                        echo -e "${YELLOW}⚠️  TEMPORARY URL (changes every restart): ${TUNNEL_URL}${NC}"
+                        break
+                    fi
+                fi
+                
+                echo -e "${YELLOW}⚠️  Tunnel failed to start (attempt $attempt/3)${NC}"
+                kill $tunnel_pid 2>/dev/null || true
+                sleep 5
+            done
 
             # Extract tunnel URL
-            if [ -f "logs/dev_tunnel.log" ]; then
-                TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
-                if [ ! -z "$TUNNEL_URL" ]; then
-                    echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
-                    echo -e "${YELLOW}⚠️  TEMPORARY URL (changes every restart): ${TUNNEL_URL}${NC}"
+            if [ "$tunnel_started" = true ] && [ ! -z "$TUNNEL_URL" ]; then
                     echo ""
-                    echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
-
-                    # Automatically update frontend config with new tunnel URL
-                    if [ -f "scripts/update-tunnel-url.sh" ]; then
-                        ./scripts/update-tunnel-url.sh
-                    else
-                        # Fallback: manual update instructions
-                        echo -e "${YELLOW}📝 Update .env.local manually:${NC}"
-                        echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                        echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                    fi
-                else
-                    echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
-                fi
+                    echo -e "${BLUE}ℹ️  Temporary tunnel URL available: ${TUNNEL_URL}${NC}"
+                    echo -e "${YELLOW}⚠️  Using production domain (analyticbot.org) - NOT updating .env.local${NC}"
+                    echo -e "${GREEN}✅ Frontend configured for production domain with proxy${NC}"
+                    echo ""
+                    echo -e "${BLUE}💡 Frontend will use relative URLs via Vite proxy${NC}"
+                    echo -e "   Frontend: https://analyticbot.org${NC}"
+                    echo -e "   API: https://analyticbot.org/health, /channels, etc.${NC}"
+                    
+                    # Save tunnel info for reference only (not used by frontend)
+                    echo "TUNNEL_URL=$TUNNEL_URL" > ".tunnel-current"
+                    echo "UPDATED_AT=$(date -Iseconds)" >> ".tunnel-current"
+                    echo "NOTE=Tunnel available but frontend uses production domain" >> ".tunnel-current"
+            else
+                echo -e "${RED}❌ Failed to start CloudFlare Tunnel after 3 attempts${NC}"
+                echo -e "${YELLOW}💡 Check logs/dev_tunnel.log for details${NC}"
+                echo -e "${YELLOW}💡 Possible causes: CloudFlare API timeout, network issues${NC}"
+                echo -e "${YELLOW}💡 You can try again with: make dev-tunnel${NC}"
             fi
         fi
         ;;
@@ -278,12 +297,35 @@ case $SERVICE in
         fi
 
         if command -v cloudflared &> /dev/null; then
-            nohup cloudflared tunnel --url http://localhost:11400 > logs/dev_tunnel.log 2>&1 &
-            tunnel_pid=$!
-            echo $tunnel_pid > "logs/dev_tunnel.pid"
+            # Start tunnel with retry logic
+            tunnel_started=false
+            for attempt in {1..3}; do
+                echo -e "${BLUE}🔄 Starting tunnel (attempt $attempt/3)...${NC}"
+                nohup cloudflared tunnel --url http://localhost:11300 > logs/dev_tunnel.log 2>&1 &
+                tunnel_pid=$!
+                echo $tunnel_pid > "logs/dev_tunnel.pid"
 
-            echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
-            sleep 5
+                echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
+                sleep 10
+
+                # Check if tunnel actually started successfully
+                if grep -q "trycloudflare.com" logs/dev_tunnel.log && kill -0 $tunnel_pid 2>/dev/null; then
+                    tunnel_started=true
+                    echo -e "${GREEN}✅ Tunnel started successfully!${NC}"
+                    break
+                else
+                    echo -e "${YELLOW}⚠️  Tunnel failed to start (attempt $attempt/3)${NC}"
+                    kill $tunnel_pid 2>/dev/null || true
+                    sleep 5
+                fi
+            done
+
+            if [ "$tunnel_started" = false ]; then
+                echo -e "${RED}❌ Failed to start CloudFlare Tunnel after 3 attempts${NC}"
+                echo -e "${YELLOW}💡 Check logs/dev_tunnel.log for details${NC}"
+                echo -e "${YELLOW}💡 You can start it later with: make dev-tunnel${NC}"
+                echo ""
+            fi
 
             # Auto-update frontend .env.local with tunnel URL
             echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"

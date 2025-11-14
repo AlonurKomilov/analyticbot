@@ -19,6 +19,7 @@ from core.protocols import AnalyticsFusionServiceProtocol
 
 from ..infrastructure.data_access import DataAccessService
 from ..protocols.analytics_protocols import AnalyticsCoreProtocol
+from ..recommendations import PostingTimeRecommendationService
 from ..protocols.orchestrator_protocols import (
     CoordinationResult,
     OrchestrationRequest,
@@ -48,6 +49,7 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         intelligence_service: Any | None = None,
         monitoring_service: Any | None = None,
         optimization_service: Any | None = None,
+        posting_time_service: PostingTimeRecommendationService | None = None,
     ):
         self.data_access = data_access_service
 
@@ -66,6 +68,9 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             self.service_instances["monitoring"] = monitoring_service
         if optimization_service:
             self.service_instances["optimization"] = optimization_service
+        
+        # NEW: Dedicated posting time service
+        self.posting_time_service = posting_time_service
 
         # Orchestrator state
         self.is_running = False
@@ -875,3 +880,38 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         except Exception as e:
             logger.error(f"Failed to generate recommendations for channel {channel_id}: {e}")
             return {"channel_id": channel_id, "error": str(e), "status": "failed"}
+
+    async def get_best_posting_times(self, channel_id: int, days: int = 90) -> dict[str, Any]:
+        """
+        Get optimal posting times based on historical engagement patterns.
+        
+        REFACTORED: Delegated to dedicated PostingTimeRecommendationService.
+        This method now follows Single Responsibility Principle.
+        
+        Implements: AnalyticsFusionServiceProtocol.get_best_posting_times
+        """
+        try:
+            # Use dedicated service if available
+            if self.posting_time_service:
+                return await self.posting_time_service.get_best_posting_times(channel_id, days)
+            
+            # Fallback: Create service on-demand (for backward compatibility)
+            logger.warning("PostingTimeRecommendationService not injected, creating on-demand")
+            
+            from apps.di import get_container
+            container = get_container()
+            pool = await container.database.asyncpg_pool()
+            
+            from ..recommendations import PostingTimeRecommendationService
+            service = PostingTimeRecommendationService(pool)
+            
+            return await service.get_best_posting_times(channel_id, days)
+            
+        except Exception as e:
+            logger.error(f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True)
+            return {
+                "channel_id": channel_id,
+                "best_times": [],
+                "error": str(e),
+                "status": "failed"
+            }

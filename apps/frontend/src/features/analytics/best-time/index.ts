@@ -5,12 +5,12 @@
  * - TimeFrameFilters: Time frame and content type filter controls
  * - BestTimeCards: Recommended time cards with confidence scores
  * - HeatmapVisualization: 24-hour activity heatmap
- * - AIInsightsPanel: AI-powered insights and recommendations
+ * - AIInsightsPanel: Performance-based insights and recommendations
  * - RecommenderFooter: Status and metadata display
  * - useRecommenderLogic: Business logic and state management
  * - timeUtils: Time formatting and calculation utilities
  *
- * Mock data is handled by existing __mocks__/analytics/bestTime.js
+ * Analyzes real historical performance data from database
  */
 
 export { default } from './BestTimeRecommender';

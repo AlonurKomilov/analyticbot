@@ -21,7 +21,8 @@ import {
     Palette as ThemeIcon,
     Language as LanguageIcon,
     SmartToy as BotIcon,
-    Timeline as MonitoringIcon
+    Timeline as MonitoringIcon,
+    CloudQueue as StorageIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -38,6 +39,13 @@ const SettingsPage: React.FC = () => {
             description: 'Configure your Telegram bot credentials and settings',
             icon: <BotIcon />,
             path: '/bot/setup',
+            available: true
+        },
+        {
+            title: 'Storage Channels',
+            description: 'Manage Telegram channels for zero-cost file storage',
+            icon: <StorageIcon />,
+            path: '/settings/storage-channels',
             available: true
         },
         {

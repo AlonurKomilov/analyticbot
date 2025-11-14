@@ -13,7 +13,7 @@ import { Psychology as AIIcon } from '@mui/icons-material';
 /**
  * Time frame options
  */
-export type TimeFrame = 'week' | 'month' | 'year';
+export type TimeFrame = 'hour' | '6hours' | '24hours' | '7days' | '30days' | '90days' | 'alltime';
 
 /**
  * Content type options
@@ -40,16 +40,10 @@ interface TimeFrameFiltersProps {
  */
 const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
     timeFrame,
-    setTimeFrame,
-    contentType,
-    setContentType
+    setTimeFrame
 }) => {
     const handleTimeFrameChange = (event: SelectChangeEvent) => {
         setTimeFrame(event.target.value as TimeFrame);
-    };
-
-    const handleContentTypeChange = (event: SelectChangeEvent) => {
-        setContentType(event.target.value as ContentType);
     };
 
     return (
@@ -57,38 +51,26 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <AIIcon color="primary" />
                 <Typography variant="h5" component="h1">
-                    🤖 AI Posting Time Recommendations
+                    📊 Performance Time Recommendations
                 </Typography>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel id="timeframe-label">Vaqt oralig'i</InputLabel>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel id="timeframe-label">Analysis Period</InputLabel>
                     <Select
                         labelId="timeframe-label"
                         value={timeFrame}
-                        label="Vaqt oralig'i"
+                        label="Analysis Period"
                         onChange={handleTimeFrameChange}
                     >
-                        <MenuItem value="week">Hafta</MenuItem>
-                        <MenuItem value="month">Oy</MenuItem>
-                        <MenuItem value="year">Yil</MenuItem>
-                    </Select>
-                </FormControl>
-
-                <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <InputLabel id="content-type-label">Kontent turi</InputLabel>
-                    <Select
-                        labelId="content-type-label"
-                        value={contentType}
-                        label="Kontent turi"
-                        onChange={handleContentTypeChange}
-                    >
-                        <MenuItem value="all">Barcha</MenuItem>
-                        <MenuItem value="text">Matn</MenuItem>
-                        <MenuItem value="image">Rasm</MenuItem>
-                        <MenuItem value="video">Video</MenuItem>
-                        <MenuItem value="poll">So'rov</MenuItem>
+                        <MenuItem value="hour">Last Hour</MenuItem>
+                        <MenuItem value="6hours">Last 6 Hours</MenuItem>
+                        <MenuItem value="24hours">Last 24 Hours</MenuItem>
+                        <MenuItem value="7days">Last 7 Days</MenuItem>
+                        <MenuItem value="30days">Last 30 Days</MenuItem>
+                        <MenuItem value="90days">Last 90 Days</MenuItem>
+                        <MenuItem value="alltime">All Time</MenuItem>
                     </Select>
                 </FormControl>
             </Box>

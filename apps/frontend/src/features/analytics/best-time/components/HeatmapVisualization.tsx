@@ -40,13 +40,13 @@ const HeatmapVisualization: React.FC<HeatmapVisualizationProps> = ({ recommendat
     return (
         <Box sx={{ mb: 4 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-                📊 24 soatlik faollik haritasi
+                📊 24-Hour Activity Heatmap
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.5, mb: 2, flexWrap: 'wrap' }}>
                 {heatmapData.map((item) => (
                     <Tooltip
                         key={item.hour}
-                        title={`${formatHour(item.hour)}: ${item.value} faollik`}
+                        title={`${formatHour(item.hour)}: ${item.value} engagement`}
                     >
                         <Box
                             sx={{

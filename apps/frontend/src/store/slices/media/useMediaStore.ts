@@ -75,10 +75,11 @@ export const useMediaStore = create<MediaState>()(
       try {
         // Create preview URL
         const preview = URL.createObjectURL(file);
+        const pendingId = `pending-${Date.now()}`;
 
         set({
           pendingMedia: {
-            id: `pending-${Date.now()}`,
+            id: pendingId,
             file,
             preview,
             status: 'pending',
@@ -105,9 +106,7 @@ export const useMediaStore = create<MediaState>()(
         }
 
         const uploadedFile = await apiClient.post<MediaFile>('/media/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
+          // Don't set Content-Type header - let browser set it with boundary for FormData
           onUploadProgress: (progressEvent: any) => {
             if (progressEvent.total) {
               const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -122,14 +121,20 @@ export const useMediaStore = create<MediaState>()(
           }
         });
 
-        set(state => ({
+        // Update pending media with uploaded file info (keep it visible)
+        // Update pending media to complete
+        set((state) => ({
           mediaFiles: [...state.mediaFiles, uploadedFile],
           isUploading: false,
-          uploadProgress: null
+          uploadProgress: null,
+          pendingMedia: pendingId === state.pendingMedia?.id
+            ? {
+                ...state.pendingMedia,
+                url: uploadedFile.url,
+                status: 'complete' as const,
+              }
+            : null,
         }));
-
-        // Clear pending media after successful upload
-        get().clearPendingMedia();
 
         console.log('✅ Media uploaded successfully:', uploadedFile.id);
         return uploadedFile;

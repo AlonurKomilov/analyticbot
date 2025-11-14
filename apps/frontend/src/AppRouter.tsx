@@ -54,6 +54,9 @@ const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManageme
 const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
 const MTProtoMonitoringPage = React.lazy(() => import('./pages/MTProtoMonitoringPage'));
 
+// Storage Channels Page
+const StorageChannelsPage = React.lazy(() => import('./pages/StorageChannelsPage'));
+
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
 //     SuperAdminDashboard
@@ -323,6 +326,18 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <MTProtoMonitoringPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Storage Channels Settings */}
+                                <Route
+                                    path={ROUTES.SETTINGS_STORAGE}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <StorageChannelsPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

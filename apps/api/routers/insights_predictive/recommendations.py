@@ -138,6 +138,7 @@ async def generate_predictions(
 @router.get("/best-times/{channel_id}")
 async def get_optimal_posting_times(
     channel_id: int,
+    days: int = Query(90, ge=7, le=365, description="Days to analyze (7, 30, 90, or 365)"),
     current_user: dict = Depends(get_current_user),
     analytics_service=Depends(get_analytics_fusion_service),
 ):
@@ -149,6 +150,7 @@ async def get_optimal_posting_times(
 
     **Parameters:**
     - channel_id: Target channel ID for analysis
+    - days: Number of days to analyze (7=week, 30=month, 90=3months, 365=year)
 
     **Returns:**
     - Optimal posting time recommendations
@@ -157,7 +159,7 @@ async def get_optimal_posting_times(
     """
     try:
         # Use predictive analytics to determine optimal posting times
-        best_times = await analytics_service.get_best_posting_times(channel_id)
+        best_times = await analytics_service.get_best_posting_times(channel_id, days)
 
         return {
             "success": True,

@@ -1,6 +1,8 @@
 # AnalyticBot - Unified Docker Compose
 # Development and local testing environment
 
+version: '3.8'
+
 services:
   # ---------- Database ----------
   db:
@@ -365,7 +367,7 @@ networks:
   database:
     driver: bridge
     name: analyticbot_database
-    internal: true  # No internet access - maximum security
+    internal: false  # Allow port mapping for external access (dev mode)
     ipam:
       config:
         - subnet: 172.20.3.0/24

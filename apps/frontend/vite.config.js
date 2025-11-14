@@ -161,19 +161,36 @@ export default defineConfig({
     cssCodeSplit: true
   },
 
-  // Development optimizations
+  // Development optimizations - merged server configuration
   server: {
     // Fast refresh
     hmr: true,
     // CORS for development
     cors: true,
-    // Port configuration - use environment variable or default
-    port: parseInt(process.env.VITE_PORT) || 5173,
+    // Port configuration
+    port: 11300,
     host: '0.0.0.0', // Allow external connections
     // Watch options for better file watching in Docker
     watch: {
       usePolling: true,
       interval: 100
+    },
+    // Proxy API requests to backend (direct paths without /api prefix)
+    proxy: {
+      '^/(health|docs|openapi\\.json|auth|channels|analytics|insights|predictions|alerts|payment|superadmin|telegram-storage)': {
+        target: 'http://127.0.0.1:11400',
+        changeOrigin: true,
+        secure: false,
+        ws: true, // WebSocket support
+        configure: (proxy, options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Proxying:', req.method, req.url, '→', options.target + req.url);
+          });
+        }
+      }
     }
   },
 

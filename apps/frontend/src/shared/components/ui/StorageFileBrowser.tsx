@@ -80,29 +80,74 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
     const [selectedFile, setSelectedFile] = useState<StorageFile | null>(null);
     const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
 
-    // Placeholder for getStorageFiles - would be implemented in media store
+    // Fetch storage files from API
     const getStorageFiles = useCallback(async (limit: number, offset: number): Promise<void> => {
         setIsLoading(true);
         try {
-            // Placeholder implementation
-            // In real app, this would fetch from API
+            console.log('🔍 Fetching storage files from API...');
+            // Fetch from actual API endpoint
+            const { apiClient } = await import('@/api/client');
+            const response = await apiClient.get<{
+                files: any[];
+                total: number;
+                offset: number;
+                limit: number;
+            }>('/media/storage', {
+                params: { limit, offset }
+            });
+            
+            console.log('📦 Raw API response:', response);
+            
+            // Transform API response to match StorageFile interface
+            const transformedFiles: StorageFile[] = response.files.map((file: any) => {
+                // Determine media type from filename if not provided
+                const filename = file.filename || '';
+                const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+                const isVideo = /\.(mp4|mov|webm|avi)$/i.test(filename);
+                
+                const mediaType = file.media_type || 
+                    (isImage ? 'image/jpeg' : 
+                     isVideo ? 'video/mp4' : 
+                     'application/octet-stream');
+                
+                return {
+                    file_id: file.file_id || file.id,
+                    filename: file.filename,
+                    caption: file.caption,
+                    media_type: mediaType,
+                    file_size: file.file_size,
+                    uploaded_at: file.uploaded_at,
+                    thumbnail_url: file.thumbnail_url || file.preview_url,
+                    preview_url: file.preview_url
+                };
+            });
+            
+            console.log('✨ Transformed files:', transformedFiles);
+            
+            setStorageFiles({
+                files: transformedFiles,
+                total: response.total,
+                limit: response.limit,
+                offset: response.offset
+            });
+            
+            console.log('✅ Storage files state updated:', {
+                filesCount: transformedFiles.length,
+                total: response.total
+            });
+        } catch (error) {
+            console.error('❌ Failed to load storage files:', error);
+            // Set empty state on error
             setStorageFiles({
                 files: [],
                 total: 0,
                 limit,
                 offset
             });
-        } catch (error) {
-            console.error('Failed to load storage files:', error);
         } finally {
             setIsLoading(false);
         }
     }, []);
-
-    // Load files on component mount and filter changes
-    useEffect(() => {
-        loadFiles();
-    }, [page, filterType]);
 
     // Load files from storage
     const loadFiles = useCallback(async (): Promise<void> => {
@@ -114,6 +159,12 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
             console.error('Failed to load storage files:', error);
         }
     }, [getStorageFiles, page]);
+
+    // Load files on component mount and filter changes
+    useEffect(() => {
+        console.log('🔄 Effect triggered - loading files...');
+        loadFiles();
+    }, [loadFiles, page, filterType]);
 
     // Handle page change
     const handlePageChange = useCallback((_event: React.ChangeEvent<unknown>, newPage: number): void => {
@@ -265,6 +316,19 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
                             'No files match your search criteria.'
                         }
                     </Typography>
+                    {/* Debug info */}
+                    {process.env.NODE_ENV === 'development' && (
+                        <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', textAlign: 'left' }}>
+                            <Typography variant="caption">Debug info:</Typography>
+                            <pre style={{ fontSize: '10px' }}>
+                                Total files: {storageFiles.total}
+                                Files array length: {storageFiles.files.length}
+                                Filtered files length: {filteredFiles.length}
+                                Search query: "{searchQuery}"
+                                Filter type: {filterType}
+                            </pre>
+                        </Box>
+                    )}
                 </Box>
             ) : (
                 <Grid container spacing={2}>

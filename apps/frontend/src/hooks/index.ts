@@ -208,17 +208,19 @@ export const useFormState = <T extends Record<string, any>>(
     const [touched, setTouched] = useState<Record<string, boolean>>({});
 
     const updateField = useCallback((field: keyof T, value: any): void => {
-        setState(prev => ({ ...prev, [field]: value }));
-        setTouched(prev => ({ ...prev, [field as string]: true }));
-
-        if (validator) {
-            setErrors(prev => {
-                const newState = { ...state, [field]: value };
+        setState(prev => {
+            const newState = { ...prev, [field]: value };
+            
+            // Run validation with new state if validator exists
+            if (validator) {
                 const fieldErrors = validator(newState);
-                return { ...prev, [field as string]: fieldErrors[field as string] };
-            });
-        }
-    }, [state, validator]);
+                setErrors(prevErrors => ({ ...prevErrors, [field as string]: fieldErrors[field as string] }));
+            }
+            
+            return newState;
+        });
+        setTouched(prev => ({ ...prev, [field as string]: true }));
+    }, [validator]);
 
     const validateForm = useCallback((): boolean => {
         if (!validator) return true;

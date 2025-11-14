@@ -56,6 +56,7 @@ export const ROUTES = {
   // User Routes
   PROFILE: '/profile',
   SETTINGS: '/settings',
+  SETTINGS_STORAGE: '/settings/storage-channels',
   HELP: '/help',
 
   // Error Routes

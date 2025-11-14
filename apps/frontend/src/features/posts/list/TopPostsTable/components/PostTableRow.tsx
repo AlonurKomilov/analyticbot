@@ -113,10 +113,10 @@ const PostTableRow: React.FC<PostTableRowProps> = ({
                     variant="body2"
                     sx={{
                         fontWeight: 'bold',
-                        color: parseFloat(calculateEngagementRate(post)) > 5 ? 'success.main' : 'text.primary'
+                        color: calculateEngagementRate(post) > 5 ? 'success.main' : 'text.primary'
                     }}
                 >
-                    {calculateEngagementRate(post)}%
+                    {calculateEngagementRate(post).toFixed(2)}%
                 </Typography>
             </TableCell>
 

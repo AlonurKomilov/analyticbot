@@ -27,7 +27,7 @@ interface UseRecommenderLogicReturn {
 }
 
 export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
-    const [timeFrame, setTimeFrame] = useState<string>('week');
+    const [timeFrame, setTimeFrame] = useState<string>('30days');
     const [contentType, setContentType] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
     const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
@@ -37,36 +37,64 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     const { fetchBestTime, isLoadingBestTime, bestTimes } = useAnalyticsStore();
     const { selectedChannel } = useChannelStore();
 
-    // Generate AI insights based on recommendations
+    // Generate performance insights based on recommendations
     const generateAIInsights = (data: BestTimeRecommendations): AIInsight[] => {
-        const insights: AIInsight[] = [
-            {
-                type: 'time',
-                message: data.best_times?.[0] ? 'Juma kuni soat 20:00 da eng ko\'p faollik kuzatiladi' : 'Ma\'lumotlar tahlil qilinmoqda',
-                title: 'Optimal Posting Time',
-                description: data.best_times?.[0] ? 'Juma kuni soat 20:00 da eng ko\'p faollik kuzatiladi' : 'Ma\'lumotlar tahlil qilinmoqda'
-            },
-            {
-                type: 'audience',
-                message: 'Sizning auditoriyangiz kechqurun ko\'proq faol bo\'ladi',
-                title: 'Audience Activity',
-                description: 'Sizning auditoriyangiz kechqurun ko\'proq faol bo\'ladi'
-            },
-            {
-                type: 'content',
-                message: 'Hafta oxirida ko\'ngilochar kontent yuborishni tavsiya etamiz',
-                title: 'Content Strategy',
-                description: 'Hafta oxirida ko\'ngilochar kontent yuborishni tavsiya etamiz'
-            },
-            {
-                type: 'trend',
-                message: 'Faollik darajasi hafta davomida 15% oshgan',
-                title: 'Engagement Trend',
-                description: 'Faollik darajasi hafta davomida 15% oshgan'
-            }
-        ];
+        if (!data.best_times || data.best_times.length === 0) {
+            return [];
+        }
 
-        return insights.slice(0, Math.min(insights.length, 4));
+        const insights: AIInsight[] = [];
+        const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // Get best time (first recommendation)
+        const bestTime = data.best_times[0];
+        const dayName = daysOfWeek[bestTime.day] || 'Unknown';
+        const hour = bestTime.hour;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const timeStr = `${displayHour}:00 ${period}`;
+        
+        // Insight 1: Optimal Posting Time (from real data)
+        insights.push({
+            type: 'time',
+            message: `Highest engagement observed on ${dayName} at ${timeStr}`,
+            title: 'Best Performing Time',
+            description: `Based on historical data analysis, posts on ${dayName} at ${timeStr} receive ${bestTime.confidence}% higher engagement`
+        });
+        
+        // Insight 2: Audience Activity (based on time of day)
+        const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+        insights.push({
+            type: 'audience',
+            message: `Your audience is most active in the ${timeOfDay}`,
+            title: 'Audience Activity Pattern',
+            description: `Historical data shows peak engagement during ${timeOfDay} hours across ${data.best_times.length} analyzed time slots`
+        });
+        
+        // Insight 3: Content Strategy (based on day type)
+        const isWeekend = bestTime.day === 0 || bestTime.day === 6;
+        const contentTip = isWeekend 
+            ? 'We recommend posting entertaining or lifestyle content on weekends'
+            : 'We recommend posting professional or educational content on weekdays';
+        insights.push({
+            type: 'content',
+            message: contentTip,
+            title: 'Content Strategy',
+            description: `${isWeekend ? 'Weekend' : 'Weekday'} posts perform best for your channel`
+        });
+        
+        // Insight 4: Engagement Trend (calculate from data if multiple times available)
+        if (data.best_times.length >= 2) {
+            const avgEngagement = data.best_times.reduce((sum, t) => sum + t.avg_engagement, 0) / data.best_times.length;
+            insights.push({
+                type: 'trend',
+                message: `Average engagement rate is ${avgEngagement.toFixed(2)} across top performing times`,
+                title: 'Engagement Trend',
+                description: `Consistent posting during optimal times can improve overall channel performance`
+            });
+        }
+
+        return insights;
     };
 
     // Load best time recommendations using store
@@ -79,7 +107,20 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
 
         try {
             setError(null);
-            console.log('BestTimeRecommender: Fetching for channel:', selectedChannel.id);
+            
+            // Convert timeFrame to days
+            const daysMap: Record<string, number> = {
+                'hour': 1,        // Last 1 day (need recent data for hourly analysis)
+                '6hours': 1,      // Last 1 day
+                '24hours': 2,     // Last 2 days
+                '7days': 7,       // Last 7 days
+                '30days': 30,     // Last 30 days
+                '90days': 90,     // Last 90 days
+                'alltime': 365    // Last 365 days (approximate "all time")
+            };
+            const days = daysMap[timeFrame] || 30;
+            
+            console.log('BestTimeRecommender: Fetching for channel:', selectedChannel.id, 'timeFrame:', timeFrame, 'days:', days);
             await fetchBestTime(selectedChannel.id);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -87,26 +128,35 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             console.error('Error loading recommendations:', err);
             setAiInsights([]);
         }
-    }, [fetchBestTime, selectedChannel]);
+    }, [fetchBestTime, selectedChannel, timeFrame]);
 
     // Update recommendations when store data changes
     useEffect(() => {
         if (bestTimes && bestTimes.length > 0) {
+            console.log('🔄 Processing bestTimes from store:', bestTimes);
+            
             // Convert BestTimeRecommendation[] to the expected format
+            // Handle both API format (avg_engagement) and any legacy format (avgEngagement)
             const formatted: BestTimeRecommendations = {
                 best_times: bestTimes.map(bt => ({
                     hour: bt.hour,
                     day: typeof bt.day === 'string' ? parseInt(bt.day) : bt.day,
                     confidence: bt.confidence,
-                    avg_engagement: bt.avgEngagement
+                    avg_engagement: bt.avg_engagement || bt.avgEngagement || 0
                 })),
-                accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + bt.confidence, 0) / bestTimes.length)
+                accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + (bt.confidence || 0), 0) / bestTimes.length)
             };
+            
+            console.log('✅ Formatted recommendations:', formatted);
             setBestTimeRecommendations(formatted);
 
-            // Generate AI insights
+            // Generate performance insights
             const insights = generateAIInsights(formatted);
             setAiInsights(insights);
+        } else {
+            console.log('⚠️ No bestTimes data available');
+            setBestTimeRecommendations(null);
+            setAiInsights([]);
         }
     }, [bestTimes]);
 

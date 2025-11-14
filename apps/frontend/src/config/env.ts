@@ -5,7 +5,7 @@
 
 export const ENV = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'https://b2qz1m0n-11400.euw.devtunnels.ms',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '',
   WS_URL: import.meta.env.VITE_WS_URL || 'ws://localhost:11400',
   
   // Timeouts

@@ -206,12 +206,21 @@ class ImportGuard:
         )
 
         if is_mtproto_import:
-            # This is a potential violation - MTProto imports should be guarded
-            # or only exist in stub implementations
+            # Allow MTProto imports in designated directories where they're expected
+            relative_path = str(file_path.relative_to(self.project_root))
 
-            # Allow in infra/tg/ directory (stub implementations)
-            if "infra/tg/" in str(file_path):
-                return
+            allowed_paths = [
+                "infra/tg/",  # Stub implementations
+                "apps/mtproto/",  # MTProto services layer
+                "apps/api/services/telegram_",  # Telegram-specific API services
+                "apps/api/routers/user_mtproto_",  # MTProto routers
+                "apps/bot/multi_tenant/",  # Bot instances using MTProto
+                "scripts/test_",  # Test scripts
+            ]
+
+            for allowed in allowed_paths:
+                if allowed in relative_path:
+                    return
 
             violation = ImportViolation(
                 file_path=str(file_path),

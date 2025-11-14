@@ -36,12 +36,12 @@ const ScheduleTimeInput: React.FC<ScheduleTimeInputProps> = ({
 
     const formatDateForInput = (date: Date | null | string): string => {
         if (!date) return '';
-        
+
         // If it's already a string in datetime-local format, return it directly
         if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(date)) {
             return date.slice(0, 16);
         }
-        
+
         // If it's a Date object, format it to local timezone
         const dateObj = typeof date === 'string' ? new Date(date) : date;
         const year = dateObj.getFullYear();

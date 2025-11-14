@@ -10,7 +10,7 @@ and provides clean, focused functionality for time-based recommendations.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .models.posting_time_models import AnalysisParameters, PostingTimeAnalysisResult
 from .recommendation_engine import RecommendationEngine
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class PostingTimeRecommendationService:
     """
     Dedicated service for posting time recommendations.
-    
+
     Coordinates between repository (data access) and engine (business logic)
     to provide clean, consistent posting time analysis.
     """
@@ -30,46 +30,46 @@ class PostingTimeRecommendationService:
     def __init__(self, db_pool):
         """
         Initialize service with database pool.
-        
+
         Args:
             db_pool: AsyncPG database connection pool
         """
         self.repository = TimeAnalysisRepository(db_pool)
         self.engine = RecommendationEngine()
 
-    async def get_best_posting_times(
-        self, 
-        channel_id: int, 
-        days: int = 90
-    ) -> Dict[str, Any]:
+    async def get_best_posting_times(self, channel_id: int, days: int = 90) -> dict[str, Any]:
         """
         Get optimal posting times for a channel.
-        
+
         This method replaces the 235-line god object method with clean,
         focused architecture that separates concerns properly.
-        
+
         Args:
             channel_id: Channel ID to analyze
             days: Number of days to analyze (7, 30, 90, or 365)
-            
+
         Returns:
             Dictionary with posting time recommendations in API format
         """
         try:
-            logger.info(f"⏰ Getting best posting times for channel {channel_id} (last {days} days)")
+            logger.info(
+                f"⏰ Getting best posting times for channel {channel_id} (last {days} days)"
+            )
 
             # Create analysis parameters with intelligent thresholds
             params = self._create_analysis_parameters(channel_id, days)
-            
+
             # Get raw data from repository (database queries)
             raw_data = await self.repository.get_posting_time_metrics(params)
-            
+
             if not raw_data:
-                return self._create_error_response(channel_id, "Failed to retrieve data from database")
+                return self._create_error_response(
+                    channel_id, "Failed to retrieve data from database"
+                )
 
             # Generate recommendations using business logic engine
             result = self.engine.generate_recommendations(raw_data, params)
-            
+
             if not result:
                 return self._create_error_response(channel_id, "Failed to generate recommendations")
 
@@ -77,7 +77,9 @@ class PostingTimeRecommendationService:
             return self._format_api_response(result)
 
         except Exception as e:
-            logger.error(f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True
+            )
             return self._create_error_response(channel_id, str(e))
 
     def _create_analysis_parameters(self, channel_id: int, days: int) -> AnalysisParameters:
@@ -104,10 +106,10 @@ class PostingTimeRecommendationService:
             days=days,
             min_posts_per_hour=min_posts_per_hour,
             min_posts_per_day=min_posts_per_day,
-            min_total_posts=min_total_posts
+            min_total_posts=min_total_posts,
         )
 
-    def _format_api_response(self, result: PostingTimeAnalysisResult) -> Dict[str, Any]:
+    def _format_api_response(self, result: PostingTimeAnalysisResult) -> dict[str, Any]:
         """
         Format internal result to match expected API response format.
         Maintains backward compatibility with existing frontend code.
@@ -119,7 +121,7 @@ class PostingTimeRecommendationService:
                     "hour": bt.hour,
                     "day": bt.day,
                     "confidence": bt.confidence,
-                    "avg_engagement": bt.avg_engagement
+                    "avg_engagement": bt.avg_engagement,
                 }
                 for bt in result.best_times
             ],
@@ -128,16 +130,12 @@ class PostingTimeRecommendationService:
                     "day": bd.day,
                     "day_number": bd.day_number,
                     "confidence": bd.confidence,
-                    "avg_engagement": bd.avg_engagement
+                    "avg_engagement": bd.avg_engagement,
                 }
                 for bd in result.best_days
             ],
             "hourly_engagement_trend": [
-                {
-                    "hour": het.hour,
-                    "engagement": het.engagement,
-                    "postCount": het.post_count
-                }
+                {"hour": het.hour, "engagement": het.engagement, "postCount": het.post_count}
                 for het in result.hourly_engagement_trend
             ],
             "current_avg_engagement": result.current_avg_engagement,
@@ -146,7 +144,7 @@ class PostingTimeRecommendationService:
                     "date": dp.date,
                     "dayOfWeek": dp.day_of_week,
                     "avgEngagement": dp.avg_engagement,
-                    "postCount": dp.post_count
+                    "postCount": dp.post_count,
                 }
                 for dp in result.daily_performance
             ],
@@ -154,20 +152,20 @@ class PostingTimeRecommendationService:
             "total_posts_analyzed": result.total_posts_analyzed,
             "confidence": result.confidence,
             "generated_at": result.generated_at,
-            "data_source": result.data_source
+            "data_source": result.data_source,
         }
 
-    def _create_error_response(self, channel_id: int, error_message: str) -> Dict[str, Any]:
+    def _create_error_response(self, channel_id: int, error_message: str) -> dict[str, Any]:
         """Create standardized error response"""
         return {
             "channel_id": channel_id,
             "best_times": [],
             "error": error_message,
             "status": "failed",
-            "data_source": "error"
+            "data_source": "error",
         }
 
-    async def analyze_engagement_patterns(self, channel_id: int) -> Optional[Dict[str, Any]]:
+    async def analyze_engagement_patterns(self, channel_id: int) -> dict[str, Any] | None:
         """
         Analyze engagement patterns for a channel.
         Future method for detailed pattern analysis.
@@ -176,7 +174,7 @@ class PostingTimeRecommendationService:
         logger.info(f"📊 Analyzing engagement patterns for channel {channel_id}")
         return None
 
-    async def generate_hourly_recommendations(self, channel_id: int) -> Optional[Dict[str, Any]]:
+    async def generate_hourly_recommendations(self, channel_id: int) -> dict[str, Any] | None:
         """
         Generate hourly posting recommendations.
         Future method for granular hour-by-hour analysis.

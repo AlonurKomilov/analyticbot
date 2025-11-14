@@ -1,7 +1,7 @@
 /**
  * Best Time Recommendations Mock Data
  * Separated from the main mockData.js for better organization
- * 
+ *
  * NOTE: This mock data is now primarily used for fallback when real API is unavailable.
  * The main application uses real data from the backend API.
  */
@@ -19,20 +19,20 @@ const generateDailyPerformance = () => {
     const dayOfWeek = date.getDay();
     const isToday = date.toDateString() === today.toDateString();
     const isPast = date < today && !isToday;
-    
+
     // Only add historical data for past days
     if (isPast) {
       const baseScore = [75, 85, 82, 88, 80, 65, 70][dayOfWeek]; // Sun-Sat scores
       const variance = (Math.random() - 0.5) * 30; // Add some randomness
       const avgEngagement = Math.max(1, baseScore + variance) / 10; // Convert to engagement rate
-      
+
       dailyPerformance.push({
         date: day,
         dayOfWeek,
         avgEngagement,
         postCount: Math.floor(Math.random() * 3) + 1, // 1-3 posts
-        score: avgEngagement > 8 ? 'excellent' : 
-               avgEngagement > 6 ? 'good' : 
+        score: avgEngagement > 8 ? 'excellent' :
+               avgEngagement > 6 ? 'good' :
                avgEngagement > 4 ? 'average' : 'poor'
       });
     }

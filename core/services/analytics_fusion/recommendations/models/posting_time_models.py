@@ -7,13 +7,13 @@ Clean separation between data structures and business logic.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
 class PostingTimeRecommendation:
     """Single posting time recommendation"""
+
     hour: int
     day: int  # 0-6 (Sunday-Saturday)
     confidence: float
@@ -23,6 +23,7 @@ class PostingTimeRecommendation:
 @dataclass
 class DailyPerformanceData:
     """Daily performance metrics for calendar heatmap"""
+
     date: int  # Day of month (1-31)
     day_of_week: int  # 0-6 (Sunday-Saturday)
     post_count: int
@@ -32,6 +33,7 @@ class DailyPerformanceData:
 @dataclass
 class HourlyEngagementTrend:
     """Hourly engagement trend data for visualization"""
+
     hour: int
     engagement: float
     post_count: int
@@ -40,6 +42,7 @@ class HourlyEngagementTrend:
 @dataclass
 class BestDayRecommendation:
     """Best day of week recommendation"""
+
     day: str  # Day name (Monday, Tuesday, etc.)
     day_number: int  # 0-6
     confidence: float
@@ -49,6 +52,7 @@ class BestDayRecommendation:
 @dataclass
 class PostingTimeAnalysisResult:
     """Complete result from posting time analysis"""
+
     channel_id: int
     best_times: list[PostingTimeRecommendation]
     best_days: list[BestDayRecommendation]
@@ -65,6 +69,7 @@ class PostingTimeAnalysisResult:
 @dataclass
 class RawMetricsData:
     """Raw metrics data from database queries"""
+
     best_hours: list[dict[str, Any]]
     best_days: list[dict[str, Any]]
     daily_performance: list[dict[str, Any]]
@@ -74,6 +79,7 @@ class RawMetricsData:
 @dataclass
 class AnalysisParameters:
     """Parameters for posting time analysis"""
+
     channel_id: int
     days: int = 90
     min_posts_per_hour: int = 1

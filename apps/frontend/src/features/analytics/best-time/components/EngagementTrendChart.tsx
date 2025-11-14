@@ -1,6 +1,6 @@
 /**
  * EngagementTrendChart Component
- * 
+ *
  * Visualizes hourly engagement patterns over time
  * Shows users when their posts perform best
  */
@@ -76,19 +76,19 @@ const EngagementTrendChart: React.FC<EngagementTrendChartProps> = ({ data, bestH
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                        <XAxis 
-                            dataKey="hour" 
+                        <XAxis
+                            dataKey="hour"
                             tickFormatter={formatHour}
                             tick={{ fontSize: 12 }}
                         />
-                        <YAxis 
+                        <YAxis
                             label={{ value: 'Avg Engagement', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                             tick={{ fontSize: 12 }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="engagement" radius={[4, 4, 0, 0]}>
                             {data.map((entry, index) => (
-                                <Cell 
+                                <Cell
                                     key={`cell-${index}`}
                                     fill={entry.hour === bestHour ? '#4caf50' : '#1976d2'}
                                 />

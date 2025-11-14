@@ -45,7 +45,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
 
         const insights: AIInsight[] = [];
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
+
         // Get best time (first recommendation)
         const bestTime = data.best_times[0];
         const dayName = daysOfWeek[bestTime.day] || 'Unknown';
@@ -53,7 +53,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
         const period = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
         const timeStr = `${displayHour}:00 ${period}`;
-        
+
         // Insight 1: Optimal Posting Time (from real data)
         insights.push({
             type: 'time',
@@ -61,7 +61,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             title: 'Best Performing Time',
             description: `Based on historical data analysis, posts on ${dayName} at ${timeStr} receive ${bestTime.confidence}% higher engagement`
         });
-        
+
         // Insight 2: Audience Activity (based on time of day)
         const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
         insights.push({
@@ -70,10 +70,10 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             title: 'Audience Activity Pattern',
             description: `Historical data shows peak engagement during ${timeOfDay} hours across ${data.best_times.length} analyzed time slots`
         });
-        
+
         // Insight 3: Content Strategy (based on day type)
         const isWeekend = bestTime.day === 0 || bestTime.day === 6;
-        const contentTip = isWeekend 
+        const contentTip = isWeekend
             ? 'We recommend posting entertaining or lifestyle content on weekends'
             : 'We recommend posting professional or educational content on weekdays';
         insights.push({
@@ -82,7 +82,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             title: 'Content Strategy',
             description: `${isWeekend ? 'Weekend' : 'Weekday'} posts perform best for your channel`
         });
-        
+
         // Insight 4: Engagement Trend (calculate from data if multiple times available)
         if (data.best_times.length >= 2) {
             const avgEngagement = data.best_times.reduce((sum, t) => sum + t.avg_engagement, 0) / data.best_times.length;
@@ -107,7 +107,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
 
         try {
             setError(null);
-            
+
             // Convert timeFrame to days
             const daysMap: Record<string, number> = {
                 'hour': 1,        // Last 1 day (need recent data for hourly analysis)
@@ -119,7 +119,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                 'alltime': 365    // Last 365 days (approximate "all time")
             };
             const days = daysMap[timeFrame] || 30;
-            
+
             console.log('BestTimeRecommender: Fetching for channel:', selectedChannel.id, 'timeFrame:', timeFrame, 'days:', days);
             await fetchBestTime(selectedChannel.id);
         } catch (err) {
@@ -134,7 +134,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     useEffect(() => {
         if (bestTimes && bestTimes.length > 0) {
             console.log('🔄 Processing bestTimes from store:', bestTimes);
-            
+
             // Convert BestTimeRecommendation[] to the expected format
             // Handle both API format (avg_engagement) and any legacy format (avgEngagement)
             const formatted: BestTimeRecommendations = {
@@ -146,7 +146,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                 })),
                 accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + (bt.confidence || 0), 0) / bestTimes.length)
             };
-            
+
             console.log('✅ Formatted recommendations:', formatted);
             setBestTimeRecommendations(formatted);
 

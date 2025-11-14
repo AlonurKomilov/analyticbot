@@ -1,6 +1,6 @@
 /**
  * Telegram Storage Browser
- * 
+ *
  * Browse, upload, and manage files stored in user's Telegram channels.
  * Replaces server storage with zero-cost Telegram cloud storage.
  */

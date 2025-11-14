@@ -1,16 +1,16 @@
 import React, { useMemo, useState } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    Tooltip, 
+import {
+    Box,
+    Typography,
+    Paper,
+    Tooltip,
     useTheme,
     Button,
     ButtonGroup,
     Chip,
     Grid
 } from '@mui/material';
-import { 
+import {
     Brightness1,
     Event,
     ChevronLeft,
@@ -49,8 +49,8 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
 }) => {
     const theme = useTheme();
     const today = new Date();
-    const [currentDate, setCurrentDate] = useState(monthlyData ? 
-        new Date(monthlyData.year, monthlyData.month) : 
+    const [currentDate, setCurrentDate] = useState(monthlyData ?
+        new Date(monthlyData.year, monthlyData.month) :
         new Date(today.getFullYear(), today.getMonth())
     );
 
@@ -63,12 +63,12 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
         startOfCalendar.setDate(1 - firstDay.getDay()); // Start from Sunday before first day
 
         const calendarDays: (DayRecommendation | null)[] = [];
-        
+
         // Generate 6 weeks of calendar (42 days)
         for (let i = 0; i < 42; i++) {
             const currentDay = new Date(startOfCalendar);
             currentDay.setDate(startOfCalendar.getDate() + i);
-            
+
             if (currentDay.getMonth() !== month) {
                 calendarDays.push(null); // Outside current month
                 continue;
@@ -82,11 +82,11 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
 
             // Find existing recommendation or create one
             const existingRec = dailyRecommendations.find(r => r.date === dayOfMonth);
-            
+
             // Calculate recommendation score based on day of week and historical data
             let recommendationScore = 50; // Default medium
             let confidence = 70; // Default confidence
-            
+
             // Use historical data if available
             if (existingRec?.avgEngagement !== undefined && existingRec?.postCount && existingRec.postCount > 0) {
                 // Convert engagement to score (0-100)
@@ -103,8 +103,8 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
             const recommendedTimes = bestTimesByDay[dayOfWeek] || (() => {
                 // Use intelligent fallback based on available data
                 const allTimes = Object.values(bestTimesByDay).flat();
-                return allTimes.length > 0 ? 
-                    [...new Set(allTimes)].slice(0, 3) : 
+                return allTimes.length > 0 ?
+                    [...new Set(allTimes)].slice(0, 3) :
                     ['10:00', '15:00', '20:00']; // Research-based optimal times
             })();
 
@@ -171,7 +171,7 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
                 borderColor = '#ffcc02';
                 textColor = '#333';
             }
-            
+
             if (day.isFuture) {
                 opacity = 0.85; // Slightly transparent to show it's a prediction
             }
@@ -231,10 +231,10 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <Paper 
+        <Paper
             elevation={0}
-            sx={{ 
-                p: 3, 
+            sx={{
+                p: 3,
                 mb: 3,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -247,7 +247,7 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
                     <Event color="primary" />
                     📅 Posting Recommendations Calendar
                 </Typography>
-                
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ButtonGroup size="small" variant="outlined">
                         <Button onClick={() => navigateMonth('prev')}>
@@ -269,18 +269,18 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
             </Typography>
 
             {/* Weekday headers */}
-            <Box 
-                sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
                     gap: 1,
                     mb: 1
                 }}
             >
                 {weekDays.map(day => (
-                    <Box 
+                    <Box
                         key={day}
-                        sx={{ 
+                        sx={{
                             textAlign: 'center',
                             fontWeight: 'bold',
                             fontSize: '0.75rem',
@@ -294,10 +294,10 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
             </Box>
 
             {/* Calendar grid */}
-            <Box 
-                sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
                     gap: 1,
                     mb: 3
                 }}
@@ -318,15 +318,15 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
                                         {day.isToday ? 'Today' : `Day ${day.date}`}
                                         {day.isToday && ' 🎯'}
                                     </Typography>
-                                    
+
                                     <Typography variant="caption" display="block" sx={{ mb: 1 }}>
                                         Status: {getRecommendationText(day.recommendationScore, day.isPast || false)}
                                     </Typography>
-                                    
+
                                     <Typography variant="caption" display="block" sx={{ mb: 1 }}>
                                         Score: {day.recommendationScore.toFixed(0)}/100
                                     </Typography>
-                                    
+
                                     <Typography variant="caption" display="block" sx={{ mb: 1 }}>
                                         Confidence: {day.confidence.toFixed(0)}%
                                     </Typography>
@@ -383,9 +383,9 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
                                     }
                                 }}
                             >
-                                <Typography 
-                                    variant="body2" 
-                                    sx={{ 
+                                <Typography
+                                    variant="body2"
+                                    sx={{
                                         fontWeight: day.isToday ? 'bold' : 'medium',
                                         color: style.textColor,
                                         fontSize: day.isToday ? '1rem' : '0.875rem'
@@ -393,15 +393,15 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
                                 >
                                     {day.date}
                                 </Typography>
-                                
+
                                 {/* Score indicator */}
-                                <Brightness1 
-                                    sx={{ 
+                                <Brightness1
+                                    sx={{
                                         fontSize: 8,
                                         color: style.textColor,
                                         opacity: 0.7,
                                         mt: 0.5
-                                    }} 
+                                    }}
                                 />
 
                                 {/* Today indicator */}
@@ -457,9 +457,9 @@ const PostingRecommendationCalendar: React.FC<PostingRecommendationCalendarProps
             </Box>
 
             {/* Instructions */}
-            <Typography 
-                variant="body2" 
-                color="text.secondary" 
+            <Typography
+                variant="body2"
+                color="text.secondary"
                 sx={{ textAlign: 'center', fontStyle: 'italic' }}
             >
                 💡 Hover over days for detailed recommendations. Click to schedule a post for that day.

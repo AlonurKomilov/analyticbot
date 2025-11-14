@@ -19,13 +19,12 @@ from apps.api.routers.auth import router as auth_router
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels_router import router as channels_router
 from apps.api.routers.content_protection_router import router as content_protection_router
-from apps.api.routers.media_router import router as media_router
-from apps.api.routers.telegram_storage_router import router as telegram_storage_router
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
+from apps.api.routers.media_router import router as media_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
 from apps.api.routers.payment_router import router as payment_router
@@ -33,6 +32,7 @@ from apps.api.routers.posts_router import router as posts_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
+from apps.api.routers.telegram_storage_router import router as telegram_storage_router
 
 # ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
 from apps.di import cleanup_container as cleanup_db_pool

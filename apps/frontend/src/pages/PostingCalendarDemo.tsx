@@ -36,8 +36,8 @@ const PostingCalendarDemo: React.FC = () => {
 
     const handleDateSelect = (date: Date) => {
         console.log('Selected date for posting:', date);
-        alert(`Selected ${date.toLocaleDateString()} for posting! 
-        
+        alert(`Selected ${date.toLocaleDateString()} for posting!
+
 In a real application, this would:
 • Open the post creation form
 • Pre-fill the scheduled date

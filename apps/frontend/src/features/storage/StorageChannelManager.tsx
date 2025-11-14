@@ -1,6 +1,6 @@
 /**
  * Storage Channel Manager Component
- * 
+ *
  * UI for connecting and managing user-owned Telegram channels for file storage.
  * Displays connected channels, allows adding new channels, and shows storage stats.
  */

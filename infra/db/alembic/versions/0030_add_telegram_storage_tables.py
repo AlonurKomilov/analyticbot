@@ -22,7 +22,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Create user_storage_channels and telegram_media tables."""
-    
+
     # Create user_storage_channels table
     op.create_table(
         "user_storage_channels",
@@ -38,7 +38,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id", "channel_id", name="uq_user_storage_channel"),
     )
-    
+
     # Add indexes for user_storage_channels
     op.create_index(
         "idx_user_storage_channels_user_id",
@@ -55,7 +55,7 @@ def upgrade() -> None:
         "user_storage_channels",
         ["is_active"],
     )
-    
+
     # Create telegram_media table
     op.create_table(
         "telegram_media",
@@ -83,7 +83,7 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Add indexes for telegram_media
     op.create_index(
         "idx_telegram_media_user_id",
@@ -110,7 +110,7 @@ def upgrade() -> None:
         "telegram_media",
         ["file_type"],
     )
-    
+
     # Composite index for efficient queries
     op.create_index(
         "idx_telegram_media_user_channel",
@@ -121,7 +121,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     """Drop telegram_media and user_storage_channels tables."""
-    
+
     # Drop indexes first
     op.drop_index("idx_telegram_media_user_channel", table_name="telegram_media")
     op.drop_index("idx_telegram_media_file_type", table_name="telegram_media")
@@ -129,11 +129,11 @@ def downgrade() -> None:
     op.drop_index("idx_telegram_media_file_id", table_name="telegram_media")
     op.drop_index("idx_telegram_media_storage_channel_id", table_name="telegram_media")
     op.drop_index("idx_telegram_media_user_id", table_name="telegram_media")
-    
+
     op.drop_index("idx_user_storage_channels_active", table_name="user_storage_channels")
     op.drop_index("idx_user_storage_channels_channel_id", table_name="user_storage_channels")
     op.drop_index("idx_user_storage_channels_user_id", table_name="user_storage_channels")
-    
+
     # Drop tables
     op.drop_table("telegram_media")
     op.drop_table("user_storage_channels")

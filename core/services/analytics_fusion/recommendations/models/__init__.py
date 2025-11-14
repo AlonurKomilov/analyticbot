@@ -17,7 +17,7 @@ from .posting_time_models import (
 
 __all__ = [
     "AnalysisParameters",
-    "BestDayRecommendation", 
+    "BestDayRecommendation",
     "DailyPerformanceData",
     "HourlyEngagementTrend",
     "PostingTimeAnalysisResult",

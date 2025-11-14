@@ -1,6 +1,6 @@
 /**
  * Storage Channels Settings Page
- * 
+ *
  * Page for managing Telegram storage channels configuration.
  * Users can connect/disconnect channels for zero-cost file storage.
  */
@@ -36,8 +36,8 @@ const StorageChannelsPage: React.FC = () => {
       {/* Info Banner */}
       <Alert severity="info" sx={{ mb: 3 }}>
         <Typography variant="body2">
-          <strong>How it works:</strong> Upload files to your private Telegram channels 
-          and use them in your posts. All files are stored in Telegram's cloud infrastructure 
+          <strong>How it works:</strong> Upload files to your private Telegram channels
+          and use them in your posts. All files are stored in Telegram's cloud infrastructure
           at no cost to you. Simply connect a channel where the bot has admin access.
         </Typography>
       </Alert>
@@ -50,7 +50,7 @@ const StorageChannelsPage: React.FC = () => {
       {/* Help Section */}
       <Paper sx={{ p: 2, mt: 3, bgcolor: 'grey.50' }}>
         <Typography variant="body2" color="text.secondary">
-          💡 <strong>Need help?</strong> Make sure your bot has admin rights in the channel 
+          💡 <strong>Need help?</strong> Make sure your bot has admin rights in the channel
           with "Post Messages" permission. The channel can be private or public.
         </Typography>
       </Paper>

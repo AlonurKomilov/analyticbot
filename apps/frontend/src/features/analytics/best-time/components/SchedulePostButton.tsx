@@ -1,6 +1,6 @@
 /**
  * SchedulePostButton Component
- * 
+ *
  * Quick action button to schedule a post at the recommended time
  * Integrates with the post scheduling system
  */
@@ -70,7 +70,7 @@ const SchedulePostButton: React.FC<SchedulePostButtonProps> = ({
 
     const handleConfirmSchedule = () => {
         const scheduledTime = getNextRecommendedDateTime();
-        
+
         // Navigate to create post page with pre-filled schedule time
         navigate('/posts/create', {
             state: {

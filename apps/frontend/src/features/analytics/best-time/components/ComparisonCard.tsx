@@ -1,6 +1,6 @@
 /**
  * ComparisonCard Component
- * 
+ *
  * Shows potential engagement improvement by posting at recommended times
  * Displays "before vs after" comparison
  */
@@ -118,7 +118,7 @@ const ComparisonCard: React.FC<ComparisonCardProps> = ({ comparison }) => {
                     <Typography variant="body2" textAlign="center">
                         {isImprovement ? (
                             <>
-                                📈 By posting at <strong>{recommendedDay} {formatHour(recommendedHour)}</strong>, 
+                                📈 By posting at <strong>{recommendedDay} {formatHour(recommendedHour)}</strong>,
                                 you could improve engagement by <strong>{improvementPercentage.toFixed(1)}%</strong>
                             </>
                         ) : (

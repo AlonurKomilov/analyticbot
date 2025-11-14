@@ -41,10 +41,10 @@ interface PostCreatorProps {
     fromRecommendation?: boolean;
 }
 
-const PostCreator: React.FC<PostCreatorProps> = React.memo(({ 
-    initialChannelId, 
-    initialScheduledTime, 
-    fromRecommendation 
+const PostCreator: React.FC<PostCreatorProps> = React.memo(({
+    initialChannelId,
+    initialScheduledTime,
+    fromRecommendation
 }) => {
     const { channels } = useChannelStore();
     const { schedulePost, sendNowPost } = usePostStore();
@@ -97,7 +97,7 @@ const PostCreator: React.FC<PostCreatorProps> = React.memo(({
         // For immediate send, only validate text and channel
         // For scheduled send, also validate scheduleTime
         const errors: Record<string, string> = {};
-        
+
         if (!formState.text.trim()) {
             errors.text = 'Post text is required';
         }
@@ -147,12 +147,12 @@ const PostCreator: React.FC<PostCreatorProps> = React.memo(({
     // Determine if form can be submitted
     const canSubmit = useMemo(() => {
         const hasBasicFields = formState.text.trim() && formState.selectedChannel;
-        
+
         if (isScheduleMode) {
             // In schedule mode, also need valid schedule time
             return hasBasicFields && !!formState.scheduleTime;
         }
-        
+
         // In send now mode, just need text and channel
         return hasBasicFields;
     }, [formState.text, formState.selectedChannel, formState.scheduleTime, isScheduleMode]);
@@ -248,7 +248,7 @@ const PostCreator: React.FC<PostCreatorProps> = React.memo(({
                         </Typography>
                     }
                 />
-                
+
                 {/* Collapsible Schedule Settings */}
                 <Collapse in={isScheduleMode}>
                     <Box sx={{ mt: 2 }}>

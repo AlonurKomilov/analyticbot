@@ -35,18 +35,18 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
     const handleSchedulePost = (day: number, hour: number) => {
         const now = new Date();
         const targetDate = new Date(now);
-        
+
         // Calculate next occurrence of the target day/hour
         const currentDay = now.getDay();
         const daysUntilTarget = (day - currentDay + 7) % 7 || 7;
         targetDate.setDate(now.getDate() + daysUntilTarget);
         targetDate.setHours(hour, 0, 0, 0);
-        
+
         // If the target time is in the past today, schedule for next week
         if (targetDate <= now && daysUntilTarget === 7) {
             targetDate.setDate(targetDate.getDate() + 7);
         }
-        
+
         // Format as datetime-local string (YYYY-MM-DDTHH:mm) in local timezone
         const year = targetDate.getFullYear();
         const month = String(targetDate.getMonth() + 1).padStart(2, '0');
@@ -54,7 +54,7 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
         const hours = String(targetDate.getHours()).padStart(2, '0');
         const minutes = String(targetDate.getMinutes()).padStart(2, '0');
         const datetimeLocal = `${year}-${month}-${date}T${hours}:${minutes}`;
-        
+
         navigate('/posts/create', {
             state: {
                 channelId: channelId,
@@ -115,7 +115,7 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
                                 <Typography variant="body2" color="text.secondary">
                                     Average: {time.avg_engagement} engagement
                                 </Typography>
-                                
+
                                 {channelId && (
                                     <Button
                                         variant="contained"

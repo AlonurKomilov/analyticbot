@@ -4,11 +4,8 @@ Handles media uploads for posts (images, videos, documents)
 """
 
 import logging
-import os
-import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
@@ -26,14 +23,15 @@ router = APIRouter(
 
 class MediaUploadResponse(BaseModel):
     """Response model for media upload"""
+
     id: str
     url: str
     type: str
     filename: str
     size: int
     uploaded_at: datetime
-    upload_duration: Optional[float] = None
-    upload_speed: Optional[float] = None
+    upload_duration: float | None = None
+    upload_speed: float | None = None
     upload_type: str = "storage"
 
 
@@ -46,17 +44,23 @@ MAX_FILE_SIZE = 50 * 1024 * 1024
 
 # Allowed file types
 ALLOWED_TYPES = {
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/webm', 'video/quicktime',
-    'application/pdf', 'text/plain'
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "application/pdf",
+    "text/plain",
 }
 
 
 @router.post("/upload", response_model=MediaUploadResponse)
 async def upload_media(
     file: UploadFile = File(...),
-    channel_id: Optional[str] = Form(None),
-    caption: Optional[str] = Form(None),
+    channel_id: str | None = Form(None),
+    caption: str | None = Form(None),
     current_user: dict = Depends(get_current_user),
 ):
     """
@@ -84,7 +88,7 @@ async def upload_media(
         if file.content_type not in ALLOWED_TYPES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported file type: {file.content_type}. Allowed types: {', '.join(ALLOWED_TYPES)}"
+                detail=f"Unsupported file type: {file.content_type}. Allowed types: {', '.join(ALLOWED_TYPES)}",
             )
 
         # Read file content to check size
@@ -94,7 +98,7 @@ async def upload_media(
         if file_size > MAX_FILE_SIZE:
             raise HTTPException(
                 status_code=400,
-                detail=f"File too large ({file_size / 1024 / 1024:.1f}MB). Maximum size is 50MB."
+                detail=f"File too large ({file_size / 1024 / 1024:.1f}MB). Maximum size is 50MB.",
             )
 
         # Generate unique filename
@@ -125,17 +129,17 @@ async def upload_media(
         speed = file_size / duration if duration > 0 else 0
 
         # Determine media type
-        if file.content_type.startswith('image/'):
-            media_type = 'image'
-        elif file.content_type.startswith('video/'):
-            media_type = 'video'
+        if file.content_type.startswith("image/"):
+            media_type = "image"
+        elif file.content_type.startswith("video/"):
+            media_type = "video"
         else:
-            media_type = 'document'
+            media_type = "document"
 
         # Generate file ID and URL
         file_id = f"{user_id}_{timestamp}"
         # Use relative path for URL
-        relative_path = str(file_path.relative_to(UPLOAD_DIR.parent))
+        str(file_path.relative_to(UPLOAD_DIR.parent))
         file_url = f"/uploads/{file_path.name}"
 
         logger.info(
@@ -152,17 +156,14 @@ async def upload_media(
             uploaded_at=end_time,
             upload_duration=duration,
             upload_speed=speed,
-            upload_type=upload_type
+            upload_type=upload_type,
         )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ Media upload failed: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to upload media: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to upload media: {str(e)}")
 
 
 @router.get("/storage", response_model=dict)
@@ -188,45 +189,36 @@ async def list_storage_files(
         storage_path = UPLOAD_DIR / "storage"
 
         if not storage_path.exists():
-            return {
-                "files": [],
-                "total": 0,
-                "offset": offset,
-                "limit": limit
-            }
+            return {"files": [], "total": 0, "offset": offset, "limit": limit}
 
         # Get all user's files
         all_files = []
         for file_path in storage_path.glob(f"{user_id}_*"):
             if file_path.is_file():
                 stat = file_path.stat()
-                all_files.append({
-                    "file_id": file_path.stem,
-                    "filename": file_path.name.split("_", 2)[-1] if "_" in file_path.name else file_path.name,
-                    "file_size": stat.st_size,
-                    "uploaded_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
-                    "preview_url": f"/uploads/{file_path.name}",
-                })
+                all_files.append(
+                    {
+                        "file_id": file_path.stem,
+                        "filename": file_path.name.split("_", 2)[-1]
+                        if "_" in file_path.name
+                        else file_path.name,
+                        "file_size": stat.st_size,
+                        "uploaded_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "preview_url": f"/uploads/{file_path.name}",
+                    }
+                )
 
         # Sort by upload time (newest first)
-        all_files.sort(key=lambda x: x["uploaded_at"], reverse=True)
+        all_files.sort(key=lambda x: str(x.get("uploaded_at", "")), reverse=True)
 
         # Apply pagination
-        paginated_files = all_files[offset:offset + limit]
+        paginated_files = all_files[offset : offset + limit]
 
-        return {
-            "files": paginated_files,
-            "total": len(all_files),
-            "offset": offset,
-            "limit": limit
-        }
+        return {"files": paginated_files, "total": len(all_files), "offset": offset, "limit": limit}
 
     except Exception as e:
         logger.error(f"❌ Failed to list storage files: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to list storage files: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list storage files: {str(e)}")
 
 
 @router.delete("/{file_id}")
@@ -251,8 +243,7 @@ async def delete_media(
         # Security check: file_id must start with user_id
         if not file_id.startswith(str(user_id)):
             raise HTTPException(
-                status_code=403,
-                detail="You don't have permission to delete this file"
+                status_code=403, detail="You don't have permission to delete this file"
             )
 
         # Search for file in both storage and channel directories
@@ -275,7 +266,4 @@ async def delete_media(
         raise
     except Exception as e:
         logger.error(f"❌ Failed to delete file: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete file: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to delete file: {str(e)}")

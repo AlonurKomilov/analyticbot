@@ -29,7 +29,7 @@ const BestTimeRecommender: React.FC = () => {
         setTimeFrame,
         setContentType
     } = useRecommenderLogic();
-    
+
     const { selectedChannel } = useChannelStore();
     const navigate = useNavigate();
     const [currentTab, setCurrentTab] = useState(0);
@@ -38,9 +38,9 @@ const BestTimeRecommender: React.FC = () => {
     const calendarData = React.useMemo(() => {
         // Use daily_performance data from the real backend API response
         const dailyPerformance = (recommendations as any)?.daily_performance || [];
-        
+
         console.log('📅 Processing calendar data:', dailyPerformance);
-        
+
         // Convert backend format to component format
         return dailyPerformance.map((day: any) => ({
             date: day.date,
@@ -53,9 +53,9 @@ const BestTimeRecommender: React.FC = () => {
     // Extract best times by day from real recommendations
     const bestTimesByDay = React.useMemo(() => {
         if (!recommendations?.best_times) return {};
-        
+
         const timesByDay: Record<number, string[]> = {};
-        
+
         // Group times by day of week
         recommendations.best_times.forEach((time: any) => {
             const day = time.day;
@@ -65,22 +65,22 @@ const BestTimeRecommender: React.FC = () => {
                 timesByDay[day].push(`${hour.toString().padStart(2, '0')}:00`);
             }
         });
-        
+
         // Fill in intelligent fallbacks for days without specific recommendations
         // Use the most common times from available data, or industry standard times
         const allTimes = Object.values(timesByDay).flat();
-        const fallbackTimes = allTimes.length > 0 ? 
+        const fallbackTimes = allTimes.length > 0 ?
             // Use the 3 most common times from actual data
-            [...new Set(allTimes)].slice(0, 3) : 
+            [...new Set(allTimes)].slice(0, 3) :
             // Only if no data at all, use research-based optimal times
             ['10:00', '15:00', '20:00']; // Updated from 09:00, 14:00, 18:00
-        
+
         for (let day = 0; day < 7; day++) {
             if (!timesByDay[day] || timesByDay[day].length === 0) {
                 timesByDay[day] = fallbackTimes;
             }
         }
-        
+
         return timesByDay;
     }, [recommendations]);
 
@@ -143,7 +143,7 @@ const BestTimeRecommender: React.FC = () => {
                                 <>
                                     {/* NEW: Engagement Trend Chart */}
                                     {(recommendations as any).hourly_engagement_trend && (recommendations as any).hourly_engagement_trend.length > 0 && (
-                                        <EngagementTrendChart 
+                                        <EngagementTrendChart
                                             data={(recommendations as any).hourly_engagement_trend}
                                             bestHour={recommendations.best_times[0]?.hour}
                                         />
@@ -158,7 +158,7 @@ const BestTimeRecommender: React.FC = () => {
                                                 recommendedHour: recommendations.best_times[0].hour,
                                                 recommendedDay: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][recommendations.best_times[0].day] || 'Monday',
                                                 improvementPercentage: (
-                                                    ((recommendations.best_times[0].avg_engagement - (recommendations as any).current_avg_engagement) / 
+                                                    ((recommendations.best_times[0].avg_engagement - (recommendations as any).current_avg_engagement) /
                                                     (recommendations as any).current_avg_engagement) * 100
                                                 )
                                             }}
@@ -174,7 +174,7 @@ const BestTimeRecommender: React.FC = () => {
                                     )}
 
                                     {/* Best Time Cards */}
-                                    <BestTimeCards 
+                                    <BestTimeCards
                                         recommendations={recommendations as any}
                                         channelId={selectedChannel?.id.toString()}
                                     />

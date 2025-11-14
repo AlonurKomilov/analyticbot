@@ -67,9 +67,9 @@ class DailyRecommendationService {
 
             // Find historical data for this day
             const historicalDayData = historicalData.find(h => h.date === day);
-            
+
             // Get weekly pattern for this day of week
-            const weeklyPattern = this.weeklyPatterns.find(p => p.dayOfWeek === dayOfWeek) || 
+            const weeklyPattern = this.weeklyPatterns.find(p => p.dayOfWeek === dayOfWeek) ||
                 { dayOfWeek, baseScore: 70, bestTimes: ['09:00', '14:00', '18:00'], confidence: 60 };
 
             let recommendationScore: number;
@@ -154,7 +154,7 @@ class DailyRecommendationService {
                 (sum, data) => sum + this.calculateHistoricalScore(data),
                 0
             ) / historicalDataForDay.length;
-            
+
             // Blend historical average with weekly pattern (70% historical, 30% pattern)
             baseScore = avgHistoricalScore * 0.7 + weeklyPattern.baseScore * 0.3;
         }
@@ -204,7 +204,7 @@ class DailyRecommendationService {
      */
     private static generateHistoricalReasoning(data: HistoricalDayData): string {
         const score = this.calculateHistoricalScore(data);
-        
+
         if (score >= 85) {
             return `Excellent historical performance with ${data.postCount || 'multiple'} posts averaging ${data.avgEngagement?.toFixed(2) || 'high'} engagement.`;
         } else if (score >= 70) {
@@ -222,7 +222,7 @@ class DailyRecommendationService {
     private static generatePredictionReasoning(pattern: WeeklyPattern, dayOfWeek: number): string {
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const dayName = dayNames[dayOfWeek];
-        
+
         if (pattern.baseScore >= 85) {
             return `${dayName}s typically show high engagement. Great day for important announcements.`;
         } else if (pattern.baseScore >= 70) {
@@ -251,7 +251,7 @@ class DailyRecommendationService {
             1.08, // November - pre-holiday
             0.92, // December - holiday distraction
         ];
-        
+
         return seasonalFactors[month] || 1.0;
     }
 
@@ -260,11 +260,11 @@ class DailyRecommendationService {
      */
     private static calculateVariance(numbers: number[]): number {
         if (numbers.length <= 1) return 0;
-        
+
         const mean = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
         const squaredDifferences = numbers.map(n => Math.pow(n - mean, 2));
         const variance = squaredDifferences.reduce((sum, sq) => sum + sq, 0) / numbers.length;
-        
+
         return Math.sqrt(variance); // Return standard deviation
     }
 
@@ -276,7 +276,7 @@ class DailyRecommendationService {
         const sampleHistoricalData: HistoricalDayData[] = [];
         const today = new Date();
         const currentMonth = new Date(year, month);
-        
+
         // Generate historical data for past days in the month
         for (let day = 1; day <= today.getDate() && currentMonth.getMonth() === today.getMonth(); day++) {
             const date = new Date(year, month, day);

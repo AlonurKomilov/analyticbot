@@ -5,7 +5,7 @@ import { useMediaStore, useUIStore } from '@store';
  * ⚠️ MIGRATION IN PROGRESS - Phase 3 Task 1.4
  * Hooks have been reorganized into feature-specific and shared directories.
  * This file now re-exports hooks from their new locations for backward compatibility.
- * 
+ *
  * New structure:
  * - features/admin/hooks/ - Admin-specific hooks
  * - features/analytics/hooks/ - Analytics hooks
@@ -30,8 +30,8 @@ export type {
 } from '@features/admin/hooks';
 
 // Analytics hooks
-export { 
-    useUnifiedAnalytics, 
+export {
+    useUnifiedAnalytics,
     ANALYTICS_PRESETS,
     useDashboardAnalytics,
     useAdminAnalytics,
@@ -210,13 +210,13 @@ export const useFormState = <T extends Record<string, any>>(
     const updateField = useCallback((field: keyof T, value: any): void => {
         setState(prev => {
             const newState = { ...prev, [field]: value };
-            
+
             // Run validation with new state if validator exists
             if (validator) {
                 const fieldErrors = validator(newState);
                 setErrors(prevErrors => ({ ...prevErrors, [field as string]: fieldErrors[field as string] }));
             }
-            
+
             return newState;
         });
         setTouched(prev => ({ ...prev, [field as string]: true }));

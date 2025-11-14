@@ -1,18 +1,18 @@
 import React, { useMemo } from 'react';
-import { 
-    Box, 
-    Typography, 
-    Paper, 
-    Tooltip, 
+import {
+    Box,
+    Typography,
+    Paper,
+    Tooltip,
     useTheme,
     ButtonGroup,
     Button,
     Chip,
     Grid
 } from '@mui/material';
-import { 
-    TrendingUp, 
-    TrendingDown, 
+import {
+    TrendingUp,
+    TrendingDown,
     Remove,
     Event,
     ChevronLeft,
@@ -43,7 +43,7 @@ interface MonthlyCalendarHeatmapProps {
     showFuturePredictions?: boolean;
 }
 
-const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({ 
+const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
     dailyPerformance,
     month = 'Current Month',
     bestTimesByDay = {},
@@ -52,7 +52,7 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
 }) => {
     const theme = useTheme();
     const today = new Date();
-    
+
     // Month navigation state
     const [currentDate, setCurrentDate] = React.useState(() => {
         const now = new Date();
@@ -177,17 +177,17 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
         const monthNum = currentDate.getMonth();
         const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
         const result: DayPerformance[] = [];
-        
+
         for (let day = 1; day <= daysInMonth; day++) {
             const dayDate = new Date(year, monthNum, day);
             const dayOfWeek = dayDate.getDay();
             const isToday = dayDate.toDateString() === today.toDateString();
             const isPast = dayDate < today && !isToday;
             const isFuture = dayDate > today;
-            
+
             // Find existing data for this day
             const existingDay = dailyPerformance.find(d => d.date === day);
-            
+
             if (existingDay && isPast) {
                 // Use historical data for past days
                 let score: DayPerformance['score'] = 'no-data';
@@ -208,13 +208,13 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                 const weekdayScores = [70, 85, 88, 85, 80, 65, 68]; // Sun-Sat
                 const baseScore = weekdayScores[dayOfWeek];
                 const recommendationScore = baseScore + (Math.random() * 20 - 10); // Add variance
-                
+
                 let score: DayPerformance['score'] = 'average';
                 if (recommendationScore >= 80) score = 'excellent';
                 else if (recommendationScore >= 65) score = 'good';
                 else if (recommendationScore >= 50) score = 'average';
                 else score = 'poor';
-                
+
                 result.push({
                     date: day,
                     dayOfWeek,
@@ -227,8 +227,8 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                     recommendedTimes: bestTimesByDay[dayOfWeek] || (() => {
                         // Use intelligent fallback based on available data
                         const allTimes = Object.values(bestTimesByDay).flat();
-                        return allTimes.length > 0 ? 
-                            [...new Set(allTimes)].slice(0, 3) : 
+                        return allTimes.length > 0 ?
+                            [...new Set(allTimes)].slice(0, 3) :
                             ['10:00', '15:00', '20:00']; // Research-based optimal times
                     })()
                 });
@@ -246,7 +246,7 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                 });
             }
         }
-        
+
         return result;
     }, [dailyPerformance, scores, currentDate, today, showFuturePredictions, bestTimesByDay]);
 
@@ -257,15 +257,15 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
     const firstDay = new Date(year, monthNum, 1);
     const firstDayOfWeek = firstDay.getDay();
     const daysInMonth = new Date(year, monthNum + 1, 0).getDate();
-    
+
     // Create calendar grid
     const calendarGrid: (DayPerformance | null)[] = [];
-    
+
     // Add empty cells for days before the 1st
     for (let i = 0; i < firstDayOfWeek; i++) {
         calendarGrid.push(null);
     }
-    
+
     // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
         const dayData = categorizedDays.find(d => d.date === day);
@@ -277,7 +277,7 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
             score: 'no-data'
         });
     }
-    
+
     // Navigation functions
     const navigateMonth = (direction: 'prev' | 'next') => {
         setCurrentDate(prev => {
@@ -305,10 +305,10 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
     const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
-        <Paper 
+        <Paper
             elevation={0}
-            sx={{ 
-                p: 3, 
+            sx={{
+                p: 3,
                 mb: 4,
                 border: '1px solid',
                 borderColor: 'divider',
@@ -321,7 +321,7 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                     <Event color="primary" />
                     📅 Monthly Posting Calendar
                 </Typography>
-                
+
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ButtonGroup size="small" variant="outlined">
                         <Button onClick={() => navigateMonth('prev')}>
@@ -343,18 +343,18 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
             </Typography>
 
             {/* Weekday headers */}
-            <Box 
-                sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
                     gap: 1,
                     mb: 1
                 }}
             >
                 {weekDays.map(day => (
-                    <Box 
+                    <Box
                         key={day}
-                        sx={{ 
+                        sx={{
                             textAlign: 'center',
                             fontWeight: 'bold',
                             fontSize: '0.75rem',
@@ -368,10 +368,10 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
             </Box>
 
             {/* Calendar grid */}
-            <Box 
-                sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(7, 1fr)', 
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
                     gap: 1
                 }}
             >
@@ -391,11 +391,11 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                                         {day.isToday ? 'Today' : `Day ${day.date}`}
                                         {day.isToday && ' 🎯'}
                                     </Typography>
-                                    
+
                                     <Typography variant="caption" display="block" sx={{ mb: 1 }}>
                                         Status: {style.label}
                                     </Typography>
-                                    
+
                                     {day.isPast && day.postCount && day.postCount > 0 ? (
                                         <>
                                             <Typography variant="caption" display="block" sx={{ mb: 1 }}>
@@ -461,9 +461,9 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                                     }
                                 }}
                             >
-                                <Typography 
-                                    variant="body2" 
-                                    sx={{ 
+                                <Typography
+                                    variant="body2"
+                                    sx={{
                                         fontWeight: day.isToday ? 'bold' : 'medium',
                                         color: style.textColor,
                                         fontSize: day.isToday ? '1rem' : '0.875rem'
@@ -471,10 +471,10 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                                 >
                                     {day.date}
                                 </Typography>
-                                
+
                                 {/* Status indicator */}
                                 {React.createElement(style.icon, {
-                                    sx: { 
+                                    sx: {
                                         fontSize: 12,
                                         color: style.textColor,
                                         opacity: 0.7,
@@ -535,9 +535,9 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
             </Box>
 
             {/* Enhanced Instructions */}
-            <Typography 
-                variant="body2" 
-                color="text.secondary" 
+            <Typography
+                variant="body2"
+                color="text.secondary"
                 sx={{ mt: 3, textAlign: 'center', fontStyle: 'italic' }}
             >
                 💡 Hover over days for detailed recommendations. Click to schedule a post for that day.

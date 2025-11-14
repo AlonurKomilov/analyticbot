@@ -1,6 +1,6 @@
 /**
  * Telegram Storage Store
- * 
+ *
  * Manages user-owned Telegram channels for file storage and media management.
  * Enables zero-cost file hosting by uploading files to user's private channels.
  */
@@ -73,30 +73,30 @@ interface TelegramStorageState {
   currentChannel: StorageChannel | null;
   files: TelegramMedia[];
   totalFiles: number;
-  
+
   // Loading states
   isLoadingChannels: boolean;
   isLoadingFiles: boolean;
   isValidating: boolean;
   isUploading: boolean;
-  
+
   // Error states
   error: string | null;
-  
+
   // Actions - Channels
   fetchChannels: (onlyActive?: boolean) => Promise<void>;
   validateChannel: (channelId: number, channelUsername?: string) => Promise<ChannelValidationResult>;
   connectChannel: (channelId: number, channelUsername?: string) => Promise<StorageChannel>;
   disconnectChannel: (channelId: number) => Promise<void>;
   setCurrentChannel: (channel: StorageChannel | null) => void;
-  
+
   // Actions - Files
   uploadFile: (file: File, caption?: string, storageChannelId?: number) => Promise<TelegramMedia>;
   fetchFiles: (filters?: { fileType?: string; limit?: number; offset?: number }) => Promise<void>;
   getFileUrl: (mediaId: number) => Promise<string>;
   deleteFile: (mediaId: number, deleteFromTelegram?: boolean) => Promise<void>;
   forwardFile: (mediaId: number, targetChannelId: number) => Promise<number>;
-  
+
   // Utility
   clearError: () => void;
   reset: () => void;
@@ -138,22 +138,22 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             '/api/storage/channels',
             { params: { only_active: onlyActive } }
           );
-          
+
           // Ensure channels is always an array
           const channels = Array.isArray(response) ? response : [];
-          
-          set({ 
+
+          set({
             channels,
             currentChannel: channels.length > 0 ? channels[0] : null,
-            isLoadingChannels: false 
+            isLoadingChannels: false
           });
         } catch (error: any) {
           console.error('Failed to fetch storage channels:', error);
-          set({ 
+          set({
             channels: [], // Reset to empty array on error
             currentChannel: null,
             error: error.response?.data?.detail || 'Failed to load storage channels',
-            isLoadingChannels: false 
+            isLoadingChannels: false
           });
         }
       },
@@ -165,7 +165,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             '/api/storage/channels/validate',
             { channel_id: channelId, channel_username: channelUsername }
           );
-          
+
           set({ isValidating: false });
           return result;
         } catch (error: any) {
@@ -183,13 +183,13 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             '/api/storage/channels/connect',
             { channel_id: channelId, channel_username: channelUsername }
           );
-          
+
           set((state) => ({
             channels: [newChannel, ...state.channels],
             currentChannel: newChannel,
             isLoadingChannels: false,
           }));
-          
+
           return newChannel;
         } catch (error: any) {
           console.error('Failed to connect channel:', error);
@@ -203,12 +203,12 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ isLoadingChannels: true, error: null });
         try {
           await apiClient.delete(`/api/storage/channels/${channelId}`);
-          
+
           set((state) => {
             const updatedChannels = state.channels.filter((ch) => ch.id !== channelId);
             return {
               channels: updatedChannels,
-              currentChannel: state.currentChannel?.id === channelId 
+              currentChannel: state.currentChannel?.id === channelId
                 ? (updatedChannels[0] || null)
                 : state.currentChannel,
               isLoadingChannels: false,
@@ -216,9 +216,9 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
           });
         } catch (error: any) {
           console.error('Failed to disconnect channel:', error);
-          set({ 
+          set({
             error: error.response?.data?.detail || 'Failed to disconnect channel',
-            isLoadingChannels: false 
+            isLoadingChannels: false
           });
           throw error;
         }
@@ -239,20 +239,20 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
           formData.append('file', file);
           if (caption) formData.append('caption', caption);
           if (storageChannelId) formData.append('storage_channel_id', storageChannelId.toString());
-          
+
           const uploadResult = await apiClient.post<FileUploadResult>(
             '/api/storage/upload',
             formData
           );
-          
+
           const newMedia = uploadResult.media;
-          
+
           set((state) => ({
             files: [newMedia, ...state.files],
             totalFiles: state.totalFiles + 1,
             isUploading: false,
           }));
-          
+
           return newMedia;
         } catch (error: any) {
           console.error('File upload failed:', error);
@@ -269,23 +269,23 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             '/api/storage/files',
             { params: filters }
           );
-          
+
           // Ensure files is always an array
           const files = Array.isArray(result?.files) ? result.files : [];
           const total = typeof result?.total === 'number' ? result.total : 0;
-          
-          set({ 
+
+          set({
             files,
             totalFiles: total,
-            isLoadingFiles: false 
+            isLoadingFiles: false
           });
         } catch (error: any) {
           console.error('Failed to fetch files:', error);
-          set({ 
+          set({
             files: [], // Reset to empty array on error
             totalFiles: 0,
             error: error.response?.data?.detail || 'Failed to load files',
-            isLoadingFiles: false 
+            isLoadingFiles: false
           });
         }
       },
@@ -309,7 +309,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             `/api/storage/files/${mediaId}`,
             { params: { delete_from_telegram: deleteFromTelegram } }
           );
-          
+
           set((state) => ({
             files: state.files.filter((file) => file.id !== mediaId),
             totalFiles: Math.max(0, state.totalFiles - 1),
@@ -330,7 +330,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
             null,
             { params: { target_channel_id: targetChannelId } }
           );
-          
+
           return result.message_id;
         } catch (error: any) {
           console.error('Failed to forward file:', error);
@@ -356,7 +356,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
 // Selectors
 // ============================================================================
 
-export const selectHasStorageChannels = (state: TelegramStorageState) => 
+export const selectHasStorageChannels = (state: TelegramStorageState) =>
   state.channels.length > 0;
 
 export const selectDefaultChannel = (state: TelegramStorageState) =>

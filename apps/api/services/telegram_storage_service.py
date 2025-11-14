@@ -13,81 +13,79 @@ Benefits:
 
 import logging
 from datetime import datetime
-from typing import Optional, BinaryIO, Dict, Any, List
-from pathlib import Path
+from typing import Any, BinaryIO
 
-from sqlalchemy import select, and_, func
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from telethon import TelegramClient
-from telethon.tl.types import InputPeerChannel, Message, DocumentAttributeFilename
 from telethon.errors import (
     ChannelPrivateError,
     ChatWriteForbiddenError,
+    FilePartsInvalidError,
     FloodWaitError,
-    FilePartsInvalidError
 )
+from telethon.tl.types import DocumentAttributeFilename, Message
 
-from infra.db.models.telegram_storage import UserStorageChannel, TelegramMedia
-from infra.db.models.user import User
 from config.settings import settings
+from infra.db.models.telegram_storage import TelegramMedia, UserStorageChannel
 
 logger = logging.getLogger(__name__)
 
 
 class TelegramStorageError(Exception):
     """Base exception for Telegram storage operations"""
+
     pass
 
 
 class ChannelNotFoundError(TelegramStorageError):
     """Raised when storage channel is not found or not accessible"""
+
     pass
 
 
 class UploadFailedError(TelegramStorageError):
     """Raised when file upload to Telegram fails"""
+
     pass
 
 
 class TelegramStorageService:
     """
     Service for managing file storage in user-owned Telegram channels.
-    
+
     Each user can connect their own private Telegram channel(s) where files are uploaded.
     The service handles:
     - Channel validation and connection
     - File uploads to Telegram
-    - File downloads from Telegram  
+    - File downloads from Telegram
     - File forwarding between channels
     - Storage quota tracking
     """
-    
+
     def __init__(self, db_session: AsyncSession, telegram_client: TelegramClient):
         self.db = db_session
         self.client = telegram_client
-        
+
     async def validate_storage_channel(
-        self,
-        user_id: int,
-        channel_id: int,
-        channel_username: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, user_id: int, channel_id: int, channel_username: str | None = None
+    ) -> dict[str, Any]:
         """
         Validate that a channel can be used for storage.
-        
+
         Checks:
         - Channel exists and is accessible
         - Bot has admin rights (post messages, delete messages)
         - User has permission to use this channel
-        
+
         Args:
             user_id: User ID attempting to connect the channel
             channel_id: Telegram channel ID (e.g., -1001234567890)
             channel_username: Optional channel username for validation
-            
+
         Returns:
             Dict with channel info: {id, title, username, member_count, is_valid}
-            
+
         Raises:
             ChannelNotFoundError: Channel not accessible or doesn't exist
             TelegramStorageError: Bot doesn't have required permissions
@@ -95,69 +93,61 @@ class TelegramStorageService:
         try:
             # Get channel entity
             channel = await self.client.get_entity(channel_id)
-            
+
             # Check if bot has admin rights
-            permissions = await self.client.get_permissions(channel, 'me')
-            
+            permissions = await self.client.get_permissions(channel, "me")
+
             if not permissions.is_admin:
-                raise TelegramStorageError(
-                    "Bot must be admin in the channel to use it for storage"
-                )
-            
+                raise TelegramStorageError("Bot must be admin in the channel to use it for storage")
+
             if not permissions.post_messages:
-                raise TelegramStorageError(
-                    "Bot needs 'Post Messages' permission in the channel"
-                )
-            
+                raise TelegramStorageError("Bot needs 'Post Messages' permission in the channel")
+
             # Get channel info
             channel_info = {
                 "id": channel.id,
                 "title": channel.title,
-                "username": getattr(channel, 'username', None),
-                "member_count": getattr(channel, 'participants_count', 0),
+                "username": getattr(channel, "username", None),
+                "member_count": getattr(channel, "participants_count", 0),
                 "is_valid": True,
                 "bot_is_admin": True,
             }
-            
+
             logger.info(
                 f"Channel validation successful: {channel_info['title']} "
                 f"(ID: {channel_id}) for user {user_id}"
             )
-            
+
             return channel_info
-            
+
         except ChannelPrivateError:
-            raise ChannelNotFoundError(
-                "Channel is private or bot doesn't have access"
-            )
+            raise ChannelNotFoundError("Channel is private or bot doesn't have access")
         except ChatWriteForbiddenError:
-            raise TelegramStorageError(
-                "Bot doesn't have permission to write in this channel"
-            )
+            raise TelegramStorageError("Bot doesn't have permission to write in this channel")
         except Exception as e:
             logger.error(f"Channel validation failed: {e}", exc_info=True)
             raise TelegramStorageError(f"Failed to validate channel: {str(e)}")
-    
+
     async def connect_storage_channel(
         self,
         user_id: int,
         channel_id: int,
         channel_title: str,
-        channel_username: Optional[str] = None,
-        is_bot_admin: bool = True
+        channel_username: str | None = None,
+        is_bot_admin: bool = True,
     ) -> UserStorageChannel:
         """
         Connect a user's channel for storage use.
-        
+
         Creates or updates the storage channel record in the database.
-        
+
         Args:
             user_id: User ID
             channel_id: Telegram channel ID
             channel_title: Channel display name
             channel_username: Optional channel username
             is_bot_admin: Whether bot has admin access
-            
+
         Returns:
             UserStorageChannel model instance
         """
@@ -166,12 +156,12 @@ class TelegramStorageService:
             select(UserStorageChannel).where(
                 and_(
                     UserStorageChannel.user_id == user_id,
-                    UserStorageChannel.channel_id == channel_id
+                    UserStorageChannel.channel_id == channel_id,
                 )
             )
         )
         existing = result.scalar_one_or_none()
-        
+
         if existing:
             # Update existing record
             existing.channel_title = channel_title
@@ -180,13 +170,13 @@ class TelegramStorageService:
             existing.is_bot_admin = is_bot_admin
             existing.last_validated_at = datetime.utcnow()
             existing.updated_at = datetime.utcnow()
-            
+
             await self.db.commit()
             await self.db.refresh(existing)
-            
+
             logger.info(f"Updated storage channel {channel_id} for user {user_id}")
             return existing
-        
+
         # Create new record
         storage_channel = UserStorageChannel(
             user_id=user_id,
@@ -195,59 +185,52 @@ class TelegramStorageService:
             channel_username=channel_username,
             is_active=True,
             is_bot_admin=is_bot_admin,
-            last_validated_at=datetime.utcnow()
+            last_validated_at=datetime.utcnow(),
         )
-        
+
         self.db.add(storage_channel)
         await self.db.commit()
         await self.db.refresh(storage_channel)
-        
+
         logger.info(f"Connected storage channel {channel_id} for user {user_id}")
         return storage_channel
-    
+
     async def get_user_storage_channels(
-        self,
-        user_id: int,
-        only_active: bool = True
-    ) -> List[UserStorageChannel]:
+        self, user_id: int, only_active: bool = True
+    ) -> list[UserStorageChannel]:
         """
         Get all storage channels for a user.
-        
+
         Args:
             user_id: User ID
             only_active: Only return active channels
-            
+
         Returns:
             List of UserStorageChannel instances
         """
-        query = select(UserStorageChannel).where(
-            UserStorageChannel.user_id == user_id
-        )
-        
+        query = select(UserStorageChannel).where(UserStorageChannel.user_id == user_id)
+
         if only_active:
-            query = query.where(UserStorageChannel.is_active == True)
-        
+            query = query.where(UserStorageChannel.is_active)
+
         query = query.order_by(UserStorageChannel.created_at.desc())
-        
+
         result = await self.db.execute(query)
         return list(result.scalars().all())
-    
-    async def get_default_storage_channel(
-        self,
-        user_id: int
-    ) -> Optional[UserStorageChannel]:
+
+    async def get_default_storage_channel(self, user_id: int) -> UserStorageChannel | None:
         """
         Get the user's default (first active) storage channel.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             UserStorageChannel or None if no channels connected
         """
         channels = await self.get_user_storage_channels(user_id, only_active=True)
         return channels[0] if channels else None
-    
+
     async def upload_file(
         self,
         user_id: int,
@@ -256,13 +239,13 @@ class TelegramStorageService:
         file_type: str,
         mime_type: str,
         file_size: int,
-        caption: Optional[str] = None,
-        storage_channel_id: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        caption: str | None = None,
+        storage_channel_id: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> TelegramMedia:
         """
         Upload a file to user's Telegram storage channel.
-        
+
         Args:
             user_id: User ID
             file: File-like object to upload
@@ -273,10 +256,10 @@ class TelegramStorageService:
             caption: Optional caption for the file
             storage_channel_id: Specific channel ID (uses default if None)
             metadata: Additional metadata to store
-            
+
         Returns:
             TelegramMedia model instance with Telegram file IDs
-            
+
         Raises:
             ChannelNotFoundError: No storage channel found for user
             UploadFailedError: Upload to Telegram failed
@@ -288,19 +271,19 @@ class TelegramStorageService:
                     and_(
                         UserStorageChannel.id == storage_channel_id,
                         UserStorageChannel.user_id == user_id,
-                        UserStorageChannel.is_active == True
+                        UserStorageChannel.is_active,
                     )
                 )
             )
             storage_channel = result.scalar_one_or_none()
         else:
             storage_channel = await self.get_default_storage_channel(user_id)
-        
+
         if not storage_channel:
             raise ChannelNotFoundError(
                 "No active storage channel found. Please connect a channel first."
             )
-        
+
         try:
             # Upload file to Telegram
             message: Message = await self.client.send_file(
@@ -308,31 +291,31 @@ class TelegramStorageService:
                 file=file,
                 caption=caption or f"📁 {file_name}",
                 attributes=[DocumentAttributeFilename(file_name=file_name)],
-                force_document=(file_type == 'document')
+                force_document=(file_type == "document"),
             )
-            
+
             # Extract file information from uploaded message
             media = message.media
-            document = getattr(media, 'document', None) or getattr(media, 'photo', None)
-            
+            document = getattr(media, "document", None) or getattr(media, "photo", None)
+
             if not document:
                 raise UploadFailedError("Failed to get file info from uploaded message")
-            
+
             # Get file dimensions if available
             width = height = duration = None
-            if hasattr(document, 'attributes'):
+            if hasattr(document, "attributes"):
                 for attr in document.attributes:
-                    if hasattr(attr, 'w') and hasattr(attr, 'h'):
+                    if hasattr(attr, "w") and hasattr(attr, "h"):
                         width, height = attr.w, attr.h
-                    if hasattr(attr, 'duration'):
+                    if hasattr(attr, "duration"):
                         duration = attr.duration
-            
+
             # Create database record
             telegram_media = TelegramMedia(
                 user_id=user_id,
                 storage_channel_id=storage_channel.id,
                 telegram_file_id=str(document.id),
-                telegram_unique_file_id=getattr(document, 'file_reference', b'').hex(),
+                telegram_unique_file_id=getattr(document, "file_reference", b"").hex(),
                 telegram_message_id=message.id,
                 file_type=file_type,
                 file_name=file_name,
@@ -343,20 +326,20 @@ class TelegramStorageService:
                 duration=duration,
                 caption=caption,
                 metadata=metadata or {},
-                is_deleted=False
+                is_deleted=False,
             )
-            
+
             self.db.add(telegram_media)
             await self.db.commit()
             await self.db.refresh(telegram_media)
-            
+
             logger.info(
                 f"Uploaded file {file_name} to channel {storage_channel.channel_id} "
                 f"(message_id: {message.id}) for user {user_id}"
             )
-            
+
             return telegram_media
-            
+
         except FloodWaitError as e:
             logger.warning(f"Flood wait error: need to wait {e.seconds} seconds")
             raise UploadFailedError(f"Rate limited. Please try again in {e.seconds} seconds")
@@ -365,22 +348,18 @@ class TelegramStorageService:
         except Exception as e:
             logger.error(f"File upload failed: {e}", exc_info=True)
             raise UploadFailedError(f"Failed to upload file: {str(e)}")
-    
-    async def get_file_url(
-        self,
-        media_id: int,
-        user_id: int
-    ) -> str:
+
+    async def get_file_url(self, media_id: int, user_id: int) -> str:
         """
         Get a public URL for a file stored in Telegram.
-        
+
         Args:
             media_id: TelegramMedia ID
             user_id: User ID (for authorization check)
-            
+
         Returns:
             Public URL to access the file
-            
+
         Raises:
             TelegramStorageError: File not found or access denied
         """
@@ -390,114 +369,97 @@ class TelegramStorageService:
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    TelegramMedia.is_deleted == False
+                    not TelegramMedia.is_deleted,
                 )
             )
         )
         media = result.scalar_one_or_none()
-        
+
         if not media:
             raise TelegramStorageError("File not found or access denied")
-        
+
         # For now, return an API endpoint URL
         # In production, this could generate a signed URL or use Telegram's CDN
-        return f"{settings.API_BASE_URL}/api/v1/storage/files/{media_id}/download"
-    
+        return f"{settings.API_HOST_URL}/api/v1/storage/files/{media_id}/download"
+
     async def list_user_files(
-        self,
-        user_id: int,
-        file_type: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0
-    ) -> Dict[str, Any]:
+        self, user_id: int, file_type: str | None = None, limit: int = 50, offset: int = 0
+    ) -> dict[str, Any]:
         """
         List files stored in user's Telegram channels.
-        
+
         Args:
             user_id: User ID
             file_type: Filter by file type (photo, video, document)
             limit: Max number of files to return
             offset: Pagination offset
-            
+
         Returns:
             Dict with 'files' list and 'total' count
         """
         # Build query
         query = select(TelegramMedia).where(
-            and_(
-                TelegramMedia.user_id == user_id,
-                TelegramMedia.is_deleted == False
-            )
+            and_(TelegramMedia.user_id == user_id, not TelegramMedia.is_deleted)
         )
-        
+
         if file_type:
             query = query.where(TelegramMedia.file_type == file_type)
-        
+
         # Get total count
         count_query = select(func.count()).select_from(query.subquery())
         total_result = await self.db.execute(count_query)
         total = total_result.scalar() or 0
-        
+
         # Get files
         query = query.order_by(TelegramMedia.uploaded_at.desc())
         query = query.limit(limit).offset(offset)
-        
+
         result = await self.db.execute(query)
         files = list(result.scalars().all())
-        
-        return {
-            "files": files,
-            "total": total,
-            "limit": limit,
-            "offset": offset
-        }
-    
+
+        return {"files": files, "total": total, "limit": limit, "offset": offset}
+
     async def delete_file(
-        self,
-        media_id: int,
-        user_id: int,
-        delete_from_telegram: bool = True
+        self, media_id: int, user_id: int, delete_from_telegram: bool = True
     ) -> bool:
         """
         Delete a file from storage.
-        
+
         Args:
             media_id: TelegramMedia ID
             user_id: User ID (for authorization check)
             delete_from_telegram: Whether to delete from Telegram channel
-            
+
         Returns:
             True if deleted successfully
-            
+
         Raises:
             TelegramStorageError: File not found or deletion failed
         """
         # Get media record with channel info
         result = await self.db.execute(
-            select(TelegramMedia, UserStorageChannel).join(
-                UserStorageChannel,
-                TelegramMedia.storage_channel_id == UserStorageChannel.id
-            ).where(
+            select(TelegramMedia, UserStorageChannel)
+            .join(UserStorageChannel, TelegramMedia.storage_channel_id == UserStorageChannel.id)
+            .where(
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    TelegramMedia.is_deleted == False
+                    not TelegramMedia.is_deleted,
                 )
             )
         )
         row = result.first()
-        
+
         if not row:
             raise TelegramStorageError("File not found or already deleted")
-        
+
         media, channel = row
-        
+
         # Delete from Telegram if requested
         if delete_from_telegram:
             try:
                 await self.client.delete_messages(
-                    entity=channel.channel_id,
-                    message_ids=[media.telegram_message_id]
+                    entity=channel.channel_id, message_ids=[media.telegram_message_id]
                 )
                 logger.info(
                     f"Deleted message {media.telegram_message_id} from "
@@ -508,76 +470,70 @@ class TelegramStorageService:
                     f"Failed to delete message from Telegram: {e}. "
                     f"Marking as deleted in database only."
                 )
-        
+
         # Mark as deleted in database
         media.is_deleted = True
         await self.db.commit()
-        
+
         logger.info(f"Marked file {media_id} as deleted for user {user_id}")
         return True
-    
-    async def forward_file(
-        self,
-        media_id: int,
-        user_id: int,
-        target_channel_id: int
-    ) -> int:
+
+    async def forward_file(self, media_id: int, user_id: int, target_channel_id: int) -> int:
         """
         Forward a file from storage to another channel.
-        
+
         Useful for posting media to user's public channels without re-uploading.
-        
+
         Args:
             media_id: TelegramMedia ID
             user_id: User ID (for authorization check)
             target_channel_id: Target Telegram channel ID
-            
+
         Returns:
             Message ID in target channel
-            
+
         Raises:
             TelegramStorageError: File not found or forward failed
         """
         # Get media record with source channel
         result = await self.db.execute(
-            select(TelegramMedia, UserStorageChannel).join(
-                UserStorageChannel,
-                TelegramMedia.storage_channel_id == UserStorageChannel.id
-            ).where(
+            select(TelegramMedia, UserStorageChannel)
+            .join(UserStorageChannel, TelegramMedia.storage_channel_id == UserStorageChannel.id)
+            .where(
                 and_(
                     TelegramMedia.id == media_id,
                     TelegramMedia.user_id == user_id,
-                    TelegramMedia.is_deleted == False
+                    not TelegramMedia.is_deleted,
                 )
             )
         )
         row = result.first()
-        
+
         if not row:
             raise TelegramStorageError("File not found")
-        
+
         media, source_channel = row
-        
+
         try:
             # Forward message to target channel
             forwarded = await self.client.forward_messages(
                 entity=target_channel_id,
                 messages=[media.telegram_message_id],
-                from_peer=source_channel.channel_id
+                from_peer=source_channel.channel_id,
             )
-            
+
             if not forwarded or len(forwarded) == 0:
                 raise TelegramStorageError("Forward returned no messages")
-            
+
             forwarded_msg = forwarded[0]
-            
+
             logger.info(
                 f"Forwarded file {media_id} from storage to channel {target_channel_id} "
                 f"(new message_id: {forwarded_msg.id})"
             )
-            
+
             return forwarded_msg.id
-            
+
         except Exception as e:
             logger.error(f"Failed to forward file: {e}", exc_info=True)
             raise TelegramStorageError(f"Failed to forward file: {str(e)}")

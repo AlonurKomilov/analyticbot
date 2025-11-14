@@ -10,8 +10,4 @@ from .posting_time_service import PostingTimeRecommendationService
 from .recommendation_engine import RecommendationEngine
 from .time_analysis_repository import TimeAnalysisRepository
 
-__all__ = [
-    "PostingTimeRecommendationService",
-    "RecommendationEngine", 
-    "TimeAnalysisRepository"
-]
+__all__ = ["PostingTimeRecommendationService", "RecommendationEngine", "TimeAnalysisRepository"]

@@ -69,7 +69,7 @@ export const useChannelStore = create<ChannelState>()(
             telegramId: channel.telegram_id || String(channel.id),
             subscriberCount: channel.subscriber_count || 0
           })) as Channel[];
-          
+
           set({
             channels: normalizedChannels,
             isLoading: false
@@ -170,7 +170,7 @@ export const useChannelStore = create<ChannelState>()(
         // 2. Validated telegram_id from Telegram API
         // 3. Random fallback ID
         let finalTelegramId: number;
-        
+
         // Check if user provided a telegram_id
         const userProvidedId = channelData.telegram_id ? parseInt(channelData.telegram_id, 10) : null;
         if (userProvidedId && !isNaN(userProvidedId)) {

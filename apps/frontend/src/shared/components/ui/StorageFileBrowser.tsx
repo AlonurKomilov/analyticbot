@@ -95,21 +95,21 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
             }>('/media/storage', {
                 params: { limit, offset }
             });
-            
+
             console.log('📦 Raw API response:', response);
-            
+
             // Transform API response to match StorageFile interface
             const transformedFiles: StorageFile[] = response.files.map((file: any) => {
                 // Determine media type from filename if not provided
                 const filename = file.filename || '';
                 const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
                 const isVideo = /\.(mp4|mov|webm|avi)$/i.test(filename);
-                
-                const mediaType = file.media_type || 
-                    (isImage ? 'image/jpeg' : 
-                     isVideo ? 'video/mp4' : 
+
+                const mediaType = file.media_type ||
+                    (isImage ? 'image/jpeg' :
+                     isVideo ? 'video/mp4' :
                      'application/octet-stream');
-                
+
                 return {
                     file_id: file.file_id || file.id,
                     filename: file.filename,
@@ -121,16 +121,16 @@ const StorageFileBrowser: React.FC<StorageFileBrowserProps> = ({ onFileSelect = 
                     preview_url: file.preview_url
                 };
             });
-            
+
             console.log('✨ Transformed files:', transformedFiles);
-            
+
             setStorageFiles({
                 files: transformedFiles,
                 total: response.total,
                 limit: response.limit,
                 offset: response.offset
             });
-            
+
             console.log('✅ Storage files state updated:', {
                 filesCount: transformedFiles.length,
                 total: response.total

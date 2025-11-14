@@ -27,7 +27,7 @@ const CreatePostPage: React.FC = () => {
   const location = useLocation();
   const [localSelectedMedia, setLocalSelectedMedia] = useState<MediaItem[]>([]);
   const { schedulePost } = usePostStore();
-  
+
   // Extract initial values from navigation state (from Best Time Recommendations)
   const initialChannelId = location.state?.channelId;
   const initialScheduledTime = location.state?.scheduledTime;
@@ -57,7 +57,7 @@ const CreatePostPage: React.FC = () => {
           {/* Main Content - Post Creator */}
           <Box>
             <PostCreator
-              {...{ 
+              {...{
                 onSchedule: schedulePost,
                 initialChannelId,
                 initialScheduledTime,

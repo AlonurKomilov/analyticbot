@@ -90,7 +90,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     title: 'Home',
     description: 'Welcome to AnalyticBot',
   },
-  
+
   DASHBOARD: {
     path: ROUTES.DASHBOARD,
     title: 'Dashboard',
@@ -98,7 +98,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     requiresAuth: true,
     icon: 'dashboard',
   },
-  
+
   ANALYTICS: {
     path: ROUTES.ANALYTICS,
     title: 'Analytics',
@@ -107,7 +107,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'analytics',
     breadcrumbs: ['Dashboard', 'Analytics'],
   },
-  
+
   ADMIN: {
     path: ROUTES.ADMIN,
     title: 'Admin Panel',
@@ -116,7 +116,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'admin_panel_settings',
     breadcrumbs: ['Dashboard', 'Admin'],
   },
-  
+
   POSTS: {
     path: ROUTES.POSTS,
     title: 'Posts',
@@ -125,7 +125,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'article',
     breadcrumbs: ['Dashboard', 'Posts'],
   },
-  
+
   CREATE_POST: {
     path: ROUTES.CREATE_POST,
     title: 'Create Post',
@@ -134,7 +134,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'add',
     breadcrumbs: ['Dashboard', 'Posts', 'Create'],
   },
-  
+
   AI_SERVICES: {
     path: ROUTES.AI_SERVICES,
     title: 'AI Services',
@@ -144,7 +144,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'psychology',
     breadcrumbs: ['Dashboard', 'AI Services'],
   },
-  
+
   PAYMENT: {
     path: ROUTES.PAYMENT,
     title: 'Payment',
@@ -153,7 +153,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'payment',
     breadcrumbs: ['Dashboard', 'Payment'],
   },
-  
+
   PROFILE: {
     path: ROUTES.PROFILE,
     title: 'Profile',
@@ -162,7 +162,7 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     icon: 'person',
     breadcrumbs: ['Dashboard', 'Profile'],
   },
-  
+
   SETTINGS: {
     path: ROUTES.SETTINGS,
     title: 'Settings',
@@ -186,12 +186,12 @@ export function getRouteMetadata(path: RoutePath): RouteMetadata | undefined {
  */
 export function buildRoute(route: RoutePath, params?: Record<string, string | number>): string {
   if (!params) return route;
-  
+
   let path: string = route;
   Object.entries(params).forEach(([key, value]) => {
     path = path.replace(`:${key}`, String(value));
   });
-  
+
   return path;
 }
 

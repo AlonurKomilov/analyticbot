@@ -70,14 +70,14 @@ async def health_check(
 ):
     """
     Check export service health including chart rendering availability
-    
+
     Returns:
         - status: "healthy" or "degraded"
         - chart_rendering: availability status
         - supported_formats: list of available export formats
     """
     chart_available = chart_service.is_available()
-    
+
     return {
         "status": "healthy" if chart_available else "degraded",
         "export_enabled": settings.EXPORT_ENABLED,

@@ -44,7 +44,11 @@ async def test_post_dynamics_endpoint():
     try:
         # Call the endpoint function directly
         result = await get_post_dynamics(
-            channel_id=channel_id, request=request, period=period, service=service, cache=cache
+            channel_id=channel_id,
+            request=request,
+            period=period,
+            service=service,
+            cache=cache,
         )
 
         print("\n✅ API Response:")
@@ -53,7 +57,7 @@ async def test_post_dynamics_endpoint():
         if result:
             print("\n📈 Sample data (first 3 points):")
             for i, point in enumerate(result[:3]):
-                print(f"   {i+1}. Time: {point['time']}")
+                print(f"   {i + 1}. Time: {point['time']}")
                 print(f"      Views: {point['views']}, Likes: {point['likes']}")
                 print(f"      Shares: {point['shares']}, Comments: {point['comments']}")
         else:

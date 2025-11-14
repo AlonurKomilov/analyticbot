@@ -225,7 +225,10 @@ class TaskCreator:
         return f"task_{model_id}_{timestamp}_{unique_id}"
 
     async def _prepare_task_config(
-        self, model_id: str, learning_strategy: LearningStrategy, task_config: dict[str, Any]
+        self,
+        model_id: str,
+        learning_strategy: LearningStrategy,
+        task_config: dict[str, Any],
     ) -> dict[str, Any]:
         """Prepare complete task configuration with defaults"""
         try:

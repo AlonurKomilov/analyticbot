@@ -36,9 +36,9 @@ RELOCATED IMPLEMENTATION: Analytics modules properly organized in bot structure
 - Web Services: bot/services/
 """
 
-from apps.shared.adapters.ml_facade import create_bot_ml_facade
-from apps.shared.adapters.ml_coordinator import create_ml_coordinator
 from apps.bot.utils.data_processor import AdvancedDataProcessor, create_data_processor
+from apps.shared.adapters.ml_coordinator import create_ml_coordinator
+from apps.shared.adapters.ml_facade import create_bot_ml_facade
 
 # ✅ Phase 3.5: Migrated to core services (2025-10-15)
 from core.services.bot.dashboard.dashboard_service import (
@@ -92,14 +92,16 @@ async def analytics_health_check():
     """
     try:
         health_results = {}
-        data_processor = await create_data_processor()
+        await create_data_processor()
         # health_results["data_processor"] = await data_processor.health_check()  # Method not available
         ml_coordinator = create_ml_coordinator()
         health_results["ml_coordinator"] = await ml_coordinator.health_check()
         bot_ml_facade = create_bot_ml_facade()
         health_results["bot_ml_facade"] = await bot_ml_facade.get_service_status()
         # ✅ Phase 3.5: Updated to core service
-        from core.services.bot.dashboard.dashboard_service import health_check as dashboard_health
+        from core.services.bot.dashboard.dashboard_service import (
+            health_check as dashboard_health,
+        )
 
         health_results["dashboard_service"] = await dashboard_health()
         reporting_system = await create_reporting_system()

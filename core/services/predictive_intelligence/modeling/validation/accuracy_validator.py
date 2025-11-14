@@ -69,7 +69,7 @@ class AccuracyValidator:
             self.validation_history.append(validation_result)
 
             logger.info(
-                f"✅ Validation complete: " f"{validation_result.overall_accuracy:.2%} accuracy"
+                f"✅ Validation complete: {validation_result.overall_accuracy:.2%} accuracy"
             )
             return validation_result
 

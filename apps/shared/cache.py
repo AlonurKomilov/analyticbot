@@ -194,4 +194,7 @@ async def _set_cached_value(cache_key: str, value: Any, ttl: int):
 
 def get_cache_stats() -> dict[str, Any]:
     """Get cache statistics"""
-    return {"memory_cache_size": len(_global_cache._cache), "max_size": _global_cache._max_size}
+    return {
+        "memory_cache_size": len(_global_cache._cache),
+        "max_size": _global_cache._max_size,
+    }

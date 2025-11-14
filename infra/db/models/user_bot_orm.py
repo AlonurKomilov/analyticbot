@@ -56,7 +56,10 @@ class UserBotCredentialsORM(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -114,7 +117,10 @@ class ChannelMTProtoSettings(Base):
         DateTime(timezone=True), nullable=False, default=datetime.now
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, default=datetime.now, onupdate=datetime.now
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     __table_args__ = (

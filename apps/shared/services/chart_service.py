@@ -14,8 +14,6 @@ logger = logging.getLogger(__name__)
 class ChartRenderingError(Exception):
     """Raised when chart rendering fails"""
 
-    pass
-
 
 class ChartService(ChartServiceProtocol):
     """

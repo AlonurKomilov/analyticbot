@@ -14,12 +14,12 @@ from typing import Any
 
 import numpy as np
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     IncrementalLearningConfig,
     MemoryOperation,
     MemoryStrategy,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 
@@ -61,16 +61,16 @@ class MemoryManagementService:
             initial_size = len(context.memory_buffer)
 
             if strategy == MemoryStrategy.RANDOM_SAMPLING:
-                result = await self._update_random_sampling(context, new_data)
+                await self._update_random_sampling(context, new_data)
             elif strategy == MemoryStrategy.IMPORTANCE_SAMPLING:
-                result = await self._update_importance_sampling(context, new_data)
+                await self._update_importance_sampling(context, new_data)
             elif strategy == MemoryStrategy.GRADIENT_BASED:
-                result = await self._update_gradient_based(context, new_data)
+                await self._update_gradient_based(context, new_data)
             elif strategy == MemoryStrategy.CLUSTERING_BASED:
-                result = await self._update_clustering_based(context, new_data)
+                await self._update_clustering_based(context, new_data)
             else:
                 logger.warning(f"⚠️ Unknown strategy {strategy}, using random sampling")
-                result = await self._update_random_sampling(context, new_data)
+                await self._update_random_sampling(context, new_data)
 
             final_size = len(context.memory_buffer)
 
@@ -157,7 +157,10 @@ class MemoryManagementService:
             )
 
     async def update_importance_weights(
-        self, context: LearningContext, item_indices: list[int], importance_scores: list[float]
+        self,
+        context: LearningContext,
+        item_indices: list[int],
+        importance_scores: list[float],
     ) -> MemoryOperation:
         """
         Update importance weights for memory buffer items.
@@ -414,7 +417,10 @@ class MemoryManagementService:
 
         # Sample based on probabilities
         indices = np.random.choice(
-            len(buffer), size=min(sample_size, len(buffer)), replace=False, p=probabilities
+            len(buffer),
+            size=min(sample_size, len(buffer)),
+            replace=False,
+            p=probabilities,
         )
 
         return [buffer[i] for i in indices]

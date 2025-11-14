@@ -31,7 +31,9 @@ from apps.shared.performance import performance_timer
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/channels", tags=["Channel Management"], responses={404: {"description": "Not found"}}
+    prefix="/channels",
+    tags=["Channel Management"],
+    responses={404: {"description": "Not found"}},
 )
 
 # === CHANNEL MODELS ===
@@ -154,7 +156,8 @@ async def get_user_channels(
         raise
     except Exception as e:
         logger.error(
-            f"User channels fetch failed for user {current_user.get('id')}: {e}", exc_info=True
+            f"User channels fetch failed for user {current_user.get('id')}: {e}",
+            exc_info=True,
         )
         raise HTTPException(status_code=500, detail=f"Failed to fetch user channels: {str(e)}")
 
@@ -259,7 +262,9 @@ async def update_channel(
                 raise HTTPException(status_code=400, detail="No update data provided")
 
             channel = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data=update_dict
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data=update_dict,
             )
 
             logger.info(f"Channel updated successfully: {channel_id} by user {current_user['id']}")
@@ -335,7 +340,9 @@ async def activate_channel(
 
         with performance_timer("channel_activation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": True}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": True},
             )
 
             logger.info(f"Channel activated: {channel_id} by user {current_user['id']}")
@@ -375,7 +382,9 @@ async def deactivate_channel(
 
         with performance_timer("channel_deactivation"):
             result = await channel_service.update_channel(
-                channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": False}
+                channel_id=channel_id,
+                user_id=current_user["id"],
+                update_data={"is_active": False},
             )
 
             logger.info(f"Channel deactivated: {channel_id} by user {current_user['id']}")
@@ -524,10 +533,10 @@ async def get_channels_statistics_overview(
                             "subscriber_count": channel.subscriber_count,
                             "post_count": post_count,
                             "total_views": views_count,
-                            "avg_views_per_post": round(views_count / post_count)
-                            if post_count > 0
-                            else 0,
-                            "latest_post_date": latest_post.isoformat() if latest_post else None,
+                            "avg_views_per_post": (
+                                round(views_count / post_count) if post_count > 0 else 0
+                            ),
+                            "latest_post_date": (latest_post.isoformat() if latest_post else None),
                             "is_active": channel.is_active,
                             "created_at": channel.created_at.isoformat(),
                         }
@@ -540,9 +549,9 @@ async def get_channels_statistics_overview(
                     "total_posts": total_posts,
                     "total_views": total_views,
                     "active_channels": active_channels,
-                    "avg_views_per_post": round(total_views / total_posts)
-                    if total_posts > 0
-                    else 0,
+                    "avg_views_per_post": (
+                        round(total_views / total_posts) if total_posts > 0 else 0
+                    ),
                 },
                 "channels": sorted(
                     channel_stats_list, key=lambda x: x["total_views"], reverse=True

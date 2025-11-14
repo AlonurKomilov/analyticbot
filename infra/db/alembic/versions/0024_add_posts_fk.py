@@ -26,10 +26,12 @@ def upgrade():
 
     # First, clean up any orphaned posts (posts without matching channels)
     # This should not happen in practice, but ensures migration won't fail
-    op.execute("""
+    op.execute(
+        """
         DELETE FROM posts
         WHERE channel_id NOT IN (SELECT id FROM channels)
-    """)
+    """
+    )
 
     # Add foreign key constraint with CASCADE delete
     # When a channel is deleted, all its posts are automatically deleted

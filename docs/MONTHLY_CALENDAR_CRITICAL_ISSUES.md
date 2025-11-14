@@ -63,7 +63,7 @@ const recommendationScore = baseScore; // Use consistent scoring
 
 ### **2. Use Real Backend Time Recommendations**
 ```typescript
-// ❌ CURRENT (BROKEN) 
+// ❌ CURRENT (BROKEN)
 const defaultTimes = ['09:00', '14:00', '18:00'];
 
 // ✅ FIXED (USE REAL DATA)
@@ -89,7 +89,7 @@ else score = 'poor';
 // ✅ STABLE COLORS BASED ON REAL CONFIDENCE
 const getColorFromConfidence = (confidence: number) => {
     if (confidence >= 80) return '#1b5e20'; // Dark green
-    if (confidence >= 65) return '#2e7d32'; // Medium green  
+    if (confidence >= 65) return '#2e7d32'; // Medium green
     if (confidence >= 50) return '#558b2f'; // Light green
     return '#ffb74d'; // Orange for poor
 };

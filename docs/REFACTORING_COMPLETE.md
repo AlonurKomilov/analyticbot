@@ -34,7 +34,7 @@ class PostingTimeRecommendationService:
     async def generate_hourly_recommendations(channel_id: int) -> Optional[Dict]
 ```
 
-### **2. TimeAnalysisRepository** 
+### **2. TimeAnalysisRepository**
 ```python
 # Single responsibility: Database queries
 class TimeAnalysisRepository:
@@ -79,7 +79,7 @@ def _process_best_times(self, raw_data):
     ))
 ```
 
-### **2. Fixed Default Time Issue**  
+### **2. Fixed Default Time Issue**
 **Before (BROKEN):**
 ```typescript
 // All days got same default times
@@ -119,7 +119,7 @@ core/services/analytics_fusion/
 └── recommendations/                          # ⭐ NEW
     ├── __init__.py
     ├── posting_time_service.py              # Main service (120 lines)
-    ├── time_analysis_repository.py          # DB queries (150 lines)  
+    ├── time_analysis_repository.py          # DB queries (150 lines)
     ├── recommendation_engine.py             # Algorithms (180 lines)
     └── models/
         ├── __init__.py

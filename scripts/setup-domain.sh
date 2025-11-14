@@ -58,29 +58,29 @@ if [ "$setup_tunnel" == "yes" ]; then
     echo ""
     echo "🔐 Logging into CloudFlare..."
     echo "This will open a browser. Please authorize the connection."
-    
+
     cloudflared tunnel login
-    
+
     echo ""
     echo "✅ CloudFlare login successful!"
     echo ""
-    
+
     TUNNEL_NAME="analyticbot-prod"
-    
+
     echo "📝 Creating tunnel: ${TUNNEL_NAME}"
     cloudflared tunnel create ${TUNNEL_NAME}
-    
+
     # Get tunnel ID
     TUNNEL_ID=$(cloudflared tunnel list | grep ${TUNNEL_NAME} | awk '{print $1}')
-    
+
     if [ -z "$TUNNEL_ID" ]; then
         echo "❌ Failed to get tunnel ID"
         exit 1
     fi
-    
+
     echo "✅ Tunnel created with ID: ${TUNNEL_ID}"
     echo ""
-    
+
     # Create tunnel config
     mkdir -p ~/.cloudflared
     cat > ~/.cloudflared/config.yml << EOF
@@ -96,18 +96,18 @@ ingress:
   # Catch-all rule (required)
   - service: http_status:404
 EOF
-    
+
     echo "✅ Tunnel configuration created!"
     echo ""
-    
+
     # Route DNS to tunnel
     echo "📝 Configuring DNS to use tunnel..."
     cloudflared tunnel route dns ${TUNNEL_NAME} ${DOMAIN}
     cloudflared tunnel route dns ${TUNNEL_NAME} www.${DOMAIN}
-    
+
     echo "✅ DNS routing configured!"
     echo ""
-    
+
     # Save tunnel info
     cat > .tunnel-info << EOF
 TUNNEL_NAME=${TUNNEL_NAME}
@@ -115,20 +115,20 @@ TUNNEL_ID=${TUNNEL_ID}
 TUNNEL_URL=https://${DOMAIN}
 DOMAIN=${DOMAIN}
 EOF
-    
+
     echo "✅ Tunnel info saved to .tunnel-info"
     echo ""
-    
+
     echo "🚀 Starting tunnel..."
     cloudflared tunnel run ${TUNNEL_NAME} &
     TUNNEL_PID=$!
-    
+
     echo "✅ Tunnel started with PID: ${TUNNEL_PID}"
     echo ""
-    
+
     # Install as systemd service
     read -p "Do you want to install tunnel as system service (auto-start on boot)? (yes/no): " install_service
-    
+
     if [ "$install_service" == "yes" ]; then
         sudo cloudflared service install
         sudo systemctl enable cloudflared
@@ -142,7 +142,7 @@ EOF
         echo "   sudo systemctl restart cloudflared - Restart"
         echo "   sudo systemctl stop cloudflared    - Stop"
     fi
-    
+
 else
     echo ""
     echo "📋 Manual Setup Without Tunnel"

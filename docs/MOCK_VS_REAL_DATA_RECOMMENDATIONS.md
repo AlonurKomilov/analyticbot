@@ -150,7 +150,7 @@ const useDataSourceLogic = () => {
 const AnalyticsComponent = () => {
     const { dataSource } = useUIStore();
     const { selectedChannel } = useChannelStore();
-    
+
     const loadData = useCallback(async () => {
         if (dataSource === 'demo' || dataSource === 'mock') {
             // Show demo data
@@ -173,7 +173,7 @@ const AnalyticsComponent = () => {
 ```typescript
 const SmartDataLoader = () => {
     const [dataType, setDataType] = useState<'demo' | 'real'>('demo');
-    
+
     // Start with demo, upgrade to real when possible
     useEffect(() => {
         if (hasRealData && userWantsRealData) {

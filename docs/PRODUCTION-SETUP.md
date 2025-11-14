@@ -334,7 +334,7 @@ curl https://analyticbot.org/api/health
 
 ---
 
-**Setup Date:** November 14, 2025  
-**Tunnel Type:** CloudFlare Permanent Named Tunnel  
-**Domain Status:** Active  
+**Setup Date:** November 14, 2025
+**Tunnel Type:** CloudFlare Permanent Named Tunnel
+**Domain Status:** Active
 **SSL:** Enabled via CloudFlare

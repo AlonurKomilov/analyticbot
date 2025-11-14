@@ -255,7 +255,7 @@ case $SERVICE in
                         break
                     fi
                 fi
-                
+
                 echo -e "${YELLOW}⚠️  Tunnel failed to start (attempt $attempt/3)${NC}"
                 kill $tunnel_pid 2>/dev/null || true
                 sleep 5
@@ -271,7 +271,7 @@ case $SERVICE in
                     echo -e "${BLUE}💡 Frontend will use relative URLs via Vite proxy${NC}"
                     echo -e "   Frontend: https://analyticbot.org${NC}"
                     echo -e "   API: https://analyticbot.org/health, /channels, etc.${NC}"
-                    
+
                     # Save tunnel info for reference only (not used by frontend)
                     echo "TUNNEL_URL=$TUNNEL_URL" > ".tunnel-current"
                     echo "UPDATED_AT=$(date -Iseconds)" >> ".tunnel-current"

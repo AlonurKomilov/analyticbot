@@ -317,6 +317,6 @@ sudo systemctl restart cloudflared  # Restart
 
 ---
 
-**Configuration Date:** November 14, 2025  
-**Status:** ✅ Active  
+**Configuration Date:** November 14, 2025
+**Status:** ✅ Active
 **Type:** Direct API Access (No /api Prefix)

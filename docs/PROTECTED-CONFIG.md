@@ -38,9 +38,9 @@ Added prominent warning header:
 # ============================================================================
 # PRODUCTION API CONFIGURATION - DO NOT MODIFY
 # ============================================================================
-# 
+#
 # ⚠️  IMPORTANT: Keep VITE_API_BASE_URL and VITE_API_URL empty!
-# 
+#
 # Why empty? Because we use RELATIVE URLs for same-domain access
 # ============================================================================
 ```
@@ -240,6 +240,6 @@ If you need to go back to using tunnel URLs:
 
 ---
 
-**Protected Date:** November 14, 2025  
-**Status:** ✅ `.env.local` protected from auto-updates  
+**Protected Date:** November 14, 2025
+**Status:** ✅ `.env.local` protected from auto-updates
 **Domain:** https://analyticbot.org (permanent)

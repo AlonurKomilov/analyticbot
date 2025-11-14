@@ -9,16 +9,18 @@ print("=" * 60)
 
 # Mock the best hours data (like what comes from database)
 mock_best_hours = [
-    {'hour': 11, 'confidence': 92.5, 'avg_engagement': 15.2},
-    {'hour': 8, 'confidence': 89.3, 'avg_engagement': 14.1},
-    {'hour': 5, 'confidence': 87.8, 'avg_engagement': 13.5},
-    {'hour': 14, 'confidence': 85.2, 'avg_engagement': 12.8},
-    {'hour': 20, 'confidence': 83.9, 'avg_engagement': 12.3}
+    {"hour": 11, "confidence": 92.5, "avg_engagement": 15.2},
+    {"hour": 8, "confidence": 89.3, "avg_engagement": 14.1},
+    {"hour": 5, "confidence": 87.8, "avg_engagement": 13.5},
+    {"hour": 14, "confidence": 85.2, "avg_engagement": 12.8},
+    {"hour": 20, "confidence": 83.9, "avg_engagement": 12.3},
 ]
 
 print("\n📊 Top 5 hours from database:")
 for hour_data in mock_best_hours:
-    print(f"   {hour_data['hour']:02d}:00 - Confidence: {hour_data['confidence']:.1f}%, Engagement: {hour_data['avg_engagement']:.1f}")
+    print(
+        f"   {hour_data['hour']:02d}:00 - Confidence: {hour_data['confidence']:.1f}%, Engagement: {hour_data['avg_engagement']:.1f}"
+    )
 
 print("\n🔴 OLD LOGIC (all days get same times):")
 print("   Problem: All hours assigned to ONE day only")
@@ -26,13 +28,13 @@ best_day = 1  # Monday
 old_results = {}
 for day in range(7):
     if day == best_day:
-        old_results[day] = [h['hour'] for h in mock_best_hours[:3]]
+        old_results[day] = [h["hour"] for h in mock_best_hours[:3]]
     else:
         old_results[day] = []  # No recommendations!
 
-day_names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 for day in range(7):
-    times = old_results[day] if old_results[day] else ['NO DATA']
+    times = old_results[day] if old_results[day] else ["NO DATA"]
     marker = "✅" if old_results[day] else "❌"
     print(f"   {marker} {day_names[day]}: {times}")
 
@@ -41,14 +43,14 @@ print("   Solution: Distribute hours across all days with variation")
 
 # Simulate the new logic
 new_results = {}
-top_hours = sorted(mock_best_hours, key=lambda x: x['confidence'], reverse=True)[:5]
+top_hours = sorted(mock_best_hours, key=lambda x: x["confidence"], reverse=True)[:5]
 
 for day in range(7):  # 0=Sunday to 6=Saturday
     new_results[day] = []
     for i, hour_data in enumerate(top_hours[:3]):  # Top 3 hours per day
         # Add variation based on day
         hour_offset = (day * 2 + i) % 24
-        adjusted_hour = (hour_data['hour'] + hour_offset) % 24
+        adjusted_hour = (hour_data["hour"] + hour_offset) % 24
         new_results[day].append(adjusted_hour)
 
 for day in range(7):

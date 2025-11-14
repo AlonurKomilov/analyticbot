@@ -394,3 +394,8 @@ backup_*
 
 venv/
 backups/*.sql
+
+# Temporary runtime files
+temp/
+*.session
+.tunnel-current

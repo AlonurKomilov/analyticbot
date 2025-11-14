@@ -21,7 +21,7 @@ Your `TimeFrameFilters` component provides these analysis periods:
 ```typescript
 // Analysis Period Options
 - Last Hour        → 1 day of data
-- Last 6 Hours     → 1 day of data  
+- Last 6 Hours     → 1 day of data
 - Last 24 Hours    → 2 days of data
 - Last 7 Days      → 7 days of data
 - Last 30 Days     → 30 days of data ✅ Default
@@ -38,7 +38,7 @@ Your `TimeFrameFilters` component provides these analysis periods:
 - **Visual**: Mostly gray/empty days with few colored historical days
 
 #### **Medium Periods (7D/30D) - RECOMMENDED:**
-- **Data Source**: Last 7-30 days of posts 
+- **Data Source**: Last 7-30 days of posts
 - **Calendar Effect**: Good mix of historical data and predictions
 - **Use Case**: Optimal balance for recommendations
 - **Visual**: Rich historical data + intelligent future predictions
@@ -74,7 +74,7 @@ Your `TimeFrameFilters` component provides these analysis periods:
 const calendarData = React.useMemo(() => {
     // Use daily_performance data from the real backend API response
     const dailyPerformance = (recommendations as any)?.daily_performance || [];
-    
+
     // Convert backend format to component format
     return dailyPerformance.map((day: any) => ({
         date: day.date,
@@ -109,7 +109,7 @@ const calendarData = React.useMemo(() => {
 ### **Scenario 1: Last 7 Days Selected**
 ```json
 {
-  "analysis_period": "7days", 
+  "analysis_period": "7days",
   "data_points": 7,
   "calendar_result": {
     "historical_days": "Nov 7-14 (colored based on real posts)",
@@ -123,7 +123,7 @@ const calendarData = React.useMemo(() => {
 ```json
 {
   "analysis_period": "30days",
-  "data_points": 30, 
+  "data_points": 30,
   "calendar_result": {
     "historical_days": "Oct 15 - Nov 14 (rich historical data)",
     "future_days": "Nov 15-30 (high-confidence predictions)",

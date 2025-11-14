@@ -124,21 +124,21 @@ from telethon.tl.types import Channel, InputChannel
 class TelegramStorageService:
     def __init__(self, user_bot_client: TelegramClient):
         self.client = user_bot_client
-    
+
     async def validate_storage_channel(self, channel_id: int) -> dict:
         """Validate bot has admin access to storage channel"""
         try:
             channel = await self.client.get_entity(channel_id)
-            
+
             # Check if it's a channel
             if not isinstance(channel, Channel):
                 raise ValueError("Must be a channel, not a group")
-            
+
             # Check bot is admin
             permissions = await self.client.get_permissions(channel, 'me')
             if not permissions.is_admin:
                 raise ValueError("Bot must be admin in the storage channel")
-            
+
             return {
                 "channel_id": channel.id,
                 "title": channel.title,
@@ -150,10 +150,10 @@ class TelegramStorageService:
                 "is_valid": False,
                 "error": str(e)
             }
-    
+
     async def upload_to_storage(
-        self, 
-        file_path: str, 
+        self,
+        file_path: str,
         storage_channel_id: int,
         caption: str = None,
         file_type: str = 'document'
@@ -182,13 +182,13 @@ class TelegramStorageService:
                     caption=caption,
                     force_document=True
                 )
-            
+
             # Extract file info
             file_id = None
             file_size = 0
             mime_type = None
             thumbnail_file_id = None
-            
+
             if message.photo:
                 file_id = message.photo.id
                 file_size = message.photo.sizes[-1].size if message.photo.sizes else 0
@@ -205,7 +205,7 @@ class TelegramStorageService:
                 mime_type = message.document.mime_type
                 if message.document.thumbs:
                     thumbnail_file_id = message.document.thumbs[0].file_reference
-            
+
             return {
                 "success": True,
                 "telegram_file_id": str(file_id),
@@ -221,7 +221,7 @@ class TelegramStorageService:
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def download_from_storage(
         self,
         storage_channel_id: int,
@@ -231,16 +231,16 @@ class TelegramStorageService:
         """Download file from storage channel (for processing)"""
         try:
             message = await self.client.get_messages(storage_channel_id, ids=message_id)
-            
+
             if not message or not message.media:
                 raise ValueError("Message not found or has no media")
-            
+
             # Download file
             file_path = await message.download_media(file=download_path)
             return file_path
         except Exception as e:
             raise Exception(f"Failed to download from storage: {e}")
-    
+
     async def forward_from_storage(
         self,
         storage_channel_id: int,
@@ -252,10 +252,10 @@ class TelegramStorageService:
         try:
             # Get original message
             message = await self.client.get_messages(storage_channel_id, ids=message_id)
-            
+
             if not message:
                 raise ValueError("Message not found in storage")
-            
+
             # Forward or send with new caption
             if new_caption:
                 # Send as new message with new caption
@@ -270,7 +270,7 @@ class TelegramStorageService:
                     target_channel_id,
                     message
                 )
-            
+
             return {
                 "success": True,
                 "target_message_id": new_message.id,
@@ -281,7 +281,7 @@ class TelegramStorageService:
                 "success": False,
                 "error": str(e)
             }
-    
+
     async def list_storage_files(
         self,
         storage_channel_id: int,
@@ -296,17 +296,17 @@ class TelegramStorageService:
                 offset_id=offset_id,
                 filter=InputMessagesFilterPhotosVideos()  # Only media
             )
-            
+
             files = []
             for msg in messages:
                 if msg.media:
                     file_info = self._extract_file_info(msg)
                     files.append(file_info)
-            
+
             return files
         except Exception as e:
             raise Exception(f"Failed to list storage files: {e}")
-    
+
     def _extract_file_info(self, message) -> dict:
         """Extract file information from message"""
         info = {
@@ -314,7 +314,7 @@ class TelegramStorageService:
             "date": message.date,
             "caption": message.message or ""
         }
-        
+
         if message.photo:
             info.update({
                 "file_type": "photo",
@@ -337,7 +337,7 @@ class TelegramStorageService:
                 "file_name": next((attr.file_name for attr in message.document.attributes if hasattr(attr, 'file_name')), None),
                 "mime_type": message.document.mime_type
             })
-        
+
         return info
 ```
 
@@ -370,17 +370,17 @@ async def connect_storage_channel(
     """Connect user's Telegram channel as storage"""
     # Get user's MTProto client
     # ... (use existing MTProto service)
-    
+
     # Validate channel
     storage_service = TelegramStorageService(user_client)
     validation = await storage_service.validate_storage_channel(request.channel_id)
-    
+
     if not validation["is_valid"]:
         raise HTTPException(status_code=400, detail=validation["error"])
-    
+
     # Save to database
     # ... save user_storage_channels
-    
+
     return {
         "success": True,
         "channel": validation
@@ -393,7 +393,7 @@ async def list_storage_channels(
     """List user's connected storage channels"""
     # Query database for user's storage channels
     # ...
-    
+
     return {
         "channels": [...]
     }
@@ -411,7 +411,7 @@ async def upload_to_telegram_storage(
     temp_path = f"/tmp/{file.filename}"
     with open(temp_path, "wb") as f:
         f.write(await file.read())
-    
+
     # Upload to Telegram
     storage_service = TelegramStorageService(user_client)
     result = await storage_service.upload_to_storage(
@@ -420,16 +420,16 @@ async def upload_to_telegram_storage(
         caption,
         file_type
     )
-    
+
     if not result["success"]:
         raise HTTPException(status_code=500, detail=result["error"])
-    
+
     # Save metadata to database
     # ... save to telegram_media table
-    
+
     # Clean up temp file
     os.remove(temp_path)
-    
+
     return result
 
 @router.get("/files")
@@ -442,7 +442,7 @@ async def list_telegram_storage_files(
     """List files from Telegram storage"""
     # Query telegram_media table
     # ...
-    
+
     return {
         "files": [...],
         "total": 123
@@ -458,7 +458,7 @@ async def forward_from_storage(
     """Forward file from storage to target channel"""
     # Get file info from database
     # ...
-    
+
     storage_service = TelegramStorageService(user_client)
     result = await storage_service.forward_from_storage(
         storage_channel_id,
@@ -466,7 +466,7 @@ async def forward_from_storage(
         target_channel_id,
         new_caption
     )
-    
+
     return result
 ```
 
@@ -501,7 +501,7 @@ interface TelegramStorageState {
   telegramFiles: TelegramMediaFile[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   fetchStorageChannels: () => Promise<void>;
   connectStorageChannel: (channelId: number) => Promise<void>;
@@ -515,7 +515,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>((set) => ({
   telegramFiles: [],
   isLoading: false,
   error: null,
-  
+
   fetchStorageChannels: async () => {
     set({ isLoading: true });
     try {
@@ -525,7 +525,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>((set) => ({
       set({ error: error.message, isLoading: false });
     }
   },
-  
+
   connectStorageChannel: async (channelId: number) => {
     set({ isLoading: true });
     try {
@@ -536,14 +536,14 @@ export const useTelegramStorageStore = create<TelegramStorageState>((set) => ({
       set({ error: error.message, isLoading: false });
     }
   },
-  
+
   uploadToTelegram: async (file: File, storageChannelId: number, caption?: string) => {
     set({ isLoading: true });
     const formData = new FormData();
     formData.append('file', file);
     formData.append('storage_channel_id', String(storageChannelId));
     if (caption) formData.append('caption', caption);
-    
+
     try {
       await apiClient.post('/storage/upload', formData);
       // Refresh files
@@ -552,7 +552,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>((set) => ({
       set({ error: error.message, isLoading: false });
     }
   },
-  
+
   fetchTelegramFiles: async (storageChannelId?: number) => {
     set({ isLoading: true });
     try {

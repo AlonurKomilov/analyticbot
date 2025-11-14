@@ -204,11 +204,11 @@ import { useTelegramStorageStore } from '@/store';
 
 const MyComponent = () => {
   const { channels, fetchChannels, uploadFile } = useTelegramStorageStore();
-  
+
   useEffect(() => {
     fetchChannels();
   }, []);
-  
+
   // Use channels, upload files, etc.
 };
 ```
@@ -221,7 +221,7 @@ import { StorageChannelManager, TelegramStorageBrowser } from '@/features/storag
 <StorageChannelManager />
 
 // File browser (selection mode)
-<TelegramStorageBrowser 
+<TelegramStorageBrowser
   selectionMode={true}
   onSelectFile={(file) => console.log('Selected:', file)}
 />

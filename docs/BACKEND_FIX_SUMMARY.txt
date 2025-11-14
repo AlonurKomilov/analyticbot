@@ -42,7 +42,7 @@ for day in range(7):  # 0=Sunday to 6=Saturday
         # Add variation based on day
         hour_offset = (day * 2 + i) % 24
         adjusted_hour = (hour_data['hour'] + hour_offset) % 24
-        
+
         hours_per_day[day].append({
             'hour': adjusted_hour,
             day: day,  # ← Each day gets its own hours!

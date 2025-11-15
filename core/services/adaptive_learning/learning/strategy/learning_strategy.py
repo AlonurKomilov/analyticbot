@@ -65,7 +65,9 @@ class LearningStrategy:
             raise ValueError(f"Unknown learning strategy: {strategy}")
 
     async def _adaptive_learning(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Adaptive learning strategy - adjusts based on data characteristics."""
         logger.info("🎯 Executing adaptive learning strategy")
@@ -86,7 +88,9 @@ class LearningStrategy:
         }
 
     async def _replay_learning(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Replay learning strategy - mixes new and old data."""
         logger.info("🔄 Executing replay learning strategy")
@@ -107,7 +111,9 @@ class LearningStrategy:
         }
 
     async def _gradual_learning(
-        self, new_data: list[dict[str, Any]], existing_data: list[dict[str, Any]] | None = None
+        self,
+        new_data: list[dict[str, Any]],
+        existing_data: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Gradual learning strategy - slowly incorporates new knowledge."""
         logger.info("📈 Executing gradual learning strategy")

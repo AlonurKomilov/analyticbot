@@ -14,7 +14,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("/tmp/mtproto_collection.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("/tmp/mtproto_collection.log"),
+        logging.StreamHandler(),
+    ],
 )
 
 logger = logging.getLogger(__name__)
@@ -24,7 +27,9 @@ async def collect_in_batches():
     """Collect posts in multiple batches"""
 
     from apps.di import get_container
-    from apps.mtproto.services.data_collection_service import MTProtoDataCollectionService
+    from apps.mtproto.services.data_collection_service import (
+        MTProtoDataCollectionService,
+    )
 
     container = get_container()
     pool = await container.database.asyncpg_pool()
@@ -50,9 +55,9 @@ async def collect_in_batches():
     logger.info(f"Starting batch collection: {max_runs} runs of {batch_size} messages each")
 
     for run in range(1, max_runs + 1):
-        logger.info(f"\n{'='*60}")
+        logger.info(f"\n{'=' * 60}")
         logger.info(f"Batch {run}/{max_runs}")
-        logger.info(f"{'='*60}")
+        logger.info(f"{'=' * 60}")
 
         try:
             result = await service.collect_user_channel_history(
@@ -88,9 +93,9 @@ async def collect_in_batches():
             await asyncio.sleep(60)  # Wait longer on error
             continue
 
-    logger.info(f"\n{'='*60}")
+    logger.info(f"\n{'=' * 60}")
     logger.info(f"Collection complete! Total collected: {total_collected}")
-    logger.info(f"{'='*60}")
+    logger.info(f"{'=' * 60}")
 
     return True
 

@@ -70,12 +70,24 @@ class Settings:
     DEBUG: bool = field(default_factory=lambda: os.getenv("DEBUG", "false").lower() == "true")
 
     # Telegram Bot Configuration
-    BOT_TOKEN: SecretStr = field(default_factory=lambda: SecretStr(os.getenv("BOT_TOKEN", "dummy_token_for_development")))
-    STORAGE_CHANNEL_ID: int = field(default_factory=lambda: int(os.getenv("STORAGE_CHANNEL_ID", "0")))
+    BOT_TOKEN: SecretStr = field(
+        default_factory=lambda: SecretStr(os.getenv("BOT_TOKEN", "dummy_token_for_development"))
+    )
+    STORAGE_CHANNEL_ID: int = field(
+        default_factory=lambda: int(os.getenv("STORAGE_CHANNEL_ID", "0"))
+    )
     ADMIN_IDS_STR: str | None = field(default_factory=lambda: os.getenv("ADMIN_IDS_STR"))
-    SUPPORTED_LOCALES: str | list[str] = field(default_factory=lambda: os.getenv("SUPPORTED_LOCALES", "en,uz").split(",") if "," in os.getenv("SUPPORTED_LOCALES", "") else ["en", "uz"])
+    SUPPORTED_LOCALES: str | list[str] = field(
+        default_factory=lambda: (
+            os.getenv("SUPPORTED_LOCALES", "en,uz").split(",")
+            if "," in os.getenv("SUPPORTED_LOCALES", "")
+            else ["en", "uz"]
+        )
+    )
     DEFAULT_LOCALE: str = field(default_factory=lambda: os.getenv("DEFAULT_LOCALE", "en"))
-    ENFORCE_PLAN_LIMITS: bool = field(default_factory=lambda: os.getenv("ENFORCE_PLAN_LIMITS", "true").lower() == "true")
+    ENFORCE_PLAN_LIMITS: bool = field(
+        default_factory=lambda: os.getenv("ENFORCE_PLAN_LIMITS", "true").lower() == "true"
+    )
 
     # Computed field
     _admin_ids: list[int] | None = None
@@ -84,10 +96,14 @@ class Settings:
     POSTGRES_HOST: str = field(default_factory=lambda: os.getenv("POSTGRES_HOST", "localhost"))
     POSTGRES_PORT: int = field(default_factory=lambda: int(os.getenv("POSTGRES_PORT", "10100")))
     POSTGRES_USER: str = field(default_factory=lambda: os.getenv("POSTGRES_USER", "postgres"))
-    POSTGRES_PASSWORD: SecretStr = field(default_factory=lambda: SecretStr(os.getenv("POSTGRES_PASSWORD", "password")))
+    POSTGRES_PASSWORD: SecretStr = field(
+        default_factory=lambda: SecretStr(os.getenv("POSTGRES_PASSWORD", "password"))
+    )
     POSTGRES_DB: str = field(default_factory=lambda: os.getenv("POSTGRES_DB", "analyticbot"))
     DATABASE_URL: str | None = field(default_factory=lambda: os.getenv("DATABASE_URL"))
-    REDIS_URL: str = field(default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:10200/0"))
+    REDIS_URL: str = field(
+        default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:10200/0")
+    )
     DB_POOL_SIZE: int = field(default_factory=lambda: int(os.getenv("DB_POOL_SIZE", "10")))
     DB_MAX_OVERFLOW: int = field(default_factory=lambda: int(os.getenv("DB_MAX_OVERFLOW", "20")))
     DB_POOL_TIMEOUT: int = field(default_factory=lambda: int(os.getenv("DB_POOL_TIMEOUT", "30")))
@@ -117,18 +133,20 @@ class Settings:
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     PASSWORD_HASH_ROUNDS: int = 12
     RATE_LIMIT_PER_MINUTE: int = 60
-    
+
     # Phase 2: Token Security Features
     JWT_REFRESH_ROTATION_ENABLED: bool = field(
         default_factory=lambda: os.getenv("JWT_REFRESH_ROTATION_ENABLED", "true").lower() == "true"
     )
     AUTH_DEVICE_FINGERPRINT_REQUIRED: bool = field(
-        default_factory=lambda: os.getenv("AUTH_DEVICE_FINGERPRINT_REQUIRED", "true").lower() == "true"
+        default_factory=lambda: os.getenv("AUTH_DEVICE_FINGERPRINT_REQUIRED", "true").lower()
+        == "true"
     )
     AUTH_ANOMALY_DETECTION_ENABLED: bool = field(
-        default_factory=lambda: os.getenv("AUTH_ANOMALY_DETECTION_ENABLED", "true").lower() == "true"
+        default_factory=lambda: os.getenv("AUTH_ANOMALY_DETECTION_ENABLED", "true").lower()
+        == "true"
     )
-    
+
     # Phase 2: Anomaly Detection Thresholds
     AUTH_MAX_LOGIN_ATTEMPTS_PER_HOUR: int = field(
         default_factory=lambda: int(os.getenv("AUTH_MAX_LOGIN_ATTEMPTS_PER_HOUR", "10"))
@@ -142,7 +160,7 @@ class Settings:
     AUTH_DEVICE_TTL_DAYS: int = field(
         default_factory=lambda: int(os.getenv("AUTH_DEVICE_TTL_DAYS", "90"))
     )
-    
+
     # Phase 3: Advanced Session Features
     AUTH_SLIDING_SESSION_ENABLED: bool = field(
         default_factory=lambda: os.getenv("AUTH_SLIDING_SESSION_ENABLED", "true").lower() == "true"
@@ -156,7 +174,7 @@ class Settings:
     AUTH_REMEMBER_ME_DAYS: int = field(
         default_factory=lambda: int(os.getenv("AUTH_REMEMBER_ME_DAYS", "30"))
     )
-    
+
     # Multi-Tenant Bot Encryption (for user bot credentials)
     ENCRYPTION_KEY: SecretStr = field(
         default_factory=lambda: SecretStr(os.getenv("ENCRYPTION_KEY", ""))

@@ -78,7 +78,8 @@ class PostingTimeRecommendationService:
 
         except Exception as e:
             logger.error(
-                f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True
+                f"Failed to get best posting times for channel {channel_id}: {e}",
+                exc_info=True,
             )
             return self._create_error_response(channel_id, str(e))
 
@@ -135,7 +136,11 @@ class PostingTimeRecommendationService:
                 for bd in result.best_days
             ],
             "hourly_engagement_trend": [
-                {"hour": het.hour, "engagement": het.engagement, "postCount": het.post_count}
+                {
+                    "hour": het.hour,
+                    "engagement": het.engagement,
+                    "postCount": het.post_count,
+                }
                 for het in result.hourly_engagement_trend
             ],
             "current_avg_engagement": result.current_avg_engagement,

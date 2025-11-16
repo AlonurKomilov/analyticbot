@@ -14,7 +14,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-from core.services.adaptive_learning.protocols.learning_protocols import LearningTask, UpdateStatus
+from core.services.adaptive_learning.protocols.learning_protocols import (
+    LearningTask,
+    UpdateStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +229,10 @@ class TaskScheduler:
             return False
 
     async def register_worker(
-        self, worker_id: str, capabilities: dict[str, Any], resource_capacity: dict[str, Any]
+        self,
+        worker_id: str,
+        capabilities: dict[str, Any],
+        resource_capacity: dict[str, Any],
     ) -> bool:
         """Register a new worker"""
         try:
@@ -589,7 +595,11 @@ class TaskScheduler:
             # Check if task is assigned to worker
             for worker_id, assigned_task_id in self.worker_assignments.items():
                 if assigned_task_id == task_id:
-                    return {"task_id": task_id, "status": "assigned", "worker_id": worker_id}
+                    return {
+                        "task_id": task_id,
+                        "status": "assigned",
+                        "worker_id": worker_id,
+                    }
 
             # Task not found
             return None

@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from core.ports.cache_port import AsyncCachePort
 
@@ -11,7 +10,7 @@ class GuardService:
     for content filtering and moderation.
     """
 
-    def __init__(self, cache: Optional[AsyncCachePort] = None):
+    def __init__(self, cache: AsyncCachePort | None = None):
         """Initialize guard service with cache backend.
 
         Args:

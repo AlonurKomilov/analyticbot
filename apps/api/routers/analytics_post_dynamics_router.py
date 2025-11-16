@@ -240,7 +240,6 @@ async def get_post_dynamics(
             else:
                 # Daily buckets for multi-day periods
                 trunc_unit = "day"
-                time_format = "YYYY-MM-DD"
 
             # OPTIMIZED QUERY: Groups by post.date (when published)
             # Uses LATERAL JOIN to get latest metrics snapshot for each post

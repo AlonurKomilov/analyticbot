@@ -316,10 +316,10 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 for i in range(min(limit, 10)):
                     audit_logs.append(
                         {
-                            "id": f"audit_{i+1}",
-                            "action": f"admin_action_{i+1}",
-                            "user_id": f"admin_user_{i+1}",
-                            "details": f"Administrative action details {i+1}",
+                            "id": f"audit_{i + 1}",
+                            "action": f"admin_action_{i + 1}",
+                            "user_id": f"admin_user_{i + 1}",
+                            "details": f"Administrative action details {i + 1}",
                             "timestamp": (datetime.utcnow().timestamp() - i * 3600),
                             "ip_address": f"192.168.1.{100 + i}",
                             "success": True,
@@ -351,9 +351,9 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 "orchestrator": {
                     "running": self.is_running,
                     "request_count": self.request_count,
-                    "last_request": self.last_request_time.isoformat()
-                    if self.last_request_time
-                    else None,
+                    "last_request": (
+                        self.last_request_time.isoformat() if self.last_request_time else None
+                    ),
                 },
                 "summary": {
                     "total_services": len(service_health),
@@ -373,7 +373,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
                 "error": str(e),
                 "services": {},
                 "orchestrator": {"running": False},
-                "summary": {"total_services": 0, "healthy_services": 0, "overall_status": "error"},
+                "summary": {
+                    "total_services": 0,
+                    "healthy_services": 0,
+                    "overall_status": "error",
+                },
             }
 
     async def start_services(self) -> bool:
@@ -438,7 +442,11 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             return {"error": str(e)}
 
     async def get_growth_time_series(
-        self, channel_id: int, from_date: datetime, to_date: datetime, window_days: int = 1
+        self,
+        channel_id: int,
+        from_date: datetime,
+        to_date: datetime,
+        window_days: int = 1,
     ) -> list[dict[str, Any]]:
         """Get growth time series data"""
         try:
@@ -559,8 +567,16 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         return [
             RoutingRule(
                 request_type=RequestType.COMPREHENSIVE_ANALYSIS,
-                target_services=[ServiceType.CORE, ServiceType.REPORTING, ServiceType.INTELLIGENCE],
-                execution_order=[ServiceType.CORE, ServiceType.INTELLIGENCE, ServiceType.REPORTING],
+                target_services=[
+                    ServiceType.CORE,
+                    ServiceType.REPORTING,
+                    ServiceType.INTELLIGENCE,
+                ],
+                execution_order=[
+                    ServiceType.CORE,
+                    ServiceType.INTELLIGENCE,
+                    ServiceType.REPORTING,
+                ],
                 parallel_execution=False,
                 timeout_seconds=300,
             ),
@@ -746,7 +762,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(f"Failed to calculate performance score for channel {channel_id}: {e}")
-            return {"channel_id": channel_id, "period": period, "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "period": period,
+                "error": str(e),
+                "status": "failed",
+            }
 
     async def get_live_monitoring_data(self, channel_id: int) -> dict[str, Any]:
         """
@@ -757,14 +778,15 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         try:
             # Use existing comprehensive analysis with monitoring focus
             result = await self.coordinate_comprehensive_analysis(
-                channel_id=channel_id, parameters={"monitoring": True, "live_data": True}
+                channel_id=channel_id,
+                parameters={"monitoring": True, "live_data": True},
             )
 
             return {
                 "channel_id": channel_id,
                 "status": "live",
                 "last_updated": datetime.utcnow().isoformat(),
-                "monitoring_data": result.get("results", {}) if result.get("success") else {},
+                "monitoring_data": (result.get("results", {}) if result.get("success") else {}),
                 "health_status": "healthy" if result.get("success") else "degraded",
             }
 
@@ -798,7 +820,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(f"Failed to get live metrics for channel {channel_id}: {e}")
-            return {"channel_id": channel_id, "hours": hours, "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "hours": hours,
+                "error": str(e),
+                "status": "failed",
+            }
 
     async def generate_analytical_report(
         self, channel_id: int, report_type: str, days: int
@@ -911,6 +938,12 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
 
         except Exception as e:
             logger.error(
-                f"Failed to get best posting times for channel {channel_id}: {e}", exc_info=True
+                f"Failed to get best posting times for channel {channel_id}: {e}",
+                exc_info=True,
             )
-            return {"channel_id": channel_id, "best_times": [], "error": str(e), "status": "failed"}
+            return {
+                "channel_id": channel_id,
+                "best_times": [],
+                "error": str(e),
+                "status": "failed",
+            }

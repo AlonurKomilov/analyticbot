@@ -211,6 +211,7 @@ class ImportGuard:
 
             allowed_paths = [
                 "infra/tg/",  # Stub implementations
+                "infra/bot/",  # Bot manager implementations
                 "apps/mtproto/",  # MTProto services layer
                 "apps/api/services/telegram_",  # Telegram-specific API services
                 "apps/api/routers/user_mtproto_",  # MTProto routers

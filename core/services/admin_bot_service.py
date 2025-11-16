@@ -8,8 +8,8 @@ suspending/activating bots, and updating rate limits.
 import logging
 from datetime import datetime
 
-from apps.bot.multi_tenant.bot_manager import get_bot_manager
 from core.models.user_bot_domain import AdminBotAction, BotStatus, UserBotCredentials
+from core.ports.bot_manager_port import IBotManager
 from core.ports.user_bot_repository import IUserBotRepository
 
 logger = logging.getLogger(__name__)
@@ -18,15 +18,16 @@ logger = logging.getLogger(__name__)
 class AdminBotService:
     """Service for admin bot management operations."""
 
-    def __init__(self, repository: IUserBotRepository):
+    def __init__(self, repository: IUserBotRepository, bot_manager: IBotManager | None = None):
         """
         Initialize the admin bot service.
 
         Args:
             repository: User bot repository for database operations
+            bot_manager: Multi-tenant bot manager (optional, injected via DI)
         """
         self.repository = repository
-        # Bot manager is async; fetch when needed
+        self.bot_manager = bot_manager
 
     async def list_all_user_bots(
         self,
@@ -88,8 +89,10 @@ class AdminBotService:
 
         try:
             # Access bot through manager (logs admin action)
-            bot_manager = await get_bot_manager()
-            bot_instance = await bot_manager.admin_access_bot(admin_user_id, target_user_id)
+            if not self.bot_manager:
+                logger.error("Bot manager not available")
+                return None
+            bot_instance = await self.bot_manager.admin_access_bot(admin_user_id, target_user_id)
 
             if not bot_instance:
                 return None
@@ -152,8 +155,8 @@ class AdminBotService:
 
         # Shutdown bot instance if active
         try:
-            bot_manager = await get_bot_manager()
-            await bot_manager.shutdown_user_bot(target_user_id)
+            if self.bot_manager:
+                await self.bot_manager.shutdown_user_bot(target_user_id)
         except Exception as e:
             logger.warning(f"Error shutting down bot for user {target_user_id}: {e}")
 
@@ -261,8 +264,8 @@ class AdminBotService:
 
         # Reload bot instance to apply new limits
         try:
-            bot_manager = await get_bot_manager()
-            await bot_manager.reload_user_bot(target_user_id)
+            if self.bot_manager:
+                await self.bot_manager.reload_user_bot(target_user_id)
             logger.info(
                 f"Admin {admin_user_id} updated rate limits for user {target_user_id}: "
                 f"RPS={max_requests_per_second}, Concurrent={max_concurrent_requests}"

@@ -295,3 +295,18 @@ class BotContainer(containers.DeclarativeContainer):
         alerts=alerts_management_service,
         competitive=competitive_intelligence_service,
     )
+
+    # ============================================================================
+    # MULTI-TENANT BOT MANAGER (Infra Layer Implementation)
+    # ============================================================================
+
+    bot_manager = providers.Singleton(
+        lambda user_bot_repo: __import__(
+            "infra.bot.multi_tenant_bot_manager", fromlist=["MultiTenantBotManager"]
+        ).MultiTenantBotManager(
+            repository=user_bot_repo,
+            max_active_bots=100,
+            bot_idle_timeout_minutes=30,
+        ),
+        user_bot_repo=database.user_bot_repo,
+    )

@@ -895,19 +895,17 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             if self.posting_time_service:
                 return await self.posting_time_service.get_best_posting_times(channel_id, days)
 
-            # Fallback: Create service on-demand (for backward compatibility)
-            logger.warning("PostingTimeRecommendationService not injected, creating on-demand")
-
-            from apps.di import get_container
-
-            container = get_container()
-            pool = await container.database.asyncpg_pool()
-
-            from ..recommendations import PostingTimeRecommendationService
-
-            service = PostingTimeRecommendationService(pool)
-
-            return await service.get_best_posting_times(channel_id, days)
+            # If service not injected, log error and return empty result
+            logger.error(
+                f"PostingTimeRecommendationService not injected for channel {channel_id}. "
+                "This indicates a DI configuration issue."
+            )
+            return {
+                "channel_id": channel_id,
+                "best_times": [],
+                "error": "Service not available",
+                "status": "failed",
+            }
 
         except Exception as e:
             logger.error(

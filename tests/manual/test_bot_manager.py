@@ -91,7 +91,7 @@ def create_test_credentials(user_id: int) -> UserBotCredentials:
 
 async def test_bot_manager():
     """Test bot manager functionality"""
-    from apps.bot.multi_tenant.bot_manager import MultiTenantBotManager
+    from infra.bot.multi_tenant_bot_manager import MultiTenantBotManager
 
     print("🧪 Testing Multi-Tenant Bot Manager\n")
 

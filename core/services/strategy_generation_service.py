@@ -170,7 +170,10 @@ class StrategyGenerationService:
             }
 
     async def analyze_strategy_effectiveness(
-        self, channel_id: int, strategy_start_date: datetime, metrics_to_track: list[str] = None
+        self,
+        channel_id: int,
+        strategy_start_date: datetime,
+        metrics_to_track: list[str] = None,
     ) -> dict:
         """
         📈 Analyze Strategy Effectiveness
@@ -262,9 +265,9 @@ class StrategyGenerationService:
                 "total_posts": len(posts),
                 "avg_views": sum(views) / len(views) if views else 0,
                 "total_views": sum(views),
-                "avg_engagement": sum(engagement_scores) / len(engagement_scores)
-                if engagement_scores
-                else 0,
+                "avg_engagement": (
+                    sum(engagement_scores) / len(engagement_scores) if engagement_scores else 0
+                ),
                 "posting_frequency": len(posts) / (timeframe / 7),  # Posts per week
                 "performance_consistency": self._calculate_consistency_score(views),
                 "top_performer_threshold": max(views) * 0.8 if views else 0,
@@ -272,10 +275,12 @@ class StrategyGenerationService:
             }
 
             analysis["summary"] = {
-                "status": "good" if analysis["avg_engagement"] > 2 else "needs_improvement",
-                "strength": "consistency"
-                if analysis["performance_consistency"] > 0.7
-                else "growth_potential",
+                "status": ("good" if analysis["avg_engagement"] > 2 else "needs_improvement"),
+                "strength": (
+                    "consistency"
+                    if analysis["performance_consistency"] > 0.7
+                    else "growth_potential"
+                ),
                 "primary_opportunity": await self._identify_primary_opportunity(analysis),
             }
 
@@ -598,7 +603,13 @@ class StrategyGenerationService:
                 "strategy_effectiveness_analysis",
                 "quick_strategy_tips",
             ],
-            "supported_goals": ["engagement", "growth", "reach", "consistency", "comprehensive"],
+            "supported_goals": [
+                "engagement",
+                "growth",
+                "reach",
+                "consistency",
+                "comprehensive",
+            ],
             "dependencies": {"nlg_service": True, "ai_insights_service": True},
             "timestamp": datetime.now().isoformat(),
         }

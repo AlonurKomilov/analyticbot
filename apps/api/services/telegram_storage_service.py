@@ -35,19 +35,13 @@ logger = logging.getLogger(__name__)
 class TelegramStorageError(Exception):
     """Base exception for Telegram storage operations"""
 
-    pass
-
 
 class ChannelNotFoundError(TelegramStorageError):
     """Raised when storage channel is not found or not accessible"""
 
-    pass
-
 
 class UploadFailedError(TelegramStorageError):
     """Raised when file upload to Telegram fails"""
-
-    pass
 
 
 class TelegramStorageService:
@@ -383,7 +377,11 @@ class TelegramStorageService:
         return f"{settings.API_HOST_URL}/api/v1/storage/files/{media_id}/download"
 
     async def list_user_files(
-        self, user_id: int, file_type: str | None = None, limit: int = 50, offset: int = 0
+        self,
+        user_id: int,
+        file_type: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
     ) -> dict[str, Any]:
         """
         List files stored in user's Telegram channels.
@@ -439,7 +437,10 @@ class TelegramStorageService:
         # Get media record with channel info
         result = await self.db.execute(
             select(TelegramMedia, UserStorageChannel)
-            .join(UserStorageChannel, TelegramMedia.storage_channel_id == UserStorageChannel.id)
+            .join(
+                UserStorageChannel,
+                TelegramMedia.storage_channel_id == UserStorageChannel.id,
+            )
             .where(
                 and_(
                     TelegramMedia.id == media_id,
@@ -462,8 +463,7 @@ class TelegramStorageService:
                     entity=channel.channel_id, message_ids=[media.telegram_message_id]
                 )
                 logger.info(
-                    f"Deleted message {media.telegram_message_id} from "
-                    f"channel {channel.channel_id}"
+                    f"Deleted message {media.telegram_message_id} from channel {channel.channel_id}"
                 )
             except Exception as e:
                 logger.warning(
@@ -498,7 +498,10 @@ class TelegramStorageService:
         # Get media record with source channel
         result = await self.db.execute(
             select(TelegramMedia, UserStorageChannel)
-            .join(UserStorageChannel, TelegramMedia.storage_channel_id == UserStorageChannel.id)
+            .join(
+                UserStorageChannel,
+                TelegramMedia.storage_channel_id == UserStorageChannel.id,
+            )
             .where(
                 and_(
                     TelegramMedia.id == media_id,

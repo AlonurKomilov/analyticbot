@@ -19,7 +19,12 @@ import logging
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +120,8 @@ def _create_channels_keyboard(channels: list) -> InlineKeyboardMarkup:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text=f"📡 {channel_name}", callback_data=f"analytics_channel:{channel_id}"
+                    text=f"📡 {channel_name}",
+                    callback_data=f"analytics_channel:{channel_id}",
                 )
             ]
         )
@@ -164,8 +170,7 @@ async def analytics_command(message: Message, state: FSMContext) -> None:
         # Show channel selection
         keyboard = _create_channels_keyboard(channels)
         await message.answer(
-            "📊 **Select Channel for Analytics**\n\n"
-            "Choose a channel to view detailed analytics:",
+            "📊 **Select Channel for Analytics**\n\nChoose a channel to view detailed analytics:",
             reply_markup=keyboard,
         )
 
@@ -194,7 +199,7 @@ async def analytics_channel_callback(callback: CallbackQuery, state: FSMContext)
 
         # Show period selection
         keyboard = _create_period_keyboard()
-        text = f"📊 **Analytics: Channel {channel_id}**\n\n" "📅 Select time period for analytics:"
+        text = f"📊 **Analytics: Channel {channel_id}**\n\n📅 Select time period for analytics:"
 
         success = await _safe_edit_message(callback, text, keyboard)
         if success:
@@ -443,9 +448,7 @@ async def analytics_channels_callback(callback: CallbackQuery, state: FSMContext
 
         # Show channel selection
         keyboard = _create_channels_keyboard(channels)
-        text = (
-            "📊 **Select Channel for Analytics**\n\n" "Choose a channel to view detailed analytics:"
-        )
+        text = "📊 **Select Channel for Analytics**\n\nChoose a channel to view detailed analytics:"
 
         success = await _safe_edit_message(callback, text, keyboard)
         if success:

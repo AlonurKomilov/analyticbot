@@ -21,7 +21,8 @@ def upgrade() -> None:
 
     # Add is_deleted boolean column (default FALSE)
     op.add_column(
-        "posts", sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default="false")
+        "posts",
+        sa.Column("is_deleted", sa.Boolean(), nullable=False, server_default="false"),
     )
 
     # Add deleted_at timestamp column (nullable, only set when deleted)

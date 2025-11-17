@@ -14,7 +14,10 @@ class MTProtoSettings(BaseSettings):
     # Feature flags - disabled by default for safety
     MTPROTO_ENABLED: bool = Field(
         default=False,
-        description="Enable MTProto functionality. Set to true to activate Telegram client features.",
+        description=(
+            "Enable MTProto functionality. "
+            "Set to true to activate Telegram client features."
+        ),
     )
 
     MTPROTO_HISTORY_ENABLED: bool = Field(
@@ -70,7 +73,10 @@ class MTProtoSettings(BaseSettings):
     # Account pool configuration (Phase 4.6)
     MTPROTO_ACCOUNTS: list[str] = Field(
         default_factory=list,
-        description="List of session names for multi-account pooling (e.g., ['session1', 'session2'])",
+        description=(
+            "List of session names for multi-account pooling "
+            "(e.g., ['session1', 'session2'])"
+        ),
     )
 
     MTPROTO_RPS_PER_ACCOUNT: float = Field(
@@ -89,7 +95,10 @@ class MTProtoSettings(BaseSettings):
     # Connection Pool Configuration (Auto-Close System)
     MTPROTO_MAX_CONCURRENT_USERS: int = Field(
         default=10,
-        description="Maximum concurrent user sessions in MTProto connection pool (system-wide limit)",
+        description=(
+            "Maximum concurrent user sessions in MTProto connection pool "
+            "(system-wide limit)"
+        ),
     )
 
     MTPROTO_MAX_CONNECTIONS_PER_USER: int = Field(
@@ -153,22 +162,11 @@ class MTProtoSettings(BaseSettings):
     # Connection Pool Configuration (Phase 4.6+)
     MTPROTO_MAX_CONNECTIONS: int = Field(
         default=10,
-        description="Maximum concurrent MTProto connections system-wide. Increase for larger servers.",
+        description=(
+            "Maximum concurrent MTProto connections system-wide. "
+            "Increase for larger servers."
+        ),
     )
-
-    MTPROTO_MAX_CONNECTIONS_PER_USER: int = Field(
-        default=1, description="Maximum concurrent connections per user (recommended: 1)"
-    )
-
-    MTPROTO_SESSION_TIMEOUT: int = Field(
-        default=600, description="Session timeout in seconds (auto-close if exceeded)"
-    )
-
-    MTPROTO_CONNECTION_TIMEOUT: int = Field(
-        default=300, description="Connection establishment timeout in seconds"
-    )
-
-    MTPROTO_IDLE_TIMEOUT: int = Field(default=180, description="Idle connection timeout in seconds")
 
     MTPROTO_CLEANUP_INTERVAL: int = Field(
         default=300, description="Cleanup task interval in seconds"

@@ -4,7 +4,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from apps.mtproto.config import MTProtoSettings
 from core.ports.tg_client import TGClient
@@ -38,7 +38,7 @@ class UpdatesCollector:
         self.parsers = getattr(repos, "parsers", None)
         self._running = False
         self._shutdown_event = asyncio.Event()
-        self._stats = {
+        self._stats: dict[str, int | datetime | None] = {
             "updates_processed": 0,
             "updates_skipped": 0,
             "updates_errors": 0,
@@ -93,24 +93,31 @@ class UpdatesCollector:
                     # Check if normalization failed (returns None on error)
                     if normalized is None:
                         self.logger.warning("Failed to normalize update, skipping")
-                        self._stats["updates_skipped"] += 1
+                        cast(int, self._stats["updates_skipped"])
+                        self._stats["updates_skipped"] = (
+                            cast(int, self._stats["updates_skipped"]) + 1
+                        )
                         continue
 
                     # Skip if no valid channel data
                     if not normalized.get("channel"):
-                        self._stats["updates_skipped"] += 1
+                        self._stats["updates_skipped"] = (
+                            cast(int, self._stats["updates_skipped"]) + 1
+                        )
                         continue
 
                     # Process the normalized update
                     await self._process_normalized_update(normalized)
-                    self._stats["updates_processed"] += 1
+                    self._stats["updates_processed"] = (
+                        cast(int, self._stats["updates_processed"]) + 1
+                    )
 
                     # Rate limiting
                     await asyncio.sleep(self.settings.MTPROTO_SLEEP_THRESHOLD / 10)
 
                 except Exception as e:
                     self.logger.error(f"Error processing update: {e}")
-                    self._stats["updates_errors"] += 1
+                    self._stats["updates_errors"] = cast(int, self._stats["updates_errors"]) + 1
                     continue
 
         except Exception as e:
@@ -138,9 +145,9 @@ class UpdatesCollector:
             if normalized.get("metrics"):
                 await self.repos.metrics_repo.add_or_update_snapshot(**normalized["metrics"])
 
-            self.logger.debug(
-                f"Processed update for channel {normalized.get('channel', {}).get('channel_id', 'unknown')}"
-            )
+            channel_info = normalized.get('channel', {})
+            channel_id = channel_info.get('channel_id', 'unknown')
+            self.logger.debug(f"Processed update for channel {channel_id}")
 
         except Exception as e:
             self.logger.error(f"Error storing normalized update: {e}")
@@ -167,8 +174,9 @@ class UpdatesCollector:
             Dictionary with collection statistics
         """
         stats = self._stats.copy()
-        if stats["start_time"]:
-            stats["uptime_seconds"] = (datetime.utcnow() - stats["start_time"]).total_seconds()
+        start_time = cast(datetime | None, stats["start_time"])
+        if start_time:
+            stats["uptime_seconds"] = (datetime.utcnow() - start_time).total_seconds()
         return stats
 
     # Legacy methods for backward compatibility

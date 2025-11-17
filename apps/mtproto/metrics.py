@@ -22,7 +22,7 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
 
     # Create stub classes for when prometheus is not available
-    class Counter:
+    class Counter:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 
@@ -32,7 +32,7 @@ except ImportError:
         def labels(self, *args, **kwargs):
             return self
 
-    class Gauge:
+    class Gauge:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 
@@ -48,7 +48,7 @@ except ImportError:
         def labels(self, *args, **kwargs):
             return self
 
-    class Histogram:
+    class Histogram:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 

@@ -298,10 +298,7 @@ class HistoryCollector:
             # Update channel metadata (subscriber count, etc.) before collecting messages
             await self._update_channel_metadata(channel_id)
 
-            # For full collection, start from the beginning (offset_id=0)
-            # iter_history goes from newest to oldest, so offset_id=0 means start from the very newest
-            offset_id = 0
-
+            # For full collection, iter_history starts from newest and goes to oldest
             self.logger.info(f"Starting full collection for channel {channel_id} (limit={limit})")
 
             # Get channel name for progress tracking

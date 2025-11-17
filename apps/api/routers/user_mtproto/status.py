@@ -66,10 +66,12 @@ async def get_mtproto_status(
             try:
                 mtproto_service = get_user_mtproto_service()
                 # Check if client exists in pool and is actively connected
-                if user_id in mtproto_service._client_pool:
-                    client = mtproto_service._client_pool[user_id]
-                    actively_connected = client._is_connected
-                    last_used = client.last_used
+                actively_connected = mtproto_service.is_user_connected(user_id)
+                if actively_connected:
+                    # Get client to access last_used (this is acceptable internal access)
+                    client = await mtproto_service.get_user_client(user_id)
+                    if client:
+                        last_used = client.last_used
                     logger.debug(
                         f"User {user_id} has active client in pool (connected={actively_connected})"
                     )

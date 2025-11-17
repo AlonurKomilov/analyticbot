@@ -19,8 +19,8 @@ from apps.api.routers.user_mtproto.models import (
     MTProtoActionResponse,
     MTProtoToggleRequest,
 )
+from core.ports.mtproto_repository import IChannelMTProtoSettingsRepository
 from core.ports.user_bot_repository import IUserBotRepository
-from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ router = APIRouter()
 async def get_all_channel_settings(
     user_id: Annotated[int, Depends(get_current_user_id)],
     user_bot_repo: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
-    channel_repo: Annotated[ChannelMTProtoRepository, Depends(get_channel_mtproto_repository)],
+    channel_repo: Annotated[
+        IChannelMTProtoSettingsRepository, Depends(get_channel_mtproto_repository)
+    ],
 ):
     """
     Get all per-channel MTProto settings for the user
@@ -89,7 +91,10 @@ async def get_all_channel_settings(
 async def get_channel_setting(
     channel_id: int,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    channel_repo: Annotated[ChannelMTProtoRepository, Depends(get_channel_mtproto_repository)],
+    user_bot_repo: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+    channel_repo: Annotated[
+        IChannelMTProtoSettingsRepository, Depends(get_channel_mtproto_repository)
+    ],
 ):
     """
     Get MTProto setting for a specific channel
@@ -134,10 +139,12 @@ async def get_channel_setting(
 async def toggle_channel_mtproto(
     channel_id: int,
     payload: MTProtoToggleRequest,
-    http_request: Request,
+    request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
     user_bot_repo: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
-    channel_repo: Annotated[ChannelMTProtoRepository, Depends(get_channel_mtproto_repository)],
+    channel_repo: Annotated[
+        IChannelMTProtoSettingsRepository, Depends(get_channel_mtproto_repository)
+    ],
 ):
     """
     Enable or disable MTProto for a specific channel
@@ -174,7 +181,7 @@ async def toggle_channel_mtproto(
                 await audit_service.log_toggle_event(
                     user_id=user_id,
                     enabled=payload.enabled,
-                    request=http_request,
+                    request=request,
                     channel_id=channel_id,
                     previous_state=previous_state,
                 )
@@ -219,7 +226,10 @@ async def toggle_channel_mtproto(
 async def delete_channel_setting(
     channel_id: int,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    channel_repo: Annotated[ChannelMTProtoRepository, Depends(get_channel_mtproto_repository)],
+    user_bot_repo: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+    channel_repo: Annotated[
+        IChannelMTProtoSettingsRepository, Depends(get_channel_mtproto_repository)
+    ],
 ):
     """
     Delete per-channel MTProto setting (reverts to global default)

@@ -219,6 +219,38 @@ class UserMTProtoService:
             del self._client_pool[user_id]
             logger.info(f"Disconnected and removed MTProto client for user {user_id}")
 
+    def is_user_connected(self, user_id: int) -> bool:
+        """
+        Check if user has an active client connection.
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            True if user has an active connected client, False otherwise
+        """
+        if user_id not in self._client_pool:
+            return False
+        return self._client_pool[user_id]._is_connected
+
+    def get_active_users_count(self) -> int:
+        """
+        Get count of users with active client connections.
+        
+        Returns:
+            Number of active user connections
+        """
+        return len(self._client_pool)
+
+    def get_active_user_ids(self) -> list[int]:
+        """
+        Get list of user IDs with active client connections.
+        
+        Returns:
+            List of user IDs with active clients
+        """
+        return list(self._client_pool.keys())
+
     async def cleanup_idle_clients(self):
         """Remove idle clients to free resources"""
         now = datetime.utcnow()
@@ -299,7 +331,8 @@ class UserMTProtoService:
 
         except Exception as e:
             logger.error(
-                f"Error checking MTProto enabled status for user {user_id}, channel {channel_id}: {e}"
+                f"Error checking MTProto enabled status for user {user_id}, "
+                f"channel {channel_id}: {e}"
             )
             # Default to disabled on error (fail-safe)
             return False

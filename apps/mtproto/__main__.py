@@ -13,8 +13,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from apps.mtproto.config import MTProtoSettings
-from apps.mtproto.di import configure_container, container
+from apps.mtproto.config import MTProtoSettings  # noqa: E402
+from apps.mtproto.di import configure_container, container  # noqa: E402
 
 
 def setup_logging(level: str) -> None:

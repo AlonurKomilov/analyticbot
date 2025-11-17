@@ -10,7 +10,11 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.di import get_db_session
-from core.ports.mtproto_repository import IMTProtoAuditRepository, IMTProtoChannelRepository
+from core.ports.mtproto_repository import (
+    IChannelMTProtoSettingsRepository,
+    IMTProtoAuditRepository,
+    IMTProtoChannelRepository,
+)
 from infra.db.adapters.mtproto_repository_adapter import (
     MTProtoAuditRepositoryAdapter,
     MTProtoChannelRepositoryAdapter,
@@ -20,8 +24,8 @@ from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepos
 
 async def get_channel_mtproto_repository(
     session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> ChannelMTProtoRepository:
-    """Get Channel MTProto Repository."""
+) -> IChannelMTProtoSettingsRepository:
+    """Get Channel MTProto Settings Repository."""
     return ChannelMTProtoRepository(session)
 
 

@@ -3,16 +3,16 @@ Channel MTProto Settings Repository
 Manages per-channel MTProto enable/disable settings
 """
 
-from datetime import datetime, timezone
-from typing import Optional, List
+from datetime import UTC, datetime
 
-from sqlalchemy import select, and_, delete
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.ports.mtproto_repository import IChannelMTProtoSettingsRepository
 from infra.db.models.user_bot_orm import ChannelMTProtoSettings
 
 
-class ChannelMTProtoRepository:
+class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     """Repository for managing per-channel MTProto settings"""
 
     def __init__(self, session: AsyncSession):
@@ -20,7 +20,7 @@ class ChannelMTProtoRepository:
 
     async def get_setting(
         self, user_id: int, channel_id: int
-    ) -> Optional[ChannelMTProtoSettings]:
+    ) -> ChannelMTProtoSettings | None:
         """
         Get MTProto setting for a specific user+channel combination.
         
@@ -40,7 +40,7 @@ class ChannelMTProtoRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_user_settings(self, user_id: int) -> List[ChannelMTProtoSettings]:
+    async def get_user_settings(self, user_id: int) -> list[ChannelMTProtoSettings]:
         """
         Get all channel MTProto settings for a user.
         
@@ -77,7 +77,7 @@ class ChannelMTProtoRepository:
         if existing:
             # Update existing
             existing.mtproto_enabled = mtproto_enabled
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             await self.session.commit()
             await self.session.refresh(existing)
             return existing
@@ -87,8 +87,8 @@ class ChannelMTProtoRepository:
                 user_id=user_id,
                 channel_id=channel_id,
                 mtproto_enabled=mtproto_enabled,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
             self.session.add(setting)
             await self.session.commit()

@@ -110,7 +110,10 @@ class MTProtoMonitoringResponse(BaseModel):
     "/overview",
     response_model=MTProtoMonitoringResponse,
     summary="Get comprehensive MTProto monitoring overview",
-    description="Returns complete monitoring data including session health, collection progress, and worker status",
+    description=(
+        "Returns complete monitoring data including session health, "
+        "collection progress, and worker status"
+    ),
 )
 async def get_monitoring_overview(
     user_id: Annotated[int, Depends(get_current_user_id)],
@@ -131,7 +134,10 @@ async def get_monitoring_overview(
         # Get user's MTProto credentials
         async with pool.acquire() as conn:
             creds = await conn.fetchrow(
-                "SELECT mtproto_enabled, telegram_phone, session_string FROM user_bot_credentials WHERE user_id = $1",
+                (
+                    "SELECT mtproto_enabled, telegram_phone, session_string "
+                    "FROM user_bot_credentials WHERE user_id = $1"
+                ),
                 user_id,
             )
 
@@ -278,10 +284,12 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
     if has_session:
         try:
             mtproto_service = get_user_mtproto_service()
-            if user_id in mtproto_service._client_pool:
-                client = mtproto_service._client_pool[user_id]
-                session_connected = client._is_connected
-                session_last_used = client.last_used
+            session_connected = mtproto_service.is_user_connected(user_id)
+            if session_connected:
+                # Get client to access last_used
+                client = await mtproto_service.get_user_client(user_id)
+                if client:
+                    session_last_used = client.last_used
         except Exception as e:
             logger.warning(f"Error checking session connection: {e}")
 

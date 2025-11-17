@@ -3,10 +3,9 @@ Channel MTProto Settings Repository
 Manages per-channel MTProto enable/disable settings
 """
 
-from datetime import datetime, timezone
-from typing import Optional, List
+from datetime import UTC, datetime
 
-from sqlalchemy import select, and_, delete
+from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infra.db.models.user_bot_orm import ChannelMTProtoSettings
@@ -18,16 +17,14 @@ class ChannelMTProtoRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_setting(
-        self, user_id: int, channel_id: int
-    ) -> Optional[ChannelMTProtoSettings]:
+    async def get_setting(self, user_id: int, channel_id: int) -> ChannelMTProtoSettings | None:
         """
         Get MTProto setting for a specific user+channel combination.
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
-            
+
         Returns:
             ChannelMTProtoSettings if exists, None otherwise
         """
@@ -40,13 +37,13 @@ class ChannelMTProtoRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_user_settings(self, user_id: int) -> List[ChannelMTProtoSettings]:
+    async def get_user_settings(self, user_id: int) -> list[ChannelMTProtoSettings]:
         """
         Get all channel MTProto settings for a user.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             List of all channel settings for the user
         """
@@ -63,12 +60,12 @@ class ChannelMTProtoRepository:
     ) -> ChannelMTProtoSettings:
         """
         Create or update per-channel MTProto setting.
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
             mtproto_enabled: Whether MTProto is enabled for this channel
-            
+
         Returns:
             Created or updated ChannelMTProtoSettings
         """
@@ -77,7 +74,7 @@ class ChannelMTProtoRepository:
         if existing:
             # Update existing
             existing.mtproto_enabled = mtproto_enabled
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             await self.session.commit()
             await self.session.refresh(existing)
             return existing
@@ -87,8 +84,8 @@ class ChannelMTProtoRepository:
                 user_id=user_id,
                 channel_id=channel_id,
                 mtproto_enabled=mtproto_enabled,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
             self.session.add(setting)
             await self.session.commit()
@@ -98,11 +95,11 @@ class ChannelMTProtoRepository:
     async def delete_setting(self, user_id: int, channel_id: int) -> bool:
         """
         Delete per-channel MTProto setting (reverts to default/global setting).
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
-            
+
         Returns:
             True if deleted, False if not found
         """
@@ -119,16 +116,14 @@ class ChannelMTProtoRepository:
     async def delete_user_settings(self, user_id: int) -> int:
         """
         Delete all per-channel settings for a user.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             Number of settings deleted
         """
-        query = delete(ChannelMTProtoSettings).where(
-            ChannelMTProtoSettings.user_id == user_id
-        )
+        query = delete(ChannelMTProtoSettings).where(ChannelMTProtoSettings.user_id == user_id)
         result = await self.session.execute(query)
         await self.session.commit()
         return result.rowcount
@@ -138,14 +133,14 @@ class ChannelMTProtoRepository:
     ) -> bool:
         """
         Check if MTProto is enabled for a specific channel.
-        
+
         Logic: global_enabled AND (channel_setting if exists else True)
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
             global_enabled: Global MTProto enabled flag from user_bot_credentials
-            
+
         Returns:
             True if MTProto is enabled for this channel, False otherwise
         """

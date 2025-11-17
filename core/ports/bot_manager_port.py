@@ -20,12 +20,10 @@ class IBotManager(ABC):
     @abstractmethod
     async def start(self) -> None:
         """Start bot manager background tasks."""
-        pass
 
     @abstractmethod
     async def stop(self) -> None:
         """Stop bot manager and shutdown all bots."""
-        pass
 
     @abstractmethod
     async def get_user_bot(self, user_id: int) -> Any:
@@ -41,7 +39,6 @@ class IBotManager(ABC):
         Raises:
             ValueError: If no credentials found or bot is suspended
         """
-        pass
 
     @abstractmethod
     async def admin_access_bot(self, admin_id: int, target_user_id: int) -> Any:
@@ -55,7 +52,6 @@ class IBotManager(ABC):
         Returns:
             Bot instance for the target user
         """
-        pass
 
     @abstractmethod
     async def shutdown_user_bot(self, user_id: int) -> None:
@@ -65,7 +61,6 @@ class IBotManager(ABC):
         Args:
             user_id: User ID
         """
-        pass
 
     @abstractmethod
     async def reload_user_bot(self, user_id: int) -> Any:
@@ -78,7 +73,6 @@ class IBotManager(ABC):
         Returns:
             New bot instance with updated credentials
         """
-        pass
 
     @abstractmethod
     async def get_active_bots_count(self) -> int:
@@ -88,7 +82,6 @@ class IBotManager(ABC):
         Returns:
             Number of active bots in cache
         """
-        pass
 
     @abstractmethod
     async def get_stats(self) -> dict:
@@ -98,4 +91,3 @@ class IBotManager(ABC):
         Returns:
             Dict with statistics
         """
-        pass

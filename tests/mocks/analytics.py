@@ -68,7 +68,7 @@ def generate_top_posts(count: int = DEMO_POSTS_COUNT) -> list[dict[str, Any]]:
         base_views = random.randint(1000, 10000)
         posts.append(
             {
-                "id": f"post_{i+1}",
+                "id": f"post_{i + 1}",
                 "title": random.choice(post_titles),
                 "views": base_views,
                 "likes": int(base_views * random.uniform(0.05, 0.15)),
@@ -259,8 +259,8 @@ def generate_top_posts(limit: int = 10) -> list[dict[str, Any]]:
 
         posts.append(
             {
-                "id": f"post_{i+1}",
-                "title": f"{topic} - Part {i+1}",
+                "id": f"post_{i + 1}",
+                "title": f"{topic} - Part {i + 1}",
                 "content": f"Sample content about {topic.lower()}...",
                 "views": views,
                 "engagement": engagement,

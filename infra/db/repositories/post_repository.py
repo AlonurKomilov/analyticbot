@@ -42,7 +42,9 @@ class AsyncpgPostRepository:
         async with self.pool.acquire() as conn:
             # Check if record exists
             existing = await conn.fetchval(
-                "SELECT 1 FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "SELECT 1 FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
 
             if existing:
@@ -106,7 +108,9 @@ class AsyncpgPostRepository:
         """
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(
-                "SELECT * FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "SELECT * FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
             return dict(record) if record else None
 
@@ -163,7 +167,9 @@ class AsyncpgPostRepository:
         """
         async with self.pool.acquire() as conn:
             result = await conn.execute(
-                "DELETE FROM posts WHERE channel_id = $1 AND msg_id = $2", channel_id, msg_id
+                "DELETE FROM posts WHERE channel_id = $1 AND msg_id = $2",
+                channel_id,
+                msg_id,
             )
             return result != "DELETE 0"
 

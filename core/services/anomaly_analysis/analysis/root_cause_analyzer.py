@@ -207,9 +207,9 @@ class RootCauseAnalyzer:
                         causes.append(
                             {
                                 "category": "audience_growth",
-                                "description": f"Audience growth rate: {avg_growth*100:.1f}% daily average",
+                                "description": f"Audience growth rate: {avg_growth * 100:.1f}% daily average",
                                 "confidence": 0.7,
-                                "growth_trend": "positive" if avg_growth > 0 else "negative",
+                                "growth_trend": ("positive" if avg_growth > 0 else "negative"),
                             }
                         )
 

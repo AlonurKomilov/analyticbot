@@ -113,9 +113,26 @@ export class TokenRefreshManager {
    * to avoid multiple simultaneous refresh calls
    */
   async refreshToken(): Promise<string> {
+    // Check if this is a fresh login (within last 10 seconds) - skip refresh
+    const lastLoginTime = localStorage.getItem('last_login_time');
+    if (lastLoginTime) {
+      const timeSinceLogin = Date.now() - parseInt(lastLoginTime);
+      if (timeSinceLogin < 10000) { // 10 seconds
+        console.log('⏭️ Recent login detected, skipping token refresh');
+        const token = localStorage.getItem(this.TOKEN_KEY);
+        if (token) return token;
+      }
+    }
+
     const refreshToken = this.getRefreshToken();
 
     if (!refreshToken) {
+      console.warn('⚠️ No refresh token available - cannot refresh access token');
+      console.log('📊 Storage state:', {
+        hasAccessToken: !!localStorage.getItem('auth_token'),
+        hasRefreshToken: !!localStorage.getItem('refresh_token'),
+        hasUser: !!localStorage.getItem('auth_user')
+      });
       this.clearTokens();
       throw new Error('No refresh token available');
     }
@@ -136,7 +153,7 @@ export class TokenRefreshManager {
                       import.meta.env.VITE_API_URL ||
                       'https://b2qz1m0n-11400.euw.devtunnels.ms';
 
-      const response = await fetch(`${baseURL}/api/auth/refresh`, {
+      const response = await fetch(`${baseURL}/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,9 +216,16 @@ export class TokenRefreshManager {
    */
   async refreshIfNeeded(): Promise<boolean> {
     const currentToken = this.getAccessToken();
+    const refreshToken = this.getRefreshToken();
 
     // No token means user is not logged in - this is normal, not an error
     if (!currentToken) {
+      return false;
+    }
+
+    // No refresh token means we can't refresh - don't attempt
+    if (!refreshToken) {
+      console.warn('⚠️ Access token exists but no refresh token - cannot refresh');
       return false;
     }
 

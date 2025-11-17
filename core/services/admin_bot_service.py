@@ -308,14 +308,17 @@ class AdminBotService:
         return []
 
 
-def get_admin_bot_service(repository: IUserBotRepository) -> AdminBotService:
+def get_admin_bot_service(
+    repository: IUserBotRepository, bot_manager: IBotManager | None = None
+) -> AdminBotService:
     """
     Get an admin bot service instance.
 
     Args:
         repository: User bot repository
+        bot_manager: Multi-tenant bot manager (optional)
 
     Returns:
         AdminBotService instance
     """
-    return AdminBotService(repository)
+    return AdminBotService(repository, bot_manager)

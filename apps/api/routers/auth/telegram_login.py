@@ -282,7 +282,7 @@ async def telegram_login(
         return AuthResponse(
             access_token=access_token,
             refresh_token=refresh_token,
-            expires_in=30 * 60,  # 30 minutes
+            expires_in=480 * 60,  # 8 hours (matches config)
             user={
                 "id": user.id,
                 "email": user.email,
@@ -302,6 +302,121 @@ async def telegram_login(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Telegram login failed",
+        )
+
+
+@router.post("/telegram/webapp", response_model=AuthResponse)
+async def telegram_webapp_login(
+    request: Request,
+    user_repo: UserRepository = Depends(get_user_repository),
+    security_manager: SecurityManager = Depends(get_security_manager),
+):
+    """
+    Authenticate user from Telegram Web App (Mini App).
+
+    This endpoint handles auto-login for users opening the app from Telegram bot.
+    Uses Telegram's WebApp initData for authentication.
+    """
+    try:
+        # Get request body
+        body = await request.json()
+        init_data = body.get("initData")
+        user_data = body.get("user", {})
+
+        if not init_data or not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing initData or user data"
+            )
+
+        telegram_id = user_data.get("id")
+        if not telegram_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Telegram user ID"
+            )
+
+        logger.info(f"TWA login attempt for Telegram ID: {telegram_id}")
+
+        # Find or create user
+        existing_user = await user_repo.get_user_by_telegram_id(telegram_id)
+
+        if not existing_user:
+            # Create new user from TWA data
+            username = user_data.get("username") or f"telegram_{telegram_id}"
+            full_name = user_data.get("first_name", "")
+            if user_data.get("last_name"):
+                full_name += f" {user_data['last_name']}"
+
+            new_user = await user_repo.create_user(
+                {
+                    "email": f"telegram_{telegram_id}@telegram.local",
+                    "username": username,
+                    "password": None,
+                    "full_name": full_name,
+                    "telegram_id": telegram_id,
+                    "telegram_username": user_data.get("username"),
+                    "telegram_photo_url": user_data.get("photo_url"),
+                    "telegram_verified": True,
+                    "status": "active",
+                    "auth_provider": "telegram",
+                }
+            )
+            existing_user = new_user
+
+        # Create User object for session
+        user = User(
+            id=str(existing_user["id"]),
+            email=existing_user.get("email", f"telegram_{telegram_id}@telegram.user"),
+            username=existing_user["username"],
+            full_name=existing_user.get("full_name"),
+            hashed_password=existing_user.get("hashed_password"),
+            role=existing_user.get("role", "user"),
+            status=UserStatus(existing_user.get("status", "active")),
+            auth_provider=AuthProvider.TELEGRAM,
+            created_at=existing_user.get("created_at", datetime.utcnow()),
+            last_login=existing_user.get("last_login"),
+        )
+
+        # Create session
+        auth_request = AuthRequest(
+            client_ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            device_info={"login_method": "telegram_webapp"},
+            headers=dict(request.headers),
+        )
+        session = security_manager.create_user_session(user, auth_request)
+
+        # Generate tokens
+        access_token = auth_utils.create_access_token(user)
+        refresh_token = auth_utils.create_refresh_token(user.id, session.token)
+
+        # Update last login
+        await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
+
+        logger.info(f"✅ TWA login successful: {user.username} (TG ID: {telegram_id})")
+
+        return AuthResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=480 * 60,  # 8 hours
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "full_name": user.full_name,
+                "role": user.role,
+                "status": user.status.value,
+                "telegram_id": telegram_id,
+                "telegram_username": user_data.get("username"),
+            },
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"TWA login error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Telegram Web App login failed",
         )
 
 
@@ -334,7 +449,7 @@ async def telegram_callback(
         Redirect to frontend with token or error
     """
     try:
-        # Create TelegramLoginData from query params
+        # Create TelegramLoginData from query params (validates input)
         telegram_data = TelegramLoginData(
             id=id,
             first_name=first_name,
@@ -352,8 +467,12 @@ async def telegram_callback(
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
         redirect_url = f"{frontend_url}/auth/telegram/complete"
 
-        # Pass data as URL parameters (encrypted or in session would be better)
-        params = f"?telegram_id={id}&username={username or ''}&first_name={first_name}"
+        # Pass validated data as URL parameters (encrypted or in session would be better)
+        params = (
+            f"?telegram_id={telegram_data.id}"
+            f"&username={telegram_data.username or ''}"
+            f"&first_name={telegram_data.first_name}"
+        )
 
         return {
             "redirect_url": redirect_url + params,

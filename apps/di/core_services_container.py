@@ -174,18 +174,18 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     # USER BOT MANAGEMENT SERVICES (Clean Architecture)
     # ============================================================================
 
+    # Note: bot_manager is injected at runtime from bot container
+    # These factories accept bot_manager as a parameter when called
     user_bot_service = providers.Factory(
-        lambda user_bot_repo, bot_manager: __import__(
+        lambda user_bot_repo, bot_manager=None: __import__(
             "core.services.user_bot_service", fromlist=["UserBotService"]
         ).UserBotService(repository=user_bot_repo, bot_manager=bot_manager),
         user_bot_repo=database.user_bot_repo,
-        bot_manager=providers.Provided["bot.bot_manager"],  # Reference from bot container
     )
 
     admin_bot_service = providers.Factory(
-        lambda user_bot_repo, bot_manager: __import__(
+        lambda user_bot_repo, bot_manager=None: __import__(
             "core.services.admin_bot_service", fromlist=["AdminBotService"]
         ).AdminBotService(repository=user_bot_repo, bot_manager=bot_manager),
         user_bot_repo=database.user_bot_repo,
-        bot_manager=providers.Provided["bot.bot_manager"],  # Reference from bot container
     )

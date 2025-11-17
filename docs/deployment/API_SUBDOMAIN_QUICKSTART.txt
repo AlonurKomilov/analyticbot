@@ -1,0 +1,140 @@
+╔═══════════════════════════════════════════════════════════════════╗
+║  🚀 API Subdomain Quick Start - api.analyticbot.org              ║
+╚═══════════════════════════════════════════════════════════════════╝
+
+✅ ALREADY DONE:
+  ✓ DNS configured in Cloudflare (api → 185.211.5.244)
+  ✓ Backend .env updated (CORS includes api.analyticbot.org)
+  ✓ Frontend .env.production updated (API URL = api.analyticbot.org)
+  ✓ Nginx configs created (api + frontend)
+
+═══════════════════════════════════════════════════════════════════
+
+📋 NEXT STEPS (30 MINUTES):
+
+1️⃣  GET SSL CERTIFICATE (10 min)
+
+   # Install certbot with Cloudflare DNS plugin
+   sudo apt-get install certbot python3-certbot-dns-cloudflare
+
+   # Create API token file
+   sudo mkdir -p /root/.secrets
+   sudo nano /root/.secrets/cloudflare.ini
+
+   # Add to file:
+   dns_cloudflare_api_token = YOUR_TOKEN_HERE
+
+   # Get token from:
+   https://dash.cloudflare.com/profile/api-tokens
+   (Use "Edit zone DNS" template)
+
+   # Get wildcard certificate
+   sudo chmod 600 /root/.secrets/cloudflare.ini
+   sudo certbot certonly \
+     --dns-cloudflare \
+     --dns-cloudflare-credentials /root/.secrets/cloudflare.ini \
+     -d analyticbot.org -d '*.analyticbot.org'
+
+───────────────────────────────────────────────────────────────────
+
+2️⃣  DEPLOY NGINX CONFIGS (5 min)
+
+   cd /home/abcdeveloper/projects/analyticbot
+
+   # Copy configs
+   sudo cp infra/nginx/api.analyticbot.conf /etc/nginx/sites-available/
+   sudo cp infra/nginx/frontend.analyticbot.conf /etc/nginx/sites-available/
+
+   # Enable sites
+   sudo ln -sf /etc/nginx/sites-available/api.analyticbot.conf /etc/nginx/sites-enabled/
+   sudo ln -sf /etc/nginx/sites-available/frontend.analyticbot.conf /etc/nginx/sites-enabled/
+
+   # Test and reload
+   sudo nginx -t && sudo systemctl reload nginx
+
+───────────────────────────────────────────────────────────────────
+
+3️⃣  START BACKEND API (5 min)
+
+   # Create systemd service
+   sudo nano /etc/systemd/system/analyticbot-api.service
+
+   # Copy content from API_SUBDOMAIN_DEPLOYMENT.md Step 3
+
+   # Start service
+   sudo systemctl daemon-reload
+   sudo systemctl enable analyticbot-api
+   sudo systemctl start analyticbot-api
+   sudo systemctl status analyticbot-api
+
+───────────────────────────────────────────────────────────────────
+
+4️⃣  BUILD AND DEPLOY FRONTEND (10 min)
+
+   cd /home/abcdeveloper/projects/analyticbot/apps/frontend
+   npm install
+   npm run build
+
+   sudo mkdir -p /var/www/analyticbot/frontend
+   sudo cp -r dist/* /var/www/analyticbot/frontend/
+   sudo chown -R www-data:www-data /var/www/analyticbot
+
+───────────────────────────────────────────────────────────────────
+
+5️⃣  CONFIGURE CLOUDFLARE (2 min)
+
+   Go to: Cloudflare Dashboard → SSL/TLS
+
+   Set:
+   • Encryption mode: Full (strict)
+   • Always Use HTTPS: ON
+   • Minimum TLS: 1.2
+   • Automatic HTTPS Rewrites: ON
+
+═══════════════════════════════════════════════════════════════════
+
+🧪 TESTING:
+
+# Test API
+curl https://api.analyticbot.org/health
+# Should return: {"status":"healthy"}
+
+# Test Frontend
+curl https://www.analyticbot.org/ | head -20
+# Should return: HTML with <!DOCTYPE html>
+
+# Test in Browser
+1. Visit: https://www.analyticbot.org/auth?mode=login
+2. Open Console (F12)
+3. No CORS errors ✅
+4. Login page shows (not JSON) ✅
+5. Telegram button appears ✅
+
+═══════════════════════════════════════════════════════════════════
+
+📁 FILES CREATED:
+
+✅ infra/nginx/api.analyticbot.conf
+✅ infra/nginx/frontend.analyticbot.conf
+✅ API_SUBDOMAIN_DEPLOYMENT.md (full guide)
+✅ API_SUBDOMAIN_QUICKSTART.txt (this file)
+
+═══════════════════════════════════════════════════════════════════
+
+🆘 TROUBLESHOOTING:
+
+502 Bad Gateway?
+  → sudo systemctl status analyticbot-api
+  → sudo systemctl start analyticbot-api
+
+CORS Errors?
+  → Check: grep CORS_ORIGINS .env
+  → Should have: https://www.analyticbot.org
+
+SSL Error?
+  → sudo certbot certificates
+  → sudo certbot renew
+
+═══════════════════════════════════════════════════════════════════
+
+📖 FULL GUIDE: API_SUBDOMAIN_DEPLOYMENT.md

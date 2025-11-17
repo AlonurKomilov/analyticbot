@@ -23,8 +23,8 @@ from apps.api.routers.user_mtproto.session_storage import (
     get_pending_session,
     store_pending_session,
 )
+from core.ports.user_bot_repository import IUserBotRepository
 from core.services.encryption_service import get_encryption_service
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ router = APIRouter()
 async def setup_mtproto(
     request: MTProtoSetupRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Initiate MTProto setup by sending verification code to phone
@@ -201,7 +201,7 @@ async def setup_mtproto(
 )
 async def resend_mtproto_code(
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Resend verification code using stored credentials

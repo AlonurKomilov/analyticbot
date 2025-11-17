@@ -1,0 +1,58 @@
+╔════════════════════════════════════════════════════════════════╗
+║  🚀 QUICK FIX: "Bot domain invalid" Error                      ║
+╚════════════════════════════════════════════════════════════════╝
+
+✅ YOUR CONFIGURATION IS READY FOR: www.analyticbot.org
+
+📋 TO FIX THE TELEGRAM LOGIN (5 MINUTES):
+
+1. Open Telegram
+2. Search: @BotFather
+3. Send: /setdomain
+4. Choose: @abccontrol_bot
+5. Type EXACTLY: analyticbot.org
+
+   ⚠️  DO NOT TYPE:
+   ❌ www.analyticbot.org
+   ❌ https://analyticbot.org
+   ❌ https://www.analyticbot.org
+
+   ✅ CORRECT FORMAT:
+   analyticbot.org
+
+6. Wait for: "Success! Domain analyticbot.org has been set"
+7. Wait 2 minutes for Telegram to update
+8. Refresh your login page → Telegram button works! 🎉
+
+═══════════════════════════════════════════════════════════════
+
+📁 UPDATED FILES:
+  ✅ .env                          (Backend production config)
+  ✅ apps/frontend/.env.production (Frontend production config)
+  ✅ TELEGRAM_LOGIN_FIX.md         (Detailed instructions)
+  ✅ PRODUCTION_DEPLOYMENT_CHECKLIST.md (Full deployment guide)
+  ✅ DEPLOYMENT_SUMMARY.md         (Configuration summary)
+
+═══════════════════════════════════════════════════════════════
+
+🔍 VERIFY YOUR CONFIGURATION:
+
+Backend (.env):
+  FRONTEND_URL=https://www.analyticbot.org
+  TELEGRAM_BOT_USERNAME=abccontrol_bot
+  CORS includes: www.analyticbot.org + analyticbot.org
+
+Frontend (.env.production):
+  VITE_API_BASE_URL=https://www.analyticbot.org
+  VITE_TELEGRAM_BOT_USERNAME=abccontrol_bot
+
+═══════════════════════════════════════════════════════════════
+
+❓ NEED HELP?
+
+Read detailed guides:
+  📖 TELEGRAM_LOGIN_FIX.md         - Fixes login issue
+  📖 DEPLOYMENT_SUMMARY.md         - Configuration overview
+  📖 PRODUCTION_DEPLOYMENT_CHECKLIST.md - Full deployment
+
+═══════════════════════════════════════════════════════════════

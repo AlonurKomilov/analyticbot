@@ -121,21 +121,26 @@ const enableFullHealthCheck = import.meta.env.VITE_FULL_HEALTH_CHECK === 'true';
 const skipOptionalChecks = import.meta.env.VITE_SKIP_OPTIONAL_CHECKS !== 'false';
 const silentMode = import.meta.env.VITE_HEALTH_CHECK_SILENT !== 'false';
 
+// 🔧 StrictMode disabled in development to prevent duplicate API calls
+// React Strict Mode intentionally mounts components twice in DEV mode,
+// which causes duplicate /channels requests that timeout and logout users
+const AppContent = (
+    <ErrorBoundary>
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <HealthStartupSplash
+                options={{
+                    fullHealthCheck: enableFullHealthCheck,
+                    skipOptional: skipOptionalChecks,
+                    silent: silentMode
+                }}
+            >
+                <App />
+            </HealthStartupSplash>
+        </ThemeProvider>
+    </ErrorBoundary>
+);
+
 root.render(
-    <React.StrictMode>
-        <ErrorBoundary>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <HealthStartupSplash
-                    options={{
-                        fullHealthCheck: enableFullHealthCheck,
-                        skipOptional: skipOptionalChecks,
-                        silent: silentMode
-                    }}
-                >
-                    <App />
-                </HealthStartupSplash>
-            </ThemeProvider>
-        </ErrorBoundary>
-    </React.StrictMode>
+    import.meta.env.PROD ? <React.StrictMode>{AppContent}</React.StrictMode> : AppContent
 );

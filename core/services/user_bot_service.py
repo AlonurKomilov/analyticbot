@@ -8,9 +8,6 @@ Integrates with repository, encryption service, and bot manager.
 import logging
 from datetime import datetime
 
-from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest, TelegramUnauthorizedError
-
 from core.models.user_bot_domain import BotStatus, UserBotCredentials
 from core.ports.bot_manager_port import IBotManager
 from core.ports.user_bot_repository import IUserBotRepository
@@ -44,27 +41,21 @@ class UserBotService:
         Returns:
             Tuple of (is_valid, error_message, bot_info)
         """
-        try:
-            bot = Bot(token=bot_token)
-            bot_info = await bot.get_me()
-            await bot.session.close()
+        # Use bot_manager for validation if available
+        if not self.bot_manager:
+            logger.error("Bot manager not available for token validation")
+            return False, "Bot validation service unavailable", None
 
-            return (
-                True,
-                None,
-                {
-                    "id": bot_info.id,
-                    "username": bot_info.username,
-                    "first_name": bot_info.first_name,
-                    "can_join_groups": bot_info.can_join_groups,
-                    "can_read_all_group_messages": bot_info.can_read_all_group_messages,
-                    "supports_inline_queries": bot_info.supports_inline_queries,
-                },
-            )
-        except TelegramUnauthorizedError:
-            return False, "Invalid bot token - unauthorized", None
-        except TelegramBadRequest as e:
-            return False, f"Bad request: {str(e)}", None
+        try:
+            # Delegate to bot_manager port (implemented in infra layer)
+            bot_info = await self.bot_manager.validate_bot_token(bot_token)
+
+            # bot_info is already a dict from the port
+            return True, None, bot_info
+
+        except ValueError as e:
+            # Token validation failed
+            return False, str(e), None
         except Exception as e:
             logger.error(f"Error validating bot token: {e}")
             return False, f"Validation error: {str(e)}", None
@@ -294,7 +285,8 @@ class UserBotService:
             if self.bot_manager:
                 await self.bot_manager.reload_user_bot(user_id)
             logger.info(
-                f"Updated rate limits for user {user_id}: RPS={max_requests_per_second}, Concurrent={max_concurrent_requests}"
+                f"Updated rate limits for user {user_id}: "
+                f"RPS={max_requests_per_second}, Concurrent={max_concurrent_requests}"
             )
         except Exception as e:
             logger.warning(f"Error reloading bot for user {user_id}: {e}")
@@ -302,14 +294,17 @@ class UserBotService:
         return updated
 
 
-def get_user_bot_service(repository: IUserBotRepository) -> UserBotService:
+def get_user_bot_service(
+    repository: IUserBotRepository, bot_manager: IBotManager | None = None
+) -> UserBotService:
     """
     Get a user bot service instance.
 
     Args:
         repository: User bot repository
+        bot_manager: Multi-tenant bot manager (optional)
 
     Returns:
         UserBotService instance
     """
-    return UserBotService(repository)
+    return UserBotService(repository, bot_manager)

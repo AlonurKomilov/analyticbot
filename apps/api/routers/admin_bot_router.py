@@ -9,11 +9,12 @@ import logging
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.middleware.auth import require_admin_user  # Use existing auth system
-from apps.di import get_db_connection
+from apps.api.services.bot_service_factory import create_admin_bot_service
+from apps.di import get_container
 from core.models.user_bot_domain import BotStatus
+from core.ports.user_bot_repository import IUserBotRepository
 from core.schemas.user_bot_schemas import (
     AdminAccessResponse,
     BotListResponse,
@@ -23,8 +24,6 @@ from core.schemas.user_bot_schemas import (
     SuspendBotRequest,
     UpdateRateLimitRequest,
 )
-from core.services.admin_bot_service import get_admin_bot_service
-from infra.db.repositories.user_bot_repository import UserBotRepository
 
 logger = logging.getLogger(__name__)
 
@@ -38,11 +37,10 @@ router = APIRouter(
 # ==================== Dependency Injection ====================
 
 
-async def get_user_bot_repository(
-    db: Annotated[AsyncSession, Depends(get_db_connection)],
-) -> UserBotRepository:
-    """Get user bot repository instance."""
-    return UserBotRepository(db)
+async def get_user_bot_repository() -> IUserBotRepository:
+    """Get user bot repository from DI container."""
+    container = get_container()
+    return await container.database.user_bot_repo()
 
 
 async def get_admin_user_id(
@@ -64,7 +62,7 @@ async def get_admin_user_id(
 )
 async def list_all_bots(
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     status_filter: BotStatus | None = Query(None, description="Filter by status"),
@@ -77,7 +75,7 @@ async def list_all_bots(
     - **status_filter**: Filter by bot status (optional)
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         bots, total = await service.list_all_user_bots(
             page=page,
@@ -132,7 +130,7 @@ async def list_all_bots(
 async def access_user_bot(
     user_id: int,
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Admin access to a user's bot.
@@ -145,7 +143,7 @@ async def access_user_bot(
     - **user_id**: Target user ID whose bot to access
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         bot_info = await service.access_user_bot(
             admin_user_id=admin_id,
@@ -188,7 +186,7 @@ async def suspend_bot(
     user_id: int,
     request: SuspendBotRequest,
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Suspend a user's bot (admin only).
@@ -202,7 +200,7 @@ async def suspend_bot(
     - **reason**: Reason for suspension (required, min 5 characters)
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         credentials = await service.suspend_user_bot(
             admin_user_id=admin_id,
@@ -259,7 +257,7 @@ async def suspend_bot(
 async def activate_bot(
     user_id: int,
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Activate a suspended bot (admin only).
@@ -272,7 +270,7 @@ async def activate_bot(
     - **user_id**: Target user ID whose bot to activate
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         credentials = await service.activate_user_bot(
             admin_user_id=admin_id,
@@ -329,7 +327,7 @@ async def update_bot_rate_limit(
     user_id: int,
     request: UpdateRateLimitRequest,
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Update rate limits for a user's bot (admin only).
@@ -344,7 +342,7 @@ async def update_bot_rate_limit(
     - **max_concurrent_requests**: New concurrent limit (1-50, optional)
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
 
         credentials = await service.update_user_bot_rate_limits(
             admin_user_id=admin_id,
@@ -389,7 +387,7 @@ async def update_bot_rate_limit(
 async def get_user_bot_status(
     user_id: int,
     admin_id: Annotated[int, Depends(get_admin_user_id)],
-    repository: Annotated[UserBotRepository, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Get status of a specific user's bot (admin only).
@@ -397,7 +395,7 @@ async def get_user_bot_status(
     - **user_id**: Target user ID
     """
     try:
-        service = get_admin_bot_service(repository)
+        service = await create_admin_bot_service(repository)
         credentials = await service.get_bot_by_id(user_id)
 
         if not credentials:

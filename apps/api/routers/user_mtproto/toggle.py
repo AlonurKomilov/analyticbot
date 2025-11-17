@@ -17,7 +17,7 @@ from apps.api.routers.user_mtproto.models import (
     MTProtoToggleRequest,
 )
 from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+from core.ports.user_bot_repository import IUserBotRepository
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def toggle_mtproto(
     payload: MTProtoToggleRequest,
     http_request: Request,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Enable or disable MTProto functionality

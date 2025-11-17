@@ -99,3 +99,19 @@ class IBotManager(ABC):
             Dict with statistics
         """
         pass
+
+    @abstractmethod
+    async def validate_bot_token(self, bot_token: str) -> dict:
+        """
+        Validate a Telegram bot token.
+
+        Args:
+            bot_token: Bot token to validate
+
+        Returns:
+            Dict with bot information (id, username, first_name, etc.)
+
+        Raises:
+            ValueError: If token is invalid
+        """
+        pass

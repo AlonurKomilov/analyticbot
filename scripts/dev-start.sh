@@ -422,6 +422,19 @@ case $SERVICE in
             pkill -f "apps.bot.run_bot" || true
         fi
 
+        # Check for mtproto worker processes
+        if pgrep -f "apps.mtproto.worker" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping remaining mtproto worker processes${NC}"
+            pkill -f "apps.mtproto.worker" || true
+        fi
+
+        # Check for multiprocessing spawn/resource_tracker (orphaned child processes)
+        if pgrep -f "multiprocessing" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping orphaned multiprocessing processes${NC}"
+            pkill -f "multiprocessing.spawn" || true
+            pkill -f "multiprocessing.resource_tracker" || true
+        fi
+
         # Check for CloudFlare Tunnel processes (NOT VS Code tunnel!)
         if pgrep -f "cloudflared tunnel --url" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping CloudFlare Tunnel${NC}"

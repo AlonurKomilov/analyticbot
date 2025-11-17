@@ -82,15 +82,29 @@ const getStoredUser = (): User | null => {
 };
 
 const setStoredAuth = (token: string, refreshToken: string, user: User): void => {
+    console.log('💾 Storing auth tokens:', {
+        tokenLength: token?.length,
+        refreshTokenLength: refreshToken?.length,
+        userId: user?.id
+    });
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
 const clearStoredAuth = (): void => {
+    console.warn('🗑️ Clearing all auth tokens - called from:', new Error().stack?.split('\n')[2]);
+    // Clear primary keys
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    // Clear backup/legacy keys
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    // Clear TWA session flags
+    sessionStorage.removeItem('twa_logged_in');
+    localStorage.removeItem('is_twa_session');
+    localStorage.removeItem('last_login_time');
 };
 
 // Authentication Provider Component
@@ -103,6 +117,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
+                // Small delay to allow TWA auto-login to complete first (if in Telegram)
+                const isTelegram = !!(window as any).Telegram?.WebApp?.initData;
+                if (isTelegram) {
+                    console.log('⏳ Waiting for potential TWA auto-login...');
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                }
+
                 const storedToken = getStoredToken();
                 const storedUser = getStoredUser();
 
@@ -113,30 +134,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                     if (isFreshLogin) {
                         console.log('✅ Fresh login detected - using stored credentials');
+                        // Batch state updates to prevent intermediate renders
                         setToken(storedToken);
                         setUser(storedUser);
                         setIsLoading(false);
                         return;
                     }
 
-                    // Verify token is still valid by making a test request with shorter timeout
+                    // For recent logins (within last 5 minutes), trust stored data without verification
+                    const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime) : Infinity;
+                    if (timeSinceLogin < 5 * 60 * 1000) { // 5 minutes
+                        console.log('✅ Recent login - using stored credentials without verification');
+                        console.log('👤 Setting user:', storedUser);
+                        console.log('🔑 Setting token:', storedToken ? 'present' : 'missing');
+                        // Batch state updates to prevent intermediate renders
+                        setToken(storedToken);
+                        setUser(storedUser);
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    // For older logins, verify token is still valid
                     try {
+                        console.log('🔍 Verifying stored token...');
                         const userData = await apiClient.get('/auth/me', { timeout: 5000 });
                         setToken(storedToken);
                         setUser(userData as User);
-                    } catch (error) {
-                        console.warn('Token verification failed, trying refresh...', error);
-                        // Token invalid or timeout, try refresh
-                        const refreshSuccess = await refreshTokenFn();
-                        if (!refreshSuccess) {
-                            console.warn('Token refresh failed, clearing auth');
-                            clearStoredAuth();
+                        console.log('✅ Token verified successfully');
+                    } catch (error: any) {
+                        console.warn('⚠️ Token verification failed:', error.message);
+
+                        // Try to refresh token instead of clearing auth
+                        try {
+                            console.log('🔄 Attempting token refresh...');
+                            const refreshSuccess = await refreshTokenFn();
+                            if (refreshSuccess) {
+                                console.log('✅ Token refreshed successfully');
+                                // Token was refreshed, state will be updated by refresh function
+                            } else {
+                                console.warn('⚠️ Token refresh failed, but keeping user logged in');
+                                // Keep the user logged in with existing token
+                                // It might work for subsequent requests
+                                setToken(storedToken);
+                                setUser(storedUser);
+                            }
+                        } catch (refreshError) {
+                            console.error('❌ Token refresh error:', refreshError);
+                            // Still keep user logged in - let them try to use the app
+                            // If token is truly invalid, API requests will fail and show errors
+                            setToken(storedToken);
+                            setUser(storedUser);
                         }
                     }
+                } else {
+                    console.log('ℹ️ No stored credentials found');
                 }
             } catch (error) {
-                console.error('Auth initialization error:', error);
-                clearStoredAuth();
+                console.error('❌ Auth initialization error:', error);
+                // Don't clear auth on error - keep user logged in
+                const storedToken = getStoredToken();
+                const storedUser = getStoredUser();
+                if (storedToken && storedUser) {
+                    setToken(storedToken);
+                    setUser(storedUser);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -145,17 +206,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         initializeAuth();
     }, []);
 
+    // Listen for TWA auto-login completion
+    useEffect(() => {
+        const handleTWAAuthComplete = () => {
+            console.log('🔔 TWA auth complete event received - updating auth state');
+            const storedToken = getStoredToken();
+            const storedUser = getStoredUser();
+            
+            if (storedToken && storedUser) {
+                console.log('✅ Setting auth state from TWA login');
+                setToken(storedToken);
+                setUser(storedUser);
+                setIsLoading(false);
+            }
+        };
+
+        window.addEventListener('twa-auth-complete', handleTWAAuthComplete);
+        
+        return () => {
+            window.removeEventListener('twa-auth-complete', handleTWAAuthComplete);
+        };
+    }, []);
+
     // Login function (🆕 Phase 3.2: Added remember_me parameter)
     const login = useCallback(async (
-        email: string, 
+        email: string,
         password: string,
         rememberMe: boolean = false
     ): Promise<LoginResponse> => {
         try {
             setIsLoading(true);
 
-            const response = await apiClient.post('/auth/login', { 
-                email, 
+            const response = await apiClient.post('/auth/login', {
+                email,
                 password,
                 remember_me: rememberMe  // 🆕 Pass remember_me to backend
             });
@@ -173,10 +256,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 throw new Error('Invalid login response: missing required fields');
             }
 
-            // Store tokens securely
-            localStorage.setItem('access_token', access_token);
-            localStorage.setItem('refresh_token', refresh_token);
-            localStorage.setItem('user', JSON.stringify(userData));
+            // Store tokens using the correct keys (must match getStoredToken/User)
+            setStoredAuth(access_token, refresh_token, userData);
+
+            // Also store with 'last_login_time' for token refresh skip logic
+            localStorage.setItem('last_login_time', Date.now().toString());
+
+            // CRITICAL: Force synchronous write to localStorage
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Verify tokens were actually stored
+            const verifyToken = localStorage.getItem(TOKEN_KEY);
+            const verifyRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
+            console.log('🔍 Token storage verification:', {
+                tokenStored: !!verifyToken,
+                refreshStored: !!verifyRefresh,
+                tokenLength: verifyToken?.length || 0,
+                refreshLength: verifyRefresh?.length || 0
+            });
+
+            if (!verifyToken || !verifyRefresh) {
+                console.error('❌ CRITICAL: Tokens not stored properly!');
+                throw new Error('Failed to store authentication tokens');
+            }
 
             // Check if this is a demo user based on email or user data
             const isDemoUser = email.includes('demo@') ||
@@ -274,6 +376,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Update stored token
             localStorage.setItem(TOKEN_KEY, newToken);
             setToken(newToken);
+
+            // IMPORTANT: Also restore user from storage after token refresh
+            // Without this, user state becomes null and app shows no data
+            const storedUser = getStoredUser();
+            if (storedUser) {
+                setUser(storedUser);
+            }
 
             return true;
         } catch (error) {

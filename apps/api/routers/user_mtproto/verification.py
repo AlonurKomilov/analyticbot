@@ -27,8 +27,8 @@ from apps.api.routers.user_mtproto.session_storage import (
     clear_pending_session,
     get_pending_session,
 )
+from core.ports.user_bot_repository import IUserBotRepository
 from core.services.encryption_service import get_encryption_service
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ router = APIRouter()
 async def verify_mtproto(
     request: MTProtoVerifyRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Verify MTProto setup with code from Telegram

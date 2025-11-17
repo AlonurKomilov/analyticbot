@@ -31,7 +31,8 @@ import {
     Badge as BadgeIcon,
     Security as SecurityIcon,
     Notifications as NotificationsIcon,
-    Link as LinkIcon
+    Link as LinkIcon,
+    Logout as LogoutIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { AccountLinking } from '@features/auth/components/profile/AccountLinking';
@@ -62,7 +63,7 @@ interface TabPanelProps {
 }
 
 const ProfilePage: React.FC = () => {
-    const { user, updateUser } = useAuth();
+    const { user, updateUser, logout } = useAuth();
     const [activeTab, setActiveTab] = useState<number>(0);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -421,6 +422,24 @@ const ProfilePage: React.FC = () => {
                                 startIcon={loading ? <CircularProgress size={16} /> : <SecurityIcon />}
                             >
                                 Change Password
+                            </Button>
+                        </Box>
+
+                        {/* Logout Section */}
+                        <Box sx={{ mt: 6, pt: 4, borderTop: 1, borderColor: 'divider' }}>
+                            <Typography variant="h6" gutterBottom>
+                                Session Management
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Sign out of your account on this device. You'll need to log in again to access your account.
+                            </Typography>
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={logout}
+                                startIcon={<LogoutIcon />}
+                            >
+                                Logout
                             </Button>
                         </Box>
                     </Box>

@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import EmailStr
 
 from apps.api.auth_utils import auth_utils
@@ -143,7 +143,7 @@ async def login(
 
 @router.post("/refresh")
 async def refresh_token(
-    refresh_token: str,
+    refresh_token: str = Body(..., embed=True),
     security_manager: SecurityManager = Depends(get_security_manager),
     user_repo: UserRepository = Depends(get_user_repository),
 ):

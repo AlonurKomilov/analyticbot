@@ -3,21 +3,42 @@ Analytics Channels Router - Channel list endpoint for analytics dashboard
 """
 
 import logging
+import time
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from apps.api.middleware.auth import get_current_user  # Import auth dependency
 from apps.api.services.telegram_validation_service import (
     ChannelValidationResult,
     TelegramValidationService,
 )
-from apps.api.middleware.auth import get_current_user  # Import auth dependency
-
-# ✅ PHASE 2: Redis caching for performance optimization
-from core.common.cache_decorator import cache_endpoint
 
 logger = logging.getLogger(__name__)
+
+# Simple in-memory cache with TTL per user (security fix)
+_channel_cache: dict[int, tuple[list[dict], float]] = {}
+_CACHE_TTL = 600  # 10 minutes
+
+
+def get_cached_channels(user_id: int) -> list[dict] | None:
+    """Get channels from cache if not expired"""
+    if user_id in _channel_cache:
+        channels, timestamp = _channel_cache[user_id]
+        if time.time() - timestamp < _CACHE_TTL:
+            logger.info(f"✅ Cache hit for user {user_id}")
+            return channels
+        else:
+            del _channel_cache[user_id]  # Expired, remove from cache
+    return None
+
+
+def cache_channels(user_id: int, channels: list[dict]) -> None:
+    """Store channels in cache with current timestamp"""
+    _channel_cache[user_id] = (channels, time.time())
+    logger.info(f"💾 Cached {len(channels)} channels for user {user_id}")
+
 
 router = APIRouter(
     prefix="",  # Fixed: No prefix here since main.py adds /analytics/channels
@@ -41,18 +62,17 @@ class ChannelInfo(BaseModel):
 @router.get(
     "", response_model=list[ChannelInfo]
 )  # Fixed: Empty path since main.py adds /analytics/channels
-@cache_endpoint(prefix="analytics:channels", ttl=600)  # Cache for 10 minutes
 async def get_analytics_channels(
     request: Request,
-    current_user: dict = Depends(get_current_user)  # Use proper dependency
+    current_user: dict = Depends(get_current_user),  # Use proper dependency
 ):
     """
-    ## 📺 Get User Channels for Analytics (CACHED)
+    ## 📺 Get User Channels for Analytics
 
     Retrieve all channels belonging to the current user for analytics dashboard.
     This endpoint is used by the frontend to populate channel selection and overview.
 
-    **Performance:** Cached for 10 minutes (600 seconds) per user
+    **Performance:** Cached per-user for 10 minutes to prevent connection pool exhaustion
 
     **Authentication Required:**
     - Valid JWT token in Authorization header (handled by middleware)
@@ -79,18 +99,23 @@ async def get_analytics_channels(
     try:
         # Use current_user from dependency injection (proper auth)
         user_id = current_user["id"]  # Extract ID from validated user dict
-        
+
         logger.info(f"🔍 Fetching analytics channels for user_id={user_id}")
-        print(f"🔍 DEBUG: Fetching analytics channels for user_id={user_id}")  # Debug print
-        
+
+        # Check cache first (per-user cache for security)
+        cached = get_cached_channels(user_id)
+        if cached is not None:
+            return cached
+
         # Get database pool from DI container
         from apps.di import get_container
+
         container = get_container()
         pool = await container.database.asyncpg_pool()
-        
+
         # Query user's channels from database
         query = """
-            SELECT 
+            SELECT
                 c.id,
                 c.title as name,
                 c.username,
@@ -102,10 +127,10 @@ async def get_analytics_channels(
             GROUP BY c.id, c.title, c.username, c.created_at
             ORDER BY c.created_at DESC
         """
-        
+
         async with pool.acquire() as conn:
             rows = await conn.fetch(query, user_id)
-        
+
         # Convert to response model
         channels = [
             ChannelInfo(
@@ -115,12 +140,16 @@ async def get_analytics_channels(
                 subscriber_count=0,  # TODO: Fetch from Telegram API periodically
                 is_active=True,
                 created_at=row["created_at"],
-                last_analytics_update=None  # TODO: Track analytics update time
+                last_analytics_update=None,  # TODO: Track analytics update time
             ).model_dump()  # ✅ Convert Pydantic model to dict for proper serialization
             for row in rows
         ]
-        
+
         logger.info(f"Found {len(channels)} channels for user {user_id}")
+
+        # Cache the results (per-user for security)
+        cache_channels(user_id, channels)
+
         return channels
 
     except Exception as e:

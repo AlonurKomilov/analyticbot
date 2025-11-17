@@ -20,40 +20,38 @@ from sqlalchemy.ext.asyncio import (
 )
 
 # ✅ PHASE 2 FIX: Import protocol instead of concrete implementation
-from core.protocols import DatabaseManagerProtocol
-
 # ✅ PHASE 3 FIX (Oct 19, 2025): Import repository protocols for type hints
 from core.protocols import (
-    AdminRepositoryProtocol,
-    AnalyticsRepositoryProtocol,
-    ChannelDailyRepositoryProtocol,
-    ChannelRepositoryProtocol,
-    PostMetricsRepositoryProtocol,
-    StatsRawRepositoryProtocol,
-    UserRepositoryProtocol,
+    DatabaseManagerProtocol,
 )
+
+# Import other repositories (no protocols yet)
+from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.shared_reports_repository import SharedReportsRepository
+from infra.db.adapters.mtproto_repository_adapter import (
+    MTProtoAuditRepositoryAdapter,
+)
+
+# Still need concrete implementation for instantiation
+from infra.db.connection_manager import db_manager
 
 # ✅ PHASE 3 FIX: Import concrete repository implementations
 from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
-from infra.db.repositories.channel_repository import AsyncpgChannelRepository
-from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
-from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
-from infra.db.repositories.user_repository import AsyncpgUserRepository
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
-# Import other repositories (no protocols yet)
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
-from core.repositories.shared_reports_repository import SharedReportsRepository
+# Import MTProto repositories
+from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
 from infra.db.repositories.plan_repository import AsyncpgPlanRepository
+from infra.db.repositories.post_metrics_repository import AsyncpgPostMetricsRepository
 from infra.db.repositories.post_repository import AsyncpgPostRepository
 from infra.db.repositories.schedule_repository import AsyncpgScheduleRepository
-
-# Still need concrete implementation for instantiation
-from infra.db.connection_manager import DatabaseManager, db_manager
+from infra.db.repositories.stats_raw_repository import AsyncpgStatsRawRepository
+from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+from infra.db.repositories.user_repository import AsyncpgUserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -88,15 +86,15 @@ async def _create_sqlalchemy_engine(
 ) -> AsyncEngine:
     """Create SQLAlchemy async engine"""
     # Log the database URL for debugging (mask password)
-    masked_url = database_url.replace(database_url.split('@')[0].split('://')[-1], '***')
+    masked_url = database_url.replace(database_url.split("@")[0].split("://")[-1], "***")
     logger.info(f"🔧 Creating SQLAlchemy engine with URL: {masked_url}")
-    
+
     # Ensure we're using asyncpg driver
     if not database_url.startswith("postgresql+asyncpg://"):
-        logger.warning(f"⚠️  DATABASE_URL does not start with 'postgresql+asyncpg://'")
+        logger.warning("⚠️  DATABASE_URL does not start with 'postgresql+asyncpg://'")
         logger.warning(f"⚠️  Converting '{database_url.split('://')[0]}' to 'postgresql+asyncpg'")
         database_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
-    
+
     return create_async_engine(
         database_url,
         pool_size=pool_size,
@@ -267,6 +265,18 @@ class DatabaseContainer(containers.DeclarativeContainer):
     user_bot_repo = providers.Singleton(
         UserBotRepositoryFactory,
         session_factory=async_session_maker,
+    )
+
+    # MTProto Channel Repository (uses AsyncSession)
+    channel_mtproto_repo = providers.Factory(
+        ChannelMTProtoRepository,
+        session=async_session_maker,  # Pass the session maker, not call it
+    )
+
+    # MTProto Audit Repository Adapter (uses AsyncSession)
+    mtproto_audit_repo = providers.Factory(
+        MTProtoAuditRepositoryAdapter,
+        session=async_session_maker,  # Pass the session maker, not call it
     )
 
     # Alert repositories (from core)

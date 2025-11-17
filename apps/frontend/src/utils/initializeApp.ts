@@ -7,6 +7,7 @@ import {
     formatReadinessReport,
     type HealthReport
 } from './systemHealthCheck';
+import { autoLoginFromTelegram } from './telegramAuth';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 
@@ -138,6 +139,15 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
 
     try {
         console.log('🚀 Initializing application...');
+
+        // Try Telegram auto-login first (with small delay for WebApp to initialize)
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const telegramLoginSuccess = await autoLoginFromTelegram();
+        if (telegramLoginSuccess) {
+            console.log('✅ Telegram auto-login successful');
+            // Give auth context time to process the event and update state
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
         // Initialize data source (quick check)
         const dataSource = await initializeDataSource();

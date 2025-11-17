@@ -64,25 +64,11 @@ async def lifespan(app: FastAPI):
             f"✅ Asyncpg pool initialized with {pool.get_min_size()}-{pool.get_max_size()} connections"
         )
 
-        # ✅ MULTI-TENANT: Initialize bot manager with repository factory
+        # ✅ MULTI-TENANT: Initialize bot manager through DI container
         try:
-            logger.info("🔧 Starting bot manager initialization...")
-            from apps.bot.multi_tenant.bot_manager import initialize_bot_manager
-            from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
-
-            # Get session factory from DI container
-            logger.info("🔧 Getting session factory from DI container...")
-            session_factory = await container.database.async_session_maker()
-            logger.info(f"🔧 Session factory obtained: {type(session_factory)}")
-
-            # Create repository factory that generates fresh sessions per operation
-            logger.info("🔧 Creating repository factory...")
-            repository_factory = UserBotRepositoryFactory(session_factory)
-            logger.info(f"🔧 Repository factory created: {type(repository_factory)}")
-
-            # Initialize bot manager with the factory
-            logger.info("🔧 Calling initialize_bot_manager...")
-            await initialize_bot_manager(repository_factory)
+            logger.info("🔧 Starting bot manager initialization through DI...")
+            bot_manager = await container.bot.bot_manager()
+            await bot_manager.start()
             logger.info("✅ Multi-tenant bot manager initialized")
         except Exception as bot_error:
             import traceback
@@ -156,11 +142,9 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
-        # ✅ MULTI-TENANT: Shutdown bot manager
+        # ✅ MULTI-TENANT: Shutdown bot manager through DI
         try:
-            from apps.bot.multi_tenant.bot_manager import get_bot_manager
-
-            bot_manager = await get_bot_manager()
+            bot_manager = await container.bot.bot_manager()
             await bot_manager.stop()
             logger.info("✅ Bot manager shutdown completed")
         except Exception as bot_error:
@@ -352,6 +336,7 @@ app.add_middleware(
 
 # Add CORS middleware with explicit configuration
 # Support both specific origins and tunnel wildcards
+# CORS middleware - handled by nginx, but kept for local development without nginx
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.api.CORS_ORIGINS if settings.api.CORS_ORIGINS != "*" else ["*"],
@@ -556,8 +541,8 @@ app.include_router(mobile_router)  # /mobile/* - Already good
 # ✅ PHASE 4 MULTI-TENANT: User and Admin Bot Management (October 27, 2025)
 from apps.api.routers.admin_bot_router import router as admin_bot_router
 from apps.api.routers.user_bot_router import router as user_bot_router
+from apps.api.routers.user_mtproto import router as user_mtproto_router
 from apps.api.routers.user_mtproto_monitoring_router import router as user_mtproto_monitoring_router
-from apps.api.routers.user_mtproto_router import router as user_mtproto_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
 app.include_router(admin_bot_router, tags=["Admin Bot Management"])  # /api/admin/bots/*

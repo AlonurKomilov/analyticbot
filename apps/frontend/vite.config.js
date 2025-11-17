@@ -174,24 +174,8 @@ export default defineConfig({
     watch: {
       usePolling: true,
       interval: 100
-    },
-    // Proxy API requests to backend (direct paths without /api prefix)
-    proxy: {
-      '^/(health|docs|openapi\\.json|auth|channels|analytics|insights|predictions|alerts|payment|superadmin|telegram-storage)': {
-        target: 'http://127.0.0.1:11400',
-        changeOrigin: true,
-        secure: false,
-        ws: true, // WebSocket support
-        configure: (proxy, options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('Proxy error:', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Proxying:', req.method, req.url, '→', options.target + req.url);
-          });
-        }
-      }
     }
+    // Note: No proxy needed - frontend (dev.analyticbot.org) and API (api.analyticbot.org) use separate subdomains
   },
 
   // Path resolution

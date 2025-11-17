@@ -36,8 +36,10 @@ class SecurityConfig:
         default_factory=lambda: os.getenv("JWT_REFRESH_SECRET_KEY") or generate_secure_key()
     )
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # Normal tokens: 7 days, Remember me: 30 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours (was 30 min)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = (
+        30  # 30 days (was 7 days)  # Normal tokens: 7 days, Remember me: 30 days
+    )
 
     # Redis Configuration - Production Environment 10xxx
     REDIS_HOST: str = field(default_factory=lambda: os.getenv("REDIS_HOST", "localhost"))
@@ -193,7 +195,9 @@ class SecurityConfig:
                 "your-refresh-secret-key-change-in-production",
             ]:
                 warnings.warn(
-                    "⚠️  WARNING: Using default secret keys! Set JWT_SECRET_KEY and JWT_REFRESH_SECRET_KEY environment variables for production!",
+                    "⚠️  WARNING: Using default secret keys! "
+                    "Set JWT_SECRET_KEY and JWT_REFRESH_SECRET_KEY "
+                    "environment variables for production!",
                     category=RuntimeWarning,
                     stacklevel=3,
                 )

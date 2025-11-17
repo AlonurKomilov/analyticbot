@@ -249,6 +249,14 @@ async def get_db_connection():
     return await container.database.asyncpg_pool()
 
 
+async def get_db_session():
+    """Get SQLAlchemy AsyncSession from container"""
+    container = get_container()
+    session_factory = await container.database.async_session_maker()
+    async with session_factory() as session:
+        yield session
+
+
 # Alert Services (Phase 3.2)
 def get_alert_condition_evaluator():
     """Get alert condition evaluator service from container"""

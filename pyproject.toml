@@ -259,8 +259,6 @@ ignore_imports = [
     "apps.api.routers.system_router -> apps.api.middleware.auth",
     # Demo router is composition root
     "apps.api.routers -> apps.demo.routers.main",
-    # Dependency factory uses middleware (composition root)
-    "apps.api.routers.system_router -> apps.api.deps_factory",
     # Telegram validation uses telethon (infra dependency - architectural debt)
     "apps.api.services.telegram_validation_service -> infra.tg.telethon_client",
     "apps.api.routers.analytics_channels_router -> apps.api.services.telegram_validation_service",
@@ -290,3 +288,23 @@ ignore_imports = [
 # - apps.mtproto.* is an infrastructure adapter layer
 # - apps.bot.utils, apps.shared.* contain optional utilities
 # These are NOT in source_modules above, so they can freely import infra
+
+# Ruff per-file ignores for intentional patterns
+[tool.ruff.lint.per-file-ignores]
+"apps/api/main.py" = [
+    "E402",  # Module level import not at top (lazy imports for performance)
+    "E501",  # Line too long in description strings (readability)
+]
+"apps/api/routers/*.py" = [
+    "B008",  # Function call in defaults (FastAPI Depends pattern)
+    "B904",  # Exception chaining (HTTP exception wrapping)
+]
+"apps/api/services/*.py" = [
+    "B904",  # Exception chaining (HTTP exception wrapping)
+]
+"apps/api/utils/*.py" = [
+    "B904",  # Exception chaining (HTTP exception wrapping)
+]
+"core/services/**/*.py" = [
+    "B904",  # Exception chaining (domain exception wrapping)
+]

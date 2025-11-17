@@ -330,7 +330,7 @@ const ChannelsManagementPage: React.FC = () => {
                                     <PeopleIcon sx={{ fontSize: 40, opacity: 0.8 }} />
                                 </Box>
                                 <Typography variant="h3" fontWeight={700}>
-                                    {statistics.aggregate.total_subscribers.toLocaleString()}
+                                    {(statistics.aggregate?.total_subscribers ?? 0).toLocaleString()}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
                                     Across all channels
@@ -358,7 +358,7 @@ const ChannelsManagementPage: React.FC = () => {
                                     <ArticleIcon sx={{ fontSize: 40, opacity: 0.8 }} />
                                 </Box>
                                 <Typography variant="h3" fontWeight={700}>
-                                    {statistics.aggregate.total_posts.toLocaleString()}
+                                    {(statistics.aggregate?.total_posts ?? 0).toLocaleString()}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
                                     Published content
@@ -386,10 +386,10 @@ const ChannelsManagementPage: React.FC = () => {
                                     <VisibilityIcon sx={{ fontSize: 40, opacity: 0.8 }} />
                                 </Box>
                                 <Typography variant="h3" fontWeight={700}>
-                                    {statistics.aggregate.total_views.toLocaleString()}
+                                    {(statistics.aggregate?.total_views ?? 0).toLocaleString()}
                                 </Typography>
                                 <Typography variant="body2" sx={{ opacity: 0.9, mt: 0.5 }}>
-                                    Avg {statistics.aggregate.avg_views_per_post.toLocaleString()} per post
+                                    Avg {(statistics.aggregate?.avg_views_per_post ?? 0).toLocaleString()} per post
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -497,7 +497,7 @@ const ChannelsManagementPage: React.FC = () => {
                                                         <Paper sx={{ p: 1.5, bgcolor: 'primary.50', textAlign: 'center' }}>
                                                             <PeopleIcon sx={{ fontSize: 20, color: 'primary.main', mb: 0.5 }} />
                                                             <Typography variant="h6" fontWeight={700} color="primary.main">
-                                                                {channelStats.subscriber_count.toLocaleString()}
+                                                                {(channelStats.subscriber_count ?? 0).toLocaleString()}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
                                                                 Subscribers
@@ -510,7 +510,7 @@ const ChannelsManagementPage: React.FC = () => {
                                                         <Paper sx={{ p: 1.5, bgcolor: 'info.50', textAlign: 'center' }}>
                                                             <ArticleIcon sx={{ fontSize: 20, color: 'info.main', mb: 0.5 }} />
                                                             <Typography variant="h6" fontWeight={700} color="info.main">
-                                                                {channelStats.post_count.toLocaleString()}
+                                                                {(channelStats.post_count ?? 0).toLocaleString()}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
                                                                 Posts
@@ -523,7 +523,7 @@ const ChannelsManagementPage: React.FC = () => {
                                                         <Paper sx={{ p: 1.5, bgcolor: 'success.50', textAlign: 'center' }}>
                                                             <VisibilityIcon sx={{ fontSize: 20, color: 'success.main', mb: 0.5 }} />
                                                             <Typography variant="h6" fontWeight={700} color="success.main">
-                                                                {channelStats.total_views.toLocaleString()}
+                                                                {(channelStats.total_views ?? 0).toLocaleString()}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
                                                                 Total Views
@@ -536,7 +536,7 @@ const ChannelsManagementPage: React.FC = () => {
                                                         <Paper sx={{ p: 1.5, bgcolor: 'warning.50', textAlign: 'center' }}>
                                                             <TrendingUpIcon sx={{ fontSize: 20, color: 'warning.main', mb: 0.5 }} />
                                                             <Typography variant="h6" fontWeight={700} color="warning.main">
-                                                                {channelStats.avg_views_per_post.toLocaleString()}
+                                                                {(channelStats.avg_views_per_post ?? 0).toLocaleString()}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.secondary">
                                                                 Avg Views

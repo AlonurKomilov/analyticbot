@@ -10,7 +10,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from apps.api.middleware.auth import get_current_user_id  # Use existing auth system
+from apps.api.services.bot_service_factory import create_user_bot_service
 from apps.di import get_container
+from core.ports.user_bot_repository import IUserBotRepository
 from core.schemas.user_bot_schemas import (
     BotCreatedResponse,
     BotRemovedResponse,
@@ -22,8 +24,6 @@ from core.schemas.user_bot_schemas import (
     UpdateRateLimitRequest,
     VerifyBotRequest,
 )
-from core.services.user_bot_service import get_user_bot_service
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +37,10 @@ router = APIRouter(
 # ==================== Dependency Injection ====================
 
 
-async def get_user_bot_repository() -> UserBotRepositoryFactory:
-    """Get user bot repository factory instance."""
+async def get_user_bot_repository() -> IUserBotRepository:
+    """Get user bot repository from DI container."""
     container = get_container()
-    session_factory = await container.database.async_session_maker()
-    return UserBotRepositoryFactory(session_factory)
+    return await container.database.user_bot_repo()
 
 
 # ==================== User Bot Endpoints ====================
@@ -59,7 +58,7 @@ async def get_user_bot_repository() -> UserBotRepositoryFactory:
 async def create_user_bot(
     request: CreateBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Create a new bot for the current user.
@@ -72,7 +71,7 @@ async def create_user_bot(
     - **max_concurrent_requests**: Max concurrent requests (1-50, default: 10)
     """
     try:
-        service = get_user_bot_service(repository)
+        service = await create_user_bot_service(repository)
 
         credentials = await service.create_user_bot(
             user_id=user_id,
@@ -120,7 +119,7 @@ async def create_user_bot(
 )
 async def get_bot_status(
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Get the status of the current user's bot.
@@ -128,7 +127,7 @@ async def get_bot_status(
     Returns bot configuration, status, verification state, and usage statistics.
     """
     try:
-        service = get_user_bot_service(repository)
+        service = await create_user_bot_service(repository)
         credentials = await service.get_user_bot_status(user_id)
 
         if not credentials:
@@ -180,7 +179,7 @@ async def get_bot_status(
 async def verify_bot(
     request: VerifyBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Verify bot credentials by initializing the bot.
@@ -189,7 +188,7 @@ async def verify_bot(
     - **test_chat_id**: Chat ID to send test message to (required if send_test_message=true)
     """
     try:
-        service = get_user_bot_service(repository)
+        service = await create_user_bot_service(repository)
 
         # Validate test message parameters
         if request.send_test_message and not request.test_chat_id:
@@ -237,7 +236,7 @@ async def verify_bot(
 )
 async def remove_bot(
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Remove the current user's bot.
@@ -248,7 +247,7 @@ async def remove_bot(
     - Remove all bot data
     """
     try:
-        service = get_user_bot_service(repository)
+        service = await create_user_bot_service(repository)
         success = await service.remove_user_bot(user_id)
 
         if not success:
@@ -282,7 +281,7 @@ async def remove_bot(
 async def update_rate_limits(
     request: UpdateRateLimitRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
-    repository: Annotated[UserBotRepositoryFactory, Depends(get_user_bot_repository)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
     """
     Update rate limits for the current user's bot.
@@ -291,7 +290,7 @@ async def update_rate_limits(
     - **max_concurrent_requests**: New concurrent request limit (1-50, optional)
     """
     try:
-        service = get_user_bot_service(repository)
+        service = await create_user_bot_service(repository)
 
         credentials = await service.update_rate_limits(
             user_id=user_id,

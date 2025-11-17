@@ -39,19 +39,20 @@ const DEFAULT_CONFIG: ApiClientConfig = {
 // Production deployment will eliminate DevTunnel and be much faster.
 const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/health': 5000,
-  '/auth/login': 10000,
-  '/auth/register': 10000,
-  '/auth/me': 10000,
-  '/auth/refresh': 10000,
+  '/auth/login': 15000, // Increased from 10s - important for initial connection
+  '/auth/register': 15000,
+  '/auth/me': 15000, // Increased from 10s - used for auth verification
+  '/auth/refresh': 20000, // Increased from 10s - critical for maintaining session
+  '/auth/telegram': 20000, // Added for Telegram auto-login
   '/analytics/channels': 10000, // Reduced from 60s - analytics queries are cached
-  '/channels': 15000, // Increased from 5s - can be slow with many channels or MTProto sync
+  '/channels': 30000, // Increased to 30s - can be slow with CloudFlare + many channels
   '/system/schedule': 5000, // Reduced from 90s - database insert is fast
   '/system/send': 10000, // Telegram API + database
   '/schedule/': 5000, // Reduced from 90s - simple SELECT query
   '/analytics/': 15000, // For complex analytics queries
   '/api/user-bot/': 15000, // Reduced from 90s - bot operations with reasonable timeout
   '/api/user-mtproto': 30000, // MTProto setup/verify needs longer timeout (network + Telegram latency)
-  'default': 5000 // Reduced from 30s - fail fast for better UX
+  'default': 10000 // Increased from 5s - better for slower connections
 };
 
 /**
@@ -176,12 +177,18 @@ export class UnifiedApiClient {
     if (!error.response) return true; // Network errors are retryable
     const status = error.response.status;
 
+    // Retry timeouts for specific slow endpoints
+    if (status === 408) {
+      // Allow retry for timeout errors (they might succeed on retry)
+      return true;
+    }
+
     // Don't retry:
     // - 4xx client errors (bad request, validation errors, etc.)
-    // - 408 timeouts (already waited long enough)
     // - 500 internal server errors (likely validation/business logic failures)
 
     // Only retry:
+    // - 408 timeouts (might succeed on retry)
     // - 429 rate limits (with backoff)
     // - 502-504 gateway/proxy errors (temporary infrastructure issues)
     if (status === 429) return true;
@@ -344,6 +351,10 @@ export class UnifiedApiClient {
       if (error.name === 'AbortError') {
         const timeoutError = new ApiRequestError('Request timeout');
         timeoutError.response = { status: 408, statusText: 'Request Timeout' };
+        // Don't trigger auth error handling for timeouts
+        if (import.meta.env.DEV) {
+          console.warn(`⏱️ Request timeout for ${endpoint} (${requestTimeout}ms)`);
+        }
         throw timeoutError;
       }
 
@@ -362,7 +373,13 @@ export class UnifiedApiClient {
       }
 
       // Handle 401 Unauthorized - try token refresh and retry
-      if (error instanceof ApiRequestError && error.response?.status === 401 && !options._retry) {
+      // BUT: Only if it's a real 401 from server, not timeout or connection error
+      // AND only if we have a refresh token (don't try to refresh if not logged in)
+      const hasRefreshToken = localStorage.getItem('refresh_token');
+      if (error instanceof ApiRequestError && 
+          error.response?.status === 401 && 
+          !options._retry &&
+          hasRefreshToken) {
         console.warn('🔄 Got 401 Unauthorized - attempting token refresh...');
 
         try {
@@ -376,9 +393,11 @@ export class UnifiedApiClient {
         } catch (refreshError) {
           // Token refresh failed - logout user
           console.error('❌ Token refresh failed, logging out');
-          localStorage.removeItem('authToken');
+          localStorage.removeItem('auth_token');
           localStorage.removeItem('refresh_token');
-          sessionStorage.removeItem('authToken');
+          localStorage.removeItem('auth_user');
+          sessionStorage.removeItem('twa_logged_in');
+          sessionStorage.removeItem('auth_token');
           sessionStorage.removeItem('refresh_token');
           window.location.href = '/login?reason=session_expired';
           throw error;

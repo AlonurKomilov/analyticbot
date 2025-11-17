@@ -214,7 +214,8 @@ class ImportGuard:
                 "infra/bot/",  # Bot manager implementations
                 "apps/mtproto/",  # MTProto services layer
                 "apps/api/services/telegram_",  # Telegram-specific API services
-                "apps/api/routers/user_mtproto_",  # MTProto routers
+                "apps/api/routers/user_mtproto_",  # MTProto routers (legacy monolithic)
+                "apps/api/routers/user_mtproto/",  # MTProto routers (modular package)
                 "apps/bot/multi_tenant/",  # Bot instances using MTProto
                 "scripts/test_",  # Test scripts
             ]

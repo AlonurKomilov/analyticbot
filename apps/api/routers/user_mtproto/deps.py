@@ -5,21 +5,24 @@ Shared dependencies and helper functions for MTProto endpoints.
 """
 
 import logging
+from typing import Annotated
 
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from telethon import TelegramClient
 
-from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+from apps.di import get_db_session
+from core.ports.user_bot_repository import IUserBotRepository
+from infra.db.repositories.user_bot_repository import UserBotRepository
 
 logger = logging.getLogger(__name__)
 
 
-async def get_user_bot_repository() -> UserBotRepositoryFactory:
-    """Get user bot repository factory instance."""
-    from apps.di import get_container
-
-    container = get_container()
-    session_factory = await container.database.async_session_maker()
-    return UserBotRepositoryFactory(session_factory)
+async def get_user_bot_repository(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> IUserBotRepository:
+    """Get user bot repository instance via DI."""
+    return UserBotRepository(session)
 
 
 async def safe_disconnect(client: TelegramClient):

@@ -90,7 +90,12 @@ def get_churn_predictions(limit: int = 10) -> list[dict[str, Any]]:
     Consolidated from frontend churnPredictor.js
     """
     predictions = []
-    subscription_tiers = ["free", "start", "pro", "premium"]  # ✅ FIXED: Updated tier names
+    subscription_tiers = [
+        "free",
+        "start",
+        "pro",
+        "premium",
+    ]  # ✅ FIXED: Updated tier names
 
     for i in range(limit):
         churn_prob = random.uniform(0.1, 0.95)
@@ -107,7 +112,7 @@ def get_churn_predictions(limit: int = 10) -> list[dict[str, Any]]:
         predictions.append(
             {
                 "user_id": DEFAULT_DEMO_USER_ID + i,
-                "user_name": f"{DEFAULT_DEMO_USERNAME}_{i+1}",
+                "user_name": f"{DEFAULT_DEMO_USERNAME}_{i + 1}",
                 "churn_probability": round(churn_prob, 2),
                 "risk_level": risk_level,
                 "last_activity": f"{random.randint(1, 14)} days ago",
@@ -213,7 +218,15 @@ def create_mock_churn_prediction(user_id: str = "") -> dict:
 def create_mock_ai_service_stats() -> dict:
     """Create mock AI service statistics"""
     return {
-        "content_optimizer": {"total_analyzed": 1247, "avg_improvement": 34.2, "status": "active"},
-        "security_monitor": {"threats_detected": 12, "security_score": 92.5, "status": "active"},
+        "content_optimizer": {
+            "total_analyzed": 1247,
+            "avg_improvement": 34.2,
+            "status": "active",
+        },
+        "security_monitor": {
+            "threats_detected": 12,
+            "security_score": 92.5,
+            "status": "active",
+        },
         "churn_predictor": {"users_analyzed": 892, "accuracy": 89.3, "status": "beta"},
     }

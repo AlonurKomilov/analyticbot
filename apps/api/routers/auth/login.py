@@ -46,7 +46,8 @@ async def login(
         user_data = await user_repo.get_user_by_email(login_data.email)
         if not user_data:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         # Create User object for SecurityManager - Updated for new role system
@@ -78,7 +79,8 @@ async def login(
         if not password_valid:
             logger.warning(f"Password verification FAILED for {user.email}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
             )
 
         logger.info(f"Password verified successfully for {user.email}")
@@ -102,20 +104,19 @@ async def login(
 
         # Generate tokens using centralized auth utilities
         access_token = auth_utils.create_access_token(user)
-        
+
         # 🆕 Phase 3.2: Create refresh token with remember_me parameter
         refresh_token = auth_utils.create_refresh_token(
-            user.id, 
+            user.id,
             session.token,
-            remember_me=login_data.remember_me  # Pass remember_me from request
+            remember_me=login_data.remember_me,  # Pass remember_me from request
         )
 
         # Update last login
         await user_repo.update_user(int(user.id), last_login=datetime.utcnow())
 
         logger.info(
-            f"Successful login for user: {user.username} "
-            f"(remember_me={login_data.remember_me})"
+            f"Successful login for user: {user.username} (remember_me={login_data.remember_me})"
         )
 
         return AuthResponse(
@@ -128,7 +129,9 @@ async def login(
                 "username": user.username,
                 "full_name": user.full_name,
                 "role": user.role,  # role is now a string, no .value needed
-                "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+                "status": (
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
+                ),
             },
         )
 
@@ -149,7 +152,7 @@ async def refresh_token(
 ):
     """
     Refresh access token using refresh token
-    
+
     🔄 NEW: Returns rotated refresh token for enhanced security
     """
     try:
@@ -160,7 +163,7 @@ async def refresh_token(
             "access_token": token_response["access_token"],
             "refresh_token": token_response["refresh_token"],  # 🔄 Rotated token
             "token_type": "bearer",
-            "expires_in": 30 * 60
+            "expires_in": 30 * 60,
         }
 
     except Exception as e:
@@ -230,5 +233,6 @@ async def verify_telegram(
     except Exception as e:
         logger.error(f"Telegram verification error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to verify account"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify account",
         )

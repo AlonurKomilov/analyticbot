@@ -107,9 +107,7 @@ class TelegramAlertNotifier(AlertNotificationPort):
             results[notification_id] = success
 
         successful_count = sum(1 for success in results.values() if success)
-        self._logger.info(
-            f"Sent {successful_count}/{len(notifications)} bulk alerts"
-        )
+        self._logger.info(f"Sent {successful_count}/{len(notifications)} bulk alerts")
 
         return results
 

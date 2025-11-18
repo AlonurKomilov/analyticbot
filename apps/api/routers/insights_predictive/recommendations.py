@@ -30,7 +30,8 @@ router = APIRouter()
 async def get_ai_recommendations(
     channel_id: int,
     context: str = Query(
-        default="general", description="Recommendation context (general, growth, engagement)"
+        default="general",
+        description="Recommendation context (general, growth, engagement)",
     ),
     current_user: dict = Depends(get_current_user),
     analytics_client=Depends(get_analytics_client),
@@ -89,7 +90,8 @@ async def generate_predictions(
         valid_types = ["growth", "engagement", "reach", "views", "subscribers"]
         if request.prediction_type not in valid_types:
             raise HTTPException(
-                status_code=400, detail=f"Invalid prediction type. Must be one of: {valid_types}"
+                status_code=400,
+                detail=f"Invalid prediction type. Must be one of: {valid_types}",
             )
 
         # Generate cache key
@@ -121,7 +123,10 @@ async def generate_predictions(
 
         prediction_result = await predictive_orchestrator.orchestrate_enhanced_prediction(
             prediction_request=prediction_request,
-            context_types=[IntelligenceContext.TEMPORAL, IntelligenceContext.ENVIRONMENTAL],
+            context_types=[
+                IntelligenceContext.TEMPORAL,
+                IntelligenceContext.ENVIRONMENTAL,
+            ],
             include_narrative=False,
         )
 
@@ -284,4 +289,8 @@ async def generate_growth_forecast(historical_data, forecast_days: int) -> dict[
         }
 
     except Exception:
-        return {"forecast_points": [], "confidence": 0.5, "error": "Unable to generate forecast"}
+        return {
+            "forecast_points": [],
+            "confidence": 0.5,
+            "error": "Unable to generate forecast",
+        }

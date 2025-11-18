@@ -30,7 +30,9 @@ class AlertNotifier:
                 return None
 
             # Create delivery service
-            from infra.adapters.telegram_alert_delivery import TelegramAlertDeliveryService
+            from infra.adapters.telegram_alert_delivery import (
+                TelegramAlertDeliveryService,
+            )
 
             return TelegramAlertDeliveryService(bot_client)
 

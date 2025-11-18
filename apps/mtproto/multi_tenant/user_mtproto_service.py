@@ -98,7 +98,11 @@ class UserMTProtoService:
     Ensures proper isolation between users.
     """
 
-    def __init__(self, user_bot_repo: IUserBotRepository | None = None, user_bot_repo_factory=None):
+    def __init__(
+        self,
+        user_bot_repo: IUserBotRepository | None = None,
+        user_bot_repo_factory=None,
+    ):
         """
         Initialize service with either a repository or a factory.
         Factory pattern is preferred for long-running services.
@@ -222,10 +226,10 @@ class UserMTProtoService:
     def is_user_connected(self, user_id: int) -> bool:
         """
         Check if user has an active client connection.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             True if user has an active connected client, False otherwise
         """
@@ -236,7 +240,7 @@ class UserMTProtoService:
     def get_active_users_count(self) -> int:
         """
         Get count of users with active client connections.
-        
+
         Returns:
             Number of active user connections
         """
@@ -245,7 +249,7 @@ class UserMTProtoService:
     def get_active_user_ids(self) -> list[int]:
         """
         Get list of user IDs with active client connections.
-        
+
         Returns:
             List of user IDs with active clients
         """
@@ -321,7 +325,9 @@ class UserMTProtoService:
 
             # Check per-channel setting
             from apps.di import get_container
-            from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
+            from infra.db.repositories.channel_mtproto_repository import (
+                ChannelMTProtoRepository,
+            )
 
             container = get_container()
             session_factory = await container.database.async_session_maker()

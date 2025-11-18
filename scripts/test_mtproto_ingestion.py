@@ -47,7 +47,8 @@ async def test_mtproto_ingestion():
 
         # Check MTProto settings
         mtproto_settings = await conn.fetchrow(
-            "SELECT * FROM channel_mtproto_settings WHERE channel_id = $1", 1002678877654
+            "SELECT * FROM channel_mtproto_settings WHERE channel_id = $1",
+            1002678877654,
         )
         if mtproto_settings and mtproto_settings["mtproto_enabled"]:
             print("   ✅ MTProto enabled for channel")
@@ -61,17 +62,24 @@ async def test_mtproto_ingestion():
             "SELECT * FROM user_bot_credentials WHERE user_id = $1", 844338517
         )
         if user_creds:
-            has_session = user_creds.get("session_string") is not None and len(str(user_creds.get("session_string", ""))) > 0
+            has_session = (
+                user_creds.get("session_string") is not None
+                and len(str(user_creds.get("session_string", ""))) > 0
+            )
             has_api_id = user_creds.get("telegram_api_id") is not None
             has_phone = user_creds.get("telegram_phone") is not None
             is_enabled = user_creds.get("mtproto_enabled", False)
-            
+
             print("   MTProto credentials:")
-            print(f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('telegram_api_id', 'N/A')}")
-            print(f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('telegram_phone', 'N/A')}")
+            print(
+                f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('telegram_api_id', 'N/A')}"
+            )
+            print(
+                f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('telegram_phone', 'N/A')}"
+            )
             print(f"      Session: {'✅ Has session' if has_session else '❌ No session'}")
             print(f"      Enabled: {'✅' if is_enabled else '❌'}")
-            
+
             if not has_session:
                 print("   ⚠️  User needs to complete MTProto setup first!")
                 await conn.close()
@@ -93,14 +101,18 @@ async def test_mtproto_ingestion():
     try:
         from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
         from core.services.encryption_service import EncryptionService
-        from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
+        from infra.db.repositories.user_bot_repository_factory import (
+            UserBotRepositoryFactory,
+        )
 
         # Initialize services
-        encryption_service = EncryptionService()
+        EncryptionService()
 
         # Create asyncpg pool
         db_pool = await asyncpg.create_pool(
-            "postgresql://analytic:change_me@localhost:10100/analytic_bot", min_size=2, max_size=5
+            "postgresql://analytic:change_me@localhost:10100/analytic_bot",
+            min_size=2,
+            max_size=5,
         )
 
         # Create repository factory

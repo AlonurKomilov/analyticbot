@@ -16,34 +16,28 @@ class IMTProtoChannelRepository(ABC):
     @abstractmethod
     async def get_by_id(self, channel_id: int) -> dict[str, Any] | None:
         """Get MTProto channel by ID."""
-        pass
 
     @abstractmethod
     async def get_by_user_id(self, user_id: int) -> list[dict[str, Any]]:
         """Get all MTProto channels for a user."""
-        pass
 
     @abstractmethod
     async def create(self, channel_data: dict[str, Any]) -> dict[str, Any]:
         """Create new MTProto channel."""
-        pass
 
     @abstractmethod
     async def update(self, channel_id: int, updates: dict[str, Any]) -> dict[str, Any] | None:
         """Update MTProto channel."""
-        pass
 
     @abstractmethod
     async def delete(self, channel_id: int) -> bool:
         """Delete MTProto channel."""
-        pass
 
     @abstractmethod
     async def list_with_pagination(
         self, user_id: int, offset: int = 0, limit: int = 50
     ) -> tuple[list[dict[str, Any]], int]:
         """List channels with pagination. Returns (channels, total_count)."""
-        pass
 
 
 class IMTProtoAuditRepository(ABC):
@@ -59,21 +53,18 @@ class IMTProtoAuditRepository(ABC):
         timestamp: datetime | None = None,
     ) -> dict[str, Any]:
         """Log an MTProto action."""
-        pass
 
     @abstractmethod
     async def get_user_actions(
         self, user_id: int, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:
         """Get user's action history."""
-        pass
 
     @abstractmethod
     async def get_channel_actions(
         self, channel_id: int, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:
         """Get channel's action history."""
-        pass
 
 
 class IChannelMTProtoSettingsRepository(ABC):
@@ -82,33 +73,25 @@ class IChannelMTProtoSettingsRepository(ABC):
     @abstractmethod
     async def get_setting(self, user_id: int, channel_id: int) -> Any | None:
         """Get MTProto setting for a specific user+channel combination."""
-        pass
 
     @abstractmethod
     async def get_user_settings(self, user_id: int) -> list[Any]:
         """Get all channel MTProto settings for a user."""
-        pass
 
     @abstractmethod
-    async def create_or_update(
-        self, user_id: int, channel_id: int, mtproto_enabled: bool
-    ) -> Any:
+    async def create_or_update(self, user_id: int, channel_id: int, mtproto_enabled: bool) -> Any:
         """Create or update per-channel MTProto setting."""
-        pass
 
     @abstractmethod
     async def delete_setting(self, user_id: int, channel_id: int) -> bool:
         """Delete per-channel MTProto setting."""
-        pass
 
     @abstractmethod
     async def delete_user_settings(self, user_id: int) -> int:
         """Delete all per-channel settings for a user."""
-        pass
 
     @abstractmethod
     async def is_channel_enabled(
         self, user_id: int, channel_id: int, global_enabled: bool = True
     ) -> bool:
         """Check if MTProto is enabled for a specific channel."""
-        pass

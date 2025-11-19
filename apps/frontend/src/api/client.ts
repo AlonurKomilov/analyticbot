@@ -126,7 +126,7 @@ export class UnifiedApiClient {
   /**
    * Get authentication headers based on current strategy
    */
-  private getAuthHeaders(): Record<string, string> {
+  private getAuthHeaders(endpoint?: string): Record<string, string> {
     const headers = { ...this.defaultHeaders };
 
     // 🔐 Add device fingerprint to all requests
@@ -148,7 +148,11 @@ export class UnifiedApiClient {
             console.log('🔑 Using JWT token from storage:', token.substring(0, 20) + '...');
           }
         } else {
-          if (import.meta.env.DEV) {
+          // Only warn if this is NOT a login/register/refresh endpoint (token expected to be missing)
+          const isAuthEndpoint = endpoint?.includes('/auth/login') ||
+                                endpoint?.includes('/auth/register') ||
+                                endpoint?.includes('/auth/refresh');
+          if (!isAuthEndpoint && import.meta.env.DEV) {
             console.warn('⚠️ No JWT token found in storage');
             console.warn('📊 Storage keys checked:', {
               auth_token: !!localStorage.getItem('auth_token'),
@@ -287,7 +291,7 @@ export class UnifiedApiClient {
       const requestConfig: RequestInit = {
         method: options.method || 'GET',
         headers: {
-          ...this.getAuthHeaders(),
+          ...this.getAuthHeaders(endpoint),
           ...options.headers
         },
         signal: controller.signal,
@@ -501,7 +505,7 @@ export class UnifiedApiClient {
       body: formData,
       headers: {
         // Don't set Content-Type for FormData - browser will set it with boundary
-        ...this.getAuthHeaders(),
+        ...this.getAuthHeaders(url),
         ...config.headers
       }
     };
@@ -533,7 +537,7 @@ export class UnifiedApiClient {
       method: 'POST',
       body: formData,
       headers: {
-        ...this.getAuthHeaders()
+        ...this.getAuthHeaders('/upload')
       }
     };
 

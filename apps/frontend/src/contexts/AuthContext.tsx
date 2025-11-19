@@ -212,7 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log('🔔 TWA auth complete event received - updating auth state');
             const storedToken = getStoredToken();
             const storedUser = getStoredUser();
-            
+
             if (storedToken && storedUser) {
                 console.log('✅ Setting auth state from TWA login');
                 setToken(storedToken);
@@ -222,7 +222,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
 
         window.addEventListener('twa-auth-complete', handleTWAAuthComplete);
-        
+
         return () => {
             window.removeEventListener('twa-auth-complete', handleTWAAuthComplete);
         };
@@ -264,7 +264,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // CRITICAL: Force synchronous write to localStorage
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             // Verify tokens were actually stored
             const verifyToken = localStorage.getItem(TOKEN_KEY);
             const verifyRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);

@@ -288,15 +288,15 @@ async def managed_service():
     """Context manager that guarantees cleanup"""
     service = MTProtoDataCollectionService()
     pool_config = ConnectionPoolConfig.from_settings(service.settings)
-    
+
     try:
         # Setup
         await init_connection_pool(pool_config)
         await service.initialize()
         logger.info("✅ Service initialized")
-        
+
         yield service
-        
+
     finally:
         # Cleanup ALWAYS runs, even on kill
         logger.info("🧹 Cleaning up resources...")
@@ -311,7 +311,7 @@ async def managed_service():
 async def main():
     """Main entry point with guaranteed cleanup"""
     # ... parse args ...
-    
+
     async with managed_service() as service:
         try:
             if args.once:
@@ -322,18 +322,18 @@ async def main():
                 # Continuous mode with graceful shutdown
                 while not _shutdown_requested:
                     result = await service.collect_all_users()
-                    
+
                     if _shutdown_requested:
                         break
-                        
+
                     # Sleep with periodic wake-ups to check shutdown flag
                     for _ in range(args.interval * 60):
                         if _shutdown_requested:
                             break
                         await asyncio.sleep(1)
-                
+
                 logger.info("🛑 Graceful shutdown complete")
-                
+
         except KeyboardInterrupt:
             logger.info("🛑 Interrupted by user")
             sys.exit(130)

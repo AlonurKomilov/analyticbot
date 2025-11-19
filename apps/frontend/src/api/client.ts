@@ -45,7 +45,7 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/auth/refresh': 20000, // Increased from 10s - critical for maintaining session
   '/auth/telegram': 20000, // Added for Telegram auto-login
   '/analytics/channels': 10000, // Reduced from 60s - analytics queries are cached
-  '/channels': 30000, // Increased to 30s - can be slow with CloudFlare + many channels
+  '/channels': 60000, // ✅ Increased from 30s to 60s - CloudFlare tunnel + network latency
   '/system/schedule': 5000, // Reduced from 90s - database insert is fast
   '/system/send': 10000, // Telegram API + database
   '/schedule/': 5000, // Reduced from 90s - simple SELECT query
@@ -227,6 +227,10 @@ export class UnifiedApiClient {
     attempt = 1
   ): Promise<T> {
     // ✅ STEP 1: Proactively refresh token if expiring soon (before request)
+    // This handles the edge case where token might expire during a long request.
+    // By refreshing BEFORE the request, we ensure the token is valid for at least
+    // TOKEN_EXPIRY_THRESHOLD more minutes. Even if request takes 60s, token will
+    // still be valid when it reaches the backend.
     // Skip refresh for authentication endpoints (login, register, refresh)
     const isAuthEndpoint = endpoint.includes('/auth/login') ||
                            endpoint.includes('/auth/register') ||
@@ -242,10 +246,10 @@ export class UnifiedApiClient {
 
     const controller = new AbortController();
     const requestTimeout = this.getTimeoutForEndpoint(endpoint);
+    const startTime = performance.now(); // Track request timing
     const timeoutId = setTimeout(() => {
-      if (import.meta.env.DEV) {
-        console.warn(`⏱️ Request timeout after ${requestTimeout}ms for ${endpoint}`);
-      }
+      const elapsed = Math.round(performance.now() - startTime);
+      console.warn(`⏱️ [API Client] Request timeout after ${elapsed}ms/${requestTimeout}ms for ${endpoint}`);
       controller.abort();
     }, requestTimeout);
 
@@ -269,9 +273,9 @@ export class UnifiedApiClient {
         }
       }
 
-      if (import.meta.env.DEV) {
-        console.log(`🌐 API Request: ${options.method || 'GET'} ${url} (timeout: ${requestTimeout}ms)`);
-      }
+      console.log(`🚀 [API Client] Starting ${options.method || 'GET'} ${url} (timeout: ${requestTimeout}ms, attempt: ${attempt})`);
+      console.log(`📍 [API Client] Request initiated at ${new Date().toISOString()}`);
+
 
       // Prepare request configuration
       const requestConfig: RequestInit = {
@@ -299,6 +303,9 @@ export class UnifiedApiClient {
 
       const response = await fetch(url, requestConfig);
       clearTimeout(timeoutId);
+
+      const elapsed = Math.round(performance.now() - startTime);
+      console.log(`✅ [API Client] Response received in ${elapsed}ms - Status: ${response.status} ${response.statusText}`);
 
       // Handle response
       let responseData: any;
@@ -352,9 +359,7 @@ export class UnifiedApiClient {
         const timeoutError = new ApiRequestError('Request timeout');
         timeoutError.response = { status: 408, statusText: 'Request Timeout' };
         // Don't trigger auth error handling for timeouts
-        if (import.meta.env.DEV) {
-          console.warn(`⏱️ Request timeout for ${endpoint} (${requestTimeout}ms)`);
-        }
+        console.warn(`⏱️ [API Client] Request timeout for ${endpoint} (${requestTimeout}ms) - NOT triggering token refresh`);
         throw timeoutError;
       }
 
@@ -375,14 +380,18 @@ export class UnifiedApiClient {
       // Handle 401 Unauthorized - try token refresh and retry
       // BUT: Only if it's a real 401 from server, not timeout or connection error
       // AND only if we have a refresh token (don't try to refresh if not logged in)
+      // AND NOT if this is a timeout error (those are network issues, not auth issues)
       const hasRefreshToken = localStorage.getItem('refresh_token');
-      if (error instanceof ApiRequestError && 
-          error.response?.status === 401 && 
-          !options._retry &&
-          hasRefreshToken) {
-        console.warn('🔄 Got 401 Unauthorized - attempting token refresh...');
+      const isTimeoutError = error.message?.includes('timeout') ||
+                             error.message?.includes('Request timeout') ||
+                             error.response?.status === 408;  // ✅ Also check status code
 
-        try {
+      if (error instanceof ApiRequestError &&
+          error.response?.status === 401 &&
+          !options._retry &&
+          hasRefreshToken &&
+          !isTimeoutError) {  // Don't try to refresh on timeouts!
+        console.warn('🔄 [API Client] Got 401 Unauthorized - attempting token refresh...');        try {
           // ✅ STEP 2: Reactive refresh on 401 (refresh + retry)
           await tokenRefreshManager.handleAuthError(async () => {
             // Mark as retry to prevent infinite loop

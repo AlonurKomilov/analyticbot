@@ -15,8 +15,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_ENABLED: bool = Field(
         default=False,
         description=(
-            "Enable MTProto functionality. "
-            "Set to true to activate Telegram client features."
+            "Enable MTProto functionality. " "Set to true to activate Telegram client features."
         ),
     )
 
@@ -74,8 +73,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_ACCOUNTS: list[str] = Field(
         default_factory=list,
         description=(
-            "List of session names for multi-account pooling "
-            "(e.g., ['session1', 'session2'])"
+            "List of session names for multi-account pooling " "(e.g., ['session1', 'session2'])"
         ),
     )
 
@@ -96,8 +94,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_MAX_CONCURRENT_USERS: int = Field(
         default=10,
         description=(
-            "Maximum concurrent user sessions in MTProto connection pool "
-            "(system-wide limit)"
+            "Maximum concurrent user sessions in MTProto connection pool " "(system-wide limit)"
         ),
     )
 
@@ -163,8 +160,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_MAX_CONNECTIONS: int = Field(
         default=10,
         description=(
-            "Maximum concurrent MTProto connections system-wide. "
-            "Increase for larger servers."
+            "Maximum concurrent MTProto connections system-wide. " "Increase for larger servers."
         ),
     )
 

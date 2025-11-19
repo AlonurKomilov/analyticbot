@@ -14,8 +14,9 @@ Containers:
 2. CacheContainer - Redis & cache adapters
 3. CoreServicesContainer - Pure business logic
 4. MLContainer - ML services (optional)
-5. BotContainer - Bot services & adapters
-6. APIContainer - API services & dependencies
+5. MTProtoContainer - User MTProto services
+6. BotContainer - Bot services & adapters
+7. APIContainer - API services & dependencies
 """
 
 import logging
@@ -28,6 +29,7 @@ from apps.di.cache_container import CacheContainer
 from apps.di.core_services_container import CoreServicesContainer
 from apps.di.database_container import DatabaseContainer
 from apps.di.ml_container import MLContainer
+from apps.di.mtproto_container import MTProtoContainer
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +82,13 @@ class ApplicationContainer(containers.DeclarativeContainer):
         config=config,
     )
 
+    # MTProto services (multi-tenant channel access)
+    mtproto = providers.Container(
+        MTProtoContainer,
+        config=config,
+        database=database,
+    )
+
     # Bot services and adapters
     bot = providers.Container(
         BotContainer,
@@ -130,6 +139,7 @@ def configure_container() -> ApplicationContainer:
         logger.info("   - Cache Container: Ready")
         logger.info("   - Core Services Container: Ready")
         logger.info("   - ML Container: Ready (optional)")
+        logger.info("   - MTProto Container: Ready")
         logger.info("   - Bot Container: Ready")
         logger.info("   - API Container: Ready")
 
@@ -255,6 +265,29 @@ async def get_db_session():
     session_factory = await container.database.async_session_maker()
     async with session_factory() as session:
         yield session
+
+
+async def get_user_mtproto_service():
+    """
+    Get UserMTProtoService instance from DI container.
+
+    This replaces the global singleton pattern with proper dependency injection.
+    Use this as a FastAPI dependency to inject the MTProto service into endpoints.
+
+    Returns:
+        UserMTProtoService: The MTProto service instance
+    """
+    from apps.mtproto.multi_tenant.user_mtproto_service import UserMTProtoService
+
+    container = get_container()
+    service = await container.mtproto.user_mtproto_service()
+
+    if not isinstance(service, UserMTProtoService):
+        # Handle case where service initialization failed
+        logger.error("UserMTProtoService not properly initialized in DI container")
+        raise RuntimeError("MTProto service not available")
+
+    return service
 
 
 # Alert Services (Phase 3.2)

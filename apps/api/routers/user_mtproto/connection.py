@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from apps.api.middleware.auth import get_current_user_id
 from apps.api.routers.user_mtproto.deps import get_user_bot_repository
 from apps.api.routers.user_mtproto.models import ErrorResponse, MTProtoActionResponse
-from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+from apps.di import get_user_mtproto_service
 from core.ports.user_bot_repository import IUserBotRepository
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ async def connect_mtproto(
             )
 
         # Get MTProto service and connect client
-        mtproto_service = get_user_mtproto_service()
+        mtproto_service = await get_user_mtproto_service()
 
         # This will create client and add to pool if not exists, or reconnect if exists
         client = await mtproto_service.get_user_client(user_id)
@@ -112,9 +112,9 @@ async def disconnect_mtproto(
     3. Keep API ID/Hash for easy reconnection
     """
     try:
-        # Disconnect from service
+        # Remove from MTProto service pool
         try:
-            mtproto_service = get_user_mtproto_service()
+            mtproto_service = await get_user_mtproto_service()
             await mtproto_service.disconnect_user(user_id)
         except Exception as e:
             logger.warning(f"Error disconnecting MTProto service for user {user_id}: {e}")

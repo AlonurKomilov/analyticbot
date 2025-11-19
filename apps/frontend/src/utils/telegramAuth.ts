@@ -78,12 +78,12 @@ export const autoLoginFromTelegram = async (): Promise<boolean> => {
     // Check if we've already successfully logged in this session AND tokens still exist
     const alreadyLoggedIn = sessionStorage.getItem('twa_logged_in') === 'true';
     const hasTokens = !!localStorage.getItem('auth_token') || !!localStorage.getItem('access_token');
-    
+
     if (alreadyLoggedIn && hasTokens) {
         console.log('ℹ️ TWA already logged in this session with valid tokens');
         return true;
     }
-    
+
     // If session says logged in but no tokens, clear the session flag and re-login
     if (alreadyLoggedIn && !hasTokens) {
         console.log('⚠️ TWA session flag exists but tokens missing - re-authenticating');

@@ -13,8 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from apps.api.middleware.auth import get_current_user_id
-from apps.di import get_container
-from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+from apps.di import get_container, get_user_mtproto_service
 
 logger = logging.getLogger(__name__)
 
@@ -283,7 +282,7 @@ async def _get_session_health(conn, user_id: int, has_session: bool) -> SessionH
 
     if has_session:
         try:
-            mtproto_service = get_user_mtproto_service()
+            mtproto_service = await get_user_mtproto_service()
             session_connected = mtproto_service.is_user_connected(user_id)
             if session_connected:
                 # Get client to access last_used

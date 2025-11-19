@@ -5,9 +5,13 @@
  * Provides channel selection, creation, and management functionality.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAuthenticatedDataProvider } from './useAuthenticatedDataSource';
+
+// Global request deduplication map
+// Prevents multiple simultaneous requests to the same endpoint
+const activeRequests = new Map<string, Promise<any>>();
 
 /**
  * Channel interface
@@ -38,7 +42,9 @@ export interface UseUserChannelsReturn {
     loading: boolean;
     error: string | null;
     lastFetch: string | null;
+    retrying: boolean;
     fetchChannels: () => Promise<void>;
+    retryFetch: () => Promise<void>;
     createChannel: (channelData: Partial<Channel>) => Promise<Channel>;
     selectChannel: (channel: Channel | null) => void;
     getChannel: (channelId: number | string) => Promise<Channel>;
@@ -61,37 +67,108 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [lastFetch, setLastFetch] = useState<string | null>(null);
+    const [retrying, setRetrying] = useState<boolean>(false);
+    const isMounted = useRef<boolean>(true); // Track if component is mounted
 
-    // Fetch user's channels
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
+
+    // Fetch user's channels with request deduplication
     const fetchChannels = useCallback(async (): Promise<void> => {
         if (!isAuthenticated) {
             setError('Authentication required');
             return;
         }
 
+        // Check if request is already in progress
+        const requestKey = `/channels-${user?.id || 'unknown'}`;
+        if (activeRequests.has(requestKey)) {
+            console.log('⏳ [useUserChannels] Request already in progress, waiting for existing request...');
+            try {
+                const response = await activeRequests.get(requestKey);
+                if (isMounted.current) {
+                    setChannels(response || []);
+                    setLastFetch(new Date().toISOString());
+                    console.log(`✅ [useUserChannels] Used cached response: ${response?.length || 0} channels`);
+                }
+                return;
+            } catch (err) {
+                // Let the error be handled by the active request
+                throw err;
+            }
+        }
+
         setLoading(true);
         setError(null);
 
-        try {
-            const response = (await (dataProvider as any)._makeRequest('/channels')) as Channel[];
-
-            setChannels(response || []);
-            setLastFetch(new Date().toISOString());
-
-            // Auto-select first channel if none selected and channels exist
-            if (!selectedChannel && response && response.length > 0) {
-                const firstChannel = response[0];
-                setSelectedChannel(firstChannel);
-                onChannelChange?.(firstChannel);
+        // Create the request promise and store it
+        const requestPromise = (async () => {
+            try {
+                console.log('🔄 [useUserChannels] Fetching channels from backend...');
+                const response = (await (dataProvider as any)._makeRequest('/channels')) as Channel[];
+                console.log(`✅ [useUserChannels] Fetched ${response?.length || 0} channels successfully`);
+                return response;
+            } finally {
+                // Remove from active requests when done
+                activeRequests.delete(requestKey);
             }
+        })();
+
+        // Store the promise
+        activeRequests.set(requestKey, requestPromise);
+
+        try {
+            const response = await requestPromise;
+
+            if (isMounted.current) {
+                setChannels(response || []);
+                setLastFetch(new Date().toISOString());
+            }
+
+            // Don't auto-select here - let the separate useEffect handle it
+            // This prevents infinite loop caused by selectedChannel dependency
         } catch (err) {
-            console.error('Failed to fetch user channels:', err);
-            const errorMessage = err instanceof Error ? err.message : 'Failed to fetch channels';
-            setError(errorMessage);
+            console.error('❌ [useUserChannels] Failed to fetch user channels:', err);
+            if (isMounted.current) {
+                const errorMessage = err instanceof Error ? err.message : 'Failed to fetch channels';
+                setError(errorMessage);
+            }
         } finally {
-            setLoading(false);
+            if (isMounted.current) {
+                setLoading(false);
+            }
         }
-    }, [dataProvider, isAuthenticated, selectedChannel, onChannelChange]);
+    }, [dataProvider, isAuthenticated, user?.id]); // ✅ Removed selectedChannel and onChannelChange to break infinite loop
+
+    // Retry with exponential backoff
+    const retryFetch = useCallback(async (maxRetries = 3): Promise<void> => {
+        setRetrying(true);
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`🔄 [useUserChannels] Retry attempt ${attempt}/${maxRetries}`);
+                await fetchChannels();
+                console.log(`✅ [useUserChannels] Retry successful on attempt ${attempt}`);
+                break; // Success, exit retry loop
+            } catch (err) {
+                if (attempt === maxRetries) {
+                    console.error(`❌ [useUserChannels] All ${maxRetries} retry attempts failed`);
+                    throw err;
+                }
+
+                // Exponential backoff: 1s, 2s, 4s
+                const delay = Math.pow(2, attempt - 1) * 1000;
+                console.log(`⏳ [useUserChannels] Waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+
+        setRetrying(false);
+    }, [fetchChannels]);
 
     // Create a new channel
     const createChannel = useCallback(async (channelData: Partial<Channel>): Promise<Channel> => {
@@ -161,14 +238,17 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         }
     }, [isAuthenticated, autoFetch, fetchChannels]);
 
-    // Restore selected channel from localStorage
+    // Restore selected channel from localStorage (separate from fetch to prevent loops)
     useEffect(() => {
+        // Only run when channels change and no channel is selected
         if (channels.length > 0 && !selectedChannel) {
+            console.log('🎯 [useUserChannels] Auto-selecting channel...');
             try {
                 const savedChannelId = localStorage.getItem('selectedChannelId');
                 if (savedChannelId) {
                     const saved = channels.find(ch => ch.id?.toString() === savedChannelId);
                     if (saved) {
+                        console.log(`✅ [useUserChannels] Restored channel from localStorage: ${saved.title || saved.name}`);
                         setSelectedChannel(saved);
                         onChannelChange?.(saved);
                         return;
@@ -177,17 +257,18 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
 
                 // Fallback to first channel
                 const firstChannel = channels[0];
+                console.log(`✅ [useUserChannels] Auto-selected first channel: ${firstChannel.title || firstChannel.name}`);
                 setSelectedChannel(firstChannel);
                 onChannelChange?.(firstChannel);
             } catch (e) {
-                console.warn('Failed to restore selected channel:', e);
+                console.warn('⚠️ [useUserChannels] Failed to restore selected channel:', e);
                 // Fallback to first channel
                 const firstChannel = channels[0];
                 setSelectedChannel(firstChannel);
                 onChannelChange?.(firstChannel);
             }
         }
-    }, [channels, selectedChannel, onChannelChange]);
+    }, [channels]); // ✅ Only depend on channels array, not selectedChannel or onChannelChange
 
     return {
         channels,
@@ -195,7 +276,9 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         loading,
         error,
         lastFetch,
+        retrying,
         fetchChannels,
+        retryFetch,
         createChannel,
         selectChannel,
         getChannel,

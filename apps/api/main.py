@@ -78,22 +78,21 @@ async def lifespan(app: FastAPI):
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
             logger.info("Application will continue without bot manager")
 
-        # ✅ MULTI-TENANT: Initialize MTProto service for full channel history access
+        # ✅ MULTI-TENANT: Initialize MTProto service via DI container
         try:
             logger.info("🔧 Starting MTProto service initialization...")
-            from apps.mtproto.multi_tenant.user_mtproto_service import init_user_mtproto_service
-            from infra.db.repositories.user_bot_repository_factory import UserBotRepositoryFactory
 
-            # Get session factory from DI container
-            session_factory = await container.database.async_session_maker()
+            # MTProto service is now managed by DI container
+            # It will be lazily initialized on first use through container.mtproto.user_mtproto_service()
+            # This follows the same pattern as other services in the DI container
 
-            # Create repository factory (same pattern as bot manager)
-            repository_factory = UserBotRepositoryFactory(session_factory)
+            # Pre-initialize the service to ensure it's ready
+            mtproto_service = await container.mtproto.user_mtproto_service()
 
-            # Initialize MTProto service with factory pattern
-            # The service will create fresh repository instances with their own sessions as needed
-            init_user_mtproto_service(user_bot_repo_factory=repository_factory)
-            logger.info("✅ MTProto service initialized - full channel history access enabled")
+            logger.info(
+                "✅ MTProto service initialized via DI container - full channel history access enabled"
+            )
+            logger.info(f"   Service type: {type(mtproto_service).__name__}")
         except Exception as mtproto_error:
             import traceback
 
@@ -152,9 +151,7 @@ async def lifespan(app: FastAPI):
 
         # ✅ MULTI-TENANT: Shutdown MTProto service
         try:
-            from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
-
-            mtproto_service = get_user_mtproto_service()
+            mtproto_service = await container.mtproto.user_mtproto_service()
             await mtproto_service.shutdown()
             logger.info("✅ MTProto service shutdown completed")
         except Exception as mtproto_error:

@@ -18,16 +18,14 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_setting(
-        self, user_id: int, channel_id: int
-    ) -> ChannelMTProtoSettings | None:
+    async def get_setting(self, user_id: int, channel_id: int) -> ChannelMTProtoSettings | None:
         """
         Get MTProto setting for a specific user+channel combination.
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
-            
+
         Returns:
             ChannelMTProtoSettings if exists, None otherwise
         """
@@ -43,10 +41,10 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     async def get_user_settings(self, user_id: int) -> list[ChannelMTProtoSettings]:
         """
         Get all channel MTProto settings for a user.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             List of all channel settings for the user
         """
@@ -63,12 +61,12 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     ) -> ChannelMTProtoSettings:
         """
         Create or update per-channel MTProto setting.
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
             mtproto_enabled: Whether MTProto is enabled for this channel
-            
+
         Returns:
             Created or updated ChannelMTProtoSettings
         """
@@ -98,11 +96,11 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     async def delete_setting(self, user_id: int, channel_id: int) -> bool:
         """
         Delete per-channel MTProto setting (reverts to default/global setting).
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
-            
+
         Returns:
             True if deleted, False if not found
         """
@@ -119,16 +117,14 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     async def delete_user_settings(self, user_id: int) -> int:
         """
         Delete all per-channel settings for a user.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             Number of settings deleted
         """
-        query = delete(ChannelMTProtoSettings).where(
-            ChannelMTProtoSettings.user_id == user_id
-        )
+        query = delete(ChannelMTProtoSettings).where(ChannelMTProtoSettings.user_id == user_id)
         result = await self.session.execute(query)
         await self.session.commit()
         return result.rowcount
@@ -138,14 +134,14 @@ class ChannelMTProtoRepository(IChannelMTProtoSettingsRepository):
     ) -> bool:
         """
         Check if MTProto is enabled for a specific channel.
-        
+
         Logic: global_enabled AND (channel_setting if exists else True)
-        
+
         Args:
             user_id: User ID
             channel_id: Channel ID
             global_enabled: Global MTProto enabled flag from user_bot_credentials
-            
+
         Returns:
             True if MTProto is enabled for this channel, False otherwise
         """

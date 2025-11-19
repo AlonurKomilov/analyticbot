@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from apps.api.middleware.auth import get_current_user_id
 from apps.api.routers.user_mtproto.deps import get_user_bot_repository
 from apps.api.routers.user_mtproto.models import ErrorResponse, MTProtoStatusResponse
-from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+from apps.di import get_user_mtproto_service
 from core.ports.user_bot_repository import IUserBotRepository
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,7 @@ async def get_mtproto_status(
             connected = True
 
             try:
-                mtproto_service = get_user_mtproto_service()
+                mtproto_service = await get_user_mtproto_service()
                 # Check if client exists in pool and is actively connected
                 actively_connected = mtproto_service.is_user_connected(user_id)
                 if actively_connected:

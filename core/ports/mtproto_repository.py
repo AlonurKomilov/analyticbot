@@ -90,9 +90,7 @@ class IChannelMTProtoSettingsRepository(ABC):
         pass
 
     @abstractmethod
-    async def create_or_update(
-        self, user_id: int, channel_id: int, mtproto_enabled: bool
-    ) -> Any:
+    async def create_or_update(self, user_id: int, channel_id: int, mtproto_enabled: bool) -> Any:
         """Create or update per-channel MTProto setting."""
         pass
 

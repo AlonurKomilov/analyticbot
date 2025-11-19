@@ -222,10 +222,10 @@ class UserMTProtoService:
     def is_user_connected(self, user_id: int) -> bool:
         """
         Check if user has an active client connection.
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             True if user has an active connected client, False otherwise
         """
@@ -236,7 +236,7 @@ class UserMTProtoService:
     def get_active_users_count(self) -> int:
         """
         Get count of users with active client connections.
-        
+
         Returns:
             Number of active user connections
         """
@@ -245,7 +245,7 @@ class UserMTProtoService:
     def get_active_user_ids(self) -> list[int]:
         """
         Get list of user IDs with active client connections.
-        
+
         Returns:
             List of user IDs with active clients
         """

@@ -373,7 +373,7 @@ class SecurityManager:
                     "jti": claims.token_id,
                 }
             except ValueError as e:
-                raise AuthenticationError(f"Invalid token: {str(e)}", 401)
+                raise AuthenticationError(f"Invalid token: {str(e)}", 401) from e
 
             # Additional security validations
             user_id = payload.get("sub")
@@ -388,7 +388,7 @@ class SecurityManager:
 
         except ValueError as e:
             logger.warning(f"JWT verification failed: {str(e)}")
-            raise AuthenticationError("Could not validate credentials", 401)
+            raise AuthenticationError("Could not validate credentials", 401) from e
 
     def create_user_session(
         self, user: User, auth_request: AuthRequest, device_info: dict[str, Any] | None = None
@@ -575,7 +575,8 @@ class SecurityManager:
         try:
             # Use adapter to decode token (ignore expiration for revocation)
             try:
-                claims = self.token_generator.verify_jwt_token(token)
+                # Verify token is valid (we'll get exp from it)
+                _ = self.token_generator.verify_jwt_token(token)
                 # For revocation, we need the expiration time, so we'll use a fallback
                 # Since we can't easily get exp from claims, we'll revoke for a default period
                 seconds_until_exp = 3600  # 1 hour default
@@ -768,14 +769,14 @@ class SecurityManager:
             logger.error(f"Error parsing refresh token data: {e}")
             raise AuthenticationError(
                 "Invalid refresh token", status_code=401, error_code="INVALID_TOKEN_FORMAT"
-            )
+            ) from e
         except AuthenticationError:
             raise
         except Exception as e:
             logger.error(f"Error refreshing access token: {e}")
             raise AuthenticationError(
                 "Token refresh failed", status_code=500, error_code="TOKEN_REFRESH_ERROR"
-            )
+            ) from e
 
     def extend_session_on_activity(self, session_id: str, extension_minutes: int = 15) -> bool:
         """

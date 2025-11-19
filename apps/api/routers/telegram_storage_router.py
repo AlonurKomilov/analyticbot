@@ -187,7 +187,13 @@ async def validate_storage_channel(
 
     **Note:** Requires MTProto integration for full functionality.
     """
-    user_id: int = current_user.get("id")  # type: ignore
+    # current_user is dict[str, Any], ensure user_id is int
+    user_id_value = current_user.get("id")
+    if not isinstance(user_id_value, int):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID in token"
+        )
+    user_id: int = user_id_value
     logger.info(f"User {user_id} validating channel: {request.channel_id}")
 
     try:
@@ -231,8 +237,15 @@ async def validate_storage_channel(
         session_string = encryption.decrypt(credentials.session_string)
 
         # Create Telethon client with user's MTProto credentials
-        from telethon import TelegramClient
-        from telethon.sessions import StringSession
+        # Import only when MTProto is actually being used (guard pattern)
+        try:
+            from telethon import TelegramClient
+            from telethon.sessions import StringSession
+        except ImportError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"MTProto library (telethon) not available: {e}",
+            ) from e
 
         user_client = TelegramClient(
             StringSession(session_string),

@@ -436,8 +436,9 @@ class MTProtoDataCollectionService:
                 await self._log_collection_end(
                     user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
                 )
-            except:
-                pass  # Ignore logging errors during error handling
+            except Exception:
+                # Ignore any logging errors during error handling to avoid cascading failures
+                pass
 
             return {
                 "success": False,
@@ -548,12 +549,14 @@ class MTProtoDataCollectionService:
 
         interval_seconds = interval_minutes * 60
 
-        try:
-            # Use process_manager's should_continue if available
-            should_run = (
-                lambda: process_manager.should_continue() if process_manager else self.running
-            )
+        # Helper function to check if collection should continue
+        def should_run() -> bool:
+            """Check if collection loop should continue running"""
+            if process_manager:
+                return process_manager.should_continue()
+            return self.running
 
+        try:
             while should_run():
                 collection_start = datetime.now(UTC)
                 logger.info(

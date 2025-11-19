@@ -124,7 +124,6 @@ class TelegramStorageService:
                     channel = await self.client.get_entity(channel_id)
                 except Exception as e:
                     logger.error(f"Failed to fetch by channel_id {channel_id}: {e}")
-                    last_error = e
 
                     # Provide helpful error message
                     error_msg = (

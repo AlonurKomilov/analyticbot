@@ -231,7 +231,8 @@ def calculate_trending_score(overview_data, growth_data, reach_data) -> float:
         # Weighted trending calculation
         trending = growth_rate * 0.5 + engagement_rate * 0.3 + reach_score * 0.2
         return round(min(100.0, max(0.0, trending)), 2)
-    except:
+    except (AttributeError, TypeError, ValueError):
+        # Handles missing attributes, None values, or invalid numeric operations
         return 50.0  # Default moderate trending score
 
 
@@ -240,7 +241,8 @@ def calculate_growth_score(growth_data) -> int:
     try:
         growth_rate = getattr(growth_data, "growth_rate", 0)
         return min(100, max(0, int(growth_rate * 10)))  # Scale to 0-100
-    except:
+    except (AttributeError, TypeError, ValueError):
+        # Handles missing attributes, None values, or conversion errors
         return 50
 
 
@@ -249,7 +251,8 @@ def calculate_engagement_score(overview_data) -> int:
     try:
         engagement_rate = getattr(overview_data, "engagement_rate", 0)
         return min(100, max(0, int(engagement_rate * 2)))  # Scale to 0-100
-    except:
+    except (AttributeError, TypeError, ValueError):
+        # Handles missing attributes, None values, or conversion errors
         return 50
 
 
@@ -258,7 +261,8 @@ def calculate_reach_score(reach_data) -> int:
     try:
         reach_score = getattr(reach_data, "reach_score", 0)
         return min(100, max(0, int(reach_score)))
-    except:
+    except (AttributeError, TypeError, ValueError):
+        # Handles missing attributes, None values, or conversion errors
         return 50
 
 
@@ -316,7 +320,8 @@ def calculate_activity_level(overview_data, growth_data, reach_data) -> str:
             return "medium"
         else:
             return "low"
-    except:
+    except (AttributeError, TypeError):
+        # Handles missing attributes or None values
         return "unknown"
 
 
@@ -331,7 +336,8 @@ def generate_performance_alerts(overview_data, growth_data, reach_data) -> list[
             alerts.append("⚠️ Negative growth detected")
         if engagement_rate < 1:
             alerts.append("⚠️ Low engagement rate")
-    except:
+    except (AttributeError, TypeError):
+        # Handles missing attributes or None values - skip alert generation
         pass
 
     return alerts
@@ -351,7 +357,8 @@ def calculate_trend_indicators(overview_data, growth_data, reach_data) -> dict[s
             if engagement_rate < 1
             else "➡️",
         }
-    except:
+    except (AttributeError, TypeError):
+        # Handles missing attributes or None values - return unknown trend
         return {"growth_trend": "❓", "engagement_trend": "❓"}
 
 
@@ -364,5 +371,6 @@ def calculate_health_score(overview_data, growth_data, reach_data) -> int:
 
         health = growth_rate * 0.4 + engagement_rate * 0.4 + reach_score * 0.2
         return min(100, max(0, int(health * 10)))
-    except:
+    except (AttributeError, TypeError, ValueError):
+        # Handles missing attributes, None values, or conversion errors
         return 50

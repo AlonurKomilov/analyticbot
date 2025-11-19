@@ -4,6 +4,7 @@ Each user gets their own dedicated bot and MTProto client instance
 """
 
 import asyncio
+import warnings
 from datetime import datetime
 from typing import Any, Protocol
 
@@ -11,6 +12,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
+from apps.bot.multi_tenant.session_pool import SharedAiogramSession
 from core.models.user_bot_domain import UserBotCredentials
 from core.services.encryption_service import get_encryption_service
 
@@ -85,9 +88,12 @@ class UserBotInstance:
             return
 
         try:
-            # Initialize Aiogram Bot
+            # Initialize Aiogram Bot with shared session pool
+            shared_session = SharedAiogramSession()
             self.bot = Bot(
-                token=self.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+                token=self.bot_token,
+                session=shared_session,  # Use shared session instead of creating new one
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML),
             )
             self.dp = Dispatcher()
 
@@ -141,6 +147,9 @@ class UserBotInstance:
         """
         Gracefully shutdown bot instances
         Closes all connections and cleans up resources
+
+        Note: Bot session is shared and managed by BotSessionPool,
+        so we don't close it here - only stop bot-specific resources.
         """
         # Prevent double-shutdown
         if self._session_closed:
@@ -159,14 +168,11 @@ class UserBotInstance:
                 except Exception as e:
                     print(f"⚠️  Error stopping MTProto for user {self.user_id}: {e}")
 
-            # Close bot session
+            # Note: Don't close bot.session here - it's shared across all bots
+            # The shared session is managed by BotSessionPool and closed on app shutdown
             if self.bot:
-                try:
-                    await self.bot.session.close()
-                    self._session_closed = True  # Mark as closed
-                    print(f"✅ Bot session closed for user {self.user_id}")
-                except Exception as e:
-                    print(f"⚠️  Error closing bot session for user {self.user_id}: {e}")
+                self._session_closed = True  # Mark as closed (even though session is shared)
+                print(f"✅ Bot instance cleaned up for user {self.user_id}")
 
             self.is_initialized = False
 
@@ -192,7 +198,6 @@ class UserBotInstance:
         """
         if self.bot and not self._session_closed:
             import logging
-            import warnings
 
             warnings.warn(
                 f"UserBotInstance for user {self.user_id} being garbage collected "
@@ -204,22 +209,23 @@ class UserBotInstance:
 
             # Log for monitoring
             logging.warning(
-                f"🔴 RESOURCE LEAK: Bot session for user {self.user_id} not properly closed. "
-                f"This will cause memory growth over time."
+                f"🔴 RESOURCE LEAK: Bot instance for user {self.user_id} not properly closed. "
+                f"MTProto connections may still be active. Call shutdown() explicitly."
             )
 
-    async def rate_limited_request(self, coro):
+    async def rate_limited_request(self, coro, method: str = "default"):
         """
-        Execute request with rate limiting
+        Execute request with both per-user and global rate limiting
 
         Args:
             coro: Coroutine to execute
+            method: Telegram API method name (for global rate limiting)
 
         Returns:
             Result of the coroutine
         """
         async with self.request_semaphore:
-            # Apply rate limiting delay
+            # 1. Apply per-user rate limiting delay
             if self.rate_limit_delay > 0:
                 now = asyncio.get_event_loop().time()
                 time_since_last = now - self.last_request_time
@@ -227,11 +233,25 @@ class UserBotInstance:
                     await asyncio.sleep(self.rate_limit_delay - time_since_last)
                 self.last_request_time = asyncio.get_event_loop().time()
 
+            # 2. Apply global rate limiting (across all users)
+            global_limiter = await GlobalRateLimiter.get_instance()
+            await global_limiter.acquire(method, user_id=self.user_id)
+
             # Update activity timestamp
             self.last_activity = datetime.now()
 
             # Execute request
-            return await coro
+            try:
+                return await coro
+            except Exception as e:
+                # Handle rate limit errors from Telegram
+                if "429" in str(e) or "Too Many Requests" in str(e):
+                    # Extract retry_after if available
+                    retry_after = None
+                    if hasattr(e, "retry_after"):
+                        retry_after = e.retry_after
+                    await global_limiter.handle_rate_limit_error(retry_after)
+                raise
 
     async def get_bot_info(self) -> dict:
         """
@@ -246,7 +266,7 @@ class UserBotInstance:
         # Type assertion for type checker - we know bot is initialized after line above
         assert self.bot is not None, "Bot should be initialized"
 
-        bot_info = await self.rate_limited_request(self.bot.get_me())
+        bot_info = await self.rate_limited_request(self.bot.get_me(), method="getMe")
 
         return {
             "id": bot_info.id,
@@ -273,7 +293,9 @@ class UserBotInstance:
         # Type assertion for type checker - we know bot is initialized after line above
         assert self.bot is not None, "Bot should be initialized"
 
-        return await self.rate_limited_request(self.bot.send_message(chat_id, text, **kwargs))
+        return await self.rate_limited_request(
+            self.bot.send_message(chat_id, text, **kwargs), method="sendMessage"
+        )
 
     async def get_channel_info(self, channel_id: str):
         """
@@ -294,7 +316,9 @@ class UserBotInstance:
         if not self.mtproto_client.is_connected:
             await self.mtproto_client.start()
 
-        return await self.rate_limited_request(self.mtproto_client.get_chat(channel_id))
+        return await self.rate_limited_request(
+            self.mtproto_client.get_chat(channel_id), method="getChat"
+        )
 
     def __repr__(self) -> str:
         """String representation"""

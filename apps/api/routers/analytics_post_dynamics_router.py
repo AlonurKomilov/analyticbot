@@ -236,11 +236,11 @@ async def get_post_dynamics(
             elif period in ["1h", "6h", "12h", "24h", "drill_down"]:
                 # Hourly buckets for intraday analysis or day drill-down
                 trunc_unit = "hour"
-                time_format = "HH24:MI"
+                time_format = "HH24:MI"  # noqa: F841 - kept for documentation
             else:
                 # Daily buckets for multi-day periods
                 trunc_unit = "day"
-                time_format = "YYYY-MM-DD"
+                # time_format would be "YYYY-MM-DD" but not used in query
 
             # OPTIMIZED QUERY: Groups by post.date (when published)
             # Uses LATERAL JOIN to get latest metrics snapshot for each post

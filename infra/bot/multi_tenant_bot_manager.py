@@ -265,10 +265,10 @@ class MultiTenantBotManager(IBotManager):
                 "can_join_groups": bot_info.can_join_groups,
                 "can_read_all_group_messages": bot_info.can_read_all_group_messages,
             }
-        except TelegramUnauthorizedError:
-            raise ValueError("Invalid bot token")
+        except TelegramUnauthorizedError as e:
+            raise ValueError("Invalid bot token") from e
         except Exception as e:
-            raise ValueError(f"Failed to validate bot token: {str(e)}")
+            raise ValueError(f"Failed to validate bot token: {str(e)}") from e
 
     async def _cleanup_idle_bots(self) -> None:
         """

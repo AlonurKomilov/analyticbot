@@ -179,6 +179,57 @@ async def get_system_health(
         raise HTTPException(status_code=500, detail="Failed to check system health")
 
 
+@router.get("/rate-limiter/stats")
+async def get_rate_limiter_statistics(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🚦 Get Rate Limiter Statistics (Admin)
+
+    Retrieve statistics about global rate limiting across all bot instances.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Total requests processed
+    - Rate limited request count
+    - Backoff events count
+    - Current backoff status
+    - Active method statistics
+
+    **Use Case:**
+    Monitor system-wide Telegram API usage to prevent hitting rate limits.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
+
+        # Get rate limiter instance
+        limiter = await GlobalRateLimiter.get_instance()
+        stats = limiter.get_stats()
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "statistics": {
+                "total_requests": stats["total_requests"],
+                "rate_limited_count": stats["rate_limited_count"],
+                "backoff_count": stats["backoff_count"],
+                "backoff_active": stats["backoff_active"],
+                "backoff_remaining_seconds": round(stats["backoff_remaining"], 2),
+            },
+            "active_methods": stats["active_methods"],
+            "health_status": "backoff" if stats["backoff_active"] else "normal",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Rate limiter stats fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch rate limiter statistics")
+
+
 # === MTPROTO CONNECTION POOL CONFIGURATION ===
 
 

@@ -237,77 +237,87 @@ async def check_all_channels_admin_status(
 
                     if mtproto_client:
                         # Use the client to check admin status
-                        from telethon.tl.functions.channels import GetParticipantRequest
-
+                        # Import MTProto dependencies only when needed (guard pattern)
                         try:
-                            # MTProto get_entity() handles multiple formats:
-                            # - @username
-                            # - Numeric ID (positive integer)
-                            # - PeerChannel object
-
-                            entity = None
-                            last_error = None
-
-                            # Method 1: Try with username first (most reliable)
-                            if channel_username:
-                                try:
-                                    entity = await mtproto_client.client.get_entity(
-                                        channel_username
-                                    )
-                                    logger.debug(
-                                        f"✓ MTProto get_entity via username {channel_username} succeeded"
-                                    )
-                                except Exception as e:
-                                    last_error = str(e)
-                                    logger.debug(f"MTProto username method failed: {e}")
-
-                            # Method 2: Try with raw telegram_id (Telethon handles conversion)
-                            if not entity and channel.telegram_id:
-                                try:
-                                    entity = await mtproto_client.client.get_entity(
-                                        channel.telegram_id
-                                    )
-                                    logger.debug(
-                                        f"✓ MTProto get_entity via ID {channel.telegram_id} succeeded"
-                                    )
-                                except Exception as e:
-                                    last_error = str(e)
-                                    logger.debug(f"MTProto ID method failed: {e}")
-
-                            if entity:
-                                # Get current user (MTProto session user)
-                                me = await mtproto_client.client.get_me()
-
-                                # Check participant status
-                                participant = await mtproto_client.client(
-                                    GetParticipantRequest(channel=entity, participant=me)
-                                )
-
-                                # Check if admin or creator
-                                participant_type = type(participant.participant).__name__
-                                mtproto_is_admin = participant_type in [
-                                    "ChannelParticipantAdmin",
-                                    "ChannelParticipantCreator",
-                                ]
-
-                                if mtproto_is_admin:
-                                    logger.info(
-                                        f"✅ User {current_user['id']} MTProto is admin of channel {channel.id}"
-                                    )
-                                else:
-                                    logger.warning(
-                                        f"❌ User {current_user['id']} MTProto is NOT admin of channel {channel.id}"
-                                    )
-                            else:
-                                # Could not get entity
-                                mtproto_is_admin = False
-                                logger.warning(f"Failed to get channel entity: {last_error}")
-
-                        except Exception as e:
+                            from telethon.tl.functions.channels import (
+                                GetParticipantRequest,
+                            )
+                        except ImportError:
                             logger.warning(
-                                f"Failed to check MTProto admin for channel {channel.id}: {e}"
+                                "MTProto library (telethon) not available for admin check"
                             )
                             mtproto_is_admin = False
+                        else:
+                            # Import succeeded, proceed with MTProto admin check
+                            try:
+                                # MTProto get_entity() handles multiple formats:
+                                # - @username
+                                # - Numeric ID (positive integer)
+                                # - PeerChannel object
+
+                                entity = None
+                                last_error = None
+
+                                # Method 1: Try with username first (most reliable)
+                                if channel_username:
+                                    try:
+                                        entity = await mtproto_client.client.get_entity(
+                                            channel_username
+                                        )
+                                        logger.debug(
+                                            f"✓ MTProto get_entity via username {channel_username} succeeded"
+                                        )
+                                    except Exception as e:
+                                        last_error = str(e)
+                                        logger.debug(f"MTProto username method failed: {e}")
+
+                                # Method 2: Try with raw telegram_id (Telethon handles conversion)
+                                if not entity and channel.telegram_id:
+                                    try:
+                                        entity = await mtproto_client.client.get_entity(
+                                            channel.telegram_id
+                                        )
+                                        logger.debug(
+                                            f"✓ MTProto get_entity via ID {channel.telegram_id} succeeded"
+                                        )
+                                    except Exception as e:
+                                        last_error = str(e)
+                                        logger.debug(f"MTProto ID method failed: {e}")
+
+                                if entity:
+                                    # Get current user (MTProto session user)
+                                    me = await mtproto_client.client.get_me()
+
+                                    # Check participant status
+                                    participant = await mtproto_client.client(
+                                        GetParticipantRequest(channel=entity, participant=me)
+                                    )
+
+                                    # Check if admin or creator
+                                    participant_type = type(participant.participant).__name__
+                                    mtproto_is_admin = participant_type in [
+                                        "ChannelParticipantAdmin",
+                                        "ChannelParticipantCreator",
+                                    ]
+
+                                    if mtproto_is_admin:
+                                        logger.info(
+                                            f"✅ User {current_user['id']} MTProto is admin of channel {channel.id}"
+                                        )
+                                    else:
+                                        logger.warning(
+                                            f"❌ User {current_user['id']} MTProto is NOT admin of channel {channel.id}"
+                                        )
+                                else:
+                                    # Could not get entity
+                                    mtproto_is_admin = False
+                                    logger.warning(f"Failed to get channel entity: {last_error}")
+
+                            except Exception as e:
+                                logger.warning(
+                                    f"Failed to check MTProto admin for channel {channel.id}: {e}"
+                                )
+                                mtproto_is_admin = False
                     else:
                         logger.info(f"No MTProto client available for user {current_user['id']}")
                         mtproto_is_admin = None
@@ -697,7 +707,10 @@ async def delete_channel(
             if not result:
                 raise HTTPException(status_code=404, detail="Channel not found or already deleted")
 
-            logger.info(f"Channel deleted successfully: {channel_id} by user {current_user['id']}")
+            logger.info(
+                f"Channel deleted successfully: {channel_id} by user {current_user['id']}, "
+                f"result: {result}"
+            )
             return {
                 "message": "Channel deleted successfully",
                 "channel_id": channel_id,
@@ -732,17 +745,17 @@ async def activate_channel(
         await require_channel_access(channel_id, current_user["id"])
 
         with performance_timer("channel_activation"):
-            result = await channel_service.update_channel(
+            await channel_service.update_channel(
                 channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": True}
             )
 
-            logger.info(f"Channel activated: {channel_id} by user {current_user['id']}")
-            return {
-                "message": "Channel activated successfully",
-                "channel_id": channel_id,
-                "is_active": True,
-                "activated_at": datetime.now().isoformat(),
-            }
+        logger.info(f"Channel activated successfully: {channel_id} by user {current_user['id']}")
+        return {
+            "message": "Channel activated successfully",
+            "channel_id": channel_id,
+            "is_active": True,
+            "activated_at": datetime.now().isoformat(),
+        }
 
     except HTTPException:
         raise
@@ -772,17 +785,17 @@ async def deactivate_channel(
         await require_channel_access(channel_id, current_user["id"])
 
         with performance_timer("channel_deactivation"):
-            result = await channel_service.update_channel(
+            await channel_service.update_channel(
                 channel_id=channel_id, user_id=current_user["id"], update_data={"is_active": False}
             )
 
-            logger.info(f"Channel deactivated: {channel_id} by user {current_user['id']}")
-            return {
-                "message": "Channel deactivated successfully",
-                "channel_id": channel_id,
-                "is_active": False,
-                "deactivated_at": datetime.now().isoformat(),
-            }
+        logger.info(f"Channel deactivated successfully: {channel_id} by user {current_user['id']}")
+        return {
+            "message": "Channel deactivated successfully",
+            "channel_id": channel_id,
+            "is_active": False,
+            "deactivated_at": datetime.now().isoformat(),
+        }
 
     except HTTPException:
         raise

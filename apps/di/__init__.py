@@ -119,10 +119,36 @@ def configure_container() -> ApplicationContainer:
 
     This should be called once at application startup.
     Subsequent calls return the same instance (singleton pattern).
+
+    IMPORTANT: Also injects cache into SecurityContainer to maintain Clean Architecture.
     """
     global _container
     if _container is None:
         _container = ApplicationContainer()
+
+        # Inject cache into SecurityContainer (maintains Clean Architecture)
+        # The core layer's SecurityContainer doesn't import infra directly.
+        # Instead, we inject the concrete Redis implementation from apps/di (composition root).
+        try:
+            from urllib.parse import urlparse
+
+            from config.settings import settings
+            from core.security_engine.container import get_security_container
+            from infra.security.adapters import RedisCache
+
+            redis_url = settings.REDIS_URL
+            parsed = urlparse(redis_url)
+            host = parsed.hostname or "localhost"
+            port = parsed.port or 10200
+            db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else 0
+
+            cache_port = RedisCache(host=host, port=port, db=db)
+            security_container = get_security_container()
+            security_container.set_cache_port(cache_port)
+            logger.info(f"✅ Injected Redis cache into SecurityContainer: {host}:{port}/{db}")
+        except Exception as e:
+            logger.error(f"❌ Failed to inject cache into SecurityContainer: {e}")
+            logger.warning("⚠️ SecurityManager will use in-memory cache fallback")
 
         # Wire modules after all imports are complete
         # This enables dependency injection in these modules

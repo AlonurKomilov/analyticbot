@@ -3,13 +3,15 @@
 
 Provides centralized access to security components with proper singleton management.
 Replaces scattered SecurityManager instances across the application.
+
+ARCHITECTURE NOTE:
+This module is in the core layer and should NOT import from infra layer.
+Cache implementations (Redis, etc.) must be injected from the apps/di layer.
 """
 
 import logging
-from urllib.parse import urlparse
 
-from config.settings import settings
-from infra.security.adapters import RedisCache
+from core.ports.security_ports import CachePort
 
 from .auth import SecurityManager
 from .rbac import RBACManager
@@ -23,11 +25,15 @@ class SecurityContainer:
 
     Ensures single instances of security components across the application
     and provides clean dependency injection for FastAPI routes.
+
+    Cache implementation must be injected from the apps/di layer to maintain
+    Clean Architecture (core doesn't depend on infra).
     """
 
     _instance = None
     _security_manager = None
     _rbac_manager = None
+    _cache_port: CachePort | None = None
 
     def __new__(cls):
         """Singleton pattern for the container itself"""
@@ -35,29 +41,35 @@ class SecurityContainer:
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    def set_cache_port(self, cache: CachePort) -> None:
+        """
+        Inject cache implementation from DI container (apps layer)
+
+        This maintains Clean Architecture by allowing apps/di to provide
+        the concrete Redis implementation while core only depends on the port.
+        """
+        self._cache_port = cache
+        logger.info("✅ Cache port injected into SecurityContainer")
+
+        # Reset managers to pick up new cache
+        if self._security_manager:
+            logger.info("🔄 Resetting SecurityManager to use new cache")
+            self._security_manager = None
+        if self._rbac_manager:
+            logger.info("🔄 Resetting RBACManager to use new cache")
+            self._rbac_manager = None
+
     @property
     def security_manager(self) -> SecurityManager:
-        """Get the singleton SecurityManager instance with Redis cache"""
+        """Get the singleton SecurityManager instance"""
         if self._security_manager is None:
-            # Parse Redis URL to get connection details
-            redis_url = settings.REDIS_URL
-            try:
-                parsed = urlparse(redis_url)
-                host = parsed.hostname or "localhost"
-                port = parsed.port or 10200
-                # Extract DB from path (e.g., /0 -> 0)
-                db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else 0
-
-                # Initialize Redis cache adapter
-                cache = RedisCache(host=host, port=port, db=db)
-                logger.info(f"🔌 Initialized SecurityManager with Redis cache: {host}:{port}/{db}")
-
-                # Initialize SecurityManager with cache
-                self._security_manager = SecurityManager(cache=cache)
-            except Exception as e:
-                logger.error(f"❌ Failed to initialize Redis cache for SecurityManager: {e}")
-                logger.warning("⚠️ Falling back to in-memory cache (tokens will not persist!)")
-                # Fallback to no cache (memory cache inside SecurityManager)
+            if self._cache_port:
+                logger.info("🔌 Initializing SecurityManager with injected cache port")
+                self._security_manager = SecurityManager(cache=self._cache_port)
+            else:
+                logger.warning(
+                    "⚠️ No cache port injected, SecurityManager will use in-memory fallback"
+                )
                 self._security_manager = SecurityManager()
 
         return self._security_manager

@@ -141,6 +141,15 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown - Cleanup database and DI container
     try:
+        # ✅ OPTIMIZATION: Close shared bot session pool first
+        try:
+            from apps.bot.multi_tenant.session_pool import close_session_pool
+
+            await close_session_pool()
+            logger.info("✅ Shared bot session pool closed")
+        except Exception as session_error:
+            logger.warning(f"⚠️ Session pool shutdown failed: {session_error}")
+
         # ✅ MULTI-TENANT: Shutdown bot manager through DI
         try:
             bot_manager = await container.bot.bot_manager()

@@ -59,7 +59,7 @@ class FastAPIAuthUtils:
         try:
             return self.security_manager.verify_token(token)
         except AuthenticationError as e:
-            raise AuthError(f"Invalid token: {str(e)}")
+            raise AuthError(f"Invalid token: {str(e)}") from e
 
     def create_access_token(self, user: Any, expires_minutes: int | None = None) -> str:
         """
@@ -115,7 +115,7 @@ class FastAPIAuthUtils:
         try:
             return self.security_manager.refresh_access_token(refresh_token)
         except AuthenticationError as e:
-            raise AuthError(f"Token refresh failed: {str(e)}")
+            raise AuthError(f"Token refresh failed: {str(e)}") from e
 
     def revoke_user_sessions(self, user_id: str) -> None:
         """

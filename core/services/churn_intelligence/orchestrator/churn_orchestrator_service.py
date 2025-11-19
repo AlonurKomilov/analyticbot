@@ -82,7 +82,10 @@ class ChurnIntelligenceOrchestratorService(ChurnOrchestratorProtocol):
         logger.info("ChurnIntelligenceOrchestratorService initialized")
 
     async def comprehensive_churn_analysis(
-        self, channel_id: int, include_predictions: bool = True, include_strategies: bool = True
+        self,
+        channel_id: int,
+        include_predictions: bool = True,
+        include_strategies: bool = True,
     ) -> dict[str, Any]:
         """
         Perform comprehensive churn analysis combining all intelligence services.
@@ -616,13 +619,13 @@ class ChurnIntelligenceOrchestratorService(ChurnOrchestratorProtocol):
                         "type": "user_churn_risk",
                         "user_id": profile.user_id,
                         "severity": alert_severity,
-                        "priority": "high" if alert_severity == "critical" else "medium",
+                        "priority": ("high" if alert_severity == "critical" else "medium"),
                         "risk_level": profile.risk_level.value,
                         "churn_probability": profile.churn_probability,
                         "message": f"User {profile.user_id} has {profile.risk_level.value} churn risk ({profile.churn_probability:.1%})",
                         "requires_immediate_action": alert_severity == "critical",
                         "recommended_action": self._get_recommended_action(profile),
-                        "urgency": "immediate" if alert_severity == "critical" else "high",
+                        "urgency": ("immediate" if alert_severity == "critical" else "high"),
                         "created_at": datetime.now(),
                     }
                 )

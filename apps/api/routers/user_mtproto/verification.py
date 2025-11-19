@@ -40,7 +40,10 @@ router = APIRouter()
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid verification code or password"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid verification code or password",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -68,7 +71,8 @@ async def verify_mtproto(
         encryption = get_encryption_service()
         if not credentials.telegram_api_hash:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="MTProto credentials not configured"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto credentials not configured",
             )
         api_hash = encryption.decrypt(credentials.telegram_api_hash)
 
@@ -78,7 +82,7 @@ async def verify_mtproto(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
-                    "Session expired. Please click 'Resend code' to get a new " "verification code."
+                    "Session expired. Please click 'Resend code' to get a new verification code."
                 ),
             )
 
@@ -97,7 +101,8 @@ async def verify_mtproto(
             phone = credentials.telegram_phone
             if not phone:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="No phone number configured"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No phone number configured",
                 )
 
             hash_preview = request.phone_code_hash[:8]

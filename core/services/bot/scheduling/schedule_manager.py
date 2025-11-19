@@ -6,9 +6,8 @@ Handles creation and validation of scheduled posts
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from .models import ScheduledPost
 from .protocols import ScheduleRepository
 
 logger = logging.getLogger(__name__)
@@ -67,9 +66,7 @@ class ScheduleManager:
 
             # Validate schedule time
             if not self._validate_schedule_time(schedule_time):
-                logger.warning(
-                    f"Invalid schedule time: {schedule_time} (must be in future)"
-                )
+                logger.warning(f"Invalid schedule time: {schedule_time} (must be in future)")
                 return None
 
             # Validate inline buttons if provided
@@ -154,11 +151,11 @@ class ScheduleManager:
             True if valid, False otherwise
         """
         # Ensure both datetimes are timezone-aware for comparison
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # If schedule_time is naive, assume UTC
         if schedule_time.tzinfo is None:
-            schedule_time = schedule_time.replace(tzinfo=timezone.utc)
+            schedule_time = schedule_time.replace(tzinfo=UTC)
 
         return schedule_time > now
 

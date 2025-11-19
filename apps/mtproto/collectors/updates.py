@@ -18,7 +18,11 @@ class UpdatesCollector:
     """
 
     def __init__(
-        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+        self,
+        tg_client: TGClient,
+        repos: Any,
+        settings: MTProtoSettings,
+        user_id: int | None = None,
     ):
         """Initialize the updates collector.
 
@@ -145,8 +149,8 @@ class UpdatesCollector:
             if normalized.get("metrics"):
                 await self.repos.metrics_repo.add_or_update_snapshot(**normalized["metrics"])
 
-            channel_info = normalized.get('channel', {})
-            channel_id = channel_info.get('channel_id', 'unknown')
+            channel_info = normalized.get("channel", {})
+            channel_id = channel_info.get("channel_id", "unknown")
             self.logger.debug(f"Processed update for channel {channel_id}")
 
         except Exception as e:

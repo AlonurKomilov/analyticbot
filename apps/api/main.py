@@ -100,6 +100,25 @@ async def lifespan(app: FastAPI):
             logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
             logger.info("Application will continue without MTProto service")
 
+        # ✅ WEBHOOK SUPPORT: Initialize webhook manager for user bots
+        try:
+            if settings.WEBHOOK_ENABLED:
+                from apps.bot.multi_tenant.webhook_manager import init_webhook_manager
+
+                webhook_manager = init_webhook_manager(settings.WEBHOOK_BASE_URL)
+                logger.info(
+                    f"✅ Webhook manager initialized: {settings.WEBHOOK_BASE_URL}"
+                )
+                logger.info("   User bots will use webhooks for instant message delivery")
+            else:
+                logger.info("⚠️ Webhooks disabled - user bots will use polling mode")
+        except Exception as webhook_error:
+            import traceback
+
+            logger.error(f"❌ Webhook manager initialization failed: {webhook_error}")
+            logger.error(f"❌ Full traceback:\n{traceback.format_exc()}")
+            logger.info("Application will continue with polling mode for user bots")
+
         # ✅ PHASE 2: Initialize Redis cache for performance optimization
         try:
             from core.common.cache_decorator import init_cache_redis
@@ -343,9 +362,28 @@ app.add_middleware(
 # Add CORS middleware with explicit configuration
 # Support both specific origins and tunnel wildcards
 # CORS middleware - handled by nginx, but kept for local development without nginx
+
+# CRITICAL FIX: Ensure CORS_ORIGINS is always a list and filter wildcard patterns
+cors_origins = settings.api.CORS_ORIGINS
+if isinstance(cors_origins, str):
+    if cors_origins == "*":
+        cors_origins = ["*"]
+    else:
+        # Parse comma-separated string to list
+        cors_origins = [x.strip() for x in cors_origins.split(",") if x.strip()]
+
+# Filter out wildcard patterns (they're handled by allow_origin_regex)
+# Only keep exact origins without * wildcards
+cors_origins_filtered = [origin for origin in cors_origins if "*" not in origin]
+
+import sys
+sys.stderr.write(f"🌐 CORS Origins (exact matches): {cors_origins_filtered}\n")
+sys.stderr.write(f"🌐 CORS Origins (all from config): {cors_origins}\n")
+sys.stderr.flush()
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.api.CORS_ORIGINS if settings.api.CORS_ORIGINS != "*" else ["*"],
+    allow_origins=cors_origins_filtered,
     allow_origin_regex=r"https://.*\.(trycloudflare\.com|devtunnels\.ms)",  # Allow Cloudflare and Microsoft Dev Tunnels
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -358,6 +396,14 @@ app.add_middleware(
 from apps.demo.middleware import DemoMiddleware
 
 app.add_middleware(DemoMiddleware)
+
+# ✅ SECURITY: Add rate limiting middleware
+from slowapi.errors import RateLimitExceeded
+from apps.api.middleware.rate_limiter import limiter, custom_rate_limit_exceeded_handler
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
+logger.info("✅ Rate limiting middleware initialized")
 
 
 # Add root /health endpoint for frontend compatibility (redirects to /health/)
@@ -549,6 +595,7 @@ from apps.api.routers.admin_bot_router import router as admin_bot_router
 from apps.api.routers.user_bot_router import router as user_bot_router
 from apps.api.routers.user_mtproto import router as user_mtproto_router
 from apps.api.routers.user_mtproto_monitoring_router import router as user_mtproto_monitoring_router
+from apps.api.routers.webhook_router import router as webhook_router
 
 app.include_router(user_bot_router, tags=["User Bot Management"])  # /api/user-bot/*
 app.include_router(admin_bot_router, tags=["Admin Bot Management"])  # /api/admin/bots/*
@@ -556,6 +603,7 @@ app.include_router(user_mtproto_router, tags=["User Bot Management"])  # /api/us
 app.include_router(
     user_mtproto_monitoring_router, tags=["MTProto Monitoring"]
 )  # /api/user-mtproto/monitoring/*
+app.include_router(webhook_router, tags=["Telegram Webhooks"])  # /webhook/* - Receive Telegram updates
 
 # ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidating all AI services under /ai/* for better organization

@@ -13,6 +13,7 @@ from pydantic import EmailStr
 
 from apps.api.auth_utils import auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
+from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
 from apps.api.routers.auth.models import AuthResponse, LoginRequest
 from core.ports.security_ports import AuthRequest
 from core.repositories.interfaces import UserRepository
@@ -30,6 +31,7 @@ router = APIRouter()
 
 
 @router.post("/login", response_model=AuthResponse)
+@limiter.limit(RateLimitConfig.AUTH_LOGIN)  # 10 login attempts per minute per IP
 async def login(
     login_data: LoginRequest,
     request: Request,

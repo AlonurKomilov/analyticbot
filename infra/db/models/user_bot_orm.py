@@ -47,6 +47,14 @@ class UserBotCredentialsORM(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
+    # Webhook configuration
+    webhook_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false", index=True
+    )
+    webhook_secret: Mapped[str | None] = mapped_column(String(255))
+    webhook_url: Mapped[str | None] = mapped_column(String(500))
+    last_webhook_update: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     # Rate limiting
     rate_limit_rps: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     max_concurrent_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=3)

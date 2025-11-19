@@ -7,11 +7,19 @@ Provides endpoints for users to create, manage, and verify their bots.
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from apps.api.middleware.auth import get_current_user_id  # Use existing auth system
+from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
 from apps.api.services.bot_service_factory import create_user_bot_service
+from apps.api.utils.error_messages import BotErrorMessages, get_user_friendly_error
+from apps.bot.multi_tenant.token_validator import (
+    get_token_validator,
+    TokenValidationStatus,
+)
+from apps.bot.multi_tenant.webhook_manager import get_webhook_manager
 from apps.di import get_container
+from config import settings
 from core.ports.user_bot_repository import IUserBotRepository
 from core.schemas.user_bot_schemas import (
     BotCreatedResponse,
@@ -52,11 +60,14 @@ async def get_user_bot_repository() -> IUserBotRepository:
     status_code=status.HTTP_201_CREATED,
     responses={
         400: {"model": ErrorResponse, "description": "Invalid bot token or user already has a bot"},
+        429: {"description": "Too many bot creation attempts"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
+@limiter.limit(RateLimitConfig.BOT_CREATION)  # 5 bot creations per hour per IP
 async def create_user_bot(
-    request: CreateBotRequest,
+    request: Request,
+    bot_request: CreateBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
     repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
@@ -71,42 +82,144 @@ async def create_user_bot(
     - **max_concurrent_requests**: Max concurrent requests (1-50, default: 10)
     """
     try:
+        # Validate token before creating bot
+        validator = get_token_validator()
+        validation_result = await validator.validate(
+            token=bot_request.bot_token,
+            live_check=True,
+            timeout_seconds=10
+        )
+        
+        if not validation_result.is_valid:
+            logger.warning(
+                f"Token validation failed for user {user_id}: "
+                f"{validation_result.status.value} - {validation_result.message}"
+            )
+            
+            # Return specific error based on validation status
+            if validation_result.status == TokenValidationStatus.INVALID_FORMAT:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message
+                )
+            elif validation_result.status == TokenValidationStatus.UNAUTHORIZED:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message
+                )
+            elif validation_result.status == TokenValidationStatus.REVOKED:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=validation_result.message
+                )
+            elif validation_result.status == TokenValidationStatus.TIMEOUT:
+                raise HTTPException(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail=validation_result.message
+                )
+            elif validation_result.status == TokenValidationStatus.NETWORK_ERROR:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Unable to validate token due to network issues. Please try again"
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=validation_result.message
+                )
+        
+        logger.info(
+            f"Token validated successfully for user {user_id}: "
+            f"@{validation_result.bot_username} (ID: {validation_result.bot_id})"
+        )
+        
         service = await create_user_bot_service(repository)
 
         credentials = await service.create_user_bot(
             user_id=user_id,
-            bot_token=request.bot_token,
-            bot_username=request.bot_username,
-            api_id=request.api_id,
-            api_hash=request.api_hash,
-            max_requests_per_second=request.max_requests_per_second,
-            max_concurrent_requests=request.max_concurrent_requests,
+            bot_token=bot_request.bot_token,
+            bot_username=bot_request.bot_username,
+            api_id=bot_request.api_id,
+            api_hash=bot_request.api_hash,
+            max_requests_per_second=bot_request.max_requests_per_second,
+            max_concurrent_requests=bot_request.max_concurrent_requests,
         )
 
         if credentials.id is None:
             raise ValueError("Failed to create bot: credentials ID is None")
+
+        # ✅ WEBHOOK SUPPORT: Auto-configure webhook for instant message delivery
+        webhook_enabled = False
+        webhook_url = None
+        
+        if settings.WEBHOOK_ENABLED:
+            try:
+                logger.info(f"Setting up webhook for user {user_id} bot @{credentials.bot_username}")
+                webhook_manager = get_webhook_manager()
+                
+                webhook_result = await webhook_manager.setup_webhook(
+                    bot_token=bot_request.bot_token,
+                    user_id=user_id,
+                    drop_pending_updates=True  # Clear old updates for fresh start
+                )
+                
+                if webhook_result["success"]:
+                    # Update credentials with webhook info
+                    credentials.webhook_enabled = True
+                    credentials.webhook_secret = webhook_result["webhook_secret"]
+                    credentials.webhook_url = webhook_result["webhook_url"]
+                    credentials.last_webhook_update = datetime.now()
+                    
+                    # Save to database
+                    await repository.update(credentials)
+                    
+                    webhook_enabled = True
+                    webhook_url = webhook_result["webhook_url"]
+                    
+                    logger.info(
+                        f"✅ Webhook configured successfully for user {user_id}: "
+                        f"{webhook_result['webhook_url']}"
+                    )
+                else:
+                    logger.warning(
+                        f"⚠️ Webhook setup failed for user {user_id}: {webhook_result.get('message')}. "
+                        f"Bot will use polling mode."
+                    )
+            except Exception as webhook_error:
+                logger.error(
+                    f"❌ Error setting up webhook for user {user_id}: {webhook_error}. "
+                    f"Bot will use polling mode."
+                )
+        else:
+            logger.info(f"Webhooks disabled globally - bot for user {user_id} will use polling")
 
         return BotCreatedResponse(
             id=credentials.id,
             status=credentials.status,
             bot_username=credentials.bot_username,
             requires_verification=True,
+            webhook_enabled=webhook_enabled,
+            webhook_url=webhook_url,
         )
 
     except ValueError as e:
         logger.warning(f"Failed to create bot for user {user_id}: {e}")
+        # Convert ValueError to user-friendly message
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            status_code=status_code,
+            detail=message,
         )
     except Exception as e:
         import traceback
 
         logger.error(f"Error creating bot for user {user_id}: {e}")
         logger.error(f"Traceback:\n{traceback.format_exc()}")
+        # Convert exception to user-friendly message
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create bot",
+            status_code=status_code,
+            detail=message,
         )
 
 
@@ -137,14 +250,14 @@ async def get_bot_status(
             logger.warning(f"❌ No bot found for user {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No bot found for this user",
+                detail=BotErrorMessages.BOT_NOT_FOUND,
             )
 
         if credentials.id is None:
             logger.error(f"❌ Bot credentials ID is None for user {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Bot credentials ID is None",
+                detail=BotErrorMessages.INTERNAL_ERROR,
             )
 
         return BotStatusResponse(
@@ -167,9 +280,10 @@ async def get_bot_status(
         raise
     except Exception as e:
         logger.error(f"❌ Error getting bot status for user {user_id}: {e}", exc_info=True)
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get bot status: {str(e)}",
+            status_code=status_code,
+            detail=message,
         )
 
 
@@ -179,10 +293,13 @@ async def get_bot_status(
     responses={
         404: {"model": ErrorResponse, "description": "Bot not found"},
         400: {"model": ErrorResponse, "description": "Verification failed"},
+        429: {"description": "Too many verification attempts"},
     },
 )
+@limiter.limit(RateLimitConfig.BOT_OPERATIONS)  # 100 operations per minute per IP
 async def verify_bot(
-    request: VerifyBotRequest,
+    request: Request,
+    verify_request: VerifyBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
     repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
 ):
@@ -196,23 +313,23 @@ async def verify_bot(
         service = await create_user_bot_service(repository)
 
         # Validate test message parameters
-        if request.send_test_message and not request.test_chat_id:
+        if verify_request.send_test_message and not verify_request.test_chat_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="test_chat_id is required when send_test_message is true",
+                detail="Chat ID is required when sending a test message. Please provide the chat ID where you want to send the test message.",
             )
 
         success, message, bot_info = await service.verify_bot_credentials(
             user_id=user_id,
-            send_test_message=request.send_test_message,
-            test_chat_id=request.test_chat_id,
-            test_message=request.test_message,
+            send_test_message=verify_request.send_test_message,
+            test_chat_id=verify_request.test_chat_id,
+            test_message=verify_request.test_message,
         )
 
         if not success and "No bot found" in message:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=message,
+                detail=BotErrorMessages.BOT_NOT_FOUND,
             )
 
         return BotVerificationResponse(
@@ -226,9 +343,10 @@ async def verify_bot(
         raise
     except Exception as e:
         logger.error(f"Error verifying bot for user {user_id}: {e}")
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to verify bot",
+            status_code=status_code,
+            detail=message,
         )
 
 
@@ -258,7 +376,7 @@ async def remove_bot(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No bot found for this user",
+                detail=BotErrorMessages.BOT_NOT_FOUND,
             )
 
         return BotRemovedResponse(
@@ -270,9 +388,10 @@ async def remove_bot(
         raise
     except Exception as e:
         logger.error(f"Error removing bot for user {user_id}: {e}")
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to remove bot",
+            status_code=status_code,
+            detail=message,
         )
 
 
@@ -306,7 +425,7 @@ async def update_rate_limits(
         if not credentials:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No bot found for this user",
+                detail=BotErrorMessages.BOT_NOT_FOUND,
             )
 
         return RateLimitUpdateResponse(
@@ -322,9 +441,10 @@ async def update_rate_limits(
         raise
     except Exception as e:
         logger.error(f"Error updating rate limits for user {user_id}: {e}")
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update rate limits",
+            status_code=status_code,
+            detail=message,
         )
 
 
@@ -356,7 +476,7 @@ async def refresh_bot_info(
         if not credentials:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No bot found for this user",
+                detail=BotErrorMessages.BOT_NOT_FOUND,
             )
 
         # Decrypt bot token
@@ -402,7 +522,8 @@ async def refresh_bot_info(
         raise
     except Exception as e:
         logger.error(f"Error refreshing bot info for user {user_id}: {e}", exc_info=True)
+        status_code, message = get_user_friendly_error(e)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to refresh bot info: {str(e)}",
+            status_code=status_code,
+            detail=message,
         )

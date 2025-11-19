@@ -42,6 +42,12 @@ class UserBotCredentials:
     status: BotStatus = BotStatus.PENDING
     is_verified: bool = False
 
+    # Webhook configuration
+    webhook_enabled: bool = False
+    webhook_secret: str | None = None
+    webhook_url: str | None = None
+    last_webhook_update: datetime | None = None
+
     # Rate limiting
     rate_limit_rps: float = 1.0
     max_concurrent_requests: int = 3

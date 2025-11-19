@@ -12,7 +12,10 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+from apps.bot.multi_tenant.bot_health import get_health_monitor
+from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry, CircuitBreakerOpenError
 from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
+from apps.bot.multi_tenant.retry_logic import retry_with_backoff, get_retry_statistics
 from apps.bot.multi_tenant.session_pool import SharedAiogramSession
 from core.models.user_bot_domain import UserBotCredentials
 from core.services.encryption_service import get_encryption_service
@@ -76,6 +79,10 @@ class UserBotInstance:
             1.0 / credentials.rate_limit_rps if credentials.rate_limit_rps > 0 else 0
         )
         self.last_request_time = 0.0
+
+        # Circuit breaker (per-user protection)
+        breaker_registry = get_circuit_breaker_registry()
+        self.circuit_breaker = breaker_registry.get_breaker(self.user_id)
 
     async def initialize(self) -> None:
         """
@@ -215,7 +222,7 @@ class UserBotInstance:
 
     async def rate_limited_request(self, coro, method: str = "default"):
         """
-        Execute request with both per-user and global rate limiting
+        Execute request with rate limiting, health monitoring, and circuit breaker
 
         Args:
             coro: Coroutine to execute
@@ -223,35 +230,83 @@ class UserBotInstance:
 
         Returns:
             Result of the coroutine
+            
+        Raises:
+            CircuitBreakerOpenError: If circuit breaker is open (too many failures)
         """
-        async with self.request_semaphore:
-            # 1. Apply per-user rate limiting delay
-            if self.rate_limit_delay > 0:
-                now = asyncio.get_event_loop().time()
-                time_since_last = now - self.last_request_time
-                if time_since_last < self.rate_limit_delay:
-                    await asyncio.sleep(self.rate_limit_delay - time_since_last)
-                self.last_request_time = asyncio.get_event_loop().time()
+        import time
+        
+        # Get health monitor
+        health_monitor = get_health_monitor()
+        start_time = time.time()
+        
+        # Check circuit breaker first (fail fast if open)
+        async def _execute_request():
+            async with self.request_semaphore:
+                # 1. Apply per-user rate limiting delay
+                if self.rate_limit_delay > 0:
+                    now = asyncio.get_event_loop().time()
+                    time_since_last = now - self.last_request_time
+                    if time_since_last < self.rate_limit_delay:
+                        await asyncio.sleep(self.rate_limit_delay - time_since_last)
+                    self.last_request_time = asyncio.get_event_loop().time()
 
-            # 2. Apply global rate limiting (across all users)
-            global_limiter = await GlobalRateLimiter.get_instance()
-            await global_limiter.acquire(method, user_id=self.user_id)
+                # 2. Apply global rate limiting (across all users)
+                global_limiter = await GlobalRateLimiter.get_instance()
+                await global_limiter.acquire(method, user_id=self.user_id)
 
-            # Update activity timestamp
-            self.last_activity = datetime.now()
+                # Update activity timestamp
+                self.last_activity = datetime.now()
 
-            # Execute request
-            try:
+                # 3. Execute request
                 return await coro
-            except Exception as e:
-                # Handle rate limit errors from Telegram
-                if "429" in str(e) or "Too Many Requests" in str(e):
-                    # Extract retry_after if available
-                    retry_after = None
-                    if hasattr(e, "retry_after"):
-                        retry_after = e.retry_after
-                    await global_limiter.handle_rate_limit_error(retry_after)
-                raise
+        
+        # Wrap execution with retry logic and circuit breaker protection
+        async def _execute_with_circuit_breaker():
+            return await self.circuit_breaker.call(_execute_request)
+        
+        try:
+            # Execute with retry logic (which includes circuit breaker)
+            result = await retry_with_backoff(_execute_with_circuit_breaker)
+            
+            # Record success
+            response_time_ms = (time.time() - start_time) * 1000
+            health_monitor.record_success(
+                user_id=self.user_id,
+                response_time_ms=response_time_ms,
+                method=method
+            )
+            
+            # Record retry statistics
+            retry_stats = get_retry_statistics()
+            retry_stats.record_attempt(attempt=0, success=True, error_category=None)
+            
+            return result
+            
+        except CircuitBreakerOpenError as e:
+            # Circuit breaker is open, don't record as failure
+            # (already too many failures, that's why it's open)
+            raise
+            
+        except Exception as e:
+            # Record failure
+            error_type = type(e).__name__
+            health_monitor.record_failure(
+                user_id=self.user_id,
+                error_type=error_type,
+                method=method
+            )
+            
+            # Handle rate limit errors from Telegram
+            if "429" in str(e) or "Too Many Requests" in str(e):
+                # Extract retry_after if available
+                retry_after = None
+                if hasattr(e, "retry_after"):
+                    retry_after = e.retry_after
+                global_limiter = await GlobalRateLimiter.get_instance()
+                await global_limiter.handle_rate_limit_error(retry_after)
+            
+            raise
 
     async def get_bot_info(self) -> dict:
         """

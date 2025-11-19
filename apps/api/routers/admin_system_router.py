@@ -13,12 +13,17 @@ import os
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
+)
+from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.bot.multi_tenant.token_validator import (
+    get_token_validator,
+    TokenValidationResult,
 )
 from apps.di.analytics_container import get_analytics_fusion_service
 from apps.shared.performance import performance_timer
@@ -59,7 +64,9 @@ class AuditLogEntry(BaseModel):
 
 
 @router.get("/stats", response_model=SystemStats)
+@limiter.limit(RateLimitConfig.ADMIN_OPERATIONS)  # 30 admin requests per minute per IP
 async def get_system_statistics(
+    request: Request,
     current_user: dict = Depends(get_current_user),
     analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):
@@ -228,6 +235,623 @@ async def get_rate_limiter_statistics(
     except Exception as e:
         logger.error(f"Rate limiter stats fetch failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch rate limiter statistics")
+
+
+@router.get("/bot-health/summary")
+async def get_bot_health_summary(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🏥 Get Bot Health Summary (Admin)
+
+    Retrieve health summary for all user bots.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Total bot count
+    - Healthy/degraded/unhealthy counts
+    - Overall health status
+    - Global metrics
+
+    **Use Case:**
+    Monitor overall bot system health and identify problematic bots.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health import get_health_monitor
+
+        health_monitor = get_health_monitor()
+        summary = health_monitor.get_health_summary()
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "summary": summary,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Bot health summary fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch bot health summary")
+
+
+@router.get("/bot-health/unhealthy")
+async def get_unhealthy_bots(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🚨 Get Unhealthy Bots (Admin)
+
+    Get list of bots with health issues (degraded or unhealthy status).
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - List of user IDs with unhealthy bots
+    - Detailed metrics for each unhealthy bot
+
+    **Use Case:**
+    Identify and investigate bots that need attention.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health import get_health_monitor
+
+        health_monitor = get_health_monitor()
+        unhealthy_user_ids = health_monitor.get_unhealthy_bots()
+
+        # Get detailed metrics for unhealthy bots
+        unhealthy_details = []
+        for user_id in unhealthy_user_ids:
+            metrics = health_monitor.get_metrics(user_id)
+            if metrics:
+                unhealthy_details.append(
+                    {
+                        "user_id": user_id,
+                        "status": metrics.status.value,
+                        "error_rate": round(metrics.error_rate * 100, 2),
+                        "consecutive_failures": metrics.consecutive_failures,
+                        "avg_response_time_ms": round(metrics.avg_response_time_ms, 2),
+                        "is_rate_limited": metrics.is_rate_limited,
+                        "last_error_type": metrics.last_error_type,
+                        "last_success": (
+                            metrics.last_success.isoformat() if metrics.last_success else None
+                        ),
+                        "last_failure": (
+                            metrics.last_failure.isoformat() if metrics.last_failure else None
+                        ),
+                    }
+                )
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "unhealthy_count": len(unhealthy_user_ids),
+            "unhealthy_bots": unhealthy_details,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unhealthy bots fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch unhealthy bots")
+
+
+@router.get("/bot-health/{user_id}")
+async def get_bot_health_metrics(
+    user_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📊 Get Bot Health Metrics (Admin)
+
+    Get detailed health metrics for a specific user's bot.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Complete health metrics for the specified bot
+    - Status, error rates, response times, etc.
+
+    **Use Case:**
+    Deep dive into a specific bot's health and performance.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health import get_health_monitor
+
+        health_monitor = get_health_monitor()
+        metrics = health_monitor.get_metrics(user_id)
+
+        if not metrics:
+            raise HTTPException(
+                status_code=404, detail=f"No health metrics found for user {user_id}"
+            )
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "user_id": user_id,
+            "metrics": {
+                "status": metrics.status.value,
+                "total_requests": metrics.total_requests,
+                "successful_requests": metrics.successful_requests,
+                "failed_requests": metrics.failed_requests,
+                "error_rate_percent": round(metrics.error_rate * 100, 2),
+                "avg_response_time_ms": round(metrics.avg_response_time_ms, 2),
+                "consecutive_failures": metrics.consecutive_failures,
+                "is_rate_limited": metrics.is_rate_limited,
+                "last_error_type": metrics.last_error_type,
+                "last_success": metrics.last_success.isoformat() if metrics.last_success else None,
+                "last_failure": metrics.last_failure.isoformat() if metrics.last_failure else None,
+                "last_check": metrics.last_check.isoformat(),
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Bot health metrics fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch bot health metrics")
+
+
+@router.get("/circuit-breakers/summary")
+async def get_circuit_breakers_summary(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔌 Get Circuit Breakers Summary (Admin)
+
+    Get summary of all circuit breaker states.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Open circuit breakers (bots being blocked)
+    - Half-open circuit breakers (recovery testing)
+    - Closed circuit breakers (normal operation)
+
+    **Use Case:**
+    Monitor which bots are being protected by circuit breakers.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+
+        registry = get_circuit_breaker_registry()
+        all_states = registry.get_all_states()
+        open_breakers = registry.get_open_breakers()
+        half_open_breakers = registry.get_half_open_breakers()
+
+        # Count by state
+        state_counts = {"closed": 0, "open": 0, "half_open": 0}
+        for state_info in all_states.values():
+            state = state_info["state"]
+            state_counts[state] = state_counts.get(state, 0) + 1
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "summary": {
+                "total_breakers": len(all_states),
+                "closed": state_counts["closed"],
+                "open": state_counts["open"],
+                "half_open": state_counts["half_open"],
+                "open_user_ids": open_breakers,
+                "half_open_user_ids": half_open_breakers,
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Circuit breakers summary fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch circuit breakers summary")
+
+
+@router.get("/circuit-breakers/{user_id}")
+async def get_circuit_breaker_state(
+    user_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔌 Get Circuit Breaker State (Admin)
+
+    Get detailed circuit breaker state for a specific user.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Current state (closed/open/half_open)
+    - Failure/success counts
+    - Timeout information
+    - Thresholds
+
+    **Use Case:**
+    Investigate why a specific bot is being blocked.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+
+        registry = get_circuit_breaker_registry()
+        breaker = registry.get_breaker(user_id)
+        state = breaker.get_state()
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "user_id": user_id,
+            "circuit_breaker": state,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Circuit breaker state fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch circuit breaker state")
+
+
+@router.post("/circuit-breakers/{user_id}/reset")
+async def reset_circuit_breaker(
+    user_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔄 Reset Circuit Breaker (Admin)
+
+    Manually reset circuit breaker for a user (close it).
+
+    **Admin Only**: Requires admin role
+
+    **Use Case:**
+    Override circuit breaker protection to allow requests again.
+    Use when bot issue has been manually resolved.
+
+    **Returns:**
+    - Success status
+    - New circuit breaker state
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+
+        registry = get_circuit_breaker_registry()
+        registry.reset_breaker(user_id)
+
+        # Get new state
+        breaker = registry.get_breaker(user_id)
+        state = breaker.get_state()
+
+        logger.info(f"Admin {current_user['id']} reset circuit breaker for user {user_id}")
+
+        return {
+            "status": "ok",
+            "message": f"Circuit breaker reset for user {user_id}",
+            "timestamp": datetime.now().isoformat(),
+            "circuit_breaker": state,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Circuit breaker reset failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset circuit breaker")
+
+
+@router.get("/retry-statistics")
+async def get_retry_statistics(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔄 Get Retry Statistics (Admin)
+
+    Get statistics about retry attempts and failures.
+
+    **Admin Only**: Requires admin role
+
+    **Returns:**
+    - Total retry attempts
+    - Successful vs failed retries
+    - Success rate
+    - Errors by category
+
+    **Use Case:**
+    Monitor retry behavior and identify problematic error patterns.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.retry_logic import get_retry_statistics
+
+        stats = get_retry_statistics()
+        statistics = stats.get_statistics()
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "retry_statistics": statistics,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Retry statistics fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch retry statistics")
+
+
+@router.post("/retry-statistics/reset")
+async def reset_retry_statistics(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🔄 Reset Retry Statistics (Admin)
+
+    Reset retry statistics counters.
+
+    **Admin Only**: Requires admin role
+
+    **Use Case:**
+    Reset statistics after deploying fixes or for clean monitoring periods.
+
+    **Returns:**
+    - Success status
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.retry_logic import get_retry_statistics
+
+        stats = get_retry_statistics()
+        stats.reset()
+
+        logger.info(f"Admin {current_user['id']} reset retry statistics")
+
+        return {
+            "status": "ok",
+            "message": "Retry statistics reset successfully",
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Retry statistics reset failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset retry statistics")
+
+
+@router.get("/bot-health/history/{user_id}")
+async def get_bot_health_history(
+    user_id: int,
+    hours: int = Query(24, ge=1, le=168, description="Hours of history to retrieve (max 7 days)"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 📊 Get Bot Health History (Admin)
+
+    Get historical health metrics for a specific user bot.
+
+    **Admin Only**: Requires admin role
+
+    **Parameters:**
+    - user_id: User ID to get history for
+    - hours: Hours of history to retrieve (1-168, default 24)
+
+    **Returns:**
+    - Time series of health metrics
+    - Error rate trends
+    - Response time trends
+    - Circuit breaker state changes
+
+    **Use Case:**
+    Analyze bot health trends, identify patterns, diagnose recurring issues.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+
+        persistence_service = get_persistence_service()
+        history = await persistence_service.get_user_history(user_id, hours)
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "user_id": user_id,
+            "hours": hours,
+            "data_points": len(history),
+            "history": history,
+        }
+
+    except RuntimeError as e:
+        # Persistence service not initialized
+        logger.warning(f"Persistence service not available: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Health metrics persistence not enabled",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Bot health history fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch bot health history")
+
+
+@router.get("/bot-health/unhealthy-history")
+async def get_unhealthy_bot_history(
+    hours: int = Query(24, ge=1, le=168, description="Hours of history to retrieve (max 7 days)"),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 🚨 Get Unhealthy Bot History (Admin)
+
+    Get historical data for all unhealthy bots.
+
+    **Admin Only**: Requires admin role
+
+    **Parameters:**
+    - hours: Hours of history to retrieve (1-168, default 24)
+
+    **Returns:**
+    - List of unhealthy bot incidents
+    - Frequency of issues per user
+    - Common error patterns
+
+    **Use Case:**
+    Identify users with chronic bot health issues, detect system-wide problems.
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+
+        persistence_service = get_persistence_service()
+        history = await persistence_service.get_unhealthy_history(hours)
+
+        return {
+            "status": "ok",
+            "timestamp": datetime.now().isoformat(),
+            "hours": hours,
+            "incident_count": len(history),
+            "history": history,
+        }
+
+    except RuntimeError as e:
+        # Persistence service not initialized
+        logger.warning(f"Persistence service not available: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Health metrics persistence not enabled",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unhealthy bot history fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch unhealthy bot history")
+
+
+@router.post("/bot-health/persist-now")
+async def persist_health_metrics_now(
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    ## 💾 Persist Health Metrics Now (Admin)
+
+    Manually trigger immediate persistence of current health metrics.
+
+    **Admin Only**: Requires admin role
+
+    **Use Case:**
+    Force immediate snapshot before maintenance, testing, or system changes.
+
+    **Returns:**
+    - Success status
+    - Number of metrics persisted
+    """
+    try:
+        await require_admin_user(current_user["id"])
+
+        from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
+
+        persistence_service = get_persistence_service()
+        await persistence_service.persist_all_metrics()
+
+        logger.info(f"Admin {current_user['id']} triggered manual health metrics persistence")
+
+        return {
+            "status": "ok",
+            "message": "Health metrics persisted successfully",
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    except RuntimeError as e:
+        # Persistence service not initialized
+        logger.warning(f"Persistence service not available: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Health metrics persistence not enabled",
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Manual persistence failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to persist health metrics")
+
+
+# === TOKEN VALIDATION ADMIN ENDPOINTS ===
+
+
+class TokenValidationRequest(BaseModel):
+    """Request to validate a bot token"""
+    token: str = Field(..., description="Bot token to validate")
+    live_check: bool = Field(
+        default=True,
+        description="Perform live validation (test connection to Telegram)"
+    )
+
+
+class TokenValidationResponse(BaseModel):
+    """Token validation result"""
+    is_valid: bool
+    status: str
+    message: str
+    bot_username: str | None = None
+    bot_id: int | None = None
+    validated_at: str
+
+
+@router.post("/token/validate")
+async def validate_token(
+    request: TokenValidationRequest,
+    _current_user: dict = Depends(require_admin_user),
+):
+    """
+    ## 🔐 Validate Bot Token (Admin)
+    
+    Validates a bot token without creating a bot.
+    Useful for testing tokens before deployment.
+    
+    **Validation Types:**
+    - **Format validation:** Checks token format (fast)
+    - **Live validation:** Tests connection to Telegram (slower but thorough)
+    
+    **Returns:**
+    - Validation status
+    - Bot username and ID (if valid)
+    - Detailed error message (if invalid)
+    """
+    try:
+        validator = get_token_validator()
+        
+        result = await validator.validate(
+            token=request.token,
+            live_check=request.live_check,
+            timeout_seconds=10
+        )
+        
+        return TokenValidationResponse(
+            is_valid=result.is_valid,
+            status=result.status.value,
+            message=result.message,
+            bot_username=result.bot_username,
+            bot_id=result.bot_id,
+            validated_at=result.validated_at.isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"Token validation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Token validation failed: {str(e)}"
+        )
 
 
 # === MTPROTO CONNECTION POOL CONFIGURATION ===

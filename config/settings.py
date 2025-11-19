@@ -161,6 +161,14 @@ class Settings:
     ENCRYPTION_KEY: SecretStr = field(
         default_factory=lambda: SecretStr(os.getenv("ENCRYPTION_KEY", ""))
     )
+    
+    # Multi-Tenant Bot Webhook Configuration
+    WEBHOOK_BASE_URL: str = field(
+        default_factory=lambda: os.getenv("WEBHOOK_BASE_URL", "https://bot.analyticbot.org")
+    )
+    WEBHOOK_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("WEBHOOK_ENABLED", "true").lower() == "true"
+    )
 
     # Payment Gateways (Optional)
     STRIPE_SECRET_KEY: SecretStr | None = None

@@ -74,7 +74,9 @@ class ContextualAnalysisService(ContextualAnalysisProtocol):
         logger.info("🌍 Contextual Analysis Service initialized - intelligence context focus")
 
     async def analyze_context_factors(
-        self, prediction_request: dict[str, Any], context_types: list[IntelligenceContext]
+        self,
+        prediction_request: dict[str, Any],
+        context_types: list[IntelligenceContext],
     ) -> ContextualIntelligence:
         """
         Analyze contextual factors for predictions.
@@ -159,11 +161,14 @@ class ContextualAnalysisService(ContextualAnalysisProtocol):
                 "seasonal_effects": seasonal_effects,
                 "external_events": external_events,
                 "environmental_score": self._calculate_environmental_score(
-                    market_conditions, economic_indicators, seasonal_effects, external_events
+                    market_conditions,
+                    economic_indicators,
+                    seasonal_effects,
+                    external_events,
                 ),
-                "context_strength": "high"
-                if market_conditions.get("stability", 0) > 0.7
-                else "medium",
+                "context_strength": (
+                    "high" if market_conditions.get("stability", 0) > 0.7 else "medium"
+                ),
             }
 
             logger.info("✅ Environmental context analysis completed")
@@ -275,7 +280,11 @@ class ContextualAnalysisService(ContextualAnalysisProtocol):
 
         except Exception as e:
             logger.error(f"❌ Temporal context analysis failed: {e}")
-            return {"hour_of_day_impact": 1.0, "day_of_week_impact": 1.0, "seasonal_impact": 1.0}
+            return {
+                "hour_of_day_impact": 1.0,
+                "day_of_week_impact": 1.0,
+                "seasonal_impact": 1.0,
+            }
 
     async def _analyze_seasonal_context_factors(self, request: dict[str, Any]) -> dict[str, Any]:
         """Analyze seasonal context factors"""
@@ -325,9 +334,9 @@ class ContextualAnalysisService(ContextualAnalysisProtocol):
             "current_season": self._get_current_season(current_time),
             "seasonal_strength": 0.6,
             "holiday_effect": self._calculate_holiday_proximity(current_time),
-            "seasonal_trend": "increasing"
-            if current_time.month in [3, 4, 5, 9, 10, 11]
-            else "stable",
+            "seasonal_trend": (
+                "increasing" if current_time.month in [3, 4, 5, 9, 10, 11] else "stable"
+            ),
         }
 
     async def _analyze_external_events_impact(self, channel_id: int) -> dict[str, Any]:
@@ -336,7 +345,11 @@ class ContextualAnalysisService(ContextualAnalysisProtocol):
         return {
             "recent_events": [
                 {"event": "industry_conference", "impact": 0.15, "duration_days": 7},
-                {"event": "competitor_product_launch", "impact": -0.08, "duration_days": 14},
+                {
+                    "event": "competitor_product_launch",
+                    "impact": -0.08,
+                    "duration_days": 14,
+                },
             ],
             "total_impact": 0.07,
             "event_uncertainty": 0.2,

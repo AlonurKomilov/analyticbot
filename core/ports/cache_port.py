@@ -7,7 +7,7 @@ Note: This is separate from the synchronous CachePort in security_ports.py
 which is used for security/session management.
 """
 
-from typing import Protocol, Set
+from typing import Protocol
 
 
 class AsyncCachePort(Protocol):
@@ -45,7 +45,7 @@ class AsyncCachePort(Protocol):
         """
         ...
 
-    async def smembers(self, key: str) -> Set[str]:
+    async def smembers(self, key: str) -> set[str]:
         """Get all members of a set.
 
         Args:

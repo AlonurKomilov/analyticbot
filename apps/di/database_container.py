@@ -26,7 +26,10 @@ from core.protocols import (
 )
 
 # Import other repositories (no protocols yet)
-from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSentRepository,
+    AlertSubscriptionRepository,
+)
 from core.repositories.shared_reports_repository import SharedReportsRepository
 from infra.db.adapters.mtproto_repository_adapter import (
     MTProtoAuditRepositoryAdapter,
@@ -103,7 +106,9 @@ async def _create_sqlalchemy_engine(
     )
 
 
-async def _create_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
+async def _create_session_factory(
+    engine: AsyncEngine,
+) -> async_sessionmaker[AsyncSession]:
     """Create SQLAlchemy session factory"""
     return async_sessionmaker(engine, expire_on_commit=False)
 
@@ -164,7 +169,8 @@ class DatabaseContainer(containers.DeclarativeContainer):
     # Database URL from environment or configuration
     database_url = providers.Callable(
         lambda: os.getenv(
-            "DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot"
+            "DATABASE_URL",
+            "postgresql+asyncpg://analytic:change_me@localhost:5432/analytic_bot",
         )
     )
 
@@ -177,7 +183,10 @@ class DatabaseContainer(containers.DeclarativeContainer):
     asyncpg_pool = providers.Resource(_create_asyncpg_pool, database_url=database_url, pool_size=10)
 
     sqlalchemy_engine = providers.Resource(
-        _create_sqlalchemy_engine, database_url=database_url, pool_size=10, max_overflow=20
+        _create_sqlalchemy_engine,
+        database_url=database_url,
+        pool_size=10,
+        max_overflow=20,
     )
 
     session_factory = providers.Resource(_create_session_factory, engine=sqlalchemy_engine)

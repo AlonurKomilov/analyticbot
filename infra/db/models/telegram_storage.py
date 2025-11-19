@@ -61,7 +61,12 @@ class UserStorageChannel(Base):
     __table_args__ = (
         Index("idx_user_storage_channels_user_id", "user_id"),
         Index("idx_user_storage_channels_channel_id", "channel_id"),
-        Index("idx_user_storage_channels_user_channel", "user_id", "channel_id", unique=True),
+        Index(
+            "idx_user_storage_channels_user_channel",
+            "user_id",
+            "channel_id",
+            unique=True,
+        ),
     )
 
     def __repr__(self):
@@ -82,7 +87,9 @@ class TelegramMedia(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     storage_channel_id = Column(
-        Integer, ForeignKey("user_storage_channels.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("user_storage_channels.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     # Telegram file identifiers

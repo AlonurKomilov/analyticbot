@@ -25,7 +25,10 @@ router = APIRouter()
     response_model=MTProtoActionResponse,
     status_code=status.HTTP_200_OK,
     responses={
-        400: {"model": ErrorResponse, "description": "No MTProto configuration or not verified"},
+        400: {
+            "model": ErrorResponse,
+            "description": "No MTProto configuration or not verified",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
@@ -133,7 +136,8 @@ async def disconnect_mtproto(
     except Exception as e:
         logger.error(f"Error disconnecting MTProto for user {user_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to disconnect MTProto"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to disconnect MTProto",
         )
 
 

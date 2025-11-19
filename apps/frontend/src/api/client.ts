@@ -135,20 +135,26 @@ export class UnifiedApiClient {
 
     switch (this.authStrategy) {
       case 'jwt': {
-        // Check all possible token storage keys
-        const token = localStorage.getItem('access_token') ||
-                     localStorage.getItem('auth_token') ||
-                     localStorage.getItem('token') ||
-                     localStorage.getItem('accessToken') ||
-                     sessionStorage.getItem('access_token');
+        // CRITICAL FIX: Use 'auth_token' as primary key (matches AuthContext and tokenRefreshManager)
+        // Check all possible token storage keys for backward compatibility
+        const token = localStorage.getItem('auth_token') ||      // ✅ Primary key (matches AuthContext)
+                     localStorage.getItem('access_token') ||     // Legacy/alternate key
+                     localStorage.getItem('token') ||            // Legacy key
+                     localStorage.getItem('accessToken') ||      // Alternate format
+                     sessionStorage.getItem('access_token');     // Session storage fallback
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
           if (import.meta.env.DEV) {
-            console.log('🔑 Using JWT token:', token.substring(0, 20) + '...');
+            console.log('🔑 Using JWT token from storage:', token.substring(0, 20) + '...');
           }
         } else {
           if (import.meta.env.DEV) {
             console.warn('⚠️ No JWT token found in storage');
+            console.warn('📊 Storage keys checked:', {
+              auth_token: !!localStorage.getItem('auth_token'),
+              access_token: !!localStorage.getItem('access_token'),
+              refresh_token: !!localStorage.getItem('refresh_token')
+            });
           }
         }
         break;

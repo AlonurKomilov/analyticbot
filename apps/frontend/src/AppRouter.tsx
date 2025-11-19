@@ -28,7 +28,7 @@ const {
 } = PageComponents;
 
 // Lazy load additional pages
-const ChannelsManagementPage = React.lazy(() => import('./pages/ChannelsManagementPage'));
+const ChannelsManagementPage = React.lazy(() => import('./pages/channels'));
 const AIServicesPage = React.lazy(() => import('./pages/AIServicesPage'));
 const PredictiveAnalyticsPage = React.lazy(() => import('./pages/PredictiveAnalyticsPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
@@ -39,8 +39,8 @@ const PostsPage = React.lazy(() => import('./pages/PostsPage'));
 const PostDetailsPage = React.lazy(() => import('./pages/PostDetailsPage'));
 const EditPostPage = React.lazy(() => import('./pages/EditPostPage'));
 const ScheduledPostsPage = React.lazy(() => import('./pages/ScheduledPostsPage'));
-const ChannelDetailsPage = React.lazy(() => import('./pages/ChannelDetailsPage'));
-const AddChannelPage = React.lazy(() => import('./pages/AddChannelPage'));
+const ChannelDetailsPage = React.lazy(() => import('./pages/channels/ChannelDetailsPage'));
+const AddChannelPage = React.lazy(() => import('./pages/channels/AddChannelPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const UnauthorizedPage = React.lazy(() => import('./pages/UnauthorizedPage'));
 const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));

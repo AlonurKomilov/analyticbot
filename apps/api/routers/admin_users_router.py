@@ -15,13 +15,12 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.shared.performance import performance_timer
+from apps.di.analytics_container import get_channel_management_service
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)

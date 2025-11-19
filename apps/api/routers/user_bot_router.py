@@ -127,16 +127,21 @@ async def get_bot_status(
     Returns bot configuration, status, verification state, and usage statistics.
     """
     try:
+        logger.info(f"🔍 Getting bot status for user_id={user_id}")
         service = await create_user_bot_service(repository)
+        logger.info("✅ Service created, calling get_user_bot_status...")
         credentials = await service.get_user_bot_status(user_id)
+        logger.info(f"📊 Credentials result: {credentials}")
 
         if not credentials:
+            logger.warning(f"❌ No bot found for user {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No bot found for this user",
             )
 
         if credentials.id is None:
+            logger.error(f"❌ Bot credentials ID is None for user {user_id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Bot credentials ID is None",
@@ -161,10 +166,10 @@ async def get_bot_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting bot status for user {user_id}: {e}")
+        logger.error(f"❌ Error getting bot status for user {user_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get bot status",
+            detail=f"Failed to get bot status: {str(e)}",
         )
 
 
@@ -271,7 +276,7 @@ async def remove_bot(
         )
 
 
-@router.patch(
+@router.put(
     "/rate-limits",
     response_model=RateLimitUpdateResponse,
     responses={
@@ -320,4 +325,84 @@ async def update_rate_limits(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update rate limits",
+        )
+
+
+@router.post(
+    "/refresh-info",
+    response_model=BotStatusResponse,
+    responses={
+        404: {"model": ErrorResponse, "description": "Bot not found"},
+        400: {"model": ErrorResponse, "description": "Failed to fetch bot info"},
+    },
+)
+async def refresh_bot_info(
+    user_id: Annotated[int, Depends(get_current_user_id)],
+    repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
+):
+    """
+    Refresh bot information (bot_id, username) from Telegram API.
+
+    This is useful for bots created before bot_id field was added,
+    or to update bot username if it changed.
+    """
+    try:
+        from aiogram import Bot
+
+        from core.services.encryption_service import get_encryption_service
+
+        # Get existing credentials
+        credentials = await repository.get_by_user_id(user_id)
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No bot found for this user",
+            )
+
+        # Decrypt bot token
+        encryption = get_encryption_service()
+        decrypted_token = encryption.decrypt(credentials.bot_token)
+
+        # Fetch fresh bot info from Telegram
+        bot = Bot(token=decrypted_token)
+        try:
+            bot_me = await bot.get_me()
+
+            # Update credentials with fresh data
+            credentials.bot_id = bot_me.id
+            credentials.bot_username = bot_me.username
+
+            # Save updated credentials
+            updated = await repository.update(credentials)
+
+            logger.info(
+                f"✅ Refreshed bot info for user {user_id}: bot_id={bot_me.id}, username={bot_me.username}"
+            )
+
+            return BotStatusResponse(
+                id=updated.id,
+                user_id=updated.user_id,
+                bot_username=updated.bot_username,
+                bot_id=updated.bot_id,
+                status=updated.status,
+                is_verified=updated.is_verified,
+                max_requests_per_second=int(updated.rate_limit_rps),
+                max_concurrent_requests=updated.max_concurrent_requests,
+                total_requests=updated.total_requests,
+                last_used_at=updated.last_used_at,
+                created_at=updated.created_at,
+                updated_at=updated.updated_at,
+                suspension_reason=updated.suspension_reason,
+            )
+
+        finally:
+            await bot.session.close()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing bot info for user {user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to refresh bot info: {str(e)}",
         )

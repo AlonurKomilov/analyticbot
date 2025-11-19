@@ -135,8 +135,8 @@ const ChartRenderer: React.FC<ChartRendererProps> = React.memo(({ chartType, dat
     };
 
     return (
-        <Box sx={{ width: '100%', height: height - 100 }}>
-            <ResponsiveContainer>
+        <Box sx={{ width: '100%', height: height - 100, minHeight: 200, minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height={height - 100} minWidth={300}>
                 {renderChart()}
             </ResponsiveContainer>
         </Box>

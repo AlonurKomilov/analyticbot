@@ -232,6 +232,44 @@ class MultiTenantBotManager(IBotManager):
         self.stats["total_evicted"] += 1
         print(f"🗑️  Evicted LRU bot for user {user_id} (cache full)")
 
+    async def validate_bot_token(self, bot_token: str) -> dict:
+        """
+        Validate a Telegram bot token by making a test API call.
+
+        Args:
+            bot_token: Bot token to validate
+
+        Returns:
+            Dict with bot information (id, username, first_name, etc.)
+
+        Raises:
+            ValueError: If token is invalid
+        """
+        from aiogram import Bot
+        from aiogram.exceptions import TelegramUnauthorizedError
+
+        try:
+            # Create temporary bot instance
+            bot = Bot(token=bot_token)
+
+            # Get bot info to validate token
+            bot_info = await bot.get_me()
+
+            # Close the bot session
+            await bot.session.close()
+
+            return {
+                "id": bot_info.id,
+                "username": bot_info.username,
+                "first_name": bot_info.first_name,
+                "can_join_groups": bot_info.can_join_groups,
+                "can_read_all_group_messages": bot_info.can_read_all_group_messages,
+            }
+        except TelegramUnauthorizedError:
+            raise ValueError("Invalid bot token")
+        except Exception as e:
+            raise ValueError(f"Failed to validate bot token: {str(e)}")
+
     async def _cleanup_idle_bots(self) -> None:
         """
         Background task to cleanup idle bots

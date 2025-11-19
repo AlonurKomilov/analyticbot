@@ -9,8 +9,8 @@ import logging
 
 from fastapi import HTTPException
 
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
 from apps.di import get_container
+from apps.di.analytics_container import get_analytics_fusion_service, get_cache
 from apps.shared.clients.analytics_client import AnalyticsClient
 from config.settings import settings
 

@@ -17,7 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from infra.db.models.superadmin.superadmin_orm import Base
+from infra.db.models.base import Base
 
 
 class UserBotCredentialsORM(Base):

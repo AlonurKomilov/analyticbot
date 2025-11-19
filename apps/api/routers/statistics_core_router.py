@@ -11,14 +11,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 
-# Services - NEW DI
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
-
 # Auth
 from apps.api.middleware.auth import get_current_user
 
 # Schemas
 from apps.api.schemas.analytics import OverviewResponse, SeriesResponse
+
+# Services - NEW DI
+from apps.di.analytics_container import get_analytics_fusion_service, get_cache
 from apps.shared.performance import performance_timer
 from core.protocols import AnalyticsFusionServiceProtocol
 

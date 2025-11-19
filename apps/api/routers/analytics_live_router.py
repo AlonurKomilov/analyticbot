@@ -8,10 +8,9 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from apps.api.di_analytics import get_analytics_fusion_service
-
 # Auth
 from apps.api.middleware.auth import get_current_user
+from apps.di.analytics_container import get_analytics_fusion_service
 
 # Services
 from apps.shared.clients.analytics_client import AnalyticsClient

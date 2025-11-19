@@ -91,8 +91,53 @@ class TelegramStorageService:
             TelegramStorageError: Bot doesn't have required permissions
         """
         try:
-            # Get channel entity
-            channel = await self.client.get_entity(channel_id)
+            # Clean and validate channel_username (remove spaces, @, etc.)
+            clean_username = None
+            if channel_username:
+                # Remove @ prefix, spaces, and validate
+                clean_username = channel_username.strip().lstrip("@").strip()
+                # Check if username contains invalid characters (spaces, etc.)
+                if " " in clean_username or not clean_username:
+                    logger.warning(f"Invalid username format: '{channel_username}' - ignoring")
+                    clean_username = None
+
+            # Get channel entity - prefer username for first-time lookups
+            # Telethon needs username or access_hash to resolve channels not in cache
+            channel = None
+            last_error = None
+
+            # Try username first if provided and valid
+            if clean_username:
+                try:
+                    username_query = f"@{clean_username}"
+                    logger.info(f"Attempting to fetch channel by username: {username_query}")
+                    channel = await self.client.get_entity(username_query)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch by username '{username_query}': {e}")
+                    last_error = e
+
+            # Try channel_id as fallback
+            if not channel:
+                try:
+                    logger.info(f"Attempting to fetch channel by ID: {channel_id}")
+                    # For private channels, we need to use get_input_entity or the user must be a member
+                    channel = await self.client.get_entity(channel_id)
+                except Exception as e:
+                    logger.error(f"Failed to fetch by channel_id {channel_id}: {e}")
+                    last_error = e
+
+                    # Provide helpful error message
+                    error_msg = (
+                        f"Cannot access channel (ID: {channel_id}"
+                        + (f", Username: @{clean_username}" if clean_username else "")
+                        + "). Common reasons:\n\n"
+                        "1. **You are not a member of the channel**: Join/create the channel first\n"
+                        "2. **Channel username is wrong**: Check spelling (no spaces, e.g., 'my_channel')\n"
+                        "3. **Wrong channel ID**: Get the correct ID using @userinfobot\n"
+                        "4. **MTProto session issue**: Your Telegram session may have expired\n\n"
+                        "💡 Setup: Create channel → You join it → Add your bot as admin → Get ID → Validate"
+                    )
+                    raise TelegramStorageError(error_msg)
 
             # Check if bot has admin rights
             permissions = await self.client.get_permissions(channel, "me")

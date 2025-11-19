@@ -264,13 +264,16 @@ export const StorageChannelManager: React.FC = () => {
         <DialogContent>
           <Stack spacing={3} mt={2}>
             <Alert severity="info">
-              <Typography variant="body2">
+              <Typography variant="body2" component="div">
                 <strong>Setup Instructions:</strong>
                 <ol style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
-                  <li>Create a private Telegram channel</li>
-                  <li>Add the bot as admin with "Post Messages" permission</li>
-                  <li>Get the channel ID (starts with -100)</li>
-                  <li>Enter the details below and validate</li>
+                  <li>Create a Telegram channel (you as owner)</li>
+                  <li>Make sure YOU are a member of the channel</li>
+                  <li>Add your personal bot as admin with "Post Messages" permission</li>
+                  <li>Get the channel ID (starts with -100) using @userinfobot</li>
+                  <li>For public channels: add username (e.g., "my_channel")</li>
+                  <li>For private channels: leave username empty</li>
+                  <li>Enter details below and validate</li>
                 </ol>
               </Typography>
             </Alert>
@@ -282,7 +285,7 @@ export const StorageChannelManager: React.FC = () => {
               onChange={(e) => setChannelId(e.target.value)}
               fullWidth
               required
-              helperText="Numeric channel ID (e.g., -1001234567890)"
+              helperText="Full numeric channel ID starting with -100 (e.g., -1001234567890). To find: Forward any message from the channel to @userinfobot"
               error={!!validationError && !validationResult}
             />
 
@@ -292,8 +295,22 @@ export const StorageChannelManager: React.FC = () => {
               value={channelUsername}
               onChange={(e) => setChannelUsername(e.target.value)}
               fullWidth
-              helperText="Username without @ (if channel is public)"
+              helperText="Channel username only (no @, no spaces, no title). Leave empty for private channels."
             />
+
+            <Alert severity="warning" icon={<TelegramIcon />}>
+              <Typography variant="body2">
+                <strong>Requirements:</strong>
+                <br />
+                • You must configure Bot + MTProto in Settings first
+                <br />
+                • You must be a member of the channel
+                <br />
+                • Your bot must be added as admin to the channel
+                <br />
+                • Leave username empty for private channels
+              </Typography>
+            </Alert>
 
             <Button
               variant="outlined"

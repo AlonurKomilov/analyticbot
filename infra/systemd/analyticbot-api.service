@@ -1,0 +1,52 @@
+[Unit]
+Description=AnalyticBot API Server
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=analyticbot
+Group=analyticbot
+WorkingDirectory=/opt/analyticbot
+
+# Environment
+Environment="PATH=/opt/analyticbot/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/opt/analyticbot/.env.production
+
+# Process management
+ExecStart=/opt/analyticbot/.venv/bin/uvicorn apps.api.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# Graceful shutdown
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Resource limits
+MemoryMax=2G
+MemoryHigh=1.5G
+CPUQuota=150%
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/analyticbot/logs
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=analyticbot-api
+
+[Install]
+WantedBy=multi-user.target

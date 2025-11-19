@@ -522,11 +522,12 @@ class MTProtoDataCollectionService:
                 "total_messages": 0,
             }
 
-    async def run_continuous_service(self, interval_minutes: int = 10):
+    async def run_continuous_service(self, interval_minutes: int = 10, process_manager=None):
         """Run continuous data collection service.
 
         Args:
             interval_minutes: Interval between collection runs in minutes
+            process_manager: Optional ProcessManager for lifecycle management
         """
         logger.info(
             f"🚀 Starting continuous MTProto data collection service "
@@ -535,22 +536,33 @@ class MTProtoDataCollectionService:
 
         self.running = True
 
-        # Set up signal handlers for graceful shutdown
-        def signal_handler(signum, frame):
-            logger.info(f"🛑 Received signal {signum}, shutting down...")
-            self.running = False
+        # Use process_manager if provided, otherwise set up own signal handlers
+        if not process_manager:
+            # Set up signal handlers for graceful shutdown
+            def signal_handler(signum, frame):
+                logger.info(f"🛑 Received signal {signum}, shutting down...")
+                self.running = False
 
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
 
         interval_seconds = interval_minutes * 60
 
         try:
-            while self.running:
+            # Use process_manager's should_continue if available
+            should_run = (
+                lambda: process_manager.should_continue() if process_manager else self.running
+            )
+
+            while should_run():
                 collection_start = datetime.now(UTC)
                 logger.info(
                     f"🔄 Starting collection cycle at {collection_start.strftime('%H:%M:%S')}..."
                 )
+
+                # Update heartbeat if using process_manager
+                if process_manager:
+                    process_manager.heartbeat()
 
                 # Run collection for all users using configured limit
                 limit = self.settings.MTPROTO_HISTORY_LIMIT_PER_RUN
@@ -590,7 +602,11 @@ class MTProtoDataCollectionService:
                         f"Collections will run back-to-back with {remaining_wait}s cooldown."
                     )
 
-                await asyncio.sleep(remaining_wait)
+                # Sleep in small chunks to respond quickly to shutdown signals
+                for _ in range(int(remaining_wait)):
+                    if not should_run():
+                        break
+                    await asyncio.sleep(1)
 
         except Exception as e:
             logger.error(f"❌ Service error: {e}")

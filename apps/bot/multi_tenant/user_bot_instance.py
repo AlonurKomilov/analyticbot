@@ -64,6 +64,7 @@ class UserBotInstance:
         # State tracking
         self.is_initialized = False
         self.last_activity = datetime.now()
+        self._session_closed = False  # Track if session is properly closed
 
         # Rate limiting
         self.request_semaphore = asyncio.Semaphore(credentials.max_concurrent_requests)
@@ -141,6 +142,10 @@ class UserBotInstance:
         Gracefully shutdown bot instances
         Closes all connections and cleans up resources
         """
+        # Prevent double-shutdown
+        if self._session_closed:
+            return
+
         try:
             # Stop MTProto client first
             if self.mtproto_client:
@@ -158,6 +163,7 @@ class UserBotInstance:
             if self.bot:
                 try:
                     await self.bot.session.close()
+                    self._session_closed = True  # Mark as closed
                     print(f"✅ Bot session closed for user {self.user_id}")
                 except Exception as e:
                     print(f"⚠️  Error closing bot session for user {self.user_id}: {e}")
@@ -166,6 +172,41 @@ class UserBotInstance:
 
         except Exception as e:
             print(f"❌ Error during shutdown for user {self.user_id}: {e}")
+
+    async def __aenter__(self):
+        """Context manager entry - ensures initialization"""
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensures cleanup"""
+        await self.shutdown()
+        return False  # Don't suppress exceptions
+
+    def __del__(self):
+        """
+        Destructor - last resort cleanup warning
+
+        Note: This should rarely be called if code is properly using shutdown().
+        If you see this warning, it indicates a resource leak in the code.
+        """
+        if self.bot and not self._session_closed:
+            import logging
+            import warnings
+
+            warnings.warn(
+                f"UserBotInstance for user {self.user_id} being garbage collected "
+                f"without proper shutdown! This indicates a resource leak. "
+                f"Always call shutdown() or use async context manager.",
+                ResourceWarning,
+                stacklevel=2,
+            )
+
+            # Log for monitoring
+            logging.warning(
+                f"🔴 RESOURCE LEAK: Bot session for user {self.user_id} not properly closed. "
+                f"This will cause memory growth over time."
+            )
 
     async def rate_limited_request(self, coro):
         """

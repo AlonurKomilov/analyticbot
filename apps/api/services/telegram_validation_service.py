@@ -13,11 +13,10 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel
 
 # Use protocol for Clean Architecture compliance
-from core.protocols.infrastructure_protocols import TelegramClientProtocol
 
 # Type checking only - for IDE support
 if TYPE_CHECKING:
-    from infra.tg.telethon_client import TelethonTGClient
+    pass
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +33,7 @@ class ChannelValidationResult(BaseModel):
     description: str | None = None
     is_verified: bool = False
     is_scam: bool = False
+    is_admin: bool | None = None  # Bot/MTProto session's admin status in the channel
     error_message: str | None = None
 
 
@@ -46,7 +46,7 @@ class TelegramValidationService:
 
         Args:
             telethon_client: Telegram client for API access
-        
+
         Note: Uses Any type since TelegramClientProtocol doesn't have all methods yet.
         Future: Expand TelegramClientProtocol with get_full_channel(), _started, _client
         The important part is dependency injection - type can be refined later.
@@ -54,9 +54,7 @@ class TelegramValidationService:
         self.client = telethon_client
         self.logger = logging.getLogger(self.__class__.__name__)
 
-    async def validate_channel_by_username(
-        self, username: str
-    ) -> ChannelValidationResult:
+    async def validate_channel_by_username(self, username: str) -> ChannelValidationResult:
         """
         Validate a Telegram channel by username and fetch metadata
 
@@ -191,24 +189,96 @@ class TelegramValidationService:
             self.logger.error(f"Error getting metadata for channel {telegram_id}: {e}")
             return {"error": str(e)}
 
-    async def check_user_admin_access(
-        self, username: str, user_id: int
-    ) -> tuple[bool, str]:
+    async def check_bot_admin_access(self, username: str) -> tuple[bool, str]:
         """
-        Check if a user has admin access to a channel
+        Check if the connected bot/MTProto session is an admin in the channel
+
+        This verifies actual ownership by checking if the Telegram client
+        (bot or MTProto session) that's making the request has admin rights.
 
         Args:
-            username: Channel username
-            user_id: Telegram user ID
+            username: Channel username (with or without @)
 
         Returns:
             Tuple of (has_access, error_message)
         """
         try:
-            # This would require checking the user's permissions in the channel
-            # For now, we'll return True to allow channel creation
-            # In production, you'd want to verify admin rights
-            return True, ""
+            # Ensure client is started
+            if not self.client._started:
+                await self.client.start()
+
+            # Clean username
+            clean_username = username.strip().lstrip("@")
+
+            if not clean_username:
+                return False, "Username cannot be empty"
+
+            # Get channel entity
+            try:
+                if self.client._client is None:
+                    return False, "Telegram client not initialized"
+
+                entity = await self.client._client.get_entity(clean_username)
+            except Exception as e:
+                self.logger.warning(f"Failed to get entity for @{clean_username}: {e}")
+                return False, f"Channel not found: {str(e)}"
+
+            # Check if it's a channel
+            entity_type = type(entity).__name__
+            if entity_type not in ["Channel"]:
+                return False, f"Entity is not a channel (type: {entity_type})"
+
+            # Try to get admin permissions using the current client
+            # If the bot/MTProto session is admin, this will succeed
+            try:
+                from telethon.tl.functions.channels import GetParticipantRequest
+
+                # Get "me" - the user/bot that this client represents
+                me = await self.client._client.get_me()
+                if not me:
+                    return False, "Could not identify current Telegram session"
+
+                # Check if "me" is a participant with admin rights
+                try:
+                    participant = await self.client._client(
+                        GetParticipantRequest(channel=entity, participant=me)
+                    )
+
+                    # Check if participant has admin or creator rights
+                    participant_type = type(participant.participant).__name__
+                    is_admin = participant_type in [
+                        "ChannelParticipantAdmin",
+                        "ChannelParticipantCreator",
+                    ]
+
+                    if not is_admin:
+                        self.logger.warning(
+                            f"Connected bot/session is not an admin of @{clean_username} "
+                            f"(participant type: {participant_type})"
+                        )
+                        return (
+                            False,
+                            "Your bot or MTProto session must be added as an admin to this channel. "
+                            "Please add your bot/account as an admin with necessary permissions.",
+                        )
+
+                    self.logger.info(
+                        f"✅ Connected bot/session verified as admin of @{clean_username}"
+                    )
+                    return True, ""
+
+                except Exception as e:
+                    # If we can't get participant info, user is likely not in the channel at all
+                    self.logger.warning(f"Not a participant of @{clean_username}: {e}")
+                    return (
+                        False,
+                        "Your bot or MTProto session is not a member of this channel. "
+                        "Please add your bot/account as an admin with necessary permissions.",
+                    )
+
+            except Exception as e:
+                self.logger.error(f"Failed to check admin permissions: {e}")
+                return False, f"Could not verify admin access: {str(e)}"
 
         except Exception as e:
             self.logger.error(f"Error checking admin access: {e}")

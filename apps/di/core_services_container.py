@@ -57,14 +57,37 @@ async def _create_dashboard_service(port: int = 8050, **kwargs):
 
 async def _create_analytics_fusion_service(**kwargs):
     """Create analytics fusion orchestrator (API service)"""
+    logger.info("🏭 Creating analytics fusion service...")
     try:
-        from core.services.analytics_fusion import AnalyticsOrchestratorService
         from core.services.analytics_fusion.infrastructure import DataAccessService
+        from core.services.analytics_fusion.orchestrator import AnalyticsOrchestratorService
+        from core.services.analytics_fusion.recommendations.posting_time_service import (
+            PostingTimeRecommendationService,
+        )
 
+        logger.info("✅ Imports successful, creating services...")
+
+        # Create data access service
         data_access_service = DataAccessService(repository_manager=None)
-        return AnalyticsOrchestratorService(data_access_service=data_access_service)
+        logger.info("✅ DataAccessService created")
+
+        # Create posting time recommendation service
+        posting_time_service = PostingTimeRecommendationService(data_access=data_access_service)
+        logger.info("✅ PostingTimeRecommendationService created")
+
+        # Create orchestrator with all services injected
+        orchestrator = AnalyticsOrchestratorService(
+            data_access_service=data_access_service, posting_time_service=posting_time_service
+        )
+        logger.info(
+            f"✅ AnalyticsOrchestratorService created with posting_time_service={orchestrator.posting_time_service}"
+        )
+        return orchestrator
     except ImportError as e:
-        logger.warning(f"Analytics fusion service not available: {e}")
+        logger.warning(f"❌ Analytics fusion service not available (ImportError): {e}")
+        return None
+    except Exception as e:
+        logger.error(f"❌ Failed to create analytics fusion service: {e}", exc_info=True)
         return None
 
 

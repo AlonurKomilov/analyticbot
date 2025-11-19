@@ -9,15 +9,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-# Services - NEW DI
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
-
 # Auth
 from apps.api.middleware.auth import get_current_user, require_channel_access
 
 # Schemas
 # Schemas
 from apps.api.schemas.analytics import PostListResponse
+
+# Services - NEW DI
+from apps.di.analytics_container import get_analytics_fusion_service, get_cache
 from apps.shared.performance import performance_timer
 from core.protocols import AnalyticsFusionServiceProtocol
 

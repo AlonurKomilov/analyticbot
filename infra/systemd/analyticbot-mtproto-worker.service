@@ -1,0 +1,54 @@
+[Unit]
+Description=AnalyticBot MTProto Data Collection Worker
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=simple
+User=analyticbot
+Group=analyticbot
+WorkingDirectory=/opt/analyticbot
+
+# Environment
+Environment="PATH=/opt/analyticbot/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/opt/analyticbot/.env.production
+
+# Process management
+ExecStart=/opt/analyticbot/.venv/bin/python -m apps.mtproto.worker \
+    --interval 10 \
+    --max-runtime 24 \
+    --memory-limit 2048 \
+    --cpu-limit 80 \
+    --health-port 9091 \
+    --log-level INFO
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+StartLimitIntervalSec=600
+
+# Graceful shutdown
+TimeoutStopSec=30
+KillMode=mixed
+KillSignal=SIGTERM
+
+# Resource limits
+MemoryMax=2.5G
+MemoryHigh=2G
+CPUQuota=90%
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/analyticbot/logs /opt/analyticbot/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=analyticbot-mtproto-worker
+
+[Install]
+WantedBy=multi-user.target

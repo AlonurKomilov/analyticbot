@@ -26,7 +26,7 @@ async def test_post_dynamics_endpoint():
     print("=" * 60)
 
     # Get container and dependencies
-    from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+    from apps.di.analytics_container import get_analytics_fusion_service, get_cache
 
     service = await anext(get_analytics_fusion_service())
     cache = await anext(get_cache())

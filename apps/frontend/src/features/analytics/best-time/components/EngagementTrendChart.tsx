@@ -72,8 +72,8 @@ const EngagementTrendChart: React.FC<EngagementTrendChartProps> = ({ data, bestH
             <Typography variant="h6" sx={{ mb: 2 }}>
                 📊 Engagement by Hour
             </Typography>
-            <Paper sx={{ p: 2 }}>
-                <ResponsiveContainer width="100%" height={300}>
+            <Paper sx={{ p: 2, minHeight: 300, minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height={300} minWidth={300}>
                     <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#444" />
                         <XAxis

@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
-from apps.api.di_analytics import get_analytics_fusion_service, get_cache
+from apps.di.analytics_container import get_analytics_fusion_service, get_cache
 from core.protocols import AnalyticsFusionServiceProtocol
 
 logger = logging.getLogger(__name__)

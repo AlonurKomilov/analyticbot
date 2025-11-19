@@ -21,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import relationship
 
-from infra.db.base import Base
+from infra.db.models.base import Base
 
 
 class UserStorageChannel(Base):
@@ -52,7 +52,8 @@ class UserStorageChannel(Base):
     last_validated_at = Column(DateTime, nullable=True)  # Last time bot verified access
 
     # Relationships
-    user = relationship("User", back_populates="storage_channels")
+    # TODO: Re-enable when User model is migrated to use common Base
+    # user = relationship("User", back_populates="storage_channels")
     media_files = relationship(
         "TelegramMedia", back_populates="storage_channel", cascade="all, delete-orphan"
     )
@@ -114,11 +115,12 @@ class TelegramMedia(Base):
     # Timestamps
     uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Additional metadata (flexible JSON field)
-    metadata = Column(JSON, nullable=True, default={})
+    # Additional metadata (flexible JSON field) - renamed to avoid SQLAlchemy reserved word conflict
+    file_metadata = Column("metadata", JSON, nullable=True, default={})
 
     # Relationships
-    user = relationship("User", back_populates="telegram_media")
+    # TODO: Re-enable when User model is migrated to use common Base
+    # user = relationship("User", back_populates="telegram_media")
     storage_channel = relationship("UserStorageChannel", back_populates="media_files")
 
     # Indexes

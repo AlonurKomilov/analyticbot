@@ -45,11 +45,11 @@ const DashboardCharts: React.FC<DashboardChartsProps> = React.memo(({ trends }) 
       {/* Trends Chart */}
       <Grid item xs={12} lg={8}>
         <Card>
-          <CardContent>
+          <CardContent sx={{ minHeight: 300, minWidth: 0 }}>
             <Typography variant="h6" gutterBottom>
               📈 Weekly Performance Trends
             </Typography>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} minWidth={300}>
               <LineChart data={trends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />

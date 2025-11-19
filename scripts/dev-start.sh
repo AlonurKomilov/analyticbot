@@ -86,6 +86,37 @@ fi
 echo -e "${GREEN}✅ Infrastructure ready!${NC}"
 echo ""
 
+# ============================================================================
+# Worker Process Cleanup
+# ============================================================================
+cleanup_workers() {
+    local service_type=$1
+    echo -e "${BLUE}🧹 Cleaning up old ${service_type} processes...${NC}"
+
+    case $service_type in
+        "mtproto")
+            # Kill MTProto workers
+            pkill -9 -f "apps.mtproto.worker" 2>/dev/null && echo -e "${GREEN}  ✅ Killed old MTProto workers${NC}" || true
+            pkill -9 -f "multiprocessing.spawn" 2>/dev/null && echo -e "${GREEN}  ✅ Killed orphan spawn processes${NC}" || true
+            ;;
+        "bot")
+            # Kill bot processes
+            pkill -9 -f "apps.bot.run_bot" 2>/dev/null && echo -e "${GREEN}  ✅ Killed old bot processes${NC}" || true
+            ;;
+        "all")
+            # Kill all workers
+            pkill -9 -f "apps.mtproto.worker" 2>/dev/null && echo -e "${GREEN}  ✅ Killed old MTProto workers${NC}" || true
+            pkill -9 -f "apps.bot.run_bot" 2>/dev/null && echo -e "${GREEN}  ✅ Killed old bot processes${NC}" || true
+            pkill -9 -f "multiprocessing.spawn" 2>/dev/null && echo -e "${GREEN}  ✅ Killed orphan spawn processes${NC}" || true
+            ;;
+    esac
+
+    # Give processes time to die
+    sleep 2
+
+    echo -e "${GREEN}✅ Cleanup complete${NC}"
+}
+
 # Function to start a service in background
 start_service() {
     local service_name=$1
@@ -149,8 +180,25 @@ case $SERVICE in
         start_service "api" 'uvicorn apps.api.main:app --host 0.0.0.0 --port 11400 --workers 2 --log-level debug' 11400
         ;;
     "bot")
+        # Clean up old bot processes first
+        cleanup_workers "bot"
+
         # Start Bot
         start_service "bot" 'python -m apps.bot.run_bot' ""
+        ;;
+    "mtproto")
+        # Clean up old MTProto processes first
+        cleanup_workers "mtproto"
+
+        # Start MTProto worker with lifecycle management
+        start_service "mtproto" 'python -m apps.mtproto.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
+        ;;
+    "workers")
+        # Start both bot and mtproto workers
+        cleanup_workers "all"
+
+        start_service "bot" 'python -m apps.bot.run_bot' ""
+        start_service "mtproto" 'python -m apps.mtproto.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
         ;;
     "frontend")
         # Start Frontend (in frontend directory) - Development Environment Port 11300

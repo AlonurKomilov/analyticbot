@@ -159,10 +159,9 @@ forbidden_modules = [
     "redis",
     "httpx",
     "asyncpg",
-    "aiogram",
     "telegram"
 ]
-# Note: aiohttp temporarily allowed in core.common_helpers.health_check (legacy code, 0% coverage)
+# Note: aiogram used in infra layer, not in core
 
 [[tool.importlinter.contracts]]
 name = "Apps Layer Boundaries"
@@ -203,18 +202,18 @@ source_modules = [
 forbidden_modules = ["infra"]
 ignore_imports = [
     # DI Containers - composition roots import concrete implementations
-    "apps.api.routers.admin_channels_router -> apps.api.di_analytics",
-    "apps.api.routers.admin_system_router -> apps.api.di_analytics",
-    "apps.api.routers.admin_users_router -> apps.api.di_analytics",
+    "apps.api.routers.admin_channels_router -> apps.di.analytics_container",
+    "apps.api.routers.admin_system_router -> apps.di.analytics_container",
+    "apps.api.routers.admin_users_router -> apps.di.analytics_container",
     "apps.api.routers.analytics_alerts_router -> apps.di",
-    "apps.api.routers.analytics_channels_router -> apps.api.di_analytics",
-    "apps.api.routers.channels_router -> apps.api.di_analytics",
-    "apps.api.routers.insights_engagement_router -> apps.api.di_analytics",
-    "apps.api.routers.insights_orchestration_router -> apps.api.di_analytics",
+    "apps.api.routers.analytics_channels_router -> apps.di.analytics_container",
+    "apps.api.routers.channels_router -> apps.di.analytics_container",
+    "apps.api.routers.insights_engagement_router -> apps.di.analytics_container",
+    "apps.api.routers.insights_orchestration_router -> apps.di.analytics_container",
     "apps.api.routers.payment_router -> apps.di",
     "apps.api.routers.sharing_router -> apps.di",
-    "apps.api.routers.statistics_core_router -> apps.api.di_analytics",
-    "apps.api.routers.statistics_reports_router -> apps.api.di_analytics",
+    "apps.api.routers.statistics_core_router -> apps.di.analytics_container",
+    "apps.api.routers.statistics_reports_router -> apps.di.analytics_container",
     "apps.api.services.initial_data_service -> apps.di",
     "apps.api.services.startup_health_check -> apps.di",
     "apps.bot.handlers.admin_handlers -> apps.di",
@@ -222,10 +221,10 @@ ignore_imports = [
     # ✅ FIXED Issue #4 Phase 2: content_protection now uses package structure
     # "apps.bot.handlers.content_protection -> apps.di" (REMOVED - no longer needed)
     # Additional DI container imports
-    "apps.api.routers.analytics_live_router -> apps.api.di_analytics",
-    "apps.api.routers.analytics_post_dynamics_router -> apps.api.di_analytics",
+    "apps.api.routers.analytics_live_router -> apps.di.analytics_container",
+    "apps.api.routers.analytics_post_dynamics_router -> apps.di.analytics_container",
     "apps.api.routers.content_protection_router -> apps.di",
-    "apps.api.routers.insights_predictive.dependencies -> apps.api.di_analytics",
+    "apps.api.routers.insights_predictive.dependencies -> apps.di.analytics_container",
     "apps.api.routers.insights_predictive.dependencies -> apps.di",
     "apps.api.routers.superadmin_router -> apps.di",
     "apps.api.routers.system_router -> apps.di",
@@ -257,7 +256,7 @@ ignore_imports = [
     "apps.api.routers.statistics_core_router -> apps.api.middleware.auth",
     "apps.api.routers.statistics_reports_router -> apps.api.middleware.auth",
     "apps.api.routers.system_router -> apps.api.middleware.auth",
-    # Demo router is composition root
+        # Demo router is composition root
     "apps.api.routers -> apps.demo.routers.main",
     # Telegram validation uses telethon (infra dependency - architectural debt)
     "apps.api.services.telegram_validation_service -> infra.tg.telethon_client",
@@ -282,9 +281,9 @@ ignore_imports = [
     "apps.api.routers.trend_analysis_router -> apps.di"
 ]
 
-# Note: apps.di.*, apps.api.di_analytics, and apps.mtproto.* intentionally allowed
+# Note: apps.di.* and apps.mtproto.* intentionally allowed
 # - apps.di.* are DI containers (composition roots) - MUST import concrete implementations
-# - apps.api.di_analytics is a specialized DI container for Analytics V2
+# - apps.di.analytics_container is the specialized DI container for Analytics V2 (refactored from apps.api.di_analytics)
 # - apps.mtproto.* is an infrastructure adapter layer
 # - apps.bot.utils, apps.shared.* contain optional utilities
 # These are NOT in source_modules above, so they can freely import infra

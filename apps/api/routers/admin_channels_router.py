@@ -12,14 +12,14 @@ import logging
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from apps.api.di_analytics import get_channel_management_service
 from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
+from apps.di.analytics_container import get_channel_management_service
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)

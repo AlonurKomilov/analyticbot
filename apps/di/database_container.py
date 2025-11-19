@@ -28,9 +28,6 @@ from core.protocols import (
 # Import other repositories (no protocols yet)
 from core.repositories.alert_repository import AlertSentRepository, AlertSubscriptionRepository
 from core.repositories.shared_reports_repository import SharedReportsRepository
-from infra.db.adapters.mtproto_repository_adapter import (
-    MTProtoAuditRepositoryAdapter,
-)
 
 # Still need concrete implementation for instantiation
 from infra.db.connection_manager import db_manager
@@ -39,9 +36,6 @@ from infra.db.connection_manager import db_manager
 from infra.db.repositories.admin_repository import AsyncpgAdminRepository
 from infra.db.repositories.analytics_repository import AsyncpgAnalyticsRepository
 from infra.db.repositories.channel_daily_repository import ChannelDailyRepository
-
-# Import MTProto repositories
-from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
 from infra.db.repositories.channel_repository import AsyncpgChannelRepository
 from infra.db.repositories.edges_repository import AsyncpgEdgesRepository
 from infra.db.repositories.payment_repository import AsyncpgPaymentRepository
@@ -265,18 +259,6 @@ class DatabaseContainer(containers.DeclarativeContainer):
     user_bot_repo = providers.Singleton(
         UserBotRepositoryFactory,
         session_factory=async_session_maker,
-    )
-
-    # MTProto Channel Repository (uses AsyncSession)
-    channel_mtproto_repo = providers.Factory(
-        ChannelMTProtoRepository,
-        session=async_session_maker,  # Pass the session maker, not call it
-    )
-
-    # MTProto Audit Repository Adapter (uses AsyncSession)
-    mtproto_audit_repo = providers.Factory(
-        MTProtoAuditRepositoryAdapter,
-        session=async_session_maker,  # Pass the session maker, not call it
     )
 
     # Alert repositories (from core)

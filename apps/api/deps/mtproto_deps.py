@@ -4,17 +4,14 @@ MTProto Dependencies - Dependency injection for MTProto services.
 Provides FastAPI dependencies for MTProto-related services and repositories.
 """
 
+from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from apps.di import get_db_session
-from core.ports.mtproto_repository import (
-    IChannelMTProtoSettingsRepository,
-    IMTProtoAuditRepository,
-    IMTProtoChannelRepository,
-)
+from apps.di import get_container
+from core.ports.mtproto_repository import IMTProtoAuditRepository, IMTProtoChannelRepository
 from infra.db.adapters.mtproto_repository_adapter import (
     MTProtoAuditRepositoryAdapter,
     MTProtoChannelRepositoryAdapter,
@@ -22,10 +19,18 @@ from infra.db.adapters.mtproto_repository_adapter import (
 from infra.db.repositories.channel_mtproto_repository import ChannelMTProtoRepository
 
 
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Get database session from DI container."""
+    container = get_container()
+    session_factory = await container.database.async_session_maker()
+    async with session_factory() as session:
+        yield session
+
+
 async def get_channel_mtproto_repository(
     session: Annotated[AsyncSession, Depends(get_db_session)],
-) -> IChannelMTProtoSettingsRepository:
-    """Get Channel MTProto Settings Repository."""
+) -> ChannelMTProtoRepository:
+    """Get Channel MTProto Repository."""
     return ChannelMTProtoRepository(session)
 
 

@@ -10,6 +10,40 @@ from datetime import datetime
 from typing import Any
 
 
+class IChannelMTProtoSettingsRepository(ABC):
+    """Interface for per-channel MTProto settings repository."""
+
+    @abstractmethod
+    async def get_setting(self, user_id: int, channel_id: int) -> Any | None:
+        """Get MTProto setting for a specific user+channel combination."""
+        pass
+
+    @abstractmethod
+    async def get_user_settings(self, user_id: int) -> list[Any]:
+        """Get all channel MTProto settings for a user."""
+        pass
+
+    @abstractmethod
+    async def create_or_update(self, user_id: int, channel_id: int, mtproto_enabled: bool) -> Any:
+        """Create or update MTProto setting for a channel."""
+        pass
+
+    @abstractmethod
+    async def delete_setting(self, user_id: int, channel_id: int) -> bool:
+        """Delete MTProto setting for a specific channel."""
+        pass
+
+    @abstractmethod
+    async def delete_user_settings(self, user_id: int) -> int:
+        """Delete all MTProto settings for a user."""
+        pass
+
+    @abstractmethod
+    async def is_channel_enabled(self, user_id: int, channel_id: int, global_enabled: bool) -> bool:
+        """Check if MTProto is enabled for a specific channel."""
+        pass
+
+
 class IMTProtoChannelRepository(ABC):
     """Interface for MTProto channel data repository."""
 
@@ -73,40 +107,4 @@ class IMTProtoAuditRepository(ABC):
         self, channel_id: int, limit: int = 100, offset: int = 0
     ) -> list[dict[str, Any]]:
         """Get channel's action history."""
-        pass
-
-
-class IChannelMTProtoSettingsRepository(ABC):
-    """Interface for per-channel MTProto settings repository."""
-
-    @abstractmethod
-    async def get_setting(self, user_id: int, channel_id: int) -> Any | None:
-        """Get MTProto setting for a specific user+channel combination."""
-        pass
-
-    @abstractmethod
-    async def get_user_settings(self, user_id: int) -> list[Any]:
-        """Get all channel MTProto settings for a user."""
-        pass
-
-    @abstractmethod
-    async def create_or_update(self, user_id: int, channel_id: int, mtproto_enabled: bool) -> Any:
-        """Create or update per-channel MTProto setting."""
-        pass
-
-    @abstractmethod
-    async def delete_setting(self, user_id: int, channel_id: int) -> bool:
-        """Delete per-channel MTProto setting."""
-        pass
-
-    @abstractmethod
-    async def delete_user_settings(self, user_id: int) -> int:
-        """Delete all per-channel settings for a user."""
-        pass
-
-    @abstractmethod
-    async def is_channel_enabled(
-        self, user_id: int, channel_id: int, global_enabled: bool = True
-    ) -> bool:
-        """Check if MTProto is enabled for a specific channel."""
         pass

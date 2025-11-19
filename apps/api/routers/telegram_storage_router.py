@@ -9,10 +9,28 @@ import logging
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.api.middleware.auth import get_current_user
+from apps.api.services.telegram_storage_service import (
+    ChannelNotFoundError,
+    TelegramStorageError,
+    TelegramStorageService,
+)
 
 logger = logging.getLogger(__name__)
+
+
+# Dependency to get database session
+async def get_db_session() -> AsyncSession:
+    """Get database session from DI container."""
+    from apps.di import get_container
+
+    container = get_container()
+    session_factory = await container.database.async_session_maker()
+    async with session_factory() as session:
+        yield session
+
 
 router = APIRouter(
     prefix="/storage",
@@ -148,6 +166,7 @@ async def get_storage_channels(
 async def validate_storage_channel(
     request: StorageChannelCreate,
     current_user: dict = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
 ):
     """
     ## ✅ Validate Storage Channel
@@ -168,13 +187,107 @@ async def validate_storage_channel(
 
     **Note:** Requires MTProto integration for full functionality.
     """
-    logger.info(f"User {current_user.get('id')} validating channel: {request.channel_id}")
+    user_id: int = current_user.get("id")  # type: ignore
+    logger.info(f"User {user_id} validating channel: {request.channel_id}")
 
-    # TODO: Implement MTProto channel validation
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Channel validation requires MTProto integration. Feature coming soon!",
-    )
+    try:
+        # Get user's bot credentials (each user has their own bot)
+        from apps.di import get_container
+
+        container = get_container()
+        user_bot_repo = await container.database.user_bot_repo()
+
+        # Get user's bot credentials
+        credentials = await user_bot_repo.get_by_user_id(user_id)
+
+        if not credentials:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No bot configured. Please configure your bot in Settings → Bot Configuration first.",
+            )
+
+        if not credentials.is_verified or credentials.status != "active":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Bot is not active (status: {credentials.status}). Please verify your bot configuration first.",
+            )
+
+        # Check if user has MTProto configured for Telethon access
+        from core.services.encryption_service import get_encryption_service
+
+        encryption = get_encryption_service()
+
+        if not all(
+            [credentials.telegram_api_id, credentials.telegram_api_hash, credentials.session_string]
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="MTProto not configured. Please set up MTProto in Settings → MTProto Configuration first. "
+                "This is required to validate and use storage channels.",
+            )
+
+        # Decrypt credentials
+        api_hash = encryption.decrypt(credentials.telegram_api_hash)
+        session_string = encryption.decrypt(credentials.session_string)
+
+        # Create Telethon client with user's MTProto credentials
+        from telethon import TelegramClient
+        from telethon.sessions import StringSession
+
+        user_client = TelegramClient(
+            StringSession(session_string),
+            api_id=credentials.telegram_api_id,
+            api_hash=api_hash,
+        )
+
+        try:
+            # Connect the client
+            await user_client.connect()
+
+            if not await user_client.is_user_authorized():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="MTProto session expired. Please reconnect MTProto in Settings.",
+                )
+
+            # Create storage service with user's Telethon client
+            storage_service = TelegramStorageService(db_session, user_client)
+
+            # Validate the channel using user's Telegram session
+            channel_info = await storage_service.validate_storage_channel(
+                user_id=user_id,
+                channel_id=request.channel_id,
+                channel_username=request.channel_username,
+            )
+
+            return ChannelValidationResponse(
+                is_valid=channel_info["is_valid"],
+                channel_id=channel_info["id"],
+                channel_title=channel_info["title"],
+                channel_username=channel_info.get("username"),
+                member_count=channel_info.get("member_count", 0),
+                bot_is_admin=channel_info.get("bot_is_admin", False),
+                message="Channel validation successful! You can now connect this channel for storage.",
+            )
+        finally:
+            # Clean up Telethon client
+            if user_client.is_connected():
+                await user_client.disconnect()
+
+    except ChannelNotFoundError as e:
+        logger.warning(f"Channel not found for user {user_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except TelegramStorageError as e:
+        logger.warning(f"Channel validation failed for user {user_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    except Exception as e:
+        logger.error(f"Error validating channel for user {user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to validate channel: {str(e)}",
+        )
 
 
 @router.post(

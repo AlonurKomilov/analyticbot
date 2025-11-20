@@ -5,9 +5,10 @@ Provides endpoints for users to create, manage, and verify their bots.
 """
 
 import logging
+from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_current_user_id  # Use existing auth system
 from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
@@ -67,6 +68,7 @@ async def get_user_bot_repository() -> IUserBotRepository:
 @limiter.limit(RateLimitConfig.BOT_CREATION)  # 5 bot creations per hour per IP
 async def create_user_bot(
     request: Request,
+    response: Response,
     bot_request: CreateBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
     repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],
@@ -299,6 +301,7 @@ async def get_bot_status(
 @limiter.limit(RateLimitConfig.BOT_OPERATIONS)  # 100 operations per minute per IP
 async def verify_bot(
     request: Request,
+    response: Response,
     verify_request: VerifyBotRequest,
     user_id: Annotated[int, Depends(get_current_user_id)],
     repository: Annotated[IUserBotRepository, Depends(get_user_bot_repository)],

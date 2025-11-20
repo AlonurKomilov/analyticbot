@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 from apps.api.middleware.auth import (
@@ -67,6 +67,7 @@ class AuditLogEntry(BaseModel):
 @limiter.limit(RateLimitConfig.ADMIN_OPERATIONS)  # 30 admin requests per minute per IP
 async def get_system_statistics(
     request: Request,
+    response: Response,
     current_user: dict = Depends(get_current_user),
     analytics_service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
 ):

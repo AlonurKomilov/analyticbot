@@ -6,7 +6,7 @@ Handles new user account creation.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_user_repository
 from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
@@ -23,6 +23,7 @@ router = APIRouter()
 @limiter.limit(RateLimitConfig.AUTH_REGISTER)  # 3 registrations per hour per IP
 async def register(
     request: Request,
+    response: Response,
     register_data: RegisterRequest,
     user_repo: UserRepository = Depends(get_user_repository)
 ):

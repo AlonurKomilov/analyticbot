@@ -101,9 +101,9 @@ class StageExecutor:
                 "drift_detected": drift_detected,
                 "drift_severity": drift_severity,
                 "analysis_result": analysis_result,
-                "next_stage": WorkflowStage.FEEDBACK_COLLECTION
-                if drift_detected
-                else WorkflowStage.COMPLETED,
+                "next_stage": (
+                    WorkflowStage.FEEDBACK_COLLECTION if drift_detected else WorkflowStage.COMPLETED
+                ),
             }
 
         except Exception as e:
@@ -139,9 +139,11 @@ class StageExecutor:
                 "success": True,
                 "feedback_count": feedback_count,
                 "feedback_analysis": feedback_analysis,
-                "next_stage": WorkflowStage.LEARNING_TASK_CREATION
-                if feedback_count > 0
-                else WorkflowStage.COMPLETED,
+                "next_stage": (
+                    WorkflowStage.LEARNING_TASK_CREATION
+                    if feedback_count > 0
+                    else WorkflowStage.COMPLETED
+                ),
             }
 
         except Exception as e:
@@ -225,9 +227,11 @@ class StageExecutor:
                 "success": True,
                 "training_result": training_result,
                 "model_confidence": model_confidence,
-                "next_stage": WorkflowStage.MODEL_VALIDATION
-                if model_confidence >= self.min_confidence_threshold
-                else WorkflowStage.FAILED,
+                "next_stage": (
+                    WorkflowStage.MODEL_VALIDATION
+                    if model_confidence >= self.min_confidence_threshold
+                    else WorkflowStage.FAILED
+                ),
             }
 
         except Exception as e:
@@ -240,7 +244,10 @@ class StageExecutor:
         """Execute model validation stage"""
         try:
             if not workflow.learning_results:
-                return {"success": False, "error": "No training results available for validation"}
+                return {
+                    "success": False,
+                    "error": "No training results available for validation",
+                }
 
             # Get model validation metrics from learning service
             validation_result = await self.learning_service.validate_model(
@@ -264,9 +271,11 @@ class StageExecutor:
                 "success": True,
                 "validation_result": validation_result,
                 "performance_improvement": performance_improvement,
-                "next_stage": WorkflowStage.MODEL_DEPLOYMENT
-                if performance_improvement >= self.performance_improvement_threshold
-                else WorkflowStage.COMPLETED,
+                "next_stage": (
+                    WorkflowStage.MODEL_DEPLOYMENT
+                    if performance_improvement >= self.performance_improvement_threshold
+                    else WorkflowStage.COMPLETED
+                ),
             }
 
         except Exception as e:
@@ -279,7 +288,10 @@ class StageExecutor:
         """Execute model deployment stage"""
         try:
             if not workflow.learning_results:
-                return {"success": False, "error": "No model results available for deployment"}
+                return {
+                    "success": False,
+                    "error": "No model results available for deployment",
+                }
 
             # Create deployment plan
             deployment_config = {
@@ -343,7 +355,10 @@ class StageExecutor:
             )
 
             if "error" in rollback_result:
-                return {"success": False, "error": f"Rollback failed: {rollback_result['error']}"}
+                return {
+                    "success": False,
+                    "error": f"Rollback failed: {rollback_result['error']}",
+                }
 
             return {
                 "success": True,

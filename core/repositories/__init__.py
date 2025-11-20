@@ -14,4 +14,9 @@ from .interfaces import (
     UserRepository,
 )
 
-__all__ = ["UserRepository", "AdminRepository", "ScheduleRepository", "DeliveryRepository"]
+__all__ = [
+    "UserRepository",
+    "AdminRepository",
+    "ScheduleRepository",
+    "DeliveryRepository",
+]

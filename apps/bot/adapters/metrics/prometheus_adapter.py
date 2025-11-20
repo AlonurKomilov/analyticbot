@@ -6,9 +6,15 @@ client library, providing concrete metrics collection functionality.
 """
 
 import logging
-from typing import Any
 
-from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 from core.services.bot.metrics.models import MetricDefinition, MetricType
 

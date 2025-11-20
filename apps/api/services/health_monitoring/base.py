@@ -4,9 +4,6 @@ Shared imports, constants, and re-exports from core models
 """
 
 import logging
-import os
-from datetime import datetime, timedelta
-from typing import Any
 
 # Re-export core health models for convenience
 from core.common.health.models import (

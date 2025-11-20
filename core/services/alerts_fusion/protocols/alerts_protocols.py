@@ -229,16 +229,10 @@ class AlertsOrchestratorProtocol(Protocol):
 class AlertConfig:
     """Alert configuration data model"""
 
-    pass
-
 
 class LiveMetrics:
     """Live metrics data model"""
 
-    pass
-
 
 class CompetitiveAnalysis:
     """Competitive analysis data model"""
-
-    pass

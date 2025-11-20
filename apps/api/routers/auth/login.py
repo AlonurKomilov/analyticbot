@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from pydantic import EmailStr
 
 from apps.api.auth_utils import auth_utils
@@ -35,6 +35,7 @@ router = APIRouter()
 async def login(
     login_data: LoginRequest,
     request: Request,
+    response: Response,
     user_repo: UserRepository = Depends(get_user_repository),
     security_manager: SecurityManager = Depends(get_security_manager),
 ):

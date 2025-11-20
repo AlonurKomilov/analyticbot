@@ -31,7 +31,11 @@ def _get_di_services():
         get_system_metrics_service,
     )
 
-    return get_business_metrics_service, get_metrics_collector_service, get_system_metrics_service
+    return (
+        get_business_metrics_service,
+        get_metrics_collector_service,
+        get_system_metrics_service,
+    )
 
 
 F = TypeVar("F", bound=Callable[..., Any])

@@ -196,7 +196,10 @@ class DeploymentExecutor:
             execution = self.active_executions[execution_id]
 
             # Check if cancellation is safe
-            if execution.progress.phase in [ExecutionPhase.DEPLOYING, ExecutionPhase.ROLLING_BACK]:
+            if execution.progress.phase in [
+                ExecutionPhase.DEPLOYING,
+                ExecutionPhase.ROLLING_BACK,
+            ]:
                 logger.warning(
                     f"⚠️ Cancellation during {execution.progress.phase.value} may be unsafe"
                 )
@@ -582,7 +585,9 @@ class DeploymentExecutor:
     def _initialize_check_implementations(self) -> dict[str, Callable]:
         """Initialize check implementations"""
 
-        async def model_validation_check(execution: DeploymentExecution) -> dict[str, Any]:
+        async def model_validation_check(
+            execution: DeploymentExecution,
+        ) -> dict[str, Any]:
             await asyncio.sleep(1)
             return {
                 "check_name": "model_validation",
@@ -591,7 +596,9 @@ class DeploymentExecutor:
                 "duration": 1.0,
             }
 
-        async def performance_benchmarking_check(execution: DeploymentExecution) -> dict[str, Any]:
+        async def performance_benchmarking_check(
+            execution: DeploymentExecution,
+        ) -> dict[str, Any]:
             await asyncio.sleep(2)
             return {
                 "check_name": "performance_benchmarking",
@@ -616,7 +623,9 @@ class DeploymentExecutor:
             # Add more implementations as needed
         }
 
-    def _initialize_deployment_implementations(self) -> dict[DeploymentStrategy, Callable]:
+    def _initialize_deployment_implementations(
+        self,
+    ) -> dict[DeploymentStrategy, Callable]:
         """Initialize deployment strategy implementations"""
 
         async def direct_deployment(execution: DeploymentExecution) -> dict[str, Any]:
@@ -637,7 +646,9 @@ class DeploymentExecutor:
                 "deployment_time": 5.0,
             }
 
-        async def blue_green_deployment(execution: DeploymentExecution) -> dict[str, Any]:
+        async def blue_green_deployment(
+            execution: DeploymentExecution,
+        ) -> dict[str, Any]:
             await asyncio.sleep(7)
             return {
                 "success": True,

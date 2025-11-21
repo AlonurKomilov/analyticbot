@@ -210,7 +210,7 @@ class HealthChecker:
                     "response_time_ms": round(dep.response_time_ms, 2),
                     "error": dep.error,
                     "details": dep.details,
-                    "last_checked": dep.last_checked.isoformat() if dep.last_checked else None,
+                    "last_checked": (dep.last_checked.isoformat() if dep.last_checked else None),
                 }
                 for dep in result.dependencies
             ],

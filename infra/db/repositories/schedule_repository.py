@@ -285,13 +285,13 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     async def delete_old_posts(self, days_old: int, statuses: list[str]) -> int:
         """
         Delete old posts in specified statuses
-        
+
         ✅ Issue #3 Phase 3: Real implementation for cleanup_old_posts
-        
+
         Args:
             days_old: Delete posts older than this many days
             statuses: List of statuses to delete (e.g., ['sent', 'cancelled', 'error'])
-        
+
         Returns:
             Number of posts deleted
         """
@@ -311,12 +311,12 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     async def get_stuck_sending_posts(self, timeout_minutes: int = 30) -> list[dict]:
         """
         Get posts stuck in 'sending' status for too long
-        
+
         ✅ Issue #3 Phase 3: Real implementation for requeue_stuck_sending_posts
-        
+
         Args:
             timeout_minutes: Consider posts stuck if in 'sending' status for this many minutes
-        
+
         Returns:
             List of stuck post dictionaries
         """
@@ -352,31 +352,31 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     ) -> int:
         """
         Count posts by status with optional filters
-        
+
         ✅ Issue #3 Phase 3: Supporting method for maintenance tasks
-        
+
         Args:
             status: Post status to count
             user_id: Optional user ID filter
             channel_id: Optional channel ID filter
-        
+
         Returns:
             Count of posts with given status
         """
         query = "SELECT COUNT(*) FROM scheduled_posts WHERE status = $1"
         params: list[Any] = [status]
         param_count = 1
-        
+
         if user_id is not None:
             param_count += 1
             query += f" AND user_id = ${param_count}"
             params.append(user_id)
-        
+
         if channel_id is not None:
             param_count += 1
             query += f" AND channel_id = ${param_count}"
             params.append(channel_id)
-        
+
         try:
             result = await self.db.fetchval(query, *params)
             return result or 0
@@ -386,12 +386,12 @@ class AsyncpgScheduleRepository(ScheduleRepository):
     async def get_expired_schedulers(self, days_old: int = 90) -> list[dict]:
         """
         Get schedulers that are very old and in terminal states
-        
+
         ✅ Issue #3 Phase 3: Real implementation for remove_expired_schedulers
-        
+
         Args:
             days_old: Consider schedulers expired if older than this many days
-        
+
         Returns:
             List of expired scheduler dictionaries
         """
@@ -429,16 +429,16 @@ class AsyncpgScheduleRepository(ScheduleRepository):
 
     def _map_status_to_db(self, status: PostStatus) -> str:
         """Map domain status to database status
-        
+
         Database constraint: status IN ('pending', 'sent', 'error')
         Domain model: SCHEDULED, PUBLISHED, FAILED, DRAFT, CANCELLED
         """
         mapping = {
-            PostStatus.SCHEDULED: "pending",      # scheduled → pending
-            PostStatus.DRAFT: "pending",          # draft → pending
-            PostStatus.PUBLISHED: "sent",         # published → sent
-            PostStatus.FAILED: "error",           # failed → error
-            PostStatus.CANCELLED: "error",        # cancelled → error
+            PostStatus.SCHEDULED: "pending",  # scheduled → pending
+            PostStatus.DRAFT: "pending",  # draft → pending
+            PostStatus.PUBLISHED: "sent",  # published → sent
+            PostStatus.FAILED: "error",  # failed → error
+            PostStatus.CANCELLED: "error",  # cancelled → error
         }
         return mapping.get(status, "pending")
 

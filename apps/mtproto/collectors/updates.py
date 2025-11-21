@@ -18,7 +18,11 @@ class UpdatesCollector:
     """
 
     def __init__(
-        self, tg_client: TGClient, repos: Any, settings: MTProtoSettings, user_id: int | None = None
+        self,
+        tg_client: TGClient,
+        repos: Any,
+        settings: MTProtoSettings,
+        user_id: int | None = None,
     ):
         """Initialize the updates collector.
 

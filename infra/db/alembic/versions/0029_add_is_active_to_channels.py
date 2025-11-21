@@ -24,17 +24,20 @@ def upgrade() -> None:
 
     # Add is_active column (default true, not null)
     op.add_column(
-        "channels", sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true")
+        "channels",
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
     )
 
     # Add index for efficient queries (filtering by active/inactive channels)
     op.create_index("idx_channels_is_active", "channels", ["is_active"])
 
     # Add comment for documentation
-    op.execute("""
+    op.execute(
+        """
         COMMENT ON COLUMN channels.is_active IS
         'Whether the channel is active (true) or suspended (false). Used for filtering and status management.'
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

@@ -461,7 +461,8 @@ async def startup_health_report(request: Request):
     # Get startup health report from app state
     if not hasattr(request.app.state, "startup_health_report"):
         raise HTTPException(
-            status_code=503, detail="Startup health check not yet completed or not enabled"
+            status_code=503,
+            detail="Startup health check not yet completed or not enabled",
         )
 
     report = request.app.state.startup_health_report

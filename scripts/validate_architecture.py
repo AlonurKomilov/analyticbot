@@ -32,7 +32,10 @@ class ArchitectureValidator:
             # Domain layer rules
             (
                 r"^domain/",
-                [r"from (infrastructure|presentation)\.", r"from application\.(?!event_bus)"],
+                [
+                    r"from (infrastructure|presentation)\.",
+                    r"from application\.(?!event_bus)",
+                ],
             ),
             # Application layer rules
             (r"^application/", [r"from presentation\."]),

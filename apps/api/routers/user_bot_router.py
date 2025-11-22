@@ -51,7 +51,10 @@ async def get_user_bot_repository() -> IUserBotRepository:
     response_model=BotCreatedResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
-        400: {"model": ErrorResponse, "description": "Invalid bot token or user already has a bot"},
+        400: {
+            "model": ErrorResponse,
+            "description": "Invalid bot token or user already has a bot",
+        },
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )

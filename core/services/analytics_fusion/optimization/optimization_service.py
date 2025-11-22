@@ -47,7 +47,10 @@ class OptimizationService:
                     "follower_growth": "12%",
                 },
                 "action_plan": {
-                    "immediate_actions": ["Adjust posting schedule", "Create video content"],
+                    "immediate_actions": [
+                        "Adjust posting schedule",
+                        "Create video content",
+                    ],
                     "short_term_goals": ["Increase engagement rate by 15%"],
                     "long_term_strategy": ["Build educational content library"],
                 },

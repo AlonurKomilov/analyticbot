@@ -86,7 +86,8 @@ class UserBotInstance:
         try:
             # Initialize Aiogram Bot
             self.bot = Bot(
-                token=self.bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+                token=self.bot_token,
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML),
             )
             self.dp = Dispatcher()
 

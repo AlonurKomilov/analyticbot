@@ -24,17 +24,20 @@ def upgrade() -> None:
 
     # Add subscriber_count column (default 0, not null)
     op.add_column(
-        "channels", sa.Column("subscriber_count", sa.Integer(), nullable=False, server_default="0")
+        "channels",
+        sa.Column("subscriber_count", sa.Integer(), nullable=False, server_default="0"),
     )
 
     # Add index for efficient queries
     op.create_index("idx_channels_subscriber_count", "channels", ["subscriber_count"])
 
     # Add comment for documentation
-    op.execute("""
+    op.execute(
+        """
         COMMENT ON COLUMN channels.subscriber_count IS
         'Number of subscribers/members in the channel (updated by MTProto worker)'
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

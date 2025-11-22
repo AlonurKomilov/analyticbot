@@ -9,7 +9,10 @@ from aiogram_i18n import I18nContext
 
 from apps.bot.handlers.alerts.base import get_chat_id, logger, validate_callback
 from apps.bot.middlewares.throttle import throttle
-from core.repositories.alert_repository import AlertSubscription, AlertSubscriptionRepository
+from core.repositories.alert_repository import (
+    AlertSubscription,
+    AlertSubscriptionRepository,
+)
 
 router = Router()
 

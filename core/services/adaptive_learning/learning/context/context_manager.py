@@ -306,6 +306,6 @@ class ContextManager:
             "active_contexts": len(self.active_contexts),
             "total_context_history": len(self.context_history),
             "scenarios_tracked": len(
-                set(context.learning_scenario for context in self.active_contexts.values())
+                {context.learning_scenario for context in self.active_contexts.values()}
             ),
         }

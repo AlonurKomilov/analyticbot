@@ -52,7 +52,10 @@ class StorageChannelCreate(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"channel_id": -1001234567890, "channel_username": "my_storage_channel"}
+            "example": {
+                "channel_id": -1001234567890,
+                "channel_username": "my_storage_channel",
+            }
         }
 
 
@@ -132,7 +135,9 @@ class ChannelValidationResponse(BaseModel):
 
 
 @router.get(
-    "/channels", response_model=list[StorageChannelResponse], summary="Get user's storage channels"
+    "/channels",
+    response_model=list[StorageChannelResponse],
+    summary="Get user's storage channels",
 )
 async def get_storage_channels(
     only_active: bool = True,
@@ -224,7 +229,11 @@ async def validate_storage_channel(
         encryption = get_encryption_service()
 
         if not all(
-            [credentials.telegram_api_id, credentials.telegram_api_hash, credentials.session_string]
+            [
+                credentials.telegram_api_id,
+                credentials.telegram_api_hash,
+                credentials.session_string,
+            ]
         ):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -457,7 +466,11 @@ async def list_storage_files(
     return FilesListResponse(files=[], total=0, limit=min(limit, 100), offset=offset)
 
 
-@router.get("/files/{media_id}", response_model=TelegramMediaResponse, summary="Get file metadata")
+@router.get(
+    "/files/{media_id}",
+    response_model=TelegramMediaResponse,
+    summary="Get file metadata",
+)
 async def get_file_metadata(
     media_id: int,
     current_user: dict = Depends(get_current_user),
@@ -477,7 +490,8 @@ async def get_file_metadata(
 
     # TODO: Fetch file metadata from database
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
@@ -501,12 +515,15 @@ async def get_file_url(
 
     # TODO: Generate file access URL
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
 @router.delete(
-    "/files/{media_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Delete file from storage"
+    "/files/{media_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete file from storage",
 )
 async def delete_storage_file(
     media_id: int,
@@ -533,7 +550,8 @@ async def delete_storage_file(
 
     # TODO: Delete file and update database
     raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"File {media_id} not found or access denied",
     )
 
 
@@ -562,8 +580,7 @@ async def forward_file_to_channel(
     **Note:** File is forwarded within Telegram's infrastructure (instant, no bandwidth used).
     """
     logger.info(
-        f"User {current_user.get('id')} forwarding file {media_id} "
-        f"to channel {target_channel_id}"
+        f"User {current_user.get('id')} forwarding file {media_id} to channel {target_channel_id}"
     )
 
     # TODO: Forward message using MTProto

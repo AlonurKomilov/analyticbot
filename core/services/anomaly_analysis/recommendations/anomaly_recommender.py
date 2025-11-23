@@ -47,7 +47,7 @@ class AnomalyRecommender:
 
         try:
             severity = severity_assessment.get("overall_severity", "medium")
-            urgency = severity_assessment.get("urgency", "moderate")
+            severity_assessment.get("urgency", "moderate")
 
             # Severity-based immediate actions
             if severity in ["critical", "high"]:
@@ -132,9 +132,16 @@ class AnomalyRecommender:
             )
 
             # Sort by priority
-            priority_order = {"immediate": 4, "high": 3, "medium": 2, "low": 1, "ongoing": 0}
+            priority_order = {
+                "immediate": 4,
+                "high": 3,
+                "medium": 2,
+                "low": 1,
+                "ongoing": 0,
+            }
             recommendations.sort(
-                key=lambda x: priority_order.get(x.get("priority", "low"), 0), reverse=True
+                key=lambda x: priority_order.get(x.get("priority", "low"), 0),
+                reverse=True,
             )
 
             return recommendations

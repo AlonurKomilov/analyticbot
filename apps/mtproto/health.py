@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import Any
 
 from apps.mtproto.di import get_settings, get_tg_client
+
 # Note: HealthChecker moved to apps layer, using stub for compatibility
 # from core.common.health.checker import HealthChecker
-from core.common.health.models import DependencyType
 from core.ports.tg_client import TGClient
 
 
@@ -191,7 +191,11 @@ class HealthCheck:
             components["configuration"] = "disabled"
             components["tg_client"] = "disabled"
 
-        return {"ready": ready, "timestamp": datetime.now().isoformat(), "components": components}
+        return {
+            "ready": ready,
+            "timestamp": datetime.now().isoformat(),
+            "components": components,
+        }
 
     async def get_liveness_status(self) -> dict[str, Any]:
         """Get liveness status for deployment health checks.

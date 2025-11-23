@@ -204,9 +204,7 @@ async def test_statistics():
     if stats["active_methods"]:
         print("\n   Active methods:")
         for method, data in stats["active_methods"].items():
-            print(
-                f"      {method}: {data['active']}/{data['limit']} " f"(window: {data['window']}s)"
-            )
+            print(f"      {method}: {data['active']}/{data['limit']} (window: {data['window']}s)")
 
     if stats["total_requests"] == 15:
         print("\n✅ PASS: Statistics tracking accurate")

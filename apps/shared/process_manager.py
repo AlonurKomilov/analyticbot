@@ -271,7 +271,7 @@ class ProcessManager:
             logger.info(
                 f"✅ '{self.name}' shutdown complete\n"
                 f"   Reason: {self.shutdown_reason or 'normal'}\n"
-                f"   Uptime: {uptime/3600:.2f}h\n"
+                f"   Uptime: {uptime / 3600:.2f}h\n"
                 f"   PID: {self.pid}"
             )
 

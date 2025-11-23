@@ -8,7 +8,10 @@ from unittest.mock import Mock
 import pytest
 from fastapi import HTTPException
 
-from apps.api.services.database_error_handler import DatabaseErrorHandler, DatabaseErrorType
+from apps.api.services.database_error_handler import (
+    DatabaseErrorHandler,
+    DatabaseErrorType,
+)
 
 
 class TestDatabaseErrorHandling:

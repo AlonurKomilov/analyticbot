@@ -5,8 +5,6 @@ Focused on database repositories and storage services
 No more direct infra imports - uses main container via protocol-based delegation
 """
 
-from typing import Any
-
 from dependency_injector import containers, providers
 
 from apps.di import get_container
@@ -48,7 +46,7 @@ async def _get_stats_raw_repo():
 class StorageContainer(containers.DeclarativeContainer):
     """
     Container for storage and repository services
-    
+
     ✅ Phase 4 Fix (Oct 19, 2025): Uses DI delegation pattern
     All repositories now delegate to main container via Callable providers
     """

@@ -97,14 +97,17 @@ async def get_current_user(
         logger.error(f"Token present: {credentials is not None}")
         logger.error(f"User repo available: {user_repo is not None}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Authentication service error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication service error",
         )
 
 
 async def require_channel_access(
     channel_id: int,
     user_id: int,  # ✅ FIXED: Changed from current_user dict to user_id int
-    channel_repo: ChannelRepository | None = None,  # ✅ FIXED: Made optional, will get from DI if not provided
+    channel_repo: (
+        ChannelRepository | None
+    ) = None,  # ✅ FIXED: Made optional, will get from DI if not provided
 ) -> int:
     """
     Validate that the current user has access to the specified channel
@@ -124,6 +127,7 @@ async def require_channel_access(
         # If channel_repo not provided, get it from DI
         if channel_repo is None:
             from apps.di import get_container
+
             container = get_container()
             channel_repo = await container.database.channel_repo()  # ✅ FIXED: Correct DI method
 
@@ -156,7 +160,9 @@ async def require_channel_access(
         )
 
 
-async def get_current_user_id(current_user: dict[str, Any] = Depends(get_current_user)) -> int:
+async def get_current_user_id(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> int:
     """
     Simple dependency to get just the user ID
 
@@ -352,10 +358,15 @@ async def get_current_user_id_from_request(request) -> int:
                 user_id_str = claims.get("sub")
                 if user_id_str:
                     elapsed = (time.time() - start) * 1000
-                    logger.info(f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)")
+                    logger.info(
+                        f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)"
+                    )
                     return int(user_id_str)
             except Exception as token_error:
-                logger.error(f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}", exc_info=True)
+                logger.error(
+                    f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}",
+                    exc_info=True,
+                )
                 # Return a default user ID instead of raising error
                 elapsed = (time.time() - start) * 1000
                 logger.info(
@@ -388,7 +399,8 @@ async def require_analytics_permission(
 
     if NewPermission.VIEW_ANALYTICS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Analytics access permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Analytics access permission required",
         )
     return current_user
 
@@ -405,7 +417,8 @@ async def require_user_management_permission(
 
     if NewPermission.MANAGE_USERS not in user_info.permissions:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="User management permission required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User management permission required",
         )
     return current_user
 
@@ -419,7 +432,8 @@ async def require_admin_role_new(
     user_role = current_user.get("role", "user")
     if not is_administrative_role(user_role):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Administrative access required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrative access required",
         )
     return current_user
 

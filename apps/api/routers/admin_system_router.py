@@ -162,9 +162,9 @@ async def get_system_health(
             health_data = await analytics_service.check_system_health()
 
             return {
-                "status": "healthy"
-                if health_data.get("all_systems_operational", False)
-                else "degraded",
+                "status": (
+                    "healthy" if health_data.get("all_systems_operational", False) else "degraded"
+                ),
                 "timestamp": datetime.now().isoformat(),
                 "components": health_data.get("components", {}),
                 "overall_score": health_data.get("health_score", 0),
@@ -237,7 +237,10 @@ class MTProtoPoolConfig(BaseModel):
     """MTProto Connection Pool Configuration"""
 
     max_concurrent_users: int = Field(
-        ..., description="Maximum concurrent user sessions (system-wide limit)", ge=1, le=200
+        ...,
+        description="Maximum concurrent user sessions (system-wide limit)",
+        ge=1,
+        le=200,
     )
     max_connections_per_user: int = Field(
         ..., description="Maximum connections per user", ge=1, le=5

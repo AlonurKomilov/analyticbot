@@ -57,7 +57,15 @@ def test_old_vs_new_logic():
         times_by_day[day].append(f"{hour:02d}:00")
 
     print("📊 Raw data by day:")
-    day_names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    day_names = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
     for day in range(7):
         times = times_by_day.get(day, [])
         print(f"   {day_names[day]}: {times}")

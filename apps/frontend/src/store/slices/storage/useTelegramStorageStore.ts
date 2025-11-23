@@ -135,7 +135,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ isLoadingChannels: true, error: null });
         try {
           const response = await apiClient.get<StorageChannel[]>(
-            '/api/storage/channels',
+            '/storage/channels',
             { params: { only_active: onlyActive } }
           );
 
@@ -162,7 +162,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ isValidating: true, error: null });
         try {
           const result = await apiClient.post<ChannelValidationResult>(
-            '/api/storage/channels/validate',
+            '/storage/channels/validate',
             { channel_id: channelId, channel_username: channelUsername }
           );
 
@@ -180,7 +180,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ isLoadingChannels: true, error: null });
         try {
           const newChannel = await apiClient.post<StorageChannel>(
-            '/api/storage/channels/connect',
+            '/storage/channels/connect',
             { channel_id: channelId, channel_username: channelUsername }
           );
 
@@ -202,7 +202,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
       disconnectChannel: async (channelId: number) => {
         set({ isLoadingChannels: true, error: null });
         try {
-          await apiClient.delete(`/api/storage/channels/${channelId}`);
+          await apiClient.delete(`/storage/channels/${channelId}`);
 
           set((state) => {
             const updatedChannels = state.channels.filter((ch) => ch.id !== channelId);
@@ -241,7 +241,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
           if (storageChannelId) formData.append('storage_channel_id', storageChannelId.toString());
 
           const uploadResult = await apiClient.post<FileUploadResult>(
-            '/api/storage/upload',
+            '/storage/upload',
             formData
           );
 
@@ -266,7 +266,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ isLoadingFiles: true, error: null });
         try {
           const result = await apiClient.get<FilesListResult>(
-            '/api/storage/files',
+            '/storage/files',
             { params: filters }
           );
 
@@ -293,7 +293,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
       getFileUrl: async (mediaId: number) => {
         try {
           const result = await apiClient.get<{ url: string }>(
-            `/api/storage/files/${mediaId}/url`
+            `/storage/files/${mediaId}/url`
           );
           return result.url;
         } catch (error: any) {
@@ -306,7 +306,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ error: null });
         try {
           await apiClient.delete(
-            `/api/storage/files/${mediaId}`,
+            `/storage/files/${mediaId}`,
             { params: { delete_from_telegram: deleteFromTelegram } }
           );
 
@@ -326,7 +326,7 @@ export const useTelegramStorageStore = create<TelegramStorageState>()(
         set({ error: null });
         try {
           const result = await apiClient.post<{ success: boolean; message_id: number }>(
-            `/api/storage/files/${mediaId}/forward`,
+            `/storage/files/${mediaId}/forward`,
             null,
             { params: { target_channel_id: targetChannelId } }
           );

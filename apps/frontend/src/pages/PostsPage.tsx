@@ -88,7 +88,7 @@ const PostsPage: React.FC = () => {
       }
 
       console.log('📡 API Request params:', params);
-      const response = await apiClient.get<PostsResponse>('/api/posts', { params });
+      const response = await apiClient.get<PostsResponse>('/posts', { params });
       console.log('📥 API Response:', { total: response.total, postsCount: response.posts.length, firstPostId: response.posts[0]?.msg_id });
       setPosts(response.posts);
       setTotal(response.total);

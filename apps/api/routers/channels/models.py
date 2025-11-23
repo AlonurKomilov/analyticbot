@@ -19,7 +19,7 @@ class ChannelListResponse(BaseModel):
     subscriber_count: int = 0
     is_active: bool = True
     created_at: datetime
-    last_updated: datetime
+    last_updated: datetime | None = None  # Optional - not all channels have this field
     bot_is_admin: bool | None = None  # Bot admin status
     mtproto_is_admin: bool | None = None  # MTProto admin status
     admin_status_message: str | None = None  # Helpful message for users
@@ -34,7 +34,7 @@ class ChannelResponse(BaseModel):
     subscriber_count: int = 0
     is_active: bool = True
     created_at: datetime
-    last_updated: datetime
+    last_updated: datetime | None = None  # Optional - not all channels have this field
     settings: dict[str, Any] | None = None
 
     class Config:

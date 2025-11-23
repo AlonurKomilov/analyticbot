@@ -39,7 +39,7 @@ interface Invoice {
 class PaymentAPI {
   private baseURL: string;
 
-  constructor(baseURL: string = '/api/payments') {
+  constructor(baseURL: string = '/payments') {
     this.baseURL = baseURL;
   }
 

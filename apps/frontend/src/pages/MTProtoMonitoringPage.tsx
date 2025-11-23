@@ -110,7 +110,7 @@ export const MTProtoMonitoringPage: React.FC = () => {
 
     try {
       console.log(`📊 ${isBackgroundRefresh ? 'Background' : 'Initial'} fetch MTProto monitoring data...`);
-      const response: any = await apiClient.get('/api/user-mtproto/monitoring/overview');
+      const response: any = await apiClient.get('/user-mtproto/monitoring/overview');
 
       // apiClient.get() returns the data directly, not wrapped in response.data
       if (!response) {

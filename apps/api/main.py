@@ -422,7 +422,7 @@ sys.stderr.flush()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins_filtered,
-    allow_origin_regex=r"https://.*\.(trycloudflare\.com|devtunnels\.ms)",  # Allow Cloudflare and Microsoft Dev Tunnels
+    allow_origin_regex=r"https://.*\.(trycloudflare\.com|devtunnels\.ms|analyticbot\.org)",  # Allow tunnels and analyticbot subdomains
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
@@ -467,9 +467,9 @@ app.include_router(system_router)  # Core system operations (performance, schedu
 app.include_router(health_router)  # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
 app.include_router(channels_router, prefix="/channels")  # Channel management (CRUD)
-app.include_router(posts_router, prefix="/api")  # Posts management (MTProto collected data)
+app.include_router(posts_router)  # Posts management (MTProto collected data)
 app.include_router(media_router)  # Media upload and management
-app.include_router(telegram_storage_router, prefix="/api")  # Telegram storage (user-owned channels)
+app.include_router(telegram_storage_router)  # Telegram storage (user-owned channels)
 app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_system_router)  # Admin - System Management
@@ -523,53 +523,6 @@ app.include_router(
     ml_predictions_router, prefix="/analytics/ml", tags=["Analytics - ML"]
 )  # Moved from /ml
 
-# OLD: Backward compatibility (deprecated - will be removed in Q2 2026)
-app.include_router(
-    analytics_live_router,
-    prefix="/analytics/live",
-    tags=["analytics-live (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    analytics_post_dynamics_router,
-    prefix="/analytics/post-dynamics",
-    tags=["analytics-post-dynamics (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    statistics_core_router,
-    prefix="/statistics/core",
-    tags=["statistics-core (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    statistics_reports_router,
-    prefix="/statistics/reports",
-    tags=["statistics-reports (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    insights_engagement_router,
-    prefix="/insights/engagement",
-    tags=["insights-engagement (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    insights_orchestration_router,
-    prefix="/insights/orchestration",
-    tags=["Analytics Orchestration v2 (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    insights_predictive_router,
-    prefix="/insights/predictive",
-    tags=["insights-predictive (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    ml_predictions_router, prefix="/ml", tags=["Machine Learning (deprecated)"], deprecated=True
-)
-
 app.include_router(demo_router)  # Demo endpoints
 
 # 🎯 PHASE 4: GRANULAR ANALYTICS ARCHITECTURE COMPLETE ✅
@@ -597,33 +550,18 @@ app.include_router(demo_router)  # Demo endpoints
 # ✅ PHASE 8: REMAINING DOMAINS REORGANIZATION (October 22, 2025)
 # Standardizing naming conventions across all remaining domains
 
-# Content Protection: /content-protection → /content/protection
+# Content Protection
 app.include_router(
     content_protection_router, prefix="/content/protection", tags=["Content - Protection"]
-)  # NEW
-app.include_router(
-    content_protection_router,
-    prefix="/content-protection",
-    tags=["Content Protection (deprecated)"],
-    deprecated=True,
-)  # OLD
+)
 
-# Payments: /payment → /payments (plural for consistency)
-app.include_router(payment_router, prefix="/payments", tags=["Payments"])  # NEW
-app.include_router(
-    payment_router, prefix="/payment", tags=["Payments (deprecated)"], deprecated=True
-)  # OLD
+# Payments
+app.include_router(payment_router, prefix="/payments", tags=["Payments"])
 
-# Admin: /superadmin → /admin/super (better hierarchy)
-app.include_router(superadmin_router, prefix="/admin/super", tags=["Admin - Super"])  # NEW
-app.include_router(
-    superadmin_router,
-    prefix="/superadmin",
-    tags=["SuperAdmin Management (deprecated)"],
-    deprecated=True,
-)  # OLD
+# Admin
+app.include_router(superadmin_router, prefix="/admin/super", tags=["Admin - Super"])
 
-# Auth, Channels, System, Health, Mobile, Exports, Sharing - Already well-organized
+# Auth, Channels, System, Health, Mobile, Exports, Sharing
 app.include_router(auth_router)  # /auth/* - Already good
 app.include_router(exports_router)  # /exports/* - Already good
 app.include_router(sharing_router)  # /sharing/* - Already good
@@ -672,36 +610,8 @@ app.include_router(
     optimization_router, prefix="/ai/optimization", tags=["AI - Optimization"]
 )  # Performance optimization
 
-# OLD: Backward compatibility (deprecated - will be removed in Q2 2026)
-app.include_router(
-    ai_chat_router, prefix="/ai-chat", tags=["AI Chat (deprecated)"], deprecated=True
-)
-app.include_router(
-    ai_insights_router, prefix="/ai-insights", tags=["AI Insights (deprecated)"], deprecated=True
-)
-app.include_router(
-    ai_services_router, prefix="/ai-services", tags=["AI Services (deprecated)"], deprecated=True
-)
-app.include_router(
-    strategy_router, prefix="/strategy", tags=["Strategy (deprecated)"], deprecated=True
-)
-app.include_router(
-    competitive_router,
-    prefix="/competitive",
-    tags=["Competitive Intelligence (deprecated)"],
-    deprecated=True,
-)
-app.include_router(
-    optimization_router, prefix="/optimization", tags=["Optimization (deprecated)"], deprecated=True
-)
-
-# Analytics Trends moved to analytics domain
-app.include_router(
-    trends_router, prefix="/analytics/trends", tags=["Analytics - Trends"]
-)  # NEW location
-app.include_router(
-    trends_router, prefix="/trends", tags=["Trend Analysis (deprecated)"], deprecated=True
-)  # OLD location
+# Analytics Trends
+app.include_router(trends_router, prefix="/analytics/trends", tags=["Analytics - Trends"])
 
 # CLEAN ARCHITECTURE REORGANIZATION COMPLETE ✅
 # ===============================================

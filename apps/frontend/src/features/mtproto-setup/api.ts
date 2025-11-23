@@ -17,7 +17,7 @@ import type {
  * Get current MTProto configuration status
  */
 export async function getMTProtoStatus(): Promise<MTProtoStatusResponse> {
-  const response = await apiClient.get<MTProtoStatusResponse>('/api/user-mtproto/status');
+  const response = await apiClient.get<MTProtoStatusResponse>('/user-mtproto/status');
   return response;
 }
 
@@ -25,7 +25,7 @@ export async function getMTProtoStatus(): Promise<MTProtoStatusResponse> {
  * Initiate MTProto setup - sends verification code to phone
  */
 export async function setupMTProto(data: MTProtoSetupRequest): Promise<MTProtoSetupResponse> {
-  const response = await apiClient.post<MTProtoSetupResponse>('/api/user-mtproto/setup', data);
+  const response = await apiClient.post<MTProtoSetupResponse>('/user-mtproto/setup', data);
   return response;
 }
 
@@ -33,7 +33,7 @@ export async function setupMTProto(data: MTProtoSetupRequest): Promise<MTProtoSe
  * Resend verification code using stored credentials
  */
 export async function resendMTProto(): Promise<MTProtoSetupResponse> {
-  const response = await apiClient.post<MTProtoSetupResponse>('/api/user-mtproto/resend', {});
+  const response = await apiClient.post<MTProtoSetupResponse>('/user-mtproto/resend', {});
   return response;
 }
 
@@ -41,7 +41,7 @@ export async function resendMTProto(): Promise<MTProtoSetupResponse> {
  * Verify MTProto setup with code from Telegram
  */
 export async function verifyMTProto(data: MTProtoVerifyRequest): Promise<MTProtoActionResponse> {
-  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/verify', data);
+  const response = await apiClient.post<MTProtoActionResponse>('/user-mtproto/verify', data);
   return response;
 }
 
@@ -49,7 +49,7 @@ export async function verifyMTProto(data: MTProtoVerifyRequest): Promise<MTProto
  * Disconnect MTProto client (removes session, keeps credentials)
  */
 export async function disconnectMTProto(): Promise<MTProtoActionResponse> {
-  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/disconnect', {});
+  const response = await apiClient.post<MTProtoActionResponse>('/user-mtproto/disconnect', {});
   return response;
 }
 
@@ -57,7 +57,7 @@ export async function disconnectMTProto(): Promise<MTProtoActionResponse> {
  * Remove all MTProto configuration
  */
 export async function removeMTProto(): Promise<MTProtoActionResponse> {
-  const response = await apiClient.delete<MTProtoActionResponse>('/api/user-mtproto/remove');
+  const response = await apiClient.delete<MTProtoActionResponse>('/user-mtproto/remove');
   return response;
 }
 
@@ -66,7 +66,7 @@ export async function removeMTProto(): Promise<MTProtoActionResponse> {
  * Note: backend exposes this as POST /api/user-mtproto/toggle
  */
 export async function toggleGlobalMTProto(enabled: boolean): Promise<MTProtoActionResponse> {
-  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/toggle', {
+  const response = await apiClient.post<MTProtoActionResponse>('/user-mtproto/toggle', {
     enabled,
   });
   return response;
@@ -77,7 +77,7 @@ export async function toggleGlobalMTProto(enabled: boolean): Promise<MTProtoActi
  * Use this to establish an immediate active connection instead of lazy loading
  */
 export async function connectMTProto(): Promise<MTProtoActionResponse> {
-  const response = await apiClient.post<MTProtoActionResponse>('/api/user-mtproto/connect', {});
+  const response = await apiClient.post<MTProtoActionResponse>('/user-mtproto/connect', {});
   return response;
 }
 
@@ -95,7 +95,7 @@ export async function getChannelMTProtoSetting(channelId: number): Promise<{
     channel_id: number;
     created_at?: string;
     updated_at?: string
-  }>(`/api/user-mtproto/channels/${channelId}/settings`);
+  }>(`/user-mtproto/channels/${channelId}/settings`);
   return response;
 }
 
@@ -110,7 +110,7 @@ export async function toggleChannelMTProto(
     mtproto_enabled: boolean;
     channel_id: number;
     updated_at: string
-  }>(`/api/user-mtproto/channels/${channelId}/toggle`, {
+  }>(`/user-mtproto/channels/${channelId}/toggle`, {
     enabled
   });
   return response;

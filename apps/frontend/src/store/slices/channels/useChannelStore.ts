@@ -215,7 +215,7 @@ export const useChannelStore = create<ChannelState>()(
 
         // Step 3: Create channel with determined telegram_id
         console.log('💾 Saving channel to database with telegram_id:', finalTelegramId);
-        const newChannel = await apiClient.post<Channel>('/channels', {
+        const newChannel = await apiClient.post<Channel>('/channels/', {
           name: channelData.name || usernameWithAt,
           telegram_id: finalTelegramId,
           username: usernameWithAt,

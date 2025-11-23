@@ -26,7 +26,7 @@ from apps.di import get_container
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/competitive", tags=["Competitive Intelligence"])
+router = APIRouter(tags=["Competitive Intelligence"])
 
 
 # ============================================================================

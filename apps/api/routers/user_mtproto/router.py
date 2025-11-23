@@ -11,7 +11,7 @@ from . import channel_settings, connection, setup, status, toggle, verification
 
 # Create main user_mtproto router
 router = APIRouter(
-    prefix="/api/user-mtproto",
+    prefix="/user-mtproto",
     tags=["User MTProto Management"],
 )
 

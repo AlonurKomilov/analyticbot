@@ -109,7 +109,7 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         const requestPromise = (async () => {
             try {
                 console.log('🔄 [useUserChannels] Fetching channels from backend...');
-                const response = (await (dataProvider as any)._makeRequest('/channels')) as Channel[];
+                const response = (await (dataProvider as any)._makeRequest('/channels/')) as Channel[];
                 console.log(`✅ [useUserChannels] Fetched ${response?.length || 0} channels successfully`);
                 return response;
             } finally {
@@ -180,7 +180,7 @@ export const useUserChannels = (options: UseUserChannelsOptions = {}): UseUserCh
         setError(null);
 
         try {
-            const newChannel = (await (dataProvider as any)._makeRequest('/channels', {
+            const newChannel = (await (dataProvider as any)._makeRequest('/channels/', {
                 method: 'POST',
                 body: JSON.stringify(channelData)
             })) as Channel;

@@ -11,12 +11,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_current_user_id  # Use existing auth system
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.services.bot_service_factory import create_user_bot_service
 from apps.api.utils.error_messages import BotErrorMessages, get_user_friendly_error
 from apps.bot.multi_tenant.token_validator import (
-    get_token_validator,
     TokenValidationStatus,
+    get_token_validator,
 )
 from apps.bot.multi_tenant.webhook_manager import get_webhook_manager
 from apps.di import get_container
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(
-    prefix="/api/user-bot",
+    prefix="/user-bot",
     tags=["User Bot Management"],
 )
 
@@ -87,54 +87,47 @@ async def create_user_bot(
         # Validate token before creating bot
         validator = get_token_validator()
         validation_result = await validator.validate(
-            token=bot_request.bot_token,
-            live_check=True,
-            timeout_seconds=10
+            token=bot_request.bot_token, live_check=True, timeout_seconds=10
         )
-        
+
         if not validation_result.is_valid:
             logger.warning(
                 f"Token validation failed for user {user_id}: "
                 f"{validation_result.status.value} - {validation_result.message}"
             )
-            
+
             # Return specific error based on validation status
             if validation_result.status == TokenValidationStatus.INVALID_FORMAT:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
                 )
             elif validation_result.status == TokenValidationStatus.UNAUTHORIZED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
                 )
             elif validation_result.status == TokenValidationStatus.REVOKED:
                 raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=validation_result.message
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail=validation_result.message
                 )
             elif validation_result.status == TokenValidationStatus.TIMEOUT:
                 raise HTTPException(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail=validation_result.message
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=validation_result.message
                 )
             elif validation_result.status == TokenValidationStatus.NETWORK_ERROR:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Unable to validate token due to network issues. Please try again"
+                    detail="Unable to validate token due to network issues. Please try again",
                 )
             else:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=validation_result.message
+                    status_code=status.HTTP_400_BAD_REQUEST, detail=validation_result.message
                 )
-        
+
         logger.info(
             f"Token validated successfully for user {user_id}: "
             f"@{validation_result.bot_username} (ID: {validation_result.bot_id})"
         )
-        
+
         service = await create_user_bot_service(repository)
 
         credentials = await service.create_user_bot(
@@ -153,31 +146,33 @@ async def create_user_bot(
         # ✅ WEBHOOK SUPPORT: Auto-configure webhook for instant message delivery
         webhook_enabled = False
         webhook_url = None
-        
+
         if settings.WEBHOOK_ENABLED:
             try:
-                logger.info(f"Setting up webhook for user {user_id} bot @{credentials.bot_username}")
+                logger.info(
+                    f"Setting up webhook for user {user_id} bot @{credentials.bot_username}"
+                )
                 webhook_manager = get_webhook_manager()
-                
+
                 webhook_result = await webhook_manager.setup_webhook(
                     bot_token=bot_request.bot_token,
                     user_id=user_id,
-                    drop_pending_updates=True  # Clear old updates for fresh start
+                    drop_pending_updates=True,  # Clear old updates for fresh start
                 )
-                
+
                 if webhook_result["success"]:
                     # Update credentials with webhook info
                     credentials.webhook_enabled = True
                     credentials.webhook_secret = webhook_result["webhook_secret"]
                     credentials.webhook_url = webhook_result["webhook_url"]
                     credentials.last_webhook_update = datetime.now()
-                    
+
                     # Save to database
                     await repository.update(credentials)
-                    
+
                     webhook_enabled = True
                     webhook_url = webhook_result["webhook_url"]
-                    
+
                     logger.info(
                         f"✅ Webhook configured successfully for user {user_id}: "
                         f"{webhook_result['webhook_url']}"

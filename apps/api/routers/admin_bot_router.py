@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(
-    prefix="/api/admin/bots",
+    prefix="/admin/bots",
     tags=["Admin Bot Management"],
 )
 

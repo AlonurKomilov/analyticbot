@@ -38,7 +38,7 @@ export class UserBotApiService {
    */
   async createBot(data: CreateBotRequest): Promise<CreateBotResponse> {
     const response = await this.client.post<CreateBotResponse>(
-      '/api/user-bot/create',
+      '/user-bot/create',
       data
     );
     return response;
@@ -49,7 +49,7 @@ export class UserBotApiService {
    */
   async getBotStatus(): Promise<BotStatusResponse> {
     const response = await this.client.get<BotStatusResponse>(
-      '/api/user-bot/status'
+      '/user-bot/status'
     );
     return response;
   }
@@ -59,7 +59,7 @@ export class UserBotApiService {
    */
   async verifyBot(data?: VerifyBotRequest): Promise<VerifyBotResponse> {
     const response = await this.client.post<VerifyBotResponse>(
-      '/api/user-bot/verify',
+      '/user-bot/verify',
       data || {}
     );
     return response;
@@ -70,7 +70,7 @@ export class UserBotApiService {
    */
   async removeBot(): Promise<RemoveBotResponse> {
     const response = await this.client.delete<RemoveBotResponse>(
-      '/api/user-bot/remove'
+      '/user-bot/remove'
     );
     return response;
   }
@@ -80,7 +80,7 @@ export class UserBotApiService {
    */
   async updateRateLimits(data: UpdateRateLimitRequest): Promise<RateLimitUpdateResponse> {
     const response = await this.client.put<RateLimitUpdateResponse>(
-      '/api/user-bot/rate-limits',
+      '/user-bot/rate-limits',
       data
     );
     return response;
@@ -97,7 +97,7 @@ export class UserBotApiService {
     status?: string;
   }): Promise<AdminBotListResponse> {
     const response = await this.client.get<AdminBotListResponse>(
-      '/api/admin/bots/list',
+      '/admin/bots/list',
       { params }
     );
     return response;

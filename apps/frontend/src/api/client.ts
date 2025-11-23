@@ -50,8 +50,8 @@ const ENDPOINT_TIMEOUTS: Record<string, number> = {
   '/system/send': 10000, // Telegram API + database
   '/schedule/': 5000, // Reduced from 90s - simple SELECT query
   '/analytics/': 15000, // For complex analytics queries
-  '/api/user-bot/': 15000, // Reduced from 90s - bot operations with reasonable timeout
-  '/api/user-mtproto': 30000, // MTProto setup/verify needs longer timeout (network + Telegram latency)
+  '/user-bot/': 15000, // Reduced from 90s - bot operations with reasonable timeout
+  '/user-mtproto': 30000, // MTProto setup/verify needs longer timeout (network + Telegram latency)
   'default': 10000 // Increased from 5s - better for slower connections
 };
 

@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(
-    prefix="/api/user-mtproto/monitoring",
+    prefix="/user-mtproto/monitoring",
     tags=["MTProto Monitoring"],
 )
 

@@ -56,7 +56,7 @@ const AlertsList: React.FC<AlertsListProps> = React.memo(({
     return (
         <Collapse in={isExpanded}>
             <Box sx={{ mt: 2 }}>
-                {displayedAlerts.map((alert) => {
+                {displayedAlerts.map((alert, index) => {
                     // Use severity if available, otherwise use type (which is the primary field from API)
                     const alertLevel = alert.severity || alert.type;
                     // Default to 'info' if alertLevel is not in config
@@ -65,7 +65,7 @@ const AlertsList: React.FC<AlertsListProps> = React.memo(({
 
                     return (
                         <Paper
-                            key={alert.id}
+                            key={alert.id || `alert-${index}`}
                             elevation={1}
                             sx={{
                                 p: 2,

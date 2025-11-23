@@ -189,12 +189,17 @@ class UserBotService:
                         test_message
                         or "✅ Bot verification successful! Your bot is working correctly."
                     )
+                    logger.info(f"📤 Attempting to send test message to chat_id={test_chat_id}")
                     await bot_instance.send_message(test_chat_id, message_text)
+                    logger.info(f"✅ Test message sent successfully to chat_id={test_chat_id}")
                     bot_info_dict["test_message_sent"] = True
                 except Exception as e:
-                    logger.warning(f"Failed to send test message: {e}")
-                    bot_info_dict["test_message_sent"] = False
-                    bot_info_dict["test_message_error"] = str(e)
+                    logger.error(
+                        f"❌ Failed to send test message to chat_id={test_chat_id}: {e}",
+                        exc_info=True,
+                    )
+                    # Return failure if test message was requested but failed
+                    return False, f"Bot verified but failed to send test message: {str(e)}", None
 
             # Update verification status
             credentials.is_verified = True

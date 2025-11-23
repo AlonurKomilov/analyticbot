@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Box,
     Container,
@@ -43,10 +43,24 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 
 interface ContentProtectionDashboardProps {
     channelId?: string | null;
+    lastUpdated?: Date;
 }
 
-const ContentProtectionDashboard: React.FC<ContentProtectionDashboardProps> = ({ channelId }) => {
+const ContentProtectionDashboard: React.FC<ContentProtectionDashboardProps> = ({ channelId, lastUpdated }) => {
     const [activeTab, setActiveTab] = useState<number>(0);
+
+    // Track previous lastUpdated to detect auto-refresh
+    const prevLastUpdatedRef = useRef<Date | undefined>(undefined);
+
+    // Handle silent auto-refresh when lastUpdated changes
+    // Note: This component is mostly static UI; actual data refresh happens in child components
+    useEffect(() => {
+        if (lastUpdated && prevLastUpdatedRef.current &&
+            lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
+            console.log('🔄 ContentProtectionDashboard: Silent auto-refresh triggered (delegated to child components)');
+        }
+        prevLastUpdatedRef.current = lastUpdated;
+    }, [lastUpdated]);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number): void => {
         setActiveTab(newValue);

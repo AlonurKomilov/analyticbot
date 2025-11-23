@@ -22,6 +22,10 @@ import {
   TextField,
   Typography,
   Alert,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import {
   SmartToy,
@@ -35,7 +39,7 @@ import {
   Send,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useUserBotStore } from '@/store';
+import { useUserBotStore, useChannelStore } from '@/store';
 import { BotStatus } from '@/types';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -56,11 +60,15 @@ export const UserBotDashboard: React.FC = () => {
     clearError,
   } = useUserBotStore();
 
+  const { channels, fetchChannels, isLoading: isLoadingChannels } = useChannelStore();
+
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [showRateLimitDialog, setShowRateLimitDialog] = useState(false);
   const [showTestMessageDialog, setShowTestMessageDialog] = useState(false);
   const [testMessage, setTestMessage] = useState('Hello! This is a test message from your bot.');
-  const [testChatId, setTestChatId] = useState('');
+  const [selectedChannelId, setSelectedChannelId] = useState('');
+  const [manualChatId, setManualChatId] = useState('');
+  const [useManualInput, setUseManualInput] = useState(false);
   const [rateLimitRps, setRateLimitRps] = useState('');
   const [maxConcurrent, setMaxConcurrent] = useState('');
 
@@ -85,6 +93,29 @@ export const UserBotDashboard: React.FC = () => {
     loadBotStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
+
+  // Fetch user channels for the selector
+  useEffect(() => {
+    if (showTestMessageDialog && channels.length === 0 && !isLoadingChannels) {
+      console.log('🔄 Fetching channels for test message dialog...');
+      fetchChannels().catch(err => {
+        console.error('Failed to load channels:', err);
+        toast.error('Failed to load channels. You can use manual input instead.');
+      });
+    }
+  }, [showTestMessageDialog, channels.length, isLoadingChannels, fetchChannels]);
+
+  // Log channels for debugging
+  useEffect(() => {
+    if (showTestMessageDialog) {
+      console.log('📊 Dialog opened - Channel state:');
+      console.log('  Total channels:', channels.length);
+      console.log('  Channels data:', JSON.stringify(channels, null, 2));
+      console.log('  Active channels:', channels.filter(ch => ch.isActive).length);
+      console.log('  Active channel details:', channels.filter(ch => ch.isActive));
+      console.log('  Is loading:', isLoadingChannels);
+    }
+  }, [showTestMessageDialog, channels, isLoadingChannels]);
 
   useEffect(() => {
     if (bot) {
@@ -140,18 +171,49 @@ export const UserBotDashboard: React.FC = () => {
   };
 
   const handleSendTestMessage = async () => {
-    if (!testChatId.trim()) {
-      toast.error('Please enter your Telegram chat ID');
-      return;
-    }
+    let chatId: number;
 
-    const chatId = parseInt(testChatId, 10);
-    if (isNaN(chatId)) {
-      toast.error('Invalid chat ID. Please enter a valid number.');
-      return;
+    if (useManualInput) {
+      // Use manual input
+      if (!manualChatId.trim()) {
+        toast.error('Please enter your Telegram chat ID');
+        return;
+      }
+      const parsedId = parseInt(manualChatId, 10);
+      if (isNaN(parsedId)) {
+        toast.error('Invalid chat ID. Please enter a valid number.');
+        return;
+      }
+      chatId = parsedId;
+    } else {
+      // Use selected channel
+      if (!selectedChannelId) {
+        toast.error('Please select a channel');
+        return;
+      }
+      const selectedChannel = channels.find(ch => ch.id === selectedChannelId);
+      if (!selectedChannel) {
+        toast.error('Selected channel not found');
+        return;
+      }
+
+      // For Telegram channels: convert channel ID to chat ID
+      // Telegram channel chat IDs use format: -100 followed by channel ID
+      // Example: channel 1002678877654 → chat ID -1001002678877654
+      const channelId = parseInt(selectedChannel.telegramId, 10);
+      if (isNaN(channelId)) {
+        toast.error('Invalid channel ID format');
+        return;
+      }
+
+      // Convert to proper chat ID format
+      // Modern Telegram channels: -channelId (e.g., 1002678877654 → -1002678877654)
+      chatId = -channelId;
+      console.log('📤 Converting channel:', selectedChannel.username || 'ID:' + channelId, '→ chat ID:', chatId);
     }
 
     try {
+      console.log('📤 Sending test message to chat ID:', chatId);
       await verifyBot({
         send_test_message: true,
         test_chat_id: chatId,
@@ -160,7 +222,8 @@ export const UserBotDashboard: React.FC = () => {
 
       toast.success('✅ Test message sent successfully! Check your Telegram.');
       setShowTestMessageDialog(false);
-      setTestChatId(''); // Clear for next time
+      setSelectedChannelId('');
+      setManualChatId('');
     } catch (err: any) {
       const errorMsg = err?.response?.data?.detail || err?.message || 'Failed to send test message';
       toast.error(`❌ ${errorMsg}`);
@@ -461,22 +524,81 @@ export const UserBotDashboard: React.FC = () => {
       </Dialog>
 
       {/* Send Test Message Dialog */}
-      <Dialog open={showTestMessageDialog} onClose={() => setShowTestMessageDialog(false)}>
+      <Dialog open={showTestMessageDialog} onClose={() => setShowTestMessageDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Send Test Message</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
             Send a test message to verify your bot is working correctly.
           </DialogContentText>
-          <TextField
-            fullWidth
-            label="Your Telegram Chat ID"
-            value={testChatId}
-            onChange={(e) => setTestChatId(e.target.value)}
-            type="number"
-            sx={{ mb: 2 }}
-            helperText="Get your chat ID by messaging @userinfobot on Telegram"
-            required
-          />
+
+          {/* Channel Selector or Manual Input Toggle */}
+          <Box sx={{ mb: 2 }}>
+            <Button
+              size="small"
+              onClick={() => setUseManualInput(!useManualInput)}
+              sx={{ mb: 1 }}
+            >
+              {useManualInput ? '📋 Use Channel Selector' : '✏️ Enter Chat ID Manually'}
+            </Button>
+          </Box>
+
+          {!useManualInput ? (
+            // Channel Selector Mode
+            <>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="channel-select-label">Select Channel</InputLabel>
+                <Select
+                  labelId="channel-select-label"
+                  value={selectedChannelId}
+                  onChange={(e) => setSelectedChannelId(e.target.value)}
+                  label="Select Channel"
+                  disabled={isLoadingChannels}
+                >
+                  {isLoadingChannels ? (
+                    <MenuItem disabled>
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                      Loading channels...
+                    </MenuItem>
+                  ) : channels.length === 0 ? (
+                    <MenuItem disabled>
+                      No channels found. Add channels in the Channels page first.
+                    </MenuItem>
+                  ) : channels.filter(ch => ch.isActive).length === 0 ? (
+                    <MenuItem disabled>
+                      No active channels found. Please activate a channel first.
+                    </MenuItem>
+                  ) : (
+                    channels
+                      .filter(ch => ch.isActive)
+                      .map((channel) => (
+                        <MenuItem key={channel.id} value={channel.id}>
+                          {channel.username ? `@${channel.username}` : channel.name}
+                          {channel.subscriberCount > 0 && ` (${channel.subscriberCount.toLocaleString()} subscribers)`}
+                        </MenuItem>
+                      ))
+                  )}
+                </Select>
+              </FormControl>
+              {channels.length === 0 && !isLoadingChannels && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  No channels found. You can either add channels in the Channels page or use manual input below.
+                </Alert>
+              )}
+            </>
+          ) : (
+            // Manual Input Mode
+            <TextField
+              fullWidth
+              label="Your Telegram Chat ID"
+              value={manualChatId}
+              onChange={(e) => setManualChatId(e.target.value)}
+              type="number"
+              sx={{ mb: 2 }}
+              helperText="Get your chat ID by messaging @userinfobot on Telegram"
+              required
+            />
+          )}
+
           <TextField
             fullWidth
             label="Test Message"
@@ -495,7 +617,7 @@ export const UserBotDashboard: React.FC = () => {
             onClick={handleSendTestMessage}
             variant="contained"
             startIcon={isVerifying ? <CircularProgress size={20} /> : <Send />}
-            disabled={isVerifying}
+            disabled={isVerifying || (!useManualInput && !selectedChannelId) || (useManualInput && !manualChatId)}
           >
             {isVerifying ? 'Sending...' : 'Send Message'}
           </Button>

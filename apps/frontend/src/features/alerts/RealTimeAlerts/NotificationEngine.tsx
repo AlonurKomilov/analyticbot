@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { alertsService } from '@features/ai-services/services';
 
 interface Alert {
   id: string;
@@ -40,24 +41,28 @@ const NotificationEngine: React.FC<NotificationEngineProps> = React.memo(({
   }  // Alert checking logic
   const checkAlerts = React.useCallback(async () => {
     try {
-      // Fetch real-time analytics data from API
+      // Fetch real-time analytics data from live monitoring API using alertsService
       let analyticsData;
 
       try {
-        const response = await fetch(`/api/analytics/realtime/${channelId}`);
+        // Use alertsService which properly handles API client configuration
+        const result = await alertsService.getLiveMonitoring(channelId, 6);
 
-        if (!response.ok) {
-          throw new Error(`API responded with status ${response.status}`);
-        }
-
-        analyticsData = await response.json();
+        // Extract metrics from live_metrics response
+        analyticsData = {
+          growth_rate: (result.metrics?.growth_rate_7d || 0) * 100,
+          engagement_rate: (result.metrics?.avg_engagement_rate || 0) * 100,
+          subscribers: 0, // Not available in current metrics
+          views: result.metrics?.post_count_24h || 0,
+          _fallback: false
+        };
 
         // Validate response structure
         if (!analyticsData || typeof analyticsData !== 'object') {
           throw new Error('Invalid API response format');
         }
       } catch (apiError) {
-        console.warn('Failed to fetch real-time data, using fallback:', apiError);
+        console.warn('Failed to fetch live monitoring data, using fallback:', apiError);
 
         // Fallback to simulated data only if API fails
         analyticsData = {

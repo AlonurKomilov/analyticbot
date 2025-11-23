@@ -11,7 +11,7 @@ from typing import Any
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 
-from apps.api.auth_utils import AuthError, auth_utils, security_scheme
+from apps.api.auth_utils import AuthError, FastAPIAuthUtils, get_auth_utils, security_scheme
 from core.repositories.interfaces import ChannelRepository, UserRepository
 from core.security_engine import LegacyUserRole as UserRole
 from core.security_engine import (
@@ -64,6 +64,7 @@ async def get_channel_repository() -> ChannelRepository:
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     user_repo: UserRepository = Depends(get_user_repository),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ) -> dict[str, Any]:
     """
     Extract and validate current user from JWT token
@@ -104,7 +105,8 @@ async def get_current_user(
 async def require_channel_access(
     channel_id: int,
     user_id: int,  # ✅ FIXED: Changed from current_user dict to user_id int
-    channel_repo: ChannelRepository | None = None,  # ✅ FIXED: Made optional, will get from DI if not provided
+    channel_repo: ChannelRepository
+    | None = None,  # ✅ FIXED: Made optional, will get from DI if not provided
 ) -> int:
     """
     Validate that the current user has access to the specified channel
@@ -124,6 +126,7 @@ async def require_channel_access(
         # If channel_repo not provided, get it from DI
         if channel_repo is None:
             from apps.di import get_container
+
             container = get_container()
             channel_repo = await container.database.channel_repo()  # ✅ FIXED: Correct DI method
 
@@ -352,10 +355,15 @@ async def get_current_user_id_from_request(request) -> int:
                 user_id_str = claims.get("sub")
                 if user_id_str:
                     elapsed = (time.time() - start) * 1000
-                    logger.info(f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)")
+                    logger.info(
+                        f"⏱️ get_current_user_id_from_request: user_id={user_id_str} (JWT, {elapsed:.2f}ms)"
+                    )
                     return int(user_id_str)
             except Exception as token_error:
-                logger.error(f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}", exc_info=True)
+                logger.error(
+                    f"❌ Failed to decode JWT token in get_current_user_id_from_request: {token_error}",
+                    exc_info=True,
+                )
                 # Return a default user ID instead of raising error
                 elapsed = (time.time() - start) * 1000
                 logger.info(

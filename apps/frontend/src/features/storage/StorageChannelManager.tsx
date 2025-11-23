@@ -135,7 +135,7 @@ export const StorageChannelManager: React.FC = () => {
             Storage Channels
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Connect your Telegram channels for zero-cost file storage
+            Connect your Telegram channels for save date files like storage
           </Typography>
         </Box>
         <Button
@@ -173,7 +173,7 @@ export const StorageChannelManager: React.FC = () => {
               <Divider orientation="vertical" flexItem />
               <Box flex={1}>
                 <Alert severity="success" icon={<CloudIcon />}>
-                  All files stored in your Telegram channels - <strong>zero server costs!</strong>
+                  All files stored in your Telegram channels ! <strong></strong>
                 </Alert>
               </Box>
             </Stack>
@@ -264,9 +264,11 @@ export const StorageChannelManager: React.FC = () => {
         <DialogContent>
           <Stack spacing={3} mt={2}>
             <Alert severity="info">
-              <Typography variant="body2" component="div">
-                <strong>Setup Instructions:</strong>
-                <ol style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+              <Box component="div">
+                <Typography variant="body2" component="div" sx={{ mb: 1 }}>
+                  <strong>Setup Instructions:</strong>
+                </Typography>
+                <Box component="ol" sx={{ mt: 1, mb: 0, pl: 2.5, '& li': { typography: 'body2' } }}>
                   <li>Create a Telegram channel (you as owner)</li>
                   <li>Make sure YOU are a member of the channel</li>
                   <li>Add your personal bot as admin with "Post Messages" permission</li>
@@ -274,8 +276,8 @@ export const StorageChannelManager: React.FC = () => {
                   <li>For public channels: add username (e.g., "my_channel")</li>
                   <li>For private channels: leave username empty</li>
                   <li>Enter details below and validate</li>
-                </ol>
-              </Typography>
+                </Box>
+              </Box>
             </Alert>
 
             <TextField
@@ -299,17 +301,23 @@ export const StorageChannelManager: React.FC = () => {
             />
 
             <Alert severity="warning" icon={<TelegramIcon />}>
-              <Typography variant="body2">
-                <strong>Requirements:</strong>
-                <br />
-                • You must configure Bot + MTProto in Settings first
-                <br />
-                • You must be a member of the channel
-                <br />
-                • Your bot must be added as admin to the channel
-                <br />
-                • Leave username empty for private channels
-              </Typography>
+              <Box component="div">
+                <Typography variant="body2" component="div" sx={{ mb: 0.5 }}>
+                  <strong>Requirements:</strong>
+                </Typography>
+                <Typography variant="body2" component="div">
+                  • You must configure Bot + MTProto in Settings first
+                </Typography>
+                <Typography variant="body2" component="div">
+                  • You must be a member of the channel
+                </Typography>
+                <Typography variant="body2" component="div">
+                  • Your bot must be added as admin to the channel
+                </Typography>
+                <Typography variant="body2" component="div">
+                  • Leave username empty for private channels
+                </Typography>
+              </Box>
             </Alert>
 
             <Button
@@ -324,16 +332,20 @@ export const StorageChannelManager: React.FC = () => {
             {/* Validation Result */}
             {validationResult && (
               <Alert severity="success" icon={<CheckIcon />}>
-                <Typography variant="body2">
-                  <strong>✓ Channel Validated Successfully</strong>
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  Channel: <strong>{validationResult.channel_title}</strong>
-                  <br />
-                  Members: {validationResult.member_count}
-                  <br />
-                  Bot has admin access: {validationResult.bot_is_admin ? 'Yes' : 'No'}
-                </Typography>
+                <Box component="div">
+                  <Typography variant="body2" component="div" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    ✓ Channel Validated Successfully
+                  </Typography>
+                  <Typography variant="body2" component="div">
+                    Channel: <strong>{validationResult.channel_title}</strong>
+                  </Typography>
+                  <Typography variant="body2" component="div">
+                    Members: {validationResult.member_count}
+                  </Typography>
+                  <Typography variant="body2" component="div">
+                    Bot has admin access: {validationResult.bot_is_admin ? 'Yes' : 'No'}
+                  </Typography>
+                </Box>
               </Alert>
             )}
 

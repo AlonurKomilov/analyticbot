@@ -38,6 +38,8 @@ interface HeroMetricsSectionProps {
     engagementRate?: string;
     growthRate?: number;
     showPlaceholder?: boolean;
+    isLoading?: boolean;
+    lastUpdated?: Date;
 }
 
 const HeroMetricsSection: React.FC<HeroMetricsSectionProps> = ({
@@ -45,7 +47,9 @@ const HeroMetricsSection: React.FC<HeroMetricsSectionProps> = ({
     totalPosts = '—',
     engagementRate = '—',
     growthRate = 0,
-    showPlaceholder = false
+    showPlaceholder = false,
+    isLoading = false,
+    lastUpdated = new Date()
 }) => {
     const theme = useTheme();
 
@@ -112,19 +116,56 @@ const HeroMetricsSection: React.FC<HeroMetricsSectionProps> = ({
                         color: 'white',
                         fontWeight: 700,
                         mb: 1,
-                        textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5
                     }}
                 >
                     Analytics Overview
+                    {/* Status dot like MTProto - pulsing when loading */}
+                    <Box
+                        sx={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            backgroundColor: isLoading ? 'primary.main' : 'success.main',
+                            animation: isLoading ? 'pulse 1s ease-in-out infinite' : 'none',
+                            boxShadow: isLoading
+                                ? '0 0 8px rgba(255, 255, 255, 0.8)'
+                                : '0 0 6px rgba(255, 255, 255, 0.6)',
+                            '@keyframes pulse': {
+                                '0%, 100%': {
+                                    opacity: 1,
+                                    transform: 'scale(1)',
+                                },
+                                '50%': {
+                                    opacity: 0.6,
+                                    transform: 'scale(1.2)',
+                                },
+                            },
+                        }}
+                        title={isLoading ? 'Updating data...' : 'Live - Connected'}
+                    />
                 </Typography>
                 <Typography
                     variant="body1"
                     sx={{
                         color: 'rgba(255,255,255,0.9)',
-                        mb: 3
+                        mb: 0.5
                     }}
                 >
                     Real-time performance metrics for your content
+                </Typography>
+                <Typography
+                    variant="caption"
+                    sx={{
+                        color: 'rgba(255,255,255,0.7)',
+                        mb: 3,
+                        display: 'block'
+                    }}
+                >
+                    Last updated: {lastUpdated.toLocaleTimeString()}
                 </Typography>
 
                 <Grid container spacing={3}>

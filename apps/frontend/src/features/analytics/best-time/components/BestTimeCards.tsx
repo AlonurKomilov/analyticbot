@@ -67,13 +67,23 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
         return null;
     }
 
+    // Sort by HIGHEST confidence and show top 5 recommendations
+    const topRecommendations = [...recommendations.best_times]
+        .sort((a, b) => b.confidence - a.confidence) // Highest confidence first
+        .slice(0, 5);
+
     return (
         <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-                🏆 Best Times
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                    🏆 Top 5 Best Times
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    {recommendations.best_times.length} total recommendations analyzed
+                </Typography>
+            </Box>
             <Grid container spacing={2}>
-                {recommendations.best_times.map((time, index) => (
+                {topRecommendations.map((time, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>
                         <Card
                             sx={{

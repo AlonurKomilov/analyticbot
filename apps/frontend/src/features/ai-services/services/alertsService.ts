@@ -18,13 +18,18 @@ export interface LiveMonitoringMetrics {
   channelId: string;
   timestamp: string;
   metrics: {
-    engagement_rate: number;
-    response_time: number;
-    error_rate: number;
-    active_users: number;
+    post_count_24h?: number;
+    avg_engagement_rate?: number;
+    growth_rate_7d?: number;
+    content_quality_score?: number;
+    anomaly_score?: number;
+    engagement_rate?: number;
+    response_time?: number;
+    error_rate?: number;
+    active_users?: number;
   };
   alerts: Alert[];
-  status: 'healthy' | 'warning' | 'critical';
+  status: 'healthy' | 'warning' | 'critical' | 'active';
 }
 
 /**
@@ -98,17 +103,26 @@ export class AlertsService {
     try {
       const result = await AlertsAPI.getLiveMonitoring(channelId, hours);
 
+      // Backend returns { live_metrics: {...}, status: '...' }
+      // Extract and transform to our interface
+      const liveMetrics = result.live_metrics || {};
+
       return {
         channelId: result.channel_id || channelId,
-        timestamp: result.timestamp || new Date().toISOString(),
-        metrics: result.metrics || {
-          engagement_rate: 0,
+        timestamp: result.timestamp || liveMetrics.timestamp || new Date().toISOString(),
+        metrics: {
+          post_count_24h: liveMetrics.post_count_24h || 0,
+          avg_engagement_rate: liveMetrics.avg_engagement_rate || 0,
+          growth_rate_7d: liveMetrics.growth_rate_7d || 0,
+          content_quality_score: liveMetrics.content_quality_score || 0,
+          anomaly_score: liveMetrics.anomaly_score || 0,
+          engagement_rate: liveMetrics.avg_engagement_rate || 0,
           response_time: 0,
           error_rate: 0,
           active_users: 0
         },
         alerts: result.alerts || [],
-        status: result.status || 'healthy'
+        status: (liveMetrics.status || result.status || 'active') as 'healthy' | 'warning' | 'critical' | 'active'
       };
     } catch (error) {
       console.error('Live monitoring failed:', error);
@@ -129,7 +143,9 @@ export class AlertsService {
 
     try {
       const result = await AlertsAPI.checkAlerts(channelId, analysisType);
-      return result.alerts || [];
+      // Backend returns: { alert_check: { active_alerts: [...] } }
+      // Extract active_alerts from the nested structure
+      return result.alert_check?.active_alerts || result.alerts || [];
     } catch (error) {
       console.error('Alert check failed:', error);
       throw new Error('Failed to check alerts');
@@ -198,12 +214,18 @@ export class AlertsService {
 
   /**
    * Get alert rules for a channel
+   * Note: Backend endpoint not yet implemented, returns empty array
    */
   async getAlertRules(channelId: string): Promise<AlertRule[]> {
     if (!channelId || channelId.trim().length === 0) {
       throw new Error('Channel ID is required');
     }
 
+    // Backend endpoint not implemented yet - skip API call and return empty
+    // This avoids 500 errors in console logs
+    return [];
+
+    /* Uncomment when backend implements get_channel_rules()
     try {
       const result = await AlertsAPI.getAlertRules(channelId);
       return result.rules || [];
@@ -211,6 +233,7 @@ export class AlertsService {
       console.error('Failed to fetch alert rules:', error);
       throw new Error('Failed to load alert rules');
     }
+    */
   }
 
   /**

@@ -50,6 +50,28 @@ class BestDayRecommendation:
 
 
 @dataclass
+class DayHourCombination:
+    """Best day-hour combination for targeted recommendations"""
+
+    day: int  # 0-6 (Sunday-Saturday)
+    hour: int  # 0-23
+    confidence: float
+    avg_engagement: float
+    post_count: int
+
+
+@dataclass
+class ContentTypeRecommendation:
+    """Best time for specific content type"""
+
+    content_type: str  # 'video', 'image', 'link', 'text'
+    hour: int  # 0-23
+    confidence: float
+    avg_engagement: float
+    post_count: int
+
+
+@dataclass
 class PostingTimeAnalysisResult:
     """Complete result from posting time analysis"""
 
@@ -64,6 +86,9 @@ class PostingTimeAnalysisResult:
     confidence: float
     generated_at: str
     data_source: str = "real_analytics"
+    # NEW: Advanced recommendations
+    best_day_hour_combinations: list[DayHourCombination] | None = None
+    content_type_recommendations: list[ContentTypeRecommendation] | None = None
 
 
 @dataclass
@@ -74,6 +99,9 @@ class RawMetricsData:
     best_days: list[dict[str, Any]]
     daily_performance: list[dict[str, Any]]
     total_posts_analyzed: int
+    # NEW: Advanced analytics
+    best_day_hour_combinations: list[dict[str, Any]] | None = None
+    content_type_recommendations: list[dict[str, Any]] | None = None
 
 
 @dataclass
@@ -81,7 +109,7 @@ class AnalysisParameters:
     """Parameters for posting time analysis"""
 
     channel_id: int
-    days: int = 90
+    days: int | None = 90  # None = all-time (limited to 10k posts)
     min_posts_per_hour: int = 1
     min_posts_per_day: int = 1
     min_total_posts: int = 3

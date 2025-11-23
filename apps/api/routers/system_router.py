@@ -59,6 +59,7 @@ class SendNowRequest(BaseModel):
     message: str
     media_type: str = "text"
     media_url: str | None = None
+    telegram_file_id: str | None = None  # For files from Telegram storage
 
 
 # === CORE ENDPOINTS ===
@@ -208,16 +209,57 @@ async def send_post_now(
         bot_token = os.getenv(
             "TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o"
         )
-        telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
         # Convert channel_id to negative for Telegram API
         telegram_chat_id = -request.channel_id
 
+        # Determine API endpoint and payload based on media type
+        if request.telegram_file_id:
+            # Using file from Telegram storage - use appropriate send method
+            if request.media_type == "photo":
+                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
+                payload = {
+                    "chat_id": telegram_chat_id,
+                    "photo": request.telegram_file_id,
+                    "caption": request.message if request.message else None,
+                }
+            elif request.media_type == "video":
+                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendVideo"
+                payload = {
+                    "chat_id": telegram_chat_id,
+                    "video": request.telegram_file_id,
+                    "caption": request.message if request.message else None,
+                }
+            elif request.media_type == "document":
+                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+                payload = {
+                    "chat_id": telegram_chat_id,
+                    "document": request.telegram_file_id,
+                    "caption": request.message if request.message else None,
+                }
+            elif request.media_type == "audio":
+                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendAudio"
+                payload = {
+                    "chat_id": telegram_chat_id,
+                    "audio": request.telegram_file_id,
+                    "caption": request.message if request.message else None,
+                }
+            else:
+                # Default to document for unknown types
+                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+                payload = {
+                    "chat_id": telegram_chat_id,
+                    "document": request.telegram_file_id,
+                    "caption": request.message if request.message else None,
+                }
+        else:
+            # Text-only message
+            telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            payload = {"chat_id": telegram_chat_id, "text": request.message}
+
         # Send to Telegram
         async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                telegram_api_url, json={"chat_id": telegram_chat_id, "text": request.message}
-            )
+            response = await client.post(telegram_api_url, json=payload)
             response.raise_for_status()
             telegram_response = response.json()
 

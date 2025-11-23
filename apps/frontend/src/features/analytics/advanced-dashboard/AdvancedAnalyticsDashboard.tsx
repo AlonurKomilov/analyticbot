@@ -5,7 +5,7 @@
  * Integrates multiple data sources and provides rich visualization capabilities.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Grid, Alert } from '@mui/material';
 import { useAllAnalytics } from '@shared/hooks';
 
@@ -25,6 +25,7 @@ const TypedPerformanceScoreWidget = PerformanceScoreWidget as any;
 
 interface AdvancedAnalyticsDashboardProps {
     channelId?: string | null;
+    lastUpdated?: Date;
 }
 
 interface Metrics {
@@ -36,7 +37,8 @@ interface Metrics {
 }
 
 const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
-    channelId
+    channelId,
+    lastUpdated
 }) => {
     // Show info message if no channel selected
     if (!channelId) {
@@ -51,6 +53,9 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
 
     const analyticsHook = useAllAnalytics(channelId);    const [trends, setTrends] = useState<any[]>([]);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Track previous lastUpdated to detect auto-refresh
+    const prevLastUpdatedRef = useRef<Date | undefined>(undefined);
 
     // Extract values safely from hooks
     const isLoading = analyticsHook.isLoading || false;
@@ -72,12 +77,29 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
         setTrends([]);
     }, [channelId]);
 
+    // Handle silent auto-refresh when lastUpdated changes
+    useEffect(() => {
+        if (lastUpdated && prevLastUpdatedRef.current &&
+            lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
+            console.log('🔄 AdvancedAnalyticsDashboard: Silent auto-refresh triggered');
+            // Refresh data silently (without showing loading state)
+            if (actions.refetchAll) {
+                try {
+                    actions.refetchAll();
+                } catch (error: any) {
+                    console.error('Silent refresh failed:', error);
+                }
+            }
+        }
+        prevLastUpdatedRef.current = lastUpdated;
+    }, [lastUpdated, actions]);
+
     // Refresh handler
     const handleRefresh = async () => {
         setRefreshing(true);
         try {
             if (actions.refetchAll) {
-                await actions.refetchAll();
+                actions.refetchAll();
             }
         } catch (error) {
             console.error('Failed to refresh dashboard:', error);
@@ -108,8 +130,8 @@ const AdvancedAnalyticsDashboard: React.FC<AdvancedAnalyticsDashboardProps> = ({
                 onRefresh={handleRefresh}
             />
 
-            {/* Smart Alerts Panel */}
-            <TypedSmartAlertsPanel />
+            {/* Smart Alerts Panel - Now connected to real alert system */}
+            <TypedSmartAlertsPanel channelId={channelId} />
 
             {/* Overview Metrics Grid */}
             <TypedOverviewMetrics metrics={metrics} />

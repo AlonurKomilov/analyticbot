@@ -17,8 +17,13 @@ import TopPostsTable from './TopPostsTable';
  *
  * @component
  */
-const EnhancedTopPostsTable: React.FC = () => {
-    return <TopPostsTable />;
+
+interface EnhancedTopPostsTableProps {
+    lastUpdated?: Date;
+}
+
+const EnhancedTopPostsTable: React.FC<EnhancedTopPostsTableProps> = ({ lastUpdated }) => {
+    return <TopPostsTable lastUpdated={lastUpdated} />;
 };
 
 export default EnhancedTopPostsTable;

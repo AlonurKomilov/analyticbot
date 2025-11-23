@@ -124,7 +124,11 @@ def configure_container() -> ApplicationContainer:
     """
     global _container
     if _container is None:
+        print("🏗️ DEBUG: Creating new ApplicationContainer instance...")
+        logger.info("🏗️ Creating new ApplicationContainer instance...")
         _container = ApplicationContainer()
+        print("✅ DEBUG: ApplicationContainer created")
+        logger.info("✅ ApplicationContainer created")
 
         # Inject cache into SecurityContainer (maintains Clean Architecture)
         # The core layer's SecurityContainer doesn't import infra directly.
@@ -136,18 +140,23 @@ def configure_container() -> ApplicationContainer:
             from core.security_engine.container import get_security_container
             from infra.security.adapters import RedisCache
 
+            logger.info("🔧 Starting cache injection into SecurityContainer...")
             redis_url = settings.REDIS_URL
+            logger.info(f"🔧 Redis URL from settings: {redis_url}")
             parsed = urlparse(redis_url)
             host = parsed.hostname or "localhost"
             port = parsed.port or 10200
             db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else 0
+            logger.info(f"🔧 Parsed Redis connection: {host}:{port}/{db}")
 
             cache_port = RedisCache(host=host, port=port, db=db)
+            logger.info("🔧 RedisCache instance created")
             security_container = get_security_container()
+            logger.info("🔧 SecurityContainer retrieved")
             security_container.set_cache_port(cache_port)
             logger.info(f"✅ Injected Redis cache into SecurityContainer: {host}:{port}/{db}")
         except Exception as e:
-            logger.error(f"❌ Failed to inject cache into SecurityContainer: {e}")
+            logger.error(f"❌ Failed to inject cache into SecurityContainer: {e}", exc_info=True)
             logger.warning("⚠️ SecurityManager will use in-memory cache fallback")
 
         # Wire modules after all imports are complete

@@ -11,9 +11,9 @@ from typing import Any
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from pydantic import EmailStr
 
-from apps.api.auth_utils import auth_utils
+from apps.api.auth_utils import FastAPIAuthUtils, get_auth_utils
 from apps.api.middleware.auth import get_current_user, get_user_repository
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.routers.auth.models import AuthResponse, LoginRequest
 from core.ports.security_ports import AuthRequest
 from core.repositories.interfaces import UserRepository
@@ -38,6 +38,7 @@ async def login(
     response: Response,
     user_repo: UserRepository = Depends(get_user_repository),
     security_manager: SecurityManager = Depends(get_security_manager),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ):
     """
     Authenticate user with email and password
@@ -148,6 +149,7 @@ async def refresh_token(
     refresh_token: str = Body(..., embed=True),
     security_manager: SecurityManager = Depends(get_security_manager),
     user_repo: UserRepository = Depends(get_user_repository),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ):
     """
     Refresh access token using refresh token

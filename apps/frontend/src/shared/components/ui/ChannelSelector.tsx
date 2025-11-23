@@ -301,16 +301,6 @@ const ChannelSelector: React.FC<ChannelSelectorProps> = ({
                 </Box>
             </Box>
 
-            {/* Selected Channel Info */}
-            {selectedChannel && (
-                <Box sx={{ mt: 1, p: 1, backgroundColor: 'grey.50', borderRadius: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                        Selected: {selectedChannel.name}
-                        {selectedChannel.description && ` - ${selectedChannel.description}`}
-                    </Typography>
-                </Box>
-            )}
-
             {/* Create Channel Dialog */}
             <Dialog
                 open={createDialogOpen}

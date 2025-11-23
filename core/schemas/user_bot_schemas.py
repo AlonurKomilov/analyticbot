@@ -124,6 +124,8 @@ class BotCreatedResponse(BaseModel):
     status: BotStatus
     bot_username: str | None
     requires_verification: bool = True
+    webhook_enabled: bool = False
+    webhook_url: str | None = None
 
 
 class BotVerificationResponse(BaseModel):

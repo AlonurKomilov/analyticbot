@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -35,6 +35,7 @@ import { useAlerts } from '@features/alerts/hooks';
 // Type definitions
 interface RealTimeAlertsSystemProps {
   channelId?: string | null;
+  lastUpdated?: Date;
 }
 
 interface Alert {
@@ -79,7 +80,7 @@ interface NewRuleFormData {
  * @param props - Component props
  * @param props.channelId - Channel ID for alert monitoring
  */
-const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId }) => {
+const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId, lastUpdated }) => {
   // Show info message if no channel selected
   if (!channelId) {
     return (
@@ -112,6 +113,24 @@ const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId }
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [newRuleDialog, setNewRuleDialog] = useState<boolean>(false);
+
+  // Track previous lastUpdated to detect auto-refresh
+  const prevLastUpdatedRef = useRef<Date | undefined>(undefined);
+
+  // Handle silent auto-refresh when lastUpdated changes
+  useEffect(() => {
+    if (lastUpdated && prevLastUpdatedRef.current &&
+        lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
+      console.log('🔄 RealTimeAlertsSystem: Silent auto-refresh triggered');
+      // Refresh data silently (without showing loading state)
+      if (refresh) {
+        refresh().catch((error: any) => {
+          console.error('Silent refresh failed:', error);
+        });
+      }
+    }
+    prevLastUpdatedRef.current = lastUpdated;
+  }, [lastUpdated, refresh]);
 
   // Default alert rules configuration
   const defaultRules = React.useMemo<AlertRule[]>(() => [
@@ -268,8 +287,26 @@ const RealTimeAlertsSystem: React.FC<RealTimeAlertsSystemProps> = ({ channelId }
 
         {/* Error Display */}
         {error && (
-          <MuiAlert severity="error" sx={{ mb: 2 }} onClose={() => {}}>
-            Failed to load alerts: {error}
+          <MuiAlert severity="error" sx={{ mb: 2 }}>
+            <Typography variant="body2" component="div">
+              <strong>Error Loading Data</strong>
+              <br />
+              {error}
+              <br />
+              <Typography variant="caption" component="div" sx={{ mt: 1 }}>
+                This might be due to:
+                • Authentication required (please log in)
+                • Channel not found or access denied
+                • Backend service temporarily unavailable
+              </Typography>
+            </Typography>
+          </MuiAlert>
+        )}
+
+        {/* Show default message when no alerts and no error */}
+        {!error && !loading && alerts.length === 0 && (
+          <MuiAlert severity="info" sx={{ mb: 2 }}>
+            No active alerts - your channel is performing well! 🎉
           </MuiAlert>
         )}
 

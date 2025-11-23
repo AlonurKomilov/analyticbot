@@ -77,6 +77,7 @@ class SecurityManager:
             security_config: Security config port for settings (optional)
             user_repository: User repository port for user data (optional)
         """
+        logger.info(f"🔐 Initializing SecurityManager with cache={cache}")
         self.cache = cache
         self.security_events = security_events
         self.token_generator: TokenGeneratorPort  # Will be initialized below
@@ -86,7 +87,12 @@ class SecurityManager:
         # Legacy fallbacks
         self.config = get_security_config()
         if not self.cache:
+            logger.warning(
+                "⚠️ No cache provided to SecurityManager, setting up memory cache fallback"
+            )
             self._setup_memory_cache()
+        else:
+            logger.info(f"✅ SecurityManager using provided cache: {type(cache).__name__}")
 
         # Initialize JWT adapter if no token generator provided
         if token_generator is None:

@@ -31,7 +31,7 @@ from .analytics_live_router import router as analytics_live_router
 from .auth.router import router as auth_router
 
 # Other domain routers - FIXED: Updated to match renamed files
-from .channels_router import router as channels_router
+from .channels import router as channels_router  # ✅ Microservice
 from .competitive_intelligence_router import router as competitive_intelligence_router
 from .exports_router import router as exports_router
 from .health_router import router as health_router

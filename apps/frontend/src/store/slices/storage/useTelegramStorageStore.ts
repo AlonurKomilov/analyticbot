@@ -2,7 +2,7 @@
  * Telegram Storage Store
  *
  * Manages user-owned Telegram channels for file storage and media management.
- * Enables zero-cost file hosting by uploading files to user's private channels.
+ * Enables file hosting by uploading files to user's private channels.
  */
 
 import { create } from 'zustand';

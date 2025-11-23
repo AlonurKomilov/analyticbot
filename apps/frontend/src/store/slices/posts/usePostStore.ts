@@ -170,13 +170,14 @@ export const usePostStore = create<PostState>()(
 
         // Transform frontend data to backend API format for immediate send
         // Frontend sends: { text, selectedChannel, inline_buttons, media }
-        // Backend /send expects: { user_id, channel_id, message, media_type, media_url }
+        // Backend /send expects: { user_id, channel_id, message, media_type, media_url, telegram_file_id }
         const backendPayload = {
           user_id: parseInt(userId),
           channel_id: parseInt(postData.selectedChannel),
           message: postData.text,
           media_type: postData.media?.type || 'text',
           media_url: postData.media?.url || null,
+          telegram_file_id: postData.media?.telegram_file_id || null,  // For Telegram storage files
         };
 
         console.log('🚀 Transformed payload for backend /send:', backendPayload);

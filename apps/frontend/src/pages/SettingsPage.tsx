@@ -43,7 +43,7 @@ const SettingsPage: React.FC = () => {
         },
         {
             title: 'Storage Channels',
-            description: 'Manage Telegram channels for zero-cost file storage',
+            description: 'Manage Telegram channels for file storage',
             icon: <StorageIcon />,
             path: '/settings/storage-channels',
             available: true

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully implemented a revolutionary **zero-cost file storage system** using users' own Telegram channels as cloud storage. This eliminates server storage costs entirely while leveraging Telegram's robust infrastructure.
+Successfully implemented a revolutionary **host file storage system** using users' own Telegram channels as cloud storage. This eliminates server storage costs entirely while leveraging Telegram's robust infrastructure.
 
 ## 🎯 Implementation Summary
 

@@ -455,6 +455,56 @@ async def get_stats() -> StatsResponse:
 # === LEGACY ENDPOINTS (Backward Compatibility) ===
 # These endpoints maintain backward compatibility while using the orchestrator internally
 
+# ⚠️ IMPORTANT: More specific routes MUST come before generic routes
+# /rules/smart/{channel_id} must be before /rules/{channel_id}
+
+
+@router.get("/rules/smart/{channel_id}")
+async def get_smart_alert_rules(
+    channel_id: int,
+    current_user: dict = Depends(get_current_user),
+    orchestrator=Depends(get_alerts_orchestrator),
+):
+    """
+    Get personalized smart alert rules for a channel.
+
+    Analyzes channel size, history, and performance to generate
+    intelligent alert rules with appropriate thresholds.
+
+    Returns:
+    - 5 pre-configured smart rules personalized to channel
+    - Each rule has thresholds based on channel's actual metrics
+    - Rules marked as 'personalized': true
+    """
+    try:
+        from core.services.alerts_fusion.alerts.smart_rules_generator import (
+            SmartRulesGenerator,
+        )
+
+        # Get repositories from container
+        container = get_container()
+        channels_repo = await container.database.channel_repo()
+        daily_repo = await container.database.channel_daily_repo()
+        posts_repo = await container.database.post_repo()
+
+        # Generate smart rules
+        generator = SmartRulesGenerator(channels_repo, daily_repo, posts_repo)
+        smart_rules = await generator.generate_smart_rules_for_channel(channel_id)
+
+        logger.info(f"✅ Generated {len(smart_rules)} smart rules for channel {channel_id}")
+
+        return {
+            "channel_id": channel_id,
+            "rules": smart_rules,
+            "total_rules": len(smart_rules),
+            "personalized": any(r.get("personalized", False) for r in smart_rules),
+            "message": "Smart rules personalized to your channel's size and performance",
+        }
+
+    except Exception as e:
+        logger.error(f"Smart rules generation failed for channel {channel_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate smart rules: {str(e)}")
+
 
 @router.get("/rules/{channel_id}")
 async def get_alert_rules(
@@ -481,6 +531,76 @@ async def get_alert_rules(
     except Exception as e:
         logger.error(f"Alert rules fetch failed for channel {channel_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get alert rules")
+
+
+@router.post("/rules/{channel_id}")
+async def create_alert_rule(
+    channel_id: int,
+    rule_request: AlertRuleRequest,
+    current_user: dict = Depends(get_current_user),
+    orchestrator=Depends(get_alerts_orchestrator),
+):
+    """
+    Create a new alert rule for a channel.
+
+    Creates a custom alert rule with specified thresholds and conditions.
+    """
+    try:
+        # Create rule in the alerts service
+        rule = await orchestrator.alerts_service.create_alert_rule(
+            channel_id=str(channel_id),
+            rule_name=rule_request.rule_name,
+            metric_type=rule_request.metric_type,
+            threshold_value=rule_request.threshold_value,
+            comparison=rule_request.comparison,
+            enabled=rule_request.enabled,
+            notification_channels=rule_request.notification_channels,
+        )
+
+        return {
+            "channel_id": channel_id,
+            "rule": rule,
+            "status": "created",
+            "message": f"Alert rule '{rule_request.rule_name}' created successfully",
+        }
+
+    except Exception as e:
+        logger.error(f"Alert rule creation failed for channel {channel_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create alert rule: {str(e)}")
+
+
+@router.put("/rules/{channel_id}/{rule_id}")
+async def update_alert_rule(
+    channel_id: int,
+    rule_id: str,
+    enabled: bool,
+    current_user: dict = Depends(get_current_user),
+    orchestrator=Depends(get_alerts_orchestrator),
+):
+    """
+    Update an alert rule (toggle enabled/disabled).
+
+    Updates the rule status in the alert configuration.
+    """
+    try:
+        # Update rule in the alerts service
+        rule = await orchestrator.alerts_service.update_alert_rule(
+            channel_id=str(channel_id),
+            rule_id=rule_id,
+            enabled=enabled,
+        )
+
+        return {
+            "channel_id": channel_id,
+            "rule_id": rule_id,
+            "rule": rule,
+            "status": "updated",
+            "message": f"Alert rule {'enabled' if enabled else 'disabled'} successfully",
+        }
+
+    except Exception as e:
+        logger.error(f"Alert rule update failed for channel {channel_id}, rule {rule_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update alert rule: {str(e)}")
 
 
 @router.get("/history/{channel_id}")

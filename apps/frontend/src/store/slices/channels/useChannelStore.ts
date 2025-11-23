@@ -62,19 +62,21 @@ export const useChannelStore = create<ChannelState>()(
       fetchChannelsPromise = (async () => {
         try {
           const channels = await apiClient.get<any[]>('/analytics/channels');  // Using analytics endpoint
-          // Normalize channel IDs to strings for consistent handling
+          // Normalize channel IDs and field names to match frontend expectations
           const normalizedChannels = (channels || []).map(channel => ({
             ...channel,
             id: String(channel.id),
             telegramId: channel.telegram_id || String(channel.id),
-            subscriberCount: channel.subscriber_count || 0
+            subscriberCount: channel.subscriber_count || 0,
+            isActive: channel.is_active !== undefined ? channel.is_active : true, // Normalize snake_case to camelCase
+            isVerified: channel.is_verified || false
           })) as Channel[];
 
           set({
             channels: normalizedChannels,
             isLoading: false
           });
-          console.log('✅ Channels loaded:', normalizedChannels.length);
+          console.log('✅ Channels loaded:', normalizedChannels.length, normalizedChannels);
         } catch (error) {
           console.error('❌ Failed to load channels:', error);
 

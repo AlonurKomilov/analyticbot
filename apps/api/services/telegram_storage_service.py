@@ -67,6 +67,105 @@ class TelegramStorageService:
         self.db = db_session
         self.client = telegram_client
 
+    @classmethod
+    async def create_for_user(
+        cls,
+        user_id: int,
+        db_session: AsyncSession,
+    ) -> "TelegramStorageService":
+        """
+        Factory method to create TelegramStorageService with user's MTProto client.
+
+        This method:
+        1. Fetches user credentials from database
+        2. Decrypts API hash and session string
+        3. Creates Telethon client
+        4. Validates user authorization
+        5. Returns initialized service
+
+        Args:
+            user_id: User ID to create service for
+            db_session: Database session for queries
+
+        Returns:
+            TelegramStorageService instance with user's client
+
+        Raises:
+            HTTPException 400: User credentials not found or session expired
+            HTTPException 503: Telethon library not available
+        """
+        from fastapi import HTTPException, status
+        from sqlalchemy import select
+
+        from core.services.encryption_service import get_encryption_service
+        from infra.db.models.user_bot import UserBot
+
+        # Get user credentials
+        stmt = select(UserBot).where(UserBot.user_id == user_id)
+        result = await db_session.execute(stmt)
+        credentials = result.scalar_one_or_none()
+
+        if (
+            not credentials
+            or not credentials.telegram_api_id
+            or not credentials.telegram_api_hash
+            or not credentials.session_string
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User MTProto credentials not found. Please connect MTProto in Settings. "
+                "This is required to validate and use storage channels.",
+            )
+
+        # Decrypt credentials
+        encryption = get_encryption_service()
+        api_hash = encryption.decrypt(credentials.telegram_api_hash)
+        session_string = encryption.decrypt(credentials.session_string)
+
+        # Create Telethon client with user's MTProto credentials
+        # Import only when MTProto is actually being used (guard pattern)
+        try:
+            from telethon import TelegramClient
+            from telethon.sessions import StringSession
+        except ImportError as e:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"MTProto library (telethon) not available: {e}",
+            ) from e
+
+        user_client = TelegramClient(
+            StringSession(session_string),
+            api_id=credentials.telegram_api_id,
+            api_hash=api_hash,
+        )
+
+        try:
+            # Connect the client
+            await user_client.connect()
+
+            if not await user_client.is_user_authorized():
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="MTProto session expired. Please reconnect MTProto in Settings.",
+                )
+
+            # Return initialized service
+            return cls(db_session, user_client)
+
+        except HTTPException:
+            # Re-raise HTTP exceptions as-is
+            raise
+        except Exception as e:
+            # Cleanup client on error
+            try:
+                await user_client.disconnect()
+            except Exception:
+                pass
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to initialize Telegram client: {str(e)}",
+            ) from e
+
     async def validate_storage_channel(
         self, user_id: int, channel_id: int, channel_username: str | None = None
     ) -> dict[str, Any]:
@@ -114,7 +213,6 @@ class TelegramStorageService:
                     channel = await self.client.get_entity(username_query)
                 except Exception as e:
                     logger.warning(f"Failed to fetch by username '{username_query}': {e}")
-                    last_error = e
 
             # Try channel_id as fallback
             if not channel:
@@ -148,11 +246,12 @@ class TelegramStorageService:
                 raise TelegramStorageError("Bot needs 'Post Messages' permission in the channel")
 
             # Get channel info
+            member_count = getattr(channel, "participants_count", None)
             channel_info = {
                 "id": channel.id,
                 "title": channel.title,
                 "username": getattr(channel, "username", None),
-                "member_count": getattr(channel, "participants_count", 0),
+                "member_count": member_count if member_count is not None else 0,
                 "is_valid": True,
                 "bot_is_admin": True,
             }

@@ -169,34 +169,183 @@ export class ApiDataProvider extends DataProvider {
 
     async getAnalytics(channelId) {
         const numericChannelId = this._convertChannelId(channelId);
-        // Use the insights endpoint which provides similar analytics data
-        const response = await this._makeRequest(`/analytics/insights/${numericChannelId}`);
-        return response;
+        // Use the historical overview endpoint with default 90-day range
+        try {
+            const toDate = new Date();
+            const fromDate = new Date();
+            fromDate.setDate(fromDate.getDate() - 90);
+
+            const fromStr = fromDate.toISOString();
+            const toStr = toDate.toISOString();
+
+            const response = await this._makeRequest(
+                `/analytics/historical/overview/${numericChannelId}?from=${fromStr}&to=${toStr}`
+            );
+
+            // Transform historical overview to match AnalyticsOverview interface
+            if (response && response.overview) {
+                const overview = response.overview;
+                return {
+                    totalViews: overview.total_views || 0,
+                    totalShares: overview.total_shares || overview.total_forwards || 0,
+                    totalReactions: overview.total_reactions || 0,
+                    engagementRate: overview.engagement_rate || 0,
+                    growthRate: overview.growth_rate || overview.subscriber_growth_rate || 0,
+                    reachScore: overview.reach_score || 0,
+                    viralityScore: overview.virality_score || 0,
+                    timestamp: response.last_updated || new Date().toISOString()
+                };
+            }
+
+            // Fallback if response structure is unexpected
+            return {
+                totalViews: 0,
+                totalShares: 0,
+                totalReactions: 0,
+                engagementRate: 0,
+                growthRate: 0,
+                reachScore: 0,
+                viralityScore: 0,
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('Failed to fetch analytics:', error);
+            // Return empty structure on error
+            return {
+                totalViews: 0,
+                totalShares: 0,
+                totalReactions: 0,
+                engagementRate: 0,
+                growthRate: 0,
+                reachScore: 0,
+                viralityScore: 0,
+                timestamp: new Date().toISOString()
+            };
+        }
     }
 
     async getTopPosts(channelId, options = {}) {
         const numericChannelId = this._convertChannelId(channelId);
         const queryParams = new URLSearchParams(options).toString();
-        // Use the demo top-posts endpoint for now
-        const url = `/analytics/demo/top-posts${queryParams ? `?${queryParams}` : ''}`;
+        // Use the real top-posts endpoint for user's channel data
+        const url = `/analytics/posts/top-posts/${numericChannelId}${queryParams ? `?${queryParams}` : ''}`;
         const response = await this._makeRequest(url);
         return response;
     }
 
     async getEngagementMetrics(channelId, options = {}) {
         const numericChannelId = this._convertChannelId(channelId);
-        const queryParams = new URLSearchParams(options).toString();
-        // Use the channel metrics endpoint
-        const url = `/analytics/channels/${numericChannelId}/metrics${queryParams ? `?${queryParams}` : ''}`;
-        const response = await this._makeRequest(url);
-        return response;
+
+        try {
+            // Try to get data from top posts and calculate basic metrics
+            const topPosts = await this.getTopPosts(numericChannelId, { period: '7d', limit: 20 });
+
+            // Calculate aggregate metrics from top posts
+            if (topPosts && Array.isArray(topPosts) && topPosts.length > 0) {
+                const totalViews = topPosts.reduce((sum, post) => sum + (post.views || 0), 0);
+                const totalForwards = topPosts.reduce((sum, post) => sum + (post.forwards || 0), 0);
+                const totalReactions = topPosts.reduce((sum, post) => sum + (post.reactions_count || 0), 0);
+                const avgEngagement = topPosts.reduce((sum, post) => sum + (post.engagement_rate || 0), 0) / topPosts.length;
+
+                return {
+                    timestamp: new Date().toISOString(),
+                    total_views: totalViews,
+                    growth_rate: 0, // Not available from post data
+                    engagement_rate: avgEngagement,
+                    reach_score: Math.min(100, Math.floor(totalViews / 10)), // Estimate
+                    active_users: Math.floor(totalViews / 3), // Estimate
+                    metrics_type: "calculated_from_posts"
+                };
+            }
+
+            // Fallback to basic structure if no posts
+            return {
+                timestamp: new Date().toISOString(),
+                total_views: 0,
+                growth_rate: 0,
+                engagement_rate: 0,
+                reach_score: 0,
+                active_users: 0,
+                metrics_type: "no_data"
+            };
+        } catch (error) {
+            console.warn('Could not calculate engagement metrics from posts:', error);
+            // Return basic structure to avoid breaking the UI
+            return {
+                timestamp: new Date().toISOString(),
+                total_views: 0,
+                growth_rate: 0,
+                engagement_rate: 0,
+                reach_score: 0,
+                active_users: 0,
+                metrics_type: "error_fallback"
+            };
+        }
     }
 
     async getRecommendations(channelId) {
         const numericChannelId = this._convertChannelId(channelId);
-        // Use the advanced analytics recommendations endpoint
-        const response = await this._makeRequest(`/analytics/advanced/recommendations/${numericChannelId}`);
-        return response;
+
+        // Skip the API call for recommendations since it requires external service
+        // Generate recommendations directly from available data
+        console.info('📊 Generating recommendations from available channel data...');
+
+        try {
+            // Generate basic recommendations from top posts data
+            const topPosts = await this.getTopPosts(numericChannelId, { period: '7d', limit: 10 });
+
+            if (topPosts && Array.isArray(topPosts) && topPosts.length > 0) {
+                const avgEngagement = topPosts.reduce((sum, post) => sum + (post.engagement_rate || 0), 0) / topPosts.length;
+                const totalViews = topPosts.reduce((sum, post) => sum + (post.views || 0), 0);
+                const totalForwards = topPosts.reduce((sum, post) => sum + (post.forwards || 0), 0);
+                const totalReactions = topPosts.reduce((sum, post) => sum + (post.reactions_count || 0), 0);
+
+                const recommendations = [];
+
+                // Engagement-based recommendations
+                if (avgEngagement > 5) {
+                    recommendations.push(`✅ Excellent engagement rate of ${avgEngagement.toFixed(2)}%! Keep up the great work.`);
+                } else if (avgEngagement > 2) {
+                    recommendations.push(`📈 Good engagement rate of ${avgEngagement.toFixed(2)}%. Try more interactive content to boost it further.`);
+                } else {
+                    recommendations.push(`💡 Current engagement is ${avgEngagement.toFixed(2)}%. Consider posting more engaging content like polls, questions, or multimedia.`);
+                }
+
+                // Views-based recommendations
+                recommendations.push(`👁️ Total views: ${totalViews.toLocaleString()}. ${totalViews > 1000 ? 'Great reach!' : 'Post more consistently to increase visibility.'}`);
+
+                // Interaction recommendations
+                if (totalForwards > 0 || totalReactions > 0) {
+                    recommendations.push(`🔄 Your content is being shared (${totalForwards} forwards, ${totalReactions} reactions). Keep creating shareable content!`);
+                } else {
+                    recommendations.push(`💬 Encourage audience interaction by asking questions and creating discussion-worthy content.`);
+                }
+
+                // Best post recommendation
+                if (topPosts[0]?.engagement_rate > 5) {
+                    recommendations.push(`🏆 Your top post has ${topPosts[0].engagement_rate.toFixed(2)}% engagement. Analyze what made it successful and replicate that approach.`);
+                }
+
+                // General recommendations
+                recommendations.push('📅 Post consistently at optimal times to maintain audience engagement.');
+                recommendations.push('📊 Monitor your analytics regularly to identify trends and opportunities.');
+
+                return recommendations;
+            }
+        } catch (error) {
+            console.warn('Could not generate data-driven recommendations:', error);
+        }
+
+        // Ultimate fallback: generic but useful recommendations
+        return [
+            '📝 Post consistently to grow your audience',
+            '💬 Engage with your subscribers regularly through comments and polls',
+            '📊 Analyze your best-performing content to identify successful patterns',
+            '🎨 Experiment with different content formats (text, images, videos)',
+            '⏰ Test different posting times to find your optimal schedule',
+            '🎯 Focus on quality over quantity for better engagement',
+            '📈 Monitor your analytics to track progress and adjust strategy'
+        ];
     }
 
     async getAnalyticsOverview(channelId) {

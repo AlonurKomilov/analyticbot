@@ -204,16 +204,37 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                 }
                 result.push({ ...existingDay, score, isToday, isPast, isFuture });
             } else if (showFuturePredictions && (isFuture || isToday)) {
-                // Generate predictions for future days
-                const weekdayScores = [70, 85, 88, 85, 80, 65, 68]; // Sun-Sat
-                const baseScore = weekdayScores[dayOfWeek];
-                const recommendationScore = baseScore + (Math.random() * 20 - 10); // Add variance
+                // Generate predictions for future days based on REAL day-of-week performance
+                // Use actual best_days data if available, otherwise use baseline
+                const bestDaysData = dailyPerformance.filter(d => d.postCount && d.postCount > 0);
+                const dayOfWeekPerformance = bestDaysData.filter(d => d.dayOfWeek === dayOfWeek);
+
+                // Calculate average engagement for this day of week from historical data
+                let baseScore = 50; // Default baseline
+                if (dayOfWeekPerformance.length > 0) {
+                    const avgEngagementForDay = dayOfWeekPerformance.reduce((sum, d) => sum + (d.avgEngagement || 0), 0) / dayOfWeekPerformance.length;
+                    // Normalize to 0-100 scale based on overall data
+                    const maxEngagement = Math.max(...bestDaysData.map(d => d.avgEngagement || 0));
+                    baseScore = maxEngagement > 0 ? (avgEngagementForDay / maxEngagement) * 100 : 50;
+
+                    console.log(`📊 Day ${day} (${weekDays[dayOfWeek]}): ${dayOfWeekPerformance.length} data points, avgEng=${avgEngagementForDay.toFixed(2)}, score=${baseScore.toFixed(1)}`);
+                }
+
+                // Use deterministic score - NO RANDOM VARIANCE
+                const recommendationScore = Math.min(100, Math.max(0, baseScore));
 
                 let score: DayPerformance['score'] = 'average';
                 if (recommendationScore >= 80) score = 'excellent';
                 else if (recommendationScore >= 65) score = 'good';
                 else if (recommendationScore >= 50) score = 'average';
                 else score = 'poor';
+
+                // Calculate confidence based on how much historical data we have for this day of week
+                const dataPoints = dayOfWeekPerformance.length;
+                let confidence = 50; // Base confidence
+                if (dataPoints >= 4) confidence = 85; // High confidence (4+ weeks of data)
+                else if (dataPoints >= 2) confidence = 70; // Medium confidence (2-3 weeks)
+                else if (dataPoints === 1) confidence = 55; // Low confidence (1 week only)
 
                 result.push({
                     date: day,
@@ -223,7 +244,7 @@ const MonthlyCalendarHeatmap: React.FC<MonthlyCalendarHeatmapProps> = ({
                     isPast,
                     isFuture,
                     recommendationScore: Math.round(recommendationScore),
-                    confidence: isFuture ? 75 : 85,
+                    confidence: confidence,
                     recommendedTimes: bestTimesByDay[dayOfWeek] || (() => {
                         // Use intelligent fallback based on available data
                         const allTimes = Object.values(bestTimesByDay).flat();

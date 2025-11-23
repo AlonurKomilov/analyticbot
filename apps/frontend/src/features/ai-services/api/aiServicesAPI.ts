@@ -341,14 +341,74 @@ export const AlertsAPI = {
     /**
      * Get alert rules for a channel (legacy endpoint)
      * Uses /analytics/alerts/rules endpoint
+     * Note: This endpoint is not fully implemented on backend yet
      */
     async getAlertRules(channelId: string): Promise<any> {
         try {
             const response: any = await apiClient.get(`/analytics/alerts/rules/${channelId}`);
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch alert rules:', error);
-            throw new Error('Failed to fetch alert rules');
+            // Silently handle - endpoint not yet implemented, return empty structure
+            // This is expected behavior until get_channel_rules() is added to backend
+            return {
+                channel_id: channelId,
+                rules: [],
+                total_rules: 0,
+                active_rules: 0
+            };
+        }
+    },
+
+    /**
+     * Get smart personalized alert rules for a channel
+     * Uses /analytics/alerts/rules/smart/{channel_id}
+     * Analyzes channel and returns intelligent, size-appropriate rules
+     */
+    async getSmartAlertRules(channelId: string): Promise<any> {
+        try {
+            const response: any = await apiClient.get(`/analytics/alerts/rules/smart/${channelId}`);
+            return response.data || response;
+        } catch (error) {
+            console.error('Failed to fetch smart alert rules:', error);
+            throw new Error('Failed to fetch smart alert rules');
+        }
+    },
+
+    /**
+     * Create a new alert rule for a channel
+     * Uses POST /analytics/alerts/rules/{channel_id}
+     */
+    async createAlertRule(channelId: string, rule: {
+        rule_name: string;
+        metric_type: string;
+        threshold_value: number;
+        comparison: string;
+        enabled: boolean;
+        notification_channels?: string[];
+    }): Promise<any> {
+        try {
+            const response: any = await apiClient.post(`/analytics/alerts/rules/${channelId}`, rule);
+            return response.data || response;
+        } catch (error) {
+            console.error('Failed to create alert rule:', error);
+            throw new Error('Failed to create alert rule');
+        }
+    },
+
+    /**
+     * Update an alert rule (toggle enabled/disabled)
+     * Uses PUT /analytics/alerts/rules/{channel_id}/{rule_id}
+     */
+    async updateAlertRule(channelId: string, ruleId: string, enabled: boolean): Promise<any> {
+        try {
+            const response: any = await apiClient.put(
+                `/analytics/alerts/rules/${channelId}/${ruleId}?enabled=${enabled}`,
+                {}
+            );
+            return response.data || response;
+        } catch (error) {
+            console.error('Failed to update alert rule:', error);
+            throw new Error('Failed to update alert rule');
         }
     },
 

@@ -37,7 +37,9 @@ class PostingTimeRecommendationService:
         self.repository = TimeAnalysisRepository(db_pool)
         self.engine = RecommendationEngine()
 
-    async def get_best_posting_times(self, channel_id: int, days: int = 90) -> dict[str, Any]:
+    async def get_best_posting_times(
+        self, channel_id: int, days: int | None = 90
+    ) -> dict[str, Any]:
         """
         Get optimal posting times for a channel.
 
@@ -46,14 +48,16 @@ class PostingTimeRecommendationService:
 
         Args:
             channel_id: Channel ID to analyze
-            days: Number of days to analyze (7, 30, 90, or 365)
+            days: Number of days to analyze (7, 30, 90, 365) or None for all-time (limited to 10k posts)
 
         Returns:
             Dictionary with posting time recommendations in API format
         """
         try:
+            # Handle all-time analysis (None = unlimited, but repository will limit to 10k posts)
+            analysis_period = "all-time" if days is None else f"{days} days"
             logger.info(
-                f"⏰ Getting best posting times for channel {channel_id} (last {days} days)"
+                f"⏰ Getting best posting times for channel {channel_id} (analysis period: {analysis_period})"
             )
 
             # Create analysis parameters with intelligent thresholds
@@ -82,13 +86,19 @@ class PostingTimeRecommendationService:
             )
             return self._create_error_response(channel_id, str(e))
 
-    def _create_analysis_parameters(self, channel_id: int, days: int) -> AnalysisParameters:
+    def _create_analysis_parameters(self, channel_id: int, days: int | None) -> AnalysisParameters:
         """
         Create analysis parameters with intelligent thresholds based on time period.
         Shorter periods need lower thresholds to show meaningful results.
+        For all-time (days=None), use moderate thresholds.
         """
         # Adjust minimum post requirements based on time period
-        if days < 7:
+        if days is None:
+            # All-time analysis: moderate thresholds
+            min_posts_per_hour = 3
+            min_posts_per_day = 5
+            min_total_posts = 20
+        elif days < 7:
             min_posts_per_hour = 1
             min_posts_per_day = 1
             min_total_posts = 3
@@ -153,6 +163,27 @@ class PostingTimeRecommendationService:
             "confidence": result.confidence,
             "generated_at": result.generated_at,
             "data_source": result.data_source,
+            # NEW: Advanced recommendations
+            "best_day_hour_combinations": [
+                {
+                    "day": combo.day,
+                    "hour": combo.hour,
+                    "confidence": combo.confidence,
+                    "avg_engagement": combo.avg_engagement,
+                    "post_count": combo.post_count,
+                }
+                for combo in (result.best_day_hour_combinations or [])
+            ],
+            "content_type_recommendations": [
+                {
+                    "content_type": ct.content_type,
+                    "hour": ct.hour,
+                    "confidence": ct.confidence,
+                    "avg_engagement": ct.avg_engagement,
+                    "post_count": ct.post_count,
+                }
+                for ct in (result.content_type_recommendations or [])
+            ],
         }
 
     def _create_error_response(self, channel_id: int, error_message: str) -> dict[str, Any]:

@@ -138,6 +138,7 @@ class TelegramAlertDeliveryService:
             "SPIKE": "🚀",
             "QUIET": "😴",
             "GROWTH": "📈",
+            "SUCCESS": "🎉",
         }
         emoji = emoji_map.get(alert_type, "🔔")
 
@@ -150,7 +151,33 @@ class TelegramAlertDeliveryService:
         ]
 
         # Add alert-specific details
-        if alert_type == "SPIKE":
+        if alert_type == "SUCCESS":
+            message = alert_data.get("message", "Success!")
+            success_type = alert_data.get("success_type", "unknown")
+            current_value = alert_data.get("current_value", "N/A")
+
+            message_parts.extend(
+                [
+                    "",
+                    f"<b>{message}</b>",
+                    "",
+                ]
+            )
+
+            if success_type == "subscribers":
+                milestone = alert_data.get("milestone_value", 0)
+                message_parts.append(f"🎯 Milestone: {milestone:,} subscribers")
+            elif success_type == "engagement_boost":
+                improvement = alert_data.get("improvement_pct", 0)
+                message_parts.append(f"📈 Improvement: +{improvement:.0f}%")
+            elif success_type == "viral_content":
+                multiplier = alert_data.get("multiplier", 0)
+                message_parts.append(f"🔥 {multiplier:.1f}x normal views!")
+            elif success_type == "high_growth":
+                growth_rate = alert_data.get("growth_rate", 0)
+                message_parts.append(f"📊 Growth Rate: {growth_rate:.1f}%/day")
+
+        elif alert_type == "SPIKE":
             current_value = alert_data.get("current_value", "N/A")
             baseline = alert_data.get("baseline", "N/A")
             increase = alert_data.get("increase_pct", 0)

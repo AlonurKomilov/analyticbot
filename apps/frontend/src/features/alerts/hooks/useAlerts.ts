@@ -75,10 +75,25 @@ export function useAlerts(options: UseAlertsOptions = {}): UseAlertsReturn {
     try {
       const result = await alertsService.checkAlerts(channelId, 'comprehensive');
       setAlerts(result);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch alerts';
+    } catch (err: any) {
+      let errorMessage = 'Failed to fetch alerts';
+
+      // Handle specific error cases
+      if (err?.response?.status === 401 || err?.response?.status === 403) {
+        errorMessage = 'Authentication required - please log in';
+      } else if (err?.response?.status === 404) {
+        errorMessage = 'Channel not found or alerts endpoint not available';
+      } else if (err?.response?.status >= 500) {
+        errorMessage = 'Server error - backend service temporarily unavailable';
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       setError(errorMessage);
       console.error('Failed to fetch alerts:', err);
+
+      // Set empty alerts array on error so UI can still render
+      setAlerts([]);
     } finally {
       setLoadingAlerts(false);
     }

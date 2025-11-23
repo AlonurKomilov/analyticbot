@@ -12,7 +12,9 @@ from datetime import datetime
 from .models.posting_time_models import (
     AnalysisParameters,
     BestDayRecommendation,
+    ContentTypeRecommendation,
     DailyPerformanceData,
+    DayHourCombination,
     HourlyEngagementTrend,
     PostingTimeAnalysisResult,
     PostingTimeRecommendation,
@@ -67,6 +69,12 @@ class RecommendationEngine:
             # Determine confidence level
             confidence = self._calculate_confidence(raw_data, params)
 
+            # NEW: Process day-hour combinations
+            day_hour_combinations = self._process_day_hour_combinations(raw_data)
+
+            # NEW: Process content type recommendations
+            content_type_recommendations = self._process_content_type_recommendations(raw_data)
+
             return PostingTimeAnalysisResult(
                 channel_id=params.channel_id,
                 best_times=best_times,
@@ -79,6 +87,8 @@ class RecommendationEngine:
                 confidence=confidence,
                 generated_at=datetime.utcnow().isoformat(),
                 data_source="real_analytics",
+                best_day_hour_combinations=day_hour_combinations,
+                content_type_recommendations=content_type_recommendations,
             )
 
         except Exception as e:
@@ -242,3 +252,41 @@ class RecommendationEngine:
             return 0.65  # Medium confidence
         else:
             return 0.45  # Low confidence
+
+    def _process_day_hour_combinations(self, raw_data: RawMetricsData) -> list[DayHourCombination]:
+        """Process specific day-hour combinations for targeted recommendations"""
+        combinations = []
+
+        if raw_data.best_day_hour_combinations:
+            for combo_data in raw_data.best_day_hour_combinations:
+                combinations.append(
+                    DayHourCombination(
+                        day=combo_data["day"],
+                        hour=combo_data["hour"],
+                        confidence=combo_data["confidence"],
+                        avg_engagement=combo_data["avg_engagement"],
+                        post_count=combo_data["post_count"],
+                    )
+                )
+
+        return combinations
+
+    def _process_content_type_recommendations(
+        self, raw_data: RawMetricsData
+    ) -> list[ContentTypeRecommendation]:
+        """Process content type specific recommendations"""
+        recommendations = []
+
+        if raw_data.content_type_recommendations:
+            for ct_data in raw_data.content_type_recommendations:
+                recommendations.append(
+                    ContentTypeRecommendation(
+                        content_type=ct_data["content_type"],
+                        hour=ct_data["hour"],
+                        confidence=ct_data["confidence"],
+                        avg_engagement=ct_data["avg_engagement"],
+                        post_count=ct_data["post_count"],
+                    )
+                )
+
+        return recommendations

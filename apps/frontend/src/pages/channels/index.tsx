@@ -90,8 +90,8 @@ const ChannelsManagementPage: React.FC = () => {
     const fetchStatistics = async () => {
         try {
             setStatsLoading(true);
-            const response = await apiClient.get<StatisticsResponse>('/channels/statistics');
-            setStatistics(response.data);
+            const response = await apiClient.get<StatisticsResponse>('/channels/statistics/overview');
+            setStatistics(response);
         } catch (err) {
             console.error('Failed to fetch statistics:', err);
         } finally {
@@ -132,7 +132,7 @@ const ChannelsManagementPage: React.FC = () => {
                 name: formData.name.trim(),
                 description: formData.description.trim(),
                 username: formData.username.trim(),
-                telegram_id: formData.telegram_id.trim() ? parseInt(formData.telegram_id.trim(), 10) : undefined
+                telegram_id: formData.telegram_id.trim() || undefined
             });
 
             setCreateDialogOpen(false);
@@ -154,7 +154,7 @@ const ChannelsManagementPage: React.FC = () => {
             name: channel.name,
             description: channel.description || '',
             username: channel.username || '',
-            telegram_id: channel.telegram_id?.toString() || ''
+            telegram_id: channel.telegramId || ''
         });
         setFormError('');
         setEditDialogOpen(true);
@@ -171,7 +171,7 @@ const ChannelsManagementPage: React.FC = () => {
                 name: formData.name.trim(),
                 description: formData.description.trim(),
                 username: formData.username.trim(),
-                telegram_id: formData.telegram_id.trim() ? parseInt(formData.telegram_id.trim(), 10) : undefined
+                telegramId: formData.telegram_id.trim() || undefined
             });
 
             setEditDialogOpen(false);

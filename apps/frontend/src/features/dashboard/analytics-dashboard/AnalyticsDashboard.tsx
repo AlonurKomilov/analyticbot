@@ -14,7 +14,6 @@ import {
 } from '@mui/icons-material';
 
 // Import refactored components
-import DashboardHeader from './DashboardHeader';
 import SummaryStatsGrid from './SummaryStatsGrid';
 import DashboardTabs from './DashboardTabs';
 import LoadingOverlay from './LoadingOverlay';
@@ -22,17 +21,14 @@ import DashboardSpeedDial from './DashboardSpeedDial';
 import TabPanel from './TabPanel';
 
 // Import Quick Win components
-import HeroMetricsSection from './HeroMetricsSection';
 import DataSourceBanner from './DataSourceBanner';
-import LastUpdatedIndicator from './LastUpdatedIndicator';
-import ExportButtons from './ExportButtons';
 
 // Import existing components
 import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import { EnhancedTopPostsTable } from '@features/posts';
 import { BestTimeRecommender } from '@features/analytics';
 import { AdvancedAnalyticsDashboard } from '@features/analytics';
-import { RealTimeAlertsSystem } from '@features/alerts';
+import SmartAlertsPanel from '@features/analytics/advanced-dashboard/SmartAlertsPanel';
 import ContentProtectionDashboard from '@features/posts/components/ContentProtectionDashboard';
 import ApiFailureDialog from '@shared/components/dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@store';
@@ -64,7 +60,6 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
     const [activeTab, setActiveTab] = useState<number>(0);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [showSettings, setShowSettings] = useState<boolean>(false);
 
     // Store integration
     const { setDataSource, dataSource } = useUIStore();
@@ -183,30 +178,16 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
     };
 
     const handleRefresh = async (): Promise<void> => {
-        setIsLoading(true);
-        // Simulate refresh delay
+        // Silent background refresh - no loading spinner
+        // Just update the timestamp and let components fetch new data
         setTimeout(() => {
             setLastUpdated(new Date());
-            setIsLoading(false);
-        }, 1000);
-    };
-
-    const handleToggleSettings = (): void => {
-        setShowSettings(!showSettings);
+            // Components watching lastUpdated will refresh their data automatically
+        }, 100);
     };
 
     const handleSwitchToRealData = async (): Promise<void> => {
         await handleDataSourceChange('api');
-    };
-
-    const handleExportPDF = async (): Promise<void> => {
-        // TODO: Implement PDF export
-        await new Promise(resolve => setTimeout(resolve, 1500));
-    };
-
-    const handleExportCSV = async (): Promise<void> => {
-        // TODO: Implement CSV export
-        await new Promise(resolve => setTimeout(resolve, 1500));
     };
 
     return (
@@ -214,41 +195,16 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
             {/* Data Source Banner - Quick Win #3 */}
             <DataSourceBanner onSwitchToRealData={handleSwitchToRealData} />
 
-            {/* Hero Metrics Section - Quick Win #1 */}
-            <HeroMetricsSection
-                totalViews={stats.averageViews}
-                totalPosts={stats.totalPosts}
-                engagementRate={stats.engagementRate}
-                growthRate={0}
-                showPlaceholder={!channelId}
-            />
-
-            {/* Header Section with Export & Last Updated */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <DashboardHeader
-                    showSettings={showSettings}
-                    onToggleSettings={handleToggleSettings}
-                    onDataSourceChange={handleDataSourceChange}
-                />
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {/* Last Updated Indicator - Quick Win #4 */}
-                    <LastUpdatedIndicator
-                        lastUpdated={lastUpdated}
-                        autoRefreshInterval={60}
-                        onRefresh={handleRefresh}
-                    />
-                    {/* Export Buttons - Quick Win #5 */}
-                    <ExportButtons
-                        onExportPDF={handleExportPDF}
-                        onExportCSV={handleExportCSV}
-                    />
-                </Box>
-            </Box>
-
             {/* Navigation Tabs */}
             <DashboardTabs
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
+                isLoading={isLoading}
+                lastUpdated={lastUpdated}
+                onChannelChange={(channel) => {
+                    const { selectChannel } = useChannelStore.getState();
+                    selectChannel(channel);
+                }}
             />
 
             {/* Tab Content */}
@@ -294,7 +250,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
                                 <Card variant="outlined" sx={{ height: '100%' }}>
                                     <CardContent>
                                         <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                                            <span aria-hidden="true">🏆</span> Advanced Analytics
+                                            <span aria-hidden="true">🏆</span> Analytics Overview
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
                                             • Comprehensive posts ranking
@@ -326,29 +282,31 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={1}>
-                    <EnhancedTopPostsTable />
+                    <EnhancedTopPostsTable lastUpdated={lastUpdated} />
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={2}>
-                    <BestTimeRecommender />
+                    <BestTimeRecommender lastUpdated={lastUpdated} />
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={3}>
-                    {/* Week 3-4 Advanced Analytics & Alerts */}
-                    <RealTimeAlertsSystem channelId={channelId} />
-                    <AdvancedAnalyticsDashboard channelId={channelId} />
+                    {/* Smart Alerts & Analytics Overview */}
+                    <SmartAlertsPanel channelId={channelId} />
+                    <Box sx={{ mt: 3 }}>
+                        <AdvancedAnalyticsDashboard channelId={channelId} lastUpdated={lastUpdated} />
+                    </Box>
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={4}>
                     {/* Week 5-6 Content Protection */}
-                    <ContentProtectionDashboard channelId={channelId} />
+                    <ContentProtectionDashboard channelId={channelId} lastUpdated={lastUpdated} />
                 </TabPanel>
             </main>
 
             {/* Quick Actions Speed Dial */}
             <DashboardSpeedDial
                 onRefresh={handleRefresh}
-                onSettings={handleToggleSettings}
+                onSettings={() => {}}
             />
 
             {/* Loading State */}

@@ -135,7 +135,7 @@ class AuthAwareAPIService {
 
     async getTopPosts(channelId: string, options: Record<string, any> = {}): Promise<any> {
         const queryParams = new URLSearchParams(options).toString();
-        const url = `/analytics/posts/dynamics/top-posts/${channelId}${queryParams ? `?${queryParams}` : ''}`;
+        const url = `/analytics/posts/top-posts/${channelId}${queryParams ? `?${queryParams}` : ''}`;
         return this.makeRequest(url);
     }
 
@@ -144,7 +144,7 @@ class AuthAwareAPIService {
     }
 
     async getEngagementMetrics(channelId: string, period: string = '7d'): Promise<any> {
-        return this.makeRequest(`/analytics/channels/${channelId}/engagement?period=${period}`);
+        return this.makeRequest(`/analytics/realtime/metrics/${channelId}`);
     }
 
     /**

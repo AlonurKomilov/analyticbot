@@ -17,7 +17,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, Field
 
-from apps.api.auth_utils import auth_utils
+from apps.api.auth_utils import FastAPIAuthUtils, get_auth_utils
 from apps.api.middleware.auth import get_user_repository
 from apps.api.routers.auth.models import AuthResponse
 from core.ports.security_ports import AuthRequest
@@ -160,6 +160,7 @@ async def telegram_login(
     request: Request,
     user_repo: UserRepository = Depends(get_user_repository),
     security_manager: SecurityManager = Depends(get_security_manager),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ):
     """
     Authenticate user via Telegram Login Widget.
@@ -310,6 +311,7 @@ async def telegram_webapp_login(
     request: Request,
     user_repo: UserRepository = Depends(get_user_repository),
     security_manager: SecurityManager = Depends(get_security_manager),
+    auth_utils: FastAPIAuthUtils = Depends(get_auth_utils),
 ):
     """
     Authenticate user from Telegram Web App (Mini App).

@@ -17,7 +17,7 @@ from apps.api.routers.auth import router as auth_router
 
 # ✅ NEW MICROROUTER ARCHITECTURE
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
-from apps.api.routers.channels_router import router as channels_router
+from apps.api.routers.channels import router as channels_router  # ✅ Microservice
 from apps.api.routers.content_protection_router import router as content_protection_router
 
 # Legacy routers (keeping for compatibility during transition)
@@ -32,7 +32,7 @@ from apps.api.routers.posts_router import router as posts_router
 from apps.api.routers.sharing_router import router as sharing_router
 from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
-from apps.api.routers.telegram_storage_router import router as telegram_storage_router
+from apps.api.routers.telegram_storage import router as telegram_storage_router  # ✅ Microservice
 
 # ✅ MIGRATED: Use new modular DI cleanup instead of legacy deps
 from apps.di import cleanup_container as cleanup_db_pool
@@ -54,6 +54,45 @@ async def lifespan(app: FastAPI):
     try:
         # ✅ CLEAN ARCHITECTURE: Use shared DI container for database initialization
         container = get_container()
+
+        # ✅ SECURITY: Inject Redis cache into SecurityContainer (per-worker initialization)
+        # This must happen in lifespan because uvicorn workers need separate cache connections
+        try:
+            from urllib.parse import urlparse
+
+            from config.settings import settings
+            from core.security_engine.container import get_security_container
+            from infra.security.adapters import RedisCache
+
+            logger.info("🔧 Starting SecurityContainer cache injection...")
+            redis_url = settings.REDIS_URL
+            parsed = urlparse(redis_url)
+            host = parsed.hostname or "localhost"
+            port = parsed.port or 10200
+            db = int(parsed.path.lstrip("/")) if parsed.path and parsed.path != "/" else 0
+
+            logger.info(f"🔧 Creating RedisCache: {host}:{port}/{db}")
+            cache_port = RedisCache(host=host, port=port, db=db)
+
+            logger.info("🔧 Getting SecurityContainer...")
+            security_container = get_security_container()
+
+            logger.info(f"🔧 SecurityContainer ID: {id(security_container)}")
+            logger.info(
+                f"🔧 SecurityManager state before injection: {security_container._security_manager}"
+            )
+            security_container.set_cache_port(cache_port)
+            logger.info(
+                f"🔧 SecurityManager state after injection: {security_container._security_manager}"
+            )
+
+            logger.info(f"✅ Injected Redis cache into SecurityContainer: {host}:{port}/{db}")
+        except Exception as cache_error:
+            logger.error(
+                f"❌ Failed to inject cache into SecurityContainer: {cache_error}", exc_info=True
+            )
+            logger.warning("⚠️ SecurityManager will use in-memory cache fallback")
+
         db_manager = await container.database.database_manager()
         await db_manager.initialize()
         logger.info("Database initialized successfully via shared DI container")
@@ -106,9 +145,7 @@ async def lifespan(app: FastAPI):
                 from apps.bot.multi_tenant.webhook_manager import init_webhook_manager
 
                 webhook_manager = init_webhook_manager(settings.WEBHOOK_BASE_URL)
-                logger.info(
-                    f"✅ Webhook manager initialized: {settings.WEBHOOK_BASE_URL}"
-                )
+                logger.info(f"✅ Webhook manager initialized: {settings.WEBHOOK_BASE_URL}")
                 logger.info("   User bots will use webhooks for instant message delivery")
             else:
                 logger.info("⚠️ Webhooks disabled - user bots will use polling mode")
@@ -235,7 +272,7 @@ Comprehensive data export capabilities with secure sharing mechanisms.
         },
         {
             "name": "Telegram Storage",
-            "description": "☁️ Telegram Storage: user-owned channel storage, zero-cost file hosting, media management",
+            "description": "☁️ Telegram Storage: user-owned channel storage, file hosting, media management",
         },
         # AI Domain (All AI services consolidated)
         {
@@ -377,6 +414,7 @@ if isinstance(cors_origins, str):
 cors_origins_filtered = [origin for origin in cors_origins if "*" not in origin]
 
 import sys
+
 sys.stderr.write(f"🌐 CORS Origins (exact matches): {cors_origins_filtered}\n")
 sys.stderr.write(f"🌐 CORS Origins (all from config): {cors_origins}\n")
 sys.stderr.flush()
@@ -399,7 +437,8 @@ app.add_middleware(DemoMiddleware)
 
 # ✅ SECURITY: Add rate limiting middleware
 from slowapi.errors import RateLimitExceeded
-from apps.api.middleware.rate_limiter import limiter, custom_rate_limit_exceeded_handler
+
+from apps.api.middleware.rate_limiter import custom_rate_limit_exceeded_handler, limiter
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, custom_rate_limit_exceeded_handler)
@@ -427,7 +466,7 @@ async def root_health_check():
 app.include_router(system_router)  # Core system operations (performance, scheduling)
 app.include_router(health_router)  # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)
-app.include_router(channels_router)  # Channel management (CRUD)
+app.include_router(channels_router, prefix="/channels")  # Channel management (CRUD)
 app.include_router(posts_router, prefix="/api")  # Posts management (MTProto collected data)
 app.include_router(media_router)  # Media upload and management
 app.include_router(telegram_storage_router, prefix="/api")  # Telegram storage (user-owned channels)
@@ -603,7 +642,9 @@ app.include_router(user_mtproto_router, tags=["User Bot Management"])  # /api/us
 app.include_router(
     user_mtproto_monitoring_router, tags=["MTProto Monitoring"]
 )  # /api/user-mtproto/monitoring/*
-app.include_router(webhook_router, tags=["Telegram Webhooks"])  # /webhook/* - Receive Telegram updates
+app.include_router(
+    webhook_router, tags=["Telegram Webhooks"]
+)  # /webhook/* - Receive Telegram updates
 
 # ✅ PHASE 7: AI DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidating all AI services under /ai/* for better organization

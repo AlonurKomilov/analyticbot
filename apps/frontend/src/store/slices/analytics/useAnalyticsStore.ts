@@ -32,6 +32,8 @@ interface AnalyticsState {
   topPosts: TopPost[];
   engagementMetrics: EngagementMetrics | null;
   bestTimes: BestTimeRecommendation[];
+  bestDayHourCombinations: any[];  // Advanced: day-hour combinations
+  contentTypeRecommendations: any[];  // Advanced: content-type specific recommendations
 
   // Loading states
   isLoadingOverview: boolean;
@@ -59,10 +61,10 @@ interface AnalyticsState {
   fetchOverview: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchGrowthMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchReachMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
-  fetchPostDynamics: (channelId: string, period?: TimePeriod, customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }) => Promise<void>;
-  fetchTopPosts: (channelId: string, limit?: number, period?: string, sortBy?: string) => Promise<void>;
+  fetchPostDynamics: (channelId: string, period?: TimePeriod, customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }, silent?: boolean) => Promise<void>;
+  fetchTopPosts: (channelId: string, limit?: number, period?: string, sortBy?: string, silent?: boolean) => Promise<void>;
   fetchEngagementMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
-  fetchBestTime: (channelId: string) => Promise<void>;
+  fetchBestTime: (channelId: string, days?: number | null, silent?: boolean) => Promise<void>;
   setPeriod: (period: TimePeriod) => void;
   clearAnalytics: () => void;
   clearError: (errorType: string) => void;
@@ -78,6 +80,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     topPosts: [],
     engagementMetrics: null,
     bestTimes: [],
+    bestDayHourCombinations: [],
+    contentTypeRecommendations: [],
 
     // Loading states
     isLoadingOverview: false,
@@ -183,8 +187,11 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch post dynamics (views/likes/shares over time)
-    fetchPostDynamics: async (channelId: string, period: TimePeriod = '7d', customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }) => {
-      set({ isLoadingPostDynamics: true, postDynamicsError: null });
+    fetchPostDynamics: async (channelId: string, period: TimePeriod = '7d', customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }, silent: boolean = false) => {
+      // Only show loading spinner on initial load, not on auto-refresh
+      if (!silent) {
+        set({ isLoadingPostDynamics: true, postDynamicsError: null });
+      }
 
       try {
         console.log('📊 Store: Fetching post dynamics for channel:', channelId, 'period:', period, 'customDateRange:', customDateRange, 'customTimeRange:', customTimeRange);
@@ -237,8 +244,11 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch top performing posts
-    fetchTopPosts: async (channelId: string, limit: number = 10, period: string = '30d', sortBy: string = 'views') => {
-      set({ isLoadingTopPosts: true, topPostsError: null });
+    fetchTopPosts: async (channelId: string, limit: number = 10, period: string = '30d', sortBy: string = 'views', silent: boolean = false) => {
+      // Only show loading spinner on initial load, not on auto-refresh
+      if (!silent) {
+        set({ isLoadingTopPosts: true, topPostsError: null });
+      }
 
       try {
         console.log('🏆 Fetching top posts for channel:', channelId, 'period:', period, 'sortBy:', sortBy);
@@ -330,29 +340,39 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     },
 
     // Fetch best time to post recommendations
-    fetchBestTime: async (channelId: string, days?: number) => {
-      set({ isLoadingBestTime: true, bestTimeError: null });
+    fetchBestTime: async (channelId: string, days?: number | null, silent: boolean = false) => {
+      // Only show loading spinner on initial load, not on auto-refresh
+      if (!silent) {
+        set({ isLoadingBestTime: true, bestTimeError: null });
+      }
 
       try {
-        console.log('⏰ Fetching best time recommendations for channel:', channelId, 'days:', days || 90);
+        console.log('⏰ Fetching best time recommendations for channel:', channelId, 'days:', days === null ? 'ALL TIME' : (days || 90));
 
         // Use correct endpoint that matches backend
-        const url = days
+        // If days is null, omit the parameter to get all-time data
+        const url = days !== null && days !== undefined
           ? `/analytics/predictive/best-times/${channelId}?days=${days}`
-          : `/analytics/predictive/best-times/${channelId}`;
+          : `/analytics/predictive/best-times/${channelId}`;  // No days param = all time
 
         const response = await apiClient.get<any>(url);
 
-        // Extract best_times array from response.data (API wraps in data object)
+        // Extract all recommendation data from response.data (API wraps in data object)
         const recommendations = response.data?.best_times || [];
+        const bestDayHourCombinations = response.data?.best_day_hour_combinations || [];
+        const contentTypeRecommendations = response.data?.content_type_recommendations || [];
 
         console.log('📊 Raw API response:', response);
         console.log('📊 Response data:', response.data);
         console.log('📊 Extracted recommendations:', recommendations);
+        console.log('📊 Day-hour combinations:', bestDayHourCombinations.length);
+        console.log('📊 Content-type recommendations:', contentTypeRecommendations.length);
 
-        // Store recommendations
+        // Store all recommendations data
         set({
           bestTimes: recommendations,
+          bestDayHourCombinations,
+          contentTypeRecommendations,
           lastUpdate: Date.now(),
           isLoadingBestTime: false
         });
@@ -364,7 +384,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         set({
           bestTimeError: errorMessage,
           isLoadingBestTime: false,
-          bestTimes: []
+          bestTimes: [],
+          bestDayHourCombinations: [],
+          contentTypeRecommendations: []
         });
       }
     },

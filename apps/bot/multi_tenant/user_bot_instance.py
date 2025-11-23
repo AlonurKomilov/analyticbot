@@ -11,11 +11,16 @@ from typing import Any, Protocol
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.filters import Command
+from aiogram.types import Message
 
 from apps.bot.multi_tenant.bot_health import get_health_monitor
-from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry, CircuitBreakerOpenError
+from apps.bot.multi_tenant.circuit_breaker import (
+    CircuitBreakerOpenError,
+    get_circuit_breaker_registry,
+)
 from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
-from apps.bot.multi_tenant.retry_logic import retry_with_backoff, get_retry_statistics
+from apps.bot.multi_tenant.retry_logic import get_retry_statistics, retry_with_backoff
 from apps.bot.multi_tenant.session_pool import SharedAiogramSession
 from core.models.user_bot_domain import UserBotCredentials
 from core.services.encryption_service import get_encryption_service
@@ -104,6 +109,9 @@ class UserBotInstance:
             )
             self.dp = Dispatcher()
 
+            # ✅ Register default message handlers for webhook support
+            self._register_handlers()
+
             # Verify bot token works
             me = await self.bot.get_me()
             print(f"✅ Bot initialized for user {self.user_id}: @{me.username}")
@@ -119,6 +127,72 @@ class UserBotInstance:
         except Exception as e:
             print(f"❌ Failed to initialize bot for user {self.user_id}: {e}")
             raise
+
+    def _register_handlers(self) -> None:
+        """
+        Register default message handlers for webhook support.
+
+        These handlers process incoming messages when webhook is enabled:
+        - /start: Welcome message
+        - /help: Help information
+        - /status: Bot status (for admin/debugging)
+        - Echo handler: Responds to any other message
+        """
+        if self.dp is None:
+            return
+
+        @self.dp.message(Command("start"))
+        async def handle_start(message: Message) -> None:
+            """Handle /start command."""
+            await message.answer(
+                "👋 <b>Welcome!</b>\n\n"
+                "I'm your personal bot. Here's what I can do:\n\n"
+                "• Use /help to see available commands\n"
+                "• Use /status to check my status\n"
+                "• Send me any message and I'll echo it back\n\n"
+                "Let's get started! 🚀"
+            )
+
+        @self.dp.message(Command("help"))
+        async def handle_help(message: Message) -> None:
+            """Handle /help command."""
+            await message.answer(
+                "📋 <b>Available Commands:</b>\n\n"
+                "/start - Start the bot and see welcome message\n"
+                "/help - Show this help message\n"
+                "/status - Check bot status and info\n\n"
+                "💡 <b>Tip:</b> Send me any message and I'll echo it back!"
+            )
+
+        @self.dp.message(Command("status"))
+        async def handle_status(message: Message) -> None:
+            """Handle /status command - shows bot info."""
+            webhook_status = (
+                "✅ Webhook enabled" if self.credentials.webhook_enabled else "⏸ Polling mode"
+            )
+            await message.answer(
+                f"🤖 <b>Bot Status</b>\n\n"
+                f"• User ID: <code>{self.user_id}</code>\n"
+                f"• Bot Username: @{self.credentials.bot_username}\n"
+                f"• Connection: {webhook_status}\n"
+                f"• Rate Limit: {self.credentials.rate_limit_rps} RPS\n"
+                f"• Status: {self.credentials.status.value}\n"
+                f"• Last Activity: {self.last_activity.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                "✅ All systems operational!"
+            )
+
+        @self.dp.message()
+        async def echo_handler(message: Message) -> None:
+            """Echo any other message back to user."""
+            if message.text:
+                await message.answer(
+                    f"📢 <b>Echo:</b>\n\n{message.text}\n\n"
+                    "💡 Use /help to see available commands."
+                )
+            else:
+                await message.answer(
+                    "I can only echo text messages for now. " "Try /help to see what I can do!"
+                )
 
     async def _initialize_mtproto(self) -> None:
         """
@@ -230,16 +304,16 @@ class UserBotInstance:
 
         Returns:
             Result of the coroutine
-            
+
         Raises:
             CircuitBreakerOpenError: If circuit breaker is open (too many failures)
         """
         import time
-        
+
         # Get health monitor
         health_monitor = get_health_monitor()
         start_time = time.time()
-        
+
         # Check circuit breaker first (fail fast if open)
         async def _execute_request():
             async with self.request_semaphore:
@@ -260,43 +334,39 @@ class UserBotInstance:
 
                 # 3. Execute request
                 return await coro
-        
+
         # Wrap execution with retry logic and circuit breaker protection
         async def _execute_with_circuit_breaker():
             return await self.circuit_breaker.call(_execute_request)
-        
+
         try:
             # Execute with retry logic (which includes circuit breaker)
             result = await retry_with_backoff(_execute_with_circuit_breaker)
-            
+
             # Record success
             response_time_ms = (time.time() - start_time) * 1000
             health_monitor.record_success(
-                user_id=self.user_id,
-                response_time_ms=response_time_ms,
-                method=method
+                user_id=self.user_id, response_time_ms=response_time_ms, method=method
             )
-            
+
             # Record retry statistics
             retry_stats = get_retry_statistics()
             retry_stats.record_attempt(attempt=0, success=True, error_category=None)
-            
+
             return result
-            
-        except CircuitBreakerOpenError as e:
+
+        except CircuitBreakerOpenError:
             # Circuit breaker is open, don't record as failure
             # (already too many failures, that's why it's open)
             raise
-            
+
         except Exception as e:
             # Record failure
             error_type = type(e).__name__
             health_monitor.record_failure(
-                user_id=self.user_id,
-                error_type=error_type,
-                method=method
+                user_id=self.user_id, error_type=error_type, method=method
             )
-            
+
             # Handle rate limit errors from Telegram
             if "429" in str(e) or "Too Many Requests" in str(e):
                 # Extract retry_after if available
@@ -305,7 +375,7 @@ class UserBotInstance:
                     retry_after = e.retry_after
                 global_limiter = await GlobalRateLimiter.get_instance()
                 await global_limiter.handle_rate_limit_error(retry_after)
-            
+
             raise
 
     async def get_bot_info(self) -> dict:

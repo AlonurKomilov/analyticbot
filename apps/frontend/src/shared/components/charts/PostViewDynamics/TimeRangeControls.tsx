@@ -16,6 +16,7 @@ interface TimeRangeControlsProps {
     refreshInterval?: RefreshInterval;
     onTimeRangeChange: (event: SelectChangeEvent<string>) => void;
     onRefreshIntervalChange: (event: SelectChangeEvent<string>) => void;
+    hideRefreshControl?: boolean;  // NEW: Option to hide refresh control
 }
 
 /**
@@ -29,12 +30,14 @@ interface TimeRangeControlsProps {
  * @param props.refreshInterval - Current refresh interval value
  * @param props.onTimeRangeChange - Time range change handler
  * @param props.onRefreshIntervalChange - Refresh interval change handler
+ * @param props.hideRefreshControl - If true, hides the refresh interval selector
  */
 const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
     timeRange = '24h',
     refreshInterval = '1m',
     onTimeRangeChange,
-    onRefreshIntervalChange
+    onRefreshIntervalChange,
+    hideRefreshControl = false
 }) => {
     return (
         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -61,25 +64,27 @@ const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
                 </Select>
             </FormControl>
 
-            {/* Refresh Interval Selector */}
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="refresh-interval-label" size="small">
-                    Refresh
-                </InputLabel>
-                <Select
-                    labelId="refresh-interval-label"
-                    id="refresh-interval-select"
-                    value={refreshInterval}
-                    label="Refresh"
-                    size="small"
-                    onChange={onRefreshIntervalChange}
-                >
-                    <MenuItem value="30s">30 seconds</MenuItem>
-                    <MenuItem value="1m">1 minute</MenuItem>
-                    <MenuItem value="5m">5 minutes</MenuItem>
-                    <MenuItem value="10m">10 minutes</MenuItem>
-                </Select>
-            </FormControl>
+            {/* Refresh Interval Selector - Hidden when hideRefreshControl=true */}
+            {!hideRefreshControl && (
+                <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel id="refresh-interval-label" size="small">
+                        Refresh
+                    </InputLabel>
+                    <Select
+                        labelId="refresh-interval-label"
+                        id="refresh-interval-select"
+                        value={refreshInterval}
+                        label="Refresh"
+                        size="small"
+                        onChange={onRefreshIntervalChange}
+                    >
+                        <MenuItem value="30s">30 seconds</MenuItem>
+                        <MenuItem value="1m">1 minute</MenuItem>
+                        <MenuItem value="5m">5 minutes</MenuItem>
+                        <MenuItem value="10m">10 minutes</MenuItem>
+                    </Select>
+                </FormControl>
+            )}
         </Box>
     );
 });

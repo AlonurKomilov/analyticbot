@@ -193,10 +193,11 @@ class FastAPIAuthUtils:
 # FastAPI dependency functions
 def get_auth_utils() -> FastAPIAuthUtils:
     """FastAPI dependency to get auth utils instance"""
-    # This should be injected via DI container in production
-    from core.security_engine import SecurityManager
+    # ✅ FIXED: Use singleton SecurityManager with Redis cache from container
+    # DO NOT create new SecurityManager() - it won't have cache!
+    from core.security_engine.container import get_security_manager
 
-    security_manager = SecurityManager()
+    security_manager = get_security_manager()
     return FastAPIAuthUtils(security_manager)
 
 
@@ -210,7 +211,7 @@ def get_current_user(
     raise NotImplementedError("Use proper DI container integration")
 
 
-# Create default auth_utils instance using container singleton (with Redis cache!)
-from core.security_engine.container import get_security_manager
-
-auth_utils = FastAPIAuthUtils(get_security_manager())
+# REMOVED: Module-level auth_utils instance was creating SecurityManager at import time,
+# before cache injection in lifespan. Use get_auth_utils() dependency instead.
+# from core.security_engine.container import get_security_manager
+# auth_utils = FastAPIAuthUtils(get_security_manager())

@@ -21,6 +21,7 @@ interface MediaItem {
     id: string;
     url: string;
     type: string;
+    telegram_file_id?: string; // For files from Telegram storage
 }
 
 const CreatePostPage: React.FC = () => {
@@ -89,7 +90,8 @@ const CreatePostPage: React.FC = () => {
                   const mediaItem: MediaItem = {
                     id: file.id.toString(),
                     url: file.preview_url || '',
-                    type: file.file_type
+                    type: file.file_type,
+                    telegram_file_id: file.telegram_file_id  // Include for posting to Telegram
                   };
                   setLocalSelectedMedia(prev => [...prev, mediaItem]);
                 }}

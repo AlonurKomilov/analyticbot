@@ -67,9 +67,12 @@ class SecurityContainer:
                 logger.info("🔌 Initializing SecurityManager with injected cache port")
                 self._security_manager = SecurityManager(cache=self._cache_port)
             else:
+                import traceback
+
                 logger.warning(
                     "⚠️ No cache port injected, SecurityManager will use in-memory fallback"
                 )
+                logger.warning(f"Called from:\n{''.join(traceback.format_stack()[-5:-1])}")
                 self._security_manager = SecurityManager()
 
         return self._security_manager

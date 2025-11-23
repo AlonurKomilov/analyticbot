@@ -30,6 +30,8 @@ from apps.di.provider_modules import (
     create_bot_reporting_adapter,
     # Metrics
     create_business_metrics_service,
+    # MTProto services
+    create_channel_admin_check_service,
     create_channel_management_service,
     create_chart_service,
     # Content protection
@@ -79,6 +81,15 @@ class BotContainer(containers.DeclarativeContainer):
 
     bot_client = providers.Factory(create_bot_client, settings=bot_settings)
     dispatcher = providers.Factory(create_dispatcher)
+
+    # Telegram Alert Delivery Service
+    telegram_alert_delivery = providers.Factory(
+        lambda bot: __import__(
+            "infra.adapters.telegram_alert_delivery",
+            fromlist=["TelegramAlertDeliveryService"],
+        ).TelegramAlertDeliveryService(bot_client=bot),
+        bot=bot_client,
+    )
 
     # ============================================================================
     # BOT ADAPTERS (Thin adapters to core services)
@@ -171,6 +182,12 @@ class BotContainer(containers.DeclarativeContainer):
         bot=bot_client,
     )
 
+    # MTProto services (Phase 3 - Nov 23, 2025)
+    channel_admin_check_service = providers.Factory(
+        create_channel_admin_check_service,
+        mtproto_service=core_services.mtproto_service,
+    )
+
     # Content protection adapters (Phase 3.3)
     image_processor = providers.Factory(create_image_processor)
     video_processor = providers.Factory(create_video_processor)
@@ -261,24 +278,29 @@ class BotContainer(containers.DeclarativeContainer):
     # ✅ PHASE 2.5: Alerts Fusion Services (Refactor - October 21, 2025)
     # Alert fusion microservices for orchestrated alert management
     live_monitoring_service = providers.Factory(
-        lambda: __import__(
+        lambda posts_repo: __import__(
             "core.services.alerts_fusion.live_monitoring_service",
             fromlist=["LiveMonitoringService"],
-        ).LiveMonitoringService(),
+        ).LiveMonitoringService(post_repository=posts_repo),
+        posts_repo=database.post_repo,
     )
 
     alerts_management_service = providers.Factory(
-        lambda posts_repo, daily_repo, channels_repo: __import__(
+        lambda posts_repo, daily_repo, channels_repo, telegram_delivery, rule_manager: __import__(
             "core.services.alerts_fusion.alerts.alerts_management_service",
             fromlist=["AlertsManagementService"],
         ).AlertsManagementService(
             posts_repo=posts_repo,
             daily_repo=daily_repo,
             channels_repo=channels_repo,
+            telegram_delivery_service=telegram_delivery,
+            alert_rule_manager=rule_manager,
         ),
         posts_repo=database.post_repo,
         daily_repo=database.channel_daily_repo,
         channels_repo=database.channel_repo,
+        telegram_delivery=telegram_alert_delivery,
+        rule_manager=alert_rule_manager,
     )
 
     # Alerts orchestrator - coordinates all alert fusion services

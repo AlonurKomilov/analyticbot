@@ -90,7 +90,7 @@ const SummaryStatsGrid: React.FC<SummaryStatsGridProps> = React.memo(({
                             {stats.peakViews}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Peak Views Today
+                            Peak Views
                         </Typography>
                     </CardContent>
                 </Card>

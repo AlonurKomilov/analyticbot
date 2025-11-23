@@ -14,11 +14,19 @@ import RecommenderFooter from './components/RecommenderFooter';
 import EngagementTrendChart from './components/EngagementTrendChart';
 import ComparisonCard from './components/ComparisonCard';
 import MonthlyCalendarHeatmap from './components/MonthlyCalendarHeatmap';
+import ContentTypeFilter from './components/ContentTypeFilter';
+import SmartRecommendationsPanel from './components/SmartRecommendationsPanel';
+// import EnhancedCalendarTooltip from './components/EnhancedCalendarTooltip'; // TODO: Replace calendar tooltip in future iteration
 import { useRecommenderLogic } from './hooks/useRecommenderLogic';
 import { useChannelStore } from '@store';
 import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 
-const BestTimeRecommender: React.FC = () => {
+interface BestTimeRecommenderProps {
+    lastUpdated?: Date;
+}
+
+const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }) => {
     const {
         timeFrame,
         contentType,
@@ -27,12 +35,27 @@ const BestTimeRecommender: React.FC = () => {
         recommendations,
         aiInsights,
         setTimeFrame,
-        setContentType
+        setContentType,
+        loadRecommendations
     } = useRecommenderLogic();
 
     const { selectedChannel } = useChannelStore();
     const navigate = useNavigate();
     const [currentTab, setCurrentTab] = useState(0);
+    const [selectedContentType, setSelectedContentType] = useState<'all' | 'video' | 'image' | 'text' | 'link'>('all');
+
+    // Track previous lastUpdated to detect auto-refresh
+    const prevLastUpdatedRef = useRef<Date | undefined>(undefined);
+
+    // Handle silent auto-refresh when lastUpdated changes
+    useEffect(() => {
+        if (lastUpdated && prevLastUpdatedRef.current &&
+            lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
+            console.log('🔄 BestTimeRecommender: Silent auto-refresh triggered');
+            loadRecommendations(true); // silent=true
+        }
+        prevLastUpdatedRef.current = lastUpdated;
+    }, [lastUpdated, loadRecommendations]);
 
     // Process real data from backend API
     const calendarData = React.useMemo(() => {
@@ -111,6 +134,22 @@ const BestTimeRecommender: React.FC = () => {
                 setContentType={(ct) => setContentType(ct)}
             />
 
+            {/* Content Type Filter (NEW: Phase 5) */}
+            {recommendations && (recommendations as any).content_type_recommendations && (recommendations as any).content_type_recommendations.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                    <ContentTypeFilter
+                        selectedType={selectedContentType}
+                        onTypeChange={setSelectedContentType}
+                        contentTypeCounts={{
+                            video: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'video').length || 0,
+                            image: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'image').length || 0,
+                            text: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'text').length || 0,
+                            link: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'link').length || 0,
+                        }}
+                    />
+                </Box>
+            )}
+
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={currentTab} onChange={handleTabChange} aria-label="recommendation views">
@@ -178,6 +217,17 @@ const BestTimeRecommender: React.FC = () => {
                                         recommendations={recommendations as any}
                                         channelId={selectedChannel?.id.toString()}
                                     />
+
+                                    {/* Smart Recommendations Panel (NEW: Phase 5) */}
+                                    {(recommendations as any).best_day_hour_combinations && (recommendations as any).best_day_hour_combinations.length > 0 && (
+                                        <Box sx={{ mt: 3 }}>
+                                            <SmartRecommendationsPanel
+                                                dayHourCombinations={(recommendations as any).best_day_hour_combinations}
+                                                contentTypeRecommendations={(recommendations as any).content_type_recommendations}
+                                                selectedContentType={selectedContentType}
+                                            />
+                                        </Box>
+                                    )}
                                 </>
                             ) : (
                                 <Alert severity="info" sx={{ my: 2 }}>

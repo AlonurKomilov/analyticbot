@@ -79,7 +79,7 @@ export class UserBotApiService {
    * Update bot rate limits
    */
   async updateRateLimits(data: UpdateRateLimitRequest): Promise<RateLimitUpdateResponse> {
-    const response = await this.client.patch<RateLimitUpdateResponse>(
+    const response = await this.client.put<RateLimitUpdateResponse>(
       '/api/user-bot/rate-limits',
       data
     );

@@ -87,6 +87,7 @@ const PostViewDynamicsChart: React.FC = () => {
     const timeRangeRef = useRef<TimeRange>(timeRange);
     const isLoadingRef = useRef<boolean>(false);
     const dataVersionRef = useRef<number>(0);
+    const isAutoRefreshRef = useRef<boolean>(false); // Track if refresh is automatic
 
     // Stable load data function with debouncing
     const loadData = useCallback(async (): Promise<void> => {
@@ -137,7 +138,7 @@ const PostViewDynamicsChart: React.FC = () => {
                 end_date: drillDownDate
             } : undefined;
 
-            await fetchPostDynamicsFromStore(channelId, currentTimeRange, customDateRange, customTimeRange);
+            await fetchPostDynamicsFromStore(channelId, currentTimeRange, customDateRange, customTimeRange, isAutoRefreshRef.current);
 
             // Get the latest data from store after fetch
             const latestPostDynamics = useAnalyticsStore.getState().postDynamics;
@@ -306,48 +307,19 @@ const PostViewDynamicsChart: React.FC = () => {
         }
     }, [selectedChannel, dataSource, loadData]); // Trigger when channel or dataSource changes
 
-    // Auto-refresh logic
+    // Auto-refresh logic - DISABLED for performance
+    // Historical post data doesn't change frequently (Telegram updates metrics every few hours)
+    // Users can manually refresh using the refresh button if needed
     useEffect(() => {
-        // Don't set up auto-refresh if no channel is selected
-        // demo/mock = use demo channel, api = use selected channel
-        const channelId = (dataSource === 'demo' || dataSource === 'mock')
-            ? DEFAULT_DEMO_CHANNEL_ID
-            : (selectedChannel?.id?.toString() || null);
-
-        if (!channelId || !autoRefresh || refreshInterval === 'disabled') {
-            return;
-        }
-
-        const intervalMap: Record<RefreshInterval, number> = {
-            '30s': 30000,
-            '1m': 60000,
-            '5m': 300000,
-            'disabled': 0
-        };
-
-        const intervalMs = intervalMap[refreshInterval] || 60000;
-
-        if (process.env.NODE_ENV === 'development') {
-            console.log('PostViewDynamicsChart: Setting up auto-refresh every', intervalMs, 'ms');
-        }
-
-        const interval = setInterval(() => {
-            // Only auto-refresh if not currently loading
-            if (!isLoadingRef.current) {
-                if (process.env.NODE_ENV === 'development') {
-                    console.log('PostViewDynamicsChart: Auto-refresh triggered');
-                }
-                loadData();
-            }
-        }, intervalMs);
-
+        // Auto-refresh intentionally disabled to:
+        // - Reduce server load and database queries
+        // - Save battery on user devices
+        // - Prevent disruption during drill-down analysis
+        // - Avoid unnecessary API calls for historical data that rarely changes
         return () => {
-            if (process.env.NODE_ENV === 'development') {
-                console.log('PostViewDynamicsChart: Clearing auto-refresh interval');
-            }
-            clearInterval(interval);
+            // Cleanup placeholder
         };
-    }, [autoRefresh, refreshInterval, loadData, selectedChannel, dataSource]);
+    }, []);
 
     // Cleanup when component unmounts
     useEffect(() => {
@@ -531,12 +503,14 @@ const PostViewDynamicsChart: React.FC = () => {
                     )}
                 </Box>
 
-                {!drillDownDate && (
+                {/* Show time range only when NOT in drill-down mode */}
+                {!drillDownDate && !drillDownHour && (
                     <TimeRangeControls
                         timeRange={timeRange as any}
                         refreshInterval={refreshInterval as any}
                         onTimeRangeChange={handleTimeRangeChange as any}
                         onRefreshIntervalChange={handleRefreshIntervalChange as any}
+                        hideRefreshControl={true}  // Hide auto-refresh - not needed for historical data
                     />
                 )}
             </Box>

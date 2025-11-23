@@ -88,11 +88,12 @@ class LiveMonitoringService:
     - Performance tracking
     """
 
-    def __init__(self):
+    def __init__(self, post_repository=None):
         self.alert_rules: dict[str, AlertRule] = {}
         self.active_alerts: dict[str, MonitoringAlert] = {}
         self.metrics_cache: dict[int, LiveMetrics] = {}
         self.monitoring_enabled = True
+        self.post_repo = post_repository  # Inject repository for DB access
         self._setup_default_rules()
 
     def _setup_default_rules(self):
@@ -133,7 +134,7 @@ class LiveMonitoringService:
 
     async def collect_live_metrics(self, channel_id: int) -> LiveMetrics | None:
         """
-        Collect live metrics for a channel
+        Collect live metrics for a channel from real database data
 
         Args:
             channel_id: Channel ID to collect metrics for
@@ -144,15 +145,46 @@ class LiveMonitoringService:
         try:
             now = datetime.now()
 
-            # Mock data implementation
+            # If repository is available, fetch real data from database
+            if self.post_repo:
+                try:
+                    # Calculate metrics from real database data
+                    post_count_24h = await self._get_post_count_24h(channel_id)
+                    avg_engagement = await self._calculate_avg_engagement(channel_id)
+                    growth_rate = await self._calculate_growth_rate(channel_id)
+                    quality_score = await self._calculate_content_quality(channel_id)
+                    anomaly_score = await self._detect_anomalies(channel_id)
+
+                    metrics = LiveMetrics(
+                        channel_id=channel_id,
+                        timestamp=now,
+                        post_count_24h=post_count_24h,
+                        avg_engagement_rate=avg_engagement,
+                        growth_rate_7d=growth_rate,
+                        content_quality_score=quality_score,
+                        anomaly_score=anomaly_score,
+                    )
+
+                    self.metrics_cache[channel_id] = metrics
+                    logger.info(
+                        f"✅ Collected REAL metrics for channel {channel_id}: {post_count_24h} posts, {avg_engagement:.2%} engagement"
+                    )
+                    return metrics
+
+                except Exception as db_error:
+                    logger.warning(f"Database query failed, using fallback: {db_error}")
+                    # Fall through to fallback
+
+            # Fallback: Return minimal but valid metrics if DB not available
+            logger.info(f"⚠️ Using fallback metrics for channel {channel_id} (no repository)")
             metrics = LiveMetrics(
                 channel_id=channel_id,
                 timestamp=now,
-                post_count_24h=5,  # Mock: 5 posts in last 24h
-                avg_engagement_rate=0.035,  # Mock: 3.5% engagement
-                growth_rate_7d=0.02,  # Mock: 2% growth
-                content_quality_score=0.75,  # Mock: 75% quality score
-                anomaly_score=0.1,  # Mock: 10% anomaly score
+                post_count_24h=0,
+                avg_engagement_rate=0.0,
+                growth_rate_7d=0.0,
+                content_quality_score=0.5,
+                anomaly_score=0.0,
             )
 
             self.metrics_cache[channel_id] = metrics
@@ -161,6 +193,189 @@ class LiveMonitoringService:
         except Exception as e:
             logger.error(f"Failed to collect live metrics for channel {channel_id}: {e}")
             return None
+
+    async def _get_post_count_24h(self, channel_id: int) -> int:
+        """Get number of posts in last 24 hours"""
+        if not self.post_repo or not hasattr(self.post_repo, "pool"):
+            return 0
+
+        async with self.post_repo.pool.acquire() as conn:
+            count = await conn.fetchval(
+                """
+                SELECT COUNT(*)
+                FROM posts
+                WHERE channel_id = $1
+                AND date >= NOW() - INTERVAL '24 hours'
+                AND is_deleted = FALSE
+                """,
+                channel_id,
+            )
+            return count or 0
+
+    async def _calculate_avg_engagement(self, channel_id: int) -> float:
+        """Calculate average engagement rate from last 7 days"""
+        if not self.post_repo or not hasattr(self.post_repo, "pool"):
+            return 0.0
+
+        async with self.post_repo.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                SELECT
+                    COALESCE(AVG(
+                        CASE
+                            WHEN pm.views > 0
+                            THEN (pm.forwards + pm.reactions_count)::float / pm.views
+                            ELSE 0
+                        END
+                    ), 0) as avg_engagement
+                FROM posts p
+                JOIN LATERAL (
+                    SELECT views, forwards, reactions_count
+                    FROM post_metrics
+                    WHERE channel_id = p.channel_id AND msg_id = p.msg_id
+                    ORDER BY snapshot_time DESC
+                    LIMIT 1
+                ) pm ON true
+                WHERE p.channel_id = $1
+                AND p.date >= NOW() - INTERVAL '7 days'
+                AND p.is_deleted = FALSE
+                AND pm.views > 0
+                """,
+                channel_id,
+            )
+            return float(result["avg_engagement"]) if result else 0.0
+
+    async def _calculate_growth_rate(self, channel_id: int) -> float:
+        """Calculate 7-day growth rate"""
+        if not self.post_repo or not hasattr(self.post_repo, "pool"):
+            return 0.0
+
+        async with self.post_repo.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                WITH week_data AS (
+                    SELECT
+                        CASE
+                            WHEN p.date >= NOW() - INTERVAL '3.5 days' THEN 'recent'
+                            ELSE 'previous'
+                        END as period,
+                        COALESCE(SUM(pm.views), 0) as total_views
+                    FROM posts p
+                    JOIN LATERAL (
+                        SELECT views
+                        FROM post_metrics
+                        WHERE channel_id = p.channel_id AND msg_id = p.msg_id
+                        ORDER BY snapshot_time DESC
+                        LIMIT 1
+                    ) pm ON true
+                    WHERE p.channel_id = $1
+                    AND p.date >= NOW() - INTERVAL '7 days'
+                    AND p.is_deleted = FALSE
+                    GROUP BY period
+                )
+                SELECT
+                    COALESCE(
+                        (MAX(CASE WHEN period = 'recent' THEN total_views END) -
+                         MAX(CASE WHEN period = 'previous' THEN total_views END))::float /
+                        NULLIF(MAX(CASE WHEN period = 'previous' THEN total_views END), 0),
+                        0
+                    ) as growth_rate
+                FROM week_data
+                """,
+                channel_id,
+            )
+            return float(result["growth_rate"]) if result else 0.0
+
+    async def _calculate_content_quality(self, channel_id: int) -> float:
+        """Calculate content quality score (0-1) based on engagement metrics"""
+        if not self.post_repo or not hasattr(self.post_repo, "pool"):
+            return 0.5
+
+        async with self.post_repo.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                SELECT
+                    COALESCE(
+                        AVG(
+                            CASE
+                                WHEN pm.views > 0 THEN
+                                    LEAST(1.0, (
+                                        (pm.forwards::float / NULLIF(pm.views, 0) * 0.4) +
+                                        (pm.reactions_count::float / NULLIF(pm.views, 0) * 0.6)
+                                    ) * 20)  -- Scale to 0-1 range
+                                ELSE 0
+                            END
+                        ),
+                        0.5
+                    ) as quality_score
+                FROM posts p
+                JOIN LATERAL (
+                    SELECT views, forwards, reactions_count
+                    FROM post_metrics
+                    WHERE channel_id = p.channel_id AND msg_id = p.msg_id
+                    ORDER BY snapshot_time DESC
+                    LIMIT 1
+                ) pm ON true
+                WHERE p.channel_id = $1
+                AND p.date >= NOW() - INTERVAL '7 days'
+                AND p.is_deleted = FALSE
+                LIMIT 10
+                """,
+                channel_id,
+            )
+            return min(1.0, max(0.0, float(result["quality_score"]))) if result else 0.5
+
+    async def _detect_anomalies(self, channel_id: int) -> float:
+        """Detect anomalies by comparing recent performance to baseline (0-1 score)"""
+        if not self.post_repo or not hasattr(self.post_repo, "pool"):
+            return 0.0
+
+        async with self.post_repo.pool.acquire() as conn:
+            result = await conn.fetchrow(
+                """
+                WITH baseline AS (
+                    SELECT AVG(pm.views) as avg_views
+                    FROM posts p
+                    JOIN LATERAL (
+                        SELECT views
+                        FROM post_metrics
+                        WHERE channel_id = p.channel_id AND msg_id = p.msg_id
+                        ORDER BY snapshot_time DESC
+                        LIMIT 1
+                    ) pm ON true
+                    WHERE p.channel_id = $1
+                    AND p.date >= NOW() - INTERVAL '30 days'
+                    AND p.date < NOW() - INTERVAL '3 days'
+                    AND p.is_deleted = FALSE
+                ),
+                recent AS (
+                    SELECT AVG(pm.views) as avg_views
+                    FROM posts p
+                    JOIN LATERAL (
+                        SELECT views
+                        FROM post_metrics
+                        WHERE channel_id = p.channel_id AND msg_id = p.msg_id
+                        ORDER BY snapshot_time DESC
+                        LIMIT 1
+                    ) pm ON true
+                    WHERE p.channel_id = $1
+                    AND p.date >= NOW() - INTERVAL '3 days'
+                    AND p.is_deleted = FALSE
+                )
+                SELECT
+                    COALESCE(
+                        ABS(
+                            (recent.avg_views - baseline.avg_views)::float /
+                            NULLIF(baseline.avg_views, 0)
+                        ),
+                        0
+                    ) as anomaly_score
+                FROM baseline, recent
+                """,
+                channel_id,
+            )
+            # Cap anomaly score at 1.0
+            return min(1.0, float(result["anomaly_score"])) if result else 0.0
 
     async def evaluate_alerts(self, channel_id: int) -> list[MonitoringAlert]:
         """

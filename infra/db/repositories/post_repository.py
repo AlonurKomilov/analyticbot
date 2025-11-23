@@ -233,7 +233,6 @@ class AsyncpgPostRepository:
                     p.msg_id,
                     p.date,
                     p.text,
-                    p.links,
                     COALESCE(pm.views, 0) as views,
                     COALESCE(pm.forwards, 0) as forwards,
                     COALESCE(pm.replies_count, 0) as replies,

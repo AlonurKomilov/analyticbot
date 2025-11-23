@@ -12,6 +12,7 @@ Modules:
 - alert_providers: Alert system services (evaluator, rules, events, notifier)
 - content_protection_providers: Content protection services (watermarking, theft detection)
 - metrics_providers: Metrics and monitoring services (Prometheus, health, charts)
+- mtproto_providers: MTProto services (admin checking, storage)
 """
 
 # Bot infrastructure
@@ -66,6 +67,11 @@ from .metrics_providers import (
     create_system_metrics_service,
 )
 
+# MTProto services
+from .mtproto_providers import (
+    create_channel_admin_check_service,
+)
+
 # Scheduling services
 from .scheduling_providers import (
     create_delivery_status_tracker,
@@ -116,4 +122,6 @@ __all__ = [
     "create_health_check_service",
     "create_system_metrics_service",
     "create_chart_service",
+    # MTProto
+    "create_channel_admin_check_service",
 ]

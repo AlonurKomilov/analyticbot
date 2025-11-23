@@ -35,7 +35,13 @@ class UserStorageChannel(Base):
     __tablename__ = "user_storage_channels"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id", ondelete="CASCADE", use_alter=True, name="fk_user_storage_channels_user_id"
+        ),
+        nullable=False,
+    )
 
     # Telegram channel info
     channel_id = Column(BigInteger, nullable=False)  # Telegram channel ID (e.g., -1001234567890)
@@ -81,9 +87,17 @@ class TelegramMedia(Base):
     __tablename__ = "telegram_media"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer,
+        ForeignKey(
+            "users.id", ondelete="CASCADE", use_alter=True, name="fk_telegram_media_user_id"
+        ),
+        nullable=False,
+    )
     storage_channel_id = Column(
-        Integer, ForeignKey("user_storage_channels.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("user_storage_channels.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     # Telegram file identifiers

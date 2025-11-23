@@ -10,6 +10,19 @@ interface BestTimeRecommendations {
         confidence: number;
         avg_engagement: number;
     }>;
+    best_day_hour_combinations?: Array<{
+        day_name: string;
+        hour: number;
+        score: number;
+        confidence: number;
+    }>;
+    content_type_recommendations?: Array<{
+        content_type: string;
+        day_name: string;
+        hour: number;
+        score: number;
+        confidence: number;
+    }>;
     accuracy?: number;
     [key: string]: any;
 }
@@ -23,18 +36,18 @@ interface UseRecommenderLogicReturn {
     aiInsights: AIInsight[];
     setTimeFrame: (timeFrame: string) => void;
     setContentType: (contentType: string) => void;
-    loadRecommendations: () => Promise<void>;
+    loadRecommendations: (silent?: boolean) => Promise<void>;
 }
 
 export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
-    const [timeFrame, setTimeFrame] = useState<string>('30days');
+    const [timeFrame, setTimeFrame] = useState<string>('all');
     const [contentType, setContentType] = useState<string>('all');
     const [error, setError] = useState<string | null>(null);
     const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
     const [bestTimeRecommendations, setBestTimeRecommendations] = useState<BestTimeRecommendations | null>(null);
 
     // Get store methods and data
-    const { fetchBestTime, isLoadingBestTime, bestTimes } = useAnalyticsStore();
+    const { fetchBestTime, isLoadingBestTime, bestTimes, bestDayHourCombinations, contentTypeRecommendations } = useAnalyticsStore();
     const { selectedChannel } = useChannelStore();
 
     // Generate performance insights based on recommendations
@@ -98,7 +111,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     };
 
     // Load best time recommendations using store
-    const loadRecommendations = useCallback(async () => {
+    const loadRecommendations = useCallback(async (silent: boolean = false) => {
         // Don't fetch if no channel is selected
         if (!selectedChannel?.id) {
             console.warn('BestTimeRecommender: No channel selected, skipping fetch');
@@ -108,20 +121,27 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
         try {
             setError(null);
 
-            // Convert timeFrame to days
-            const daysMap: Record<string, number> = {
-                'hour': 1,        // Last 1 day (need recent data for hourly analysis)
-                '6hours': 1,      // Last 1 day
-                '24hours': 2,     // Last 2 days
-                '7days': 7,       // Last 7 days
-                '30days': 30,     // Last 30 days
-                '90days': 90,     // Last 90 days
-                'alltime': 365    // Last 365 days (approximate "all time")
+            // Convert timeFrame to days (standardized format)
+            const daysMap: Record<string, number | null> = {
+                '1h': 1,        // Last 1 day (need recent data for hourly analysis)
+                '6h': 1,        // Last 1 day
+                '24h': 2,       // Last 2 days
+                '7d': 7,        // Last 7 days
+                '30d': 30,      // Last 30 days
+                '90d': 90,      // Last 90 days
+                '180d': 180,    // Last 6 months
+                '1y': 365,      // Last 1 year
+                'all': null     // All time (unlimited, backend will limit to 10k posts)
             };
-            const days = daysMap[timeFrame] || 30;
+            const days = daysMap[timeFrame] !== undefined ? daysMap[timeFrame] : 30;
 
-            console.log('BestTimeRecommender: Fetching for channel:', selectedChannel.id, 'timeFrame:', timeFrame, 'days:', days);
-            await fetchBestTime(selectedChannel.id);
+            console.log('📅 BestTimeRecommender: Fetching data');
+            console.log('   Channel ID:', selectedChannel.id);
+            console.log('   TimeFrame selected:', timeFrame);
+            console.log('   Days parameter:', days === null ? 'ALL TIME (unlimited)' : days);
+            console.log('   Silent mode:', silent);
+
+            await fetchBestTime(selectedChannel.id, days, silent);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
@@ -144,10 +164,14 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                     confidence: bt.confidence,
                     avg_engagement: bt.avg_engagement || bt.avgEngagement || 0
                 })),
+                best_day_hour_combinations: bestDayHourCombinations || [],
+                content_type_recommendations: contentTypeRecommendations || [],
                 accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + (bt.confidence || 0), 0) / bestTimes.length)
             };
 
             console.log('✅ Formatted recommendations:', formatted);
+            console.log('📊 Day-hour combinations:', formatted.best_day_hour_combinations?.length || 0);
+            console.log('📊 Content-type recommendations:', formatted.content_type_recommendations?.length || 0);
             setBestTimeRecommendations(formatted);
 
             // Generate performance insights
@@ -158,7 +182,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             setBestTimeRecommendations(null);
             setAiInsights([]);
         }
-    }, [bestTimes]);
+    }, [bestTimes, bestDayHourCombinations, contentTypeRecommendations]);
 
     // Load data on mount and when filters change
     useEffect(() => {

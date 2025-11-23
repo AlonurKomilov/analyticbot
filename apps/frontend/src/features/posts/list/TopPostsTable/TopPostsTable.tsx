@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Paper, Box, Alert } from '@mui/material';
 import { EnhancedDataTable } from '@shared/components/tables';
 import PostTableFilters from './components/PostTableFilters';
@@ -6,7 +6,11 @@ import PostSummaryStats from './components/PostSummaryStats';
 import { usePostTableLogic } from './hooks/usePostTableLogic';
 import { createTopPostsColumns, topPostsTableConfig } from './TopPostsTableConfig';
 
-const TopPostsTable: React.FC = () => {
+interface TopPostsTableProps {
+    lastUpdated?: Date;
+}
+
+const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
     const {
         timeFilter,
         sortBy,
@@ -15,8 +19,21 @@ const TopPostsTable: React.FC = () => {
         posts,
         summaryStats,
         setTimeFilter,
-        setSortBy
+        setSortBy,
+        loadTopPosts
     } = usePostTableLogic();
+
+    const prevLastUpdatedRef = useRef<Date | undefined>(undefined);
+
+    // Silent refresh when lastUpdated changes (from dashboard auto-refresh)
+    useEffect(() => {
+        if (lastUpdated && prevLastUpdatedRef.current && lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
+            // This is an auto-refresh from the dashboard - trigger silent reload
+            console.log('🔄 TopPostsTable: Silent auto-refresh triggered');
+            loadTopPosts(true); // Pass true for silent mode
+        }
+        prevLastUpdatedRef.current = lastUpdated;
+    }, [lastUpdated, loadTopPosts]);
 
     // Create columns without menu click handler
     const columns = createTopPostsColumns();

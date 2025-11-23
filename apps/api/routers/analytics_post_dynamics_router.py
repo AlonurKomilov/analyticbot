@@ -28,11 +28,11 @@ async def get_optional_user(request: Request) -> dict | None:
         credentials = await security_scheme(request)
 
         if credentials:
+            from apps.api.auth_utils import get_auth_utils
             from apps.api.middleware.auth import get_user_repository
 
             user_repo = await get_user_repository()
-            from apps.api.auth_utils import auth_utils
-
+            auth_utils = get_auth_utils()  # Not async
             user = await auth_utils.get_user_from_token(credentials, user_repo)
             return user
     except Exception as e:

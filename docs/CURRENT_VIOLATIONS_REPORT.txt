@@ -1,0 +1,37 @@
+❌ Found 7 import violations:
+
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/channels_router.py:242
+Import: telethon.tl.functions.channels
+Type: mtproto_guard
+Message: MTProto import 'telethon.tl.functions.channels' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:379
+Import: telethon
+Type: mtproto_guard
+Message: MTProto import 'telethon' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:380
+Import: telethon.sessions
+Type: mtproto_guard
+Message: MTProto import 'telethon.sessions' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:551
+Import: telethon
+Type: mtproto_guard
+Message: MTProto import 'telethon' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:552
+Import: telethon.sessions
+Type: mtproto_guard
+Message: MTProto import 'telethon.sessions' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:280
+Import: telethon
+Type: mtproto_guard
+Message: MTProto import 'telethon' should be guarded or in stub implementation
+--------------------------------------------------
+File: /home/abcdeveloper/projects/analyticbot/apps/api/routers/telegram_storage_router.py:281
+Import: telethon.sessions
+Type: mtproto_guard
+Message: MTProto import 'telethon.sessions' should be guarded or in stub implementation
+--------------------------------------------------

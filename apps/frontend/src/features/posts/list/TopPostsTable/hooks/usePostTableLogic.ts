@@ -18,7 +18,7 @@ interface UsePostTableLogicReturn {
     setSortBy: (sort: string) => void;
     handleMenuClick: (event: React.MouseEvent<HTMLElement>, postId: string | number) => void;
     handleMenuClose: () => void;
-    loadTopPosts: () => Promise<void>;
+    loadTopPosts: (silent?: boolean) => Promise<void>;
 }
 
 export const usePostTableLogic = (): UsePostTableLogicReturn => {
@@ -60,7 +60,7 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
     };
 
     // Load top posts data
-    const loadTopPosts = useCallback(async () => {
+    const loadTopPosts = useCallback(async (silent: boolean = false) => {
         // Don't load if no channel selected and not in demo mode
         if (!channelId) {
             console.info('💡 No channel selected - select a channel to view top posts');
@@ -73,7 +73,7 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
             setError(null);
             const period = mapTimFilterToPeriod(timeFilter);
             const backendSortBy = mapSortByToBackend(sortBy);
-            await fetchTopPosts(channelId, 10, period, backendSortBy);
+            await fetchTopPosts(channelId, 10, period, backendSortBy, silent);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);

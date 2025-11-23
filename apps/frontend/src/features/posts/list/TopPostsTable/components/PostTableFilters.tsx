@@ -5,7 +5,6 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Typography,
     SelectChangeEvent
 } from '@mui/material';
 
@@ -61,10 +60,6 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
                 flexWrap: 'wrap'
             }}
         >
-            <Typography variant="h6" component="h2" sx={{ mr: 2 }}>
-                📊 Top Posts
-            </Typography>
-
             <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel id="time-filter-label">Time Period</InputLabel>
                 <Select

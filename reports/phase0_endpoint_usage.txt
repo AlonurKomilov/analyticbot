@@ -1,0 +1,69 @@
+====================================================================================================
+PHASE 0: ENDPOINT USAGE ANALYSIS
+====================================================================================================
+
+Total API Requests: 241
+Unique Endpoints: 37
+
+METHOD DISTRIBUTION:
+--------------------------------------------------
+  GET            90 requests
+  OPTIONS        78 requests
+  POST           73 requests
+
+
+TOP 50 MOST-USED ENDPOINTS:
+----------------------------------------------------------------------------------------------------
+ 1.     67 requests → POST /webhook/844338517
+ 2.     14 requests → OPTIONS /channels
+ 3.     14 requests → GET /channels
+ 4.     14 requests → OPTIONS /channels/
+ 5.     14 requests → GET /channels/
+ 6.     10 requests → OPTIONS /analytics/channels
+ 7.      9 requests → OPTIONS /channels/admin-status/check-all
+ 8.      9 requests → GET /channels/admin-status/check-all
+ 9.      8 requests → GET /analytics/channels
+10.      6 requests → GET /health/
+11.      6 requests → OPTIONS /channels/statistics/overview
+12.      6 requests → OPTIONS /api/user-mtproto/status
+13.      6 requests → GET /api/user-mtproto/status
+14.      6 requests → OPTIONS /api/user-mtproto/channels/1002678877654/settings
+15.      6 requests → GET /channels/statistics/overview
+16.      6 requests → GET /api/user-mtproto/channels/1002678877654/settings
+17.      4 requests → GET /
+18.      4 requests → OPTIONS /auth/refresh
+19.      4 requests → POST /auth/refresh
+20.      3 requests → GET /openapi.json
+21.      3 requests → OPTIONS /auth/me
+22.      3 requests → GET /auth/me
+23.      3 requests → OPTIONS /api/posts
+24.      2 requests → GET /api/posts
+25.      2 requests → GET /auth/refresh
+26.      1 requests → OPTIONS /api/storage/channels
+27.      1 requests → GET /api/storage/channels
+28.      1 requests → GET /p/spa-szuro-45cm-x-135-cm/
+29.      1 requests → GET /robots.txt
+30.      1 requests → GET /p/bt-609-kezi-szegecs-pisztoly-szegecs-anya-szerszam-szegecselo-szerszam-metrikus-es-huvelykes-dioval/
+31.      1 requests → GET /p/marka-20db-marka-nagy-aramkori-megszakito-zarak-zarolas-legkapcsolo-fogantyu-zar-zaro-biztonsagi-zar/
+32.      1 requests → GET /p/sargarez-egy-tartocsapkar-fogantyucsiszolt-arany-modern-fedelzetre-szerelt-meleg-es-hideg-viz-vegyes-tipusu-furdoszoba-medence-csaptelep/
+33.      1 requests → OPTIONS /auth/logout
+34.      1 requests → POST /auth/logout
+35.      1 requests → OPTIONS /auth/login
+36.      1 requests → POST /auth/login
+37.      1 requests → GET /cgi-bin/luci/%3Bstok%3D/locale
+
+
+ENDPOINTS WITH ERRORS:
+----------------------------------------------------------------------------------------------------
+      67 errors → POST /webhook/844338517
+      14 errors → GET /channels/
+       4 errors → GET /
+       2 errors → GET /auth/refresh
+       2 errors → POST /auth/refresh
+       1 errors → GET /p/spa-szuro-45cm-x-135-cm/
+       1 errors → GET /robots.txt
+       1 errors → GET /p/bt-609-kezi-szegecs-pisztoly-szegecs-anya-szerszam-szegecselo-szerszam-metrikus-es-huvelykes-dioval/
+       1 errors → GET /p/marka-20db-marka-nagy-aramkori-megszakito-zarak-zarolas-legkapcsolo-fogantyu-zar-zaro-biztonsagi-zar/
+       1 errors → GET /p/sargarez-egy-tartocsapkar-fogantyucsiszolt-arany-modern-fedelzetre-szerelt-meleg-es-hideg-viz-vegyes-tipusu-furdoszoba-medence-csaptelep/
+       1 errors → POST /auth/logout
+       1 errors → GET /cgi-bin/luci/%3Bstok%3D/locale

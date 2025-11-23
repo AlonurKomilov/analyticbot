@@ -16,7 +16,7 @@ import TimeRangeControls from './TimeRangeControls.jsx';
 import MetricsSummary from './MetricsSummary.jsx';
 import ChartVisualization from './ChartVisualization';
 import ChartErrorBoundary from './ChartErrorBoundary.jsx';
-import { LoadingState, ChartEmptyState, StatusFooter } from './StatusComponents.jsx';
+import { LoadingState, ChartEmptyState } from './StatusComponents.jsx';
 
 // ============================================================================
 // Type Definitions
@@ -70,7 +70,6 @@ const PostViewDynamicsChart: React.FC = () => {
     const [timeRange, setTimeRange] = useState<TimeRange>('90d');  // Default to 90d to show more historical data
     const [error, setError] = useState<string | null>(null);
     const [data, setData] = useState<DataPoint[]>([]);
-    const [autoRefresh] = useState<boolean>(true);
     const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('30s');
     const [drillDownDate, setDrillDownDate] = useState<string | null>(null); // For specific day drill-down
     const [drillDownHour, setDrillDownHour] = useState<string | null>(null); // For specific hour minute drill-down
@@ -561,13 +560,6 @@ const PostViewDynamicsChart: React.FC = () => {
 
             {/* Empty State */}
             {!isLoadingPostDynamics && chartData.length === 0 && <ChartEmptyState />}
-
-            {/* Status Footer */}
-            <StatusFooter
-                autoRefresh={autoRefresh}
-                refreshInterval={refreshInterval}
-                summaryStats={summaryStats}
-            />
         </Paper>
     );
 };

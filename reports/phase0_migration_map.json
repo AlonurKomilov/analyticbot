@@ -1,0 +1,4586 @@
+[
+  {
+    "method": "GET",
+    "current_path": "/api/channels/{channel_id}/posts",
+    "new_path": null,
+    "action": "DEPRECATE",
+    "reason": "Old endpoint - replaced by /channels microservice",
+    "summary": "Get Channel Posts",
+    "tags": [
+      "posts"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-chat/ask",
+    "new_path": "/ai/ask",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Ask Question",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-chat/health",
+    "new_path": "/ai/health",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-chat/history/{channel_id}",
+    "new_path": "/ai/history/{channel_id}",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Chat History",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-chat/insights/quick",
+    "new_path": "/ai/insights/quick",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Quick Insight",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-chat/questions/suggested/{channel_id}",
+    "new_path": "/ai/questions/suggested/{channel_id}",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Suggested Questions",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-chat/stats",
+    "new_path": "/ai/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI Chat (deprecated)",
+      "AI Chat"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-insights/analyze/comprehensive",
+    "new_path": "/ai/analyze/comprehensive",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Analyze Comprehensive Insights",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-insights/analyze/core",
+    "new_path": "/ai/analyze/core",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Analyze Core Insights",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-insights/analyze/patterns",
+    "new_path": "/ai/analyze/patterns",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Analyze Patterns",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-insights/analyze/predictions",
+    "new_path": "/ai/analyze/predictions",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Analyze Predictions",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-insights/health",
+    "new_path": "/ai/health",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-insights/stats",
+    "new_path": "/ai/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI Insights (deprecated)",
+      "AI Insights"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-services/churn/analyze",
+    "new_path": "/ai/churn/analyze",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Predict Churn",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-services/churn/stats",
+    "new_path": "/ai/churn/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Churn Predictor Stats",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-services/content/analyze",
+    "new_path": "/ai/content/analyze",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Optimize Content",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-services/content/stats",
+    "new_path": "/ai/content/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Content Optimizer Stats",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai-services/security/analyze",
+    "new_path": "/ai/security/analyze",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Analyze Security",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-services/security/stats",
+    "new_path": "/ai/security/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get Security Monitor Stats",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai-services/stats",
+    "new_path": "/ai/stats",
+    "action": "REDIRECT",
+    "reason": "Consolidate AI endpoints under /ai",
+    "summary": "Get All Stats",
+    "tags": [
+      "AI Services (deprecated)",
+      "AI Services"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content-protection/custom-emoji",
+    "new_path": "/content/custom-emoji",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Format Custom Emoji Message",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content-protection/files/{filename}",
+    "new_path": "/content/files/{filename}",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Download Protected File",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content-protection/premium-features/{tier}",
+    "new_path": "/content/premium-features/{tier}",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Get Premium Features",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content-protection/theft-detection",
+    "new_path": "/content/theft-detection",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Detect Content Theft",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content-protection/usage/{user_id}",
+    "new_path": "/content/usage/{user_id}",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Get Feature Usage",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content-protection/watermark/image",
+    "new_path": "/content/watermark/image",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Add Image Watermark",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content-protection/watermark/video",
+    "new_path": "/content/watermark/video",
+    "action": "REDIRECT",
+    "reason": "Consolidate content endpoints",
+    "summary": "Add Video Watermark",
+    "tags": [
+      "Content Protection (deprecated)",
+      "Content Protection"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payment/analytics/stats",
+    "new_path": "/payments/analytics/stats",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Get Payment Stats",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payment/health",
+    "new_path": "/payments/health",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Payment System Health",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payment/methods",
+    "new_path": "/payments/methods",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Create Payment Method",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payment/methods/{user_id}",
+    "new_path": "/payments/methods/{user_id}",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Get User Payment Methods",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payment/process",
+    "new_path": "/payments/process",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Process Payment",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payment/subscriptions",
+    "new_path": "/payments/subscriptions",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Create Subscription",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payment/subscriptions/{user_id}",
+    "new_path": "/payments/subscriptions/{user_id}",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Get User Subscription",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payment/webhooks/{provider}",
+    "new_path": "/payments/webhooks/{provider}",
+    "action": "REDIRECT",
+    "reason": "Remove duplicate - use /payments",
+    "summary": "Process Webhook",
+    "tags": [
+      "Payments (deprecated)",
+      "payment"
+    ],
+    "priority": "HIGH"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/admin/bots/list",
+    "new_path": "/admin/bots/bots/list",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "List All Bots",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/admin/bots/{user_id}/access",
+    "new_path": "/admin/bots/bots/{user_id}/access",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "Access User Bot",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "PATCH",
+    "current_path": "/api/admin/bots/{user_id}/activate",
+    "new_path": "/admin/bots/bots/{user_id}/activate",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "Activate Bot",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "PATCH",
+    "current_path": "/api/admin/bots/{user_id}/rate-limit",
+    "new_path": "/admin/bots/bots/{user_id}/rate-limit",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "Update Bot Rate Limit",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/admin/bots/{user_id}/status",
+    "new_path": "/admin/bots/bots/{user_id}/status",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "Get User Bot Status",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "PATCH",
+    "current_path": "/api/admin/bots/{user_id}/suspend",
+    "new_path": "/admin/bots/bots/{user_id}/suspend",
+    "action": "MOVE",
+    "reason": "Consolidate under /admin",
+    "summary": "Suspend Bot",
+    "tags": [
+      "Admin Bot Management",
+      "Admin Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/posts",
+    "new_path": "/posts",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Get All Posts",
+    "tags": [
+      "posts"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/posts/debug/current-user",
+    "new_path": "/posts/debug/current-user",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Debug Current User",
+    "tags": [
+      "posts"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/posts/{channel_id}/{msg_id}",
+    "new_path": "/posts/{channel_id}/{msg_id}",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Get Post",
+    "tags": [
+      "posts"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/storage/channels",
+    "new_path": "/storage/channels",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Get user's storage channels",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/storage/channels/connect",
+    "new_path": "/storage/channels/connect",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Connect a Telegram channel for storage",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/storage/channels/validate",
+    "new_path": "/storage/channels/validate",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Validate a Telegram channel for storage use",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/api/storage/channels/{channel_id}",
+    "new_path": "/storage/channels/{channel_id}",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Disconnect a storage channel",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/storage/files",
+    "new_path": "/storage/files",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "List files in Telegram storage",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/storage/files/{media_id}",
+    "new_path": "/storage/files/{media_id}",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Get file metadata",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/api/storage/files/{media_id}",
+    "new_path": "/storage/files/{media_id}",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Delete file from storage",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/storage/files/{media_id}/forward",
+    "new_path": "/storage/files/{media_id}/forward",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Forward file to another channel",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/storage/files/{media_id}/url",
+    "new_path": "/storage/files/{media_id}/url",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Get file download URL",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/storage/upload",
+    "new_path": "/storage/upload",
+    "action": "MOVE",
+    "reason": "Remove /api prefix (subdomain routing)",
+    "summary": "Upload file to Telegram storage",
+    "tags": [
+      "Telegram Storage"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-bot/create",
+    "new_path": "/user-bots/create",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Create User Bot",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/api/user-bot/rate-limits",
+    "new_path": "/user-bots/rate-limits",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Update Rate Limits",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-bot/refresh-info",
+    "new_path": "/user-bots/refresh-info",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Refresh Bot Info",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/api/user-bot/remove",
+    "new_path": "/user-bots/remove",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Remove Bot",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-bot/status",
+    "new_path": "/user-bots/status",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Get Bot Status",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-bot/verify",
+    "new_path": "/user-bots/verify",
+    "action": "MOVE",
+    "reason": "Remove /api prefix",
+    "summary": "Verify Bot",
+    "tags": [
+      "User Bot Management",
+      "User Bot Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/channels/settings",
+    "new_path": "/user-sessions/channels/settings",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get All Channel Settings",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/channels/{channel_id}/settings",
+    "new_path": "/user-sessions/channels/{channel_id}/settings",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get Channel Setting",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/api/user-mtproto/channels/{channel_id}/settings",
+    "new_path": "/user-sessions/channels/{channel_id}/settings",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Delete Channel Setting",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/channels/{channel_id}/toggle",
+    "new_path": "/user-sessions/channels/{channel_id}/toggle",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Toggle Channel Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/connect",
+    "new_path": "/user-sessions/connect",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Connect Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/disconnect",
+    "new_path": "/user-sessions/disconnect",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Disconnect Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/monitoring/channels",
+    "new_path": "/user-sessions/monitoring/channels",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get per-channel collection statistics",
+    "tags": [
+      "MTProto Monitoring",
+      "MTProto Monitoring"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/monitoring/collection-progress",
+    "new_path": "/user-sessions/monitoring/collection-progress",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get collection progress statistics",
+    "tags": [
+      "MTProto Monitoring",
+      "MTProto Monitoring"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/monitoring/overview",
+    "new_path": "/user-sessions/monitoring/overview",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get comprehensive MTProto monitoring overview",
+    "tags": [
+      "MTProto Monitoring",
+      "MTProto Monitoring"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/monitoring/session-health",
+    "new_path": "/user-sessions/monitoring/session-health",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get MTProto session health status",
+    "tags": [
+      "MTProto Monitoring",
+      "MTProto Monitoring"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/api/user-mtproto/remove",
+    "new_path": "/user-sessions/remove",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Remove Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/resend",
+    "new_path": "/user-sessions/resend",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Resend Mtproto Code",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/setup",
+    "new_path": "/user-sessions/setup",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Setup Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/api/user-mtproto/status",
+    "new_path": "/user-sessions/status",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Get Mtproto Status",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/toggle",
+    "new_path": "/user-sessions/toggle",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Toggle Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/api/user-mtproto/verify",
+    "new_path": "/user-sessions/verify",
+    "action": "MOVE",
+    "reason": "Remove /api prefix + rename for clarity",
+    "summary": "Verify Mtproto",
+    "tags": [
+      "User Bot Management",
+      "User MTProto Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/auth/admin/user-roles",
+    "new_path": "/admin/auth/user-roles",
+    "action": "MOVE",
+    "reason": "Consolidate admin operations",
+    "summary": "Get Role Hierarchy",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/competitive/competitive/analyze/intelligence",
+    "new_path": "/analytics/competitive/analyze/intelligence",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Generate Competitive Intelligence",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/competitive/competitive/comparison/{channel_id}",
+    "new_path": "/analytics/competitive/comparison/{channel_id}",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Performance Comparison",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/competitive/competitive/discover/competitors",
+    "new_path": "/analytics/competitive/discover/competitors",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Discover Competitor Channels",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/competitive/competitive/health",
+    "new_path": "/analytics/competitive/health",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Service Health Check",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/competitive/competitive/profile/channel",
+    "new_path": "/analytics/competitive/profile/channel",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Channel Profile",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/competitive/competitive/stats",
+    "new_path": "/analytics/competitive/stats",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Service Statistics",
+    "tags": [
+      "Competitive Intelligence (deprecated)",
+      "Competitive Intelligence"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/engagement/channels/{channel_id}/audience",
+    "new_path": "/analytics/insights/engagement/channels/{channel_id}/audience",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Channel Audience Insights",
+    "tags": [
+      "insights-engagement (deprecated)",
+      "insights-engagement"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/engagement/channels/{channel_id}/engagement",
+    "new_path": "/analytics/insights/engagement/channels/{channel_id}/engagement",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Channel Engagement Insights",
+    "tags": [
+      "insights-engagement (deprecated)",
+      "insights-engagement"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/engagement/channels/{channel_id}/trending",
+    "new_path": "/analytics/insights/engagement/channels/{channel_id}/trending",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Trending Content Analysis",
+    "tags": [
+      "insights-engagement (deprecated)",
+      "insights-engagement"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/engagement/engagement-patterns/{channel_id}",
+    "new_path": "/analytics/insights/engagement/engagement-patterns/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Engagement Patterns Analysis",
+    "tags": [
+      "insights-engagement (deprecated)",
+      "insights-engagement"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/orchestration/health",
+    "new_path": "/analytics/insights/orchestration/health",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Orchestration Health",
+    "tags": [
+      "Analytics Orchestration v2 (deprecated)",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/orchestration/services",
+    "new_path": "/analytics/insights/orchestration/services",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Available Services",
+    "tags": [
+      "Analytics Orchestration v2 (deprecated)",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/insights/orchestration/workflows/comprehensive",
+    "new_path": "/analytics/insights/orchestration/workflows/comprehensive",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Execute Comprehensive Analytics",
+    "tags": [
+      "Analytics Orchestration v2 (deprecated)",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/best-times/{channel_id}",
+    "new_path": "/analytics/insights/predictive/best-times/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Optimal Posting Times",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/insights/predictive/forecast",
+    "new_path": "/analytics/insights/predictive/forecast",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Generate Predictions",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/growth-forecast/{channel_id}",
+    "new_path": "/analytics/insights/predictive/growth-forecast/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Growth Forecast",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/insights/predictive/intelligence/contextual",
+    "new_path": "/analytics/insights/predictive/intelligence/contextual",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Analyze Contextual Intelligence",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/insights/predictive/intelligence/cross-channel",
+    "new_path": "/analytics/insights/predictive/intelligence/cross-channel",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Analyze Cross Channel Intelligence",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/intelligence/health",
+    "new_path": "/analytics/insights/predictive/intelligence/health",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Intelligence Health Status",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/intelligence/narrative/{channel_id}",
+    "new_path": "/analytics/insights/predictive/intelligence/narrative/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Prediction Narrative",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/intelligence/temporal/{channel_id}",
+    "new_path": "/analytics/insights/predictive/intelligence/temporal/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Discover Temporal Patterns",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/insights/predictive/recommendations/{channel_id}",
+    "new_path": "/analytics/insights/predictive/recommendations/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Ai Recommendations",
+    "tags": [
+      "insights-predictive (deprecated)",
+      "insights-predictive"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ml/ml/clear-cache",
+    "new_path": "/ai/ml/clear-cache",
+    "action": "MOVE",
+    "reason": "Flatten nested path + consolidate to AI",
+    "summary": "Clear ML Cache",
+    "tags": [
+      "Machine Learning (deprecated)",
+      "Machine Learning"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ml/ml/health",
+    "new_path": "/ai/ml/health",
+    "action": "MOVE",
+    "reason": "Flatten nested path + consolidate to AI",
+    "summary": "ML Service Health",
+    "tags": [
+      "Machine Learning (deprecated)",
+      "Machine Learning"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ml/ml/predict-growth",
+    "new_path": "/ai/ml/predict-growth",
+    "action": "MOVE",
+    "reason": "Flatten nested path + consolidate to AI",
+    "summary": "Predict Channel Growth",
+    "tags": [
+      "Machine Learning (deprecated)",
+      "Machine Learning"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ml/ml/task-status/{task_id}",
+    "new_path": "/ai/ml/task-status/{task_id}",
+    "action": "MOVE",
+    "reason": "Flatten nested path + consolidate to AI",
+    "summary": "Check ML Task Status",
+    "tags": [
+      "Machine Learning (deprecated)",
+      "Machine Learning"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/optimization/optimization/analyze/performance",
+    "new_path": "/analytics/optimization/analyze/performance",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Analyze Performance",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/optimization/optimization/apply",
+    "new_path": "/analytics/optimization/apply",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Apply Optimizations",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/optimization/optimization/cycle/execute",
+    "new_path": "/analytics/optimization/cycle/execute",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Execute Optimization Cycle",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/optimization/optimization/health",
+    "new_path": "/analytics/optimization/health",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Service Health",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/optimization/optimization/recommendations/channel/{channel_id}",
+    "new_path": "/analytics/optimization/recommendations/channel/{channel_id}",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Channel Recommendations",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/optimization/optimization/recommendations/generate",
+    "new_path": "/analytics/optimization/recommendations/generate",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Generate Recommendations",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/optimization/optimization/stats",
+    "new_path": "/analytics/optimization/stats",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Service Stats",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/optimization/optimization/validate",
+    "new_path": "/analytics/optimization/validate",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Validate Optimization",
+    "tags": [
+      "Optimization (deprecated)",
+      "Optimization"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/core/growth/{channel_id}",
+    "new_path": "/analytics/statistics/core/growth/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Channel Growth Statistics",
+    "tags": [
+      "statistics-core (deprecated)",
+      "statistics-core"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/core/metrics/{channel_id}",
+    "new_path": "/analytics/statistics/core/metrics/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Historical Metrics",
+    "tags": [
+      "statistics-core (deprecated)",
+      "statistics-core"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/core/overview/{channel_id}",
+    "new_path": "/analytics/statistics/core/overview/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Channel Overview",
+    "tags": [
+      "statistics-core (deprecated)",
+      "statistics-core"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/core/sources/{channel_id}",
+    "new_path": "/analytics/statistics/core/sources/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Traffic Sources Statistics",
+    "tags": [
+      "statistics-core (deprecated)",
+      "statistics-core"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/core/top-posts/{channel_id}",
+    "new_path": "/analytics/statistics/core/top-posts/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Historical Top Posts",
+    "tags": [
+      "statistics-core (deprecated)",
+      "statistics-core"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/reports/analytical/{channel_id}",
+    "new_path": "/analytics/statistics/reports/analytical/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Analytical Report",
+    "tags": [
+      "statistics-reports (deprecated)",
+      "statistics-reports"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/reports/comparison/{channel_id}",
+    "new_path": "/analytics/statistics/reports/comparison/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Data Source Comparison",
+    "tags": [
+      "statistics-reports (deprecated)",
+      "statistics-reports"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/reports/performance-summary/{channel_id}",
+    "new_path": "/analytics/statistics/reports/performance-summary/{channel_id}",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Performance Summary Report",
+    "tags": [
+      "statistics-reports (deprecated)",
+      "statistics-reports"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/statistics/reports/trends/top-posts",
+    "new_path": "/analytics/statistics/reports/trends/top-posts",
+    "action": "MOVE",
+    "reason": "Consolidate analytics",
+    "summary": "Get Top Posts Trends",
+    "tags": [
+      "statistics-reports (deprecated)",
+      "statistics-reports"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/strategy/strategy/analyze/effectiveness",
+    "new_path": "/analytics/strategy/analyze/effectiveness",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Analyze Strategy Effectiveness",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/strategy/strategy/generate/narrative",
+    "new_path": "/analytics/strategy/generate/narrative",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Generate Strategy Narrative",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/strategy/strategy/health",
+    "new_path": "/analytics/strategy/health",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Service Health",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/strategy/strategy/roadmap/generate",
+    "new_path": "/analytics/strategy/roadmap/generate",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Generate Implementation Roadmap",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/strategy/strategy/stats",
+    "new_path": "/analytics/strategy/stats",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Service Stats",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/strategy/strategy/tips/quick",
+    "new_path": "/analytics/strategy/tips/quick",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Quick Strategy Tips",
+    "tags": [
+      "Strategy (deprecated)",
+      "Strategy"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/superadmin/superadmin/audit-logs",
+    "new_path": "/admin/super/audit-logs",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get Audit Logs",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/superadmin/superadmin/auth/login",
+    "new_path": "/admin/super/auth/login",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Admin Login",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/superadmin/superadmin/auth/logout",
+    "new_path": "/admin/super/auth/logout",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Admin Logout",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/superadmin/superadmin/config",
+    "new_path": "/admin/super/config",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get System Config",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/superadmin/superadmin/config/{key}",
+    "new_path": "/admin/super/config/{key}",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Update System Config",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/superadmin/superadmin/stats",
+    "new_path": "/admin/super/stats",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get System Stats",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/superadmin/superadmin/users",
+    "new_path": "/admin/super/users",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Get System Users",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/superadmin/superadmin/users/{user_id}/reactivate",
+    "new_path": "/admin/super/users/{user_id}/reactivate",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Reactivate User",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/superadmin/superadmin/users/{user_id}/suspend",
+    "new_path": "/admin/super/users/{user_id}/suspend",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Suspend User",
+    "tags": [
+      "SuperAdmin Management (deprecated)",
+      "SuperAdmin Management"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/trends/trends/analyze/advanced",
+    "new_path": "/analytics/trends/analyze/advanced",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Advanced Trend Analysis",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/trends/trends/detect/anomalies/{channel_id}",
+    "new_path": "/analytics/trends/detect/anomalies/{channel_id}",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Detect Anomalies",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/trends/trends/detect/changes/{channel_id}",
+    "new_path": "/analytics/trends/detect/changes/{channel_id}",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Detect Change Points",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/trends/trends/forecast",
+    "new_path": "/analytics/trends/forecast",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Generate Trend Forecast",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/trends/trends/health",
+    "new_path": "/analytics/trends/health",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Service Health Check",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/trends/trends/stats",
+    "new_path": "/analytics/trends/stats",
+    "action": "MOVE",
+    "reason": "Flatten nested path",
+    "summary": "Service Statistics",
+    "tags": [
+      "Trend Analysis (deprecated)",
+      "Trend Analysis"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/webhook/{user_id}",
+    "new_path": "/webhooks/{user_id}",
+    "action": "MOVE",
+    "reason": "Plural for consistency",
+    "summary": "Receive Telegram Webhook",
+    "tags": [
+      "Telegram Webhooks",
+      "Telegram Webhooks"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/webhook/{user_id}/info",
+    "new_path": "/webhooks/{user_id}/info",
+    "action": "MOVE",
+    "reason": "Plural for consistency",
+    "summary": "Get Webhook Status",
+    "tags": [
+      "Telegram Webhooks",
+      "Telegram Webhooks"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "POST",
+    "current_path": "/webhook/{user_id}/test",
+    "new_path": "/webhooks/{user_id}/test",
+    "action": "MOVE",
+    "reason": "Plural for consistency",
+    "summary": "Test Webhook",
+    "tags": [
+      "Telegram Webhooks",
+      "Telegram Webhooks"
+    ],
+    "priority": "MEDIUM"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/channels",
+    "new_path": "/admin/channels",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get All Channels",
+    "tags": [
+      "Admin - Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/admin/channels/{channel_id}",
+    "new_path": "/admin/channels/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Delete Channel Admin",
+    "tags": [
+      "Admin - Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/channels/{channel_id}/suspend",
+    "new_path": "/admin/channels/{channel_id}/suspend",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Suspend Channel",
+    "tags": [
+      "Admin - Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/channels/{channel_id}/unsuspend",
+    "new_path": "/admin/channels/{channel_id}/unsuspend",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Unsuspend Channel",
+    "tags": [
+      "Admin - Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/super/superadmin/audit-logs",
+    "new_path": "/admin/super/superadmin/audit-logs",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Audit Logs",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/super/superadmin/auth/login",
+    "new_path": "/admin/super/superadmin/auth/login",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Admin Login",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/super/superadmin/auth/logout",
+    "new_path": "/admin/super/superadmin/auth/logout",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Admin Logout",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/super/superadmin/config",
+    "new_path": "/admin/super/superadmin/config",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get System Config",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/admin/super/superadmin/config/{key}",
+    "new_path": "/admin/super/superadmin/config/{key}",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Update System Config",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/super/superadmin/stats",
+    "new_path": "/admin/super/superadmin/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get System Stats",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/super/superadmin/users",
+    "new_path": "/admin/super/superadmin/users",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get System Users",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/super/superadmin/users/{user_id}/reactivate",
+    "new_path": "/admin/super/superadmin/users/{user_id}/reactivate",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Reactivate User",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/super/superadmin/users/{user_id}/suspend",
+    "new_path": "/admin/super/superadmin/users/{user_id}/suspend",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Suspend User",
+    "tags": [
+      "Admin - Super",
+      "SuperAdmin Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/audit/recent",
+    "new_path": "/admin/system/audit/recent",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Recent Admin Actions",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/bot-health/history/{user_id}",
+    "new_path": "/admin/system/bot-health/history/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Bot Health History",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/system/bot-health/persist-now",
+    "new_path": "/admin/system/bot-health/persist-now",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Persist Health Metrics Now",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/bot-health/summary",
+    "new_path": "/admin/system/bot-health/summary",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Bot Health Summary",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/bot-health/unhealthy",
+    "new_path": "/admin/system/bot-health/unhealthy",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Unhealthy Bots",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/bot-health/unhealthy-history",
+    "new_path": "/admin/system/bot-health/unhealthy-history",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Unhealthy Bot History",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/bot-health/{user_id}",
+    "new_path": "/admin/system/bot-health/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Bot Health Metrics",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/circuit-breakers/summary",
+    "new_path": "/admin/system/circuit-breakers/summary",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Circuit Breakers Summary",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/circuit-breakers/{user_id}",
+    "new_path": "/admin/system/circuit-breakers/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Circuit Breaker State",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/system/circuit-breakers/{user_id}/reset",
+    "new_path": "/admin/system/circuit-breakers/{user_id}/reset",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Reset Circuit Breaker",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/health",
+    "new_path": "/admin/system/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get System Health",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/mtproto/pool/config",
+    "new_path": "/admin/system/mtproto/pool/config",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Mtproto Pool Config",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/admin/system/mtproto/pool/config",
+    "new_path": "/admin/system/mtproto/pool/config",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Update Mtproto Pool Config",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/mtproto/pool/status",
+    "new_path": "/admin/system/mtproto/pool/status",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Mtproto Pool Status",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/rate-limiter/stats",
+    "new_path": "/admin/system/rate-limiter/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Rate Limiter Statistics",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/retry-statistics",
+    "new_path": "/admin/system/retry-statistics",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get Retry Statistics",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/system/retry-statistics/reset",
+    "new_path": "/admin/system/retry-statistics/reset",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Reset Retry Statistics",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/system/stats",
+    "new_path": "/admin/system/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get System Statistics",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/admin/system/token/validate",
+    "new_path": "/admin/system/token/validate",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Validate Token",
+    "tags": [
+      "Admin - System Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/admin/users/{user_id}/channels",
+    "new_path": "/admin/users/{user_id}/channels",
+    "action": "KEEP",
+    "reason": "Already good - will be central admin hub",
+    "summary": "Get User Channels Admin",
+    "tags": [
+      "Admin - User Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/chat/ask",
+    "new_path": "/ai/chat/ask",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Ask Question",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/chat/health",
+    "new_path": "/ai/chat/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/chat/history/{channel_id}",
+    "new_path": "/ai/chat/history/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Chat History",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/chat/insights/quick",
+    "new_path": "/ai/chat/insights/quick",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Quick Insight",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/chat/questions/suggested/{channel_id}",
+    "new_path": "/ai/chat/questions/suggested/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Suggested Questions",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/chat/stats",
+    "new_path": "/ai/chat/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI - Chat",
+      "AI Chat"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/competitive/competitive/analyze/intelligence",
+    "new_path": "/ai/competitive/competitive/analyze/intelligence",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Generate Competitive Intelligence",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/competitive/competitive/comparison/{channel_id}",
+    "new_path": "/ai/competitive/competitive/comparison/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Performance Comparison",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/competitive/competitive/discover/competitors",
+    "new_path": "/ai/competitive/competitive/discover/competitors",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Discover Competitor Channels",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/competitive/competitive/health",
+    "new_path": "/ai/competitive/competitive/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Service Health Check",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/competitive/competitive/profile/channel",
+    "new_path": "/ai/competitive/competitive/profile/channel",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Channel Profile",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/competitive/competitive/stats",
+    "new_path": "/ai/competitive/competitive/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Service Statistics",
+    "tags": [
+      "AI - Competitive",
+      "Competitive Intelligence"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/insights/analyze/comprehensive",
+    "new_path": "/ai/insights/analyze/comprehensive",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Comprehensive Insights",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/insights/analyze/core",
+    "new_path": "/ai/insights/analyze/core",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Core Insights",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/insights/analyze/patterns",
+    "new_path": "/ai/insights/analyze/patterns",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Patterns",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/insights/analyze/predictions",
+    "new_path": "/ai/insights/analyze/predictions",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Predictions",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/insights/health",
+    "new_path": "/ai/insights/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/insights/stats",
+    "new_path": "/ai/insights/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI - Insights",
+      "AI Insights"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/optimization/optimization/analyze/performance",
+    "new_path": "/ai/optimization/optimization/analyze/performance",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Performance",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/optimization/optimization/apply",
+    "new_path": "/ai/optimization/optimization/apply",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Apply Optimizations",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/optimization/optimization/cycle/execute",
+    "new_path": "/ai/optimization/optimization/cycle/execute",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Execute Optimization Cycle",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/optimization/optimization/health",
+    "new_path": "/ai/optimization/optimization/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/optimization/optimization/recommendations/channel/{channel_id}",
+    "new_path": "/ai/optimization/optimization/recommendations/channel/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Channel Recommendations",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/optimization/optimization/recommendations/generate",
+    "new_path": "/ai/optimization/optimization/recommendations/generate",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Generate Recommendations",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/optimization/optimization/stats",
+    "new_path": "/ai/optimization/optimization/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/optimization/optimization/validate",
+    "new_path": "/ai/optimization/optimization/validate",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Validate Optimization",
+    "tags": [
+      "AI - Optimization",
+      "Optimization"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/services/churn/analyze",
+    "new_path": "/ai/services/churn/analyze",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Predict Churn",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/services/churn/stats",
+    "new_path": "/ai/services/churn/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Churn Predictor Stats",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/services/content/analyze",
+    "new_path": "/ai/services/content/analyze",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Optimize Content",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/services/content/stats",
+    "new_path": "/ai/services/content/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Content Optimizer Stats",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/services/security/analyze",
+    "new_path": "/ai/services/security/analyze",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Security",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/services/security/stats",
+    "new_path": "/ai/services/security/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Security Monitor Stats",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/services/stats",
+    "new_path": "/ai/services/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get All Stats",
+    "tags": [
+      "AI - Services",
+      "AI Services"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/strategy/strategy/analyze/effectiveness",
+    "new_path": "/ai/strategy/strategy/analyze/effectiveness",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Analyze Strategy Effectiveness",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/strategy/strategy/generate/narrative",
+    "new_path": "/ai/strategy/strategy/generate/narrative",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Generate Strategy Narrative",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/strategy/strategy/health",
+    "new_path": "/ai/strategy/strategy/health",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Health",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/strategy/strategy/roadmap/generate",
+    "new_path": "/ai/strategy/strategy/roadmap/generate",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Generate Implementation Roadmap",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/ai/strategy/strategy/stats",
+    "new_path": "/ai/strategy/strategy/stats",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Service Stats",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/ai/strategy/strategy/tips/quick",
+    "new_path": "/ai/strategy/strategy/tips/quick",
+    "action": "KEEP",
+    "reason": "Already good - will be central AI hub",
+    "summary": "Get Quick Strategy Tips",
+    "tags": [
+      "AI - Strategy",
+      "Strategy"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/alerts/check/{channel_id}",
+    "new_path": "/analytics/alerts/check/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Check Channel Alerts",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/alerts/competitive/monitor",
+    "new_path": "/analytics/alerts/competitive/monitor",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Competitive Monitoring",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/health",
+    "new_path": "/analytics/alerts/health",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Service Health Check",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/history/{channel_id}",
+    "new_path": "/analytics/alerts/history/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Alert History",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/monitor/live/{channel_id}",
+    "new_path": "/analytics/alerts/monitor/live/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Live Monitoring",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/rules/smart/{channel_id}",
+    "new_path": "/analytics/alerts/rules/smart/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Smart Alert Rules",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/rules/{channel_id}",
+    "new_path": "/analytics/alerts/rules/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Alert Rules",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/alerts/rules/{channel_id}",
+    "new_path": "/analytics/alerts/rules/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Create Alert Rule",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/analytics/alerts/rules/{channel_id}/{rule_id}",
+    "new_path": "/analytics/alerts/rules/{channel_id}/{rule_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Update Alert Rule",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/alerts/stats",
+    "new_path": "/analytics/alerts/stats",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Service Statistics",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/alerts/workflow/comprehensive/{channel_id}",
+    "new_path": "/analytics/alerts/workflow/comprehensive/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Comprehensive Alerts Workflow",
+    "tags": [
+      "Analytics - Alerts",
+      "analytics-alerts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/channels",
+    "new_path": "/analytics/channels",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Analytics Channels",
+    "tags": [
+      "Analytics - Channels",
+      "Analytics - Channels"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/channels/validate",
+    "new_path": "/analytics/channels/validate",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Validate Telegram Channel",
+    "tags": [
+      "Analytics - Channels",
+      "Analytics - Channels"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/engagement/channels/{channel_id}/audience",
+    "new_path": "/analytics/engagement/channels/{channel_id}/audience",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Channel Audience Insights",
+    "tags": [
+      "Analytics - Engagement",
+      "insights-engagement"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/engagement/channels/{channel_id}/engagement",
+    "new_path": "/analytics/engagement/channels/{channel_id}/engagement",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Channel Engagement Insights",
+    "tags": [
+      "Analytics - Engagement",
+      "insights-engagement"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/engagement/channels/{channel_id}/trending",
+    "new_path": "/analytics/engagement/channels/{channel_id}/trending",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Trending Content Analysis",
+    "tags": [
+      "Analytics - Engagement",
+      "insights-engagement"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/engagement/engagement-patterns/{channel_id}",
+    "new_path": "/analytics/engagement/engagement-patterns/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Engagement Patterns Analysis",
+    "tags": [
+      "Analytics - Engagement",
+      "insights-engagement"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/historical/growth/{channel_id}",
+    "new_path": "/analytics/historical/growth/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Channel Growth Statistics",
+    "tags": [
+      "Analytics - Historical",
+      "statistics-core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/historical/metrics/{channel_id}",
+    "new_path": "/analytics/historical/metrics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Historical Metrics",
+    "tags": [
+      "Analytics - Historical",
+      "statistics-core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/historical/overview/{channel_id}",
+    "new_path": "/analytics/historical/overview/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Channel Overview",
+    "tags": [
+      "Analytics - Historical",
+      "statistics-core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/historical/sources/{channel_id}",
+    "new_path": "/analytics/historical/sources/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Traffic Sources Statistics",
+    "tags": [
+      "Analytics - Historical",
+      "statistics-core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/historical/top-posts/{channel_id}",
+    "new_path": "/analytics/historical/top-posts/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Historical Top Posts",
+    "tags": [
+      "Analytics - Historical",
+      "statistics-core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/live/live-metrics/{channel_id}",
+    "new_path": "/analytics/live/live-metrics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Live Metrics Optimized",
+    "tags": [
+      "analytics-live (deprecated)",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/live/metrics/{channel_id}",
+    "new_path": "/analytics/live/metrics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Realtime Metrics",
+    "tags": [
+      "analytics-live (deprecated)",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/live/monitor/{channel_id}",
+    "new_path": "/analytics/live/monitor/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Live Monitoring Data",
+    "tags": [
+      "analytics-live (deprecated)",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/live/performance/{channel_id}",
+    "new_path": "/analytics/live/performance/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Performance Score",
+    "tags": [
+      "analytics-live (deprecated)",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/ml/ml/clear-cache",
+    "new_path": "/analytics/ml/ml/clear-cache",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Clear ML Cache",
+    "tags": [
+      "Analytics - ML",
+      "Machine Learning"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/ml/ml/health",
+    "new_path": "/analytics/ml/ml/health",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "ML Service Health",
+    "tags": [
+      "Analytics - ML",
+      "Machine Learning"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/ml/ml/predict-growth",
+    "new_path": "/analytics/ml/ml/predict-growth",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Predict Channel Growth",
+    "tags": [
+      "Analytics - ML",
+      "Machine Learning"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/ml/ml/task-status/{task_id}",
+    "new_path": "/analytics/ml/ml/task-status/{task_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Check ML Task Status",
+    "tags": [
+      "Analytics - ML",
+      "Machine Learning"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/orchestration/health",
+    "new_path": "/analytics/orchestration/health",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Orchestration Health",
+    "tags": [
+      "Analytics - Orchestration",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/orchestration/services",
+    "new_path": "/analytics/orchestration/services",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Available Services",
+    "tags": [
+      "Analytics - Orchestration",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/orchestration/workflows/comprehensive",
+    "new_path": "/analytics/orchestration/workflows/comprehensive",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Execute Comprehensive Analytics",
+    "tags": [
+      "Analytics - Orchestration",
+      "Analytics Orchestration v2"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/post-dynamics/post-dynamics/{channel_id}",
+    "new_path": "/analytics/post-dynamics/post-dynamics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Post Dynamics",
+    "tags": [
+      "analytics-post-dynamics (deprecated)",
+      "analytics-post-dynamics"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/posts/dynamics/post-dynamics/{channel_id}",
+    "new_path": "/analytics/posts/dynamics/post-dynamics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Post Dynamics",
+    "tags": [
+      "Analytics - Posts",
+      "analytics-post-dynamics"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/posts/top-posts/{channel_id}",
+    "new_path": "/analytics/posts/top-posts/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Top Posts",
+    "tags": [
+      "Analytics - Top Posts",
+      "analytics-top-posts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/posts/top-posts/{channel_id}/summary",
+    "new_path": "/analytics/posts/top-posts/{channel_id}/summary",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Top Posts Summary",
+    "tags": [
+      "Analytics - Top Posts",
+      "analytics-top-posts"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/best-times/{channel_id}",
+    "new_path": "/analytics/predictive/best-times/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Optimal Posting Times",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/predictive/forecast",
+    "new_path": "/analytics/predictive/forecast",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Generate Predictions",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/growth-forecast/{channel_id}",
+    "new_path": "/analytics/predictive/growth-forecast/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Growth Forecast",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/predictive/intelligence/contextual",
+    "new_path": "/analytics/predictive/intelligence/contextual",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Analyze Contextual Intelligence",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/predictive/intelligence/cross-channel",
+    "new_path": "/analytics/predictive/intelligence/cross-channel",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Analyze Cross Channel Intelligence",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/intelligence/health",
+    "new_path": "/analytics/predictive/intelligence/health",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Intelligence Health Status",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/intelligence/narrative/{channel_id}",
+    "new_path": "/analytics/predictive/intelligence/narrative/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Prediction Narrative",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/intelligence/temporal/{channel_id}",
+    "new_path": "/analytics/predictive/intelligence/temporal/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Discover Temporal Patterns",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/predictive/recommendations/{channel_id}",
+    "new_path": "/analytics/predictive/recommendations/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Ai Recommendations",
+    "tags": [
+      "Analytics - Predictive",
+      "insights-predictive"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/realtime/live-metrics/{channel_id}",
+    "new_path": "/analytics/realtime/live-metrics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Live Metrics Optimized",
+    "tags": [
+      "Analytics - Realtime",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/realtime/metrics/{channel_id}",
+    "new_path": "/analytics/realtime/metrics/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Realtime Metrics",
+    "tags": [
+      "Analytics - Realtime",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/realtime/monitor/{channel_id}",
+    "new_path": "/analytics/realtime/monitor/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Live Monitoring Data",
+    "tags": [
+      "Analytics - Realtime",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/realtime/performance/{channel_id}",
+    "new_path": "/analytics/realtime/performance/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Performance Score",
+    "tags": [
+      "Analytics - Realtime",
+      "analytics-live"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/reports/analytical/{channel_id}",
+    "new_path": "/analytics/reports/analytical/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Analytical Report",
+    "tags": [
+      "Analytics - Reports",
+      "statistics-reports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/reports/comparison/{channel_id}",
+    "new_path": "/analytics/reports/comparison/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Data Source Comparison",
+    "tags": [
+      "Analytics - Reports",
+      "statistics-reports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/reports/performance-summary/{channel_id}",
+    "new_path": "/analytics/reports/performance-summary/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Performance Summary Report",
+    "tags": [
+      "Analytics - Reports",
+      "statistics-reports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/reports/trends/top-posts",
+    "new_path": "/analytics/reports/trends/top-posts",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Get Top Posts Trends",
+    "tags": [
+      "Analytics - Reports",
+      "statistics-reports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/trends/trends/analyze/advanced",
+    "new_path": "/analytics/trends/trends/analyze/advanced",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Advanced Trend Analysis",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/trends/trends/detect/anomalies/{channel_id}",
+    "new_path": "/analytics/trends/trends/detect/anomalies/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Detect Anomalies",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/trends/trends/detect/changes/{channel_id}",
+    "new_path": "/analytics/trends/trends/detect/changes/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Detect Change Points",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/analytics/trends/trends/forecast",
+    "new_path": "/analytics/trends/trends/forecast",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Generate Trend Forecast",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/trends/trends/health",
+    "new_path": "/analytics/trends/trends/health",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Service Health Check",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/analytics/trends/trends/stats",
+    "new_path": "/analytics/trends/trends/stats",
+    "action": "KEEP",
+    "reason": "Already good - central analytics hub",
+    "summary": "Service Statistics",
+    "tags": [
+      "Analytics - Trends",
+      "Trend Analysis"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/login",
+    "new_path": "/auth/login",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Login",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/logout",
+    "new_path": "/auth/logout",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Logout",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/auth/me",
+    "new_path": "/auth/me",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Current User Profile",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/auth/mfa/status",
+    "new_path": "/auth/mfa/status",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Mfa Status",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/password/forgot",
+    "new_path": "/auth/password/forgot",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Forgot Password",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/password/reset",
+    "new_path": "/auth/password/reset",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Reset Password",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/auth/profile",
+    "new_path": "/auth/profile",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Update Profile",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/auth/profile/permissions",
+    "new_path": "/auth/profile/permissions",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get User Permissions",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/refresh",
+    "new_path": "/auth/refresh",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Refresh Token",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/register",
+    "new_path": "/auth/register",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Register",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/auth/telegram/callback",
+    "new_path": "/auth/telegram/callback",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Telegram Callback",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/telegram/link",
+    "new_path": "/auth/telegram/link",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Link Telegram Account",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/telegram/login",
+    "new_path": "/auth/telegram/login",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Telegram Login",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/telegram/webapp",
+    "new_path": "/auth/telegram/webapp",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Telegram Webapp Login",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/auth/verify-telegram",
+    "new_path": "/auth/verify-telegram",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Verify Telegram",
+    "tags": [
+      "Authentication"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/channels/",
+    "new_path": "/channels/",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Get User Channels",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/channels/",
+    "new_path": "/channels/",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Create Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/channels/admin-status/check-all",
+    "new_path": "/channels/admin-status/check-all",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Check All Channels Admin Status",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/channels/statistics/overview",
+    "new_path": "/channels/statistics/overview",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Get Channels Statistics Overview",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/channels/validate",
+    "new_path": "/channels/validate",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Validate Telegram Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/channels/{channel_id}",
+    "new_path": "/channels/{channel_id}",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Get Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "PUT",
+    "current_path": "/channels/{channel_id}",
+    "new_path": "/channels/{channel_id}",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Update Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/channels/{channel_id}",
+    "new_path": "/channels/{channel_id}",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Delete Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/channels/{channel_id}/activate",
+    "new_path": "/channels/{channel_id}/activate",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Activate Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/channels/{channel_id}/deactivate",
+    "new_path": "/channels/{channel_id}/deactivate",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Deactivate Channel",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/channels/{channel_id}/status",
+    "new_path": "/channels/{channel_id}/status",
+    "action": "KEEP",
+    "reason": "New microservice - already follows Option A",
+    "summary": "Get Channel Status",
+    "tags": [
+      "Channel Management"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content/protection/custom-emoji",
+    "new_path": "/content/protection/custom-emoji",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Format Custom Emoji Message",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content/protection/files/{filename}",
+    "new_path": "/content/protection/files/{filename}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Download Protected File",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content/protection/premium-features/{tier}",
+    "new_path": "/content/protection/premium-features/{tier}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Premium Features",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content/protection/theft-detection",
+    "new_path": "/content/protection/theft-detection",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Detect Content Theft",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/content/protection/usage/{user_id}",
+    "new_path": "/content/protection/usage/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Feature Usage",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content/protection/watermark/image",
+    "new_path": "/content/protection/watermark/image",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Add Image Watermark",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/content/protection/watermark/video",
+    "new_path": "/content/protection/watermark/video",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Add Video Watermark",
+    "tags": [
+      "Content - Protection",
+      "Content Protection"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/",
+    "new_path": "/demo/",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Project Showcase",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/ai/recommendations",
+    "new_path": "/demo/ai/recommendations",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Demo Ai Recommendations",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/analytics/best-times",
+    "new_path": "/demo/analytics/best-times",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Demo Best Posting Times",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/analytics/post-dynamics",
+    "new_path": "/demo/analytics/post-dynamics",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Demo Post Dynamics",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/analytics/top-posts",
+    "new_path": "/demo/analytics/top-posts",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Demo Top Posts",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/architecture/clean-demo",
+    "new_path": "/demo/architecture/clean-demo",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Demonstrate Clean Architecture",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/demo/health",
+    "new_path": "/demo/health",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Demo Health Check",
+    "tags": [
+      "Project Demo"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/csv/growth/{channel_id}",
+    "new_path": "/exports/csv/growth/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Growth Csv",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/csv/overview/{channel_id}",
+    "new_path": "/exports/csv/overview/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Overview Csv",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/csv/reach/{channel_id}",
+    "new_path": "/exports/csv/reach/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Reach Csv",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/csv/sources/{channel_id}",
+    "new_path": "/exports/csv/sources/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Sources Csv",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/health",
+    "new_path": "/exports/health",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Health Check",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/png/growth/{channel_id}",
+    "new_path": "/exports/png/growth/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Growth Chart",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/png/reach/{channel_id}",
+    "new_path": "/exports/png/reach/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Reach Chart",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/png/sources/{channel_id}",
+    "new_path": "/exports/png/sources/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Sources Chart",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/exports/status",
+    "new_path": "/exports/status",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Export Status",
+    "tags": [
+      "Exports"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/",
+    "new_path": "/health/",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Basic Health Check",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/debug",
+    "new_path": "/health/debug",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Debug Information",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/detailed",
+    "new_path": "/health/detailed",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Detailed Health Check",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/live",
+    "new_path": "/health/live",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Liveness Probe",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/metrics",
+    "new_path": "/health/metrics",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Performance Metrics",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/ready",
+    "new_path": "/health/ready",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Readiness Probe",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/startup",
+    "new_path": "/health/startup",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Startup Health Report",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/health/trends",
+    "new_path": "/health/trends",
+    "action": "KEEP",
+    "reason": "Health checks at root - standard practice",
+    "summary": "Health Trends Analysis",
+    "tags": [
+      "Health Monitoring"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/mobile/analytics/quick",
+    "new_path": "/mobile/analytics/quick",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Quick Analytics",
+    "tags": [
+      "Mobile"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/mobile/dashboard/{user_id}",
+    "new_path": "/mobile/dashboard/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Mobile Dashboard",
+    "tags": [
+      "Mobile"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/mobile/metrics/summary/{channel_id}",
+    "new_path": "/mobile/metrics/summary/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Metrics Summary",
+    "tags": [
+      "Mobile"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payments/analytics/stats",
+    "new_path": "/payments/analytics/stats",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Get Payment Stats",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payments/health",
+    "new_path": "/payments/health",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Payment System Health",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payments/methods",
+    "new_path": "/payments/methods",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Create Payment Method",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payments/methods/{user_id}",
+    "new_path": "/payments/methods/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Get User Payment Methods",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payments/process",
+    "new_path": "/payments/process",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Process Payment",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payments/subscriptions",
+    "new_path": "/payments/subscriptions",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Create Subscription",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/payments/subscriptions/{user_id}",
+    "new_path": "/payments/subscriptions/{user_id}",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Get User Subscription",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/payments/webhooks/{provider}",
+    "new_path": "/payments/webhooks/{provider}",
+    "action": "KEEP",
+    "reason": "Already good structure (correct plural)",
+    "summary": "Process Webhook",
+    "tags": [
+      "Payments",
+      "payment"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/share/cleanup",
+    "new_path": "/share/cleanup",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Cleanup Expired Shares",
+    "tags": [
+      "Sharing"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/share/create/{report_type}/{channel_id}",
+    "new_path": "/share/create/{report_type}/{channel_id}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Create Share Link",
+    "tags": [
+      "Sharing"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/share/info/{share_token}",
+    "new_path": "/share/info/{share_token}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Get Share Info",
+    "tags": [
+      "Sharing"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/share/report/{share_token}",
+    "new_path": "/share/report/{share_token}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Access Shared Report",
+    "tags": [
+      "Sharing"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/share/revoke/{share_token}",
+    "new_path": "/share/revoke/{share_token}",
+    "action": "KEEP",
+    "reason": "Already good structure",
+    "summary": "Revoke Share Link",
+    "tags": [
+      "Sharing"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/media/storage",
+    "new_path": "/media/storage",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "List Storage Files",
+    "tags": [
+      "Media"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/media/upload",
+    "new_path": "/media/upload",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Upload Media",
+    "tags": [
+      "Media"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/media/{file_id}",
+    "new_path": "/media/{file_id}",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Delete Media",
+    "tags": [
+      "Media"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/delivery/stats",
+    "new_path": "/system/delivery/stats",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Get Delivery Stats",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/initial-data",
+    "new_path": "/system/initial-data",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Application Startup Data",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/performance",
+    "new_path": "/system/performance",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Performance Metrics",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/system/schedule",
+    "new_path": "/system/schedule",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Create Scheduled Post",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/schedule/user/{user_id}",
+    "new_path": "/system/schedule/user/{user_id}",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Get User Scheduled Posts",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/schedule/{post_id}",
+    "new_path": "/system/schedule/{post_id}",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Get Scheduled Post",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "DELETE",
+    "current_path": "/system/schedule/{post_id}",
+    "new_path": "/system/schedule/{post_id}",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Delete Scheduled Post",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "POST",
+    "current_path": "/system/send",
+    "new_path": "/system/send",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Send Post Now",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  },
+  {
+    "method": "GET",
+    "current_path": "/system/service-info",
+    "new_path": "/system/service-info",
+    "action": "REVIEW",
+    "reason": "No migration rule defined - needs review",
+    "summary": "Get Service Information",
+    "tags": [
+      "Core"
+    ],
+    "priority": "LOW"
+  }
+]

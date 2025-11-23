@@ -2,16 +2,8 @@ import React, { useState, useEffect, SyntheticEvent } from 'react';
 import {
     Box,
     Container,
-    Typography,
-    Paper,
-    Grid,
-    Card,
-    CardContent
+    Paper
 } from '@mui/material';
-import {
-    TrendingUp as TrendingIcon,
-    Analytics as AnalyticsIcon
-} from '@mui/icons-material';
 
 // Import refactored components
 import SummaryStatsGrid from './SummaryStatsGrid';
@@ -215,69 +207,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
 
                     {/* Chart Component */}
                     <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <TrendingIcon color="primary" />
-                            Post View Dynamics - Last 30 Days
-                        </Typography>
                         <PostViewDynamicsChart />
-                    </Paper>
-
-                    {/* Phase 2.1 Features Showcase */}
-                    <Paper sx={{ p: 3 }}>
-                        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <AnalyticsIcon color="primary" />
-                            Phase 2.1 Week 2 - Key Features
-                        </Typography>
-
-                        <Grid container spacing={2}>
-                            <Grid item xs={12} md={4}>
-                                <Card variant="outlined" sx={{ height: '100%' }}>
-                                    <CardContent>
-                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                                            <span aria-hidden="true">📊</span> Interactive Charts
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            • Real-time data visualization
-                                            <br />• Performance trends analysis
-                                            <br />• Custom date range selection
-                                            <br />• Multiple chart types support
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-
-                            <Grid item xs={12} md={4}>
-                                <Card variant="outlined" sx={{ height: '100%' }}>
-                                    <CardContent>
-                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'success.main' }}>
-                                            <span aria-hidden="true">🏆</span> Analytics Overview
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            • Comprehensive posts ranking
-                                            <br />• Engagement rate calculations
-                                            <br />• Performance badges
-                                            <br />• Detailed metrics table
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-
-                            <Grid item xs={12} md={4}>
-                                <Card variant="outlined" sx={{ height: '100%' }}>
-                                    <CardContent>
-                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold', color: 'warning.main' }}>
-                                            <span aria-hidden="true">🤖</span> AI Recommendations
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            • Machine learning time predictions
-                                            <br />• Confidence-based scoring
-                                            <br />• Weekly performance insights
-                                            <br />• Smart posting schedule
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
                     </Paper>
                 </TabPanel>
 

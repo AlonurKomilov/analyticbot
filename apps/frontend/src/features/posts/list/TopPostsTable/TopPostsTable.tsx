@@ -40,14 +40,6 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
 
     return (
         <Paper sx={{ p: 3, borderRadius: 2 }}>
-            {/* Filters */}
-            <PostTableFilters
-                timeFilter={timeFilter as any}
-                setTimeFilter={setTimeFilter as any}
-                sortBy={sortBy as any}
-                setSortBy={setSortBy as any}
-            />
-
             {/* Error State */}
             {error && (
                 <Alert
@@ -59,8 +51,16 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
                 </Alert>
             )}
 
-            {/* Summary Statistics */}
+            {/* Summary Statistics with Heading */}
             <PostSummaryStats summaryStats={summaryStats as any} />
+
+            {/* Filters */}
+            <PostTableFilters
+                timeFilter={timeFilter as any}
+                setTimeFilter={setTimeFilter as any}
+                sortBy={sortBy as any}
+                setSortBy={setSortBy as any}
+            />
 
             {/* Enhanced Data Table */}
             <Box sx={{ mt: 3 }}>

@@ -24,7 +24,10 @@ const PostSummaryStats: React.FC<PostSummaryStatsProps> = ({ summaryStats }) => 
     if (!summaryStats) return null;
 
     return (
-        <section aria-labelledby="summary-stats-title" style={{ marginBottom: '24px' }}>
+        <section aria-labelledby="summary-stats-title">
+            <Typography variant="h6" component="h2" sx={{ mb: 2, fontWeight: 600 }}>
+                Top Posts Analytics
+            </Typography>
             <Typography variant="h3" id="summary-stats-title" className="sr-only">
                 Posts Summary Statistics
             </Typography>

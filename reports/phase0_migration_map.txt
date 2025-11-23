@@ -1,0 +1,1978 @@
+========================================================================================================================
+PHASE 0: ENDPOINT MIGRATION MAP (Option A - Flat Resources)
+Target: https://api.analyticbot.org/{resource}/{action}
+========================================================================================================================
+
+
+========================================================================================================================
+DEPRECATE - 1 endpoints
+========================================================================================================================
+
+GET    /api/channels/{channel_id}/posts
+       → WILL BE REMOVED
+       Reason: Old endpoint - replaced by /channels microservice
+       Summary: Get Channel Posts
+       Priority: HIGH
+
+
+========================================================================================================================
+REDIRECT - 34 endpoints
+========================================================================================================================
+
+POST   /ai-chat/ask
+       → NEW: /ai/ask
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Ask Question
+       Priority: HIGH
+
+GET    /ai-chat/health
+       → NEW: /ai/health
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Service Health
+       Priority: HIGH
+
+GET    /ai-chat/history/{channel_id}
+       → NEW: /ai/history/{channel_id}
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Chat History
+       Priority: HIGH
+
+POST   /ai-chat/insights/quick
+       → NEW: /ai/insights/quick
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Quick Insight
+       Priority: HIGH
+
+GET    /ai-chat/questions/suggested/{channel_id}
+       → NEW: /ai/questions/suggested/{channel_id}
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Suggested Questions
+       Priority: HIGH
+
+GET    /ai-chat/stats
+       → NEW: /ai/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Service Stats
+       Priority: HIGH
+
+POST   /ai-insights/analyze/comprehensive
+       → NEW: /ai/analyze/comprehensive
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Analyze Comprehensive Insights
+       Priority: HIGH
+
+POST   /ai-insights/analyze/core
+       → NEW: /ai/analyze/core
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Analyze Core Insights
+       Priority: HIGH
+
+POST   /ai-insights/analyze/patterns
+       → NEW: /ai/analyze/patterns
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Analyze Patterns
+       Priority: HIGH
+
+POST   /ai-insights/analyze/predictions
+       → NEW: /ai/analyze/predictions
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Analyze Predictions
+       Priority: HIGH
+
+GET    /ai-insights/health
+       → NEW: /ai/health
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Service Health
+       Priority: HIGH
+
+GET    /ai-insights/stats
+       → NEW: /ai/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Service Stats
+       Priority: HIGH
+
+POST   /ai-services/churn/analyze
+       → NEW: /ai/churn/analyze
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Predict Churn
+       Priority: HIGH
+
+GET    /ai-services/churn/stats
+       → NEW: /ai/churn/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Churn Predictor Stats
+       Priority: HIGH
+
+POST   /ai-services/content/analyze
+       → NEW: /ai/content/analyze
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Optimize Content
+       Priority: HIGH
+
+GET    /ai-services/content/stats
+       → NEW: /ai/content/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Content Optimizer Stats
+       Priority: HIGH
+
+POST   /ai-services/security/analyze
+       → NEW: /ai/security/analyze
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Analyze Security
+       Priority: HIGH
+
+GET    /ai-services/security/stats
+       → NEW: /ai/security/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get Security Monitor Stats
+       Priority: HIGH
+
+GET    /ai-services/stats
+       → NEW: /ai/stats
+       Reason: Consolidate AI endpoints under /ai
+       Summary: Get All Stats
+       Priority: HIGH
+
+POST   /content-protection/custom-emoji
+       → NEW: /content/custom-emoji
+       Reason: Consolidate content endpoints
+       Summary: Format Custom Emoji Message
+       Priority: HIGH
+
+GET    /content-protection/files/{filename}
+       → NEW: /content/files/{filename}
+       Reason: Consolidate content endpoints
+       Summary: Download Protected File
+       Priority: HIGH
+
+GET    /content-protection/premium-features/{tier}
+       → NEW: /content/premium-features/{tier}
+       Reason: Consolidate content endpoints
+       Summary: Get Premium Features
+       Priority: HIGH
+
+POST   /content-protection/theft-detection
+       → NEW: /content/theft-detection
+       Reason: Consolidate content endpoints
+       Summary: Detect Content Theft
+       Priority: HIGH
+
+GET    /content-protection/usage/{user_id}
+       → NEW: /content/usage/{user_id}
+       Reason: Consolidate content endpoints
+       Summary: Get Feature Usage
+       Priority: HIGH
+
+POST   /content-protection/watermark/image
+       → NEW: /content/watermark/image
+       Reason: Consolidate content endpoints
+       Summary: Add Image Watermark
+       Priority: HIGH
+
+POST   /content-protection/watermark/video
+       → NEW: /content/watermark/video
+       Reason: Consolidate content endpoints
+       Summary: Add Video Watermark
+       Priority: HIGH
+
+GET    /payment/analytics/stats
+       → NEW: /payments/analytics/stats
+       Reason: Remove duplicate - use /payments
+       Summary: Get Payment Stats
+       Priority: HIGH
+
+GET    /payment/health
+       → NEW: /payments/health
+       Reason: Remove duplicate - use /payments
+       Summary: Payment System Health
+       Priority: HIGH
+
+POST   /payment/methods
+       → NEW: /payments/methods
+       Reason: Remove duplicate - use /payments
+       Summary: Create Payment Method
+       Priority: HIGH
+
+GET    /payment/methods/{user_id}
+       → NEW: /payments/methods/{user_id}
+       Reason: Remove duplicate - use /payments
+       Summary: Get User Payment Methods
+       Priority: HIGH
+
+POST   /payment/process
+       → NEW: /payments/process
+       Reason: Remove duplicate - use /payments
+       Summary: Process Payment
+       Priority: HIGH
+
+POST   /payment/subscriptions
+       → NEW: /payments/subscriptions
+       Reason: Remove duplicate - use /payments
+       Summary: Create Subscription
+       Priority: HIGH
+
+GET    /payment/subscriptions/{user_id}
+       → NEW: /payments/subscriptions/{user_id}
+       Reason: Remove duplicate - use /payments
+       Summary: Get User Subscription
+       Priority: HIGH
+
+POST   /payment/webhooks/{provider}
+       → NEW: /payments/webhooks/{provider}
+       Reason: Remove duplicate - use /payments
+       Summary: Process Webhook
+       Priority: HIGH
+
+
+========================================================================================================================
+MOVE - 109 endpoints
+========================================================================================================================
+
+GET    /api/admin/bots/list
+       → NEW: /admin/bots/bots/list
+       Reason: Consolidate under /admin
+       Summary: List All Bots
+       Priority: MEDIUM
+
+POST   /api/admin/bots/{user_id}/access
+       → NEW: /admin/bots/bots/{user_id}/access
+       Reason: Consolidate under /admin
+       Summary: Access User Bot
+       Priority: MEDIUM
+
+PATCH  /api/admin/bots/{user_id}/activate
+       → NEW: /admin/bots/bots/{user_id}/activate
+       Reason: Consolidate under /admin
+       Summary: Activate Bot
+       Priority: MEDIUM
+
+PATCH  /api/admin/bots/{user_id}/rate-limit
+       → NEW: /admin/bots/bots/{user_id}/rate-limit
+       Reason: Consolidate under /admin
+       Summary: Update Bot Rate Limit
+       Priority: MEDIUM
+
+GET    /api/admin/bots/{user_id}/status
+       → NEW: /admin/bots/bots/{user_id}/status
+       Reason: Consolidate under /admin
+       Summary: Get User Bot Status
+       Priority: MEDIUM
+
+PATCH  /api/admin/bots/{user_id}/suspend
+       → NEW: /admin/bots/bots/{user_id}/suspend
+       Reason: Consolidate under /admin
+       Summary: Suspend Bot
+       Priority: MEDIUM
+
+GET    /api/posts
+       → NEW: /posts
+       Reason: Remove /api prefix
+       Summary: Get All Posts
+       Priority: MEDIUM
+
+GET    /api/posts/debug/current-user
+       → NEW: /posts/debug/current-user
+       Reason: Remove /api prefix
+       Summary: Debug Current User
+       Priority: MEDIUM
+
+GET    /api/posts/{channel_id}/{msg_id}
+       → NEW: /posts/{channel_id}/{msg_id}
+       Reason: Remove /api prefix
+       Summary: Get Post
+       Priority: MEDIUM
+
+GET    /api/storage/channels
+       → NEW: /storage/channels
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Get user's storage channels
+       Priority: MEDIUM
+
+POST   /api/storage/channels/connect
+       → NEW: /storage/channels/connect
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Connect a Telegram channel for storage
+       Priority: MEDIUM
+
+POST   /api/storage/channels/validate
+       → NEW: /storage/channels/validate
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Validate a Telegram channel for storage use
+       Priority: MEDIUM
+
+DELETE /api/storage/channels/{channel_id}
+       → NEW: /storage/channels/{channel_id}
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Disconnect a storage channel
+       Priority: MEDIUM
+
+GET    /api/storage/files
+       → NEW: /storage/files
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: List files in Telegram storage
+       Priority: MEDIUM
+
+GET    /api/storage/files/{media_id}
+       → NEW: /storage/files/{media_id}
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Get file metadata
+       Priority: MEDIUM
+
+DELETE /api/storage/files/{media_id}
+       → NEW: /storage/files/{media_id}
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Delete file from storage
+       Priority: MEDIUM
+
+POST   /api/storage/files/{media_id}/forward
+       → NEW: /storage/files/{media_id}/forward
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Forward file to another channel
+       Priority: MEDIUM
+
+GET    /api/storage/files/{media_id}/url
+       → NEW: /storage/files/{media_id}/url
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Get file download URL
+       Priority: MEDIUM
+
+POST   /api/storage/upload
+       → NEW: /storage/upload
+       Reason: Remove /api prefix (subdomain routing)
+       Summary: Upload file to Telegram storage
+       Priority: MEDIUM
+
+POST   /api/user-bot/create
+       → NEW: /user-bots/create
+       Reason: Remove /api prefix
+       Summary: Create User Bot
+       Priority: MEDIUM
+
+PUT    /api/user-bot/rate-limits
+       → NEW: /user-bots/rate-limits
+       Reason: Remove /api prefix
+       Summary: Update Rate Limits
+       Priority: MEDIUM
+
+POST   /api/user-bot/refresh-info
+       → NEW: /user-bots/refresh-info
+       Reason: Remove /api prefix
+       Summary: Refresh Bot Info
+       Priority: MEDIUM
+
+DELETE /api/user-bot/remove
+       → NEW: /user-bots/remove
+       Reason: Remove /api prefix
+       Summary: Remove Bot
+       Priority: MEDIUM
+
+GET    /api/user-bot/status
+       → NEW: /user-bots/status
+       Reason: Remove /api prefix
+       Summary: Get Bot Status
+       Priority: MEDIUM
+
+POST   /api/user-bot/verify
+       → NEW: /user-bots/verify
+       Reason: Remove /api prefix
+       Summary: Verify Bot
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/channels/settings
+       → NEW: /user-sessions/channels/settings
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get All Channel Settings
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/channels/{channel_id}/settings
+       → NEW: /user-sessions/channels/{channel_id}/settings
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get Channel Setting
+       Priority: MEDIUM
+
+DELETE /api/user-mtproto/channels/{channel_id}/settings
+       → NEW: /user-sessions/channels/{channel_id}/settings
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Delete Channel Setting
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/channels/{channel_id}/toggle
+       → NEW: /user-sessions/channels/{channel_id}/toggle
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Toggle Channel Mtproto
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/connect
+       → NEW: /user-sessions/connect
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Connect Mtproto
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/disconnect
+       → NEW: /user-sessions/disconnect
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Disconnect Mtproto
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/monitoring/channels
+       → NEW: /user-sessions/monitoring/channels
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get per-channel collection statistics
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/monitoring/collection-progress
+       → NEW: /user-sessions/monitoring/collection-progress
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get collection progress statistics
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/monitoring/overview
+       → NEW: /user-sessions/monitoring/overview
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get comprehensive MTProto monitoring overview
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/monitoring/session-health
+       → NEW: /user-sessions/monitoring/session-health
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get MTProto session health status
+       Priority: MEDIUM
+
+DELETE /api/user-mtproto/remove
+       → NEW: /user-sessions/remove
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Remove Mtproto
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/resend
+       → NEW: /user-sessions/resend
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Resend Mtproto Code
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/setup
+       → NEW: /user-sessions/setup
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Setup Mtproto
+       Priority: MEDIUM
+
+GET    /api/user-mtproto/status
+       → NEW: /user-sessions/status
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Get Mtproto Status
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/toggle
+       → NEW: /user-sessions/toggle
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Toggle Mtproto
+       Priority: MEDIUM
+
+POST   /api/user-mtproto/verify
+       → NEW: /user-sessions/verify
+       Reason: Remove /api prefix + rename for clarity
+       Summary: Verify Mtproto
+       Priority: MEDIUM
+
+GET    /auth/admin/user-roles
+       → NEW: /admin/auth/user-roles
+       Reason: Consolidate admin operations
+       Summary: Get Role Hierarchy
+       Priority: MEDIUM
+
+POST   /competitive/competitive/analyze/intelligence
+       → NEW: /analytics/competitive/analyze/intelligence
+       Reason: Flatten nested path
+       Summary: Generate Competitive Intelligence
+       Priority: MEDIUM
+
+GET    /competitive/competitive/comparison/{channel_id}
+       → NEW: /analytics/competitive/comparison/{channel_id}
+       Reason: Flatten nested path
+       Summary: Get Performance Comparison
+       Priority: MEDIUM
+
+POST   /competitive/competitive/discover/competitors
+       → NEW: /analytics/competitive/discover/competitors
+       Reason: Flatten nested path
+       Summary: Discover Competitor Channels
+       Priority: MEDIUM
+
+GET    /competitive/competitive/health
+       → NEW: /analytics/competitive/health
+       Reason: Flatten nested path
+       Summary: Service Health Check
+       Priority: MEDIUM
+
+POST   /competitive/competitive/profile/channel
+       → NEW: /analytics/competitive/profile/channel
+       Reason: Flatten nested path
+       Summary: Get Channel Profile
+       Priority: MEDIUM
+
+GET    /competitive/competitive/stats
+       → NEW: /analytics/competitive/stats
+       Reason: Flatten nested path
+       Summary: Service Statistics
+       Priority: MEDIUM
+
+GET    /insights/engagement/channels/{channel_id}/audience
+       → NEW: /analytics/insights/engagement/channels/{channel_id}/audience
+       Reason: Consolidate analytics
+       Summary: Get Channel Audience Insights
+       Priority: MEDIUM
+
+GET    /insights/engagement/channels/{channel_id}/engagement
+       → NEW: /analytics/insights/engagement/channels/{channel_id}/engagement
+       Reason: Consolidate analytics
+       Summary: Get Channel Engagement Insights
+       Priority: MEDIUM
+
+GET    /insights/engagement/channels/{channel_id}/trending
+       → NEW: /analytics/insights/engagement/channels/{channel_id}/trending
+       Reason: Consolidate analytics
+       Summary: Get Trending Content Analysis
+       Priority: MEDIUM
+
+GET    /insights/engagement/engagement-patterns/{channel_id}
+       → NEW: /analytics/insights/engagement/engagement-patterns/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Engagement Patterns Analysis
+       Priority: MEDIUM
+
+GET    /insights/orchestration/health
+       → NEW: /analytics/insights/orchestration/health
+       Reason: Consolidate analytics
+       Summary: Get Orchestration Health
+       Priority: MEDIUM
+
+GET    /insights/orchestration/services
+       → NEW: /analytics/insights/orchestration/services
+       Reason: Consolidate analytics
+       Summary: Get Available Services
+       Priority: MEDIUM
+
+POST   /insights/orchestration/workflows/comprehensive
+       → NEW: /analytics/insights/orchestration/workflows/comprehensive
+       Reason: Consolidate analytics
+       Summary: Execute Comprehensive Analytics
+       Priority: MEDIUM
+
+GET    /insights/predictive/best-times/{channel_id}
+       → NEW: /analytics/insights/predictive/best-times/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Optimal Posting Times
+       Priority: MEDIUM
+
+POST   /insights/predictive/forecast
+       → NEW: /analytics/insights/predictive/forecast
+       Reason: Consolidate analytics
+       Summary: Generate Predictions
+       Priority: MEDIUM
+
+GET    /insights/predictive/growth-forecast/{channel_id}
+       → NEW: /analytics/insights/predictive/growth-forecast/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Growth Forecast
+       Priority: MEDIUM
+
+POST   /insights/predictive/intelligence/contextual
+       → NEW: /analytics/insights/predictive/intelligence/contextual
+       Reason: Consolidate analytics
+       Summary: Analyze Contextual Intelligence
+       Priority: MEDIUM
+
+POST   /insights/predictive/intelligence/cross-channel
+       → NEW: /analytics/insights/predictive/intelligence/cross-channel
+       Reason: Consolidate analytics
+       Summary: Analyze Cross Channel Intelligence
+       Priority: MEDIUM
+
+GET    /insights/predictive/intelligence/health
+       → NEW: /analytics/insights/predictive/intelligence/health
+       Reason: Consolidate analytics
+       Summary: Get Intelligence Health Status
+       Priority: MEDIUM
+
+GET    /insights/predictive/intelligence/narrative/{channel_id}
+       → NEW: /analytics/insights/predictive/intelligence/narrative/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Prediction Narrative
+       Priority: MEDIUM
+
+GET    /insights/predictive/intelligence/temporal/{channel_id}
+       → NEW: /analytics/insights/predictive/intelligence/temporal/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Discover Temporal Patterns
+       Priority: MEDIUM
+
+GET    /insights/predictive/recommendations/{channel_id}
+       → NEW: /analytics/insights/predictive/recommendations/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Ai Recommendations
+       Priority: MEDIUM
+
+POST   /ml/ml/clear-cache
+       → NEW: /ai/ml/clear-cache
+       Reason: Flatten nested path + consolidate to AI
+       Summary: Clear ML Cache
+       Priority: MEDIUM
+
+GET    /ml/ml/health
+       → NEW: /ai/ml/health
+       Reason: Flatten nested path + consolidate to AI
+       Summary: ML Service Health
+       Priority: MEDIUM
+
+POST   /ml/ml/predict-growth
+       → NEW: /ai/ml/predict-growth
+       Reason: Flatten nested path + consolidate to AI
+       Summary: Predict Channel Growth
+       Priority: MEDIUM
+
+GET    /ml/ml/task-status/{task_id}
+       → NEW: /ai/ml/task-status/{task_id}
+       Reason: Flatten nested path + consolidate to AI
+       Summary: Check ML Task Status
+       Priority: MEDIUM
+
+POST   /optimization/optimization/analyze/performance
+       → NEW: /analytics/optimization/analyze/performance
+       Reason: Flatten nested path
+       Summary: Analyze Performance
+       Priority: MEDIUM
+
+POST   /optimization/optimization/apply
+       → NEW: /analytics/optimization/apply
+       Reason: Flatten nested path
+       Summary: Apply Optimizations
+       Priority: MEDIUM
+
+POST   /optimization/optimization/cycle/execute
+       → NEW: /analytics/optimization/cycle/execute
+       Reason: Flatten nested path
+       Summary: Execute Optimization Cycle
+       Priority: MEDIUM
+
+GET    /optimization/optimization/health
+       → NEW: /analytics/optimization/health
+       Reason: Flatten nested path
+       Summary: Get Service Health
+       Priority: MEDIUM
+
+GET    /optimization/optimization/recommendations/channel/{channel_id}
+       → NEW: /analytics/optimization/recommendations/channel/{channel_id}
+       Reason: Flatten nested path
+       Summary: Get Channel Recommendations
+       Priority: MEDIUM
+
+POST   /optimization/optimization/recommendations/generate
+       → NEW: /analytics/optimization/recommendations/generate
+       Reason: Flatten nested path
+       Summary: Generate Recommendations
+       Priority: MEDIUM
+
+GET    /optimization/optimization/stats
+       → NEW: /analytics/optimization/stats
+       Reason: Flatten nested path
+       Summary: Get Service Stats
+       Priority: MEDIUM
+
+POST   /optimization/optimization/validate
+       → NEW: /analytics/optimization/validate
+       Reason: Flatten nested path
+       Summary: Validate Optimization
+       Priority: MEDIUM
+
+GET    /statistics/core/growth/{channel_id}
+       → NEW: /analytics/statistics/core/growth/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Channel Growth Statistics
+       Priority: MEDIUM
+
+GET    /statistics/core/metrics/{channel_id}
+       → NEW: /analytics/statistics/core/metrics/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Historical Metrics
+       Priority: MEDIUM
+
+GET    /statistics/core/overview/{channel_id}
+       → NEW: /analytics/statistics/core/overview/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Channel Overview
+       Priority: MEDIUM
+
+GET    /statistics/core/sources/{channel_id}
+       → NEW: /analytics/statistics/core/sources/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Traffic Sources Statistics
+       Priority: MEDIUM
+
+GET    /statistics/core/top-posts/{channel_id}
+       → NEW: /analytics/statistics/core/top-posts/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Historical Top Posts
+       Priority: MEDIUM
+
+GET    /statistics/reports/analytical/{channel_id}
+       → NEW: /analytics/statistics/reports/analytical/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Analytical Report
+       Priority: MEDIUM
+
+GET    /statistics/reports/comparison/{channel_id}
+       → NEW: /analytics/statistics/reports/comparison/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Data Source Comparison
+       Priority: MEDIUM
+
+GET    /statistics/reports/performance-summary/{channel_id}
+       → NEW: /analytics/statistics/reports/performance-summary/{channel_id}
+       Reason: Consolidate analytics
+       Summary: Get Performance Summary Report
+       Priority: MEDIUM
+
+GET    /statistics/reports/trends/top-posts
+       → NEW: /analytics/statistics/reports/trends/top-posts
+       Reason: Consolidate analytics
+       Summary: Get Top Posts Trends
+       Priority: MEDIUM
+
+POST   /strategy/strategy/analyze/effectiveness
+       → NEW: /analytics/strategy/analyze/effectiveness
+       Reason: Flatten nested path
+       Summary: Analyze Strategy Effectiveness
+       Priority: MEDIUM
+
+POST   /strategy/strategy/generate/narrative
+       → NEW: /analytics/strategy/generate/narrative
+       Reason: Flatten nested path
+       Summary: Generate Strategy Narrative
+       Priority: MEDIUM
+
+GET    /strategy/strategy/health
+       → NEW: /analytics/strategy/health
+       Reason: Flatten nested path
+       Summary: Get Service Health
+       Priority: MEDIUM
+
+POST   /strategy/strategy/roadmap/generate
+       → NEW: /analytics/strategy/roadmap/generate
+       Reason: Flatten nested path
+       Summary: Generate Implementation Roadmap
+       Priority: MEDIUM
+
+GET    /strategy/strategy/stats
+       → NEW: /analytics/strategy/stats
+       Reason: Flatten nested path
+       Summary: Get Service Stats
+       Priority: MEDIUM
+
+POST   /strategy/strategy/tips/quick
+       → NEW: /analytics/strategy/tips/quick
+       Reason: Flatten nested path
+       Summary: Get Quick Strategy Tips
+       Priority: MEDIUM
+
+GET    /superadmin/superadmin/audit-logs
+       → NEW: /admin/super/audit-logs
+       Reason: Flatten nested path
+       Summary: Get Audit Logs
+       Priority: MEDIUM
+
+POST   /superadmin/superadmin/auth/login
+       → NEW: /admin/super/auth/login
+       Reason: Flatten nested path
+       Summary: Admin Login
+       Priority: MEDIUM
+
+POST   /superadmin/superadmin/auth/logout
+       → NEW: /admin/super/auth/logout
+       Reason: Flatten nested path
+       Summary: Admin Logout
+       Priority: MEDIUM
+
+GET    /superadmin/superadmin/config
+       → NEW: /admin/super/config
+       Reason: Flatten nested path
+       Summary: Get System Config
+       Priority: MEDIUM
+
+PUT    /superadmin/superadmin/config/{key}
+       → NEW: /admin/super/config/{key}
+       Reason: Flatten nested path
+       Summary: Update System Config
+       Priority: MEDIUM
+
+GET    /superadmin/superadmin/stats
+       → NEW: /admin/super/stats
+       Reason: Flatten nested path
+       Summary: Get System Stats
+       Priority: MEDIUM
+
+GET    /superadmin/superadmin/users
+       → NEW: /admin/super/users
+       Reason: Flatten nested path
+       Summary: Get System Users
+       Priority: MEDIUM
+
+POST   /superadmin/superadmin/users/{user_id}/reactivate
+       → NEW: /admin/super/users/{user_id}/reactivate
+       Reason: Flatten nested path
+       Summary: Reactivate User
+       Priority: MEDIUM
+
+POST   /superadmin/superadmin/users/{user_id}/suspend
+       → NEW: /admin/super/users/{user_id}/suspend
+       Reason: Flatten nested path
+       Summary: Suspend User
+       Priority: MEDIUM
+
+POST   /trends/trends/analyze/advanced
+       → NEW: /analytics/trends/analyze/advanced
+       Reason: Flatten nested path
+       Summary: Advanced Trend Analysis
+       Priority: MEDIUM
+
+GET    /trends/trends/detect/anomalies/{channel_id}
+       → NEW: /analytics/trends/detect/anomalies/{channel_id}
+       Reason: Flatten nested path
+       Summary: Detect Anomalies
+       Priority: MEDIUM
+
+GET    /trends/trends/detect/changes/{channel_id}
+       → NEW: /analytics/trends/detect/changes/{channel_id}
+       Reason: Flatten nested path
+       Summary: Detect Change Points
+       Priority: MEDIUM
+
+POST   /trends/trends/forecast
+       → NEW: /analytics/trends/forecast
+       Reason: Flatten nested path
+       Summary: Generate Trend Forecast
+       Priority: MEDIUM
+
+GET    /trends/trends/health
+       → NEW: /analytics/trends/health
+       Reason: Flatten nested path
+       Summary: Service Health Check
+       Priority: MEDIUM
+
+GET    /trends/trends/stats
+       → NEW: /analytics/trends/stats
+       Reason: Flatten nested path
+       Summary: Service Statistics
+       Priority: MEDIUM
+
+POST   /webhook/{user_id}
+       → NEW: /webhooks/{user_id}
+       Reason: Plural for consistency
+       Summary: Receive Telegram Webhook
+       Priority: MEDIUM
+
+GET    /webhook/{user_id}/info
+       → NEW: /webhooks/{user_id}/info
+       Reason: Plural for consistency
+       Summary: Get Webhook Status
+       Priority: MEDIUM
+
+POST   /webhook/{user_id}/test
+       → NEW: /webhooks/{user_id}/test
+       Reason: Plural for consistency
+       Summary: Test Webhook
+       Priority: MEDIUM
+
+
+========================================================================================================================
+KEEP - 205 endpoints
+========================================================================================================================
+
+GET    /admin/channels
+       Reason: Already good - will be central admin hub
+       Summary: Get All Channels
+       Priority: LOW
+
+DELETE /admin/channels/{channel_id}
+       Reason: Already good - will be central admin hub
+       Summary: Delete Channel Admin
+       Priority: LOW
+
+POST   /admin/channels/{channel_id}/suspend
+       Reason: Already good - will be central admin hub
+       Summary: Suspend Channel
+       Priority: LOW
+
+POST   /admin/channels/{channel_id}/unsuspend
+       Reason: Already good - will be central admin hub
+       Summary: Unsuspend Channel
+       Priority: LOW
+
+GET    /admin/super/superadmin/audit-logs
+       Reason: Already good - will be central admin hub
+       Summary: Get Audit Logs
+       Priority: LOW
+
+POST   /admin/super/superadmin/auth/login
+       Reason: Already good - will be central admin hub
+       Summary: Admin Login
+       Priority: LOW
+
+POST   /admin/super/superadmin/auth/logout
+       Reason: Already good - will be central admin hub
+       Summary: Admin Logout
+       Priority: LOW
+
+GET    /admin/super/superadmin/config
+       Reason: Already good - will be central admin hub
+       Summary: Get System Config
+       Priority: LOW
+
+PUT    /admin/super/superadmin/config/{key}
+       Reason: Already good - will be central admin hub
+       Summary: Update System Config
+       Priority: LOW
+
+GET    /admin/super/superadmin/stats
+       Reason: Already good - will be central admin hub
+       Summary: Get System Stats
+       Priority: LOW
+
+GET    /admin/super/superadmin/users
+       Reason: Already good - will be central admin hub
+       Summary: Get System Users
+       Priority: LOW
+
+POST   /admin/super/superadmin/users/{user_id}/reactivate
+       Reason: Already good - will be central admin hub
+       Summary: Reactivate User
+       Priority: LOW
+
+POST   /admin/super/superadmin/users/{user_id}/suspend
+       Reason: Already good - will be central admin hub
+       Summary: Suspend User
+       Priority: LOW
+
+GET    /admin/system/audit/recent
+       Reason: Already good - will be central admin hub
+       Summary: Get Recent Admin Actions
+       Priority: LOW
+
+GET    /admin/system/bot-health/history/{user_id}
+       Reason: Already good - will be central admin hub
+       Summary: Get Bot Health History
+       Priority: LOW
+
+POST   /admin/system/bot-health/persist-now
+       Reason: Already good - will be central admin hub
+       Summary: Persist Health Metrics Now
+       Priority: LOW
+
+GET    /admin/system/bot-health/summary
+       Reason: Already good - will be central admin hub
+       Summary: Get Bot Health Summary
+       Priority: LOW
+
+GET    /admin/system/bot-health/unhealthy
+       Reason: Already good - will be central admin hub
+       Summary: Get Unhealthy Bots
+       Priority: LOW
+
+GET    /admin/system/bot-health/unhealthy-history
+       Reason: Already good - will be central admin hub
+       Summary: Get Unhealthy Bot History
+       Priority: LOW
+
+GET    /admin/system/bot-health/{user_id}
+       Reason: Already good - will be central admin hub
+       Summary: Get Bot Health Metrics
+       Priority: LOW
+
+GET    /admin/system/circuit-breakers/summary
+       Reason: Already good - will be central admin hub
+       Summary: Get Circuit Breakers Summary
+       Priority: LOW
+
+GET    /admin/system/circuit-breakers/{user_id}
+       Reason: Already good - will be central admin hub
+       Summary: Get Circuit Breaker State
+       Priority: LOW
+
+POST   /admin/system/circuit-breakers/{user_id}/reset
+       Reason: Already good - will be central admin hub
+       Summary: Reset Circuit Breaker
+       Priority: LOW
+
+GET    /admin/system/health
+       Reason: Already good - will be central admin hub
+       Summary: Get System Health
+       Priority: LOW
+
+GET    /admin/system/mtproto/pool/config
+       Reason: Already good - will be central admin hub
+       Summary: Get Mtproto Pool Config
+       Priority: LOW
+
+PUT    /admin/system/mtproto/pool/config
+       Reason: Already good - will be central admin hub
+       Summary: Update Mtproto Pool Config
+       Priority: LOW
+
+GET    /admin/system/mtproto/pool/status
+       Reason: Already good - will be central admin hub
+       Summary: Get Mtproto Pool Status
+       Priority: LOW
+
+GET    /admin/system/rate-limiter/stats
+       Reason: Already good - will be central admin hub
+       Summary: Get Rate Limiter Statistics
+       Priority: LOW
+
+GET    /admin/system/retry-statistics
+       Reason: Already good - will be central admin hub
+       Summary: Get Retry Statistics
+       Priority: LOW
+
+POST   /admin/system/retry-statistics/reset
+       Reason: Already good - will be central admin hub
+       Summary: Reset Retry Statistics
+       Priority: LOW
+
+GET    /admin/system/stats
+       Reason: Already good - will be central admin hub
+       Summary: Get System Statistics
+       Priority: LOW
+
+POST   /admin/system/token/validate
+       Reason: Already good - will be central admin hub
+       Summary: Validate Token
+       Priority: LOW
+
+GET    /admin/users/{user_id}/channels
+       Reason: Already good - will be central admin hub
+       Summary: Get User Channels Admin
+       Priority: LOW
+
+POST   /ai/chat/ask
+       Reason: Already good - will be central AI hub
+       Summary: Ask Question
+       Priority: LOW
+
+GET    /ai/chat/health
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Health
+       Priority: LOW
+
+GET    /ai/chat/history/{channel_id}
+       Reason: Already good - will be central AI hub
+       Summary: Get Chat History
+       Priority: LOW
+
+POST   /ai/chat/insights/quick
+       Reason: Already good - will be central AI hub
+       Summary: Get Quick Insight
+       Priority: LOW
+
+GET    /ai/chat/questions/suggested/{channel_id}
+       Reason: Already good - will be central AI hub
+       Summary: Get Suggested Questions
+       Priority: LOW
+
+GET    /ai/chat/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Stats
+       Priority: LOW
+
+POST   /ai/competitive/competitive/analyze/intelligence
+       Reason: Already good - will be central AI hub
+       Summary: Generate Competitive Intelligence
+       Priority: LOW
+
+GET    /ai/competitive/competitive/comparison/{channel_id}
+       Reason: Already good - will be central AI hub
+       Summary: Get Performance Comparison
+       Priority: LOW
+
+POST   /ai/competitive/competitive/discover/competitors
+       Reason: Already good - will be central AI hub
+       Summary: Discover Competitor Channels
+       Priority: LOW
+
+GET    /ai/competitive/competitive/health
+       Reason: Already good - will be central AI hub
+       Summary: Service Health Check
+       Priority: LOW
+
+POST   /ai/competitive/competitive/profile/channel
+       Reason: Already good - will be central AI hub
+       Summary: Get Channel Profile
+       Priority: LOW
+
+GET    /ai/competitive/competitive/stats
+       Reason: Already good - will be central AI hub
+       Summary: Service Statistics
+       Priority: LOW
+
+POST   /ai/insights/analyze/comprehensive
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Comprehensive Insights
+       Priority: LOW
+
+POST   /ai/insights/analyze/core
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Core Insights
+       Priority: LOW
+
+POST   /ai/insights/analyze/patterns
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Patterns
+       Priority: LOW
+
+POST   /ai/insights/analyze/predictions
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Predictions
+       Priority: LOW
+
+GET    /ai/insights/health
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Health
+       Priority: LOW
+
+GET    /ai/insights/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Stats
+       Priority: LOW
+
+POST   /ai/optimization/optimization/analyze/performance
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Performance
+       Priority: LOW
+
+POST   /ai/optimization/optimization/apply
+       Reason: Already good - will be central AI hub
+       Summary: Apply Optimizations
+       Priority: LOW
+
+POST   /ai/optimization/optimization/cycle/execute
+       Reason: Already good - will be central AI hub
+       Summary: Execute Optimization Cycle
+       Priority: LOW
+
+GET    /ai/optimization/optimization/health
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Health
+       Priority: LOW
+
+GET    /ai/optimization/optimization/recommendations/channel/{channel_id}
+       Reason: Already good - will be central AI hub
+       Summary: Get Channel Recommendations
+       Priority: LOW
+
+POST   /ai/optimization/optimization/recommendations/generate
+       Reason: Already good - will be central AI hub
+       Summary: Generate Recommendations
+       Priority: LOW
+
+GET    /ai/optimization/optimization/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Stats
+       Priority: LOW
+
+POST   /ai/optimization/optimization/validate
+       Reason: Already good - will be central AI hub
+       Summary: Validate Optimization
+       Priority: LOW
+
+POST   /ai/services/churn/analyze
+       Reason: Already good - will be central AI hub
+       Summary: Predict Churn
+       Priority: LOW
+
+GET    /ai/services/churn/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Churn Predictor Stats
+       Priority: LOW
+
+POST   /ai/services/content/analyze
+       Reason: Already good - will be central AI hub
+       Summary: Optimize Content
+       Priority: LOW
+
+GET    /ai/services/content/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Content Optimizer Stats
+       Priority: LOW
+
+POST   /ai/services/security/analyze
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Security
+       Priority: LOW
+
+GET    /ai/services/security/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Security Monitor Stats
+       Priority: LOW
+
+GET    /ai/services/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get All Stats
+       Priority: LOW
+
+POST   /ai/strategy/strategy/analyze/effectiveness
+       Reason: Already good - will be central AI hub
+       Summary: Analyze Strategy Effectiveness
+       Priority: LOW
+
+POST   /ai/strategy/strategy/generate/narrative
+       Reason: Already good - will be central AI hub
+       Summary: Generate Strategy Narrative
+       Priority: LOW
+
+GET    /ai/strategy/strategy/health
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Health
+       Priority: LOW
+
+POST   /ai/strategy/strategy/roadmap/generate
+       Reason: Already good - will be central AI hub
+       Summary: Generate Implementation Roadmap
+       Priority: LOW
+
+GET    /ai/strategy/strategy/stats
+       Reason: Already good - will be central AI hub
+       Summary: Get Service Stats
+       Priority: LOW
+
+POST   /ai/strategy/strategy/tips/quick
+       Reason: Already good - will be central AI hub
+       Summary: Get Quick Strategy Tips
+       Priority: LOW
+
+POST   /analytics/alerts/check/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Check Channel Alerts
+       Priority: LOW
+
+POST   /analytics/alerts/competitive/monitor
+       Reason: Already good - central analytics hub
+       Summary: Competitive Monitoring
+       Priority: LOW
+
+GET    /analytics/alerts/health
+       Reason: Already good - central analytics hub
+       Summary: Service Health Check
+       Priority: LOW
+
+GET    /analytics/alerts/history/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Alert History
+       Priority: LOW
+
+GET    /analytics/alerts/monitor/live/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Live Monitoring
+       Priority: LOW
+
+GET    /analytics/alerts/rules/smart/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Smart Alert Rules
+       Priority: LOW
+
+GET    /analytics/alerts/rules/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Alert Rules
+       Priority: LOW
+
+POST   /analytics/alerts/rules/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Create Alert Rule
+       Priority: LOW
+
+PUT    /analytics/alerts/rules/{channel_id}/{rule_id}
+       Reason: Already good - central analytics hub
+       Summary: Update Alert Rule
+       Priority: LOW
+
+GET    /analytics/alerts/stats
+       Reason: Already good - central analytics hub
+       Summary: Service Statistics
+       Priority: LOW
+
+POST   /analytics/alerts/workflow/comprehensive/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Comprehensive Alerts Workflow
+       Priority: LOW
+
+GET    /analytics/channels
+       Reason: Already good - central analytics hub
+       Summary: Get Analytics Channels
+       Priority: LOW
+
+POST   /analytics/channels/validate
+       Reason: Already good - central analytics hub
+       Summary: Validate Telegram Channel
+       Priority: LOW
+
+GET    /analytics/engagement/channels/{channel_id}/audience
+       Reason: Already good - central analytics hub
+       Summary: Get Channel Audience Insights
+       Priority: LOW
+
+GET    /analytics/engagement/channels/{channel_id}/engagement
+       Reason: Already good - central analytics hub
+       Summary: Get Channel Engagement Insights
+       Priority: LOW
+
+GET    /analytics/engagement/channels/{channel_id}/trending
+       Reason: Already good - central analytics hub
+       Summary: Get Trending Content Analysis
+       Priority: LOW
+
+GET    /analytics/engagement/engagement-patterns/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Engagement Patterns Analysis
+       Priority: LOW
+
+GET    /analytics/historical/growth/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Channel Growth Statistics
+       Priority: LOW
+
+GET    /analytics/historical/metrics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Historical Metrics
+       Priority: LOW
+
+GET    /analytics/historical/overview/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Channel Overview
+       Priority: LOW
+
+GET    /analytics/historical/sources/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Traffic Sources Statistics
+       Priority: LOW
+
+GET    /analytics/historical/top-posts/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Historical Top Posts
+       Priority: LOW
+
+GET    /analytics/live/live-metrics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Live Metrics Optimized
+       Priority: LOW
+
+GET    /analytics/live/metrics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Realtime Metrics
+       Priority: LOW
+
+GET    /analytics/live/monitor/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Live Monitoring Data
+       Priority: LOW
+
+GET    /analytics/live/performance/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Performance Score
+       Priority: LOW
+
+POST   /analytics/ml/ml/clear-cache
+       Reason: Already good - central analytics hub
+       Summary: Clear ML Cache
+       Priority: LOW
+
+GET    /analytics/ml/ml/health
+       Reason: Already good - central analytics hub
+       Summary: ML Service Health
+       Priority: LOW
+
+POST   /analytics/ml/ml/predict-growth
+       Reason: Already good - central analytics hub
+       Summary: Predict Channel Growth
+       Priority: LOW
+
+GET    /analytics/ml/ml/task-status/{task_id}
+       Reason: Already good - central analytics hub
+       Summary: Check ML Task Status
+       Priority: LOW
+
+GET    /analytics/orchestration/health
+       Reason: Already good - central analytics hub
+       Summary: Get Orchestration Health
+       Priority: LOW
+
+GET    /analytics/orchestration/services
+       Reason: Already good - central analytics hub
+       Summary: Get Available Services
+       Priority: LOW
+
+POST   /analytics/orchestration/workflows/comprehensive
+       Reason: Already good - central analytics hub
+       Summary: Execute Comprehensive Analytics
+       Priority: LOW
+
+GET    /analytics/post-dynamics/post-dynamics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Post Dynamics
+       Priority: LOW
+
+GET    /analytics/posts/dynamics/post-dynamics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Post Dynamics
+       Priority: LOW
+
+GET    /analytics/posts/top-posts/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Top Posts
+       Priority: LOW
+
+GET    /analytics/posts/top-posts/{channel_id}/summary
+       Reason: Already good - central analytics hub
+       Summary: Get Top Posts Summary
+       Priority: LOW
+
+GET    /analytics/predictive/best-times/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Optimal Posting Times
+       Priority: LOW
+
+POST   /analytics/predictive/forecast
+       Reason: Already good - central analytics hub
+       Summary: Generate Predictions
+       Priority: LOW
+
+GET    /analytics/predictive/growth-forecast/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Growth Forecast
+       Priority: LOW
+
+POST   /analytics/predictive/intelligence/contextual
+       Reason: Already good - central analytics hub
+       Summary: Analyze Contextual Intelligence
+       Priority: LOW
+
+POST   /analytics/predictive/intelligence/cross-channel
+       Reason: Already good - central analytics hub
+       Summary: Analyze Cross Channel Intelligence
+       Priority: LOW
+
+GET    /analytics/predictive/intelligence/health
+       Reason: Already good - central analytics hub
+       Summary: Get Intelligence Health Status
+       Priority: LOW
+
+GET    /analytics/predictive/intelligence/narrative/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Prediction Narrative
+       Priority: LOW
+
+GET    /analytics/predictive/intelligence/temporal/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Discover Temporal Patterns
+       Priority: LOW
+
+GET    /analytics/predictive/recommendations/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Ai Recommendations
+       Priority: LOW
+
+GET    /analytics/realtime/live-metrics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Live Metrics Optimized
+       Priority: LOW
+
+GET    /analytics/realtime/metrics/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Realtime Metrics
+       Priority: LOW
+
+GET    /analytics/realtime/monitor/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Live Monitoring Data
+       Priority: LOW
+
+GET    /analytics/realtime/performance/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Performance Score
+       Priority: LOW
+
+GET    /analytics/reports/analytical/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Analytical Report
+       Priority: LOW
+
+GET    /analytics/reports/comparison/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Data Source Comparison
+       Priority: LOW
+
+GET    /analytics/reports/performance-summary/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Get Performance Summary Report
+       Priority: LOW
+
+GET    /analytics/reports/trends/top-posts
+       Reason: Already good - central analytics hub
+       Summary: Get Top Posts Trends
+       Priority: LOW
+
+POST   /analytics/trends/trends/analyze/advanced
+       Reason: Already good - central analytics hub
+       Summary: Advanced Trend Analysis
+       Priority: LOW
+
+GET    /analytics/trends/trends/detect/anomalies/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Detect Anomalies
+       Priority: LOW
+
+GET    /analytics/trends/trends/detect/changes/{channel_id}
+       Reason: Already good - central analytics hub
+       Summary: Detect Change Points
+       Priority: LOW
+
+POST   /analytics/trends/trends/forecast
+       Reason: Already good - central analytics hub
+       Summary: Generate Trend Forecast
+       Priority: LOW
+
+GET    /analytics/trends/trends/health
+       Reason: Already good - central analytics hub
+       Summary: Service Health Check
+       Priority: LOW
+
+GET    /analytics/trends/trends/stats
+       Reason: Already good - central analytics hub
+       Summary: Service Statistics
+       Priority: LOW
+
+POST   /auth/login
+       Reason: Already good structure
+       Summary: Login
+       Priority: LOW
+
+POST   /auth/logout
+       Reason: Already good structure
+       Summary: Logout
+       Priority: LOW
+
+GET    /auth/me
+       Reason: Already good structure
+       Summary: Get Current User Profile
+       Priority: LOW
+
+GET    /auth/mfa/status
+       Reason: Already good structure
+       Summary: Get Mfa Status
+       Priority: LOW
+
+POST   /auth/password/forgot
+       Reason: Already good structure
+       Summary: Forgot Password
+       Priority: LOW
+
+POST   /auth/password/reset
+       Reason: Already good structure
+       Summary: Reset Password
+       Priority: LOW
+
+PUT    /auth/profile
+       Reason: Already good structure
+       Summary: Update Profile
+       Priority: LOW
+
+GET    /auth/profile/permissions
+       Reason: Already good structure
+       Summary: Get User Permissions
+       Priority: LOW
+
+POST   /auth/refresh
+       Reason: Already good structure
+       Summary: Refresh Token
+       Priority: LOW
+
+POST   /auth/register
+       Reason: Already good structure
+       Summary: Register
+       Priority: LOW
+
+GET    /auth/telegram/callback
+       Reason: Already good structure
+       Summary: Telegram Callback
+       Priority: LOW
+
+POST   /auth/telegram/link
+       Reason: Already good structure
+       Summary: Link Telegram Account
+       Priority: LOW
+
+POST   /auth/telegram/login
+       Reason: Already good structure
+       Summary: Telegram Login
+       Priority: LOW
+
+POST   /auth/telegram/webapp
+       Reason: Already good structure
+       Summary: Telegram Webapp Login
+       Priority: LOW
+
+POST   /auth/verify-telegram
+       Reason: Already good structure
+       Summary: Verify Telegram
+       Priority: LOW
+
+GET    /channels/
+       Reason: New microservice - already follows Option A
+       Summary: Get User Channels
+       Priority: LOW
+
+POST   /channels/
+       Reason: New microservice - already follows Option A
+       Summary: Create Channel
+       Priority: LOW
+
+GET    /channels/admin-status/check-all
+       Reason: New microservice - already follows Option A
+       Summary: Check All Channels Admin Status
+       Priority: LOW
+
+GET    /channels/statistics/overview
+       Reason: New microservice - already follows Option A
+       Summary: Get Channels Statistics Overview
+       Priority: LOW
+
+POST   /channels/validate
+       Reason: New microservice - already follows Option A
+       Summary: Validate Telegram Channel
+       Priority: LOW
+
+GET    /channels/{channel_id}
+       Reason: New microservice - already follows Option A
+       Summary: Get Channel
+       Priority: LOW
+
+PUT    /channels/{channel_id}
+       Reason: New microservice - already follows Option A
+       Summary: Update Channel
+       Priority: LOW
+
+DELETE /channels/{channel_id}
+       Reason: New microservice - already follows Option A
+       Summary: Delete Channel
+       Priority: LOW
+
+POST   /channels/{channel_id}/activate
+       Reason: New microservice - already follows Option A
+       Summary: Activate Channel
+       Priority: LOW
+
+POST   /channels/{channel_id}/deactivate
+       Reason: New microservice - already follows Option A
+       Summary: Deactivate Channel
+       Priority: LOW
+
+GET    /channels/{channel_id}/status
+       Reason: New microservice - already follows Option A
+       Summary: Get Channel Status
+       Priority: LOW
+
+POST   /content/protection/custom-emoji
+       Reason: Already good structure
+       Summary: Format Custom Emoji Message
+       Priority: LOW
+
+GET    /content/protection/files/{filename}
+       Reason: Already good structure
+       Summary: Download Protected File
+       Priority: LOW
+
+GET    /content/protection/premium-features/{tier}
+       Reason: Already good structure
+       Summary: Get Premium Features
+       Priority: LOW
+
+POST   /content/protection/theft-detection
+       Reason: Already good structure
+       Summary: Detect Content Theft
+       Priority: LOW
+
+GET    /content/protection/usage/{user_id}
+       Reason: Already good structure
+       Summary: Get Feature Usage
+       Priority: LOW
+
+POST   /content/protection/watermark/image
+       Reason: Already good structure
+       Summary: Add Image Watermark
+       Priority: LOW
+
+POST   /content/protection/watermark/video
+       Reason: Already good structure
+       Summary: Add Video Watermark
+       Priority: LOW
+
+GET    /demo/
+       Reason: Already good structure
+       Summary: Get Project Showcase
+       Priority: LOW
+
+GET    /demo/ai/recommendations
+       Reason: Already good structure
+       Summary: Get Demo Ai Recommendations
+       Priority: LOW
+
+GET    /demo/analytics/best-times
+       Reason: Already good structure
+       Summary: Get Demo Best Posting Times
+       Priority: LOW
+
+GET    /demo/analytics/post-dynamics
+       Reason: Already good structure
+       Summary: Get Demo Post Dynamics
+       Priority: LOW
+
+GET    /demo/analytics/top-posts
+       Reason: Already good structure
+       Summary: Get Demo Top Posts
+       Priority: LOW
+
+GET    /demo/architecture/clean-demo
+       Reason: Already good structure
+       Summary: Demonstrate Clean Architecture
+       Priority: LOW
+
+GET    /demo/health
+       Reason: Already good structure
+       Summary: Demo Health Check
+       Priority: LOW
+
+GET    /exports/csv/growth/{channel_id}
+       Reason: Already good structure
+       Summary: Export Growth Csv
+       Priority: LOW
+
+GET    /exports/csv/overview/{channel_id}
+       Reason: Already good structure
+       Summary: Export Overview Csv
+       Priority: LOW
+
+GET    /exports/csv/reach/{channel_id}
+       Reason: Already good structure
+       Summary: Export Reach Csv
+       Priority: LOW
+
+GET    /exports/csv/sources/{channel_id}
+       Reason: Already good structure
+       Summary: Export Sources Csv
+       Priority: LOW
+
+GET    /exports/health
+       Reason: Already good structure
+       Summary: Health Check
+       Priority: LOW
+
+GET    /exports/png/growth/{channel_id}
+       Reason: Already good structure
+       Summary: Export Growth Chart
+       Priority: LOW
+
+GET    /exports/png/reach/{channel_id}
+       Reason: Already good structure
+       Summary: Export Reach Chart
+       Priority: LOW
+
+GET    /exports/png/sources/{channel_id}
+       Reason: Already good structure
+       Summary: Export Sources Chart
+       Priority: LOW
+
+GET    /exports/status
+       Reason: Already good structure
+       Summary: Export Status
+       Priority: LOW
+
+GET    /health/
+       Reason: Health checks at root - standard practice
+       Summary: Basic Health Check
+       Priority: LOW
+
+GET    /health/debug
+       Reason: Health checks at root - standard practice
+       Summary: Debug Information
+       Priority: LOW
+
+GET    /health/detailed
+       Reason: Health checks at root - standard practice
+       Summary: Detailed Health Check
+       Priority: LOW
+
+GET    /health/live
+       Reason: Health checks at root - standard practice
+       Summary: Liveness Probe
+       Priority: LOW
+
+GET    /health/metrics
+       Reason: Health checks at root - standard practice
+       Summary: Performance Metrics
+       Priority: LOW
+
+GET    /health/ready
+       Reason: Health checks at root - standard practice
+       Summary: Readiness Probe
+       Priority: LOW
+
+GET    /health/startup
+       Reason: Health checks at root - standard practice
+       Summary: Startup Health Report
+       Priority: LOW
+
+GET    /health/trends
+       Reason: Health checks at root - standard practice
+       Summary: Health Trends Analysis
+       Priority: LOW
+
+POST   /mobile/analytics/quick
+       Reason: Already good structure
+       Summary: Get Quick Analytics
+       Priority: LOW
+
+GET    /mobile/dashboard/{user_id}
+       Reason: Already good structure
+       Summary: Get Mobile Dashboard
+       Priority: LOW
+
+GET    /mobile/metrics/summary/{channel_id}
+       Reason: Already good structure
+       Summary: Get Metrics Summary
+       Priority: LOW
+
+GET    /payments/analytics/stats
+       Reason: Already good structure (correct plural)
+       Summary: Get Payment Stats
+       Priority: LOW
+
+GET    /payments/health
+       Reason: Already good structure (correct plural)
+       Summary: Payment System Health
+       Priority: LOW
+
+POST   /payments/methods
+       Reason: Already good structure (correct plural)
+       Summary: Create Payment Method
+       Priority: LOW
+
+GET    /payments/methods/{user_id}
+       Reason: Already good structure (correct plural)
+       Summary: Get User Payment Methods
+       Priority: LOW
+
+POST   /payments/process
+       Reason: Already good structure (correct plural)
+       Summary: Process Payment
+       Priority: LOW
+
+POST   /payments/subscriptions
+       Reason: Already good structure (correct plural)
+       Summary: Create Subscription
+       Priority: LOW
+
+GET    /payments/subscriptions/{user_id}
+       Reason: Already good structure (correct plural)
+       Summary: Get User Subscription
+       Priority: LOW
+
+POST   /payments/webhooks/{provider}
+       Reason: Already good structure (correct plural)
+       Summary: Process Webhook
+       Priority: LOW
+
+GET    /share/cleanup
+       Reason: Already good structure
+       Summary: Cleanup Expired Shares
+       Priority: LOW
+
+POST   /share/create/{report_type}/{channel_id}
+       Reason: Already good structure
+       Summary: Create Share Link
+       Priority: LOW
+
+GET    /share/info/{share_token}
+       Reason: Already good structure
+       Summary: Get Share Info
+       Priority: LOW
+
+GET    /share/report/{share_token}
+       Reason: Already good structure
+       Summary: Access Shared Report
+       Priority: LOW
+
+DELETE /share/revoke/{share_token}
+       Reason: Already good structure
+       Summary: Revoke Share Link
+       Priority: LOW
+
+
+========================================================================================================================
+REVIEW - 12 endpoints
+========================================================================================================================
+
+GET    /media/storage
+       Reason: No migration rule defined - needs review
+       Summary: List Storage Files
+       Priority: LOW
+
+POST   /media/upload
+       Reason: No migration rule defined - needs review
+       Summary: Upload Media
+       Priority: LOW
+
+DELETE /media/{file_id}
+       Reason: No migration rule defined - needs review
+       Summary: Delete Media
+       Priority: LOW
+
+GET    /system/delivery/stats
+       Reason: No migration rule defined - needs review
+       Summary: Get Delivery Stats
+       Priority: LOW
+
+GET    /system/initial-data
+       Reason: No migration rule defined - needs review
+       Summary: Application Startup Data
+       Priority: LOW
+
+GET    /system/performance
+       Reason: No migration rule defined - needs review
+       Summary: Performance Metrics
+       Priority: LOW
+
+POST   /system/schedule
+       Reason: No migration rule defined - needs review
+       Summary: Create Scheduled Post
+       Priority: LOW
+
+GET    /system/schedule/user/{user_id}
+       Reason: No migration rule defined - needs review
+       Summary: Get User Scheduled Posts
+       Priority: LOW
+
+GET    /system/schedule/{post_id}
+       Reason: No migration rule defined - needs review
+       Summary: Get Scheduled Post
+       Priority: LOW
+
+DELETE /system/schedule/{post_id}
+       Reason: No migration rule defined - needs review
+       Summary: Delete Scheduled Post
+       Priority: LOW
+
+POST   /system/send
+       Reason: No migration rule defined - needs review
+       Summary: Send Post Now
+       Priority: LOW
+
+GET    /system/service-info
+       Reason: No migration rule defined - needs review
+       Summary: Get Service Information
+       Priority: LOW

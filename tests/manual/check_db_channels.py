@@ -29,11 +29,13 @@ async def main():
 
     # Check for any channel with similar name
     print("\n🔍 Searching for 'ABC LEGACY NEWS' or ID 100267887654...")
-    abc_channels = await conn.fetch("""
+    abc_channels = await conn.fetch(
+        """
         SELECT id, user_id, title, username
         FROM channels
         WHERE title ILIKE '%ABC%LEGACY%' OR title ILIKE '%ABC%NEWS%' OR id = 100267887654
-    """)
+    """
+    )
 
     if abc_channels:
         print("Found matches:")
@@ -50,13 +52,15 @@ async def main():
     print(f"\n📊 Total posts in database: {posts_count}")
 
     if posts_count > 0:
-        sample = await conn.fetch("""
+        sample = await conn.fetch(
+            """
             SELECT channel_id, COUNT(*) as count
             FROM posts
             GROUP BY channel_id
             ORDER BY count DESC
             LIMIT 5
-        """)
+        """
+        )
         print("\nTop channels by posts:")
         for s in sample:
             print(f"  Channel {s['channel_id']}: {s['count']} posts")

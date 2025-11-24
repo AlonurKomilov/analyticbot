@@ -239,5 +239,5 @@ class GPUConfigService:
             "status": "healthy" if device_working else "unhealthy",
             "device_working": device_working,
             "device_info": self.get_device_info(),
-            "memory_limit_mb": self.memory_limit / (1024 * 1024) if self.memory_limit else None,
+            "memory_limit_mb": (self.memory_limit / (1024 * 1024) if self.memory_limit else None),
         }

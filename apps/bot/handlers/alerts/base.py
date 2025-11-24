@@ -4,6 +4,7 @@ Shared imports, utilities, and helper functions
 """
 
 import logging
+
 from aiogram.types import CallbackQuery, Message
 
 from core.repositories.alert_repository import AlertSubscription

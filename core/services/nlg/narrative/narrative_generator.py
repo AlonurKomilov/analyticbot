@@ -398,9 +398,11 @@ class NarrativeGenerator:
                         "deviation": analytics_data.get("deviation", 0),
                         "metric": analytics_data.get("metric", "engagement"),
                         "change": analytics_data.get("change_percent", 0),
-                        "direction": "increased"
-                        if analytics_data.get("change_percent", 0) > 0
-                        else "decreased",
+                        "direction": (
+                            "increased"
+                            if analytics_data.get("change_percent", 0) > 0
+                            else "decreased"
+                        ),
                     }
                 )
 
@@ -519,5 +521,8 @@ class NarrativeGenerator:
                 "recommendation_generation",
                 "severity_assessment",
             ],
-            "dependencies": {"template_manager": "initialized", "formatter": "initialized"},
+            "dependencies": {
+                "template_manager": "initialized",
+                "formatter": "initialized",
+            },
         }

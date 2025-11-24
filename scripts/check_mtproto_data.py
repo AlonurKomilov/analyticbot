@@ -34,11 +34,13 @@ async def check_data():
 
         # Check MTProto settings
         print("\n⚙️  MTProto Settings:")
-        mtproto_settings = await conn.fetch("""
+        mtproto_settings = await conn.fetch(
+            """
             SELECT channel_id, is_enabled, collection_mode, user_id
             FROM channel_mtproto_settings
             WHERE is_enabled = true
-        """)
+        """
+        )
         print(f"  Enabled MTProto channels: {len(mtproto_settings)}")
         for setting in mtproto_settings:
             print(
@@ -51,12 +53,14 @@ async def check_data():
         print(f"  Total posts: {posts_count}")
 
         if posts_count > 0:
-            recent_posts = await conn.fetch("""
+            recent_posts = await conn.fetch(
+                """
                 SELECT channel_id, msg_id, date, LEFT(text, 50) as text_preview
                 FROM posts
                 ORDER BY date DESC
                 LIMIT 5
-            """)
+            """
+            )
             print("  Recent posts:")
             for post in recent_posts:
                 print(
@@ -71,12 +75,14 @@ async def check_data():
 
         if metrics_count > 0:
             # Check recent metrics
-            recent_metrics = await conn.fetch("""
+            recent_metrics = await conn.fetch(
+                """
                 SELECT channel_id, msg_id, views, forwards, reactions, snapshot_time
                 FROM post_metrics
                 ORDER BY snapshot_time DESC
                 LIMIT 10
-            """)
+            """
+            )
             print("  Recent metrics snapshots:")
             for m in recent_metrics:
                 print(f"    - Channel {m['channel_id']}, msg_id={m['msg_id']}")
@@ -86,14 +92,16 @@ async def check_data():
                 print(f"      Time: {m['snapshot_time']}")
 
             # Check metrics by channel
-            metrics_by_channel = await conn.fetch("""
+            metrics_by_channel = await conn.fetch(
+                """
                 SELECT channel_id, COUNT(*) as metric_count,
                        MAX(snapshot_time) as last_snapshot,
                        MIN(snapshot_time) as first_snapshot
                 FROM post_metrics
                 GROUP BY channel_id
                 ORDER BY metric_count DESC
-            """)
+            """
+            )
             print("\n  Metrics by channel:")
             for mc in metrics_by_channel:
                 print(f"    - Channel {mc['channel_id']}: {mc['metric_count']} snapshots")
@@ -109,7 +117,8 @@ async def check_data():
         print("  - history_collector (historical data)")
 
         # Check ABC LEGACY NEWS specifically (from the screenshot)
-        abc_channel = await conn.fetchrow("""
+        abc_channel = await conn.fetchrow(
+            """
             SELECT c.id, c.title, c.username,
                    m.is_enabled, m.collection_mode,
                    (SELECT COUNT(*) FROM posts WHERE channel_id = c.id) as post_count,
@@ -118,7 +127,8 @@ async def check_data():
             LEFT JOIN channel_mtproto_settings m ON c.id = m.channel_id
             WHERE c.id = 1002678877654 OR c.username LIKE '%LEGACY%NEWS%'
             LIMIT 1
-        """)
+        """
+        )
 
         if abc_channel:
             print("\n📺 ABC LEGACY NEWS Channel (from screenshot):")

@@ -114,7 +114,9 @@ class MTProtoMetrics:
         )
 
         self.pool_accounts_healthy = Gauge(
-            "mtproto_pool_accounts_healthy", "Healthy accounts in pool", registry=registry
+            "mtproto_pool_accounts_healthy",
+            "Healthy accounts in pool",
+            registry=registry,
         )
 
         self.pool_accounts_inflight = Gauge(
@@ -134,12 +136,18 @@ class MTProtoMetrics:
         )
 
         self.proxy_rotation_total = Counter(
-            "mtproto_proxy_rotations_total", "Total proxy rotations", ["reason"], registry=registry
+            "mtproto_proxy_rotations_total",
+            "Total proxy rotations",
+            ["reason"],
+            registry=registry,
         )
 
         # Queue and batch metrics
         self.queue_depth = Gauge(
-            "mtproto_queue_depth", "Current queue depth", ["task_type"], registry=registry
+            "mtproto_queue_depth",
+            "Current queue depth",
+            ["task_type"],
+            registry=registry,
         )
 
         self.batch_duration = Histogram(
@@ -233,7 +241,12 @@ class MTProtoMetrics:
             raise
 
     def record_request(
-        self, method: str, account: str, dc: str, status: str, duration: float | None = None
+        self,
+        method: str,
+        account: str,
+        dc: str,
+        status: str,
+        duration: float | None = None,
     ) -> None:
         """Record MTProto request metrics."""
         if not self.enabled:

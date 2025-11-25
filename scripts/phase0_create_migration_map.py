@@ -91,7 +91,11 @@ migration_rules = {
         "target": "/analytics/insights",
         "reason": "Consolidate analytics",
     },
-    "/trends": {"action": "MOVE", "target": "/analytics/trends", "reason": "Consolidate analytics"},
+    "/trends": {
+        "action": "MOVE",
+        "target": "/analytics/trends",
+        "reason": "Consolidate analytics",
+    },
     "/competitive": {
         "action": "MOVE",
         "target": "/analytics/competitive",
@@ -131,16 +135,32 @@ migration_rules = {
         "target": "/user-sessions",
         "reason": "Remove /api prefix + rename for clarity",
     },
-    "/api/user-bot": {"action": "MOVE", "target": "/user-bots", "reason": "Remove /api prefix"},
-    "/api/admin": {"action": "MOVE", "target": "/admin/bots", "reason": "Consolidate under /admin"},
+    "/api/user-bot": {
+        "action": "MOVE",
+        "target": "/user-bots",
+        "reason": "Remove /api prefix",
+    },
+    "/api/admin": {
+        "action": "MOVE",
+        "target": "/admin/bots",
+        "reason": "Consolidate under /admin",
+    },
     "/api/channels": {
         "action": "DEPRECATE",
         "target": None,
         "reason": "Old endpoint - replaced by /channels microservice",
     },
-    "/api/posts": {"action": "MOVE", "target": "/posts", "reason": "Remove /api prefix"},
+    "/api/posts": {
+        "action": "MOVE",
+        "target": "/posts",
+        "reason": "Remove /api prefix",
+    },
     # Rename for consistency
-    "/webhook": {"action": "MOVE", "target": "/webhooks", "reason": "Plural for consistency"},
+    "/webhook": {
+        "action": "MOVE",
+        "target": "/webhooks",
+        "reason": "Plural for consistency",
+    },
     # Keep as-is (already good)
     "/health": {
         "action": "KEEP",
@@ -163,16 +183,36 @@ migration_rules = {
         "target": "/admin",
         "reason": "Already good - will be central admin hub",
     },
-    "/ai": {"action": "KEEP", "target": "/ai", "reason": "Already good - will be central AI hub"},
-    "/content": {"action": "KEEP", "target": "/content", "reason": "Already good structure"},
+    "/ai": {
+        "action": "KEEP",
+        "target": "/ai",
+        "reason": "Already good - will be central AI hub",
+    },
+    "/content": {
+        "action": "KEEP",
+        "target": "/content",
+        "reason": "Already good structure",
+    },
     "/payments": {
         "action": "KEEP",
         "target": "/payments",
         "reason": "Already good structure (correct plural)",
     },
-    "/exports": {"action": "KEEP", "target": "/exports", "reason": "Already good structure"},
-    "/share": {"action": "KEEP", "target": "/share", "reason": "Already good structure"},
-    "/mobile": {"action": "KEEP", "target": "/mobile", "reason": "Already good structure"},
+    "/exports": {
+        "action": "KEEP",
+        "target": "/exports",
+        "reason": "Already good structure",
+    },
+    "/share": {
+        "action": "KEEP",
+        "target": "/share",
+        "reason": "Already good structure",
+    },
+    "/mobile": {
+        "action": "KEEP",
+        "target": "/mobile",
+        "reason": "Already good structure",
+    },
     "/demo": {"action": "KEEP", "target": "/demo", "reason": "Already good structure"},
 }
 
@@ -220,11 +260,13 @@ for path, methods in spec["paths"].items():
                     "reason": rule["reason"],
                     "summary": methods[method].get("summary", "No description"),
                     "tags": methods[method].get("tags", ["untagged"]),
-                    "priority": "HIGH"
-                    if rule["action"] in ["DEPRECATE", "REDIRECT"]
-                    else "MEDIUM"
-                    if rule["action"] == "MOVE"
-                    else "LOW",
+                    "priority": (
+                        "HIGH"
+                        if rule["action"] in ["DEPRECATE", "REDIRECT"]
+                        else "MEDIUM"
+                        if rule["action"] == "MOVE"
+                        else "LOW"
+                    ),
                 }
             )
 

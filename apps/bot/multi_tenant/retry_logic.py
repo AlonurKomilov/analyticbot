@@ -9,21 +9,21 @@ Handles transient failures with intelligent retry strategies:
 
 import asyncio
 import random
-import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, TypeVar, ParamSpec
+from typing import Any, ParamSpec, TypeVar
 
 from telethon.errors import (
+    AuthKeyError,
     FloodWaitError,
-    ServerError,
-    TimedOutError,
     NetworkMigrateError,
     PhoneMigrateError,
-    UserDeactivatedError,
-    UserDeactivatedBanError,
-    AuthKeyError,
+    ServerError,
     SessionPasswordNeededError,
+    TimedOutError,
+    UserDeactivatedBanError,
+    UserDeactivatedError,
 )
 
 P = ParamSpec("P")
@@ -81,8 +81,6 @@ class RetryableError(Exception):
 class NonRetryableError(Exception):
     """Base class for non-retryable errors"""
 
-    pass
-
 
 def categorize_error(error: Exception) -> RetryErrorCategory:
     """
@@ -95,7 +93,7 @@ def categorize_error(error: Exception) -> RetryErrorCategory:
         Error category
     """
     error_name = type(error).__name__
-    
+
     # Rate limiting errors
     if error_name == "FloodWaitError" or isinstance(error, FloodWaitError):
         return RetryErrorCategory.RATE_LIMIT
@@ -120,7 +118,12 @@ def categorize_error(error: Exception) -> RetryErrorCategory:
         return RetryErrorCategory.TRANSIENT_NETWORK
 
     # Permanent errors (do not retry)
-    if error_name in ("UserDeactivatedError", "UserDeactivatedBanError", "AuthKeyError", "SessionPasswordNeededError") or isinstance(
+    if error_name in (
+        "UserDeactivatedError",
+        "UserDeactivatedBanError",
+        "AuthKeyError",
+        "SessionPasswordNeededError",
+    ) or isinstance(
         error,
         (
             UserDeactivatedError,
@@ -385,9 +388,7 @@ class RetryStatistics:
             "successful_retries": self.successful_retries,
             "failed_retries": self.failed_retries,
             "success_rate": (
-                self.successful_retries / self.total_retries
-                if self.total_retries > 0
-                else 0.0
+                self.successful_retries / self.total_retries if self.total_retries > 0 else 0.0
             ),
             "errors_by_category": dict(self.errors_by_category),
         }

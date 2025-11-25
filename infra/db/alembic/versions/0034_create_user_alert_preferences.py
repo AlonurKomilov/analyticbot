@@ -62,10 +62,23 @@ def upgrade() -> None:
         sa.Column("quiet_hours_end", sa.Integer(), nullable=True, comment="Hour 0-23"),
         sa.Column("timezone", sa.String(50), nullable=False, server_default="UTC"),
         sa.Column("enabled", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column("telegram_enabled", sa.Boolean(), nullable=False, server_default=sa.text("true")),
-        sa.Column("email_enabled", sa.Boolean(), nullable=False, server_default=sa.text("false")),
         sa.Column(
-            "web_push_enabled", sa.Boolean(), nullable=False, server_default=sa.text("false")
+            "telegram_enabled",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.text("true"),
+        ),
+        sa.Column(
+            "email_enabled",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.text("false"),
+        ),
+        sa.Column(
+            "web_push_enabled",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.text("false"),
         ),
         sa.Column(
             "created_at",

@@ -20,10 +20,9 @@ from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.bot.multi_tenant.token_validator import (
     get_token_validator,
-    TokenValidationResult,
 )
 from apps.di.analytics_container import get_analytics_fusion_service
 from apps.shared.performance import performance_timer
@@ -170,9 +169,9 @@ async def get_system_health(
             health_data = await analytics_service.check_system_health()
 
             return {
-                "status": "healthy"
-                if health_data.get("all_systems_operational", False)
-                else "degraded",
+                "status": (
+                    "healthy" if health_data.get("all_systems_operational", False) else "degraded"
+                ),
                 "timestamp": datetime.now().isoformat(),
                 "components": health_data.get("components", {}),
                 "overall_score": health_data.get("health_score", 0),
@@ -388,8 +387,12 @@ async def get_bot_health_metrics(
                 "consecutive_failures": metrics.consecutive_failures,
                 "is_rate_limited": metrics.is_rate_limited,
                 "last_error_type": metrics.last_error_type,
-                "last_success": metrics.last_success.isoformat() if metrics.last_success else None,
-                "last_failure": metrics.last_failure.isoformat() if metrics.last_failure else None,
+                "last_success": (
+                    metrics.last_success.isoformat() if metrics.last_success else None
+                ),
+                "last_failure": (
+                    metrics.last_failure.isoformat() if metrics.last_failure else None
+                ),
                 "last_check": metrics.last_check.isoformat(),
             },
         }
@@ -792,15 +795,17 @@ async def persist_health_metrics_now(
 
 class TokenValidationRequest(BaseModel):
     """Request to validate a bot token"""
+
     token: str = Field(..., description="Bot token to validate")
     live_check: bool = Field(
         default=True,
-        description="Perform live validation (test connection to Telegram)"
+        description="Perform live validation (test connection to Telegram)",
     )
 
 
 class TokenValidationResponse(BaseModel):
     """Token validation result"""
+
     is_valid: bool
     status: str
     message: str
@@ -816,14 +821,14 @@ async def validate_token(
 ):
     """
     ## 🔐 Validate Bot Token (Admin)
-    
+
     Validates a bot token without creating a bot.
     Useful for testing tokens before deployment.
-    
+
     **Validation Types:**
     - **Format validation:** Checks token format (fast)
     - **Live validation:** Tests connection to Telegram (slower but thorough)
-    
+
     **Returns:**
     - Validation status
     - Bot username and ID (if valid)
@@ -831,28 +836,23 @@ async def validate_token(
     """
     try:
         validator = get_token_validator()
-        
+
         result = await validator.validate(
-            token=request.token,
-            live_check=request.live_check,
-            timeout_seconds=10
+            token=request.token, live_check=request.live_check, timeout_seconds=10
         )
-        
+
         return TokenValidationResponse(
             is_valid=result.is_valid,
             status=result.status.value,
             message=result.message,
             bot_username=result.bot_username,
             bot_id=result.bot_id,
-            validated_at=result.validated_at.isoformat()
+            validated_at=result.validated_at.isoformat(),
         )
-        
+
     except Exception as e:
         logger.error(f"Token validation error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Token validation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Token validation failed: {str(e)}")
 
 
 # === MTPROTO CONNECTION POOL CONFIGURATION ===
@@ -862,7 +862,10 @@ class MTProtoPoolConfig(BaseModel):
     """MTProto Connection Pool Configuration"""
 
     max_concurrent_users: int = Field(
-        ..., description="Maximum concurrent user sessions (system-wide limit)", ge=1, le=200
+        ...,
+        description="Maximum concurrent user sessions (system-wide limit)",
+        ge=1,
+        le=200,
     )
     max_connections_per_user: int = Field(
         ..., description="Maximum connections per user", ge=1, le=5

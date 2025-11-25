@@ -76,11 +76,14 @@ class PerformanceMetrics:
                 "avg_time": round(self.get_average_time(query_name), 3),
                 "p95_time": round(self.get_p95_time(query_name), 3),
                 "errors": self.error_counts.get(query_name, 0),
-                "error_rate": round(
-                    self.error_counts.get(query_name, 0) / self.query_counts[query_name] * 100, 2
-                )
-                if self.query_counts[query_name] > 0
-                else 0,
+                "error_rate": (
+                    round(
+                        self.error_counts.get(query_name, 0) / self.query_counts[query_name] * 100,
+                        2,
+                    )
+                    if self.query_counts[query_name] > 0
+                    else 0
+                ),
             }
 
         return {

@@ -13,17 +13,17 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
 
 from aiogram import Bot
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiogram.exceptions import TelegramUnauthorizedError, TelegramNetworkError
+from aiogram.exceptions import TelegramNetworkError, TelegramUnauthorizedError
 
 logger = logging.getLogger(__name__)
 
 
 class TokenValidationStatus(Enum):
     """Token validation status"""
+
     VALID = "valid"
     INVALID_FORMAT = "invalid_format"
     UNAUTHORIZED = "unauthorized"
@@ -36,11 +36,12 @@ class TokenValidationStatus(Enum):
 @dataclass
 class TokenValidationResult:
     """Result of token validation"""
+
     is_valid: bool
     status: TokenValidationStatus
     message: str
-    bot_username: Optional[str] = None
-    bot_id: Optional[int] = None
+    bot_username: str | None = None
+    bot_id: int | None = None
     validated_at: datetime = None
 
     def __post_init__(self):
@@ -51,7 +52,7 @@ class TokenValidationResult:
 class TokenValidator:
     """
     Validates Telegram bot tokens
-    
+
     Features:
     - Format validation (regex check)
     - Live validation (test connection)
@@ -61,15 +62,15 @@ class TokenValidator:
     """
 
     # Bot token format: numeric_id:alphanumeric_secret (35 chars)
-    TOKEN_PATTERN = re.compile(r'^(\d+):([A-Za-z0-9_-]{35,})$')
-    
+    TOKEN_PATTERN = re.compile(r"^(\d+):([A-Za-z0-9_-]{35,})$")
+
     # Validation timeout
     VALIDATION_TIMEOUT_SECONDS = 10
 
     def __init__(self, shared_session=None):
         """
         Initialize token validator
-        
+
         Args:
             shared_session: Optional shared aiohttp session for efficiency
         """
@@ -78,13 +79,13 @@ class TokenValidator:
     def validate_format(self, token: str) -> TokenValidationResult:
         """
         Validate token format without connecting to Telegram
-        
+
         Format: numeric_bot_id:alphanumeric_secret
         Example: 123456789:ABCdefGHIjklMNOpqrsTUVwxyz1234567
-        
+
         Args:
             token: Bot token to validate
-            
+
         Returns:
             TokenValidationResult with format validation status
         """
@@ -92,71 +93,69 @@ class TokenValidator:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message="Token must be a non-empty string"
+                message="Token must be a non-empty string",
             )
-        
+
         # Check format: number:string
-        if ':' not in token:
+        if ":" not in token:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message="Invalid token format. Expected format: numeric_id:alphanumeric_secret"
+                message="Invalid token format. Expected format: numeric_id:alphanumeric_secret",
             )
-        
-        parts = token.split(':', 1)
+
+        parts = token.split(":", 1)
         if len(parts) != 2:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message="Invalid token format. Expected format: numeric_id:alphanumeric_secret"
+                message="Invalid token format. Expected format: numeric_id:alphanumeric_secret",
             )
-        
+
         bot_id_str, secret = parts
-        
+
         # Validate bot ID is numeric
         if not bot_id_str.isdigit():
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message="Bot ID must be numeric"
+                message="Bot ID must be numeric",
             )
-        
+
         # Validate secret length and characters
         if len(secret) < 35:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message=f"Token secret too short. Expected at least 35 characters, got {len(secret)}"
+                message=f"Token secret too short. Expected at least 35 characters, got {len(secret)}",
             )
-        
+
         # Check if secret contains only valid characters (alphanumeric, underscore, hyphen)
-        if not re.match(r'^[A-Za-z0-9_-]+$', secret):
+        if not re.match(r"^[A-Za-z0-9_-]+$", secret):
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.INVALID_FORMAT,
-                message="Token secret contains invalid characters. Only alphanumeric, underscore, and hyphen allowed"
+                message="Token secret contains invalid characters. Only alphanumeric, underscore, and hyphen allowed",
             )
-        
+
         # All checks passed
         return TokenValidationResult(
             is_valid=True,
             status=TokenValidationStatus.VALID,
             message="Token format is valid",
-            bot_id=int(bot_id_str)
+            bot_id=int(bot_id_str),
         )
-    
+
     async def validate_live(
-        self, 
-        token: str,
-        timeout_seconds: Optional[int] = None
+        self, token: str, timeout_seconds: int | None = None
     ) -> TokenValidationResult:
         """
         Validate token by testing connection to Telegram
-        
+
         Args:
             token: Bot token string
             timeout_seconds: Optional custom timeout (default: 10 seconds)
-            
+
         Returns:
             TokenValidationResult with live validation status
         """
@@ -166,7 +165,7 @@ class TokenValidator:
             return format_result
 
         timeout = timeout_seconds or self.VALIDATION_TIMEOUT_SECONDS
-        
+
         bot = None
         try:
             # Create bot instance
@@ -177,17 +176,14 @@ class TokenValidator:
                 bot = Bot(token=token)
 
             # Test connection with timeout
-            bot_info = await asyncio.wait_for(
-                bot.get_me(),
-                timeout=timeout
-            )
+            bot_info = await asyncio.wait_for(bot.get_me(), timeout=timeout)
 
             return TokenValidationResult(
                 is_valid=True,
                 status=TokenValidationStatus.VALID,
                 message=f"Token is valid for bot @{bot_info.username}",
                 bot_username=bot_info.username,
-                bot_id=bot_info.id
+                bot_id=bot_info.id,
             )
 
         except TelegramUnauthorizedError as e:
@@ -197,27 +193,27 @@ class TokenValidator:
                 return TokenValidationResult(
                     is_valid=False,
                     status=TokenValidationStatus.REVOKED,
-                    message="Token has been revoked or bot was deleted"
+                    message="Token has been revoked or bot was deleted",
                 )
             else:
                 return TokenValidationResult(
                     is_valid=False,
                     status=TokenValidationStatus.UNAUTHORIZED,
-                    message="Token is unauthorized. Please check your token from @BotFather"
+                    message="Token is unauthorized. Please check your token from @BotFather",
                 )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.TIMEOUT,
-                message=f"Validation timeout after {timeout} seconds. Please try again"
+                message=f"Validation timeout after {timeout} seconds. Please try again",
             )
 
         except TelegramNetworkError as e:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.NETWORK_ERROR,
-                message=f"Network error during validation: {str(e)}"
+                message=f"Network error during validation: {str(e)}",
             )
 
         except Exception as e:
@@ -225,7 +221,7 @@ class TokenValidator:
             return TokenValidationResult(
                 is_valid=False,
                 status=TokenValidationStatus.UNKNOWN_ERROR,
-                message=f"Validation failed: {str(e)}"
+                message=f"Validation failed: {str(e)}",
             )
 
         finally:
@@ -237,32 +233,29 @@ class TokenValidator:
                     logger.warning(f"Error closing bot session during validation: {e}")
 
     async def validate(
-        self, 
-        token: str,
-        live_check: bool = True,
-        timeout_seconds: Optional[int] = None
+        self, token: str, live_check: bool = True, timeout_seconds: int | None = None
     ) -> TokenValidationResult:
         """
         Validate token with optional live check
-        
+
         Args:
             token: Bot token string
             live_check: Whether to perform live validation (default: True)
             timeout_seconds: Optional custom timeout for live check
-            
+
         Returns:
             TokenValidationResult with validation status
         """
         if not live_check:
             return self.validate_format(token)
-        
+
         return await self.validate_live(token, timeout_seconds)
 
 
 class PeriodicTokenValidator:
     """
     Background service for periodic token validation
-    
+
     Checks token validity for existing bots to detect:
     - Revoked tokens
     - Expired tokens
@@ -273,11 +266,11 @@ class PeriodicTokenValidator:
         self,
         validator: TokenValidator,
         check_interval_hours: int = 24,
-        max_consecutive_failures: int = 3
+        max_consecutive_failures: int = 3,
     ):
         """
         Initialize periodic validator
-        
+
         Args:
             validator: TokenValidator instance
             check_interval_hours: How often to check tokens (default: 24 hours)
@@ -286,12 +279,12 @@ class PeriodicTokenValidator:
         self.validator = validator
         self.check_interval = timedelta(hours=check_interval_hours)
         self.max_consecutive_failures = max_consecutive_failures
-        
+
         # Track validation state
         self.last_validation: dict[int, datetime] = {}
         self.consecutive_failures: dict[int, int] = {}
         self.is_running = False
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
 
     async def start(self):
         """Start periodic validation task"""
@@ -336,24 +329,23 @@ class PeriodicTokenValidator:
         # TODO: Validate each token
         # TODO: Update health status for invalid tokens
         # TODO: Notify users of invalid tokens
-        pass
 
     async def validate_token(self, user_id: int, token: str) -> TokenValidationResult:
         """
         Validate a single token and track results
-        
+
         Args:
             user_id: User ID associated with the token
             token: Bot token to validate
-            
+
         Returns:
             TokenValidationResult
         """
         result = await self.validator.validate(token)
-        
+
         # Update tracking
         self.last_validation[user_id] = datetime.now()
-        
+
         if result.is_valid:
             # Reset failure count on success
             self.consecutive_failures[user_id] = 0
@@ -361,7 +353,7 @@ class PeriodicTokenValidator:
             # Increment failure count
             current_failures = self.consecutive_failures.get(user_id, 0)
             self.consecutive_failures[user_id] = current_failures + 1
-            
+
             # Check if we've exceeded max failures
             if self.consecutive_failures[user_id] >= self.max_consecutive_failures:
                 logger.warning(
@@ -374,17 +366,17 @@ class PeriodicTokenValidator:
     def should_validate(self, user_id: int) -> bool:
         """
         Check if token should be validated now
-        
+
         Args:
             user_id: User ID to check
-            
+
         Returns:
             True if validation is due
         """
         last_check = self.last_validation.get(user_id)
         if not last_check:
             return True
-        
+
         time_since_check = datetime.now() - last_check
         return time_since_check >= self.check_interval
 
@@ -398,8 +390,8 @@ class PeriodicTokenValidator:
 
 
 # Global validator instance
-_token_validator: Optional[TokenValidator] = None
-_periodic_validator: Optional[PeriodicTokenValidator] = None
+_token_validator: TokenValidator | None = None
+_periodic_validator: PeriodicTokenValidator | None = None
 
 
 def get_token_validator() -> TokenValidator:
@@ -411,16 +403,15 @@ def get_token_validator() -> TokenValidator:
 
 
 def initialize_periodic_validator(
-    check_interval_hours: int = 24,
-    max_consecutive_failures: int = 3
+    check_interval_hours: int = 24, max_consecutive_failures: int = 3
 ) -> PeriodicTokenValidator:
     """
     Initialize global periodic validator
-    
+
     Args:
         check_interval_hours: Validation interval (default: 24 hours)
         max_consecutive_failures: Failures before flagging (default: 3)
-        
+
     Returns:
         PeriodicTokenValidator instance
     """
@@ -429,11 +420,11 @@ def initialize_periodic_validator(
     _periodic_validator = PeriodicTokenValidator(
         validator=validator,
         check_interval_hours=check_interval_hours,
-        max_consecutive_failures=max_consecutive_failures
+        max_consecutive_failures=max_consecutive_failures,
     )
     return _periodic_validator
 
 
-def get_periodic_validator() -> Optional[PeriodicTokenValidator]:
+def get_periodic_validator() -> PeriodicTokenValidator | None:
     """Get global periodic validator instance"""
     return _periodic_validator

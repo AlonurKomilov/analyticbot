@@ -327,13 +327,15 @@ async def telegram_webapp_login(
 
         if not init_data or not user_data:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing initData or user data"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing initData or user data",
             )
 
         telegram_id = user_data.get("id")
         if not telegram_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Telegram user ID"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing Telegram user ID",
             )
 
         logger.info(f"TWA login attempt for Telegram ID: {telegram_id}")

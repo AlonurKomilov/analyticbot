@@ -451,7 +451,10 @@ class ProgressTracker:
             return {"error": str(e)}
 
     async def _record_learning_progress(
-        self, task_id: str, context: TaskExecutionContext, details: dict[str, Any] | None
+        self,
+        task_id: str,
+        context: TaskExecutionContext,
+        details: dict[str, Any] | None,
     ) -> None:
         """Record learning progress"""
         try:

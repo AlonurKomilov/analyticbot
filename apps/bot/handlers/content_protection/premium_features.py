@@ -98,7 +98,8 @@ async def handle_custom_emoji_format(message: Message, state: FSMContext):
         )
 
         await message.answer(
-            f"✨ **Premium Formatted Message:**\n\n{formatted_text}", parse_mode="Markdown"
+            f"✨ **Premium Formatted Message:**\n\n{formatted_text}",
+            parse_mode="Markdown",
         )
 
         # Update usage tracking

@@ -14,12 +14,14 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
     const {
         timeFilter,
         sortBy,
+        limit,
         loading,
         error,
         posts,
         summaryStats,
         setTimeFilter,
         setSortBy,
+        setLimit,
         loadTopPosts
     } = usePostTableLogic();
 
@@ -60,6 +62,8 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
                 setTimeFilter={setTimeFilter as any}
                 sortBy={sortBy as any}
                 setSortBy={setSortBy as any}
+                limit={limit as any}
+                setLimit={setLimit as any}
             />
 
             {/* Enhanced Data Table */}
@@ -70,6 +74,7 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
                     loading={loading}
                     error={error}
                     {...topPostsTableConfig as any}
+                    enableDensityToggle={false}
                     emptyStateMessage="No posts found. Try adjusting your filters or check back later."
                     aria-label="Top performing posts with engagement metrics"
                 />

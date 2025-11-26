@@ -14,7 +14,7 @@ import {
     CircularProgress
 } from '@mui/material';
 import { TrendingUp as PredictiveIcon } from '@mui/icons-material';
-import { apiClient } from '../api/client.js';
+import { apiClient } from '../api/client';
 
 const PredictiveAnalyticsService: React.FC = () => {
     const [loading, setLoading] = useState(false);

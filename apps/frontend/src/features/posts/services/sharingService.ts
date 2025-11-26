@@ -7,7 +7,7 @@
  * Backend API: /sharing/create, /sharing/revoke, /sharing/{token}
  */
 
-import apiClient from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export type TTLOption = '1h' | '6h' | '24h' | '3d' | '7d';
 
@@ -82,7 +82,7 @@ class SharingService {
                     }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to create share link:', error);
             throw error;
@@ -95,12 +95,12 @@ class SharingService {
      * @param shareToken - Secure share token
      * @returns Shared report data
      */
-    async accessSharedReport(shareToken: string): Promise<SharedReportResponse> {
+    async accessSharedReport(shareToken: string): Promise<SharedReportResponse | null> {
         try {
             const response = await apiClient.get<SharedReportResponse>(
                 `${this.baseURL}/${shareToken}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to access shared report:', error);
             throw error;
@@ -118,7 +118,7 @@ class SharingService {
             const response = await apiClient.delete<{ message: string }>(
                 `${this.baseURL}/revoke/${shareToken}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to revoke share link:', error);
             throw error;
@@ -136,7 +136,7 @@ class SharingService {
             const response = await apiClient.get<ShareListItem[]>(
                 `${this.baseURL}/channel/${channelId}/links`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get channel share links:', error);
             throw error;
@@ -156,10 +156,15 @@ class SharingService {
         expires_at: string;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                access_count: number;
+                last_accessed: string | null;
+                created_at: string;
+                expires_at: string;
+            }>(
                 `${this.baseURL}/${shareToken}/stats`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get share stats:', error);
             throw error;
@@ -178,10 +183,14 @@ class SharingService {
         is_expired?: boolean;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                valid: boolean;
+                expires_at?: string;
+                is_expired?: boolean;
+            }>(
                 `${this.baseURL}/validate/${shareToken}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to validate share token:', error);
             return { valid: false };

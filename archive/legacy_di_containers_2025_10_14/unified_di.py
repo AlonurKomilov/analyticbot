@@ -66,7 +66,6 @@ warnings.warn(
     stacklevel=2
 )
 
-import logging
 import os
 from typing import Any
 

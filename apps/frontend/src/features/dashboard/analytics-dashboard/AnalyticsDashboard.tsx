@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 
 // Import refactored components
-import SummaryStatsGrid from './SummaryStatsGrid';
 import DashboardTabs from './DashboardTabs';
 import LoadingOverlay from './LoadingOverlay';
 import DashboardSpeedDial from './DashboardSpeedDial';
@@ -56,72 +55,13 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
     // Store integration
     const { setDataSource, dataSource } = useUIStore();
     const { loadChannels, selectedChannel } = useChannelStore() as any;
-    const { clearAnalytics, postDynamics } = useAnalyticsStore();
+    const { clearAnalytics } = useAnalyticsStore();
 
     // Determine channel ID based on data source mode
     // 'api' = Real API with real channel, 'demo'/'mock' = Demo mode with demo channel
     const channelId = (dataSource === 'demo' || dataSource === 'mock')
         ? 'demo_channel'
         : (selectedChannel?.id?.toString() || null);
-
-    // Calculate stats from analytics data
-    const calculateStats = () => {
-        if (!channelId) {
-            return {
-                totalPosts: '—',
-                averageViews: '—',
-                engagementRate: '—',
-                peakViews: '—'
-            };
-        }
-
-        // Calculate from actual data
-        const postsData = Array.isArray(postDynamics) ? postDynamics : [];
-
-        // Sum up post_count from all time buckets to get total posts
-        const totalPosts = postsData.reduce((sum: number, point: any) =>
-            sum + (point.post_count || point.postCount || 0), 0
-        );
-
-        if (postsData.length === 0) {
-            return {
-                totalPosts: '0',
-                averageViews: '0',
-                engagementRate: '0%',
-                peakViews: '0'
-            };
-        }
-
-        const totalViews = postsData.reduce((sum: number, post: any) => sum + (post.views || 0), 0);
-        const avgViews = totalPosts > 0 ? Math.round(totalViews / totalPosts) : 0;
-        const peakViews = Math.max(...postsData.map((post: any) => post.views || 0), 0);
-
-        // Calculate engagement rate from post dynamics data
-        const totalEngagement = postsData.reduce((sum: number, post: any) =>
-            sum + (post.reactions_count || post.reactions || 0) +
-                  (post.forwards || post.shares || 0) +
-                  (post.replies_count || post.replies || post.comments || 0), 0
-        );
-        const engagementRate = totalViews > 0
-            ? ((totalEngagement / totalViews) * 100)
-            : 0;
-
-        // Format numbers
-        const formatNumber = (num: number): string => {
-            if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-            if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-            return num.toString();
-        };
-
-        return {
-            totalPosts: totalPosts.toString(),
-            averageViews: formatNumber(avgViews),
-            engagementRate: `${engagementRate.toFixed(1)}%`,
-            peakViews: formatNumber(peakViews)
-        };
-    };
-
-    const stats = calculateStats();
 
     // API failure dialog management
     const {
@@ -202,10 +142,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
             {/* Tab Content */}
             <main role="main">
                 <TabPanel value={activeTab} index={0}>
-                    {/* Summary Statistics */}
-                    <SummaryStatsGrid stats={stats} />
-
-                    {/* Chart Component */}
+                    {/* Chart Component with integrated summary stats */}
                     <Paper sx={{ p: 3, mb: 3 }}>
                         <PostViewDynamicsChart />
                     </Paper>

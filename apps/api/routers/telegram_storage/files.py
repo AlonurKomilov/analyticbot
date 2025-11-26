@@ -120,40 +120,106 @@ async def upload_file_to_storage(
             file_content = await file.read()
             file_size = len(file_content)
 
-            # Determine file type
+            # Determine file type and upload settings
             file_type = "document"  # Default
+            force_document = True
+            attributes = []
+
+            # Import Telethon attributes and BytesIO
+            import io
+
+            from telethon.tl.types import DocumentAttributeFilename
+
+            # Create BytesIO object for file content
+            file_bytes = io.BytesIO(file_content)
+            file_bytes.name = file.filename or "file"
+
             if file.content_type:
                 if file.content_type.startswith("image/"):
-                    file_type = "photo"
+                    if file.content_type == "image/gif":
+                        # GIFs as documents to preserve animation
+                        file_type = "document"
+                        force_document = True
+                        if file.filename:
+                            attributes.append(DocumentAttributeFilename(file.filename))
+                    else:
+                        # Regular images as PHOTOS
+                        file_type = "photo"
+                        force_document = False
+                        attributes = []
+                        logger.info(f"📸 Detected photo: {file.filename}, force_document=False")
                 elif file.content_type.startswith("video/"):
+                    # Videos as actual videos
                     file_type = "video"
+                    force_document = False
+                    attributes = []
+                    logger.info(f"🎥 Detected video: {file.filename}, force_document=False")
                 elif file.content_type.startswith("audio/"):
                     file_type = "audio"
+                    force_document = False
+                    if file.filename:
+                        attributes.append(DocumentAttributeFilename(file.filename))
+                else:
+                    # Other files as documents with filename
+                    if file.filename:
+                        attributes.append(DocumentAttributeFilename(file.filename))
 
-            # Upload to Telegram channel
-            message = await storage_service.client.send_file(
-                storage_channel.channel_id,
-                file_content,
-                caption=caption or file.filename,
-                force_document=(file_type == "document"),
-                attributes=[],
+            logger.info(
+                f"⚙️ Upload settings: type={file_type}, force_document={force_document}, "
+                f"attributes_count={len(attributes)}, content_type={file.content_type}"
             )
 
-            # Extract file metadata from message
+            # Upload to Telegram channel - use BytesIO object instead of raw bytes
+            message = await storage_service.client.send_file(
+                storage_channel.channel_id,
+                file_bytes,  # Use BytesIO object, not raw bytes
+                caption=caption if caption else None,
+                force_document=force_document,
+                attributes=attributes if attributes else None,
+            )
+
+            logger.info(
+                f"✅ Telegram response: has_photo={hasattr(message, 'photo') and message.photo is not None}, "
+                f"has_video={hasattr(message, 'video') and message.video is not None}, "
+                f"has_document={hasattr(message, 'document') and message.document is not None}"
+            )
+
+            # Extract file metadata from message and generate preview URL
             telegram_file_id = None
             width = None
             height = None
             duration = None
+            preview_url = None
+
+            # Generate API endpoint URL for thumbnail preview
+            # This will be served by our /storage/files/{id}/thumbnail endpoint
+            base_url = "https://api.analyticbot.org"  # TODO: Get from config
 
             if message.photo:
                 telegram_file_id = str(message.photo.id)
+                file_type = "photo"  # Ensure it's marked as photo
                 if hasattr(message.photo, "sizes") and message.photo.sizes:
                     largest = message.photo.sizes[-1]
                     if hasattr(largest, "w"):
                         width = largest.w
                         height = largest.h
+
+            elif message.video:
+                telegram_file_id = str(message.video.id)
+                file_type = "video"  # Ensure it's marked as video
+                width = getattr(message.video, "w", None)
+                height = getattr(message.video, "h", None)
+                duration = getattr(message.video, "duration", None)
+
             elif message.document:
                 telegram_file_id = str(message.document.id)
+                # Check document mime type for better classification
+                mime = message.document.mime_type
+                if mime and (mime.startswith("image/") or mime.startswith("video/")):
+                    # Document that's actually media
+                    pass
+
+                # Check if document has image/video attributes
                 for attr in message.document.attributes:
                     if hasattr(attr, "w") and hasattr(attr, "h"):
                         width = attr.w
@@ -161,7 +227,7 @@ async def upload_file_to_storage(
                     if hasattr(attr, "duration"):
                         duration = attr.duration
 
-            # Save metadata to database
+            # Save metadata to database (without preview_url first)
             media_record = TelegramMedia(
                 user_id=user_id,
                 storage_channel_id=storage_channel.id,
@@ -175,11 +241,21 @@ async def upload_file_to_storage(
                 width=width,
                 height=height,
                 duration=duration,
+                preview_url=None,  # Will be set after we have the ID
             )
 
             db_session.add(media_record)
             await db_session.commit()
             await db_session.refresh(media_record)
+
+            # Now generate preview_url using the media_record.id
+            # For photos and videos, point to our thumbnail endpoint
+            if file_type in ["photo", "video"]:
+                base_url = "https://api.analyticbot.org"  # TODO: Get from config/env
+                preview_url = f"{base_url}/storage/files/{media_record.id}/thumbnail"
+                media_record.preview_url = preview_url
+                await db_session.commit()
+                await db_session.refresh(media_record)
 
             logger.info(
                 f"Successfully uploaded file {file.filename} for user {user_id} "
@@ -203,7 +279,7 @@ async def upload_file_to_storage(
                     height=media_record.height,
                     duration=media_record.duration,
                     caption=media_record.caption,
-                    preview_url=None,  # TODO: Generate preview URL
+                    preview_url=media_record.preview_url,  # Include preview URL
                     uploaded_at=media_record.uploaded_at.isoformat(),
                 ),
                 message="File uploaded successfully to Telegram storage!",
@@ -354,6 +430,127 @@ async def get_file_url(
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, detail=f"File {media_id} not found or access denied"
     )
+
+
+@router.get("/files/{media_id}/thumbnail", summary="Get file thumbnail")
+async def get_file_thumbnail(
+    media_id: int,
+    current_user: dict = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session),
+):
+    """
+    ## 🖼️ Get File Thumbnail
+
+    Get a thumbnail/preview image for photos and videos.
+
+    **Parameters:**
+    - media_id: File ID from your storage
+
+    **Returns:**
+    - Image data (JPEG/PNG) for display in UI
+
+    **Note:** For photos and videos only. Documents return 404.
+    """
+    from fastapi.responses import Response
+    from sqlalchemy import select
+
+    user_id: int = current_user.get("id")  # type: ignore[assignment]
+
+    logger.info(f"User {user_id} requesting thumbnail for file: {media_id}")
+
+    try:
+        # Get file metadata from database
+        result = await db_session.execute(
+            select(TelegramMedia).where(
+                TelegramMedia.id == media_id,
+                TelegramMedia.user_id == user_id,
+                TelegramMedia.is_deleted.is_(False),
+            )
+        )
+        media_file = result.scalar_one_or_none()
+
+        if not media_file:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="File not found or access denied"
+            )
+
+        # Only generate thumbnails for photos and videos
+        if media_file.file_type not in ["photo", "video"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Thumbnails not available for {media_file.file_type} files",
+            )
+
+        # Get storage channel
+        channel_result = await db_session.execute(
+            select(UserStorageChannel).where(UserStorageChannel.id == media_file.storage_channel_id)
+        )
+        storage_channel = channel_result.scalar_one_or_none()
+
+        if not storage_channel:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Storage channel not found"
+            )
+
+        # Create storage service to download thumbnail
+        storage_service = await TelegramStorageService.create_for_user(
+            user_id=user_id,
+            db_session=db_session,
+        )
+
+        try:
+            # Get the message
+            from_channel = storage_channel.channel_username or int(storage_channel.channel_id)
+            message = await storage_service.client.get_messages(
+                entity=from_channel, ids=media_file.telegram_message_id
+            )
+
+            if not message or not message.media:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Media not found in Telegram"
+                )
+
+            # Download thumbnail/preview
+            import io
+
+            thumbnail_bytes = io.BytesIO()
+
+            # Download with thumb parameter for smaller preview
+            await storage_service.client.download_media(
+                message.media,
+                file=thumbnail_bytes,
+                thumb=-1,  # Download smallest thumbnail
+            )
+
+            thumbnail_bytes.seek(0)
+            content = thumbnail_bytes.read()
+
+            # Determine content type
+            content_type = "image/jpeg"
+            if media_file.mime_type and media_file.mime_type.startswith("image/"):
+                content_type = media_file.mime_type
+
+            return Response(
+                content=content,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                    "Content-Disposition": f'inline; filename="thumb_{media_file.file_name}"',
+                },
+            )
+
+        finally:
+            if storage_service.client.is_connected():
+                await storage_service.client.disconnect()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to generate thumbnail for file {media_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate thumbnail: {str(e)}",
+        )
 
 
 @router.delete(

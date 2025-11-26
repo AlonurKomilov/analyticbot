@@ -12,7 +12,7 @@
  * - Audit channel activity
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface AdminChannelInfo {
     channel_id: string;
@@ -77,13 +77,18 @@ class AdminChannelsService {
         pages: number;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                channels: AdminChannelInfo[];
+                total: number;
+                page: number;
+                pages: number;
+            }>(
                 `${this.baseURL}/list`,
                 {
                     params: { page, limit, status }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get channels:', error);
             throw error;
@@ -101,7 +106,7 @@ class AdminChannelsService {
             const response = await apiClient.get<AdminChannelInfo>(
                 `${this.baseURL}/${channelId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get channel details:', error);
             throw error;
@@ -120,11 +125,11 @@ class AdminChannelsService {
         request: ChannelSuspendRequest
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.post(
+            const response = await apiClient.post<{ message: string; success: boolean }>(
                 `${this.baseURL}/${channelId}/suspend`,
                 request
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to suspend channel:', error);
             throw error;
@@ -141,10 +146,10 @@ class AdminChannelsService {
         channelId: string | number
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.post(
-                `${this.baseURL}/${channelId}/unsuspend`
+            const response = await apiClient.post<{ message: string; success: boolean }>(
+                `${this.baseURL}/${channelId}/reactivate`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to unsuspend channel:', error);
             throw error;
@@ -163,13 +168,13 @@ class AdminChannelsService {
         reason: string
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.delete(
+            const response = await apiClient.delete<{ message: string; success: boolean }>(
                 `${this.baseURL}/${channelId}`,
                 {
                     data: { reason }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to delete channel:', error);
             throw error;
@@ -192,7 +197,7 @@ class AdminChannelsService {
                 `${this.baseURL}/${channelId}/audit`,
                 { params: { limit } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get audit log:', error);
             throw error;
@@ -209,7 +214,7 @@ class AdminChannelsService {
             const response = await apiClient.get<ChannelStatistics>(
                 `${this.baseURL}/statistics`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get channel statistics:', error);
             throw error;
@@ -232,7 +237,7 @@ class AdminChannelsService {
                 `${this.baseURL}/search`,
                 { params: { q: query, limit } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to search channels:', error);
             throw error;

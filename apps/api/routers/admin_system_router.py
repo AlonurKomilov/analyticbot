@@ -20,10 +20,9 @@ from apps.api.middleware.auth import (
     get_current_user,
     require_admin_user,
 )
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.bot.multi_tenant.token_validator import (
     get_token_validator,
-    TokenValidationResult,
 )
 from apps.di.analytics_container import get_analytics_fusion_service
 from apps.shared.performance import performance_timer
@@ -816,14 +815,14 @@ async def validate_token(
 ):
     """
     ## 🔐 Validate Bot Token (Admin)
-    
+
     Validates a bot token without creating a bot.
     Useful for testing tokens before deployment.
-    
+
     **Validation Types:**
     - **Format validation:** Checks token format (fast)
     - **Live validation:** Tests connection to Telegram (slower but thorough)
-    
+
     **Returns:**
     - Validation status
     - Bot username and ID (if valid)
@@ -831,13 +830,13 @@ async def validate_token(
     """
     try:
         validator = get_token_validator()
-        
+
         result = await validator.validate(
             token=request.token,
             live_check=request.live_check,
             timeout_seconds=10
         )
-        
+
         return TokenValidationResponse(
             is_valid=result.is_valid,
             status=result.status.value,
@@ -846,7 +845,7 @@ async def validate_token(
             bot_id=result.bot_id,
             validated_at=result.validated_at.isoformat()
         )
-        
+
     except Exception as e:
         logger.error(f"Token validation error: {e}")
         raise HTTPException(

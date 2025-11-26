@@ -4,6 +4,7 @@
  */
 
 import localforage from 'localforage';
+import { logger } from '@/utils/logger';
 
 // Configure localforage for optimal performance
 localforage.config({
@@ -138,7 +139,7 @@ class OfflineStorage {
 
             return true;
         } catch (error) {
-            console.error('Failed to cache analytics data:', error);
+            logger.error('Failed to cache analytics data', { error });
             return false;
         }
     }
@@ -174,7 +175,7 @@ class OfflineStorage {
                 _cacheAge: Date.now() - cacheEntry.timestamp
             };
         } catch (error) {
-            console.error('Failed to retrieve cached data:', error);
+            logger.error('Failed to retrieve cached data', { error });
             return null;
         }
     }
@@ -239,7 +240,7 @@ class OfflineStorage {
 
             return Array.from(channels);
         } catch (error) {
-            console.error('Failed to get cached channels:', error);
+            logger.error('Failed to get cached channels', { error });
             return [];
         }
     }
@@ -276,7 +277,7 @@ class OfflineStorage {
                 usagePercentage: (totalSize / this.maxCacheSize) * 100
             };
         } catch (error: any) {
-            console.error('Failed to get cache stats:', error);
+            logger.error('Failed to get cache stats', { error });
             return { error: error.message };
         }
     }
@@ -303,10 +304,10 @@ class OfflineStorage {
                 }
             }
 
-            console.log(`Cleaned up ${cleanedCount} expired cache entries`);
+            logger.info('Cache cleanup completed', { cleanedCount });
             return cleanedCount;
         } catch (error) {
-            console.error('Failed to cleanup cache:', error);
+            logger.error('Failed to cleanup cache', { error });
             return 0;
         }
     }
@@ -317,10 +318,10 @@ class OfflineStorage {
     async clearCache(): Promise<boolean> {
         try {
             await localforage.clear();
-            console.log('All cache data cleared');
+            logger.info('All cache data cleared');
             return true;
         } catch (error) {
-            console.error('Failed to clear cache:', error);
+            logger.error('Failed to clear cache', { error });
             return false;
         }
     }
@@ -340,10 +341,10 @@ class OfflineStorage {
                 }
             }
 
-            console.log(`Cleared ${clearedCount} cache entries for channel ${channelId}`);
+            logger.info('Channel cache cleared', { channelId, clearedCount });
             return clearedCount;
         } catch (error) {
-            console.error('Failed to clear channel cache:', error);
+            logger.error('Failed to clear channel cache', { channelId, error });
             return 0;
         }
     }
@@ -356,7 +357,7 @@ class OfflineStorage {
             // Simple compression by removing unnecessary whitespace
             return JSON.stringify(data);
         } catch (error) {
-            console.error('Data compression failed:', error);
+            logger.error('Data compression failed', { error });
             return data;
         }
     }
@@ -370,7 +371,7 @@ class OfflineStorage {
                 ? JSON.parse(compressedData)
                 : compressedData;
         } catch (error) {
-            console.error('Data decompression failed:', error);
+            logger.error('Data decompression failed', { error });
             return compressedData;
         }
     }
@@ -387,7 +388,7 @@ class OfflineStorage {
      */
     async syncWhenOnline(apiClient: APIClient): Promise<number | false> {
         if (this.isOffline()) {
-            console.log('Still offline, sync delayed');
+            logger.debug('Still offline, sync delayed');
             return false;
         }
 
@@ -402,14 +403,14 @@ class OfflineStorage {
                     await this.cacheAnalyticsData(channelId, freshData);
                     syncedCount++;
                 } catch (error) {
-                    console.warn(`Failed to sync data for channel ${channelId}:`, error);
+                    logger.warn('Failed to sync data for channel', { channelId, error });
                 }
             }
 
-            console.log(`Synced ${syncedCount} channels with server`);
+            logger.info('Data sync completed', { syncedCount });
             return syncedCount;
         } catch (error) {
-            console.error('Failed to sync data:', error);
+            logger.error('Failed to sync data', { error });
             return 0;
         }
     }
@@ -426,10 +427,10 @@ class OfflineStorage {
             // Clean up old cache on startup
             await this.cleanupCache();
 
-            console.log('Offline storage initialized successfully');
+            logger.info('Offline storage initialized successfully');
             return true;
         } catch (error) {
-            console.error('Failed to initialize offline storage:', error);
+            logger.error('Failed to initialize offline storage', { error });
             return false;
         }
     }

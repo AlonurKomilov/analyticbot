@@ -8,6 +8,7 @@ import {
     type HealthReport
 } from './systemHealthCheck';
 import { autoLoginFromTelegram } from './telegramAuth';
+import { logger } from './logger';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '';
 
@@ -53,7 +54,7 @@ export const initializeDataSource = async (): Promise<DataSource> => {
 
         if (isLocalhost) {
             if (import.meta.env.DEV) {
-                console.log('✅ Localhost detected - skipping health check');
+                logger.debug('Localhost detected - skipping health check');
             }
             const savedPreference = localStorage.getItem('useRealAPI');
             return savedPreference === 'true' || savedPreference === null ? 'api' : 'mock';
@@ -61,7 +62,7 @@ export const initializeDataSource = async (): Promise<DataSource> => {
 
         // API health check with 30s timeout for devtunnel connections
         if (import.meta.env.DEV) {
-            console.log('🔍 Checking API health...');
+            logger.debug('Checking API health');
         }
 
         const { ok, status, response } = await checkAPIHealth(30000);
@@ -72,15 +73,15 @@ export const initializeDataSource = async (): Promise<DataSource> => {
                 const healthData = await response.json();
                 if (import.meta.env.DEV) {
                     if (healthData.status === 'healthy') {
-                        console.log('✅ API is healthy and ready');
+                        logger.info('API is healthy and ready');
                     } else if (healthData.status === 'degraded') {
-                        console.warn('⚠️ API is running in degraded mode (some services unavailable)');
+                        logger.warn('API is running in degraded mode (some services unavailable)');
                     }
                 }
             } catch (e) {
                 // Ignore JSON parse errors, health check passed
                 if (import.meta.env.DEV) {
-                    console.log('✅ API is available');
+                    logger.info('API is available');
                 }
             }
 
@@ -95,7 +96,7 @@ export const initializeDataSource = async (): Promise<DataSource> => {
         } else {
             // API returned error, don't auto-switch - user should sign in to demo account
             if (import.meta.env.DEV) {
-                console.warn(`⚠️ API health check returned ${status} - continuing with API mode`);
+                logger.warn(`API health check returned ${status} - continuing with API mode`);
             }
             return 'api'; // Keep API mode, let backend handle demo authentication
         }
@@ -105,8 +106,8 @@ export const initializeDataSource = async (): Promise<DataSource> => {
             const errorMsg = error.name === 'AbortError'
                 ? 'Timeout after 30s (dev tunnel may be cold-starting)'
                 : (error.message || error.toString() || 'Unknown error');
-            console.info('⏱️ API health check slow - continuing anyway:', errorMsg);
-            console.info('💡 This is normal for dev tunnels. Authentication will use optimized timeout.');
+            logger.info('API health check slow - continuing anyway', { error: errorMsg });
+            logger.info('This is normal for dev tunnels. Authentication will use optimized timeout.');
         }
         // Don't auto-switch to mock - user should sign in to demo account instead
         return 'api'; // Keep API mode, API requests will use their own optimized timeouts
@@ -138,13 +139,13 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
     } = options;
 
     try {
-        console.log('🚀 Initializing application...');
+        logger.info('Initializing application');
 
         // Try Telegram auto-login first (with small delay for WebApp to initialize)
         await new Promise(resolve => setTimeout(resolve, 200));
         const telegramLoginSuccess = await autoLoginFromTelegram();
         if (telegramLoginSuccess) {
-            console.log('✅ Telegram auto-login successful');
+            logger.info('Telegram auto-login successful');
             // Give auth context time to process the event and update state
             await new Promise(resolve => setTimeout(resolve, 100));
         }
@@ -155,7 +156,7 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
         // Run production readiness checks if requested
         let healthReport: HealthReport | null = null;
         if (fullHealthCheck) {
-            console.log('🏥 Running comprehensive production readiness checks...');
+            logger.info('Running comprehensive production readiness checks');
 
             const checkOptions: any = {
                 skipOptional,
@@ -169,7 +170,7 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
             healthReport = await runProductionReadinessCheck(checkOptions);
 
             // Display report in console
-            console.log(formatReadinessReport(healthReport));
+            logger.info(formatReadinessReport(healthReport));
 
             // Dispatch health check event
             window.dispatchEvent(new CustomEvent('healthCheckCompleted', {
@@ -182,17 +183,17 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
 
             // Log warnings for critical failures
             if (!healthReport.isProductionReady()) {
-                console.error('❌ SYSTEM NOT PRODUCTION READY - Critical failures detected');
+                logger.error('SYSTEM NOT PRODUCTION READY - Critical failures detected');
                 healthReport.criticalFailures.forEach((failure) => {
-                    console.error(`  - ${failure.name}: ${failure.error}`);
+                    logger.error(`  - ${failure.name}: ${failure.error}`);
                 });
             } else if (healthReport.overallStatus === 'degraded') {
-                console.warn('⚠️ System running in degraded mode');
+                logger.warn('System running in degraded mode');
                 healthReport.warnings.forEach((warning) => {
-                    console.warn(`  - ${warning.name}: ${warning.error}`);
+                    logger.warn(`  - ${warning.name}: ${warning.error}`);
                 });
             } else {
-                console.log('✅ All systems operational - Production ready!');
+                logger.info('All systems operational - Production ready!');
             }
         }
 
@@ -212,10 +213,10 @@ export const initializeApp = async (options: InitOptions = {}): Promise<InitResu
             isProductionReady: healthReport ? healthReport.isProductionReady() : null
         };
     } catch (error: any) {
-        console.error('App initialization error:', error);
+        logger.error('App initialization error', { error });
 
         // Don't fallback to demo mode - user should sign in to demo account instead
-        console.info('App initialization encountered an error - continuing with API mode for demo authentication');
+        logger.info('App initialization encountered an error - continuing with API mode for demo authentication');
         window.dispatchEvent(new CustomEvent('appInitialized', {
             detail: { dataSource: 'api', error: error.message, timestamp: Date.now() }
         }));

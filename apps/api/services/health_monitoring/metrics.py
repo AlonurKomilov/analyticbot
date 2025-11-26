@@ -3,7 +3,6 @@ Health Metrics Module
 Calculate system-wide metrics and overall health status
 """
 
-from typing import Any
 
 import psutil
 

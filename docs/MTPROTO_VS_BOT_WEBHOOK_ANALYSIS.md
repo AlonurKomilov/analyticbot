@@ -1,6 +1,6 @@
 # MTProto vs Bot API: Complete System Analysis
 
-**Date:** November 19, 2025  
+**Date:** November 19, 2025
 **Purpose:** Clarify the difference between MTProto data collection and Bot API webhooks
 
 ---
@@ -10,15 +10,15 @@
 Your platform has **TWO COMPLETELY DIFFERENT** Telegram integration systems:
 
 ### System 1: MTProto (Telethon) - ANALYTICS DATA COLLECTION ✅
-**Status:** WORKING, fully implemented  
-**Purpose:** Read channel history, get analytics, collect statistics  
-**Direction:** YOU READ from Telegram  
+**Status:** WORKING, fully implemented
+**Purpose:** Read channel history, get analytics, collect statistics
+**Direction:** YOU READ from Telegram
 **User needs:** MTProto API credentials (api_id, api_hash, session_string)
 
 ### System 2: Bot API (Aiogram) - BOT MESSAGING ❌
-**Status:** NOT WORKING for user bots (can only send, not receive)  
-**Purpose:** Interactive bots that respond to user commands  
-**Direction:** USERS SEND to bot, bot responds  
+**Status:** NOT WORKING for user bots (can only send, not receive)
+**Purpose:** Interactive bots that respond to user commands
+**Direction:** USERS SEND to bot, bot responds
 **User needs:** Bot token from @BotFather
 
 ---
@@ -216,12 +216,12 @@ class UserBotInstance:
     async def initialize(self):
         self.bot = Bot(token=self.bot_token)
         self.dp = Dispatcher()
-        
+
         # Register handlers
         @self.dp.message(Command("start"))
         async def handle_start(message):
             await message.answer("Hello! I'm your bot.")
-        
+
         # ❌ MISSING: Start polling
         self.polling_task = asyncio.create_task(
             self.dp.start_polling(self.bot)
@@ -294,10 +294,10 @@ User Journey 2: Interactive Bot (Bot API) ❌ BROKEN
 
 6. Customer sends message to bot:
    Customer → Bot: "/start"
-   
+
    ❌ NOTHING HAPPENS!
    Bot doesn't receive the message
-   
+
    Why? No polling or webhook configured!
 
 7. Platform manually sends message (this works):

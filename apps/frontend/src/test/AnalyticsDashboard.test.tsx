@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { server } from '../__mocks__/api/server.js';
+import { server } from '../__mocks__/api/server';
 import { http, HttpResponse } from 'msw';
 import { AnalyticsDashboard } from '@features/dashboard';
 import React from 'react';

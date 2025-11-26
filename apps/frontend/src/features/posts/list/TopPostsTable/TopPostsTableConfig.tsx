@@ -317,7 +317,7 @@ export const createTopPostsColumns = (): TableColumn[] => [
         header: 'Views',
         align: 'center',
         minWidth: 120,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => (
             <MetricCell
                 value={row.views || 0}
@@ -327,11 +327,11 @@ export const createTopPostsColumns = (): TableColumn[] => [
         )
     },
     {
-        id: 'likes',
+        id: 'reactions',
         header: 'Reactions',
         align: 'center',
         minWidth: 120,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => (
             <MetricCell
                 value={row.reactions_count || row.likes || 0}
@@ -345,21 +345,21 @@ export const createTopPostsColumns = (): TableColumn[] => [
         header: 'Forwards',
         align: 'center',
         minWidth: 120,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => (
             <MetricCell
                 value={row.forwards || row.shares || 0}
                 icon={ShareIcon}
-                color="info.main"
+                color="success.main"
             />
         )
     },
     {
         id: 'comments',
-        header: 'Replies',
+        header: 'Comments',
         align: 'center',
         minWidth: 120,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => (
             <MetricCell
                 value={row.replies_count || row.comments || 0}
@@ -373,7 +373,7 @@ export const createTopPostsColumns = (): TableColumn[] => [
         header: 'Engagement',
         align: 'center',
         minWidth: 140,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => <EngagementCell post={row} />
     },
     {
@@ -381,7 +381,7 @@ export const createTopPostsColumns = (): TableColumn[] => [
         header: 'Date',
         align: 'center',
         minWidth: 160,
-        sortable: true,
+        sortable: false,
         Cell: ({ row }: { row: Post }) => <DateCell date={row.date || row.created_at || ''} />
     }
 ];
@@ -396,9 +396,9 @@ export const topPostsTableConfig: TableConfig = {
     defaultSortDirection: 'desc',
     defaultPageSize: 10,
     pageSizeOptions: [5, 10, 25, 50],
-    enableSearch: true,
+    enableSearch: false,
     searchFields: ['text', 'status'],
-    enableExport: true,
+    enableExport: false,
     enableBulkActions: false,
     enableColumnManagement: true,
     stickyHeader: true,

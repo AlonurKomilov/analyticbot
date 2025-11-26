@@ -59,19 +59,19 @@ async def receive_telegram_webhook(
 ):
     """
     Receive Telegram webhook updates for user's bot
-    
+
     Called by Telegram when a user sends a message to the bot.
-    
+
     Args:
         user_id: User ID (from URL path)
         request: FastAPI request object
         x_telegram_bot_api_secret_token: Webhook secret from Telegram headers
         repository: User bot repository
         bot_manager: Bot manager instance
-        
+
     Returns:
         {"ok": True} on success
-        
+
     Raises:
         HTTPException: On validation or processing errors
     """
@@ -181,14 +181,14 @@ async def get_webhook_status(
 ):
     """
     Get webhook configuration status for user's bot
-    
+
     Args:
         user_id: User ID
         repository: User bot repository
-        
+
     Returns:
         Webhook status information
-        
+
     Raises:
         HTTPException: If bot not found
     """
@@ -220,11 +220,11 @@ async def test_webhook(
     """
     Test webhook by sending a message from bot
     (For debugging purposes)
-    
+
     Args:
         user_id: User ID
         bot_manager: Bot manager instance
-        
+
     Returns:
         Test result
     """

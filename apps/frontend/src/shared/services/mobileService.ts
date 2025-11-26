@@ -11,7 +11,7 @@
  * - Mobile app preferences
  */
 
-import apiClient from './api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface MobileDashboardData {
     channel_id: string;
@@ -77,7 +77,7 @@ class MobileService {
                     params: { channel_id: channelId, period }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get mobile dashboard:', error);
             throw error;
@@ -98,7 +98,7 @@ class MobileService {
                 `${this.baseURL}/analytics/quick`,
                 request
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get quick analytics:', error);
             throw error;
@@ -121,7 +121,7 @@ class MobileService {
                 `${this.baseURL}/metrics/summary/${channelId}`,
                 { params: { format } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get metrics summary:', error);
             throw error;
@@ -139,11 +139,15 @@ class MobileService {
         cache_available: boolean;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                status: 'healthy' | 'degraded' | 'unhealthy';
+                mobile_api: boolean;
+                cache_available: boolean;
+            }>(
                 '/health/services',
                 { params: { service: 'mobile' } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to check mobile health:', error);
             return {

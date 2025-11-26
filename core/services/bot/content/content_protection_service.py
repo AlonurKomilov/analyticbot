@@ -6,15 +6,15 @@ Combines watermarking, theft detection, and premium features.
 """
 
 import time
+
 from core.services.bot.content.models import (
     ContentProtectionRequest,
     ContentProtectionResponse,
-    WatermarkResult,
 )
-from core.services.bot.content.watermark_service import WatermarkService
-from core.services.bot.content.video_watermark_service import VideoWatermarkService
+from core.services.bot.content.protocols import FileSystemPort, SubscriptionPort
 from core.services.bot.content.theft_detector import TheftDetectorService
-from core.services.bot.content.protocols import SubscriptionPort, FileSystemPort
+from core.services.bot.content.video_watermark_service import VideoWatermarkService
+from core.services.bot.content.watermark_service import WatermarkService
 
 
 class ContentProtectionService:

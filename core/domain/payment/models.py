@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 # Domain Enums
@@ -73,12 +73,12 @@ class PaymentMethodData:
     """Payment method creation data"""
     method_type: PaymentMethodType
     provider: PaymentProvider
-    last_four: Optional[str] = None
-    brand: Optional[str] = None
-    expires_at: Optional[datetime] = None
+    last_four: str | None = None
+    brand: str | None = None
+    expires_at: datetime | None = None
     is_default: bool = False
-    metadata: Optional[dict[str, Any]] = None
-    provider_data: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
+    provider_data: dict[str, Any] | None = None
 
 
 @dataclass
@@ -86,9 +86,9 @@ class PaymentData:
     """Payment creation data"""
     payment_method_id: str
     amount: Money
-    description: Optional[str] = None
-    subscription_id: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = None
+    description: str | None = None
+    subscription_id: str | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -97,8 +97,8 @@ class SubscriptionData:
     plan_id: str
     payment_method_id: str
     billing_cycle: BillingCycle
-    trial_days: Optional[int] = None
-    metadata: Optional[dict[str, Any]] = None
+    trial_days: int | None = None
+    metadata: dict[str, Any] | None = None
 
 
 # Domain Entities
@@ -109,13 +109,13 @@ class PaymentMethod:
     user_id: int
     provider: PaymentProvider
     method_type: PaymentMethodType
-    last_four: Optional[str]
-    brand: Optional[str]
-    expires_at: Optional[datetime]
+    last_four: str | None
+    brand: str | None
+    expires_at: datetime | None
     is_default: bool
     is_active: bool
     created_at: datetime
-    metadata: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -127,12 +127,12 @@ class Payment:
     amount: Money
     status: PaymentStatus
     provider: PaymentProvider
-    provider_payment_id: Optional[str]
-    description: Optional[str]
-    subscription_id: Optional[str]
+    provider_payment_id: str | None
+    description: str | None
+    subscription_id: str | None
     created_at: datetime
-    updated_at: Optional[datetime] = None
-    metadata: Optional[dict[str, Any]] = None
+    updated_at: datetime | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -147,8 +147,8 @@ class Subscription:
     amount: Money
     current_period_start: datetime
     current_period_end: datetime
-    trial_ends_at: Optional[datetime]
+    trial_ends_at: datetime | None
     created_at: datetime
-    canceled_at: Optional[datetime] = None
+    canceled_at: datetime | None = None
     cancel_at_period_end: bool = False
-    metadata: Optional[dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None

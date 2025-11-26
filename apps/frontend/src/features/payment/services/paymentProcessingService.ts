@@ -11,7 +11,7 @@
  * - Validate API responses to catch invalid data early
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 import {
     PaymentStatus,
     PaymentProvider
@@ -59,7 +59,7 @@ class PaymentProcessingService {
                 { ...paymentData, user_id: userId }
             );
             // Validate and normalize response
-            return validatePaymentResponse(response.data) as Payment;
+            return validatePaymentResponse(response) as Payment;
         } catch (error) {
             console.error('Failed to process payment:', error);
             throw error;
@@ -76,7 +76,7 @@ class PaymentProcessingService {
                 `${this.baseURL}/status/${paymentId}`
             );
             // Validate and normalize response
-            return validatePaymentResponse(response.data) as Payment;
+            return validatePaymentResponse(response) as Payment;
         } catch (error) {
             console.error('Failed to get payment status:', error);
             throw error;
@@ -94,7 +94,7 @@ class PaymentProcessingService {
                 { params: { limit } }
             );
             // Safely validate array, filtering out any invalid payments
-            return safeValidatePaymentsArray(response.data.payments || []) as Payment[];
+            return safeValidatePaymentsArray(response.payments || []) as Payment[];
         } catch (error) {
             console.error('Failed to get payment history:', error);
             throw error;
@@ -110,7 +110,7 @@ class PaymentProcessingService {
                 `${this.baseURL}/refund/${paymentId}`,
                 { reason }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to refund payment:', error);
             throw error;

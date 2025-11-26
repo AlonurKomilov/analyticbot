@@ -44,7 +44,6 @@ warnings.warn(
     stacklevel=2
 )
 
-import logging
 from typing import TypeVar, cast
 
 from apps.bot.config import Settings

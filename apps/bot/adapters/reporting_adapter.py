@@ -4,7 +4,6 @@ Follows Clean Architecture: Apps layer adapter wrapping Core business logic
 """
 
 import logging
-from pathlib import Path
 from typing import Any
 
 import pandas as pd

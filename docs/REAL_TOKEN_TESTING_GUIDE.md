@@ -31,13 +31,13 @@ BotFather will ask you:
 
 BotFather will reply with a message containing your token:
 ```
-Done! Congratulations on your new bot. You will find it at 
+Done! Congratulations on your new bot. You will find it at
 t.me/my_test_validation_bot. You can now add a description...
 
 Use this token to access the HTTP API:
 1234567890:ABCdefGHIjklMNOpqrsTUVwxyzABCDE
 
-For a description of the Bot API, see this page: 
+For a description of the Bot API, see this page:
 https://core.telegram.org/bots/api
 ```
 
@@ -257,6 +257,6 @@ export TEST_BOT_TOKEN="your_token_here"
 
 ---
 
-**Created:** November 19, 2025  
-**Purpose:** Safe testing of token validator with real Telegram bot tokens  
+**Created:** November 19, 2025
+**Purpose:** Safe testing of token validator with real Telegram bot tokens
 **Security Level:** Test environment only

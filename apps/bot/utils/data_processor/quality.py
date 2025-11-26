@@ -14,7 +14,7 @@ from .base import logger, np, pd
 class DataQualityMixin:
     """
     Mixin class providing data quality analysis capabilities.
-    
+
     Features:
     - Basic dataset metrics
     - Column-wise analysis

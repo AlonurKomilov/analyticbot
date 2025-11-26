@@ -24,7 +24,7 @@ import {
   Check as CheckIcon,
   Error as ErrorIcon
 } from '@mui/icons-material';
-import { TouchRipple, FeedbackAnimation } from './MicroInteractions.jsx';
+import { TouchRipple, FeedbackAnimation } from './MicroInteractions';
 import { DESIGN_TOKENS } from '@theme/designTokens';
 
 type HoverEffect = 'lift' | 'glow' | 'scale' | 'bounce';

@@ -35,6 +35,7 @@ celery_app = Celery(
     include=[
         "apps.celery.tasks.bot_tasks",
         "apps.celery.tasks.ml_tasks",  # Deep Learning tasks
+        "apps.celery.tasks.maintenance_tasks",  # Database maintenance tasks
     ],
 )
 
@@ -66,6 +67,9 @@ celery_app.conf.update(
         "apps.celery.tasks.ml_tasks.train_growth_model": {"queue": "ml_processing"},
         "apps.celery.tasks.ml_tasks.process_content_analysis": {"queue": "ml_processing"},
         "apps.celery.tasks.ml_tasks.generate_predictions": {"queue": "ml_processing"},
+        # Maintenance tasks - low priority
+        "apps.celery.tasks.maintenance_tasks.refresh_materialized_views": {"queue": "maintenance"},
+        "apps.celery.tasks.maintenance_tasks.get_view_statistics": {"queue": "maintenance"},
     },
     # Serialization and compression (ENHANCED)
     task_serializer="msgpack",
@@ -233,6 +237,12 @@ celery_app.conf.beat_schedule = {
         "task": "apps.celery.tasks.bot_tasks.update_prometheus_metrics",
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "monitoring", "priority": 3},
+    },
+    # Materialized view refresh (every 4 hours)
+    "refresh-materialized-views": {
+        "task": "apps.celery.tasks.maintenance_tasks.refresh_materialized_views",
+        "schedule": 14400.0,  # Every 4 hours (4 * 60 * 60)
+        "options": {"queue": "maintenance", "priority": 2},
     },
 }
 

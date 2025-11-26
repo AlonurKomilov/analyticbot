@@ -52,7 +52,6 @@ warnings.warn(
     stacklevel=2
 )
 
-import logging
 from collections.abc import AsyncGenerator
 from typing import Any
 

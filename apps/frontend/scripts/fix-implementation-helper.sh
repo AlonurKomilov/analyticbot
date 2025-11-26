@@ -87,12 +87,12 @@ show_menu() {
 # Function 1: Create logger utility
 create_logger() {
     info "Creating logger utility..."
-    
+
     if [ -f "src/utils/logger.ts" ]; then
         warning "Logger already exists. Backing up..."
         mv src/utils/logger.ts src/utils/logger.ts.backup
     fi
-    
+
     # Logger code will be created by user following the plan
     success "Ready to create src/utils/logger.ts - Check FRONTEND_FIX_IMPLEMENTATION_PLAN.md Step 1.1"
 }
@@ -100,28 +100,28 @@ create_logger() {
 # Function 2: Audit console.log usage
 audit_console_logs() {
     info "Auditing console.log usage..."
-    
+
     echo "" > console_audit.txt
     echo "=== CONSOLE.LOG AUDIT ===" >> console_audit.txt
     echo "Generated: $(date)" >> console_audit.txt
     echo "" >> console_audit.txt
-    
+
     echo "Console.log instances:" >> console_audit.txt
     grep -rn "console\.log" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> console_audit.txt || true
-    
+
     echo -e "\n\nConsole.error instances:" >> console_audit.txt
     grep -rn "console\.error" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> console_audit.txt || true
-    
+
     echo -e "\n\nConsole.warn instances:" >> console_audit.txt
     grep -rn "console\.warn" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> console_audit.txt || true
-    
+
     echo -e "\n\nConsole.debug instances:" >> console_audit.txt
     grep -rn "console\.debug" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> console_audit.txt || true
-    
+
     LOG_COUNT=$(grep -c "console\.log" console_audit.txt || echo "0")
     ERROR_COUNT=$(grep -c "console\.error" console_audit.txt || echo "0")
     WARN_COUNT=$(grep -c "console\.warn" console_audit.txt || echo "0")
-    
+
     success "Audit complete! Results saved to console_audit.txt"
     info "Found: $LOG_COUNT console.log, $ERROR_COUNT console.error, $WARN_COUNT console.warn"
 }
@@ -129,36 +129,36 @@ audit_console_logs() {
 # Function 3: Create storage manager
 create_storage_manager() {
     info "Creating storage manager..."
-    
+
     if [ -f "src/utils/storage.ts" ]; then
         warning "Storage manager already exists. Backing up..."
         mv src/utils/storage.ts src/utils/storage.ts.backup
     fi
-    
+
     success "Ready to create src/utils/storage.ts - Check FRONTEND_FIX_IMPLEMENTATION_PLAN.md Step 2.2"
 }
 
 # Function 4: Audit localStorage usage
 audit_localstorage() {
     info "Auditing localStorage usage..."
-    
+
     echo "" > storage_audit.txt
     echo "=== LOCALSTORAGE AUDIT ===" >> storage_audit.txt
     echo "Generated: $(date)" >> storage_audit.txt
     echo "" >> storage_audit.txt
-    
+
     echo "localStorage.getItem:" >> storage_audit.txt
     grep -rn "localStorage\.getItem" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> storage_audit.txt || true
-    
+
     echo -e "\n\nlocalStorage.setItem:" >> storage_audit.txt
     grep -rn "localStorage\.setItem" src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> storage_audit.txt || true
-    
+
     echo -e "\n\nsessionStorage usage:" >> storage_audit.txt
     grep -rn "sessionStorage\." src/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null >> storage_audit.txt || true
-    
+
     GET_COUNT=$(grep -c "localStorage\.getItem" storage_audit.txt || echo "0")
     SET_COUNT=$(grep -c "localStorage\.setItem" storage_audit.txt || echo "0")
-    
+
     success "Audit complete! Results saved to storage_audit.txt"
     info "Found: $GET_COUNT getItem calls, $SET_COUNT setItem calls"
 }
@@ -196,16 +196,16 @@ upgrade_safe_packages() {
 # Function 8: Find JS files
 find_js_files() {
     info "Finding all .js and .jsx files..."
-    
+
     echo "" > js_files_to_convert.txt
     echo "=== JS/JSX FILES TO CONVERT ===" >> js_files_to_convert.txt
     echo "Generated: $(date)" >> js_files_to_convert.txt
     echo "" >> js_files_to_convert.txt
-    
+
     find src -name "*.js" -o -name "*.jsx" >> js_files_to_convert.txt
-    
+
     JS_COUNT=$(find src -name "*.js" -o -name "*.jsx" | wc -l)
-    
+
     success "Found $JS_COUNT JS/JSX files to convert"
     success "List saved to js_files_to_convert.txt"
 }
@@ -213,38 +213,38 @@ find_js_files() {
 # Function 9: Audit components
 audit_components() {
     info "Auditing components for optimization opportunities..."
-    
+
     echo "" > component_audit.txt
     echo "=== COMPONENT OPTIMIZATION AUDIT ===" >> component_audit.txt
     echo "Generated: $(date)" >> component_audit.txt
     echo "" >> component_audit.txt
-    
+
     echo "Components with multiple useEffect:" >> component_audit.txt
     grep -rn "useEffect" src/components/ --include="*.tsx" 2>/dev/null | cut -d: -f1 | sort | uniq -c | sort -rn >> component_audit.txt || true
-    
+
     echo -e "\n\nComponents with useState:" >> component_audit.txt
     grep -rn "useState" src/components/ --include="*.tsx" 2>/dev/null | cut -d: -f1 | sort | uniq -c | sort -rn >> component_audit.txt || true
-    
+
     success "Component audit complete! Results saved to component_audit.txt"
 }
 
 # Function 10: Find 'any' types
 find_any_types() {
     info "Finding all 'any' types..."
-    
+
     echo "" > any_types_audit.txt
     echo "=== TYPESCRIPT 'ANY' AUDIT ===" >> any_types_audit.txt
     echo "Generated: $(date)" >> any_types_audit.txt
     echo "" >> any_types_audit.txt
-    
+
     echo "'as any' usage:" >> any_types_audit.txt
     grep -rn "as any" src/ --include="*.ts" --include="*.tsx" 2>/dev/null >> any_types_audit.txt || true
-    
+
     echo -e "\n\n': any' annotations:" >> any_types_audit.txt
     grep -rn ": any" src/ --include="*.ts" --include="*.tsx" 2>/dev/null >> any_types_audit.txt || true
-    
+
     ANY_COUNT=$(grep -c "any" any_types_audit.txt || echo "0")
-    
+
     success "Found $ANY_COUNT 'any' type usage instances"
     success "Results saved to any_types_audit.txt"
 }
@@ -264,30 +264,30 @@ run_all_audits() {
 check_status() {
     info "Checking implementation status..."
     echo ""
-    
+
     # Check if utilities exist
     echo "Status of key files:"
     [ -f "src/utils/logger.ts" ] && success "✓ logger.ts exists" || warning "✗ logger.ts missing"
     [ -f "src/utils/storage.ts" ] && success "✓ storage.ts exists" || warning "✗ storage.ts missing"
     [ -f "src/config/env.ts" ] && success "✓ env.ts exists" || warning "✗ env.ts missing"
-    
+
     echo ""
-    
+
     # Check if Zod is installed
     if npm list zod &>/dev/null; then
         success "✓ Zod installed"
     else
         warning "✗ Zod not installed"
     fi
-    
+
     echo ""
-    
+
     # Count remaining issues
     if [ -f "console_audit.txt" ]; then
         LOG_COUNT=$(grep -c "console\.log" src/ --include="*.ts" --include="*.tsx" 2>/dev/null || echo "0")
         info "Console.log instances remaining: $LOG_COUNT"
     fi
-    
+
     if [ -f "storage_audit.txt" ]; then
         STORAGE_COUNT=$(grep -c "localStorage\." src/ --include="*.ts" --include="*.tsx" 2>/dev/null || echo "0")
         info "Direct localStorage calls remaining: $STORAGE_COUNT"
@@ -312,10 +312,10 @@ install_dependencies() {
 # Main script
 main() {
     check_directory
-    
+
     while true; do
         show_menu
-        
+
         case $choice in
             1) create_logger ;;
             2) audit_console_logs ;;
@@ -330,7 +330,7 @@ main() {
             11) run_all_audits ;;
             12) check_status ;;
             13) install_dependencies ;;
-            0) 
+            0)
                 info "Exiting..."
                 exit 0
                 ;;
@@ -338,7 +338,7 @@ main() {
                 error "Invalid choice. Please try again."
                 ;;
         esac
-        
+
         echo ""
         read -p "Press Enter to continue..."
     done

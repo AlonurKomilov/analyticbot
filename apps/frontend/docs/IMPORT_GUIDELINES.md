@@ -1,6 +1,6 @@
 # Import Guidelines
 
-**Last Updated:** October 26, 2025  
+**Last Updated:** October 26, 2025
 **Version:** 1.0.0
 
 ## Table of Contents

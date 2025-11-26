@@ -38,7 +38,7 @@ else
     echo "❌ TEST_BOT_TOKEN environment variable is not set"
     echo ""
     read -p "Do you have a bot token ready? (yes/no): " response
-    
+
     if [ "$response" = "yes" ] || [ "$response" = "y" ]; then
         echo ""
         read -p "Enter your bot token: " token

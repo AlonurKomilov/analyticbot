@@ -74,6 +74,7 @@ class BotContainer(containers.DeclarativeContainer):
     # Dependencies from other containers
     database = providers.DependenciesContainer()
     core_services = providers.DependenciesContainer()
+    mtproto = providers.DependenciesContainer()
 
     # ============================================================================
     # BOT CLIENT & DISPATCHER
@@ -185,7 +186,7 @@ class BotContainer(containers.DeclarativeContainer):
     # MTProto services (Phase 3 - Nov 23, 2025)
     channel_admin_check_service = providers.Factory(
         create_channel_admin_check_service,
-        mtproto_service=core_services.mtproto_service,
+        mtproto_service=mtproto.user_mtproto_service,
     )
 
     # Content protection adapters (Phase 3.3)

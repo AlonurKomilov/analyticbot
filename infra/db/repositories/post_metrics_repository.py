@@ -22,6 +22,7 @@ class AsyncpgPostMetricsRepository:
         msg_id: int,
         views: int = 0,
         forwards: int = 0,
+        comments_count: int = 0,
         replies_count: int = 0,
         reactions_json: list | None = None,
         reactions_count: int = 0,
@@ -34,7 +35,8 @@ class AsyncpgPostMetricsRepository:
             msg_id: Message ID
             views: Number of views
             forwards: Number of forwards
-            replies_count: Number of replies
+            comments_count: Number of discussion group comments
+            replies_count: Number of direct threaded replies
             reactions_json: List of reaction data
             reactions_count: Total reaction count
             ts: Timestamp for the snapshot
@@ -50,12 +52,13 @@ class AsyncpgPostMetricsRepository:
             await conn.execute(
                 """
                 INSERT INTO post_metrics (
-                    channel_id, msg_id, views, forwards, replies_count,
-                    reactions, reactions_count, snapshot_time
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    channel_id, msg_id, views, forwards, comments_count,
+                    replies_count, reactions, reactions_count, snapshot_time
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 ON CONFLICT (channel_id, msg_id, snapshot_time) DO UPDATE SET
                     views = GREATEST(post_metrics.views, EXCLUDED.views),
                     forwards = GREATEST(post_metrics.forwards, EXCLUDED.forwards),
+                    comments_count = GREATEST(post_metrics.comments_count, EXCLUDED.comments_count),
                     replies_count = GREATEST(post_metrics.replies_count, EXCLUDED.replies_count),
                     reactions = EXCLUDED.reactions,
                     reactions_count = EXCLUDED.reactions_count
@@ -64,6 +67,7 @@ class AsyncpgPostMetricsRepository:
                 msg_id,
                 views,
                 forwards,
+                comments_count,
                 replies_count,
                 json.dumps(reactions_json),
                 reactions_count,

@@ -6,12 +6,13 @@ Coordinates with VideoProcessorPort for actual video manipulation.
 """
 
 import time
+
 from core.services.bot.content.models import (
     WatermarkConfig,
-    WatermarkResult,
     WatermarkPosition,
+    WatermarkResult,
 )
-from core.services.bot.content.protocols import VideoProcessorPort, FileSystemPort
+from core.services.bot.content.protocols import FileSystemPort, VideoProcessorPort
 
 
 class VideoWatermarkService:

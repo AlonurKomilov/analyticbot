@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAnalyticsStore } from '@store';
 import { useChannelStore } from '@store';
 import { useUIStore } from '@store';
-import { calculateSummaryStats, type Post, type SummaryStats } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
+import { type Post, type SummaryStats } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
 import { DEFAULT_DEMO_CHANNEL_ID } from '@/__mocks__/constants';
 
 interface UsePostTableLogicReturn {
     timeFilter: string;
     sortBy: string;
+    limit: number;
     loading: boolean;
     error: string | null;
     posts: Post[];
@@ -16,21 +17,23 @@ interface UsePostTableLogicReturn {
     summaryStats: SummaryStats | null;
     setTimeFilter: (filter: string) => void;
     setSortBy: (sort: string) => void;
+    setLimit: (limit: number) => void;
     handleMenuClick: (event: React.MouseEvent<HTMLElement>, postId: string | number) => void;
     handleMenuClose: () => void;
     loadTopPosts: (silent?: boolean) => Promise<void>;
 }
 
 export const usePostTableLogic = (): UsePostTableLogicReturn => {
-    const [timeFilter, setTimeFilter] = useState<string>('30d');  // Changed default to 30d
+    const [timeFilter, setTimeFilter] = useState<string>('all');  // Changed default to all
     const [sortBy, setSortBy] = useState<string>('views');
+    const [limit, setLimit] = useState<number>(10);  // Default to 10 posts
     const [error, setError] = useState<string | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [selectedPostId, setSelectedPostId] = useState<string | number | null>(null);
 
     // Get store methods and state
-    const { fetchTopPosts, topPosts, isLoadingTopPosts } = useAnalyticsStore();
+    const { fetchTopPosts, topPosts, isLoadingTopPosts, fetchTopPostsSummary, isLoadingTopPostsSummary } = useAnalyticsStore();
     const { selectedChannel } = useChannelStore();
     const { dataSource } = useUIStore();
 
@@ -51,9 +54,9 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
     const mapSortByToBackend = (sort: string): string => {
         const mapping: Record<string, string> = {
             'views': 'views',
-            'likes': 'reactions_count',
+            'reactions': 'reactions_count',
             'shares': 'forwards',
-            'comments': 'replies_count',
+            'comments': 'comments_count',  // Fixed: was 'replies_count', should be 'comments_count'
             'engagement': 'engagement_rate'
         };
         return mapping[sort] || 'views';
@@ -73,13 +76,22 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
             setError(null);
             const period = mapTimFilterToPeriod(timeFilter);
             const backendSortBy = mapSortByToBackend(sortBy);
-            await fetchTopPosts(channelId, 10, period, backendSortBy, silent);
+
+            console.log('🔄 Loading top posts:', { channelId, period, sortBy: backendSortBy, limit });
+
+            // Fetch both top posts table data AND summary statistics in parallel
+            await Promise.all([
+                fetchTopPosts(channelId, limit, period, backendSortBy, silent),
+                fetchTopPostsSummary(channelId, period, silent)
+            ]);
+
+            console.log('✅ Top posts and summary loaded successfully');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
             console.error('Error loading top posts:', err);
         }
-    }, [fetchTopPosts, channelId, timeFilter, sortBy]); // Removed topPosts from dependencies!
+    }, [fetchTopPosts, fetchTopPostsSummary, channelId, timeFilter, sortBy, limit]); // Removed topPosts from dependencies!
 
     // Sync topPosts from store to local state
     useEffect(() => {
@@ -103,9 +115,32 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
         }
     }, [isLoadingTopPosts, posts.length, error, channelId]);
 
-    // Calculate summary statistics
+    // Transform summary from fetched posts (calculate from top N posts only)
     const summaryStats = useMemo(() => {
-        return calculateSummaryStats(posts);
+        if (!posts || posts.length === 0) {
+            console.log('⚠️ No posts data available for summary');
+            return null;
+        }
+
+        // Calculate summary from the fetched posts (top N based on limit)
+        const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+        const totalReactions = posts.reduce((sum, post) => sum + (post.reactions || 0), 0);
+        const totalShares = posts.reduce((sum, post) => sum + (post.shares || 0), 0);
+        const totalComments = posts.reduce((sum, post) => sum + (post.comments || 0), 0);
+        const totalReplies = posts.reduce((sum, post) => sum + (post.replies || 0), 0);
+        const avgEngagement = posts.reduce((sum, post) => sum + (post.engagementRate || 0), 0) / posts.length;
+
+        console.log('📊 Summary calculated from top', posts.length, 'posts');
+
+        return {
+            totalViews,
+            totalReactions,
+            totalShares,
+            totalComments,
+            totalReplies,
+            avgEngagement: avgEngagement.toFixed(1),
+            topPost: posts[0] || null
+        };
     }, [posts]);
 
     // Menu handlers
@@ -123,7 +158,8 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
         // State
         timeFilter,
         sortBy,
-        loading: isLoadingTopPosts,
+        limit,
+        loading: isLoadingTopPosts || isLoadingTopPostsSummary,
         error,
         posts,
         anchorEl,
@@ -133,6 +169,7 @@ export const usePostTableLogic = (): UsePostTableLogicReturn => {
         // Actions
         setTimeFilter,
         setSortBy,
+        setLimit,
         handleMenuClick,
         handleMenuClose,
         loadTopPosts

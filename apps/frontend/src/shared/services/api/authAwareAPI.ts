@@ -143,7 +143,7 @@ class AuthAwareAPIService {
         return this.makeRequest(`/analytics/predictive/best-times/${channelId}?timeframe=${timeframe}`);
     }
 
-    async getEngagementMetrics(channelId: string, period: string = '7d'): Promise<any> {
+    async getEngagementMetrics(channelId: string): Promise<any> {
         return this.makeRequest(`/analytics/realtime/metrics/${channelId}`);
     }
 

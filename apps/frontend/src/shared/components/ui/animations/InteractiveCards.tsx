@@ -25,7 +25,7 @@ import {
   ExpandMore as ExpandIcon,
   ExpandLess as CollapseIcon
 } from '@mui/icons-material';
-import { InteractiveCard, SkeletonLoader, StaggeredAnimation } from './MicroInteractions.jsx';
+import { InteractiveCard, SkeletonLoader, StaggeredAnimation } from './MicroInteractions';
 
 type HoverEffect = 'lift' | 'glow' | 'scale';
 type EntranceEffect = 'fade' | 'grow' | 'none';

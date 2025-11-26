@@ -15,13 +15,13 @@ from typing import Any
 import torch
 import torch.nn as nn
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     BatchData,
     ImportanceWeights,
     IncrementalLearningConfig,
     ModelEvaluation,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

@@ -25,7 +25,7 @@ class PaymentGateway(Enum):
 class PaymentAdapterFactory:
     """
     Factory for creating payment adapters with configuration-based switching.
-    
+
     Clean Architecture: Abstracts payment provider details from business logic.
     """
 

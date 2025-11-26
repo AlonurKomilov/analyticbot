@@ -950,14 +950,14 @@ async def verify_bot_ownership(
   - Alembic migration 0031 creates `bot_health_metrics` table
   - Composite indexes for efficient queries: `(user_id, timestamp DESC)`, `(status, timestamp DESC)`
   - 17 columns tracking all health metrics
-  
+
 - **Persistence Service:**
   - `BotHealthPersistenceService` with background task
   - Automatic persistence every 5 minutes (configurable: 60s-3600s)
   - Batch insert for efficiency
   - 30-day retention policy with automatic cleanup (configurable)
   - Load latest metrics on startup (restores state after restart)
-  
+
 - **Historical Queries:**
   - `get_user_history(user_id, hours)` - Time series for specific bot
   - `get_unhealthy_history(hours)` - All unhealthy incidents
@@ -991,7 +991,7 @@ async def verify_bot_ownership(
 
 **Admin API Endpoints (11 total):**
 - Health Monitoring: 3 endpoints
-- Circuit Breaker: 3 endpoints  
+- Circuit Breaker: 3 endpoints
 - Retry Statistics: 2 endpoints
 - Persistence: 3 endpoints
 
@@ -1237,14 +1237,14 @@ All Phase 2 tasks have been successfully implemented, tested, and verified. The 
      - Secret must be at least 35 characters
      - Characters: alphanumeric, underscore, hyphen only
      - Detailed error messages for each failure case
-   
+
    - **Live Validation:**
      - Connects to Telegram API
      - Retrieves bot information (ID, username)
      - Categorizes errors (unauthorized, network, timeout, revoked)
      - Graceful error handling
      - Returns detailed validation result
-   
+
    - **Error Categorization:**
      - `VALID` - Token works correctly
      - `INVALID_FORMAT` - Format doesn't match pattern
@@ -1286,7 +1286,7 @@ All Phase 2 tasks have been successfully implemented, tested, and verified. The 
 **Test Results:**
 ```
 ✅ Real token validation: PASSED
-✅ Format validation: PASSED  
+✅ Format validation: PASSED
 ✅ Live Telegram connection: PASSED
 ✅ Bot info retrieval: PASSED
 ✅ Invalid token detection: PASSED
@@ -1346,14 +1346,14 @@ Token Details:
 async def validate_bot_token(token: str) -> tuple[bool, str]:
     """
     Validate bot token format and connectivity
-    
+
     Returns:
         (is_valid, error_message)
     """
     # Format check
     if not re.match(r'^\d+:[A-Za-z0-9_-]{35}$', token):
         return False, "Invalid token format"
-    
+
     # Live validation
     try:
         bot = Bot(token=token)
@@ -1398,7 +1398,7 @@ async def validate_bot_token(token: str) -> tuple[bool, str]:
      - Supports both in-memory and Redis backend
      - Fixed-window strategy for rate limiting
      - Graceful error handling (swallow_errors=True)
-   
+
    - **Rate Limit Configuration:**
      ```python
      BOT_CREATION = "5/hour"        # Prevent bot spam
@@ -1410,13 +1410,13 @@ async def validate_bot_token(token: str) -> tuple[bool, str]:
      WEBHOOK = "1000/minute"        # High-traffic webhooks
      FAILED_AUTH = "5/15minute"     # Brute force protection
      ```
-   
+
    - **IP Whitelist:**
      - Localhost (127.0.0.1, ::1)
      - Configurable via RATE_LIMIT_WHITELIST environment variable
      - Whitelisted IPs bypass all rate limits
      - Admin IPs can be added for monitoring tools
-   
+
    - **Smart IP Detection:**
      - Handles X-Forwarded-For header (proxied requests)
      - Handles X-Real-IP header (nginx)
@@ -1430,19 +1430,19 @@ async def validate_bot_token(token: str) -> tuple[bool, str]:
    - Logged for monitoring
 
 3. **Applied to Endpoints:**
-   
+
    **Authentication Endpoints:**
    - `POST /auth/login` - 10 requests/minute per IP
    - `POST /auth/register` - 3 registrations/hour per IP
    - Prevents brute force attacks
    - Prevents registration spam
-   
+
    **Bot Management Endpoints:**
    - `POST /api/user-bot/create` - 5 creations/hour per IP
    - `POST /api/user-bot/verify` - 100 operations/minute per IP
    - Prevents bot creation spam
    - Allows normal usage
-   
+
    **Admin Endpoints:**
    - `GET /admin/system/stats` - 30 requests/minute per IP
    - All admin endpoints protected
@@ -1476,7 +1476,7 @@ async def validate_bot_token(token: str) -> tuple[bool, str]:
 ```
 ✅ Passed: 5/7 tests
 ✅ Configuration: PASSED
-✅ Whitelist: PASSED  
+✅ Whitelist: PASSED
 ✅ Enforcement: PASSED (rate limited after 3 requests)
 ✅ Headers: PASSED (Retry-After, X-RateLimit-*)
 ✅ Status Check: PASSED
@@ -1599,8 +1599,8 @@ async def send_message(...):
 
 **Progress: 1/4 tasks complete (25%)**
 
-**Total Estimated Effort:** 10-12 hours  
-**Time Spent:** 2 hours  
+**Total Estimated Effort:** 10-12 hours
+**Time Spent:** 2 hours
 **Remaining:** 8-10 hours
 
 **Completed:**
@@ -1608,7 +1608,7 @@ async def send_message(...):
 
 **Next Up:**
 - 📅 Task 12: IP Rate Limiting (2-3 hours)
-- 📅 Task 10: Usage Analytics (2-3 hours)  
+- 📅 Task 10: Usage Analytics (2-3 hours)
 - 📅 Task 9: Webhook Support (3-4 hours)
 
 **Expected Benefits:**

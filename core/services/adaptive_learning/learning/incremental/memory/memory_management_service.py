@@ -14,12 +14,12 @@ from typing import Any
 
 import numpy as np
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     IncrementalLearningConfig,
     MemoryOperation,
     MemoryStrategy,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

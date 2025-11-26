@@ -16,7 +16,7 @@ import { productionDataProvider } from '@/providers/DataProvider';
 import { DEFAULT_CHANNEL_ID } from '@config/constants';
 import type {
     AnalyticsOverview,
-    Post,
+    TopPost,
     EngagementMetrics
 } from '@/types';
 
@@ -27,7 +27,7 @@ export interface DataProvider {
     getProviderName: () => string;
     isAvailable: () => Promise<boolean>;
     getAnalytics: (channelId: string) => Promise<AnalyticsOverview>;
-    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<Post[]>;
+    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<TopPost[]>;
     getEngagementMetrics: (channelId: string, options?: Record<string, any>) => Promise<EngagementMetrics>;
     getRecommendations: (channelId: string) => Promise<any>;
 }
@@ -63,7 +63,7 @@ export interface UseDataSourceReturn {
     /** Fetch analytics data */
     getAnalytics: (channelId: string) => Promise<AnalyticsOverview>;
     /** Fetch top posts */
-    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<Post[]>;
+    getTopPosts: (channelId: string, options?: Record<string, any>) => Promise<TopPost[]>;
     /** Fetch engagement metrics */
     getEngagementMetrics: (channelId: string, options?: Record<string, any>) => Promise<EngagementMetrics>;
     /** Fetch recommendations */
@@ -158,7 +158,7 @@ export const useDataSource = (
     }, []);
 
     // Get top posts
-    const getTopPosts = useCallback(async (channelId: string, options: Record<string, any> = {}): Promise<Post[]> => {
+    const getTopPosts = useCallback(async (channelId: string, options: Record<string, any> = {}): Promise<TopPost[]> => {
         setIsLoading(true);
         setError(null);
 
@@ -314,10 +314,10 @@ export const useAnalytics = (
  * Clean top posts hook using data provider
  */
 export interface UseTopPostsReturn {
-    data: Post[] | null;
+    data: TopPost[] | null;
     isLoading: boolean;
     error: string | null;
-    refetch: (forceRefresh?: boolean) => Promise<Post[] | null>;
+    refetch: (forceRefresh?: boolean) => Promise<TopPost[] | null>;
     clearError: () => void;
 }
 
@@ -326,11 +326,11 @@ export const useTopPosts = (
     options: Record<string, any> = {},
     dataProvider: DataProvider = productionDataProvider
 ): UseTopPostsReturn => {
-    const [data, setData] = useState<Post[] | null>(null);
+    const [data, setData] = useState<TopPost[] | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchTopPosts = useCallback(async (forceRefresh: boolean = false): Promise<Post[] | null> => {
+    const fetchTopPosts = useCallback(async (forceRefresh: boolean = false): Promise<TopPost[] | null> => {
         if (!forceRefresh && data) return data;
 
         setIsLoading(true);
@@ -473,7 +473,7 @@ export const useRecommendations = (
  */
 export interface UseAllAnalyticsReturn {
     analytics: AnalyticsOverview | null;
-    topPosts: Post[] | null;
+    topPosts: TopPost[] | null;
     engagementMetrics: EngagementMetrics | null;
     recommendations: any | null;
     isLoading: boolean;

@@ -5,6 +5,7 @@
 
 import { lazy, Suspense, useState, useEffect, useRef, ComponentType, ReactNode } from 'react';
 import type { LazyExoticComponent } from 'react';
+import { logger } from './logger';
 
 interface ChunkStats {
     totalChunks: number;
@@ -83,7 +84,7 @@ class BundleAnalyzer {
             if (event.filename && event.filename.includes('/js/')) {
                 const chunkName = this.extractChunkName(event.filename);
                 this.failedChunks.add(chunkName);
-                console.error(`❌ Failed to load chunk: ${chunkName}`);
+                logger.error('Failed to load chunk', { chunkName });
             }
         });
     }
@@ -99,7 +100,7 @@ class BundleAnalyzer {
         this.loadTimes.set(chunkName, loadTime);
 
         if (loadTime > 3000) {
-            console.warn(`🐌 Slow chunk load: ${chunkName} took ${loadTime.toFixed(2)}ms`);
+            logger.warn('Slow chunk load', { chunkName, loadTime: loadTime.toFixed(2) });
         }
     }
 
@@ -134,36 +135,14 @@ class BundleAnalyzer {
     generateBundleReport(): ChunkStats {
         const stats = this.getChunkStats();
 
-        console.group('📦 Bundle Analysis Report');
-        console.log(`📊 Total Chunks: ${stats.totalChunks}`);
-        console.log(`📏 Total Size: ${(stats.totalSize / 1024).toFixed(2)} KB`);
-        console.log(`⏱️ Average Load Time: ${stats.averageLoadTime.toFixed(2)}ms`);
-
-        if (stats.slowestChunks.length > 0) {
-            console.group('🐌 Slowest Chunks');
-            stats.slowestChunks.forEach(({ name, time }) => {
-                console.log(`${name}: ${time.toFixed(2)}ms`);
-            });
-            console.groupEnd();
-        }
-
-        if (stats.failedChunks.length > 0) {
-            console.group('❌ Failed Chunks');
-            stats.failedChunks.forEach(chunk => {
-                console.log(chunk);
-            });
-            console.groupEnd();
-        }
-
-        if (stats.preloadedChunks.length > 0) {
-            console.group('🚀 Preloaded Chunks');
-            stats.preloadedChunks.forEach(chunk => {
-                console.log(chunk);
-            });
-            console.groupEnd();
-        }
-
-        console.groupEnd();
+        logger.info('Bundle Analysis Report', {
+            totalChunks: stats.totalChunks,
+            totalSize: `${(stats.totalSize / 1024).toFixed(2)} KB`,
+            averageLoadTime: `${stats.averageLoadTime.toFixed(2)}ms`,
+            slowestChunks: stats.slowestChunks.map(({ name, time }) => `${name}: ${time.toFixed(2)}ms`),
+            failedChunks: stats.failedChunks,
+            preloadedChunks: stats.preloadedChunks
+        });
 
         return stats;
     }
@@ -199,7 +178,7 @@ export const createSmartLazy = <T extends ComponentType<any>>(
                 return module;
             } catch (error) {
                 lastError = error;
-                console.warn(`⚠️ Chunk load attempt ${attempt} failed:`, error);
+                logger.warn('Chunk load attempt failed', { attempt, error });
 
                 if (attempt < retryAttempts) {
                     await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
@@ -208,7 +187,7 @@ export const createSmartLazy = <T extends ComponentType<any>>(
         }
 
         // All attempts failed
-        console.error(`❌ Failed to load chunk after ${retryAttempts} attempts:`, lastError);
+        logger.error('Failed to load chunk after all attempts', { retryAttempts, error: lastError });
         throw lastError;
     };
 
@@ -224,7 +203,7 @@ export const createSmartLazy = <T extends ComponentType<any>>(
     // Preload logic
     if (preload) {
         setTimeout(() => {
-            enhancedImport().catch(console.error);
+            enhancedImport().catch((error) => logger.error('Chunk preload failed', { error }));
             if (bundleAnalyzer && chunkName) {
                 bundleAnalyzer.preloadedChunks.add(chunkName);
             }
@@ -249,7 +228,7 @@ export const SmartSuspense = ({
         // Set timeout for loading
         timeoutRef.current = setTimeout(() => {
             setHasTimedOut(true);
-            console.warn('⏰ Component loading timeout');
+            logger.warn('Component loading timeout', { timeout });
         }, timeout);
 
         return () => {
@@ -380,15 +359,15 @@ class PreloadManager {
         const route = this.preloadQueue.get(routeName);
         if (!route) return;
 
-        console.log(`🚀 Preloading route: ${routeName}`);
+        logger.debug('Preloading route', { routeName });
 
         route.importFn()
             .then(() => {
                 this.preloadedRoutes.add(routeName);
-                console.log(`✅ Route preloaded: ${routeName}`);
+                logger.debug('Route preloaded', { routeName });
             })
             .catch(error => {
-                console.error(`❌ Failed to preload route ${routeName}:`, error);
+                logger.error('Failed to preload route', { routeName, error });
             });
     }
 

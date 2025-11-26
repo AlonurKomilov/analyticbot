@@ -21,7 +21,7 @@ import {
   ChipProps as MuiChipProps,
   BoxProps
 } from '@mui/material';
-import { DESIGN_TOKENS, getButtonProps, getCardProps, getStatusColor, createTransition, createElevation } from '@/theme/designTokens.js';
+import { DESIGN_TOKENS, getButtonProps, getCardProps, getStatusColor, createTransition, createElevation } from '@/theme/designTokens';
 
 /**
  * Type definitions

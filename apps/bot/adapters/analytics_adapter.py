@@ -14,7 +14,7 @@ from core.ports.telegram_port import TelegramBotPort
 from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
 
 if TYPE_CHECKING:
-    from aiogram import Bot
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class BotAnalyticsAdapter:
         Args:
             batch_processor: Core analytics batch processor
             telegram_port: Telegram port for bot integration
-        
+
         Note: Removed bot parameter - caller should inject telegram_port directly.
         This enforces dependency injection at DI container level.
         """

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Event as EventIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { daysOfWeek, formatHour, getConfidenceColor } from '../utils/timeUtils.js';
+import { daysOfWeek, formatHour, getConfidenceColor } from '../utils/timeUtils';
 
 interface BestTime {
     day: number;

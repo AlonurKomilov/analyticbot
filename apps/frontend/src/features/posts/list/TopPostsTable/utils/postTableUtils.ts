@@ -9,7 +9,8 @@ export interface Post {
     text?: string;
     views?: number;
     forwards?: number;
-    replies_count?: number;
+    comments_count?: number;  // Discussion group comments
+    replies_count?: number;   // Direct threaded replies
     reactions_count?: number;
     engagement_rate?: number;
 
@@ -34,9 +35,10 @@ export interface PerformanceBadge {
 
 export interface SummaryStats {
     totalViews: number;
-    totalLikes: number;
+    totalReactions: number;
     totalShares: number;
     totalComments: number;
+    totalReplies: number;
     avgEngagement: string;
     topPost: Post;
 }
@@ -82,8 +84,9 @@ export const calculateEngagementRate = (post: Post): number => {
     // Otherwise calculate from metrics (supports both old and new field names)
     const reactions = post.reactions_count || post.likes || 0;
     const forwards = post.forwards || post.shares || 0;
-    const replies = post.replies_count || post.comments || 0;
-    const totalEngagement = reactions + forwards + replies;
+    const comments = post.comments_count || 0;  // Discussion group comments
+    const replies = post.replies_count || 0;     // Direct threaded replies
+    const totalEngagement = reactions + forwards + comments + replies;
     const views = post.views || 1;
     return (totalEngagement / views) * 100;
 };
@@ -109,16 +112,18 @@ export const calculateSummaryStats = (posts: Post[] | null | undefined): Summary
     if (!posts || !Array.isArray(posts) || posts.length === 0) return null;
 
     const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
-    const totalLikes = posts.reduce((sum, post) => sum + (post.reactions_count || post.likes || 0), 0);
+    const totalReactions = posts.reduce((sum, post) => sum + (post.reactions_count || post.likes || 0), 0);
     const totalShares = posts.reduce((sum, post) => sum + (post.forwards || post.shares || 0), 0);
-    const totalComments = posts.reduce((sum, post) => sum + (post.replies_count || post.comments || 0), 0);
+    const totalComments = posts.reduce((sum, post) => sum + (post.comments_count || 0), 0);
+    const totalReplies = posts.reduce((sum, post) => sum + (post.replies_count || 0), 0);
     const avgEngagement = posts.reduce((sum, post) => sum + calculateEngagementRate(post), 0) / posts.length;
 
     return {
         totalViews,
-        totalLikes,
+        totalReactions,
         totalShares,
         totalComments,
+        totalReplies,
         avgEngagement: avgEngagement.toFixed(1),
         topPost: posts[0]
     };

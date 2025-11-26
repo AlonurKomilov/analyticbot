@@ -31,6 +31,7 @@ async def check_all_channels_admin_status(
 
     **Returns:**
     - Dictionary mapping channel_id to admin status
+    - Includes per-channel MTProto disabled status
     - Saves server resources by checking before starting sessions
 
     **Uses multi-tenant bot/MTProto system**: Each user's own credentials are used for verification.
@@ -49,10 +50,33 @@ async def check_all_channels_admin_status(
                 "note": "No channels found for this user.",
             }
 
-        # Get user's bot and MTProto credentials
+        # Get per-channel MTProto settings
         from apps.di import get_container
 
         container = get_container()
+        db_pool = await container.database.asyncpg_pool()
+
+        channel_mtproto_settings = {}
+        async with db_pool.acquire() as conn:
+            for channel in channels:
+                setting = await conn.fetchrow(
+                    """
+                    SELECT mtproto_enabled
+                    FROM channel_mtproto_settings
+                    WHERE channel_id = $1 AND user_id = $2
+                    """,
+                    channel.id,
+                    current_user["id"],
+                )
+                # None = default enabled (backward compatibility)
+                # False = explicitly disabled
+                channel_mtproto_settings[channel.id] = (
+                    setting["mtproto_enabled"] if setting else True
+                )
+
+        logger.info(f"Fetched MTProto settings for {len(channel_mtproto_settings)} channels")
+
+        # Get user's bot and MTProto credentials
         user_bot_repo = await container.database.user_bot_repo()
         user_credentials = await user_bot_repo.get_by_user_id(current_user["id"])
 
@@ -63,6 +87,16 @@ async def check_all_channels_admin_status(
             bot_is_admin = None
             mtproto_is_admin = None
             message = "Checking admin status..."
+
+            # Check if MTProto is disabled for this channel
+            mtproto_disabled = not channel_mtproto_settings.get(channel.id, True)
+
+            if mtproto_disabled:
+                logger.info(
+                    f"  🚫 Channel {channel.id} has MTProto disabled - skipping admin check"
+                )
+                # For disabled channels, set mtproto_is_admin to None and add indicator
+                mtproto_is_admin = None
 
             # Prepare channel identifiers for different APIs
             # 1. Username format (if available) - works for both Bot API and MTProto
@@ -167,9 +201,10 @@ async def check_all_channels_admin_status(
                     logger.error(f"Error checking bot admin for channel {channel.id}: {e}")
                     bot_is_admin = False
 
-            # Check MTProto admin status (if user has configured MTProto)
+            # Check MTProto admin status (if user has configured MTProto AND channel has it enabled)
             if (
-                user_credentials
+                not mtproto_disabled
+                and user_credentials
                 and user_credentials.mtproto_enabled
                 and user_credentials.session_string
             ):
@@ -211,7 +246,19 @@ async def check_all_channels_admin_status(
 
             # Determine message based on status
             # null = not configured, false = configured but not admin, true = admin
-            if bot_is_admin is None and mtproto_is_admin is None:
+            if mtproto_disabled:
+                # Channel has MTProto explicitly disabled
+                if bot_is_admin is True:
+                    message = "✓ Bot has admin access - MTProto disabled for this channel"
+                elif bot_is_admin is False:
+                    message = "🚫 Bot has no admin access - MTProto disabled for this channel"
+                elif bot_is_admin is None:
+                    message = (
+                        "🚫 MTProto disabled for this channel - Configure bot for data collection"
+                    )
+                else:
+                    message = "🚫 MTProto disabled for this channel"
+            elif bot_is_admin is None and mtproto_is_admin is None:
                 # User hasn't configured bot OR MTProto
                 message = (
                     "⚠️ Setup required: Configure your bot or MTProto session to enable "
@@ -256,6 +303,7 @@ async def check_all_channels_admin_status(
                 "channel_name": channel.name,
                 "bot_is_admin": bot_is_admin,
                 "mtproto_is_admin": mtproto_is_admin,
+                "mtproto_disabled": mtproto_disabled,
                 "can_collect_data": bool(bot_is_admin or mtproto_is_admin),
                 "is_inactive": bot_is_admin is False
                 and mtproto_is_admin is False,  # Both red = gray out card

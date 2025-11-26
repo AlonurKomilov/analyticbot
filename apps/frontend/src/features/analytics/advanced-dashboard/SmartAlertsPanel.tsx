@@ -50,8 +50,6 @@ const SmartAlertsPanel: React.FC<SmartAlertsPanelProps> = ({ channelId }) => {
     const [isExpanded, setIsExpanded] = useState(true);
     const [showRuleManager, setShowRuleManager] = useState(false);
     const [rules, setRules] = useState<AlertRule[]>([]);
-    const [rulesLoading, setRulesLoading] = useState(false);
-    const [rulesPersonalized, setRulesPersonalized] = useState(false);
 
     // Connect to real alert system
     const {
@@ -75,7 +73,6 @@ const SmartAlertsPanel: React.FC<SmartAlertsPanelProps> = ({ channelId }) => {
     const loadRules = async () => {
         if (!channelId) return;
 
-        setRulesLoading(true);
         try {
             // Fetch smart personalized rules
             const smartResult = await AlertsAPI.getSmartAlertRules(channelId);
@@ -97,14 +94,10 @@ const SmartAlertsPanel: React.FC<SmartAlertsPanelProps> = ({ channelId }) => {
             const allRules = [...smartRules, ...customRules];
 
             setRules(allRules);
-            setRulesPersonalized(smartResult.personalized || false);
         } catch (err) {
             console.error('Failed to load alert rules:', err);
             // Fallback to empty rules on error
             setRules([]);
-            setRulesPersonalized(false);
-        } finally {
-            setRulesLoading(false);
         }
     };
 

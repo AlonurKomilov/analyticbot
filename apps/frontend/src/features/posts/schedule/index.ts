@@ -1,7 +1,7 @@
 /**
  * Post Scheduling Components
  * Re-exports the NEW modular ScheduledPostsList from pages
- * 
+ *
  * DEPRECATED: The old ScheduledPostsList.tsx in this folder is kept for reference
  * but the actual component now comes from pages/ScheduledPostsPage/components
  */

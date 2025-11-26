@@ -59,35 +59,60 @@ export const MTProtoStatusCard: React.FC = () => {
       console.log('⏸️ Skipping sync - user is toggling');
       return;
     }
-    
+
     console.log('🔄 Toggle Sync Effect:', {
       status_mtproto_enabled: status?.mtproto_enabled,
       current_globalEnabled: globalEnabled,
       will_update: status?.mtproto_enabled !== undefined && !isUserToggling
     });
-    
+
     if (status?.mtproto_enabled !== undefined) {
       console.log('✅ Syncing globalEnabled to:', status.mtproto_enabled);
       setGlobalEnabled(status.mtproto_enabled);
     }
   }, [status?.mtproto_enabled, isUserToggling]);
-  
+
   const [isToggling, setIsToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toggleSuccess, setToggleSuccess] = useState<string | null>(null);
+  const [hasAutoConnected, setHasAutoConnected] = useState(false); // Track if we already auto-connected
 
-  // Connect button state
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectError, setConnectError] = useState<string | null>(null);
-  const [connectSuccess, setConnectSuccess] = useState<string | null>(null);
+  // 🚀 AUTO-CONNECT ON PAGE LOAD: Connect if MTProto is enabled but not actively connected
+  useEffect(() => {
+    const autoConnect = async () => {
+      // Only auto-connect once per page load
+      if (hasAutoConnected) {
+        console.log('⏸️ Already attempted auto-connect');
+        return;
+      }
+
+      // Check if MTProto is enabled, session is ready, but not actively connected
+      if (status?.mtproto_enabled && status?.connected && !status?.actively_connected) {
+        console.log('🚀 Auto-connecting on page load...');
+        setHasAutoConnected(true); // Mark as attempted
+
+        try {
+          await connectMTProto();
+          console.log('✅ Auto-connect on load succeeded');
+          // Refresh status to show active connection
+          await fetchStatus();
+        } catch (err: any) {
+          console.warn('⚠️ Auto-connect on load failed:', err);
+          // Don't show error to user - connection will happen automatically when needed
+        }
+      }
+    };
+
+    autoConnect();
+  }, [status?.mtproto_enabled, status?.connected, status?.actively_connected, hasAutoConnected]);
 
   const handleGlobalToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;
     console.log('🎚️ Toggle clicked:', { from: globalEnabled, to: newValue });
-    
+
     // Mark that user is actively toggling - prevent race conditions
     setIsUserToggling(true);
-    
+
     // Immediately update UI for responsive feedback
     setGlobalEnabled(newValue);
     setIsToggling(true);
@@ -99,12 +124,22 @@ export const MTProtoStatusCard: React.FC = () => {
       console.log('📤 Sending toggle request:', { enabled: newValue });
       await toggleGlobalMTProto(newValue);
       console.log('✅ Toggle API succeeded');
-      
-      setToggleSuccess(
-        newValue
-          ? 'MTProto enabled globally for all channels'
-          : 'MTProto disabled globally - per-channel settings still apply'
-      );
+
+      // 🚀 AUTO-CONNECT: When enabling MTProto, automatically connect the session
+      if (newValue) {
+        console.log('🔌 Auto-connecting MTProto session...');
+        try {
+          await connectMTProto();
+          console.log('✅ Auto-connect succeeded');
+          setToggleSuccess('MTProto enabled and connected automatically!');
+        } catch (connectErr: any) {
+          console.warn('⚠️ Auto-connect failed:', connectErr);
+          // Don't fail the whole operation if connect fails - session will connect lazily
+          setToggleSuccess('MTProto enabled globally (will connect automatically when needed)');
+        }
+      } else {
+        setToggleSuccess('MTProto disabled globally - per-channel settings still apply');
+      }
 
       logger.log(`Global MTProto toggled: ${newValue}`);
 
@@ -112,10 +147,10 @@ export const MTProtoStatusCard: React.FC = () => {
       console.log('🔄 Refetching status...');
       await fetchStatus();
       console.log('✅ Status refetched');
-      
+
       // Wait a bit to ensure backend has processed and returned new state
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
     } catch (err: any) {
       logger.error('Failed to toggle global MTProto:', err);
       setToggleError(err.message || 'Failed to toggle MTProto');
@@ -125,26 +160,6 @@ export const MTProtoStatusCard: React.FC = () => {
       setIsToggling(false);
       // Re-enable sync after toggle completes
       setIsUserToggling(false);
-    }
-  };
-
-  const handleConnect = async () => {
-    setIsConnecting(true);
-    setConnectError(null);
-    setConnectSuccess(null);
-
-    try {
-      await connectMTProto();
-      setConnectSuccess('MTProto client connected successfully!');
-      logger.log('MTProto client connected manually');
-
-      // Refetch status to show active connection
-      await fetchStatus();
-    } catch (err: any) {
-      logger.error('Failed to connect MTProto:', err);
-      setConnectError(err.message || 'Failed to connect MTProto client');
-    } finally {
-      setIsConnecting(false);
     }
   };
 
@@ -311,30 +326,8 @@ export const MTProtoStatusCard: React.FC = () => {
           {status.connected && !status.actively_connected && (
             <Box sx={{ ml: 4 }}>
               <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
-                💤 Session ready - will connect automatically when needed
+                🔌 Session ready - connecting automatically...
               </Typography>
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                onClick={handleConnect}
-                disabled={isConnecting}
-                sx={{ mt: 1 }}
-              >
-                {isConnecting ? 'Connecting...' : 'Connect Now'}
-              </Button>
-
-              {/* Connect feedback */}
-              {connectSuccess && (
-                <Alert severity="success" sx={{ mt: 1, py: 0.5 }} onClose={() => setConnectSuccess(null)}>
-                  {connectSuccess}
-                </Alert>
-              )}
-              {connectError && (
-                <Alert severity="error" sx={{ mt: 1, py: 0.5 }} onClose={() => setConnectError(null)}>
-                  {connectError}
-                </Alert>
-              )}
             </Box>
           )}
 

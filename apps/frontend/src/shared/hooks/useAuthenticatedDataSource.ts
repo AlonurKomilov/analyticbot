@@ -11,7 +11,7 @@ import { createAuthenticatedDataProvider } from '@/providers/DataProvider';
 import { DEFAULT_CHANNEL_ID } from '@config/constants';
 import type {
     AnalyticsOverview,
-    Post,
+    TopPost,
     EngagementMetrics
 } from '@/types';
 import type { DataProvider } from './useDataSource';
@@ -109,7 +109,7 @@ export const useAuthenticatedAnalytics = (
  * Enhanced top posts hook return type with authentication
  */
 export interface UseAuthenticatedTopPostsReturn {
-    data: Post[] | null;
+    data: TopPost[] | null;
     loading: boolean;
     error: string | null;
     lastFetch: string | null;
@@ -132,7 +132,7 @@ export const useAuthenticatedTopPosts = (
 ): UseAuthenticatedTopPostsReturn => {
     const { user, isAuthenticated } = useAuth();
     const dataProvider = useAuthenticatedDataProvider();
-    const [data, setData] = useState<Post[] | null>(null);
+    const [data, setData] = useState<TopPost[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [lastFetch, setLastFetch] = useState<string | null>(null);

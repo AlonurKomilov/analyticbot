@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Smart Console Logger Replacement Script
-# 
+#
 # Intelligently replaces console.* calls with appropriate logger instances
 # based on file context and location
 #
@@ -35,65 +35,65 @@ failed=0
 
 for entry in "${HIGH_PRIORITY_FILES[@]}"; do
     IFS=':' read -r file logger <<< "$entry"
-    
+
     if [ ! -f "$file" ]; then
         echo "⚠️  SKIP: $file (not found)"
         continue
     fi
-    
+
     # Check if file already has logger
     if grep -q "from.*utils/logger" "$file" 2>/dev/null; then
         echo "✓ SKIP: $file (logger already imported)"
         continue
     fi
-    
+
     # Count console calls
     count=$(grep -c "console\." "$file" 2>/dev/null || echo 0)
-    
+
     if [ "$count" -eq 0 ]; then
         echo "✓ SKIP: $file (no console calls)"
         continue
     fi
-    
+
     echo "Processing: $file ($count console calls, using $logger)"
-    
+
     # Calculate relative path to logger
     depth=$(echo "$file" | grep -o "/" | wc -l)
     depth=$((depth - 2)) # src/file.ts = 1 level, src/dir/file.ts = 2 levels
-    
+
     import_path=""
     for ((i=0; i<depth; i++)); do
         import_path="../${import_path}"
     done
     import_path="${import_path}utils/logger"
-    
+
     # Create backup
     cp "$file" "${file}.bak"
-    
+
     # Find first import line to insert after
     first_import=$(grep -n "^import " "$file" | head -1 | cut -d: -f1)
-    
+
     if [ -z "$first_import" ]; then
         echo "  ⚠️  No import found, skipping"
         rm "${file}.bak"
         ((failed++))
         continue
     fi
-    
+
     # Add logger import
     sed -i "${first_import}a import { ${logger} } from '${import_path}';" "$file"
-    
+
     # Replace console calls
     sed -i "s/console\.log(/${logger}.log(/g" "$file"
     sed -i "s/console\.error(/${logger}.error(/g" "$file"
     sed -i "s/console\.warn(/${logger}.warn(/g" "$file"
     sed -i "s/console\.info(/${logger}.info(/g" "$file"
     sed -i "s/console\.debug(/${logger}.debug(/g" "$file"
-    
+
     # Check result
     new_count=$(grep -c "console\." "$file" 2>/dev/null || echo 0)
     replaced=$((count - new_count))
-    
+
     if [ "$replaced" -gt 0 ]; then
         echo "  ✓ Replaced $replaced console calls"
         rm "${file}.bak"
@@ -103,7 +103,7 @@ for entry in "${HIGH_PRIORITY_FILES[@]}"; do
         mv "${file}.bak" "$file"
         ((failed++))
     fi
-    
+
     echo ""
 done
 

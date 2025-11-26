@@ -120,7 +120,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode = null, onForgotPass
         try {
             // 🆕 Phase 3.2: Pass rememberMe to login function
             const result = await login(
-                formData.email, 
+                formData.email,
                 formData.password,
                 formData.rememberMe
             );

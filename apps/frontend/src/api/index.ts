@@ -80,7 +80,7 @@ export default apiClient;
  * Migration Guide:
  *
  * BEFORE (JavaScript):
- * import { apiClient } from '../api/client.js';
+ * import { apiClient } from '../api/client';
  *
  * AFTER (TypeScript):
  * import { apiClient } from '@/api';

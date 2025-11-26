@@ -56,7 +56,7 @@ export const apiClient = {
             return mockClient.default.get(url);
         } else {
             console.log('🔗 Using real API client for production user');
-            const realClient = await import('./api/apiClient');
+            const realClient = await import('@/api/client');
             return realClient.apiClient.get(url, config ? config : undefined);
         }
     },
@@ -69,7 +69,7 @@ export const apiClient = {
             return mockClient.default.post(url, data);
         } else {
             console.log('🔗 Using real API client for production user');
-            const realClient = await import('./api/apiClient');
+            const realClient = await import('@/api/client');
             return realClient.apiClient.post(url, data);
         }
     },
@@ -79,8 +79,8 @@ export const apiClient = {
             const mockClient = await import('@/__mocks__/services/mockApiClient');
             return mockClient.default.put(url, data);
         } else {
-            const realClient = await import('./api/apiClient');
-            return realClient.apiClient.put(url, data);
+            const realClient = await import('@/api/client');
+            return realClient.apiClient.patch(url, data);
         }
     },
 
@@ -89,7 +89,7 @@ export const apiClient = {
             const mockClient = await import('@/__mocks__/services/mockApiClient');
             return mockClient.default.delete(url);
         } else {
-            const realClient = await import('./api/apiClient');
+            const realClient = await import('@/api/client');
             return realClient.apiClient.delete(url);
         }
     },
@@ -99,7 +99,7 @@ export const apiClient = {
             const mockClient = await import('@/__mocks__/services/mockApiClient');
             return mockClient.default.uploadFileDirect(file, onProgress);
         } else {
-            const realClient = await import('./api/apiClient');
+            const realClient = await import('@/api/client');
             return (realClient.apiClient as any).uploadFileDirect(file, onProgress);
         }
     }

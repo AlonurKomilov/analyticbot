@@ -49,7 +49,8 @@ class PostDynamicsPoint(BaseModel):
     views: int
     likes: int
     shares: int
-    comments: int
+    comments: int  # Discussion group comments
+    replies: int  # Direct threaded replies
     post_count: int = 0  # Number of posts in this time bucket
 
 
@@ -196,7 +197,7 @@ async def get_post_dynamics(
         }
         cache_key = cache.generate_cache_key("post_dynamics", cache_params)
 
-        # Try cache first (5 minutes TTL for recent data)
+        # Try cache first (1 minute TTL for real-time data)
         cached_data = await cache.get_json(cache_key)
         if cached_data:
             logger.info(f"Cache hit for post dynamics: {cache_key}")
@@ -250,12 +251,13 @@ async def get_post_dynamics(
                     date_trunc($1, p.date) as time_bucket,
                     SUM(latest_metrics.views)::int as avg_views,
                     SUM(latest_metrics.forwards)::int as avg_forwards,
+                    SUM(latest_metrics.comments_count)::int as avg_comments,
                     SUM(latest_metrics.replies_count)::int as avg_replies,
                     SUM(latest_metrics.reactions_count)::int as avg_reactions,
                     COUNT(DISTINCT p.msg_id) as post_count
                 FROM posts p
                 LEFT JOIN LATERAL (
-                    SELECT views, forwards, replies_count, reactions_count
+                    SELECT views, forwards, comments_count, replies_count, reactions_count
                     FROM post_metrics
                     WHERE channel_id = p.channel_id AND msg_id = p.msg_id
                     ORDER BY snapshot_time DESC
@@ -287,6 +289,7 @@ async def get_post_dynamics(
                         "time_bucket": hour_timestamp,
                         "avg_views": record["avg_views"],
                         "avg_forwards": record["avg_forwards"],
+                        "avg_comments": record["avg_comments"],
                         "avg_replies": record["avg_replies"],
                         "avg_reactions": record["avg_reactions"],
                         "post_count": record["post_count"],
@@ -309,6 +312,7 @@ async def get_post_dynamics(
                                 "time_bucket": current_hour,
                                 "avg_views": 0,
                                 "avg_forwards": 0,
+                                "avg_comments": 0,
                                 "avg_replies": 0,
                                 "avg_reactions": 0,
                                 "post_count": 0,
@@ -328,6 +332,7 @@ async def get_post_dynamics(
                         "time_bucket": minute_timestamp,
                         "avg_views": record["avg_views"],
                         "avg_forwards": record["avg_forwards"],
+                        "avg_comments": record["avg_comments"],
                         "avg_replies": record["avg_replies"],
                         "avg_reactions": record["avg_reactions"],
                         "post_count": record["post_count"],
@@ -353,6 +358,7 @@ async def get_post_dynamics(
                                 "time_bucket": current_minute,
                                 "avg_views": 0,
                                 "avg_forwards": 0,
+                                "avg_comments": 0,
                                 "avg_replies": 0,
                                 "avg_reactions": 0,
                                 "post_count": 0,
@@ -377,7 +383,8 @@ async def get_post_dynamics(
                     views=record["avg_views"] or 0,
                     likes=record["avg_reactions"] or 0,  # Using reactions as "likes"
                     shares=record["avg_forwards"] or 0,
-                    comments=record["avg_replies"] or 0,
+                    comments=record["avg_comments"] or 0,  # Discussion comments
+                    replies=record["avg_replies"] or 0,  # Threaded replies
                     post_count=record.get("post_count", 0),
                 )
                 data_points.append(data_point)
@@ -390,8 +397,8 @@ async def get_post_dynamics(
         # Convert to dict for response
         response_data = [point.model_dump() for point in data_points]
 
-        # Cache for 5 minutes
-        await cache.set_json(cache_key, response_data, ttl_s=300)
+        # Cache for 1 minute (matches frontend auto-refresh interval)
+        await cache.set_json(cache_key, response_data, ttl_s=60)
 
         logger.info(f"Generated {len(data_points)} post dynamics points for channel {channel_id}")
         return response_data

@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { storeLogger } from '@/utils/logger';
 import type { Channel, ValidationResult, ChannelValidationResponse } from '@/types';
 
 interface ChannelState {
@@ -52,7 +53,7 @@ export const useChannelStore = create<ChannelState>()(
     fetchChannels: async () => {
       // ✅ Request deduplication: if a request is already in progress, return that promise
       if (fetchChannelsPromise) {
-        console.log('🔄 Reusing existing fetchChannels request');
+        storeLogger.debug('Reusing existing fetchChannels request');
         return fetchChannelsPromise;
       }
 
@@ -76,9 +77,9 @@ export const useChannelStore = create<ChannelState>()(
             channels: normalizedChannels,
             isLoading: false
           });
-          console.log('✅ Channels loaded:', normalizedChannels.length, normalizedChannels);
+          storeLogger.debug('Channels loaded', { count: normalizedChannels.length });
         } catch (error) {
-          console.error('❌ Failed to load channels:', error);
+          storeLogger.error('Failed to load channels', { error });
 
           // Provide helpful error message
           let errorMessage = 'Failed to load channels';
@@ -113,7 +114,7 @@ export const useChannelStore = create<ChannelState>()(
       try {
         // Ensure username starts with @
         const channelUsername = username.startsWith('@') ? username : `@${username}`;
-        console.log('🔍 Validating Telegram channel:', channelUsername);
+        storeLogger.debug('Validating Telegram channel', { channelUsername });
 
         // Use shorter timeout (5s) since validation is optional
         const validationResult = await apiClient.post<ChannelValidationResponse>(
@@ -125,19 +126,19 @@ export const useChannelStore = create<ChannelState>()(
         set({ isValidating: false });
 
         if (validationResult.valid) {
-          console.log('✅ Channel validated:', validationResult.channelData?.title);
+          storeLogger.debug('Channel validated', { title: validationResult.channelData?.title });
           return {
             valid: true
           };
         } else {
-          console.warn('❌ Channel validation failed:', validationResult.error);
+          storeLogger.warn('Channel validation failed', { error: validationResult.error });
           return {
             valid: false,
             errors: [validationResult.error || 'Channel not found']
           };
         }
       } catch (error) {
-        console.error('❌ Channel validation error:', error);
+        storeLogger.error('Channel validation error', { error, username });
         ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'validateChannel',
@@ -165,7 +166,7 @@ export const useChannelStore = create<ChannelState>()(
         // Clean username
         const cleanUsername = channelData.username.replace('@', '');
         const usernameWithAt = `@${cleanUsername}`;
-        console.log('📺 Adding channel:', usernameWithAt);
+        storeLogger.debug('Adding channel', { username: usernameWithAt });
 
         // Step 1: Determine telegram_id priority:
         // 1. User-provided telegram_id (if valid)
@@ -176,7 +177,7 @@ export const useChannelStore = create<ChannelState>()(
         // Check if user provided a telegram_id
         const userProvidedId = channelData.telegram_id ? parseInt(channelData.telegram_id, 10) : null;
         if (userProvidedId && !isNaN(userProvidedId)) {
-          console.log('✅ Using user-provided Telegram ID:', userProvidedId);
+          storeLogger.debug('Using user-provided Telegram ID', { telegramId: userProvidedId });
           finalTelegramId = userProvidedId;
         } else {
           // Step 2: Try OPTIONAL validation with Telegram API to get telegram_id
@@ -187,7 +188,7 @@ export const useChannelStore = create<ChannelState>()(
           } | null = null;
 
           try {
-            console.log('🔍 Validating with Telegram API (optional)...');
+            storeLogger.debug('Validating with Telegram API (optional)');
             const validation = await apiClient.post<ChannelValidationResponse>(
               '/channels/validate',
               { username: usernameWithAt },
@@ -195,7 +196,7 @@ export const useChannelStore = create<ChannelState>()(
             );
 
             if (validation.is_valid && validation.telegram_id) {
-              console.log('✅ Telegram validation successful:', validation.title);
+              storeLogger.debug('Telegram validation successful', { title: validation.title });
               validatedData = {
                 telegram_id: validation.telegram_id,
                 title: validation.title || channelData.name,
@@ -203,18 +204,18 @@ export const useChannelStore = create<ChannelState>()(
               };
               finalTelegramId = validatedData.telegram_id;
             } else {
-              console.warn('⚠️ Validation failed, will use fallback values');
+              storeLogger.warn('Validation failed, will use fallback values');
               finalTelegramId = Math.floor(Math.random() * 1000000000);
             }
           } catch (validationError) {
-            console.warn('⚠️ Telegram validation failed (MTProto may be disabled), continuing with fallback:', validationError);
+            storeLogger.warn('Telegram validation failed (MTProto may be disabled), continuing with fallback', { validationError });
             // Continue without validation - use random fallback ID
             finalTelegramId = Math.floor(Math.random() * 1000000000);
           }
         }
 
         // Step 3: Create channel with determined telegram_id
-        console.log('💾 Saving channel to database with telegram_id:', finalTelegramId);
+        storeLogger.debug('Saving channel to database', { telegramId: finalTelegramId });
         const newChannel = await apiClient.post<Channel>('/channels/', {
           name: channelData.name || usernameWithAt,
           telegram_id: finalTelegramId,
@@ -228,9 +229,9 @@ export const useChannelStore = create<ChannelState>()(
           isLoading: false
         }));
 
-        console.log('✅ Channel added successfully:', newChannel);
+        storeLogger.info('Channel added successfully', { channelId: newChannel.id });
       } catch (error) {
-        console.error('❌ Add channel error:', error);
+        storeLogger.error('Add channel error', { error, username: channelData.username });
         ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'addChannel',
@@ -266,9 +267,9 @@ export const useChannelStore = create<ChannelState>()(
           isLoading: false
         }));
 
-        console.log('✅ Channel updated successfully');
+        storeLogger.info('Channel updated successfully', { channelId });
       } catch (error) {
-        console.error('❌ Update channel error:', error);
+        storeLogger.error('Update channel error', { error, channelId, data });
         const errorMessage = error instanceof Error ? error.message : 'Failed to update channel';
         set({
           error: errorMessage,
@@ -283,7 +284,7 @@ export const useChannelStore = create<ChannelState>()(
       set({ isLoading: true, error: null });
 
       try {
-        console.log('🗑️ Deleting channel:', channelId);
+        storeLogger.debug('Deleting channel', { channelId });
         await apiClient.delete(`/channels/${channelId}`);
 
         // Remove from local state
@@ -295,9 +296,9 @@ export const useChannelStore = create<ChannelState>()(
           isLoading: false
         }));
 
-        console.log('✅ Channel deleted successfully');
+        storeLogger.info('Channel deleted successfully', { channelId });
       } catch (error) {
-        console.error('❌ Delete channel error:', error);
+        storeLogger.error('Delete channel error', { error, channelId });
         ErrorHandler.handleError(error as Error, {
           component: 'ChannelStore',
           action: 'deleteChannel',

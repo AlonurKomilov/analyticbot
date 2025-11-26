@@ -5,7 +5,7 @@
  * Separated from: payment processing, subscriptions, invoicing
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export type PaymentProvider = 'stripe' | 'paypal' | 'crypto';
 
@@ -45,7 +45,7 @@ class PaymentMethodsService {
                 methodData,
                 { params: { user_id: userId } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to create payment method:', error);
             throw error;
@@ -60,7 +60,7 @@ class PaymentMethodsService {
             const response = await apiClient.get<{ methods: PaymentMethod[] }>(
                 `${this.baseURL}/${userId}`
             );
-            return response.data.methods || [];
+            return response.methods || [];
         } catch (error) {
             console.error('Failed to get payment methods:', error);
             throw error;
@@ -75,7 +75,7 @@ class PaymentMethodsService {
             const response = await apiClient.get<PaymentMethod>(
                 `${this.baseURL}/detail/${methodId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get payment method:', error);
             throw error;
@@ -87,10 +87,10 @@ class PaymentMethodsService {
      */
     async setDefault(methodId: string): Promise<{ success: boolean }> {
         try {
-            const response = await apiClient.patch(
+            const response = await apiClient.patch<{ success: boolean }>(
                 `${this.baseURL}/${methodId}/default`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to set default method:', error);
             throw error;
@@ -102,10 +102,10 @@ class PaymentMethodsService {
      */
     async delete(methodId: string): Promise<{ success: boolean }> {
         try {
-            const response = await apiClient.delete(
+            const response = await apiClient.delete<{ success: boolean }>(
                 `${this.baseURL}/${methodId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to delete payment method:', error);
             throw error;

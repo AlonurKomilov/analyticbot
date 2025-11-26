@@ -9,8 +9,9 @@ Stores historical health metrics for user bots to enable:
 """
 
 from datetime import datetime
-from sqlalchemy import BigInteger, Integer, Float, String, DateTime, Boolean, Index
+
 import sqlalchemy as sa
+from sqlalchemy import BigInteger, DateTime, Float, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from infra.db.models.base import Base
@@ -19,7 +20,7 @@ from infra.db.models.base import Base
 class BotHealthMetricOrm(Base):
     """
     Persistent storage for bot health metrics snapshots.
-    
+
     Captures point-in-time health data for each user bot to enable:
     - Historical trend analysis
     - Performance degradation detection

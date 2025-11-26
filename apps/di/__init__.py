@@ -95,6 +95,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
         config=config,
         database=database,
         core_services=core_services,
+        mtproto=mtproto,
     )
 
     # API services and dependencies

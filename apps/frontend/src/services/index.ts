@@ -1,9 +1,9 @@
 /**
  * Services Index - Updated for Feature-First Architecture (Phase 3 Task 1.5)
- * 
+ *
  * Services have been reorganized into feature-specific directories.
  * This file maintains backward compatibility by re-exporting from new locations.
- * 
+ *
  * New structure:
  * - features/analytics/services/ - Analytics service
  * - features/admin/services/ - Admin services (users, channels)

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Batch Console.log Replacement Script
-# 
+#
 # This script systematically replaces console.* calls with appropriate logger instances
 # across the frontend codebase.
 #
@@ -36,7 +36,7 @@ declare -A FILE_GROUPS=(
 # Function to detect appropriate logger for file
 get_logger_for_file() {
     local file="$1"
-    
+
     if [[ "$file" =~ /api/ ]] || [[ "$file" =~ /services/ ]] || [[ "$file" =~ API ]]; then
         echo "apiLogger"
     elif [[ "$file" =~ /auth/ ]] || [[ "$file" =~ Auth ]]; then
@@ -54,13 +54,13 @@ get_logger_for_file() {
 get_import_path() {
     local file="$1"
     local depth=$(echo "$file" | grep -o "/" | wc -l)
-    
+
     # Calculate relative path
     local prefix=""
     for ((i=1; i<depth; i++)); do
         prefix="../${prefix}"
     done
-    
+
     echo "${prefix}utils/logger"
 }
 
@@ -75,20 +75,20 @@ add_logger_import() {
     local file="$1"
     local logger="$2"
     local import_path=$(get_import_path "$file")
-    
+
     if has_logger_import "$file"; then
         echo -e "${YELLOW}  ⚠ Logger already imported${NC}"
         return 0
     fi
-    
+
     # Find last import line
     local last_import=$(grep -n "^import " "$file" | tail -1 | cut -d: -f1)
-    
+
     if [ -z "$last_import" ]; then
         echo -e "${RED}  ✗ No import statements found${NC}"
         return 1
     fi
-    
+
     # Insert logger import after last import
     sed -i "${last_import}a import { ${logger} } from '${import_path}';" "$file"
     echo -e "${GREEN}  ✓ Added import: ${logger}${NC}"
@@ -98,26 +98,26 @@ add_logger_import() {
 replace_console_calls() {
     local file="$1"
     local logger="$2"
-    
+
     # Count before
     local before=$(grep -c "console\." "$file" 2>/dev/null || echo 0)
-    
+
     if [ "$before" -eq 0 ]; then
         echo -e "${YELLOW}  ⚠ No console calls found${NC}"
         return 0
     fi
-    
+
     # Replace console.log, console.error, console.warn, console.info, console.debug
     sed -i "s/console\.log(/${logger}.log(/g" "$file"
     sed -i "s/console\.error(/${logger}.error(/g" "$file"
     sed -i "s/console\.warn(/${logger}.warn(/g" "$file"
     sed -i "s/console\.info(/${logger}.info(/g" "$file"
     sed -i "s/console\.debug(/${logger}.debug(/g" "$file"
-    
+
     # Count after
     local after=$(grep -c "console\." "$file" 2>/dev/null || echo 0)
     local replaced=$((before - after))
-    
+
     if [ "$replaced" -gt 0 ]; then
         echo -e "${GREEN}  ✓ Replaced ${replaced}/${before} console calls${NC}"
     else
@@ -128,26 +128,26 @@ replace_console_calls() {
 # Process a single file
 process_file() {
     local file="$1"
-    
+
     # Skip if file doesn't exist
     [ ! -f "$file" ] && return
-    
+
     # Skip archive and test files
     [[ "$file" =~ /archive/ ]] && return
     [[ "$file" =~ /__tests__/ ]] && return
     [[ "$file" =~ /__mocks__/ ]] && return
     [[ "$file" =~ \.test\. ]] && return
     [[ "$file" =~ \.spec\. ]] && return
-    
+
     echo -e "\n${BLUE}Processing:${NC} $file"
-    
+
     # Detect appropriate logger
     local logger=$(get_logger_for_file "$file")
     echo -e "${BLUE}  Using: ${logger}${NC}"
-    
+
     # Add import if needed
     add_logger_import "$file" "$logger"
-    
+
     # Replace console calls
     replace_console_calls "$file" "$logger"
 }
@@ -156,25 +156,25 @@ process_file() {
 if [ $# -eq 1 ]; then
     # Process specific file or pattern
     echo -e "${BLUE}Processing pattern: $1${NC}\n"
-    
+
     for file in src/$1; do
         process_file "$file"
     done
 else
     # Process all file groups
     echo -e "${BLUE}Processing all file groups...${NC}\n"
-    
+
     for group in "${!FILE_GROUPS[@]}"; do
         echo -e "\n${BLUE}=== Processing Group: ${group} ===${NC}"
         pattern="${FILE_GROUPS[$group]}"
-        
+
         files=$(find src -path "src/${pattern}" 2>/dev/null || true)
-        
+
         if [ -z "$files" ]; then
             echo -e "${YELLOW}No files found for pattern: ${pattern}${NC}"
             continue
         fi
-        
+
         while IFS= read -r file; do
             process_file "$file"
         done <<< "$files"

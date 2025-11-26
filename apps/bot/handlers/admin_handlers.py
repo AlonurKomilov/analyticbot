@@ -36,7 +36,7 @@ async def get_channel_repository() -> ChannelRepository:
 def get_chart_service() -> ChartServiceProtocol:
     """
     Get chart service instance from DI container.
-    
+
     ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
     container = get_container()

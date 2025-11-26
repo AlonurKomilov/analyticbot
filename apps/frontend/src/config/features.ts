@@ -149,7 +149,7 @@ export function hasFeatureAccess(
   userRole?: string
 ): boolean {
   const config = FEATURES[feature];
-  
+
   if (!config || !config.enabled) {
     return false;
   }
@@ -159,7 +159,7 @@ export function hasFeatureAccess(
     const tierOrder: UserTier[] = ['free', 'start', 'pro', 'premium'];
     const userTierIndex = tierOrder.indexOf(userTier);
     const minTierIndex = tierOrder.indexOf(config.minTier);
-    
+
     if (userTierIndex < minTierIndex) {
       return false;
     }

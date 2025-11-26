@@ -1,0 +1,25 @@
+# AnalyticBot Domain Configuration
+# This file indicates that permanent domain is configured
+# and prevents temporary CloudFlare tunnel generation
+
+DOMAIN_CONFIGURED=true
+USE_PRODUCTION_DOMAIN=true
+DISABLE_TEMP_TUNNELS=true
+
+# Domain Configuration
+PRIMARY_DOMAIN=analyticbot.org
+API_SUBDOMAIN=api.analyticbot.org
+DEV_SUBDOMAIN=dev.analyticbot.org
+
+# Frontend URLs
+FRONTEND_PROD_URL=https://analyticbot.org
+FRONTEND_DEV_URL=https://dev.analyticbot.org
+
+# API URL
+API_URL=https://api.analyticbot.org
+
+# CloudFlare Configuration
+# Your domain is managed through CloudFlare DNS
+# No temporary tunnels needed - using permanent domain setup
+CLOUDFLARE_MANAGED=true
+TUNNEL_MODE=disabled

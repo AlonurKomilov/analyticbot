@@ -5,9 +5,9 @@ from datetime import datetime
 from typing import Any
 
 from apps.mtproto.di import get_settings, get_tg_client
+
 # Note: HealthChecker moved to apps layer, using stub for compatibility
 # from core.common.health.checker import HealthChecker
-from core.common.health.models import DependencyType
 from core.ports.tg_client import TGClient
 
 

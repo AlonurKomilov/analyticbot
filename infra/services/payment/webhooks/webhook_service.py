@@ -13,7 +13,6 @@ import logging
 from typing import Any
 
 from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
-
 from core.protocols.payment.payment_protocols import (
     PaymentEventType,
     WebhookEvent,

@@ -16,7 +16,12 @@ export type TimeFilter = '1h' | '6h' | '24h' | '7d' | '30d' | '90d' | 'all';
 /**
  * Sort by options
  */
-export type SortBy = 'views' | 'likes' | 'shares' | 'comments' | 'engagement';
+export type SortBy = 'views' | 'reactions' | 'shares' | 'comments' | 'engagement';
+
+/**
+ * Limit options for top N posts
+ */
+export type LimitOption = 10 | 25 | 50;
 
 /**
  * Props for PostTableFilters component
@@ -30,6 +35,10 @@ interface PostTableFiltersProps {
     sortBy: SortBy;
     /** Callback to update sort option */
     setSortBy: (sort: SortBy) => void;
+    /** Selected limit for top N posts */
+    limit: LimitOption;
+    /** Callback to update limit */
+    setLimit: (limit: LimitOption) => void;
 }
 
 /**
@@ -40,7 +49,9 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
     timeFilter,
     setTimeFilter,
     sortBy,
-    setSortBy
+    setSortBy,
+    limit,
+    setLimit
 }) => {
     const handleTimeFilterChange = (event: SelectChangeEvent) => {
         setTimeFilter(event.target.value as TimeFilter);
@@ -48,6 +59,10 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
 
     const handleSortByChange = (event: SelectChangeEvent) => {
         setSortBy(event.target.value as SortBy);
+    };
+
+    const handleLimitChange = (event: SelectChangeEvent) => {
+        setLimit(parseInt(event.target.value) as LimitOption);
     };
 
     return (
@@ -89,10 +104,25 @@ const PostTableFilters: React.FC<PostTableFiltersProps> = ({
                     onChange={handleSortByChange}
                 >
                     <MenuItem value="views">Views</MenuItem>
-                    <MenuItem value="likes">Likes</MenuItem>
+                    <MenuItem value="reactions">Reactions</MenuItem>
                     <MenuItem value="shares">Shares</MenuItem>
                     <MenuItem value="comments">Comments</MenuItem>
                     <MenuItem value="engagement">Engagement Rate</MenuItem>
+                </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="limit-label">Top</InputLabel>
+                <Select
+                    labelId="limit-label"
+                    id="limit"
+                    value={limit.toString()}
+                    label="Top"
+                    onChange={handleLimitChange}
+                >
+                    <MenuItem value="10">10 Posts</MenuItem>
+                    <MenuItem value="25">25 Posts</MenuItem>
+                    <MenuItem value="50">50 Posts</MenuItem>
                 </Select>
             </FormControl>
         </Box>

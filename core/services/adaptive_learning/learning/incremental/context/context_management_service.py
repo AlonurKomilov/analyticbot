@@ -11,11 +11,11 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from ....protocols.learning_protocols import LearningContext, LearningStrategy
 from ..models import (
     IncrementalLearningConfig,
     LearningResult,
 )
-from ....protocols.learning_protocols import LearningContext, LearningStrategy
 
 logger = logging.getLogger(__name__)
 

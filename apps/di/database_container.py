@@ -63,13 +63,30 @@ async def _create_database_manager() -> DatabaseManagerProtocol:
 
 
 async def _create_asyncpg_pool(database_url: str, pool_size: int = 10) -> asyncpg.Pool:
-    """Create asyncpg connection pool"""
+    """Create asyncpg connection pool with environment-based configuration"""
+    # Read pool configuration from environment
+    pool_size = int(os.getenv("DB_POOL_SIZE", "10"))
+    max_overflow = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+
+    # Calculate min/max sizes for asyncpg
+    min_size = max(1, pool_size // 2)  # Minimum 1, typically half of pool_size
+    max_size = pool_size + max_overflow
+
     # Convert SQLAlchemy URL to asyncpg format if needed
     db_url = database_url
     if db_url.startswith("postgresql+asyncpg://"):
         db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
 
-    pool = await asyncpg.create_pool(db_url, min_size=1, max_size=pool_size)
+    logger.info(f"📊 Creating asyncpg pool: min_size={min_size}, max_size={max_size}")
+
+    pool = await asyncpg.create_pool(
+        db_url,
+        min_size=min_size,
+        max_size=max_size,
+        max_queries=50000,  # Recycle connections after 50k queries
+        max_inactive_connection_lifetime=300,  # Close idle connections after 5 minutes
+        command_timeout=60,  # Command timeout 60 seconds
+    )
     if pool is None:
         raise RuntimeError("Failed to create asyncpg pool")
     return pool
@@ -78,10 +95,20 @@ async def _create_asyncpg_pool(database_url: str, pool_size: int = 10) -> asyncp
 async def _create_sqlalchemy_engine(
     database_url: str, pool_size: int = 10, max_overflow: int = 20
 ) -> AsyncEngine:
-    """Create SQLAlchemy async engine"""
+    """Create SQLAlchemy async engine with environment-based configuration"""
+    # Read pool configuration from environment
+    pool_size = int(os.getenv("DB_POOL_SIZE", "10"))
+    max_overflow = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+    pool_timeout = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+    pool_recycle = int(os.getenv("DB_POOL_RECYCLE", "3600"))
+    pool_pre_ping = os.getenv("DB_POOL_PRE_PING", "true").lower() == "true"
+
     # Log the database URL for debugging (mask password)
     masked_url = database_url.replace(database_url.split("@")[0].split("://")[-1], "***")
     logger.info(f"🔧 Creating SQLAlchemy engine with URL: {masked_url}")
+    logger.info(
+        f"📊 Pool config: size={pool_size}, overflow={max_overflow}, timeout={pool_timeout}s, recycle={pool_recycle}s, pre_ping={pool_pre_ping}"
+    )
 
     # Ensure we're using asyncpg driver
     if not database_url.startswith("postgresql+asyncpg://"):
@@ -93,7 +120,10 @@ async def _create_sqlalchemy_engine(
         database_url,
         pool_size=pool_size,
         max_overflow=max_overflow,
-        pool_pre_ping=True,
+        pool_timeout=pool_timeout,
+        pool_recycle=pool_recycle,
+        pool_pre_ping=pool_pre_ping,
+        echo=False,  # Disable SQL echo in production
     )
 
 

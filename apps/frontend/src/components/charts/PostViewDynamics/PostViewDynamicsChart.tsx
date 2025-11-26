@@ -37,7 +37,7 @@ interface DataPoint {
 interface ChartDataPoint {
     time: string;
     views: number;
-    likes: number;
+    reactions: number;
     shares: number;
     comments: number;
     timestamp: string;
@@ -236,7 +236,7 @@ const PostViewDynamicsChart: React.FC = () => {
                         }) :
                         point.time || `Point ${index + 1}`,
                     views: Math.max(0, Number(point.views) || 0),
-                    likes: Math.max(0, Number(point.likes || point.reactions) || 0),
+                    reactions: Math.max(0, Number(point.likes || point.reactions) || 0),
                     shares: Math.max(0, Number(point.shares || point.forwards) || 0),
                     comments: Math.max(0, Number(point.comments) || 0),
                     timestamp: point.timestamp || new Date().toISOString()

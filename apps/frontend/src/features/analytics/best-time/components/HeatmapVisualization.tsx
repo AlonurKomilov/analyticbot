@@ -4,7 +4,7 @@ import {
     Typography,
     Tooltip
 } from '@mui/material';
-import { formatHour, getHeatmapColor, generateHourlyPerformance } from '../utils/timeUtils.js';
+import { formatHour, getHeatmapColor, generateHourlyPerformance } from '../utils/timeUtils';
 
 interface HourlyPerformance {
     [hour: number]: number;

@@ -58,7 +58,7 @@ router = Router()
 def get_chart_service():
     """
     Get chart service instance from DI container.
-    
+
     ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
     from apps.di import get_container

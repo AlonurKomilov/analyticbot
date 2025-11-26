@@ -242,4 +242,3 @@ export const CONSTANTS = {
   WS_EVENTS,
   TIER_LIMITS,
 } as const;
-

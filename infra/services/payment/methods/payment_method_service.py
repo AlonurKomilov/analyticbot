@@ -12,13 +12,12 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
 from core.domain.payment import (
     PaymentMethod,
     PaymentMethodData,
     PaymentProvider,
 )
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory
-
 from core.protocols.payment.payment_protocols import (
     PaymentMethodProtocol,
     PaymentMethodResult,

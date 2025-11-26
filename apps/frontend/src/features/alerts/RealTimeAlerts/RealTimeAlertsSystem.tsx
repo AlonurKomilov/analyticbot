@@ -24,10 +24,10 @@ import {
 } from '@mui/icons-material';
 
 // Import extracted components
-import AlertsList from './AlertsList.jsx';
-import RuleManager from './RuleManager.jsx';
-import NewRuleDialog from './NewRuleDialog.jsx';
-import NotificationEngine from './NotificationEngine.jsx';
+import AlertsList from './AlertsList';
+import RuleManager from './RuleManager';
+import NewRuleDialog from './NewRuleDialog';
+import NotificationEngine from './NotificationEngine';
 
 // Import new hooks
 import { useAlerts } from '@features/alerts/hooks';

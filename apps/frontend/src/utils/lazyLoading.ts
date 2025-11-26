@@ -86,7 +86,7 @@ export const PageComponents = {
   ),
 
   CreatePostPage: lazyWithPreload(
-    () => import('../pages/CreatePostPage.jsx'),
+    () => import('../pages/posts/create'),
     { preloadAfter: 2000 }
   ),
 

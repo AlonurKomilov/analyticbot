@@ -12,7 +12,7 @@
  * - Conversation history
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface ChatQuestionRequest {
     channel_id: number;
@@ -132,7 +132,7 @@ class AIChatService {
                     include_follow_ups: includeFollowUps
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to process chat question:', error);
             throw error;
@@ -155,7 +155,7 @@ class AIChatService {
                 `${this.baseURL}/history/${channelId}`,
                 { params: { limit } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get chat history:', error);
             throw error;
@@ -181,7 +181,7 @@ class AIChatService {
                     insight_type: insightType
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get quick insight:', error);
             throw error;
@@ -199,7 +199,7 @@ class AIChatService {
             const response = await apiClient.get<SuggestedQuestionsResponse>(
                 `${this.baseURL}/suggested-questions/${channelId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get suggested questions:', error);
             throw error;
@@ -217,7 +217,7 @@ class AIChatService {
             const response = await apiClient.delete<{ message: string }>(
                 `${this.baseURL}/history/${channelId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to clear chat history:', error);
             throw error;
@@ -234,7 +234,7 @@ class AIChatService {
             const response = await apiClient.get<ServiceHealthResponse>(
                 `${this.baseURL}/health`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get service health:', error);
             throw error;
@@ -253,14 +253,14 @@ class AIChatService {
         format: 'json' | 'txt' = 'json'
     ): Promise<Blob> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<Blob>(
                 `${this.baseURL}/export/${conversationId}`,
                 {
                     params: { format },
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export conversation:', error);
             throw error;

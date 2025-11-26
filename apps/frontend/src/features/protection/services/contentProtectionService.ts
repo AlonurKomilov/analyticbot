@@ -12,7 +12,7 @@
  * - Protection history
  */
 
-import apiClient from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface TheftDetectionRequest {
     channel_id: string | number;
@@ -97,7 +97,7 @@ class ContentProtectionService {
                     check_platforms: platforms || ['telegram', 'twitter', 'facebook']
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to scan for theft:', error);
             throw error;
@@ -122,7 +122,7 @@ class ContentProtectionService {
                     params: { channel_id: channelId, limit }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get theft history:', error);
             throw error;
@@ -141,11 +141,15 @@ class ContentProtectionService {
         last_scan: string;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                total_scans: number;
+                matches_found: number;
+                last_scan: string;
+            }>(
                 `${this.baseURL}/detection/stats`,
                 { params: { channel_id: channelId } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get theft stats:', error);
             throw error;
@@ -174,7 +178,7 @@ class ContentProtectionService {
                     position
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to apply text watermark:', error);
             throw error;
@@ -197,7 +201,7 @@ class ContentProtectionService {
         position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright' | 'center' = 'bottomright'
     ): Promise<{ watermarked_image_url: string; watermark_id: string }> {
         try {
-            const response = await apiClient.post(
+            const response = await apiClient.post<{ watermarked_image_url: string; watermark_id: string }>(
                 `${this.baseURL}/watermark/image`,
                 {
                     image_url: imageUrl,
@@ -206,7 +210,7 @@ class ContentProtectionService {
                     position
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to apply image watermark:', error);
             throw error;
@@ -228,14 +232,17 @@ class ContentProtectionService {
         entities: any[];
     }> {
         try {
-            const response = await apiClient.post(
+            const response = await apiClient.post<{
+                formatted_text: string;
+                entities: any[];
+            }>(
                 `${this.baseURL}/premium/emojis`,
                 {
                     text,
                     custom_emoji_ids: customEmojiIds
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to format premium emojis:', error);
             throw error;
@@ -260,7 +267,7 @@ class ContentProtectionService {
                     params: { channel_id: channelId, limit }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get protection history:', error);
             throw error;
@@ -279,7 +286,7 @@ class ContentProtectionService {
                 `${this.baseURL}/statistics`,
                 { params: { channel_id: channelId } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get protection statistics:', error);
             throw error;
@@ -298,10 +305,14 @@ class ContentProtectionService {
         created_at?: string;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                valid: boolean;
+                original_content_id?: string;
+                created_at?: string;
+            }>(
                 `${this.baseURL}/watermark/verify/${watermarkId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to verify watermark:', error);
             throw error;

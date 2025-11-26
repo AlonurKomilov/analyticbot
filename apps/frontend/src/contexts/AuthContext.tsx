@@ -6,7 +6,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { apiClient } from '../api/client.js';
+import { apiClient } from '../api/client';
+import { authLogger } from '@/utils/logger';
 
 // Type definitions
 interface User {
@@ -82,7 +83,7 @@ const getStoredUser = (): User | null => {
 };
 
 const setStoredAuth = (token: string, refreshToken: string, user: User): void => {
-    console.log('💾 Storing auth tokens:', {
+    authLogger.debug('Storing auth tokens', {
         tokenLength: token?.length,
         refreshTokenLength: refreshToken?.length,
         userId: user?.id
@@ -93,7 +94,7 @@ const setStoredAuth = (token: string, refreshToken: string, user: User): void =>
 };
 
 const clearStoredAuth = (): void => {
-    console.warn('🗑️ Clearing all auth tokens - called from:', new Error().stack?.split('\n')[2]);
+    authLogger.info('Clearing all auth tokens');
     // Clear primary keys
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
@@ -120,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 // Small delay to allow TWA auto-login to complete first (if in Telegram)
                 const isTelegram = !!(window as any).Telegram?.WebApp?.initData;
                 if (isTelegram) {
-                    console.log('⏳ Waiting for potential TWA auto-login...');
+                    authLogger.debug('Waiting for potential TWA auto-login');
                     await new Promise(resolve => setTimeout(resolve, 300));
                 }
 
@@ -133,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     const isFreshLogin = lastLoginTime && (Date.now() - parseInt(lastLoginTime)) < 5000;
 
                     if (isFreshLogin) {
-                        console.log('✅ Fresh login detected - using stored credentials');
+                        authLogger.info('Fresh login detected - using stored credentials');
                         // Batch state updates to prevent intermediate renders
                         setToken(storedToken);
                         setUser(storedUser);
@@ -144,9 +145,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     // For recent logins (within last 5 minutes), trust stored data without verification
                     const timeSinceLogin = lastLoginTime ? Date.now() - parseInt(lastLoginTime) : Infinity;
                     if (timeSinceLogin < 5 * 60 * 1000) { // 5 minutes
-                        console.log('✅ Recent login - using stored credentials without verification');
-                        console.log('👤 Setting user:', storedUser);
-                        console.log('🔑 Setting token:', storedToken ? 'present' : 'missing');
+                        authLogger.info('Recent login - using stored credentials without verification');
+                        authLogger.debug('Setting user', { user: storedUser });
+                        authLogger.debug('Setting token', { hasToken: !!storedToken });
                         // Batch state updates to prevent intermediate renders
                         setToken(storedToken);
                         setUser(storedUser);
@@ -156,30 +157,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                     // For older logins, verify token is still valid
                     try {
-                        console.log('🔍 Verifying stored token...');
+                        authLogger.debug('Verifying stored token');
                         const userData = await apiClient.get('/auth/me', { timeout: 5000 });
                         setToken(storedToken);
                         setUser(userData as User);
-                        console.log('✅ Token verified successfully');
+                        authLogger.info('Token verified successfully');
                     } catch (error: any) {
-                        console.warn('⚠️ Token verification failed:', error.message);
+                        authLogger.warn('Token verification failed', { error: error.message });
 
                         // Try to refresh token instead of clearing auth
                         try {
-                            console.log('🔄 Attempting token refresh...');
+                            authLogger.debug('Attempting token refresh');
                             const refreshSuccess = await refreshTokenFn();
                             if (refreshSuccess) {
-                                console.log('✅ Token refreshed successfully');
+                                authLogger.info('Token refreshed successfully');
                                 // Token was refreshed, state will be updated by refresh function
                             } else {
-                                console.warn('⚠️ Token refresh failed, but keeping user logged in');
+                                authLogger.warn('Token refresh failed, but keeping user logged in');
                                 // Keep the user logged in with existing token
                                 // It might work for subsequent requests
                                 setToken(storedToken);
                                 setUser(storedUser);
                             }
                         } catch (refreshError) {
-                            console.error('❌ Token refresh error:', refreshError);
+                            authLogger.error('Token refresh error', refreshError);
                             // Still keep user logged in - let them try to use the app
                             // If token is truly invalid, API requests will fail and show errors
                             setToken(storedToken);
@@ -187,10 +188,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                         }
                     }
                 } else {
-                    console.log('ℹ️ No stored credentials found');
+                    authLogger.debug('No stored credentials found');
                 }
             } catch (error) {
-                console.error('❌ Auth initialization error:', error);
+                authLogger.error('Auth initialization error', error);
                 // Don't clear auth on error - keep user logged in
                 const storedToken = getStoredToken();
                 const storedUser = getStoredUser();
@@ -209,12 +210,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for TWA auto-login completion
     useEffect(() => {
         const handleTWAAuthComplete = () => {
-            console.log('🔔 TWA auth complete event received - updating auth state');
+            authLogger.info('TWA auth complete event received - updating auth state');
             const storedToken = getStoredToken();
             const storedUser = getStoredUser();
 
             if (storedToken && storedUser) {
-                console.log('✅ Setting auth state from TWA login');
+                authLogger.info('Setting auth state from TWA login');
                 setToken(storedToken);
                 setUser(storedUser);
                 setIsLoading(false);
@@ -242,11 +243,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 password,
                 remember_me: rememberMe  // 🆕 Pass remember_me to backend
             });
-            console.log('Login API full response:', response); // Debug log
+            authLogger.debug('Login API response', { response });
 
             // Our apiClient returns data directly (not response.data like axios)
             const data = (response as any).data || response; // Support both formats
-            console.log('Login API response data:', data); // Debug log
+            authLogger.debug('Login API data', { data });
 
             const { access_token, refresh_token, user: userData } = data;
 

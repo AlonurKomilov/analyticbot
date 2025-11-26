@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { storeLogger } from '@/utils/logger';
 import type { Post, ScheduledPost, CreatePostRequest } from '@/types';
 
 // Internal type for PostCreator component data
@@ -19,6 +20,7 @@ interface PostCreatorData {
   media?: {
     type: string;
     url: string;
+    telegram_file_id?: string;
   };
 }
 
@@ -62,13 +64,13 @@ export const usePostStore = create<PostState>()(
       try {
         // For now, return empty array since there's no /posts endpoint
         // Posts are tracked in analytics after being sent through the bot
-        console.log('ℹ️ No general /posts endpoint - posts are tracked in scheduled or analytics');
+        storeLogger.debug('No general /posts endpoint - posts are tracked in scheduled or analytics');
         set({
           posts: [],
           isLoading: false
         });
       } catch (error) {
-        console.error('❌ Failed to load posts:', error);
+        storeLogger.error('Failed to load posts', { error });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load posts';
         set({
           posts: [],
@@ -101,9 +103,9 @@ export const usePostStore = create<PostState>()(
           scheduledPosts: scheduledPosts || [],
           isLoading: false
         });
-        console.log('✅ Scheduled posts loaded:', scheduledPosts?.length || 0);
+        storeLogger.debug('Scheduled posts loaded', { count: scheduledPosts?.length || 0 });
       } catch (error) {
-        console.error('❌ Failed to load scheduled posts:', error);
+        storeLogger.error('Failed to load scheduled posts', { error });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load scheduled posts';
         set({
           scheduledPosts: [],
@@ -118,7 +120,7 @@ export const usePostStore = create<PostState>()(
       set({ isLoading: true, error: null });
 
       try {
-        console.log('📝 Creating post:', postData);
+        storeLogger.debug('Creating post', { postData });
         const newPost = await apiClient.post<Post>('/posts', postData);
 
         set(state => ({
@@ -126,9 +128,9 @@ export const usePostStore = create<PostState>()(
           isLoading: false
         }));
 
-        console.log('✅ Post created successfully:', newPost);
+        storeLogger.info('Post created successfully', { postId: newPost.id });
       } catch (error) {
-        console.error('❌ Create post error:', error);
+        storeLogger.error('Create post error', { error, postData });
         ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'createPost',
@@ -149,7 +151,7 @@ export const usePostStore = create<PostState>()(
       set({ isScheduling: true, error: null });
 
       try {
-        console.log('🚀 Sending post immediately (raw data):', postData);
+        storeLogger.debug('Sending post immediately', { postData });
 
         // Get user ID from JWT token (check multiple keys)
         const token = localStorage.getItem('access_token') ||
@@ -180,7 +182,7 @@ export const usePostStore = create<PostState>()(
           telegram_file_id: postData.media?.telegram_file_id || null,  // For Telegram storage files
         };
 
-        console.log('🚀 Transformed payload for backend /send:', backendPayload);
+        storeLogger.debug('Transformed payload for backend /send', { backendPayload });
 
         const sentPost = await apiClient.post<ScheduledPost>('/system/send', backendPayload);
 
@@ -189,9 +191,9 @@ export const usePostStore = create<PostState>()(
           isScheduling: false
         }));
 
-        console.log('✅ Post sent immediately:', sentPost);
+        storeLogger.info('Post sent immediately', { postId: sentPost.id });
       } catch (error) {
-        console.error('❌ Send post error:', error);
+        storeLogger.error('Send post error', { error, postData });
         ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'sendNowPost',
@@ -209,7 +211,7 @@ export const usePostStore = create<PostState>()(
       set({ isScheduling: true, error: null });
 
       try {
-        console.log('📅 Scheduling post (raw data):', postData);
+        storeLogger.debug('Scheduling post', { postData });
 
         // Get user ID from JWT token (check multiple keys)
         const token = localStorage.getItem('access_token') ||
@@ -240,7 +242,7 @@ export const usePostStore = create<PostState>()(
           media_url: postData.media?.url || null,
         };
 
-        console.log('📅 Transformed payload for backend:', backendPayload);
+        storeLogger.debug('Transformed payload for backend schedule', { backendPayload });
 
         const scheduledPost = await apiClient.post<ScheduledPost>('/system/schedule', backendPayload);
 
@@ -249,9 +251,9 @@ export const usePostStore = create<PostState>()(
           isScheduling: false
         }));
 
-        console.log('✅ Post scheduled successfully:', scheduledPost);
+        storeLogger.info('Post scheduled successfully', { postId: scheduledPost.id });
       } catch (error) {
-        console.error('❌ Schedule post error:', error);
+        storeLogger.error('Schedule post error', { error, postData });
         ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'schedulePost',
@@ -272,7 +274,7 @@ export const usePostStore = create<PostState>()(
       set({ isLoading: true, error: null });
 
       try {
-        console.log('✏️ Updating post:', postId, data);
+        storeLogger.debug('Updating post', { postId, data });
         const updatedPost = await apiClient.patch<Post>(`/posts/${postId}`, data);
 
         set(state => ({
@@ -285,9 +287,9 @@ export const usePostStore = create<PostState>()(
           isLoading: false
         }));
 
-        console.log('✅ Post updated successfully');
+        storeLogger.info('Post updated successfully', { postId });
       } catch (error) {
-        console.error('❌ Update post error:', error);
+        storeLogger.error('Update post error', { error, postId, data });
         ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'updatePost',
@@ -309,7 +311,7 @@ export const usePostStore = create<PostState>()(
       set({ isLoading: true, error: null });
 
       try {
-        console.log('🗑️ Deleting post:', postId);
+        storeLogger.debug('Deleting post', { postId });
         await apiClient.delete(`/posts/${postId}`);
 
         set(state => ({
@@ -320,9 +322,9 @@ export const usePostStore = create<PostState>()(
           isLoading: false
         }));
 
-        console.log('✅ Post deleted successfully');
+        storeLogger.info('Post deleted successfully', { postId });
       } catch (error) {
-        console.error('❌ Delete post error:', error);
+        storeLogger.error('Delete post error', { error, postId });
         ErrorHandler.handleError(error as Error, {
           component: 'PostStore',
           action: 'deletePost',
@@ -343,7 +345,7 @@ export const usePostStore = create<PostState>()(
       set({ isLoading: true, error: null });
 
       try {
-        console.log('⏹️ Canceling scheduled post:', postId);
+        storeLogger.debug('Canceling scheduled post', { postId });
         await apiClient.delete(`/posts/scheduled/${postId}`);
 
         set(state => ({
@@ -351,9 +353,9 @@ export const usePostStore = create<PostState>()(
           isLoading: false
         }));
 
-        console.log('✅ Scheduled post canceled successfully');
+        storeLogger.info('Scheduled post canceled successfully', { postId });
       } catch (error) {
-        console.error('❌ Cancel scheduled post error:', error);
+        storeLogger.error('Cancel scheduled post error', { error, postId });
         const errorMessage = error instanceof Error ? error.message : 'Failed to cancel scheduled post';
         set({
           error: errorMessage,

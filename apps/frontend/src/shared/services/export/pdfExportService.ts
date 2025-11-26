@@ -5,7 +5,7 @@
  * Separated from: CSV export, chart export, batch operations
  */
 
-import apiClient from '../api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface PDFExportOptions {
     include_charts?: boolean;
@@ -40,7 +40,7 @@ class PDFExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export PDF report:', error);
             throw error;
@@ -63,7 +63,7 @@ class PDFExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export overview PDF:', error);
             throw error;
@@ -89,7 +89,7 @@ class PDFExportService {
                 },
                 { responseType: 'blob' }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export custom PDF report:', error);
             throw error;

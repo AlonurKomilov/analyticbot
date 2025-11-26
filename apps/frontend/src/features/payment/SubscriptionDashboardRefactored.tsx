@@ -29,8 +29,8 @@ import { CreditCard } from '@mui/icons-material';
 import { paymentAPI } from '@features/payment/api';
 
 // Import refactored components
-import SubscriptionCard from './subscriptions/SubscriptionCard.jsx';
-import UsageMetrics from './subscriptions/UsageMetrics.jsx';
+import SubscriptionCard from './subscriptions/SubscriptionCard';
+import UsageMetrics from './subscriptions/UsageMetrics';
 import PaymentHistory from './invoices/PaymentHistory';
 import CancelSubscriptionDialog from './dialogs/CancelSubscriptionDialog';
 import PaymentHistoryDialog from './dialogs/PaymentHistoryDialog';

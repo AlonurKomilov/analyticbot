@@ -6,12 +6,13 @@ Coordinates with ImageProcessorPort for actual image manipulation.
 """
 
 import time
+
 from core.services.bot.content.models import (
     WatermarkConfig,
-    WatermarkResult,
     WatermarkPosition,
+    WatermarkResult,
 )
-from core.services.bot.content.protocols import ImageProcessorPort, FileSystemPort
+from core.services.bot.content.protocols import FileSystemPort, ImageProcessorPort
 
 
 class WatermarkService:

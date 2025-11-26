@@ -65,13 +65,13 @@ async def test_mtproto_ingestion():
             has_api_id = user_creds.get("telegram_api_id") is not None
             has_phone = user_creds.get("telegram_phone") is not None
             is_enabled = user_creds.get("mtproto_enabled", False)
-            
+
             print("   MTProto credentials:")
             print(f"      API ID: {'✅' if has_api_id else '❌'} {user_creds.get('telegram_api_id', 'N/A')}")
             print(f"      Phone: {'✅' if has_phone else '❌'} {user_creds.get('telegram_phone', 'N/A')}")
             print(f"      Session: {'✅ Has session' if has_session else '❌ No session'}")
             print(f"      Enabled: {'✅' if is_enabled else '❌'}")
-            
+
             if not has_session:
                 print("   ⚠️  User needs to complete MTProto setup first!")
                 await conn.close()

@@ -15,6 +15,9 @@ import { Box, Typography, useTheme, Theme } from '@mui/material';
 interface ChartDataItem {
     timestamp: string;
     views: number;
+    reactions: number;
+    shares: number;
+    comments: number;
 }
 
 interface ProcessedDataItem extends ChartDataItem {
@@ -41,6 +44,7 @@ interface ChartConfig {
 interface ChartVisualizationProps {
     data: ChartDataItem[];
     timeRange: string;
+    metricFilter?: 'all' | 'views' | 'reactions' | 'forwards' | 'comments';
     onChartClick?: (data: any) => void;
 }
 
@@ -96,11 +100,19 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
  * @param {Array} props.data - Chart data array with timestamp and views
  * @param {string} props.timeRange - Current time range for chart formatting (unused, kept for API compatibility)
  */
-const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, onChartClick }) => {
+const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data, metricFilter = 'all', onChartClick }) => {
     const theme = useTheme<Theme>();
 
     // Log when component receives click handler
     console.log('🎨 ChartVisualization: onChartClick =', onChartClick ? 'defined' : 'undefined');
+
+    // Deep, saturated colors that stay visible even with dense data
+    const colors = {
+        views: '#5288C1',       // Telegram Blue - stays visible
+        reactions: '#9e3028fa',   // Deep Red - highly visible
+        forwards: '#419644ec',    // Deep Green - strong visibility
+        comments: '#ca9a09be'     // Amber/Gold - bright and clear
+    };
 
     // Memoized chart configuration based on time range and theme
     const chartConfig: ChartConfig = useMemo(() => {
@@ -165,6 +177,9 @@ const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data
         return data.map((item: ChartDataItem) => ({
             timestamp: item.timestamp,
             views: Number(item.views) || 0,
+            reactions: Number(item.reactions) || 0,
+            shares: Number(item.shares) || 0,
+            comments: Number(item.comments) || 0,
             // Format timestamp for display
             formattedTime: new Date(item.timestamp).toLocaleString()
         }));
@@ -216,15 +231,58 @@ const ChartVisualization: React.FC<ChartVisualizationProps> = React.memo(({ data
                         labelFormatter={(value: string) => chartConfig.tickFormatter(value)}
                     />
                     <Legend />
-                    <Line
-                        type="monotone"
-                        dataKey="views"
-                        stroke={chartConfig.strokeColor}
-                        strokeWidth={2}
-                        dot={{ fill: chartConfig.strokeColor, strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, strokeWidth: 0 }}
-                        name="Post Views"
-                    />
+                    {(metricFilter === 'all' || metricFilter === 'views') && (
+                        <Line
+                            type="monotone"
+                            dataKey="views"
+                            stroke={colors.views}
+                            strokeWidth={2.5}
+                            dot={{ fill: colors.views, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, strokeWidth: 0 }}
+                            name="Views"
+                            animationDuration={800}
+                            animationEasing="ease-in-out"
+                        />
+                    )}
+                    {(metricFilter === 'all' || metricFilter === 'reactions') && (
+                        <Line
+                            type="monotone"
+                            dataKey="reactions"
+                            stroke={colors.reactions}
+                            strokeWidth={2.5}
+                            dot={{ fill: colors.reactions, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, strokeWidth: 0 }}
+                            name="Reactions"
+                            animationDuration={800}
+                            animationEasing="ease-in-out"
+                        />
+                    )}
+                    {(metricFilter === 'all' || metricFilter === 'forwards') && (
+                        <Line
+                            type="monotone"
+                            dataKey="shares"
+                            stroke={colors.forwards}
+                            strokeWidth={2.5}
+                            dot={{ fill: colors.forwards, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, strokeWidth: 0 }}
+                            name="Forwards"
+                            animationDuration={800}
+                            animationEasing="ease-in-out"
+                        />
+                    )}
+                    {(metricFilter === 'all' || metricFilter === 'comments') && (
+                        <Line
+                            type="monotone"
+                            dataKey="comments"
+                            stroke={colors.comments}
+                            strokeWidth={2}
+                            dot={{ fill: colors.comments, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6 }}
+                            name="Comments"
+                            animationDuration={800}
+                            animationEasing="ease-in-out"
+                        />
+                    )}
                 </LineChart>
             </ResponsiveContainer>
         </Box>

@@ -75,10 +75,34 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
         # Extract metrics
         views = getattr(message, "views", 0) or 0
         forwards = getattr(message, "forwards", 0) or 0
-        replies_count = 0
+
+        # Extract reply/comment metrics
+        # Distinguish between:
+        # - Discussion group comments (for channels with linked discussion groups)
+        # - Direct threaded replies (for groups/supergroups/channels)
+        comments_count = 0  # Discussion group comments
+        replies_count = 0  # Direct threaded replies
+        total_replies = 0  # Total (for logging/debugging)
 
         if hasattr(message, "replies") and message.replies:
-            replies_count = getattr(message.replies, "replies", 0) or 0
+            total_replies = getattr(message.replies, "replies", 0) or 0
+            is_comments_enabled = getattr(message.replies, "comments", False)
+
+            # Determine if this is a channel (not a supergroup)
+            is_channel = not is_supergroup and channel_id and channel_id > 0
+
+            if is_channel and is_comments_enabled:
+                # Channel with discussion group - these are comments
+                comments_count = total_replies
+                replies_count = 0
+            elif is_channel and not is_comments_enabled:
+                # Channel with threaded replies enabled (no discussion group)
+                comments_count = 0
+                replies_count = total_replies
+            else:
+                # Group or supergroup - these are threaded replies
+                comments_count = 0
+                replies_count = total_replies
 
         # Extract reactions
         reactions = []
@@ -129,6 +153,7 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
                 "msg_id": message_id,
                 "views": views,
                 "forwards": forwards,
+                "comments_count": comments_count,
                 "replies_count": replies_count,
                 "reactions_json": reactions,
                 "reactions_count": reactions_count,

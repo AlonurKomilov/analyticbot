@@ -1,7 +1,7 @@
 # State Management Guide
 
-**Last Updated:** October 26, 2025  
-**Library:** Zustand 4.x  
+**Last Updated:** October 26, 2025
+**Library:** Zustand 4.x
 **Pattern:** Slice Pattern
 
 ## Table of Contents
@@ -20,11 +20,11 @@
 
 We use **Zustand** for global state management because it's:
 
-✅ **Simple** - No boilerplate, easy to learn  
-✅ **Performant** - Only re-renders when subscribed state changes  
-✅ **Type-Safe** - Full TypeScript support  
-✅ **Flexible** - No providers, works anywhere  
-✅ **DevTools** - Redux DevTools integration  
+✅ **Simple** - No boilerplate, easy to learn
+✅ **Performant** - Only re-renders when subscribed state changes
+✅ **Type-Safe** - Full TypeScript support
+✅ **Flexible** - No providers, works anywhere
+✅ **DevTools** - Redux DevTools integration
 
 ---
 
@@ -62,7 +62,7 @@ interface ExampleState {
   data: Data | null;
   loading: boolean;
   error: string | null;
-  
+
   // Actions
   fetchData: () => Promise<void>;
   updateData: (data: Data) => void;
@@ -77,7 +77,7 @@ export const useExampleStore = create<ExampleState>()(
         data: null,
         loading: false,
         error: null,
-        
+
         // Actions
         fetchData: async () => {
           set({ loading: true, error: null });
@@ -88,9 +88,9 @@ export const useExampleStore = create<ExampleState>()(
             set({ error: error.message, loading: false });
           }
         },
-        
+
         updateData: (data) => set({ data }),
-        
+
         reset: () => set({
           data: null,
           loading: false,
@@ -123,7 +123,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  
+
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState>()(
         token: null,
         isAuthenticated: false,
         loading: false,
-        
+
         login: async (email, password) => {
           set({ loading: true });
           try {
@@ -157,7 +157,7 @@ export const useAuthStore = create<AuthState>()(
             throw error;
           }
         },
-        
+
         logout: () => {
           set({
             user: null,
@@ -165,11 +165,11 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
           });
         },
-        
+
         refreshUser: async () => {
           const { token } = get();
           if (!token) return;
-          
+
           try {
             const user = await apiClient.get('/auth/me');
             set({ user });
@@ -177,7 +177,7 @@ export const useAuthStore = create<AuthState>()(
             get().logout();
           }
         },
-        
+
         updateUser: (updates) => {
           set((state) => ({
             user: state.user ? { ...state.user, ...updates } : null,
@@ -204,7 +204,7 @@ import { useAuthStore } from '@store';
 
 function LoginForm() {
   const { login, loading, isAuthenticated } = useAuthStore();
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -214,7 +214,7 @@ function LoginForm() {
       // Show error
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       {/* form fields */}
@@ -227,9 +227,9 @@ function LoginForm() {
 
 function UserProfile() {
   const user = useAuthStore((state) => state.user);
-  
+
   if (!user) return null;
-  
+
   return <div>Welcome, {user.username}!</div>;
 }
 ```
@@ -247,7 +247,7 @@ interface AnalyticsState {
   period: TimePeriod;
   loading: boolean;
   error: string | null;
-  
+
   fetchOverview: (period: TimePeriod) => Promise<void>;
   setPeriod: (period: TimePeriod) => void;
   reset: () => void;
@@ -260,7 +260,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       period: '7d',
       loading: false,
       error: null,
-      
+
       fetchOverview: async (period) => {
         set({ loading: true, error: null });
         try {
@@ -270,12 +270,12 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           set({ error: error.message, loading: false });
         }
       },
-      
+
       setPeriod: (period) => {
         set({ period });
         get().fetchOverview(period);
       },
-      
+
       reset: () => set({
         overview: null,
         period: '7d',
@@ -295,11 +295,11 @@ import { useAnalyticsStore } from '@store';
 
 function AnalyticsDashboard() {
   const { overview, period, loading, setPeriod } = useAnalyticsStore();
-  
+
   useEffect(() => {
     fetchOverview(period);
   }, []);
-  
+
   return (
     <div>
       <PeriodSelector value={period} onChange={setPeriod} />
@@ -319,7 +319,7 @@ import { persist } from 'zustand/middleware';
 interface UIState {
   sidebarCollapsed: boolean;
   theme: 'light' | 'dark';
-  
+
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   setTheme: (theme: 'light' | 'dark') => void;
@@ -330,13 +330,13 @@ export const useUIStore = create<UIState>()(
     (set) => ({
       sidebarCollapsed: false,
       theme: 'light',
-      
+
       toggleSidebar: () => set((state) => ({
         sidebarCollapsed: !state.sidebarCollapsed,
       })),
-      
+
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-      
+
       setTheme: (theme) => set({ theme }),
     }),
     {
@@ -437,7 +437,7 @@ logout: () => {
     token: null,
     isAuthenticated: false,
   });
-  
+
   // Reset other stores if needed
   useChannelStore.getState().reset();
   usePostStore.getState().reset();
@@ -456,7 +456,7 @@ Use selectors for computed values:
 const useChannelStore = create<ChannelState>()((set) => ({
   channels: [],
   selectedId: null,
-  
+
   // Getter for derived state
   get selectedChannel() {
     const { channels, selectedId } = get();
@@ -473,7 +473,7 @@ const selectedChannel = useChannelStore((state) => state.selectedChannel);
 ```typescript
 fetchData: async () => {
   set({ loading: true, error: null });
-  
+
   try {
     const data = await api.fetchData();
     set({ data, loading: false });
@@ -482,7 +482,7 @@ fetchData: async () => {
       error: error instanceof Error ? error.message : 'An error occurred',
       loading: false,
     });
-    
+
     // Optional: Show toast notification
     toast.error('Failed to fetch data');
   }
@@ -584,25 +584,25 @@ describe('useAuthStore', () => {
       isAuthenticated: false,
     });
   });
-  
+
   it('should login user', async () => {
     const { result } = renderHook(() => useAuthStore());
-    
+
     await act(async () => {
       await result.current.login('test@example.com', 'password');
     });
-    
+
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toBeTruthy();
   });
-  
+
   it('should logout user', () => {
     const { result } = renderHook(() => useAuthStore());
-    
+
     act(() => {
       result.current.logout();
     });
-    
+
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
   });
@@ -622,9 +622,9 @@ describe('UserProfile', () => {
       user: { id: 1, username: 'testuser' },
       isAuthenticated: true,
     });
-    
+
     render(<UserProfile />);
-    
+
     expect(screen.getByText('Welcome, testuser!')).toBeInTheDocument();
   });
 });

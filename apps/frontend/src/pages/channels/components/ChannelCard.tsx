@@ -53,6 +53,7 @@ export interface ChannelStats {
 export interface ChannelAdminStatus {
     bot_is_admin: boolean | null;
     mtproto_is_admin: boolean | null;
+    mtproto_disabled?: boolean;
     is_inactive?: boolean;
     message?: string;
 }
@@ -117,6 +118,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                                 <ChannelAdminStatusIndicator
                                     botIsAdmin={adminStatus.bot_is_admin}
                                     mtprotoIsAdmin={adminStatus.mtproto_is_admin}
+                                    mtprotoDisabled={adminStatus.mtproto_disabled}
                                     compact={true}
                                 />
                             )}
@@ -138,6 +140,7 @@ export const ChannelCard: React.FC<ChannelCardProps> = ({
                         <ChannelAdminStatusIndicator
                             botIsAdmin={adminStatus.bot_is_admin}
                             mtprotoIsAdmin={adminStatus.mtproto_is_admin}
+                            mtprotoDisabled={adminStatus.mtproto_disabled}
                             compact={false}
                             message={adminStatus.message}
                         />

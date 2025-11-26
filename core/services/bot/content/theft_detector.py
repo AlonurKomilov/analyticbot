@@ -6,7 +6,8 @@ No external dependencies - only standard library.
 """
 
 import re
-from core.services.bot.content.models import TheftAnalysis, RiskLevel
+
+from core.services.bot.content.models import RiskLevel, TheftAnalysis
 
 
 class TheftDetectorService:

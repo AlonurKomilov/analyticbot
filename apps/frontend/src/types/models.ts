@@ -79,6 +79,8 @@ export interface PendingMedia {
   uploadProgress?: number;
   status: 'pending' | 'uploading' | 'complete' | 'error';
   type?: 'image' | 'video' | 'document';
+  telegram_file_id?: string;  // For files from Telegram storage
+  url?: string;  // URL for preview (used for storage files)
 }
 
 // Data sources

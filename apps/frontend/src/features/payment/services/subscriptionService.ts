@@ -12,7 +12,7 @@
  * - Validate API responses to catch invalid data early
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 import {
     SubscriptionStatus
 } from '@/types/payment';
@@ -65,7 +65,7 @@ class SubscriptionService {
             const response = await apiClient.get<{ plans: SubscriptionPlan[] }>(
                 `${this.baseURL}/plans`
             );
-            return response.data.plans || [];
+            return response.plans || [];
         } catch (error) {
             console.error('Failed to get subscription plans:', error);
             throw error;
@@ -83,7 +83,7 @@ class SubscriptionService {
                 { ...subscriptionData, user_id: userId }
             );
             // Validate and normalize response
-            return validateSubscriptionResponse(response.data) as Subscription;
+            return validateSubscriptionResponse(response) as Subscription;
         } catch (error) {
             console.error('Failed to create subscription:', error);
             throw error;
@@ -98,7 +98,7 @@ class SubscriptionService {
         try {
             const response = await apiClient.get<Subscription[]>(`${this.baseURL}/user/${userId}`);
             // Safely validate array, filtering out any invalid subscriptions
-            return safeValidateSubscriptionsArray(response.data) as Subscription[];
+            return safeValidateSubscriptionsArray(response) as Subscription[];
         } catch (error) {
             console.error('Failed to fetch user subscriptions:', error);
             throw error;
@@ -115,7 +115,7 @@ class SubscriptionService {
                 `${this.baseURL}/detail/${subscriptionId}`
             );
             // Validate and normalize response
-            return validateSubscriptionResponse(response.data) as Subscription;
+            return validateSubscriptionResponse(response) as Subscription;
         } catch (error) {
             console.error('Failed to get subscription:', error);
             throw error;
@@ -131,7 +131,7 @@ class SubscriptionService {
                 `${this.baseURL}/${subscriptionId}/cancel`,
                 { immediate }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to cancel subscription:', error);
             throw error;
@@ -146,7 +146,7 @@ class SubscriptionService {
             const response = await apiClient.post<Subscription>(
                 `${this.baseURL}/${subscriptionId}/resume`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to resume subscription:', error);
             throw error;
@@ -162,7 +162,7 @@ class SubscriptionService {
                 `${this.baseURL}/${subscriptionId}`,
                 { plan_id: newPlanId }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to update subscription:', error);
             throw error;

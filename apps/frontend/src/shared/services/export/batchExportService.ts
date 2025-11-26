@@ -5,7 +5,7 @@
  * Separated from: individual CSV/PNG/PDF exports
  */
 
-import apiClient from '../api/apiClient';
+import { apiClient } from '@/api/client';
 
 export type ExportFormat = 'csv' | 'png' | 'pdf' | 'json';
 
@@ -43,7 +43,7 @@ class BatchExportService {
                     format
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to start batch export:', error);
             throw error;
@@ -58,7 +58,7 @@ class BatchExportService {
             const response = await apiClient.get<ExportJob>(
                 `${this.baseURL}/status/${jobId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get export job status:', error);
             throw error;
@@ -74,7 +74,7 @@ class BatchExportService {
                 `${this.baseURL}/download/${jobId}`,
                 { responseType: 'blob' }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to download export:', error);
             throw error;
@@ -89,7 +89,7 @@ class BatchExportService {
             const response = await apiClient.get<{ jobs: ExportJob[] }>(
                 `${this.baseURL}/jobs/${userId}`
             );
-            return response.data.jobs || [];
+            return response.jobs || [];
         } catch (error) {
             console.error('Failed to get user export jobs:', error);
             throw error;
@@ -101,10 +101,10 @@ class BatchExportService {
      */
     async cancelJob(jobId: string): Promise<{ success: boolean }> {
         try {
-            const response = await apiClient.delete(
+            const response = await apiClient.delete<{ success: boolean }>(
                 `${this.baseURL}/job/${jobId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to cancel export job:', error);
             throw error;

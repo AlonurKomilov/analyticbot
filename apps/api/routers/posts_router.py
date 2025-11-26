@@ -34,7 +34,8 @@ class PostMetrics(BaseModel):
 
     views: int = 0
     forwards: int = 0
-    replies_count: int = 0
+    comments_count: int = 0  # Discussion group comments
+    replies_count: int = 0  # Direct threaded replies
     reactions_count: int = 0
     snapshot_time: datetime | None = None
 
@@ -51,6 +52,7 @@ class PostResponse(BaseModel):
     updated_at: datetime = Field(..., description="Last update time")
     metrics: PostMetrics | None = Field(None, description="Latest metrics")
     channel_name: str | None = Field(None, description="Channel name")
+    channel_username: str | None = Field(None, description="Channel username")
 
 
 class PostsListResponse(BaseModel):
@@ -79,12 +81,14 @@ async def get_all_posts(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Number of posts per page"),
     channel_id: int | None = Query(None, description="Filter by channel ID"),
+    search: str | None = Query(None, description="Search by message ID or text content"),
     current_user: dict = Depends(get_current_user),
     db_pool=Depends(get_db_pool),
 ):
     """
     Get all collected posts with pagination.
     Returns posts from MTProto data collection with latest metrics.
+    Supports search by message ID or text content.
     """
     try:
         offset = (page - 1) * page_size
@@ -96,12 +100,13 @@ async def get_all_posts(
         print(f"Page Size: {page_size}")
         print(f"Offset: {offset}")
         print(f"Channel ID: {channel_id}")
+        print(f"Search Query: {search}")
         print(f"Current User: {current_user}")
         print(f"Current User ID: {current_user['id']}")
         print(f"{'='*80}\n")
 
         logger.info(
-            f"=== Posts Request === page={page}, page_size={page_size}, offset={offset}, channel_id={channel_id}"
+            f"=== Posts Request === page={page}, page_size={page_size}, offset={offset}, channel_id={channel_id}, search={search}"
         )
         logger.info(f"Current user: {current_user}")
         logger.info(f"Current user ID: {current_user['id']}")
@@ -114,6 +119,22 @@ async def get_all_posts(
         if channel_id:
             where_clause += f" AND p.channel_id = ${len(params) + 1}"
             params.append(channel_id)
+
+        if search:
+            # Search by message ID (exact match) or text content (case-insensitive partial match)
+            search_value = search.strip()
+            # Try to parse as integer for msg_id search
+            try:
+                msg_id_search = int(search_value)
+                where_clause += (
+                    f" AND (p.msg_id = ${len(params) + 1} OR p.text ILIKE ${len(params) + 2})"
+                )
+                params.append(msg_id_search)
+                params.append(f"%{search_value}%")
+            except ValueError:
+                # Not a number, search only in text
+                where_clause += f" AND p.text ILIKE ${len(params) + 1}"
+                params.append(f"%{search_value}%")
 
         # Get total count
         count_query = f"SELECT COUNT(*) FROM posts p {where_clause}"
@@ -135,15 +156,17 @@ async def get_all_posts(
                     p.created_at,
                     p.updated_at,
                     c.title as channel_name,
+                    c.username as channel_username,
                     pm.views,
                     pm.forwards,
+                    pm.comments_count,
                     pm.replies_count,
                     pm.reactions_count,
                     pm.snapshot_time
                 FROM posts p
                 LEFT JOIN channels c ON p.channel_id = c.id
                 LEFT JOIN LATERAL (
-                    SELECT views, forwards, replies_count, reactions_count, snapshot_time
+                    SELECT views, forwards, comments_count, replies_count, reactions_count, snapshot_time
                     FROM post_metrics
                     WHERE channel_id = p.channel_id AND msg_id = p.msg_id
                     ORDER BY snapshot_time DESC
@@ -178,7 +201,8 @@ async def get_all_posts(
                     metrics = PostMetrics(
                         views=record["views"] or 0,
                         forwards=record["forwards"] or 0,
-                        replies_count=record["replies_count"] or 0,
+                        comments_count=record["comments_count"] or 0,
+                        replies_count=record.get("replies_count") or 0,
                         reactions_count=record["reactions_count"] or 0,
                         snapshot_time=record["snapshot_time"],
                     )
@@ -194,6 +218,7 @@ async def get_all_posts(
                         updated_at=record["updated_at"],
                         metrics=metrics,
                         channel_name=record["channel_name"],
+                        channel_username=record["channel_username"],
                     )
                 )
 
@@ -242,13 +267,14 @@ async def get_post(
                     c.title as channel_name,
                     pm.views,
                     pm.forwards,
+                    pm.comments_count,
                     pm.replies_count,
                     pm.reactions_count,
                     pm.snapshot_time
                 FROM posts p
                 LEFT JOIN channels c ON p.channel_id = c.id
                 LEFT JOIN LATERAL (
-                    SELECT views, forwards, replies_count, reactions_count, snapshot_time
+                    SELECT views, forwards, comments_count, replies_count, reactions_count, snapshot_time
                     FROM post_metrics
                     WHERE channel_id = p.channel_id AND msg_id = p.msg_id
                     ORDER BY snapshot_time DESC
@@ -268,7 +294,8 @@ async def get_post(
                 metrics = PostMetrics(
                     views=record["views"] or 0,
                     forwards=record["forwards"] or 0,
-                    replies_count=record["replies_count"] or 0,
+                    comments_count=record["comments_count"] or 0,
+                    replies_count=record.get("replies_count") or 0,
                     reactions_count=record["reactions_count"] or 0,
                     snapshot_time=record["snapshot_time"],
                 )

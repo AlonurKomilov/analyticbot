@@ -71,10 +71,10 @@ import sys
 try:
     with open("coverage.json") as f:
         data = json.load(f)
-    
+
     total = data["totals"]
     percent = total["percent_covered"]
-    
+
     # Determine color based on coverage
     if percent >= 80:
         color = "\033[0;32m"  # Green
@@ -85,20 +85,20 @@ try:
     else:
         color = "\033[0;31m"  # Red
         icon = "🔴"
-    
+
     print(f"  {icon} Overall Coverage: {color}{percent:.2f}%\033[0m")
     print(f"  📝 Lines Covered: {total['covered_lines']}/{total['num_statements']}")
     print(f"  🌿 Branches Covered: {total['covered_branches']}/{total['num_branches']}")
     print()
-    
+
     # Top 5 best covered files
     files = []
     for file, stats in data["files"].items():
         if "test" not in file.lower():
             files.append((file, stats["summary"]["percent_covered"]))
-    
+
     files.sort(key=lambda x: x[1], reverse=True)
-    
+
     if files:
         print("  🏆 Top 5 Best Covered:")
         for file, cov in files[:5]:
@@ -106,13 +106,13 @@ try:
             if len(short_file) > 50:
                 short_file = "..." + short_file[-47:]
             print(f"    {cov:6.2f}% - {short_file}")
-    
+
     print()
-    
+
     # Bottom 5 least covered files (excluding 0%)
     files_low = [f for f in files if f[1] > 0]
     files_low.sort(key=lambda x: x[1])
-    
+
     if files_low:
         print("  ⚠️  Bottom 5 Need Improvement:")
         for file, cov in files_low[:5]:

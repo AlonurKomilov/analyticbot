@@ -62,7 +62,7 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
       const status = await getMTProtoStatus();
       const globalSetting = status.mtproto_enabled ?? false;
       setGlobalEnabled(globalSetting);
-      
+
       console.log('🌐 Global MTProto setting:', globalSetting);
 
       // SECOND: Try to get per-channel override
@@ -93,9 +93,9 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
 
   const handleToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;
-    
+
     console.log(`🎚️ Channel ${channelId} toggle clicked:`, { from: enabled, to: newValue });
-    
+
     // 🔒 LOCK: Prevent race conditions
     setIsUserToggling(true);
     setIsToggling(true);
@@ -109,16 +109,16 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
       const numericChannelId = typeof channelId === 'string' ? parseInt(channelId, 10) : channelId;
       await toggleChannelMTProto(numericChannelId, newValue);
       console.log(`✅ Channel toggle API succeeded for ${channelId}`);
-      
+
       setSuccessMessage(
         newValue
           ? `MTProto enabled for ${channelName}`
           : `MTProto disabled for ${channelName}`
       );
-      
+
       // ⏱️ WAIT: Let backend fully process (prevent stale data)
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
     } catch (err: any) {
       console.error(`❌ Channel toggle failed for ${channelId}:`, err);
       logger.error(`Failed to toggle MTProto for channel ${channelId}:`, err);

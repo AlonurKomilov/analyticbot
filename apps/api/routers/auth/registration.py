@@ -9,7 +9,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_user_repository
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.routers.auth.models import RegisterRequest
 from core.repositories.interfaces import UserRepository
 from core.security_engine import ApplicationRole, AuthProvider, User, UserStatus

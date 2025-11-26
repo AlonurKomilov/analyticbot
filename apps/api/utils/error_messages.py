@@ -4,13 +4,12 @@ User-Friendly Error Messages for Bot Management
 Converts technical error messages into user-friendly, actionable messages.
 """
 
-from typing import Tuple
 
 
 class BotErrorMessages:
     """
     User-friendly error messages for common bot management issues
-    
+
     Provides clear, actionable error messages instead of technical details.
     """
 
@@ -105,16 +104,16 @@ class BotErrorMessages:
     )
 
 
-def get_user_friendly_error(error: Exception) -> Tuple[int, str]:
+def get_user_friendly_error(error: Exception) -> tuple[int, str]:
     """
     Convert an exception to user-friendly error message
-    
+
     Args:
         error: The exception that occurred
-        
+
     Returns:
         Tuple of (status_code, user_friendly_message)
-        
+
     Example:
         status_code, message = get_user_friendly_error(error)
         raise HTTPException(status_code=status_code, detail=message)
@@ -124,20 +123,20 @@ def get_user_friendly_error(error: Exception) -> Tuple[int, str]:
     # Bot Token Errors (400)
     if any(x in error_str for x in ["invalid token", "token is invalid"]) and "revoked" not in error_str:
         return 400, BotErrorMessages.INVALID_TOKEN
-    
+
     if "token revoked" in error_str or "token was revoked" in error_str:
         return 401, BotErrorMessages.TOKEN_REVOKED
-    
+
     if "already exists" in error_str or "duplicate" in error_str:
         return 409, BotErrorMessages.TOKEN_ALREADY_EXISTS
 
     # Verification Errors (400)
     if "bot was blocked" in error_str or "bot can't initiate" in error_str:
         return 400, BotErrorMessages.BOT_NOT_STARTED
-    
+
     if "not enough rights" in error_str or "forbidden" in error_str:
         return 403, BotErrorMessages.INSUFFICIENT_PERMISSIONS
-    
+
     if "chat not found" in error_str or "channel not found" in error_str:
         return 404, BotErrorMessages.CHAT_NOT_FOUND
 
@@ -152,14 +151,14 @@ def get_user_friendly_error(error: Exception) -> Tuple[int, str]:
     # Connection Errors (503) - check after rate limits
     if any(x in error_str for x in ["network", "timeout", "timed out"]) and "connection" in error_str:
         return 503, BotErrorMessages.NETWORK_ERROR
-    
+
     if "telegram api" in error_str or "bad gateway" in error_str:
         return 503, BotErrorMessages.TELEGRAM_API_ERROR
 
     # Database Errors (500) - check for database keywords more specifically
     if any(x in error_str for x in ["database error", "db error", "connection pool", "sql error"]):
         return 500, BotErrorMessages.DATABASE_ERROR
-    
+
     # Not Found - check before generic "not found"
     if "no bot found" in error_str or ("bot" in error_str and "not found" in error_str):
         return 404, BotErrorMessages.BOT_NOT_FOUND
@@ -184,11 +183,11 @@ def get_user_friendly_error(error: Exception) -> Tuple[int, str]:
 def get_validation_error_message(field: str, constraint: str) -> str:
     """
     Get user-friendly message for validation errors
-    
+
     Args:
         field: The field that failed validation
         constraint: The constraint that was violated
-        
+
     Returns:
         User-friendly error message
     """

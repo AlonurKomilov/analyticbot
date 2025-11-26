@@ -4,7 +4,7 @@ Provides Redis-based implementation of the cache operations defined
 in AsyncCachePort protocol with proper error handling and connection management.
 """
 
-from typing import TYPE_CHECKING, Any, Optional, Set
+from typing import TYPE_CHECKING, Any
 
 from core.ports.cache_port import AsyncCachePort
 
@@ -46,7 +46,7 @@ class RedisCacheAdapter(AsyncCachePort):
         result = await self._redis.srem(key, *values)
         return int(result) if result is not None else 0
 
-    async def smembers(self, key: str) -> Set[str]:
+    async def smembers(self, key: str) -> set[str]:
         """Get all members from Redis set.
 
         Handles byte decoding from Redis automatically.
@@ -84,7 +84,7 @@ class InMemoryCacheAdapter(AsyncCachePort):
 
     def __init__(self):
         """Initialize in-memory storage."""
-        self._storage: dict[str, Set[str]] = {}
+        self._storage: dict[str, set[str]] = {}
 
     async def sadd(self, key: str, *values: str) -> int:
         """Add values to in-memory set."""
@@ -104,7 +104,7 @@ class InMemoryCacheAdapter(AsyncCachePort):
         self._storage[key].difference_update(values)
         return before - len(self._storage[key])
 
-    async def smembers(self, key: str) -> Set[str]:
+    async def smembers(self, key: str) -> set[str]:
         """Get all members from in-memory set."""
         return self._storage.get(key, set()).copy()
 
@@ -126,7 +126,7 @@ class InMemoryCacheAdapter(AsyncCachePort):
         pass
 
 
-def create_redis_cache_adapter(redis_client: Optional[Any] = None) -> AsyncCachePort:
+def create_redis_cache_adapter(redis_client: Any | None = None) -> AsyncCachePort:
     """Factory function to create appropriate cache adapter.
 
     Args:

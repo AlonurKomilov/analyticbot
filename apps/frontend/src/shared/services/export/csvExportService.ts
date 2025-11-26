@@ -5,7 +5,7 @@
  * Separated from: chart export, PDF export, batch operations
  */
 
-import apiClient from '../api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface CSVExportOptions {
     include_headers?: boolean;
@@ -39,7 +39,7 @@ class CSVExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export overview CSV:', error);
             throw error;
@@ -62,7 +62,7 @@ class CSVExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export growth CSV:', error);
             throw error;
@@ -86,7 +86,7 @@ class CSVExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export top posts CSV:', error);
             throw error;
@@ -109,7 +109,7 @@ class CSVExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export engagement CSV:', error);
             throw error;

@@ -14,7 +14,7 @@
 import React from 'react';
 import { Button as MuiButton, CircularProgress, SxProps, Theme, ButtonProps as MuiButtonProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { DESIGN_TOKENS, getButtonProps, createTransition, createElevation } from '@/theme/designTokens.js';
+import { DESIGN_TOKENS, getButtonProps, createTransition, createElevation } from '@/theme/designTokens';
 
 /**
  * Button variant types

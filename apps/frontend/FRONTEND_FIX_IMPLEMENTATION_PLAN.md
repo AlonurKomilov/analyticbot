@@ -1432,4 +1432,3 @@ git checkout -b hotfix/revert-changes
 - Manual QA checklist complete
 
 **Next Step:** Deploy to staging environment (requires infrastructure)
-

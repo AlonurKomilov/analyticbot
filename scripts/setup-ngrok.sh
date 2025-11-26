@@ -10,13 +10,13 @@ echo "===================================="
 # Check if ngrok is installed
 if ! command -v ngrok &> /dev/null; then
     echo "📦 Installing ngrok..."
-    
+
     # Download ngrok
     wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
     tar -xzf ngrok-v3-stable-linux-amd64.tgz
     sudo mv ngrok /usr/local/bin/
     rm ngrok-v3-stable-linux-amd64.tgz
-    
+
     echo "✅ ngrok installed"
 fi
 

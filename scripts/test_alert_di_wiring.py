@@ -159,7 +159,7 @@ async def test_alert_service_dependencies():
 
         print("Testing TelegramAlertNotifier:")
         print("-" * 80)
-        print(f"⚠ Skipped (requires valid bot token in test environment)")
+        print("⚠ Skipped (requires valid bot token in test environment)")
         print()
 
         print("=" * 80)
@@ -183,8 +183,8 @@ async def test_middleware_injection():
     print()
 
     try:
-        from apps.di import get_container
         from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
+        from apps.di import get_container
 
         container = get_container()
 

@@ -5,13 +5,14 @@ Unit Tests for Payment Processing Service
 Tests payment transaction processing, validation, retries, and refunds.
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
-from core.domain.payment import Money, Payment, PaymentData, PaymentStatus
+import pytest
+
+from core.domain.payment import Money, PaymentData, PaymentStatus
 from core.protocols.payment.payment_protocols import PaymentResult
 from infra.services.payment import PaymentProcessingService
 
@@ -260,7 +261,7 @@ class TestPaymentProcessingService:
         # Arrange
         payment_id = 1
         refund_amount = Money(amount=Decimal("10.00"), currency="USD")
-        
+
         payment_record = {
             "id": payment_id,
             "user_id": 123,

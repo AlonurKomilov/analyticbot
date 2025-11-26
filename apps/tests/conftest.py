@@ -165,7 +165,7 @@ async def authenticated_client(
     """
     # Create a test user and get auth token
     from core.security_engine import create_access_token  # Fixed Oct 19, 2025: Updated import path
-    from core.security_engine.models import User, UserRole, UserStatus, AuthProvider
+    from core.security_engine.models import AuthProvider, User, UserRole, UserStatus
 
     # Create a mock User object for testing
     test_user = User(

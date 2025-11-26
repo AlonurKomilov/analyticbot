@@ -51,9 +51,9 @@ export default defineConfig([
     rules: {
       // TypeScript-specific rules
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { 
+      '@typescript-eslint/no-unused-vars': ['error', {
         argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_' 
+        varsIgnorePattern: '^_'
       }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -64,13 +64,13 @@ export default defineConfig([
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
-      
+
       // General code quality
       'no-console': ['warn', { allow: ['error', 'warn'] }],
-      
+
       // React Hooks
       ...reactHooks.configs['recommended-latest'].rules,
-      
+
       // React Refresh
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },

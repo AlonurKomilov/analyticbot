@@ -9,7 +9,7 @@ import {
     SxProps,
     Theme
 } from '@mui/material';
-import { generateId } from '@/utils/accessibility.js';
+import { generateId } from '@/utils/accessibility';
 
 interface ValidationRules {
     [key: string]: any;

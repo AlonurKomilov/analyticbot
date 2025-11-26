@@ -19,12 +19,12 @@ from core.services.adaptive_learning.protocols.learning_protocols import (
     LearningTask,
 )
 
+from ....protocols.learning_protocols import LearningContext
 from ..models import (
     ImportanceWeights,
     IncrementalLearningConfig,
     LearningResult,
 )
-from ....protocols.learning_protocols import LearningContext
 
 logger = logging.getLogger(__name__)
 

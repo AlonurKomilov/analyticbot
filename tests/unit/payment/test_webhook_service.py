@@ -5,14 +5,15 @@ Unit Tests for Webhook Service
 Tests webhook event processing, validation, and handling for payment providers.
 """
 
-import pytest
-import hmac
 import hashlib
+import hmac
 import json
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
-from core.protocols.payment.payment_protocols import WebhookEvent, PaymentEventType
+import pytest
+
+from core.protocols.payment.payment_protocols import PaymentEventType, WebhookEvent
 from infra.services.payment import WebhookService
 
 
@@ -67,7 +68,7 @@ class TestWebhookService:
         secret = "whsec_test_secret"
         payload_str = json.dumps(sample_webhook_payload)
         timestamp = str(int(datetime.now().timestamp()))
-        
+
         # Create signature
         signed_payload = f"{timestamp}.{payload_str}"
         signature = hmac.new(
@@ -200,7 +201,7 @@ class TestWebhookService:
                     "customer": "cus_test123",
                     "status": "active",
                     "current_period_start": int(datetime.now().timestamp()),
-                    "current_period_end": int((datetime.now().timestamp())) + 30*24*60*60,
+                    "current_period_end": int(datetime.now().timestamp()) + 30*24*60*60,
                 }
             },
         }
@@ -442,7 +443,7 @@ class TestWebhookEdgeCases:
         payload_str = json.dumps(sample_webhook_payload)
         # Old timestamp (over 5 minutes ago)
         old_timestamp = str(int(datetime.now().timestamp()) - 400)
-        
+
         signed_payload = f"{old_timestamp}.{payload_str}"
         signature = hmac.new(
             secret.encode("utf-8"),

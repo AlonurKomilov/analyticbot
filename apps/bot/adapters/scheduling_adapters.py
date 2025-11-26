@@ -11,11 +11,6 @@ from typing import Any
 from aiogram import Bot
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from core.services.bot.scheduling.protocols import (
-    MarkupBuilderPort,
-    MessageSenderPort,
-)
-
 logger = logging.getLogger(__name__)
 
 

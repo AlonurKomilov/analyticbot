@@ -146,19 +146,22 @@ class MTProtoDataCollectionService:
             total_channels: Total number of channels to collect from
         """
         try:
-            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
 
             session_factory = await self.container.database.async_session_maker()
             async with session_factory() as audit_session:
-                audit_service = MTProtoAuditService(audit_session)
-                await audit_service.log_event(
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
                     user_id=user_id,
                     action="collection_start",
-                    metadata={
+                    event_metadata={
                         "total_channels": total_channels,
                         "start_time": datetime.now(UTC).isoformat(),
                     },
+                    timestamp=datetime.now(UTC),
                 )
+                audit_session.add(log_entry)
+                await audit_session.commit()
         except Exception as e:
             logger.warning(f"Failed to log collection start for user {user_id}: {e}")
 
@@ -184,16 +187,16 @@ class MTProtoDataCollectionService:
             errors: Error count for this channel
         """
         try:
-            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
 
             session_factory = await self.container.database.async_session_maker()
             async with session_factory() as audit_session:
-                audit_service = MTProtoAuditService(audit_session)
-                await audit_service.log_event(
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
                     user_id=user_id,
-                    action="collection_progress",
                     channel_id=channel_id,
-                    metadata={
+                    action="collection_progress",
+                    event_metadata={
                         "channel_name": channel_name,
                         "messages_collected": messages_collected,
                         "channels_processed": channels_processed,
@@ -201,7 +204,10 @@ class MTProtoDataCollectionService:
                         "errors": errors,
                         "progress_time": datetime.now(UTC).isoformat(),
                     },
+                    timestamp=datetime.now(UTC),
                 )
+                audit_session.add(log_entry)
+                await audit_session.commit()
         except Exception as e:
             logger.warning(
                 f"Failed to log collection progress for user {user_id}, channel {channel_id}: {e}"
@@ -225,22 +231,25 @@ class MTProtoDataCollectionService:
             errors: Total error count
         """
         try:
-            from apps.api.services.mtproto_audit_service import MTProtoAuditService
+            from infra.db.models.user_bot_orm import MTProtoAuditLog
 
             session_factory = await self.container.database.async_session_maker()
             async with session_factory() as audit_session:
-                audit_service = MTProtoAuditService(audit_session)
-                await audit_service.log_event(
+                # Create audit log entry directly
+                log_entry = MTProtoAuditLog(
                     user_id=user_id,
                     action="collection_end",
-                    metadata={
+                    event_metadata={
                         "total_messages": total_messages,
                         "channels_synced": channels_synced,
                         "total_channels": total_channels,
                         "errors": errors,
                         "end_time": datetime.now(UTC).isoformat(),
                     },
+                    timestamp=datetime.now(UTC),
                 )
+                audit_session.add(log_entry)
+                await audit_session.commit()
         except Exception as e:
             logger.warning(f"Failed to log collection end for user {user_id}: {e}")
 
@@ -303,10 +312,68 @@ class MTProtoDataCollectionService:
                     "total_messages": 0,
                 }
 
-            logger.info(f"📥 Collecting history for user {user_id}: {len(channels)} channels")
+            # 🔒 FILTER: Check per-channel MTProto settings
+            # Only collect from channels where MTProto is explicitly enabled or no setting exists (default enabled)
+            channels_to_collect = []
+            skipped_channels = []
 
-            # Log collection start
-            await self._log_collection_start(user_id, len(channels))
+            # Get database pool from container
+            db_pool = await self.container.database.asyncpg_pool()
+
+            async with db_pool.acquire() as conn:
+                for channel in channels:
+                    channel_id = channel.get("id") or channel.get("telegram_id")
+
+                    # Check if channel has per-channel MTProto setting
+                    setting = await conn.fetchrow(
+                        """
+                        SELECT mtproto_enabled
+                        FROM channel_mtproto_settings
+                        WHERE channel_id = $1 AND user_id = $2
+                        """,
+                        channel_id,
+                        user_id,
+                    )
+
+                    if setting is None:
+                        # No explicit setting = default ENABLED (backward compatibility)
+                        channels_to_collect.append(channel)
+                        logger.debug(
+                            f"  ✅ Channel {channel.get('title')} - no setting (default enabled)"
+                        )
+                    elif setting["mtproto_enabled"]:
+                        # Explicitly enabled
+                        channels_to_collect.append(channel)
+                        logger.debug(f"  ✅ Channel {channel.get('title')} - explicitly enabled")
+                    else:
+                        # Explicitly disabled - SKIP
+                        skipped_channels.append(channel.get("title", "Unknown"))
+                        logger.info(
+                            f"  ⏭️  Skipping channel {channel.get('title')} - MTProto disabled per channel setting"
+                        )
+
+            if skipped_channels:
+                logger.info(
+                    f"📛 Skipped {len(skipped_channels)} channels with MTProto disabled: {', '.join(skipped_channels)}"
+                )
+
+            if not channels_to_collect:
+                logger.info(f"User {user_id} has no channels with MTProto enabled")
+                return {
+                    "success": True,
+                    "user_id": user_id,
+                    "reason": "no_enabled_channels",
+                    "channels_synced": 0,
+                    "total_messages": 0,
+                    "skipped_channels": len(skipped_channels),
+                }
+
+            logger.info(
+                f"📥 Collecting history for user {user_id}: {len(channels_to_collect)} channels (skipped {len(skipped_channels)})"
+            )
+
+            # Log collection start (with actual channels to collect)
+            await self._log_collection_start(user_id, len(channels_to_collect))
 
             # Create a repos object for the collector
             class ReposWrapper:
@@ -331,8 +398,8 @@ class MTProtoDataCollectionService:
 
             error_list = []
 
-            # Collect from each channel
-            for idx, channel in enumerate(channels):
+            # Collect from each channel (only MTProto-enabled channels)
+            for idx, channel in enumerate(channels_to_collect):
                 channel_name = "Unknown"
                 channel_id = None
                 channel_errors = 0
@@ -375,7 +442,7 @@ class MTProtoDataCollectionService:
                         channel_name=channel_name,
                         messages_collected=messages_collected,
                         channels_processed=idx + 1,
-                        total_channels=len(channels),
+                        total_channels=len(channels_to_collect),
                         errors=channel_errors,
                     )
 
@@ -393,7 +460,7 @@ class MTProtoDataCollectionService:
                             channel_name=channel_name,
                             messages_collected=0,
                             channels_processed=idx + 1,
-                            total_channels=len(channels),
+                            total_channels=len(channels_to_collect),
                             errors=channel_errors,
                         )
 
@@ -406,22 +473,22 @@ class MTProtoDataCollectionService:
                 user_id=user_id,
                 total_messages=total_messages,
                 channels_synced=synced_channels,
-                total_channels=len(channels),
+                total_channels=len(channels_to_collect),
                 errors=len(error_list),
             )
 
             session_duration = (datetime.now(UTC) - session_start).total_seconds()
             logger.info(
                 f"✅ User {user_id} collection complete: "
-                f"{synced_channels}/{len(channels)} channels, "
+                f"{synced_channels}/{len(channels_to_collect)} channels, "
                 f"{total_messages} messages in {session_duration:.1f}s"
             )
 
             return {
-                "success": len(error_list) < len(channels),
+                "success": len(error_list) < len(channels_to_collect),
                 "user_id": user_id,
                 "channels_synced": synced_channels,
-                "total_channels": len(channels),
+                "total_channels": len(channels_to_collect),
                 "total_messages": total_messages,
                 "errors": error_list,
                 "sync_time": datetime.now(UTC).isoformat(),

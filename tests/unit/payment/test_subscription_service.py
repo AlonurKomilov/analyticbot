@@ -5,12 +5,12 @@ Unit Tests for Subscription Service
 Tests subscription management, lifecycle, and billing cycles.
 """
 
-import pytest
 from datetime import datetime, timedelta
-from decimal import Decimal
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
-from core.domain.payment import Money, SubscriptionData, SubscriptionStatus
+import pytest
+
+from core.domain.payment import SubscriptionData, SubscriptionStatus
 from core.protocols.payment.payment_protocols import SubscriptionResult
 from infra.services.payment import SubscriptionService
 

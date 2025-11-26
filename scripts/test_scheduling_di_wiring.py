@@ -69,11 +69,11 @@ async def test_di_wiring():
                     if service is not None:
                         print(f"  ✅ Service instantiated: {type(service).__name__}")
                     else:
-                        print(f"  ⚠️  Service is None (may need repository implementations)")
+                        print("  ⚠️  Service is None (may need repository implementations)")
 
                 except Exception as e:
                     print(f"  ⚠️  Could not instantiate service: {e}")
-                    print(f"     (This is expected if repositories are not fully implemented)")
+                    print("     (This is expected if repositories are not fully implemented)")
             else:
                 print(f"  ❌ Provider '{service_name}' NOT FOUND")
                 return False
@@ -95,23 +95,23 @@ async def test_di_wiring():
 
         try:
             from core.services.bot.scheduling import (
-                ScheduleManager,
-                PostDeliveryService,
                 DeliveryStatusTracker,
+                PostDeliveryService,
+                ScheduleManager,
             )
             print("  ✅ Core services import successfully")
 
             from core.services.bot.scheduling.protocols import (
-                ScheduleRepository,
                 AnalyticsRepository,
-                MessageSenderPort,
                 MarkupBuilderPort,
+                MessageSenderPort,
+                ScheduleRepository,
             )
             print("  ✅ Protocols import successfully")
 
             from apps.bot.adapters.scheduling_adapters import (
-                AiogramMessageSender,
                 AiogramMarkupBuilder,
+                AiogramMessageSender,
             )
             print("  ✅ Adapters import successfully")
 

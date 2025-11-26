@@ -29,14 +29,14 @@ import {
     Shield as ProtectionIcon
 } from '@mui/icons-material';
 import { ModernCard, ModernCardHeader } from '@shared/components/ui';
-import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
+import { SEMANTIC_SPACING } from '../../theme/spacingSystem';
 
 // Import mock data
 import {
     churnPredictorStats,
     mockChurnPredictions,
     retentionStrategies
-} from '../aiServices/churnPredictor.js';
+} from '../aiServices/churnPredictor';
 
 /**
  * Mock Churn Predictor Service Page

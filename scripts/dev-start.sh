@@ -211,10 +211,22 @@ case $SERVICE in
         cd ../..
         ;;
     "tunnel")
-        # Start tunnel - Check for permanent tunnel first, fallback to random
+        # Tunnel disabled - Using production domain analyticbot.org
+        echo -e "${BLUE}🌐 Tunnel mode disabled - Using production domain${NC}"
+        echo -e "${GREEN}✅ Production domain configured: https://analyticbot.org${NC}"
+        echo -e "${GREEN}✅ API subdomain: https://api.analyticbot.org${NC}"
+        echo -e "${BLUE}💡 Frontend uses relative URLs via Vite proxy${NC}"
+        echo ""
+        echo -e "${YELLOW}📝 Domain configuration:${NC}"
+        echo -e "   Frontend: https://analyticbot.org or https://dev.analyticbot.org"
+        echo -e "   API: https://api.analyticbot.org"
+        echo -e "   All services accessible through your CloudFlare domain"
+        echo ""
+        return 0
 
+        # Legacy tunnel support (commented out)
         # Check if permanent Cloudflare tunnel is configured
-        if [ -f ".tunnel-info" ]; then
+        if false && [ -f ".tunnel-info" ]; then
             source .tunnel-info
             echo -e "${BLUE}🌐 Starting PERMANENT Cloudflare Tunnel: ${TUNNEL_NAME}${NC}"
 
@@ -333,77 +345,14 @@ case $SERVICE in
         fi
         ;;
     "all")
-        # Start CloudFlare Tunnel FIRST (before frontend) so .env.local gets updated
+        # Domain configured - Skip tunnel generation
         echo ""
-        echo -e "${BLUE}🌐 Starting CloudFlare Tunnel for public access...${NC}"
-
-        # Stop any existing CloudFlare tunnel first
-        if pgrep -f "cloudflared tunnel --url" > /dev/null; then
-            echo -e "${YELLOW}🔄 Stopping existing CloudFlare Tunnel...${NC}"
-            pkill -f "cloudflared tunnel --url" || true
-            sleep 2
-        fi
-
-        if command -v cloudflared &> /dev/null; then
-            # Start tunnel with retry logic
-            tunnel_started=false
-            for attempt in {1..3}; do
-                echo -e "${BLUE}🔄 Starting tunnel (attempt $attempt/3)...${NC}"
-                nohup cloudflared tunnel --url http://localhost:11300 > logs/dev_tunnel.log 2>&1 &
-                tunnel_pid=$!
-                echo $tunnel_pid > "logs/dev_tunnel.pid"
-
-                echo -e "${BLUE}⏳ Waiting for tunnel URL...${NC}"
-                sleep 10
-
-                # Check if tunnel actually started successfully
-                if grep -q "trycloudflare.com" logs/dev_tunnel.log && kill -0 $tunnel_pid 2>/dev/null; then
-                    tunnel_started=true
-                    echo -e "${GREEN}✅ Tunnel started successfully!${NC}"
-                    break
-                else
-                    echo -e "${YELLOW}⚠️  Tunnel failed to start (attempt $attempt/3)${NC}"
-                    kill $tunnel_pid 2>/dev/null || true
-                    sleep 5
-                fi
-            done
-
-            if [ "$tunnel_started" = false ]; then
-                echo -e "${RED}❌ Failed to start CloudFlare Tunnel after 3 attempts${NC}"
-                echo -e "${YELLOW}💡 Check logs/dev_tunnel.log for details${NC}"
-                echo -e "${YELLOW}💡 You can start it later with: make dev-tunnel${NC}"
-                echo ""
-            fi
-
-            # Auto-update frontend .env.local with tunnel URL
-            echo -e "${BLUE}🔄 Auto-updating frontend .env.local with new tunnel URL...${NC}"
-
-            if [ -f "scripts/update-tunnel-url.sh" ]; then
-                # Run the auto-update script
-                ./scripts/update-tunnel-url.sh
-                echo ""
-                echo -e "${GREEN}✅ Frontend configuration updated automatically!${NC}"
-            else
-                # Fallback: manual instructions if update script missing
-                if [ -f "logs/dev_tunnel.log" ]; then
-                    TUNNEL_URL=$(grep -o "https://[a-z0-9-]*\.trycloudflare\.com" logs/dev_tunnel.log | head -1)
-                    if [ ! -z "$TUNNEL_URL" ]; then
-                        echo -e "${GREEN}✅ CloudFlare Tunnel started!${NC}"
-                        echo -e "${GREEN}🌐 Public URL: ${TUNNEL_URL}${NC}"
-                        echo ""
-                        echo -e "${YELLOW}📝 To use this tunnel, update your frontend manually:${NC}"
-                        echo -e "   sed -i 's|VITE_API_BASE_URL=.*|VITE_API_BASE_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                        echo -e "   sed -i 's|VITE_API_URL=.*|VITE_API_URL=${TUNNEL_URL}|g' apps/frontend/.env.local"
-                        echo -e "   Then restart frontend: ./scripts/dev-start.sh stop && make dev-start"
-                    else
-                        echo -e "${YELLOW}⚠️  Tunnel URL not found yet. Check logs/dev_tunnel.log${NC}"
-                    fi
-                fi
-            fi
-        else
-            echo -e "${YELLOW}⚠️  cloudflared not installed - skipping tunnel${NC}"
-            echo -e "${BLUE}💡 Install with: wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb && sudo dpkg -i cloudflared-linux-amd64.deb${NC}"
-        fi
+        echo -e "${BLUE}🌐 Using production domain configuration...${NC}"
+        echo -e "${GREEN}✅ Domain: https://analyticbot.org${NC}"
+        echo -e "${GREEN}✅ API: https://api.analyticbot.org${NC}"
+        echo -e "${BLUE}💡 Temporary tunnel generation disabled${NC}"
+        echo -e "${BLUE}💡 Frontend uses relative URLs via Vite proxy${NC}"
+        echo ""
 
         echo ""
         echo -e "${BLUE}🚀 Starting backend services...${NC}"
@@ -416,6 +365,18 @@ case $SERVICE in
 
         echo ""
         echo -e "${BLUE}🚀 Starting MTProto data collection worker...${NC}"
+
+        # Clean up any zombie processes holding the health port
+        if lsof -ti:9091 >/dev/null 2>&1; then
+            echo -e "${YELLOW}⚠️  Port 9091 already in use - cleaning up zombie process...${NC}"
+            ZOMBIE_PID=$(lsof -ti:9091)
+            if ps -p $ZOMBIE_PID > /dev/null 2>&1; then
+                echo -e "${YELLOW}🧟 Killing zombie process (PID: ${ZOMBIE_PID})${NC}"
+                kill -9 $ZOMBIE_PID 2>/dev/null || true
+                sleep 2
+            fi
+        fi
+
         start_service "mtproto_worker" 'python -m apps.mtproto.worker --interval 10' ""
         sleep 1
 
@@ -535,6 +496,56 @@ case $SERVICE in
             echo -e "Bot:                ${GREEN}✅ Running${NC}"
         else
             echo -e "Bot:                ${RED}❌ Stopped${NC}"
+        fi
+
+        # Check MTProto Worker (by PID file and health endpoint)
+        if [ -f "logs/dev_mtproto_worker.pid" ] && kill -0 $(cat logs/dev_mtproto_worker.pid) 2>/dev/null; then
+            # Check health endpoint
+            MTPROTO_HEALTH=$(curl -s http://localhost:9091/health 2>/dev/null | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('status', ''))" 2>/dev/null)
+            if [ "$MTPROTO_HEALTH" = "healthy" ]; then
+                echo -e "MTProto Worker:     ${GREEN}✅ Running & Healthy${NC}"
+            elif [ "$MTPROTO_HEALTH" = "unhealthy" ]; then
+                REASON=$(curl -s http://localhost:9091/health 2>/dev/null | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('reason', 'unknown'))" 2>/dev/null)
+                echo -e "MTProto Worker:     ${YELLOW}⚠️  Running but unhealthy (${REASON})${NC}"
+            elif [ ! -z "$MTPROTO_HEALTH" ]; then
+                echo -e "MTProto Worker:     ${YELLOW}⚠️  Running (status: ${MTPROTO_HEALTH})${NC}"
+            else
+                echo -e "MTProto Worker:     ${GREEN}✅ Running${NC} (health check unavailable)"
+            fi
+        else
+            echo -e "MTProto Worker:     ${RED}❌ Stopped${NC}"
+        fi
+
+        echo ""
+        echo -e "${BLUE}🏥 Service Health Details:${NC}"
+
+        # API Health
+        if curl -s http://localhost:11400/health >/dev/null 2>&1; then
+            API_HEALTH=$(curl -s http://localhost:11400/health 2>/dev/null)
+            DB_STATUS=$(echo "$API_HEALTH" | grep -o '"database":"[^"]*"' | cut -d'"' -f4)
+            REDIS_STATUS=$(echo "$API_HEALTH" | grep -o '"redis":"[^"]*"' | cut -d'"' -f4)
+            if [ ! -z "$DB_STATUS" ]; then
+                echo -e "  Database:         ${GREEN}✅ ${DB_STATUS}${NC}"
+            fi
+            if [ ! -z "$REDIS_STATUS" ]; then
+                echo -e "  Redis:            ${GREEN}✅ ${REDIS_STATUS}${NC}"
+            fi
+        fi
+
+        # MTProto Metrics
+        if curl -s http://localhost:9091/metrics >/dev/null 2>&1; then
+            MTPROTO_METRICS=$(curl -s http://localhost:9091/metrics 2>/dev/null)
+            CPU=$(echo "$MTPROTO_METRICS" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data['metrics'].get('cpu_percent', 0))" 2>/dev/null)
+            MEM=$(echo "$MTPROTO_METRICS" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data['metrics'].get('memory_mb', 0))" 2>/dev/null)
+            UPTIME=$(echo "$MTPROTO_METRICS" | python3 -c "import sys, json; data=json.load(sys.stdin); print(int(data['metrics'].get('uptime_seconds', 0)))" 2>/dev/null)
+            if [ ! -z "$CPU" ] && [ "$CPU" != "0" ]; then
+                echo -e "  MTProto CPU:      ${GREEN}${CPU}%${NC}"
+                echo -e "  MTProto Memory:   ${GREEN}${MEM} MB${NC}"
+                if [ ! -z "$UPTIME" ] && [ "$UPTIME" != "0" ]; then
+                    UPTIME_MIN=$((UPTIME / 60))
+                    echo -e "  MTProto Uptime:   ${GREEN}${UPTIME_MIN} minutes${NC}"
+                fi
+            fi
         fi
 
         echo ""

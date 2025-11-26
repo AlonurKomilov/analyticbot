@@ -152,7 +152,7 @@ export interface ChannelValidationResponse {
     description?: string;
   };
   error?: string;
-  
+
   // New format (from backend ChannelValidationResult)
   is_valid: boolean;
   telegram_id?: number;
@@ -434,9 +434,11 @@ export interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: Record<string, string>;
   body?: unknown;
+  data?: unknown; // For DELETE requests with body
   timeout?: number;
   signal?: AbortSignal;
-  params?: Record<string, string | number | boolean>;
+  params?: Record<string, any>; // Allow any type for params (they'll be serialized)
+  responseType?: 'json' | 'blob' | 'text' | 'arraybuffer';
   onUploadProgress?: (progressEvent: UploadProgress) => void;
   _retry?: boolean; // Internal flag to track retry attempts
 }

@@ -78,26 +78,26 @@ def remove_expired_schedulers():
         try:
             # ✅ Issue #3 Phase 3: Real implementation using clean architecture
             logger.info("Starting remove_expired_schedulers task")
-            
+
             # Get schedule repository from DI container
             container = get_container()
             scheduler_repo_result = await container.database.schedule_repo()
-            
+
             # Handle potential coroutines
             if asyncio.iscoroutine(scheduler_repo_result):
                 scheduler_repo = await scheduler_repo_result
             else:
                 scheduler_repo = scheduler_repo_result
-            
+
             if not scheduler_repo:
                 logger.error("Scheduler repository not available")
                 return "scheduler-repo-unavailable"
-            
+
             # Get expired schedulers (older than 90 days in terminal states)
             if hasattr(scheduler_repo, "get_expired_schedulers"):
                 expired_schedulers = await scheduler_repo.get_expired_schedulers(days_old=90)
                 logger.info(f"Found {len(expired_schedulers)} expired schedulers")
-                
+
                 # Delete them using delete_old_posts method
                 if len(expired_schedulers) > 0 and hasattr(scheduler_repo, "delete_old_posts"):
                     removed_count = await scheduler_repo.delete_old_posts(
@@ -111,7 +111,7 @@ def remove_expired_schedulers():
             else:
                 logger.warning("get_expired_schedulers method not available")
                 removed_count = 0
-            
+
             return f"removed-{removed_count}"
         except Exception as e:
             ErrorHandler.log_error(e, context)
@@ -293,26 +293,26 @@ def maintenance_cleanup():
         try:
             # ✅ Issue #3 Phase 3: Real implementation using clean architecture
             logger.info("Starting maintenance_cleanup task")
-            
+
             container = get_container()
             scheduler_repo_result = await container.database.schedule_repo()
-            
+
             # Handle potential coroutines
             if asyncio.iscoroutine(scheduler_repo_result):
                 scheduler_repo = await scheduler_repo_result
             else:
                 scheduler_repo = scheduler_repo_result
-            
+
             if not scheduler_repo:
                 logger.error("Scheduler repository not available")
                 return "scheduler-repo-unavailable"
-            
+
             # Part 1: Requeue stuck 'sending' posts (timeout: 30 minutes)
             requeued = 0
             if hasattr(scheduler_repo, "get_stuck_sending_posts"):
                 stuck_posts = await scheduler_repo.get_stuck_sending_posts(timeout_minutes=30)
                 logger.info(f"Found {len(stuck_posts)} stuck posts in 'sending' status")
-                
+
                 for post in stuck_posts:
                     try:
                         # Update status back to 'pending' so they can be retried
@@ -325,11 +325,11 @@ def maintenance_cleanup():
                                 logger.debug(f"Requeued stuck post {post['id']}")
                     except Exception as e:
                         logger.error(f"Failed to requeue post {post['id']}: {e}")
-                
+
                 logger.info(f"Requeued {requeued} stuck posts")
             else:
                 logger.warning("get_stuck_sending_posts method not available")
-            
+
             # Part 2: Cleanup old posts (older than 30 days in terminal states)
             cleaned = 0
             if hasattr(scheduler_repo, "delete_old_posts"):

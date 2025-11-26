@@ -12,17 +12,17 @@ import {
 } from '@mui/icons-material';
 
 // Import modular components
-import TableToolbar from './components/TableToolbar.jsx';
+import TableToolbar from './components/TableToolbar';
 import TableContent from './components/TableContent';
 import TablePaginationControls from './components/TablePaginationControls';
 
 // Import custom hooks
-import { useTableState } from './hooks/useTableState.js';
-import { useTableData } from './hooks/useTableData.js';
-import { useTableSelection } from './hooks/useTableSelection.js';
+import { useTableState } from './hooks/useTableState';
+import { useTableData } from './hooks/useTableData';
+import { useTableSelection } from './hooks/useTableSelection';
 
 // Import utilities
-import { exportToCsv, exportToExcel, exportToPdf } from './utils/exportUtils.js';
+import { exportToCsv, exportToExcel, exportToPdf } from './utils/exportUtils';
 
 /**
  * Type definitions

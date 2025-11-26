@@ -24,6 +24,7 @@ import type {
 } from '@/types';
 import { tokenRefreshManager } from '@/utils/tokenRefreshManager';
 import { getDeviceFingerprint } from '@/utils/deviceFingerprint';
+import { apiLogger } from '@/utils/logger';
 
 // Configuration constants
 const DEFAULT_CONFIG: ApiClientConfig = {
@@ -102,7 +103,7 @@ export class UnifiedApiClient {
 
     // Debug logging
     if (import.meta.env.DEV) {
-      console.log('🔧 Unified API Client Configuration:', {
+      apiLogger.info('Unified API Client Configuration', {
         baseURL: this.config.baseURL,
         timeout: this.config.timeout,
         maxRetries: this.config.maxRetries,
@@ -120,7 +121,7 @@ export class UnifiedApiClient {
       throw new Error(`Invalid auth strategy: ${strategy}`);
     }
     this.authStrategy = strategy;
-    console.log(`🔐 Auth strategy set to: ${strategy}`);
+    apiLogger.debug('Auth strategy set', { strategy });
   }
 
   /**
@@ -145,7 +146,7 @@ export class UnifiedApiClient {
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
           if (import.meta.env.DEV) {
-            console.log('🔑 Using JWT token from storage:', token.substring(0, 20) + '...');
+            apiLogger.debug('Using JWT token from storage', { tokenPrefix: token.substring(0, 20) });
           }
         } else {
           // Only warn if this is NOT a login/register/refresh endpoint (token expected to be missing)
@@ -153,8 +154,7 @@ export class UnifiedApiClient {
                                 endpoint?.includes('/auth/register') ||
                                 endpoint?.includes('/auth/refresh');
           if (!isAuthEndpoint && import.meta.env.DEV) {
-            console.warn('⚠️ No JWT token found in storage');
-            console.warn('📊 Storage keys checked:', {
+            apiLogger.warn('No JWT token found in storage', {
               auth_token: !!localStorage.getItem('auth_token'),
               access_token: !!localStorage.getItem('access_token'),
               refresh_token: !!localStorage.getItem('refresh_token')
@@ -250,7 +250,7 @@ export class UnifiedApiClient {
       try {
         await tokenRefreshManager.refreshIfNeeded();
       } catch (error) {
-        console.warn('⚠️ Proactive token refresh failed, continuing with request...');
+        apiLogger.warn('Proactive token refresh failed, continuing with request');
       }
     }
 
@@ -259,7 +259,7 @@ export class UnifiedApiClient {
     const startTime = performance.now(); // Track request timing
     const timeoutId = setTimeout(() => {
       const elapsed = Math.round(performance.now() - startTime);
-      console.warn(`⏱️ [API Client] Request timeout after ${elapsed}ms/${requestTimeout}ms for ${endpoint}`);
+      apiLogger.warn('Request timeout', { elapsed, requestTimeout, endpoint });
       controller.abort();
     }, requestTimeout);
 
@@ -283,8 +283,13 @@ export class UnifiedApiClient {
         }
       }
 
-      console.log(`🚀 [API Client] Starting ${options.method || 'GET'} ${url} (timeout: ${requestTimeout}ms, attempt: ${attempt})`);
-      console.log(`📍 [API Client] Request initiated at ${new Date().toISOString()}`);
+      apiLogger.debug('Starting API request', {
+        method: options.method || 'GET',
+        url,
+        timeout: requestTimeout,
+        attempt,
+        timestamp: new Date().toISOString()
+      });
 
 
       // Prepare request configuration
@@ -315,7 +320,7 @@ export class UnifiedApiClient {
       clearTimeout(timeoutId);
 
       const elapsed = Math.round(performance.now() - startTime);
-      console.log(`✅ [API Client] Response received in ${elapsed}ms - Status: ${response.status} ${response.statusText}`);
+      apiLogger.debug('Response received', { elapsed, status: response.status, statusText: response.statusText });
 
       // Handle response
       let responseData: any;
@@ -369,7 +374,7 @@ export class UnifiedApiClient {
         const timeoutError = new ApiRequestError('Request timeout');
         timeoutError.response = { status: 408, statusText: 'Request Timeout' };
         // Don't trigger auth error handling for timeouts
-        console.warn(`⏱️ [API Client] Request timeout for ${endpoint} (${requestTimeout}ms) - NOT triggering token refresh`);
+        apiLogger.warn('Request timeout - not triggering token refresh', { endpoint, requestTimeout });
         throw timeoutError;
       }
 
@@ -379,7 +384,7 @@ export class UnifiedApiClient {
           error.message?.includes('Network request failed')) {
 
         if (import.meta.env.DEV) {
-          console.warn('API connection failed - consider using demo mode');
+          apiLogger.warn('API connection failed - consider using demo mode');
         }
 
         const connectionError = new ApiRequestError('API is currently unavailable');
@@ -401,7 +406,7 @@ export class UnifiedApiClient {
           !options._retry &&
           hasRefreshToken &&
           !isTimeoutError) {  // Don't try to refresh on timeouts!
-        console.warn('🔄 [API Client] Got 401 Unauthorized - attempting token refresh...');        try {
+        apiLogger.warn('Got 401 Unauthorized - attempting token refresh');        try {
           // ✅ STEP 2: Reactive refresh on 401 (refresh + retry)
           await tokenRefreshManager.handleAuthError(async () => {
             // Mark as retry to prevent infinite loop
@@ -411,7 +416,7 @@ export class UnifiedApiClient {
           });
         } catch (refreshError) {
           // Token refresh failed - logout user
-          console.error('❌ Token refresh failed, logging out');
+          apiLogger.error('Token refresh failed, logging out');
           localStorage.removeItem('auth_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('auth_user');
@@ -425,7 +430,9 @@ export class UnifiedApiClient {
 
       // Retry logic
       if (error instanceof ApiRequestError && this.isRetryableError(error) && attempt < this.config.maxRetries) {
-        console.warn(`API request failed (attempt ${attempt}/${this.config.maxRetries}), retrying...`, {
+        apiLogger.warn('API request failed, retrying', {
+          attempt,
+          maxRetries: this.config.maxRetries,
           endpoint,
           error: error.message
         });
@@ -436,7 +443,7 @@ export class UnifiedApiClient {
       }
 
       // Final error handling
-      console.error('API request failed after all retries:', error);
+      apiLogger.error('API request failed after all retries', { error });
       throw error;
     }
   }
@@ -489,33 +496,93 @@ export class UnifiedApiClient {
   }
 
   /**
-   * File upload method
+   * File upload method with real progress tracking using XMLHttpRequest
    */
   async uploadFile<T = unknown>(
     url: string,
     file: File,
-    _onProgress?: ((progress: UploadProgress) => void) | null,
+    onProgress?: ((progress: UploadProgress) => void) | null,
     config: RequestConfig = {}
   ): Promise<T> {
-    const formData = new FormData();
-    formData.append('file', file);
+    // If no progress callback provided, use simple fetch-based upload
+    if (!onProgress) {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    const uploadConfig: RequestConfig = {
-      method: 'POST',
-      body: formData,
-      headers: {
-        // Don't set Content-Type for FormData - browser will set it with boundary
-        ...this.getAuthHeaders(url),
-        ...config.headers
-      }
-    };
+      const uploadConfig: RequestConfig = {
+        method: 'POST',
+        body: formData,
+        headers: {
+          ...this.getAuthHeaders(url),
+          ...config.headers
+        }
+      };
 
-    // Remove Content-Type from headers for file upload
-    delete (uploadConfig.headers as Record<string, string>)['Content-Type'];
+      delete (uploadConfig.headers as Record<string, string>)['Content-Type'];
+      return this.request<T>(url, uploadConfig);
+    }
 
-    // Note: Fetch API doesn't support upload progress like XMLHttpRequest
-    // onProgress parameter kept for API compatibility but not currently used
-    return this.request<T>(url, uploadConfig);
+    // Use XMLHttpRequest for progress tracking
+    return new Promise<T>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Setup progress tracking
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable && onProgress) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          onProgress({
+            progress: percentComplete,
+            loaded: e.loaded,
+            total: e.total,
+            speed: e.loaded / ((Date.now() - startTime) / 1000) // bytes per second
+          });
+        }
+      });
+
+      // Handle completion
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response as T);
+          } catch {
+            resolve(xhr.responseText as T);
+          }
+        } else {
+          reject(new ApiRequestError(
+            `Upload failed: ${xhr.statusText}`,
+            { status: xhr.status, statusText: xhr.statusText, data: xhr.responseText }
+          ));
+        }
+      });
+
+      // Handle errors
+      xhr.addEventListener('error', () => {
+        reject(new ApiRequestError('Upload failed: Network error'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new ApiRequestError('Upload cancelled'));
+      });
+
+      // Setup request
+      const fullUrl = this.config.baseURL ? `${this.config.baseURL}${url}` : url;
+      xhr.open('POST', fullUrl);
+
+      // Add auth headers
+      const headers = this.getAuthHeaders(url);
+      Object.entries(headers).forEach(([key, value]) => {
+        if (key !== 'Content-Type') { // Let browser set Content-Type for FormData
+          xhr.setRequestHeader(key, value);
+        }
+      });
+
+      // Send request
+      const startTime = Date.now();
+      xhr.send(formData);
+    });
   }
 
   /**
@@ -619,7 +686,7 @@ export class UnifiedApiClient {
     try {
       return await this.get(`/analytics/channels/${channelId}/real-time`);
     } catch (error) {
-      console.warn('Real-time metrics unavailable:', error);
+      apiLogger.warn('Real-time metrics unavailable', { error });
       return { metrics: [], timestamp: new Date().toISOString() };
     }
   }
@@ -631,7 +698,7 @@ export class UnifiedApiClient {
     try {
       return await this.get(`/analytics/channels/${channelId}/alerts`);
     } catch (error) {
-      console.warn('Alerts unavailable:', error);
+      apiLogger.warn('Alerts unavailable', { error });
       return { alerts: [], timestamp: new Date().toISOString() };
     }
   }
@@ -676,7 +743,7 @@ export class UnifiedApiClient {
    * Initialize client
    */
   async initialize(): Promise<void> {
-    console.log('🚀 Unified API Client initialized');
+    apiLogger.info('Unified API Client initialized');
     return Promise.resolve();
   }
 }

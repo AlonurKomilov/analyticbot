@@ -10,12 +10,15 @@ import {
 
 export type TimeRange = '1h' | '6h' | '24h' | '7d' | '30d' | '90d' | 'all';
 export type RefreshInterval = '30s' | '1m' | '5m' | '10m';
+export type MetricFilter = 'all' | 'views' | 'reactions' | 'forwards' | 'comments';
 
 interface TimeRangeControlsProps {
     timeRange?: TimeRange;
     refreshInterval?: RefreshInterval;
+    metricFilter?: MetricFilter;
     onTimeRangeChange: (event: SelectChangeEvent<string>) => void;
     onRefreshIntervalChange: (event: SelectChangeEvent<string>) => void;
+    onMetricFilterChange?: (event: SelectChangeEvent<string>) => void;
     hideRefreshControl?: boolean;  // NEW: Option to hide refresh control
 }
 
@@ -35,22 +38,24 @@ interface TimeRangeControlsProps {
 const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
     timeRange = '24h',
     refreshInterval = '1m',
+    metricFilter = 'all',
     onTimeRangeChange,
     onRefreshIntervalChange,
+    onMetricFilterChange,
     hideRefreshControl = false
 }) => {
     return (
         <Box sx={{ display: 'flex', gap: 2 }}>
-            {/* Time Range Selector */}
+            {/* Time Period Selector */}
             <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
                 <InputLabel id="time-range-label" size="small">
-                    Time Range
+                    Time Period
                 </InputLabel>
                 <Select
                     labelId="time-range-label"
                     id="time-range-select"
                     value={timeRange}
-                    label="Time Range"
+                    label="Time Period"
                     size="small"
                     onChange={onTimeRangeChange}
                 >
@@ -63,6 +68,29 @@ const TimeRangeControls: React.FC<TimeRangeControlsProps> = React.memo(({
                     <MenuItem value="all">All Time</MenuItem>
                 </Select>
             </FormControl>
+
+            {/* Metric Filter Selector */}
+            {onMetricFilterChange && (
+                <FormControl variant="outlined" size="small" sx={{ minWidth: 140 }}>
+                    <InputLabel id="metric-filter-label" size="small">
+                        Show Metric
+                    </InputLabel>
+                    <Select
+                        labelId="metric-filter-label"
+                        id="metric-filter-select"
+                        value={metricFilter}
+                        label="Show Metric"
+                        size="small"
+                        onChange={onMetricFilterChange}
+                    >
+                        <MenuItem value="all">All Metrics</MenuItem>
+                        <MenuItem value="views">Views</MenuItem>
+                        <MenuItem value="reactions">Reactions</MenuItem>
+                        <MenuItem value="forwards">Forwards</MenuItem>
+                        <MenuItem value="comments">Comments</MenuItem>
+                    </Select>
+                </FormControl>
+            )}
 
             {/* Refresh Interval Selector - Hidden when hideRefreshControl=true */}
             {!hideRefreshControl && (

@@ -6,7 +6,6 @@ Framework-agnostic service for checking metrics against alert rules
 """
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from core.services.bot.alerts.protocols import AlertRepository

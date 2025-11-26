@@ -12,7 +12,6 @@ import logging
 from typing import Any
 
 from core.domain.payment import PaymentData, SubscriptionData
-
 from core.protocols.payment.payment_protocols import (
     PaymentOrchestratorProtocol,
     PaymentResult,

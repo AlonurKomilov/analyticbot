@@ -34,7 +34,7 @@ async def toggle_alert(
         # Get the current subscription to check its state
         all_subs = await alert_repo.get_user_subscriptions(callback.from_user.id if callback.from_user else 0)
         current_sub = next((s for s in all_subs if s.id == alert_id), None)
-        
+
         if not current_sub:
             await callback.answer("❌ Alert not found", show_alert=True)
             return

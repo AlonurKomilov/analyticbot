@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusChip } from '@shared/components';
-import { getPerformanceBadge } from '@features/posts/list/TopPostsTable/utils/postTableUtils.js';
+import { getPerformanceBadge } from '@features/posts/list/TopPostsTable/utils/postTableUtils';
 
 interface Post {
   id: string;

@@ -5,6 +5,7 @@ import AppRouter from './AppRouter';
 import theme from './theme';
 import PerformanceMonitor from './utils/performanceMonitor';
 import { AuthProvider } from './contexts/AuthContext';
+import EnhancedErrorBoundary from '@shared/components/feedback/EnhancedErrorBoundary';
 
 /**
  * Main App Component with Professional Router Architecture
@@ -24,12 +25,18 @@ const App: React.FC = () => {
     }, []);
 
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <AuthProvider>
-                <AppRouter />
-            </AuthProvider>
-        </ThemeProvider>
+        <EnhancedErrorBoundary
+            errorContext={{ component: 'App' }}
+            userFriendlyMessage="The application encountered an unexpected error. Please refresh the page to continue."
+            maxRetries={2}
+        >
+            <ThemeProvider theme={theme}>
+                <CssBaseline />
+                <AuthProvider>
+                    <AppRouter />
+                </AuthProvider>
+            </ThemeProvider>
+        </EnhancedErrorBoundary>
     );
 };
 

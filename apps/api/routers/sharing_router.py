@@ -16,6 +16,9 @@ from apps.api.middleware.rate_limit import (
     check_access_rate_limit,
     check_creation_rate_limit,
 )
+
+# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
+from apps.di import get_container
 from apps.shared.clients.analytics_client import (
     AnalyticsClient,
     GrowthResponse,
@@ -25,9 +28,6 @@ from apps.shared.clients.analytics_client import (
     TopPostsResponse,
     TrendingResponse,
 )
-
-# ✅ PHASE 1 FIX: Import from apps.shared.exports (circular dependency fix)
-from apps.di import get_container
 from apps.shared.exports.csv_v2 import CSVExporter
 from apps.shared.protocols import ChartServiceProtocol
 from config import settings
@@ -79,7 +79,7 @@ def get_csv_exporter() -> CSVExporter:
 def get_chart_service() -> ChartServiceProtocol:
     """
     Get chart service instance from DI container.
-    
+
     ✅ Issue #10 (Oct 21, 2025): Chart service now properly registered in DI container
     """
     from apps.di import get_container

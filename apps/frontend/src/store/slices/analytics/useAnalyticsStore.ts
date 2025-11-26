@@ -11,6 +11,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
+import { storeLogger } from '@/utils/logger';
 
 import type {
   AnalyticsOverview,
@@ -30,6 +31,15 @@ interface AnalyticsState {
   reachMetrics: ReachMetrics | null;
   postDynamics: PostDynamics | null;
   topPosts: TopPost[];
+  topPostsSummary: {
+    totalViews: number;
+    totalForwards: number;
+    totalReactions: number;
+    totalComments: number;      // Discussion group comments
+    totalReplies?: number;      // Threaded replies (optional)
+    averageEngagementRate: number;
+    postCount: number;
+  } | null;
   engagementMetrics: EngagementMetrics | null;
   bestTimes: BestTimeRecommendation[];
   bestDayHourCombinations: any[];  // Advanced: day-hour combinations
@@ -41,6 +51,7 @@ interface AnalyticsState {
   isLoadingReach: boolean;
   isLoadingPostDynamics: boolean;
   isLoadingTopPosts: boolean;
+  isLoadingTopPostsSummary: boolean;
   isLoadingEngagement: boolean;
   isLoadingBestTime: boolean;
 
@@ -50,6 +61,7 @@ interface AnalyticsState {
   reachError: string | null;
   postDynamicsError: string | null;
   topPostsError: string | null;
+  topPostsSummaryError: string | null;
   engagementError: string | null;
   bestTimeError: string | null;
 
@@ -63,6 +75,7 @@ interface AnalyticsState {
   fetchReachMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchPostDynamics: (channelId: string, period?: TimePeriod, customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }, silent?: boolean) => Promise<void>;
   fetchTopPosts: (channelId: string, limit?: number, period?: string, sortBy?: string, silent?: boolean) => Promise<void>;
+  fetchTopPostsSummary: (channelId: string, period?: string, silent?: boolean) => Promise<void>;
   fetchEngagementMetrics: (channelId: string, period?: TimePeriod) => Promise<void>;
   fetchBestTime: (channelId: string, days?: number | null, silent?: boolean) => Promise<void>;
   setPeriod: (period: TimePeriod) => void;
@@ -78,6 +91,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     reachMetrics: null,
     postDynamics: null,
     topPosts: [],
+    topPostsSummary: null,
     engagementMetrics: null,
     bestTimes: [],
     bestDayHourCombinations: [],
@@ -89,6 +103,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     isLoadingReach: false,
     isLoadingPostDynamics: false,
     isLoadingTopPosts: false,
+    isLoadingTopPostsSummary: false,
     isLoadingEngagement: false,
     isLoadingBestTime: false,
 
@@ -98,6 +113,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     reachError: null,
     postDynamicsError: null,
     topPostsError: null,
+    topPostsSummaryError: null,
     engagementError: null,
     bestTimeError: null,
 
@@ -121,9 +137,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingOverview: false
         });
 
-        console.log('✅ Analytics overview loaded');
+        storeLogger.debug('Analytics overview loaded', { channelId });
       } catch (error) {
-        console.error('❌ Failed to load analytics overview:', error);
+        storeLogger.error('Failed to load analytics overview', { error, channelId });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load overview';
         set({
           overviewError: errorMessage,
@@ -148,9 +164,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingGrowth: false
         });
 
-        console.log('✅ Growth metrics loaded');
+        storeLogger.debug('Growth metrics loaded', { channelId, period });
       } catch (error) {
-        console.error('❌ Failed to load growth metrics:', error);
+        storeLogger.error('Failed to load growth metrics', { error, channelId, period });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load growth';
         set({
           growthError: errorMessage,
@@ -175,9 +191,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingReach: false
         });
 
-        console.log('✅ Reach metrics loaded');
+        storeLogger.debug('Reach metrics loaded', { channelId, period });
       } catch (error) {
-        console.error('❌ Failed to load reach metrics:', error);
+        storeLogger.error('Failed to load reach metrics', { error, channelId, period });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load reach';
         set({
           reachError: errorMessage,
@@ -186,7 +202,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       }
     },
 
-    // Fetch post dynamics (views/likes/shares over time)
+    // Fetch post dynamics (views/reactions/shares over time)
     fetchPostDynamics: async (channelId: string, period: TimePeriod = '7d', customDateRange?: { start_date: string; end_date: string }, customTimeRange?: { start_time: string; end_time: string }, silent: boolean = false) => {
       // Only show loading spinner on initial load, not on auto-refresh
       if (!silent) {
@@ -194,14 +210,14 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       }
 
       try {
-        console.log('📊 Store: Fetching post dynamics for channel:', channelId, 'period:', period, 'customDateRange:', customDateRange, 'customTimeRange:', customTimeRange);
+        storeLogger.debug('Fetching post dynamics', { channelId, period, customDateRange, customTimeRange });
 
         // Use demo endpoint for demo_channel, real endpoint for actual channels
         const endpoint = channelId === 'demo_channel'
           ? '/demo/analytics/post-dynamics'
           : `/analytics/posts/dynamics/post-dynamics/${channelId}`;
 
-        console.log('📡 Store: API endpoint:', endpoint);
+        storeLogger.debug('Post dynamics API endpoint', { endpoint });
 
         // Build params with optional date/time range for drill-down
         const params: any = { period };
@@ -215,16 +231,17 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           params.end_date = customDateRange.end_date;
         }
 
-        console.log('📡 Store: API params:', params);
+        storeLogger.debug('Post dynamics API params', { params });
 
         const postDynamics = await apiClient.get<PostDynamics>(
           endpoint,
           { params }
         );
 
-        console.log('✅ Store: Post dynamics response:', postDynamics);
-        console.log('✅ Store: Is array?', Array.isArray(postDynamics));
-        console.log('✅ Store: Length:', Array.isArray(postDynamics) ? postDynamics.length : 'N/A');
+        storeLogger.debug('Post dynamics response received', {
+          isArray: Array.isArray(postDynamics),
+          length: Array.isArray(postDynamics) ? postDynamics.length : 'N/A'
+        });
 
         set({
           postDynamics,
@@ -232,9 +249,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingPostDynamics: false
         });
 
-        console.log('✅ Store: Post dynamics saved to store');
+        storeLogger.debug('Post dynamics saved to store');
       } catch (error) {
-        console.error('❌ Store: Failed to load post dynamics:', error);
+        storeLogger.error('Failed to load post dynamics', { error, channelId, period });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load post dynamics';
         set({
           postDynamicsError: errorMessage,
@@ -251,7 +268,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       }
 
       try {
-        console.log('🏆 Fetching top posts for channel:', channelId, 'period:', period, 'sortBy:', sortBy);
+        storeLogger.debug('Fetching top posts', { channelId, period, sortBy, limit });
 
         // Use demo endpoint for demo_channel, real endpoint for actual channels
         const endpoint = channelId === 'demo_channel'
@@ -272,16 +289,16 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           : (response as any)?.data?.posts || (response as any)?.posts || [];
 
         // Transform backend response to frontend format
-        // Backend: { msg_id, date, text, views, forwards, replies_count, reactions_count, engagement_rate }
-        // Frontend: { id, content, views, shares, reactions, likes, comments, engagementRate, publishedTime }
+        // Backend: { msg_id, date, text, views, forwards, comments_count, replies_count, reactions_count, engagement_rate }
+        // Frontend: { id, content, views, shares, reactions, comments, replies, engagementRate, publishedTime }
         const transformedPosts = rawPosts.map((post: any) => ({
           id: post.msg_id || post.id,
           content: post.text || post.content || '',
           views: post.views || 0,
           shares: post.forwards || post.shares || 0,
           reactions: post.reactions_count || post.reactions || 0,
-          likes: post.reactions_count || post.likes || 0, // Use reactions as likes
-          comments: post.replies_count || post.comments || 0,
+          comments: post.comments_count || post.comments || 0,  // Discussion group comments
+          replies: post.replies_count || 0,                      // Direct threaded replies
           engagementRate: post.engagement_rate || 0,
           publishedTime: post.date || post.publishedTime || post.created_at,
           // Keep original fields for compatibility
@@ -294,9 +311,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingTopPosts: false
         });
 
-        console.log('✅ Top posts loaded:', transformedPosts?.length || 0);
+        storeLogger.debug('Top posts loaded', { count: transformedPosts?.length || 0 });
       } catch (error) {
-        console.error('❌ Failed to load top posts:', error);
+        storeLogger.error('Failed to load top posts', { error, channelId, period });
 
         // Set error state so UI can show it
         set({
@@ -306,7 +323,61 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           // topPosts: [] // Don't clear - let UI decide whether to show stale data or error
         });
 
-        console.log('⚠️ Error occurred, keeping existing posts (if any)');
+        storeLogger.warn('Error occurred, keeping existing posts (if any)');
+      }
+    },
+
+    // Fetch top posts summary statistics (aggregates ALL posts in period)
+    fetchTopPostsSummary: async (channelId: string, period: string = '30d', silent: boolean = false) => {
+      // Only show loading spinner on initial load, not on auto-refresh
+      if (!silent) {
+        set({ isLoadingTopPostsSummary: true, topPostsSummaryError: null });
+      }
+
+      try {
+        storeLogger.debug('Fetching top posts summary', { channelId, period });
+
+        // Use demo endpoint for demo_channel, real endpoint for actual channels
+        const endpoint = channelId === 'demo_channel'
+          ? '/demo/analytics/top-posts-summary'
+          : `/analytics/posts/top-posts/${channelId}/summary`;  // Corrected path
+
+        const response = await apiClient.get<any>(endpoint, {
+          params: {
+            period: period
+          }
+        });
+
+        // Handle response
+        const summary = response?.data || response || {};
+
+        // Transform to frontend format
+        const transformedSummary = {
+          totalViews: summary.total_views || 0,
+          totalForwards: summary.total_forwards || 0,
+          totalReactions: summary.total_reactions || 0,
+          totalComments: summary.total_replies || summary.total_comments || 0,  // Backend uses total_replies for comments
+          totalReplies: summary.total_threaded_replies || 0,  // Separate field for threaded replies
+          averageEngagementRate: summary.average_engagement_rate || 0,
+          postCount: summary.post_count || 0
+        };
+
+        set({
+          topPostsSummary: transformedSummary,
+          lastUpdate: Date.now(),
+          isLoadingTopPostsSummary: false
+        });
+
+        storeLogger.debug('Top posts summary loaded', { postCount: transformedSummary.postCount });
+      } catch (error) {
+        storeLogger.error('Failed to load top posts summary', { error, channelId, period });
+
+        set({
+          topPostsSummaryError: error instanceof Error ? error.message : 'Failed to load summary',
+          isLoadingTopPostsSummary: false
+        });
+
+        storeLogger.warn('Error occurred loading summary');
       }
     },
 
@@ -315,7 +386,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       set({ isLoadingEngagement: true, engagementError: null });
 
       try {
-        console.log('📈 Fetching engagement metrics for channel:', channelId);
+        storeLogger.debug('Fetching engagement metrics', { channelId, period });
 
         const engagementMetrics = await apiClient.get<EngagementMetrics>(
           `/analytics/channels/${channelId}/engagement`,
@@ -328,9 +399,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingEngagement: false
         });
 
-        console.log('✅ Engagement metrics loaded');
+        storeLogger.debug('Engagement metrics loaded');
       } catch (error) {
-        console.error('❌ Failed to load engagement metrics:', error);
+        storeLogger.error('Failed to load engagement metrics', { error, channelId, period });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load metrics';
         set({
           engagementError: errorMessage,
@@ -347,7 +418,10 @@ export const useAnalyticsStore = create<AnalyticsState>()(
       }
 
       try {
-        console.log('⏰ Fetching best time recommendations for channel:', channelId, 'days:', days === null ? 'ALL TIME' : (days || 90));
+        storeLogger.debug('Fetching best time recommendations', {
+          channelId,
+          days: days === null ? 'ALL TIME' : (days || 90)
+        });
 
         // Use correct endpoint that matches backend
         // If days is null, omit the parameter to get all-time data
@@ -362,11 +436,11 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         const bestDayHourCombinations = response.data?.best_day_hour_combinations || [];
         const contentTypeRecommendations = response.data?.content_type_recommendations || [];
 
-        console.log('📊 Raw API response:', response);
-        console.log('📊 Response data:', response.data);
-        console.log('📊 Extracted recommendations:', recommendations);
-        console.log('📊 Day-hour combinations:', bestDayHourCombinations.length);
-        console.log('📊 Content-type recommendations:', contentTypeRecommendations.length);
+        storeLogger.debug('Best time API response received', {
+          recommendationsCount: recommendations.length,
+          dayHourCombosCount: bestDayHourCombinations.length,
+          contentTypeRecsCount: contentTypeRecommendations.length
+        });
 
         // Store all recommendations data
         set({
@@ -377,9 +451,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingBestTime: false
         });
 
-        console.log('✅ Best time recommendations loaded:', recommendations.length);
+        storeLogger.debug('Best time recommendations loaded', { count: recommendations.length });
       } catch (error) {
-        console.error('❌ Failed to load best time:', error);
+        storeLogger.error('Failed to load best time recommendations', { error, channelId, days });
         const errorMessage = error instanceof Error ? error.message : 'Failed to load recommendations';
         set({
           bestTimeError: errorMessage,
@@ -404,6 +478,7 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         reachMetrics: null,
         postDynamics: null,
         topPosts: [],
+        topPostsSummary: null,
         engagementMetrics: null,
         bestTimes: [],
         lastUpdate: null

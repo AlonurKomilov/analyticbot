@@ -20,6 +20,7 @@ import {
 import { normalizePaymentStatus, normalizeSubscriptionStatus } from '@/types';
 import { normalizeUser } from '@shared/utils/userMigration';
 import { normalizePost } from '@shared/utils/postStatus';
+import { logger } from '@/utils/logger';
 
 // ============================================================================
 // API Response Validators
@@ -63,7 +64,7 @@ export function safeValidatePaymentResponse(response: any): any | null {
   try {
     return validatePaymentResponse(response);
   } catch (error) {
-    console.error('Payment validation failed:', error);
+    logger.error('Payment validation failed', { error });
     return null;
   }
 }
@@ -110,7 +111,7 @@ export function safeValidateSubscriptionResponse(response: any): any | null {
   try {
     return validateSubscriptionResponse(response);
   } catch (error) {
-    console.error('Subscription validation failed:', error);
+    logger.error('Subscription validation failed', { error });
     return null;
   }
 }
@@ -157,7 +158,7 @@ export function safeValidateUserResponse(response: any): any | null {
   try {
     return validateUserResponse(response);
   } catch (error) {
-    console.error('User validation failed:', error);
+    logger.error('User validation failed', { error });
     return null;
   }
 }
@@ -201,7 +202,7 @@ export function safeValidatePostResponse(response: any): any | null {
   try {
     return validatePostResponse(response);
   } catch (error) {
-    console.error('Post validation failed:', error);
+    logger.error('Post validation failed', { error });
     return null;
   }
 }
@@ -222,7 +223,7 @@ export function validatePaymentsArray(response: any): any[] {
     try {
       return validatePaymentResponse(item);
     } catch (error) {
-      console.error(`Payment validation failed at index ${index}:`, error);
+      logger.error('Payment validation failed at index', { index, error });
       throw error;
     }
   });
@@ -240,7 +241,7 @@ export function validateSubscriptionsArray(response: any): any[] {
     try {
       return validateSubscriptionResponse(item);
     } catch (error) {
-      console.error(`Subscription validation failed at index ${index}:`, error);
+      logger.error('Subscription validation failed at index', { index, error });
       throw error;
     }
   });
@@ -258,7 +259,7 @@ export function validateUsersArray(response: any): any[] {
     try {
       return validateUserResponse(item);
     } catch (error) {
-      console.error(`User validation failed at index ${index}:`, error);
+      logger.error('User validation failed at index', { index, error });
       throw error;
     }
   });
@@ -276,7 +277,7 @@ export function validatePostsArray(response: any): any[] {
     try {
       return validatePostResponse(item);
     } catch (error) {
-      console.error(`Post validation failed at index ${index}:`, error);
+      logger.error('Post validation failed at index', { index, error });
       throw error;
     }
   });
@@ -291,7 +292,7 @@ export function validatePostsArray(response: any): any[] {
  */
 export function safeValidatePaymentsArray(response: any): any[] {
   if (!Array.isArray(response)) {
-    console.error('Expected array of payments, got:', typeof response);
+    logger.error('Expected array of payments', { responseType: typeof response });
     return [];
   }
 
@@ -299,7 +300,7 @@ export function safeValidatePaymentsArray(response: any): any[] {
     .map((item, index) => {
       const validated = safeValidatePaymentResponse(item);
       if (!validated) {
-        console.warn(`Skipping invalid payment at index ${index}`);
+        logger.warn('Skipping invalid payment at index', { index });
       }
       return validated;
     })
@@ -311,7 +312,7 @@ export function safeValidatePaymentsArray(response: any): any[] {
  */
 export function safeValidateSubscriptionsArray(response: any): any[] {
   if (!Array.isArray(response)) {
-    console.error('Expected array of subscriptions, got:', typeof response);
+    logger.error('Expected array of subscriptions', { responseType: typeof response });
     return [];
   }
 
@@ -319,7 +320,7 @@ export function safeValidateSubscriptionsArray(response: any): any[] {
     .map((item, index) => {
       const validated = safeValidateSubscriptionResponse(item);
       if (!validated) {
-        console.warn(`Skipping invalid subscription at index ${index}`);
+        logger.warn('Skipping invalid subscription at index', { index });
       }
       return validated;
     })
@@ -331,7 +332,7 @@ export function safeValidateSubscriptionsArray(response: any): any[] {
  */
 export function safeValidateUsersArray(response: any): any[] {
   if (!Array.isArray(response)) {
-    console.error('Expected array of users, got:', typeof response);
+    logger.error('Expected array of users', { responseType: typeof response });
     return [];
   }
 
@@ -339,7 +340,7 @@ export function safeValidateUsersArray(response: any): any[] {
     .map((item, index) => {
       const validated = safeValidateUserResponse(item);
       if (!validated) {
-        console.warn(`Skipping invalid user at index ${index}`);
+        logger.warn('Skipping invalid user at index', { index });
       }
       return validated;
     })
@@ -351,7 +352,7 @@ export function safeValidateUsersArray(response: any): any[] {
  */
 export function safeValidatePostsArray(response: any): any[] {
   if (!Array.isArray(response)) {
-    console.error('Expected array of posts, got:', typeof response);
+    logger.error('Expected array of posts', { responseType: typeof response });
     return [];
   }
 
@@ -359,7 +360,7 @@ export function safeValidatePostsArray(response: any): any[] {
     .map((item, index) => {
       const validated = safeValidatePostResponse(item);
       if (!validated) {
-        console.warn(`Skipping invalid post at index ${index}`);
+        logger.warn('Skipping invalid post at index', { index });
       }
       return validated;
     })
@@ -381,7 +382,7 @@ export function validateApiResponse<T>(
   try {
     return validator(response);
   } catch (error) {
-    console.error(`API validation failed for ${context}:`, error);
+    logger.error('API validation failed', { context, error });
     throw error;
   }
 }
@@ -399,7 +400,7 @@ export function safeValidateApiResponse<T>(
     const result = validator(response);
     return result !== null ? result : fallback;
   } catch (error) {
-    console.error(`API validation failed for ${context}:`, error);
+    logger.error('API validation failed', { context, error });
     return fallback;
   }
 }

@@ -11,10 +11,10 @@ Circuit States:
 This prevents wasting resources on bots that are consistently failing.
 """
 
-import asyncio
 import time
+from collections.abc import Callable, Coroutine
 from enum import Enum
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 
 class CircuitState(Enum):
@@ -119,7 +119,7 @@ class CircuitBreaker:
             self._record_success()
             return result
 
-        except Exception as e:
+        except Exception:
             # Failure handling
             self._record_failure()
             raise

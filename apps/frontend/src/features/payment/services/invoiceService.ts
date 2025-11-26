@@ -5,7 +5,7 @@
  * Separated from: payments, subscriptions, payment methods
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export interface Invoice {
     id: string;
@@ -35,7 +35,7 @@ class InvoiceService {
                 `${this.baseURL}/${userId}`,
                 { params: { limit } }
             );
-            return response.data.invoices || [];
+            return response.invoices || [];
         } catch (error) {
             console.error('Failed to get invoices:', error);
             throw error;
@@ -50,7 +50,7 @@ class InvoiceService {
             const response = await apiClient.get<Invoice>(
                 `${this.baseURL}/detail/${invoiceId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get invoice:', error);
             throw error;
@@ -66,7 +66,7 @@ class InvoiceService {
                 `${this.baseURL}/${invoiceId}/download`,
                 { responseType: 'blob' }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to download invoice:', error);
             throw error;
@@ -81,7 +81,7 @@ class InvoiceService {
             const response = await apiClient.get<{ invoices: Invoice[] }>(
                 `${this.baseURL}/subscription/${subscriptionId}`
             );
-            return response.data.invoices || [];
+            return response.invoices || [];
         } catch (error) {
             console.error('Failed to get subscription invoices:', error);
             throw error;

@@ -273,32 +273,32 @@ async def analyze_security(
         # ✅ Issue #3 Phase 4: Basic security analysis implementation
         # For production users, provide basic heuristic-based analysis
         # Full AI/ML integration is a future enhancement (requires external services)
-        
+
         content = request.content if request.content else ""
         content_lower = content.lower()
-        
+
         # Basic heuristic checks
         detected_risks = []
         risk_score = 0
-        
+
         # Check for suspicious URLs
         suspicious_keywords = ["http://", "https://", "bit.ly", "tinyurl"]
         if any(keyword in content_lower for keyword in suspicious_keywords):
             detected_risks.append("External links detected - verify before clicking")
             risk_score += 20
-        
+
         # Check for financial/payment related content
         financial_keywords = ["payment", "credit card", "bank", "password", "login"]
         if any(keyword in content_lower for keyword in financial_keywords):
             detected_risks.append("Financial/sensitive information detected")
             risk_score += 15
-        
+
         # Check for urgency/scam indicators
         urgency_keywords = ["urgent", "act now", "limited time", "click here", "verify account"]
         if any(keyword in content_lower for keyword in urgency_keywords):
             detected_risks.append("Urgency indicators detected - potential phishing")
             risk_score += 25
-        
+
         # Calculate threat level and security score
         if risk_score >= 40:
             threat_level = "high"
@@ -309,7 +309,7 @@ async def analyze_security(
         else:
             threat_level = "low"
             security_score = max(0, 95 - risk_score)
-        
+
         # Generate recommendations
         recommendations = []
         if detected_risks:
@@ -322,7 +322,7 @@ async def analyze_security(
         else:
             recommendations.append("Content appears safe - no obvious threats detected")
             recommendations.append("Always practice good security hygiene")
-        
+
         return SecurityAnalysisResponse(
             threat_level=threat_level,
             security_score=security_score,

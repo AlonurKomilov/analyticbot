@@ -67,6 +67,8 @@ export interface PostDynamicsDataPoint {
   shares: number;
   forwards?: number;
   reactions?: number;
+  comments?: number;      // Discussion group comments
+  replies?: number;       // Direct threaded replies
   engagement?: number;
   post_count?: number;  // Number of posts in this time bucket
   postCount?: number;   // Alternative camelCase naming
@@ -80,6 +82,8 @@ export interface PostDynamicsData {
     totalViews: number;
     totalShares: number;
     totalReactions: number;
+    totalComments?: number;     // Total discussion group comments
+    totalReplies?: number;      // Total threaded replies
     averageEngagement: number;
     peakDate: string;
     peakViews: number;

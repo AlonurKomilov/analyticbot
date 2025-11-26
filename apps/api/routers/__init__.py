@@ -38,13 +38,13 @@ from .health_router import router as health_router
 from .insights_engagement_router import router as insights_engagement_router
 from .mobile_router import router as mobile_router
 from .optimization_router import router as optimization_router
+
+# Re-enabled after fixing dependencies and imports
+from .owner_router import router as owner_router
 from .sharing_router import router as sharing_router
 from .statistics_core_router import router as statistics_core_router
 from .statistics_reports_router import router as statistics_reports_router
 from .strategy_router import router as strategy_router
-
-# Re-enabled after fixing dependencies and imports
-from .superadmin_router import router as superadmin_router
 from .system_router import router as system_router
 from .trend_analysis_router import router as trend_analysis_router
 
@@ -74,6 +74,6 @@ __all__ = [
     "exports_router",
     "sharing_router",
     "mobile_router",
-    "superadmin_router",  # Re-enabled after dependency fixes
+    "owner_router",  # Re-enabled after dependency fixes (renamed from superadmin)
     "ai_services_router",  # Re-enabled after textstat dependency resolved
 ]

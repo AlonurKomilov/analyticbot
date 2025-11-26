@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardActions, Box, alpha, SxProps, Theme } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { SPACING_SCALE, SEMANTIC_SPACING } from '@/theme/spacingSystem.js';
+import { SPACING_SCALE, SEMANTIC_SPACING } from '@/theme/spacingSystem';
 
 /**
  * ModernCard - Enhanced card component with contemporary design

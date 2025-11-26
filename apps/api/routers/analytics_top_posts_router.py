@@ -25,7 +25,8 @@ class TopPostMetrics(BaseModel):
     text: str
     views: int
     forwards: int
-    replies_count: int
+    comments_count: int  # Discussion group comments
+    replies_count: int  # Direct threaded replies
     reactions_count: int
     engagement_rate: float
 
@@ -36,6 +37,8 @@ class TopPostsSummary(BaseModel):
     total_views: int
     total_forwards: int
     total_reactions: int
+    total_comments: int  # Discussion group comments
+    total_replies: int  # Direct threaded replies
     average_engagement_rate: float
     post_count: int
 
@@ -71,7 +74,8 @@ async def get_top_posts(
     request: Request,
     period: str = Query(default="30d", regex="^(1h|6h|24h|7d|30d|90d|all)$"),
     sort_by: str = Query(
-        default="views", regex="^(views|forwards|replies_count|reactions_count|engagement_rate)$"
+        default="views",
+        regex="^(views|forwards|comments_count|replies_count|reactions_count|engagement_rate)$",
     ),
     limit: int = Query(default=10, ge=1, le=50),
     service: AnalyticsFusionServiceProtocol = Depends(get_analytics_fusion_service),
@@ -85,7 +89,7 @@ async def get_top_posts(
     **Parameters:**
     - `channel_id`: Channel identifier
     - `period`: Time period (1h, 6h, 24h, 7d, 30d, 90d, all)
-    - `sort_by`: Sort metric (views, forwards, replies_count, reactions_count, engagement_rate)
+    - `sort_by`: Sort metric (views, forwards, comments_count, replies_count, reactions_count, engagement_rate)
     - `limit`: Number of posts to return (1-50, default 10)
 
     **Returns:**
@@ -106,6 +110,7 @@ async def get_top_posts(
             "media_type": "photo",
             "views": 751,
             "forwards": 12,
+            "comments_count": 8,
             "replies_count": 5,
             "reactions_count": 23,
             "engagement_rate": 5.33
@@ -127,7 +132,7 @@ async def get_top_posts(
         }
         cache_key = cache.generate_cache_key("top_posts", cache_params)
 
-        # Try cache first (5 minutes TTL)
+        # Try cache first (1 minute TTL)
         cached_data = await cache.get_json(cache_key)
         if cached_data:
             logger.info(f"✅ Cache hit: returning {len(cached_data)} cached top posts")
@@ -158,16 +163,17 @@ async def get_top_posts(
                 p.text,
                 latest_metrics.views,
                 latest_metrics.forwards,
+                latest_metrics.comments_count,
                 latest_metrics.replies_count,
                 latest_metrics.reactions_count,
                 CASE
                     WHEN latest_metrics.views > 0 THEN
-                        ((latest_metrics.forwards + latest_metrics.replies_count + latest_metrics.reactions_count)::float / latest_metrics.views * 100)
+                        ((latest_metrics.forwards + latest_metrics.comments_count + latest_metrics.replies_count + latest_metrics.reactions_count)::float / latest_metrics.views * 100)
                     ELSE 0
                 END as engagement_rate
             FROM posts p
             LEFT JOIN LATERAL (
-                SELECT views, forwards, replies_count, reactions_count
+                SELECT views, forwards, comments_count, replies_count, reactions_count
                 FROM post_metrics
                 WHERE channel_id = p.channel_id AND msg_id = p.msg_id
                 ORDER BY snapshot_time DESC
@@ -178,18 +184,28 @@ async def get_top_posts(
                 AND p.date <= $3
                 AND p.is_deleted = FALSE
                 AND latest_metrics.views IS NOT NULL
+                {filter_clause}
             ORDER BY {order_clause} DESC
             LIMIT $4
         """
 
         # Handle sort column - engagement_rate is computed, others are from metrics
+        # Add filter to exclude posts with 0 values for the sorted metric
         if sort_by == "engagement_rate":
             order_clause = "engagement_rate"
+            # For engagement_rate, filter out posts with 0 engagement
+            filter_clause = "AND ((latest_metrics.forwards + latest_metrics.comments_count + latest_metrics.replies_count + latest_metrics.reactions_count) > 0)"
+        elif sort_by == "views":
+            order_clause = f"latest_metrics.{sort_by}"
+            # For views, the condition 'views IS NOT NULL' already ensures views > 0 typically
+            filter_clause = "AND latest_metrics.views > 0"
         else:
             order_clause = f"latest_metrics.{sort_by}"
+            # For other metrics (forwards, comments_count, replies_count, reactions_count), exclude 0 values
+            filter_clause = f"AND latest_metrics.{sort_by} > 0"
 
-        # Safely inject sort column (already validated by Query regex)
-        safe_query = query.format(order_clause=order_clause)
+        # Safely inject sort column and filter (already validated by Query regex)
+        safe_query = query.format(order_clause=order_clause, filter_clause=filter_clause)
 
         async with pool.acquire() as conn:
             records = await conn.fetch(safe_query, channel_id_int, from_date, to_date, limit)
@@ -207,6 +223,7 @@ async def get_top_posts(
                 text=record["text"][:200] if record["text"] else "",  # Truncate for API response
                 views=record["views"] or 0,
                 forwards=record["forwards"] or 0,
+                comments_count=record["comments_count"] or 0,
                 replies_count=record["replies_count"] or 0,
                 reactions_count=record["reactions_count"] or 0,
                 engagement_rate=round(
@@ -220,8 +237,8 @@ async def get_top_posts(
         # Convert to dict for caching
         response_data = [post.model_dump() for post in top_posts]
 
-        # Cache for 5 minutes
-        await cache.set_json(cache_key, response_data, ttl_s=300)
+        # Cache for 1 minute
+        await cache.set_json(cache_key, response_data, ttl_s=60)
 
         return top_posts
 
@@ -288,15 +305,17 @@ async def get_top_posts_summary(
                 COALESCE(SUM(latest_metrics.views), 0)::int as total_views,
                 COALESCE(SUM(latest_metrics.forwards), 0)::int as total_forwards,
                 COALESCE(SUM(latest_metrics.reactions_count), 0)::int as total_reactions,
+                COALESCE(SUM(latest_metrics.comments_count), 0)::int as total_comments,
+                COALESCE(SUM(latest_metrics.replies_count), 0)::int as total_replies,
                 CASE
                     WHEN SUM(latest_metrics.views) > 0 THEN
-                        (SUM(latest_metrics.forwards + latest_metrics.replies_count + latest_metrics.reactions_count)::float
+                        (SUM(latest_metrics.forwards + latest_metrics.comments_count + latest_metrics.replies_count + latest_metrics.reactions_count)::float
                          / SUM(latest_metrics.views) * 100)
                     ELSE 0
                 END as avg_engagement_rate
             FROM posts p
             LEFT JOIN LATERAL (
-                SELECT views, forwards, replies_count, reactions_count
+                SELECT views, forwards, comments_count, replies_count, reactions_count
                 FROM post_metrics
                 WHERE channel_id = p.channel_id AND msg_id = p.msg_id
                 ORDER BY snapshot_time DESC
@@ -318,6 +337,8 @@ async def get_top_posts_summary(
                 total_views=0,
                 total_forwards=0,
                 total_reactions=0,
+                total_comments=0,
+                total_replies=0,
                 average_engagement_rate=0.0,
                 post_count=0,
             )
@@ -326,6 +347,8 @@ async def get_top_posts_summary(
             total_views=record["total_views"],
             total_forwards=record["total_forwards"],
             total_reactions=record["total_reactions"],
+            total_comments=record["total_comments"],
+            total_replies=record["total_replies"],
             average_engagement_rate=round(float(record["avg_engagement_rate"]), 2),
             post_count=record["post_count"],
         )
@@ -334,8 +357,8 @@ async def get_top_posts_summary(
             f"✅ Returning summary: {summary.post_count} posts, {summary.total_views} total views"
         )
 
-        # Cache for 5 minutes
-        await cache.set_json(cache_key, summary.model_dump(), ttl_s=300)
+        # Cache for 1 minute
+        await cache.set_json(cache_key, summary.model_dump(), ttl_s=60)
 
         return summary
 

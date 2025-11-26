@@ -38,7 +38,7 @@ const createCleanAPI = () => {
       getPostDynamics: (channelId: string, period: string = '24h') => authAwareAPI.getPostDynamics(channelId, period),
       getTopPosts: (channelId: string, options: AnalyticsOptions = {}) => authAwareAPI.getTopPosts(channelId, options),
       getBestTime: (channelId: string, timeframe: string = 'week') => authAwareAPI.getBestTime(channelId, timeframe),
-      getEngagementMetrics: (channelId: string, period: string = '7d') => authAwareAPI.getEngagementMetrics(channelId, period)
+      getEngagementMetrics: (channelId: string) => authAwareAPI.getEngagementMetrics(channelId)
     },
 
     // AI Services methods

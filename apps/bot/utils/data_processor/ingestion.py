@@ -11,7 +11,7 @@ from .base import aiofiles, create_engine, io, json, logger, pd, requests
 class DataIngestionMixin:
     """
     Mixin class providing data ingestion capabilities.
-    
+
     Supports ingestion from:
     - CSV files
     - JSON files and URLs

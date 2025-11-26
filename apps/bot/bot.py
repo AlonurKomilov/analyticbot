@@ -5,16 +5,16 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.base import DefaultKeyBuilder
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 
 from apps.bot.config import settings
 from apps.bot.config import settings as app_settings
-from apps.di import get_container
 from apps.bot.handlers import admin_handlers, user_handlers
 from apps.bot.middlewares.dependency_middleware import DependencyMiddleware
 from apps.bot.middlewares.i18n import i18n_middleware
+from apps.di import get_container
 
 if app_settings.LOG_FORMAT == "json":
 

@@ -46,7 +46,6 @@ warnings.warn(
     stacklevel=2
 )
 
-import logging
 import os
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Union

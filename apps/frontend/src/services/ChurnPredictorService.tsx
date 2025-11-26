@@ -98,9 +98,9 @@ const ChurnPredictorService: React.FC = () => {
                 // Note: Backend only has /stats and /analyze endpoints
                 // For now, fetch stats only until other endpoints are implemented
                 const statsResponse = await apiClient.get('/ai/services/churn/stats');
-                
+
                 setStats((statsResponse as any).data);
-                
+
                 // TODO: Backend doesn't have /predictions or /strategies endpoints yet
                 // Either implement these on backend or use mock data
                 setRiskUsers([]);  // Empty until backend implements this

@@ -27,10 +27,10 @@ from apps.api.routers.health_router import router as health_router
 from apps.api.routers.media_router import router as media_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
+from apps.api.routers.owner_router import router as owner_router
 from apps.api.routers.payment_router import router as payment_router
 from apps.api.routers.posts_router import router as posts_router
 from apps.api.routers.sharing_router import router as sharing_router
-from apps.api.routers.superadmin_router import router as superadmin_router
 from apps.api.routers.system_router import router as system_router
 from apps.api.routers.telegram_storage import router as telegram_storage_router  # ✅ Microservice
 
@@ -558,8 +558,8 @@ app.include_router(
 # Payments
 app.include_router(payment_router, prefix="/payments", tags=["Payments"])
 
-# Admin
-app.include_router(superadmin_router, prefix="/admin/super", tags=["Admin - Super"])
+# Owner Management (renamed from SuperAdmin)
+app.include_router(owner_router, prefix="/owner", tags=["Owner"])
 
 # Auth, Channels, System, Health, Mobile, Exports, Sharing
 app.include_router(auth_router)  # /auth/* - Already good

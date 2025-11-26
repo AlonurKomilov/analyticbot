@@ -204,73 +204,141 @@ async def send_post_now(
         logger.info(
             f"🚀 Sending post immediately: user={request.user_id}, channel={request.channel_id}"
         )
-
-        # Get Telegram bot token
-        bot_token = os.getenv(
-            "TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o"
+        logger.info(
+            f"📎 Media info: type={request.media_type}, url={request.media_url}, telegram_file_id={request.telegram_file_id}"
         )
 
         # Convert channel_id to negative for Telegram API
         telegram_chat_id = -request.channel_id
 
-        # Determine API endpoint and payload based on media type
+        # If using Telegram storage file, forward the message instead
         if request.telegram_file_id:
-            # Using file from Telegram storage - use appropriate send method
-            if request.media_type == "photo":
-                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendPhoto"
-                payload = {
-                    "chat_id": telegram_chat_id,
-                    "photo": request.telegram_file_id,
-                    "caption": request.message if request.message else None,
-                }
-            elif request.media_type == "video":
-                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendVideo"
-                payload = {
-                    "chat_id": telegram_chat_id,
-                    "video": request.telegram_file_id,
-                    "caption": request.message if request.message else None,
-                }
-            elif request.media_type == "document":
-                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-                payload = {
-                    "chat_id": telegram_chat_id,
-                    "document": request.telegram_file_id,
-                    "caption": request.message if request.message else None,
-                }
-            elif request.media_type == "audio":
-                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendAudio"
-                payload = {
-                    "chat_id": telegram_chat_id,
-                    "audio": request.telegram_file_id,
-                    "caption": request.message if request.message else None,
-                }
-            else:
-                # Default to document for unknown types
-                telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
-                payload = {
-                    "chat_id": telegram_chat_id,
-                    "document": request.telegram_file_id,
-                    "caption": request.message if request.message else None,
-                }
+            logger.info("📤 Using MTProto to send file from storage")
+
+            # Get the original message info from database
+            from sqlalchemy import select
+
+            from apps.api.services.telegram_storage_service import TelegramStorageService
+
+            # Get database session from DI container
+            from apps.di import get_container
+            from infra.db.models.telegram_storage import TelegramMedia, UserStorageChannel
+
+            container = get_container()
+            session_factory = await container.database.async_session_maker()
+
+            async with session_factory() as db_session:
+                result = await db_session.execute(
+                    select(TelegramMedia).where(
+                        TelegramMedia.telegram_file_id == request.telegram_file_id
+                    )
+                )
+                media_record = result.scalar_one_or_none()
+
+                if not media_record:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Media file with telegram_file_id {request.telegram_file_id} not found",
+                    )
+
+                # Get storage channel info
+                channel_result = await db_session.execute(
+                    select(UserStorageChannel).where(
+                        UserStorageChannel.id == media_record.storage_channel_id
+                    )
+                )
+                storage_channel = channel_result.scalar_one_or_none()
+
+                if not storage_channel:
+                    raise HTTPException(status_code=404, detail="Storage channel not found")
+
+                # Create storage service for user
+                storage_service = await TelegramStorageService.create_for_user(
+                    user_id=request.user_id,
+                    db_session=db_session,
+                )
+
+                try:
+                    # Get the message from storage channel
+                    # Use username if available, otherwise use channel_id
+                    from_channel = storage_channel.channel_username or int(
+                        storage_channel.channel_id
+                    )
+
+                    # For target channel, ensure it's formatted correctly for Telethon
+                    # If channel_id is already negative (e.g., -1002678877654), use as-is
+                    # If it's just the numeric part (e.g., 1002678877654), make it negative
+                    to_channel_id = int(request.channel_id)
+                    if to_channel_id > 0:
+                        to_channel = -to_channel_id  # Make it negative for Telethon
+                    else:
+                        to_channel = to_channel_id
+
+                    logger.info(
+                        f"Getting message {media_record.telegram_message_id} "
+                        f"from storage channel {from_channel}"
+                    )
+
+                    # Get the original message
+                    original_message = await storage_service.client.get_messages(
+                        entity=from_channel, ids=media_record.telegram_message_id
+                    )
+
+                    if not original_message:
+                        raise HTTPException(
+                            status_code=404,
+                            detail=f"Message {media_record.telegram_message_id} not found in storage channel",
+                        )
+
+                    logger.info(f"Sending file to channel {to_channel}")
+
+                    # Send the file to target channel as proper media type
+                    # For photos/videos, don't force as document to maintain media type
+                    force_document = media_record.file_type not in ["photo", "video"]
+
+                    sent_message = await storage_service.client.send_file(
+                        entity=to_channel,
+                        file=original_message.media,
+                        caption=request.message if request.message else media_record.caption,
+                        force_document=force_document,  # Keep as photo/video, not document
+                    )
+
+                    message_id = sent_message.id
+                    logger.info(f"✅ File sent successfully! Message ID: {message_id}")
+
+                except Exception as e:
+                    logger.error(f"❌ MTProto send failed: {str(e)}", exc_info=True)
+                    raise HTTPException(
+                        status_code=500, detail=f"Failed to send file from storage: {str(e)}"
+                    )
         else:
-            # Text-only message
+            # Original logic for text-only or URL-based media using Bot API
+            # Get Telegram bot token
+            bot_token = os.getenv(
+                "TELEGRAM_BOT_TOKEN", "7603888301:AAHsmvb846iBbiGPzTda7wA1_RCimuowo3o"
+            )
+
+            # Text-only message (or URL-based media, though not implemented yet)
             telegram_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
             payload = {"chat_id": telegram_chat_id, "text": request.message}
 
-        # Send to Telegram
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(telegram_api_url, json=payload)
-            response.raise_for_status()
-            telegram_response = response.json()
+            logger.info(f"📤 Sending to Telegram API: {telegram_api_url}")
+            logger.info(f"📦 Payload: {payload}")
 
-        if not telegram_response.get("ok"):
-            raise HTTPException(
-                status_code=500,
-                detail=f"Telegram API error: {telegram_response.get('description')}",
-            )
+            # Send to Telegram
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(telegram_api_url, json=payload)
+                response.raise_for_status()
+                telegram_response = response.json()
 
-        message_id = telegram_response["result"]["message_id"]
-        logger.info(f"✅ Message sent to Telegram! Message ID: {message_id}")
+            if not telegram_response.get("ok"):
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Telegram API error: {telegram_response.get('description')}",
+                )
+
+            message_id = telegram_response["result"]["message_id"]
+            logger.info(f"✅ Message sent to Telegram! Message ID: {message_id}")
 
         # For immediate posts, save directly to DB bypassing schedule validation
         # Use repository directly instead of service to avoid "past date" validation
@@ -329,14 +397,14 @@ async def get_scheduled_post(
     try:
         from uuid import UUID
 
-        # Convert to UUID - if it's already a string, use it directly
-        if isinstance(post_id, int):
-            # For integer IDs, we need to query by ID field directly
-            # This is a temporary workaround - ideally all posts should use UUID
-            post_uuid = None
-        else:
-            post_uuid = UUID(str(post_id))
-        post = await schedule_service.get_post(post_uuid if post_uuid else post_id)
+        # Convert int to UUID for the service call
+        # Note: This assumes post_id comes as int from the API path, but service expects UUID
+        try:
+            post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(str(post_id))
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid post ID format")
+
+        post = await schedule_service.get_post(post_uuid)
 
         if not post:
             raise HTTPException(status_code=404, detail="Scheduled post not found")
@@ -418,12 +486,13 @@ async def delete_scheduled_post(
     try:
         from uuid import UUID
 
-        # Convert to UUID - if it's already a string, use it directly
-        if isinstance(post_id, int):
-            post_uuid = None
-        else:
-            post_uuid = UUID(str(post_id))
-        result = await schedule_service.delete_post(post_uuid if post_uuid else post_id)
+        # Convert int to UUID for the service call
+        try:
+            post_uuid = UUID(int=post_id) if isinstance(post_id, int) else UUID(str(post_id))
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail="Invalid post ID format")
+
+        result = await schedule_service.delete_post(post_uuid)
 
         if not result:
             raise HTTPException(status_code=404, detail="Scheduled post not found")

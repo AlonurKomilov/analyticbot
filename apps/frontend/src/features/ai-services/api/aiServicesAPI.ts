@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from '@/api/client';
+import { apiLogger } from '@/utils/logger';
 
 // Mock data removed - should only be loaded dynamically in demo mode
 // See ContentOptimizerService.tsx for proper dynamic import pattern
@@ -93,7 +94,7 @@ export const ContentOptimizerAPI = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Content optimization failed:', error);
+            apiLogger.error('Content optimization failed', { error });
             throw new Error(error.response?.data?.detail || 'Content optimization failed');
         }
     },
@@ -103,7 +104,7 @@ export const ContentOptimizerAPI = {
             const response: any = await apiClient.get(`${AI_SERVICES_BASE}/content-optimizer/stats`);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch content optimizer stats:', error);
+            apiLogger.error('Failed to fetch content optimizer stats', { error });
             throw new Error('Failed to fetch stats');
         }
     }
@@ -123,7 +124,7 @@ export const ChurnPredictorAPI = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Churn prediction failed:', error);
+            apiLogger.error('Churn prediction failed', { error });
             throw new Error(error.response?.data?.detail || 'Churn prediction failed');
         }
     },
@@ -133,7 +134,7 @@ export const ChurnPredictorAPI = {
             const response: any = await apiClient.get(`${AI_SERVICES_BASE}/churn-predictor/stats`);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch churn predictor stats:', error);
+            apiLogger.error('Failed to fetch churn predictor stats', { error });
             throw new Error('Failed to fetch stats');
         }
     }
@@ -153,7 +154,7 @@ export const SecurityMonitorAPI = {
             });
             return response.data;
         } catch (error: any) {
-            console.error('Security analysis failed:', error);
+            apiLogger.error('Security analysis failed', { error });
             throw new Error(error.response?.data?.detail || 'Security analysis failed');
         }
     },
@@ -163,7 +164,7 @@ export const SecurityMonitorAPI = {
             const response: any = await apiClient.get(`${AI_SERVICES_BASE}/security-monitor/stats`);
             return response.data;
         } catch (error) {
-            console.error('Failed to fetch security monitor stats:', error);
+            apiLogger.error('Failed to fetch security monitor stats', { error });
             throw new Error('Failed to fetch stats');
         }
     }
@@ -189,7 +190,7 @@ export const PredictiveAnalyticsAPI = {
             });
             return response.data || response;
         } catch (error: any) {
-            console.error('Forecast generation failed:', error);
+            apiLogger.error('Forecast generation failed', { error });
             throw new Error(error.response?.data?.detail || 'Forecast generation failed');
         }
     },
@@ -209,7 +210,7 @@ export const PredictiveAnalyticsAPI = {
             });
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch insights:', error);
+            apiLogger.error('Failed to fetch insights', { error });
             throw new Error('Failed to fetch insights');
         }
     },
@@ -225,7 +226,7 @@ export const PredictiveAnalyticsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch temporal patterns:', error);
+            apiLogger.error('Failed to fetch temporal patterns', { error });
             throw new Error('Failed to fetch temporal patterns');
         }
     },
@@ -243,7 +244,7 @@ export const PredictiveAnalyticsAPI = {
             });
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch cross-channel intelligence:', error);
+            apiLogger.error('Failed to fetch cross-channel intelligence', { error });
             throw new Error('Failed to fetch cross-channel intelligence');
         }
     },
@@ -257,7 +258,7 @@ export const PredictiveAnalyticsAPI = {
             const response: any = await apiClient.get('/analytics/predictive/intelligence/health');
             return response.data || response;
         } catch (error) {
-            console.error('Predictive service health check failed:', error);
+            apiLogger.error('Predictive service health check failed', { error });
             throw new Error('Health check failed');
         }
     }
@@ -280,7 +281,7 @@ export const AlertsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch live monitoring:', error);
+            apiLogger.error('Failed to fetch live monitoring', { error });
             throw new Error('Failed to fetch live monitoring');
         }
     },
@@ -297,7 +298,7 @@ export const AlertsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to check alerts:', error);
+            apiLogger.error('Failed to check alerts', { error });
             throw new Error('Failed to check alerts');
         }
     },
@@ -316,7 +317,7 @@ export const AlertsAPI = {
             });
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch competitive monitoring:', error);
+            apiLogger.error('Failed to fetch competitive monitoring', { error });
             throw new Error('Failed to fetch competitive monitoring');
         }
     },
@@ -333,7 +334,7 @@ export const AlertsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to execute comprehensive workflow:', error);
+            apiLogger.error('Failed to execute comprehensive workflow', { error });
             throw new Error('Failed to execute comprehensive workflow');
         }
     },
@@ -369,7 +370,7 @@ export const AlertsAPI = {
             const response: any = await apiClient.get(`/analytics/alerts/rules/smart/${channelId}`);
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch smart alert rules:', error);
+            apiLogger.error('Failed to fetch smart alert rules', { error });
             throw new Error('Failed to fetch smart alert rules');
         }
     },
@@ -390,7 +391,7 @@ export const AlertsAPI = {
             const response: any = await apiClient.post(`/analytics/alerts/rules/${channelId}`, rule);
             return response.data || response;
         } catch (error) {
-            console.error('Failed to create alert rule:', error);
+            apiLogger.error('Failed to create alert rule', { error });
             throw new Error('Failed to create alert rule');
         }
     },
@@ -407,7 +408,7 @@ export const AlertsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to update alert rule:', error);
+            apiLogger.error('Failed to update alert rule', { error });
             throw new Error('Failed to update alert rule');
         }
     },
@@ -423,7 +424,7 @@ export const AlertsAPI = {
             );
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch alert history:', error);
+            apiLogger.error('Failed to fetch alert history', { error });
             throw new Error('Failed to fetch alert history');
         }
     },
@@ -437,7 +438,7 @@ export const AlertsAPI = {
             const response: any = await apiClient.get('/analytics/alerts/health');
             return response.data || response;
         } catch (error) {
-            console.error('Alerts service health check failed:', error);
+            apiLogger.error('Alerts service health check failed', { error });
             throw new Error('Health check failed');
         }
     },
@@ -451,8 +452,8 @@ export const AlertsAPI = {
             const response: any = await apiClient.get('/analytics/alerts/stats');
             return response.data || response;
         } catch (error) {
-            console.error('Failed to fetch alerts stats:', error);
-            throw new Error('Failed to fetch alerts stats');
+            apiLogger.error('Failed to fetch alerts stats', { error });
+            throw new Error('Failed to fetch stats');
         }
     }
 };
@@ -467,7 +468,7 @@ export const AIServicesAPI = {
             const response: any = await apiClient.get(`${AI_SERVICES_BASE}/health`);
             return response.data;
         } catch (error) {
-            console.error('AI services health check failed:', error);
+            apiLogger.error('AI services health check failed', { error });
             throw new Error('Health check failed');
         }
     },
@@ -477,7 +478,7 @@ export const AIServicesAPI = {
             const response: any = await apiClient.get(`${AI_SERVICES_BASE}/stats`);
             return response.data;
         } catch (error) {
-            console.error('❌ Failed to fetch AI services stats:', error);
+            apiLogger.error('Failed to fetch AI services stats', { error });
             // NEVER fallback to mock - throw error so UI can handle properly
             throw error;
         }

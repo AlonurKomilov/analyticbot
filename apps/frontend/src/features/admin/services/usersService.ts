@@ -12,7 +12,7 @@
  * - Audit user activity
  */
 
-import { apiClient } from '@shared/services/api/apiClient';
+import { apiClient } from '@/api/client';
 
 export type UserRole = 'user' | 'admin' | 'superadmin' | 'moderator';
 
@@ -107,13 +107,18 @@ class AdminUsersService {
         pages: number;
     }> {
         try {
-            const response = await apiClient.get(
+            const response = await apiClient.get<{
+                users: AdminUserInfo[];
+                total: number;
+                page: number;
+                pages: number;
+            }>(
                 `${this.baseURL}/list`,
                 {
                     params: { page, limit, status, role }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get users:', error);
             throw error;
@@ -131,7 +136,7 @@ class AdminUsersService {
             const response = await apiClient.get<AdminUserInfo>(
                 `${this.baseURL}/${userId}`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get user details:', error);
             throw error;
@@ -156,11 +161,11 @@ class AdminUsersService {
                 ? { reason: reasonOrRequest, duration_days: days }
                 : reasonOrRequest;
 
-            const response = await apiClient.post(
+            const response = await apiClient.post<{ message: string; success: boolean }>(
                 `${this.baseURL}/${userId}/suspend`,
                 request
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to suspend user:', error);
             throw error;
@@ -177,10 +182,10 @@ class AdminUsersService {
         userId: number
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.post(
+            const response = await apiClient.post<{ message: string; success: boolean }>(
                 `${this.baseURL}/${userId}/unsuspend`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to unsuspend user:', error);
             throw error;
@@ -199,11 +204,11 @@ class AdminUsersService {
         role: UserRole
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.patch(
+            const response = await apiClient.patch<{ message: string; success: boolean }>(
                 `${this.baseURL}/${userId}/role`,
                 { role }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to update user role:', error);
             throw error;
@@ -222,13 +227,13 @@ class AdminUsersService {
         reason?: string
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.delete(
+            const response = await apiClient.delete<{ message: string; success: boolean }>(
                 `${this.baseURL}/${userId}`,
                 {
                     data: { reason: reason || 'Admin deletion' }
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to delete user:', error);
             throw error;
@@ -251,7 +256,7 @@ class AdminUsersService {
                 `${this.baseURL}/${userId}/audit`,
                 { params: { limit } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get audit log:', error);
             throw error;
@@ -270,7 +275,7 @@ class AdminUsersService {
                 ? `${this.baseURL}/${userId}/statistics`
                 : `${this.baseURL}/statistics`;
             const response = await apiClient.get<UserStatistics>(url);
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get user statistics:', error);
             throw error;
@@ -288,7 +293,7 @@ class AdminUsersService {
             const response = await apiClient.get<UserActivitySummary>(
                 `${this.baseURL}/${userId}/activity`
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to get user activity:', error);
             throw error;
@@ -311,7 +316,7 @@ class AdminUsersService {
                 `${this.baseURL}/search`,
                 { params: { q: query, limit } }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to search users:', error);
             throw error;
@@ -332,11 +337,11 @@ class AdminUsersService {
         type: 'info' | 'warning' | 'alert' = 'info'
     ): Promise<{ message: string; success: boolean }> {
         try {
-            const response = await apiClient.post(
+            const response = await apiClient.post<{ message: string; success: boolean }>(
                 `${this.baseURL}/${userId}/notify`,
                 { message, type }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to send notification:', error);
             throw error;

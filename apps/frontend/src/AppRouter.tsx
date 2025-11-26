@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { Box } from '@mui/material';
 import { ProtectedRoute, PublicRoute } from '@features/auth/guards';
 import { ROUTES } from '@config/routes';
+import { RouteErrorBoundary, setupGlobalErrorHandling } from '@shared/components/feedback/EnhancedErrorBoundary';
 
 // Import optimized lazy loading system
 import {
@@ -35,9 +36,9 @@ const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
 const SubscriptionPage = React.lazy(() => import('./pages/SubscriptionPage'));
 const PaymentHistoryPage = React.lazy(() => import('./pages/PaymentHistoryPage'));
 const InvoicesPage = React.lazy(() => import('./pages/InvoicesPage'));
-const PostsPage = React.lazy(() => import('./pages/PostsPage'));
-const PostDetailsPage = React.lazy(() => import('./pages/PostDetailsPage'));
-const EditPostPage = React.lazy(() => import('./pages/EditPostPage'));
+const PostsPage = React.lazy(() => import('./pages/posts'));
+const PostDetailsPage = React.lazy(() => import('./pages/posts/details'));
+const EditPostPage = React.lazy(() => import('./pages/posts/edit'));
 const ScheduledPostsPage = React.lazy(() => import('./pages/ScheduledPostsPage'));
 const ChannelDetailsPage = React.lazy(() => import('./pages/channels/ChannelDetailsPage'));
 const AddChannelPage = React.lazy(() => import('./pages/channels/AddChannelPage'));
@@ -56,6 +57,9 @@ const MTProtoMonitoringPage = React.lazy(() => import('./pages/MTProtoMonitoring
 
 // Storage Channels Page
 const StorageChannelsPage = React.lazy(() => import('./pages/StorageChannelsPage'));
+
+// Owner Dashboard Page (Owner-only features)
+const OwnerDashboard = React.lazy(() => import('@features/owner/OwnerDashboard'));
 
 // AdminComponents.SuperAdminDashboard archived - components moved to @features/admin
 // const {
@@ -124,6 +128,9 @@ const AppRouter: React.FC = () => {
     useEffect(() => {
         // Initialize performance optimizations on app start
         initializePerformanceOptimizations();
+
+        // Setup global error handling for unhandled errors
+        setupGlobalErrorHandling();
     }, []);
 
     return (
@@ -135,11 +142,12 @@ const AppRouter: React.FC = () => {
                 }
             } as any}
         >
-            <NavigationProvider>
-                <RoutePreloader />
-                <Box sx={{ minHeight: '100vh' }}>
-                    <OptimizedSuspense>
-                            <Routes>
+            <RouteErrorBoundary routeName="Application">
+                <NavigationProvider>
+                    <RoutePreloader />
+                    <Box sx={{ minHeight: '100vh' }}>
+                        <OptimizedSuspense>
+                                <Routes>
                                 {/* Public Routes - Authentication */}
                                 <Route
                                     path="/auth"
@@ -284,6 +292,18 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 /> */}
+
+                                {/* Owner Dashboard - Database & System Management */}
+                                <Route
+                                    path="/owner"
+                                    element={
+                                        <ProtectedRoute requiredRole="owner">
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <OwnerDashboard />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
 
                                 {/* User Profile */}
                                 <Route
@@ -529,6 +549,7 @@ const AppRouter: React.FC = () => {
                         </OptimizedSuspense>
                 </Box>
             </NavigationProvider>
+            </RouteErrorBoundary>
         </Router>
     );
 };

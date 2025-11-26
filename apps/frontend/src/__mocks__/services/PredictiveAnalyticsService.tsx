@@ -33,7 +33,7 @@ import {
     TrendingUp
 } from '@mui/icons-material';
 import { ModernCard, ModernCardHeader } from '@shared/components/ui';
-import { SEMANTIC_SPACING } from '../../theme/spacingSystem.js';
+import { SEMANTIC_SPACING } from '../../theme/spacingSystem';
 
 // Import mock data
 import {
@@ -41,7 +41,7 @@ import {
     mockForecasts,
     trendInsights,
     forecastModels
-} from '../aiServices/predictiveAnalytics.js';
+} from '../aiServices/predictiveAnalytics';
 
 /**
  * Mock Predictive Analytics Service Page

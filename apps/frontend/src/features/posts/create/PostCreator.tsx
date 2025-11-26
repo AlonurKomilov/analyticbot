@@ -15,12 +15,12 @@ import { Box, Typography, Alert, Button, CircularProgress, Switch, FormControlLa
 import { useChannelStore, usePostStore, useMediaStore } from '@store';
 import { useLoadingState, useFormState } from '@/hooks';
 import MediaPreview from '@shared/components/ui/MediaPreview';
-import { useResponsive } from '@/theme/responsive.js';
+import { useResponsive } from '@/theme/responsive';
 
 // Import decomposed sub-components
-import PostContentInput from './PostContentInput.jsx';
-import ChannelSelector from './ChannelSelector.jsx';
-import ScheduleTimeInput from './ScheduleTimeInput.jsx';
+import PostContentInput from './PostContentInput';
+import ChannelSelector from './ChannelSelector';
+import ScheduleTimeInput from './ScheduleTimeInput';
 import PostButtonManager from './PostButtonManager';
 
 interface Button {

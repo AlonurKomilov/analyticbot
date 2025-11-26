@@ -11,9 +11,9 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as Sentry from '@sentry/react';
 
-import App from './App.jsx';
+import App from './App';
 import { ErrorBoundary } from '@shared/components/feedback';
-import theme from './theme.js';
+import theme from './theme';
 import HealthStartupSplash from '@features/admin/components/HealthStartupSplash';
 
 // Suppress React DevTools suggestion in development

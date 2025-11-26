@@ -98,10 +98,10 @@ class TelegramStorageService:
         from sqlalchemy import select
 
         from core.services.encryption_service import get_encryption_service
-        from infra.db.models.user_bot import UserBot
+        from infra.db.models.user_bot_orm import UserBotCredentialsORM
 
         # Get user credentials
-        stmt = select(UserBot).where(UserBot.user_id == user_id)
+        stmt = select(UserBotCredentialsORM).where(UserBotCredentialsORM.user_id == user_id)
         result = await db_session.execute(stmt)
         credentials = result.scalar_one_or_none()
 

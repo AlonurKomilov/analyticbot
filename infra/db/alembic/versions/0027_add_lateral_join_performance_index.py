@@ -1,7 +1,7 @@
 """Add performance index for LATERAL joins
 
 Revision ID: 0027_add_lateral_join_performance_index
-Revises: 0026_add_soft_delete_to_posts
+Revises: 0026_fix_fk_consistency
 Create Date: 2025-11-10 08:30:00.000000
 
 """

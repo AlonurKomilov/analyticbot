@@ -30,6 +30,7 @@ import {
 interface AdminStatusProps {
     botIsAdmin: boolean | null;
     mtprotoIsAdmin: boolean | null;
+    mtprotoDisabled?: boolean;
     compact?: boolean;
     message?: string;
 }
@@ -37,6 +38,7 @@ interface AdminStatusProps {
 export const ChannelAdminStatusIndicator: React.FC<AdminStatusProps> = ({
     botIsAdmin,
     mtprotoIsAdmin,
+    mtprotoDisabled = false,
     compact = false,
     message
 }) => {
@@ -110,7 +112,14 @@ export const ChannelAdminStatusIndicator: React.FC<AdminStatusProps> = ({
                 </Tooltip>
 
                 {/* MTProto Status Dot */}
-                <Tooltip title={`MTProto: ${mtprotoIsAdmin === true ? '✅ Admin' : mtprotoIsAdmin === false ? '❌ No Access' : '⏳ Pending - Connect MTProto session'}`} arrow>
+                <Tooltip
+                    title={
+                        mtprotoDisabled
+                            ? 'MTProto: 🚫 Disabled for this channel'
+                            : `MTProto: ${mtprotoIsAdmin === true ? '✅ Admin' : mtprotoIsAdmin === false ? '❌ No Access' : '⏳ Pending - Connect MTProto session'}`
+                    }
+                    arrow
+                >
                     <Box
                         sx={{
                             display: 'flex',
@@ -125,12 +134,14 @@ export const ChannelAdminStatusIndicator: React.FC<AdminStatusProps> = ({
                                 height: 8,
                                 borderRadius: '50%',
                                 bgcolor:
+                                    mtprotoDisabled ? 'grey.600' :
                                     mtprotoIsAdmin === true ? 'success.main' :
                                     mtprotoIsAdmin === false ? 'error.main' :
                                     'grey.400',
                                 boxShadow: 1,
                                 border: '1px solid',
                                 borderColor:
+                                    mtprotoDisabled ? 'grey.800' :
                                     mtprotoIsAdmin === true ? 'success.dark' :
                                     mtprotoIsAdmin === false ? 'error.dark' :
                                     'grey.600'

@@ -5,7 +5,7 @@
  * Separated from: CSV export, PDF export, batch operations
  */
 
-import apiClient from '../api/apiClient';
+import { apiClient } from '@/api/client';
 
 export type ChartType = 'line' | 'bar' | 'pie' | 'area' | 'scatter';
 
@@ -48,7 +48,7 @@ class ChartExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export chart PNG:', error);
             throw error;
@@ -71,7 +71,7 @@ class ChartExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export overview PNG:', error);
             throw error;
@@ -94,7 +94,7 @@ class ChartExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export growth chart PNG:', error);
             throw error;
@@ -117,7 +117,7 @@ class ChartExportService {
                     responseType: 'blob'
                 }
             );
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to export engagement chart PNG:', error);
             throw error;

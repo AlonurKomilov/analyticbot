@@ -9,9 +9,8 @@ Tracks health metrics for all user bots including:
 - Rate limiting status
 """
 
-import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import ClassVar
 

@@ -441,7 +441,7 @@ class GrowthForecasterService:
                 "microservices": {
                     name: health.is_healthy for name, health in service_healths.items()
                 },
-                "cache_stats": self.cache_service.get_cache_stats() if self.cache_service else {},
+                "cache_stats": (self.cache_service.get_cache_stats() if self.cache_service else {}),
                 "last_health_check": datetime.utcnow().isoformat(),
             }
 
@@ -477,7 +477,7 @@ class GrowthForecasterService:
         """Convert microservice result to legacy API format"""
         try:
             legacy_result = {
-                "predictions": result.predictions.tolist() if result.predictions.size > 0 else [],
+                "predictions": (result.predictions.tolist() if result.predictions.size > 0 else []),
                 "execution_time_ms": result.execution_time_ms,
                 "model_version": result.model_version,
                 "cached": result.cached,
@@ -489,9 +489,11 @@ class GrowthForecasterService:
             if result.confidence_lower is not None:
                 legacy_result["confidence_intervals"] = {
                     "lower": result.confidence_lower.tolist(),
-                    "upper": result.confidence_upper.tolist()
-                    if result.confidence_upper is not None
-                    else [],
+                    "upper": (
+                        result.confidence_upper.tolist()
+                        if result.confidence_upper is not None
+                        else []
+                    ),
                 }
 
             if return_attention:

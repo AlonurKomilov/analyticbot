@@ -15,7 +15,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_ENABLED: bool = Field(
         default=False,
         description=(
-            "Enable MTProto functionality. " "Set to true to activate Telegram client features."
+            "Enable MTProto functionality. Set to true to activate Telegram client features."
         ),
     )
 
@@ -36,7 +36,8 @@ class MTProtoSettings(BaseSettings):
 
     # Phase 4.6: Scale & Hardening Features (OFF by default)
     MTPROTO_POOL_ENABLED: bool = Field(
-        default=False, description="Enable multi-account connection pooling for horizontal scaling"
+        default=False,
+        description="Enable multi-account connection pooling for horizontal scaling",
     )
 
     MTPROTO_PROXY_ENABLED: bool = Field(
@@ -73,7 +74,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_ACCOUNTS: list[str] = Field(
         default_factory=list,
         description=(
-            "List of session names for multi-account pooling " "(e.g., ['session1', 'session2'])"
+            "List of session names for multi-account pooling (e.g., ['session1', 'session2'])"
         ),
     )
 
@@ -94,7 +95,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_MAX_CONCURRENT_USERS: int = Field(
         default=10,
         description=(
-            "Maximum concurrent user sessions in MTProto connection pool " "(system-wide limit)"
+            "Maximum concurrent user sessions in MTProto connection pool (system-wide limit)"
         ),
     )
 
@@ -125,7 +126,8 @@ class MTProtoSettings(BaseSettings):
     )
 
     MTPROTO_PROXY_ROTATION_SEC: int = Field(
-        default=300, description="Proxy rotation interval in seconds (5 minutes default)"
+        default=300,
+        description="Proxy rotation interval in seconds (5 minutes default)",
     )
 
     MTPROTO_PROXY_FAIL_SCORE_LIMIT: int = Field(
@@ -139,7 +141,8 @@ class MTProtoSettings(BaseSettings):
     )
 
     MTPROTO_HISTORY_LIMIT_PER_RUN: int = Field(
-        default=500, description="Maximum number of messages to fetch per peer per history run"
+        default=500,
+        description="Maximum number of messages to fetch per peer per history run",
     )
 
     MTPROTO_CONCURRENCY: int = Field(
@@ -160,7 +163,7 @@ class MTProtoSettings(BaseSettings):
     MTPROTO_MAX_CONNECTIONS: int = Field(
         default=10,
         description=(
-            "Maximum concurrent MTProto connections system-wide. " "Increase for larger servers."
+            "Maximum concurrent MTProto connections system-wide. Increase for larger servers."
         ),
     )
 
@@ -187,7 +190,8 @@ class MTProtoSettings(BaseSettings):
     )
 
     OTEL_SAMPLER_RATIO: float = Field(
-        default=0.05, description="OpenTelemetry trace sampling ratio (0.05 = 5% of traces)"
+        default=0.05,
+        description="OpenTelemetry trace sampling ratio (0.05 = 5% of traces)",
     )
 
     # Health and shutdown configuration (Phase 4.6)
@@ -196,7 +200,8 @@ class MTProtoSettings(BaseSettings):
     )
 
     HEALTH_BIND: str = Field(
-        default="0.0.0.0:8091", description="Health check HTTP server bind address (host:port)"
+        default="0.0.0.0:8091",
+        description="Health check HTTP server bind address (host:port)",
     )
 
     # Logging configuration
@@ -204,9 +209,11 @@ class MTProtoSettings(BaseSettings):
 
     model_config = {
         # Clean Architecture: Load environment-specific files
-        "env_file": [".env.production", ".env.development"]
-        if os.getenv("ENVIRONMENT") != "development"
-        else [".env.development", ".env.production"],
+        "env_file": (
+            [".env.production", ".env.development"]
+            if os.getenv("ENVIRONMENT") != "development"
+            else [".env.development", ".env.production"]
+        ),
         "case_sensitive": False,
         "extra": "ignore",  # Ignore extra environment variables
     }

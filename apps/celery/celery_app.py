@@ -36,6 +36,7 @@ celery_app = Celery(
         "apps.celery.tasks.bot_tasks",
         "apps.celery.tasks.ml_tasks",  # Deep Learning tasks
         "apps.celery.tasks.maintenance_tasks",  # Database maintenance tasks
+        "apps.celery.tasks.smart_analytics_tasks",  # Smart collection with change detection
     ],
 )
 
@@ -216,6 +217,35 @@ celery_app.conf.beat_schedule = {
         "task": "apps.celery.tasks.bot_tasks.update_post_views_task",
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "analytics", "priority": 5},
+    },
+    # SMART COLLECTION: Age-based post metrics collection with change detection
+    # Fresh posts (< 1 hour old) - check every 10 minutes
+    "smart-collect-fresh-posts": {
+        "task": "smart_collect_post_metrics",
+        "schedule": 600.0,  # Every 10 minutes
+        "kwargs": {"min_age_hours": 0, "max_age_hours": 1},
+        "options": {"queue": "analytics", "priority": 8},
+    },
+    # Recent posts (1-24 hours old) - check every 30 minutes
+    "smart-collect-recent-posts": {
+        "task": "smart_collect_post_metrics",
+        "schedule": 1800.0,  # Every 30 minutes
+        "kwargs": {"min_age_hours": 1, "max_age_hours": 24},
+        "options": {"queue": "analytics", "priority": 6},
+    },
+    # Daily posts (1-7 days old) - check every 6 hours
+    "smart-collect-daily-posts": {
+        "task": "smart_collect_post_metrics",
+        "schedule": 21600.0,  # Every 6 hours
+        "kwargs": {"min_age_hours": 24, "max_age_days": 7},
+        "options": {"queue": "analytics", "priority": 4},
+    },
+    # Weekly posts (7-30 days old) - check once per day
+    "smart-collect-weekly-posts": {
+        "task": "smart_collect_post_metrics",
+        "schedule": 86400.0,  # Once per day
+        "kwargs": {"min_age_days": 7, "max_age_days": 30},
+        "options": {"queue": "analytics", "priority": 2},
     },
     "health-check": {
         "task": "apps.celery.tasks.bot_tasks.health_check_task",

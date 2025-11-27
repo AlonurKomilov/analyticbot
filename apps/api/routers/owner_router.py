@@ -1394,3 +1394,206 @@ def _bytes_to_human(size_bytes: int) -> str:
 
 # NOTE: Health endpoint moved to health_system_router.py for consolidation
 # SuperAdmin health is now monitored at /health/services
+
+
+# ===== SMART COLLECTION MONITORING ENDPOINTS =====
+
+
+class SmartCollectionStatsResponse(BaseModel):
+    """Statistics for smart collection efficiency."""
+    total_posts: int
+    total_checks: int
+    total_snapshots_saved: int
+    efficiency_rate: float  # snapshots_saved / checks * 100
+    storage_saved_mb: float
+    collection_by_age: dict[str, Any]
+    stable_posts_count: int
+    active_posts_count: int
+
+
+class StorageAnalysisResponse(BaseModel):
+    """Database storage analysis with smart collection impact."""
+    current_storage_mb: float
+    projected_storage_without_smart_mb: float
+    savings_mb: float
+    savings_pct: float
+    post_metrics_records: int
+    post_metrics_checks_records: int
+    avg_snapshots_per_post: float
+    duplicate_snapshots_estimate: int
+
+
+@router.get(
+    "/database/smart-collection/stats",
+    response_model=SmartCollectionStatsResponse,
+    summary="Get smart collection efficiency statistics",
+    description="Retrieve statistics about the smart collection system's performance and storage savings",
+)
+async def get_smart_collection_stats(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db_connection),
+) -> SmartCollectionStatsResponse:
+    """Get comprehensive statistics about smart collection efficiency."""
+    from sqlalchemy import text
+    
+    # Verify admin authentication
+    await _verify_owner_access(credentials, db)
+    
+    # Get total posts and checks
+    query = text("""
+        SELECT 
+            COUNT(DISTINCT p.channel_id || '-' || p.msg_id) as total_posts,
+            COALESCE(SUM(c.check_count), 0) as total_checks,
+            COALESCE(SUM(c.save_count), 0) as total_snapshots_saved,
+            COUNT(*) FILTER (WHERE c.stable_since IS NOT NULL) as stable_posts,
+            COUNT(*) FILTER (WHERE c.stable_since IS NULL OR c.last_changed_at > NOW() - INTERVAL '24 hours') as active_posts
+        FROM posts p
+        LEFT JOIN post_metrics_checks c ON p.channel_id = c.channel_id AND p.msg_id = c.msg_id
+        WHERE p.is_deleted = FALSE
+    """)
+    
+    result = await db.execute(query)
+    row = result.fetchone()
+    
+    total_posts = row.total_posts or 0
+    total_checks = row.total_checks or 0
+    total_snapshots_saved = row.total_snapshots_saved or 0
+    stable_posts = row.stable_posts or 0
+    active_posts = row.active_posts or 0
+    
+    # Calculate efficiency rate
+    efficiency_rate = (total_snapshots_saved / total_checks * 100) if total_checks > 0 else 0.0
+    
+    # Estimate storage saved (each skipped snapshot = ~100 bytes saved)
+    storage_saved_mb = (total_checks - total_snapshots_saved) * 100 / (1024 * 1024)
+    
+    # Get collection by age brackets
+    age_query = text("""
+        SELECT 
+            CASE 
+                WHEN post_age_hours < 1 THEN 'fresh_<1h'
+                WHEN post_age_hours < 24 THEN 'recent_1-24h'
+                WHEN post_age_hours < 168 THEN 'daily_1-7d'
+                ELSE 'weekly_>7d'
+            END as age_bracket,
+            COUNT(*) as post_count,
+            AVG(check_count) as avg_checks,
+            AVG(save_count) as avg_saves,
+            AVG(save_count::float / NULLIF(check_count, 0) * 100) as efficiency_pct
+        FROM post_metrics_checks
+        WHERE post_age_hours IS NOT NULL
+        GROUP BY age_bracket
+        ORDER BY age_bracket
+    """)
+    
+    age_result = await db.execute(age_query)
+    collection_by_age = {}
+    
+    for age_row in age_result.fetchall():
+        collection_by_age[age_row.age_bracket] = {
+            "post_count": age_row.post_count,
+            "avg_checks": round(float(age_row.avg_checks or 0), 1),
+            "avg_saves": round(float(age_row.avg_saves or 0), 1),
+            "efficiency_pct": round(float(age_row.efficiency_pct or 0), 1),
+        }
+    
+    return SmartCollectionStatsResponse(
+        total_posts=total_posts,
+        total_checks=total_checks,
+        total_snapshots_saved=total_snapshots_saved,
+        efficiency_rate=round(efficiency_rate, 2),
+        storage_saved_mb=round(storage_saved_mb, 2),
+        collection_by_age=collection_by_age,
+        stable_posts_count=stable_posts,
+        active_posts_count=active_posts,
+    )
+
+
+@router.get(
+    "/database/storage-analysis",
+    response_model=StorageAnalysisResponse,
+    summary="Get database storage analysis with smart collection impact",
+    description="Analyze database storage usage and calculate savings from smart collection",
+)
+async def get_storage_analysis(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db_connection),
+) -> StorageAnalysisResponse:
+    """Get comprehensive storage analysis showing smart collection impact."""
+    from sqlalchemy import text
+    
+    # Verify admin authentication
+    await _verify_owner_access(credentials, db)
+    
+    # Get current post_metrics storage
+    storage_query = text("""
+        SELECT 
+            pg_size_pretty(pg_total_relation_size('post_metrics')) as total_size,
+            pg_total_relation_size('post_metrics') as size_bytes,
+            COUNT(*) as record_count
+        FROM post_metrics
+    """)
+    
+    storage_result = await db.execute(storage_query)
+    storage_row = storage_result.fetchone()
+    
+    current_storage_mb = storage_row.size_bytes / (1024 * 1024) if storage_row.size_bytes else 0
+    post_metrics_records = storage_row.record_count or 0
+    
+    # Get checks table size
+    checks_query = text("""
+        SELECT COUNT(*) as count FROM post_metrics_checks
+    """)
+    
+    checks_result = await db.execute(checks_query)
+    checks_row = checks_result.fetchone()
+    post_metrics_checks_records = checks_row.count or 0
+    
+    # Calculate average snapshots per post
+    avg_query = text("""
+        SELECT 
+            COUNT(DISTINCT (channel_id, msg_id)) as unique_posts,
+            COUNT(*) as total_snapshots,
+            AVG(snapshot_count) as avg_per_post
+        FROM (
+            SELECT channel_id, msg_id, COUNT(*) as snapshot_count
+            FROM post_metrics
+            GROUP BY channel_id, msg_id
+        ) grouped
+    """)
+    
+    avg_result = await db.execute(avg_query)
+    avg_row = avg_result.fetchone()
+    
+    unique_posts = avg_row.unique_posts or 0
+    avg_snapshots_per_post = float(avg_row.avg_per_post or 0)
+    
+    # Estimate duplicates (same metrics saved multiple times)
+    duplicate_query = text("""
+        SELECT 
+            COUNT(*) - COUNT(DISTINCT (channel_id, msg_id, views, forwards, reactions_count, replies_count)) as duplicate_estimate
+        FROM post_metrics
+    """)
+    
+    dup_result = await db.execute(duplicate_query)
+    dup_row = dup_result.fetchone()
+    duplicate_snapshots_estimate = dup_row.duplicate_estimate or 0
+    
+    # Project storage without smart collection
+    # Assume old system would have 10x more snapshots (no change detection)
+    projected_storage_without_smart_mb = current_storage_mb * 10
+    
+    # Calculate savings
+    savings_mb = projected_storage_without_smart_mb - current_storage_mb
+    savings_pct = (savings_mb / projected_storage_without_smart_mb * 100) if projected_storage_without_smart_mb > 0 else 0
+    
+    return StorageAnalysisResponse(
+        current_storage_mb=round(current_storage_mb, 2),
+        projected_storage_without_smart_mb=round(projected_storage_without_smart_mb, 2),
+        savings_mb=round(savings_mb, 2),
+        savings_pct=round(savings_pct, 2),
+        post_metrics_records=post_metrics_records,
+        post_metrics_checks_records=post_metrics_checks_records,
+        avg_snapshots_per_post=round(avg_snapshots_per_post, 2),
+        duplicate_snapshots_estimate=duplicate_snapshots_estimate,
+    )

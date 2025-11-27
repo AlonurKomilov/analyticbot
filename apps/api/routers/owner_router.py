@@ -853,6 +853,346 @@ async def reset_query_stats(
     }
 
 
+# ===== VACUUM MONITORING ENDPOINTS (Issue #9) =====
+
+
+@router.get("/database/vacuum-status")
+async def get_vacuum_status(
+    db: AsyncSession = Depends(get_db_connection),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+) -> dict[str, Any]:
+    """
+    Get comprehensive VACUUM and table health status
+    
+    **Owner Only**: Requires Level 4 (OWNER) access
+    
+    Returns detailed information about:
+    - Table health (dead tuples, bloat percentage)
+    - Recent vacuum activity
+    - Autovacuum configuration
+    - Tables needing attention
+    """
+    from sqlalchemy import text
+    
+    # Get table health status with dead tuples and bloat
+    health_query = """
+        SELECT 
+            schemaname,
+            relname AS table_name,
+            n_live_tup AS live_tuples,
+            n_dead_tup AS dead_tuples,
+            ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS dead_percent,
+            n_mod_since_analyze AS modifications_since_analyze,
+            pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) AS total_size,
+            pg_total_relation_size(schemaname||'.'||relname) AS total_size_bytes,
+            last_vacuum,
+            last_autovacuum,
+            last_analyze,
+            last_autoanalyze,
+            vacuum_count,
+            autovacuum_count
+        FROM pg_stat_user_tables
+        WHERE n_live_tup > 0
+        ORDER BY n_dead_tup DESC, n_live_tup DESC
+        LIMIT 50
+    """
+    
+    result = await db.execute(text(health_query))
+    tables = []
+    for row in result:
+        tables.append({
+            "schema": row[0],
+            "table_name": row[1],
+            "live_tuples": row[2],
+            "dead_tuples": row[3],
+            "dead_percent": float(row[4]) if row[4] else 0.0,
+            "modifications_since_analyze": row[5],
+            "total_size": row[6],
+            "total_size_bytes": row[7],
+            "last_vacuum": row[8].isoformat() if row[8] else None,
+            "last_autovacuum": row[9].isoformat() if row[9] else None,
+            "last_analyze": row[10].isoformat() if row[10] else None,
+            "last_autoanalyze": row[11].isoformat() if row[11] else None,
+            "vacuum_count": row[12],
+            "autovacuum_count": row[13],
+        })
+    
+    # Get overall database statistics
+    summary_query = """
+        SELECT 
+            pg_size_pretty(pg_database_size(current_database())) AS database_size,
+            COUNT(*) AS total_tables,
+            SUM(n_live_tup) AS total_live_tuples,
+            SUM(n_dead_tup) AS total_dead_tuples,
+            ROUND(100.0 * SUM(n_dead_tup) / NULLIF(SUM(n_live_tup + n_dead_tup), 0), 2) AS overall_dead_percent
+        FROM pg_stat_user_tables
+    """
+    
+    summary_result = await db.execute(text(summary_query))
+    summary_row = summary_result.first()
+    
+    return {
+        "tables": tables,
+        "summary": {
+            "database_size": summary_row[0],
+            "total_tables": summary_row[1],
+            "total_live_tuples": summary_row[2],
+            "total_dead_tuples": summary_row[3],
+            "overall_dead_percent": float(summary_row[4]) if summary_row[4] else 0.0,
+        },
+        "retrieved_at": datetime.utcnow().isoformat(),
+    }
+
+
+@router.get("/database/autovacuum-config")
+async def get_autovacuum_config(
+    db: AsyncSession = Depends(get_db_connection),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+) -> dict[str, Any]:
+    """
+    Get current autovacuum configuration settings
+    
+    **Owner Only**: Requires Level 4 (OWNER) access
+    
+    Returns PostgreSQL autovacuum parameters including:
+    - Global settings (thresholds, scale factors, timing)
+    - Table-specific overrides
+    - Performance settings
+    """
+    from sqlalchemy import text
+    
+    # Get global autovacuum settings
+    config_query = """
+        SELECT 
+            name, 
+            setting, 
+            unit,
+            short_desc
+        FROM pg_settings 
+        WHERE name IN (
+            'autovacuum',
+            'autovacuum_max_workers',
+            'autovacuum_naptime',
+            'autovacuum_vacuum_threshold',
+            'autovacuum_vacuum_scale_factor',
+            'autovacuum_analyze_threshold',
+            'autovacuum_analyze_scale_factor',
+            'autovacuum_vacuum_cost_delay',
+            'autovacuum_vacuum_cost_limit',
+            'autovacuum_freeze_max_age'
+        )
+        ORDER BY name
+    """
+    
+    config_result = await db.execute(text(config_query))
+    global_settings = {}
+    for row in config_result:
+        global_settings[row[0]] = {
+            "value": row[1],
+            "unit": row[2],
+            "description": row[3],
+        }
+    
+    # Get table-specific settings
+    table_settings_query = """
+        SELECT 
+            nspname AS schema,
+            relname AS table_name,
+            (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_vacuum_threshold') AS vacuum_threshold,
+            (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_vacuum_scale_factor') AS vacuum_scale_factor,
+            (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_analyze_threshold') AS analyze_threshold,
+            (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_analyze_scale_factor') AS analyze_scale_factor,
+            (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_vacuum_cost_delay') AS vacuum_cost_delay
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE nspname = 'public'
+          AND relkind = 'r'
+          AND reloptions IS NOT NULL
+        ORDER BY relname
+    """
+    
+    table_result = await db.execute(text(table_settings_query))
+    table_specific_settings = []
+    for row in table_result:
+        table_specific_settings.append({
+            "schema": row[0],
+            "table_name": row[1],
+            "vacuum_threshold": row[2],
+            "vacuum_scale_factor": row[3],
+            "analyze_threshold": row[4],
+            "analyze_scale_factor": row[5],
+            "vacuum_cost_delay": row[6],
+        })
+    
+    return {
+        "global_settings": global_settings,
+        "table_specific_settings": table_specific_settings,
+        "retrieved_at": datetime.utcnow().isoformat(),
+    }
+
+
+@router.post("/database/vacuum-table")
+async def manual_vacuum_table(
+    table_name: str = Query(..., min_length=1, max_length=100),
+    analyze: bool = Query(True, description="Run ANALYZE after VACUUM"),
+    full: bool = Query(False, description="Run VACUUM FULL (locks table)"),
+    db: AsyncSession = Depends(get_db_connection),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+) -> dict[str, Any]:
+    """
+    Manually trigger VACUUM on a specific table
+    
+    **Owner Only**: Requires Level 4 (OWNER) access
+    
+    **WARNING**: VACUUM FULL requires an exclusive lock and can take significant time
+    on large tables. Use with caution during business hours.
+    
+    Parameters:
+    - **table_name**: Name of the table to vacuum
+    - **analyze**: Whether to run ANALYZE after VACUUM (default: true)
+    - **full**: Whether to run VACUUM FULL for maximum space reclamation (default: false)
+    """
+    from sqlalchemy import text
+    import re
+    
+    # Validate table name (prevent SQL injection)
+    if not re.match(r'^[a-z_][a-z0-9_]*$', table_name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid table name. Must contain only lowercase letters, numbers, and underscores."
+        )
+    
+    # Verify table exists
+    check_query = text("""
+        SELECT EXISTS (
+            SELECT 1 FROM pg_tables 
+            WHERE schemaname = 'public' AND tablename = :table_name
+        )
+    """)
+    result = await db.execute(check_query, {"table_name": table_name})
+    exists = result.scalar()
+    
+    if not exists:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Table '{table_name}' not found in public schema"
+        )
+    
+    # Build VACUUM command
+    vacuum_type = "VACUUM FULL" if full else "VACUUM"
+    analyze_suffix = " ANALYZE" if analyze else ""
+    vacuum_command = f"{vacuum_type}{analyze_suffix} {table_name}"
+    
+    # Execute VACUUM (must be in its own transaction)
+    try:
+        await db.commit()  # Commit any pending transaction
+        await db.execute(text(f"VACUUM {'FULL ' if full else ''}{'ANALYZE ' if analyze else ''}{table_name}"))
+        await db.commit()
+        
+        return {
+            "success": True,
+            "message": f"Successfully executed {vacuum_command}",
+            "table_name": table_name,
+            "vacuum_type": "full" if full else "standard",
+            "analyzed": analyze,
+            "executed_at": datetime.utcnow().isoformat(),
+        }
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"VACUUM failed: {str(e)}"
+        )
+
+
+@router.get("/database/tables-needing-vacuum")
+async def get_tables_needing_vacuum(
+    dead_percent_threshold: float = Query(5.0, ge=0, le=100, description="Dead tuple percentage threshold"),
+    min_dead_tuples: int = Query(100, ge=0, description="Minimum dead tuples to consider"),
+    db: AsyncSession = Depends(get_db_connection),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+) -> dict[str, Any]:
+    """
+    Get tables that need VACUUM attention
+    
+    **Owner Only**: Requires Level 4 (OWNER) access
+    
+    Returns tables with high dead tuple ratios or significant bloat
+    that would benefit from manual VACUUM.
+    
+    Parameters:
+    - **dead_percent_threshold**: Minimum % of dead tuples to flag (default: 5%)
+    - **min_dead_tuples**: Minimum absolute dead tuples to consider (default: 100)
+    """
+    from sqlalchemy import text
+    
+    query = text("""
+        SELECT 
+            schemaname,
+            relname AS table_name,
+            n_live_tup AS live_tuples,
+            n_dead_tup AS dead_tuples,
+            ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) AS dead_percent,
+            pg_size_pretty(pg_total_relation_size(schemaname||'.'||relname)) AS total_size,
+            pg_total_relation_size(schemaname||'.'||relname) AS total_size_bytes,
+            last_vacuum,
+            last_autovacuum,
+            CASE 
+                WHEN last_autovacuum IS NULL AND last_vacuum IS NULL THEN 'NEVER_VACUUMED'
+                WHEN n_dead_tup > 10000 AND ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) > 10 THEN 'CRITICAL'
+                WHEN n_dead_tup > 1000 AND ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) > 5 THEN 'HIGH'
+                ELSE 'MODERATE'
+            END AS priority
+        FROM pg_stat_user_tables
+        WHERE n_live_tup > 0
+          AND (
+            (n_dead_tup >= :min_dead_tuples AND 
+             ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) >= :dead_percent_threshold) OR
+            (last_autovacuum IS NULL AND last_vacuum IS NULL)
+          )
+        ORDER BY 
+            CASE 
+                WHEN last_autovacuum IS NULL AND last_vacuum IS NULL THEN 0
+                ELSE 1
+            END,
+            n_dead_tup DESC
+        LIMIT 30
+    """)
+    
+    result = await db.execute(
+        query, 
+        {
+            "dead_percent_threshold": dead_percent_threshold,
+            "min_dead_tuples": min_dead_tuples,
+        }
+    )
+    
+    tables = []
+    for row in result:
+        tables.append({
+            "schema": row[0],
+            "table_name": row[1],
+            "live_tuples": row[2],
+            "dead_tuples": row[3],
+            "dead_percent": float(row[4]) if row[4] else 0.0,
+            "total_size": row[5],
+            "total_size_bytes": row[6],
+            "last_vacuum": row[7].isoformat() if row[7] else None,
+            "last_autovacuum": row[8].isoformat() if row[8] else None,
+            "priority": row[9],
+        })
+    
+    return {
+        "tables": tables,
+        "count": len(tables),
+        "filters": {
+            "dead_percent_threshold": dead_percent_threshold,
+            "min_dead_tuples": min_dead_tuples,
+        },
+        "retrieved_at": datetime.utcnow().isoformat(),
+    }
+
+
 # ===== HEALTH AND STATUS ENDPOINTS =====
 
 # NOTE: Health endpoint moved to health_system_router.py for consolidation

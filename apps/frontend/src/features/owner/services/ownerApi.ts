@@ -187,6 +187,75 @@ export const ownerApi = {
     );
     return handleResponse(response);
   },
+
+  /**
+   * Get VACUUM status and table health
+   * GET /owner/database/vacuum-status
+   */
+  async getVacuumStatus(): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/vacuum-status`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Get autovacuum configuration
+   * GET /owner/database/autovacuum-config
+   */
+  async getAutovacuumConfig(): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/autovacuum-config`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Manually trigger VACUUM on a table
+   * POST /owner/database/vacuum-table
+   */
+  async manualVacuumTable(
+    tableName: string,
+    analyze: boolean = true,
+    full: boolean = false
+  ): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/vacuum-table?table_name=${encodeURIComponent(
+        tableName
+      )}&analyze=${analyze}&full=${full}`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Get tables needing VACUUM attention
+   * GET /owner/database/tables-needing-vacuum
+   */
+  async getTablesNeedingVacuum(
+    deadPercentThreshold: number = 5,
+    minDeadTuples: number = 100
+  ): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/tables-needing-vacuum?dead_percent_threshold=${deadPercentThreshold}&min_dead_tuples=${minDeadTuples}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
 };
 
 export default ownerApi;

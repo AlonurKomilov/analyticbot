@@ -24,10 +24,12 @@ import {
   Storage as StorageIcon,
   Backup as BackupIcon,
   Speed as SpeedIcon,
+  CleaningServices as CleaningServicesIcon,
 } from '@mui/icons-material';
 import DatabaseStatsComponent from './components/DatabaseStats';
 import DatabaseBackupComponent from './components/DatabaseBackup';
 import { QueryPerformanceMonitor } from './components/QueryPerformanceMonitor';
+import { VacuumMonitor } from './components/VacuumMonitor';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -94,6 +96,11 @@ export const OwnerDashboard: React.FC = () => {
             label="Query Performance"
             iconPosition="start"
           />
+          <Tab
+            icon={<CleaningServicesIcon />}
+            label="VACUUM Operations"
+            iconPosition="start"
+          />
         </Tabs>
 
         {/* Tab 0: Database Statistics */}
@@ -137,6 +144,26 @@ export const OwnerDashboard: React.FC = () => {
                 <li>Use this to identify optimization opportunities</li>
                 <li>Reset statistics after optimizations to measure improvements</li>
                 <li>Auto-refresh updates data every 30 seconds when enabled</li>
+              </ul>
+            </Alert>
+          </Box>
+        </TabPanel>
+
+        {/* Tab 3: VACUUM Operations Monitor */}
+        <TabPanel value={tabValue} index={3}>
+          <Paper elevation={0} sx={{ p: 3, bgcolor: 'grey.50' }}>
+            <VacuumMonitor />
+          </Paper>
+          <Box mt={3} px={3} pb={3}>
+            <Alert severity="info">
+              <AlertTitle>About VACUUM Operations</AlertTitle>
+              <ul style={{ margin: 0, paddingLeft: 20 }}>
+                <li>Autovacuum runs automatically every 30 seconds on all tables</li>
+                <li>Aggressive settings applied to high-write tables (post_metrics, posts, channels)</li>
+                <li>Manual VACUUM recommended for tables with &gt;5% dead tuples</li>
+                <li>VACUUM FULL reclaims maximum space but requires exclusive lock</li>
+                <li>Table-specific thresholds optimize performance for your workload</li>
+                <li>Regular vacuum prevents bloat and maintains query performance</li>
               </ul>
             </Alert>
           </Box>

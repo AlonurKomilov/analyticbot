@@ -403,42 +403,124 @@ POSTGRES_PASSWORD=change_me  # ⚠️ INSECURE
 
 ---
 
-### 8. **Missing Query Performance Monitoring (pg_stat_statements)**
-**Severity:** Critical (Security)
-**Impact:** Unauthorized access, data breach
+## ✅ FIXED - Issue #8: **Missing Query Performance Monitoring (pg_stat_statements)**
+**Severity:** Medium
+**Impact:** Undetected slow queries, performance degradation, optimization challenges
+**Status:** ✅ **RESOLVED** - pg_stat_statements enabled and configured
 
-**Current:**
-```env
-POSTGRES_PASSWORD=change_me
+**Previous State:**
+- No query performance tracking
+- Unable to identify slow queries
+- No visibility into query execution patterns
+- No data for optimization decisions
+
+**Implementation:**
+
+### 1. Enabled pg_stat_statements Extension
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+-- Extension version: 1.10
 ```
 
-**Recommendation:**
+### 2. PostgreSQL Configuration Added
+```ini
+# Query Performance Monitoring - Added to postgresql.conf
+shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all
+pg_stat_statements.max = 10000
+pg_stat_statements.track_utility = on
+pg_stat_statements.track_planning = on
+
+# Slow Query Logging
+log_min_duration_statement = 1000  # Log queries > 1 second
+log_line_prefix = '%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+log_statement = 'ddl'
+```
+
+### 3. Created Monitoring Tools
+
+**Query Performance View:**
+```sql
+CREATE VIEW query_performance AS
+SELECT
+    substring(query, 1, 100) as query_snippet,
+    calls,
+    round(total_exec_time::numeric, 2) as total_time_ms,
+    round(mean_exec_time::numeric, 2) as mean_time_ms,
+    round(max_exec_time::numeric, 2) as max_time_ms,
+    round((100.0 * total_exec_time / sum(total_exec_time) OVER ())::numeric, 2) as percent_of_total
+FROM pg_stat_statements
+WHERE query NOT LIKE '%pg_stat_statements%'
+ORDER BY total_exec_time DESC
+LIMIT 50;
+```
+
+**Monitoring Script:** `scripts/monitor_query_performance.sh`
+- Shows top 10 slowest queries by mean execution time
+- Displays most frequently called queries
+- Identifies queries taking >100ms
+- Provides reset and monitoring tips
+
+### 4. Verification Results
+
+✅ **Extension Status:**
+- pg_stat_statements v1.10 installed
+- Tracking 60+ query patterns
+- All execution metrics captured
+
+✅ **Query Insights Discovered:**
+- Post listing queries: 82ms average (needs optimization)
+- Channel analytics: 67ms average  
+- Most called: UNLISTEN/RESET (11,740 calls - connection cleanup)
+- Bulk inserts: post_metrics averaging 0.66ms (good performance)
+
+### 5. Usage Examples
+
+**Find slowest queries:**
+```sql
+SELECT * FROM query_performance LIMIT 10;
+```
+
+**Identify queries >100ms:**
+```sql
+SELECT query, mean_exec_time, calls
+FROM pg_stat_statements
+WHERE mean_exec_time > 100
+ORDER BY mean_exec_time DESC;
+```
+
+**Reset statistics:**
+```sql
+SELECT pg_stat_statements_reset();
+```
+
+**Run monitoring script:**
 ```bash
-# Generate strong password
-openssl rand -base64 32
-
-# Update .env files
-POSTGRES_PASSWORD=<generated-strong-password>
-
-# Update Docker secrets
-# Update deployed environment variables
-# Rotate password in all environments
+./scripts/monitor_query_performance.sh
 ```
 
-**Security Checklist:**
-- [ ] Use 32+ character passwords with special characters
-- [ ] Store in secrets manager (AWS Secrets Manager, Vault)
-- [ ] Never commit passwords to git
-- [ ] Implement password rotation policy (90 days)
-- [ ] Use different passwords per environment
+### Benefits Achieved
+- ✅ Real-time query performance visibility
+- ✅ Automatic slow query detection (>1s logged)
+- ✅ Data-driven optimization decisions
+- ✅ Track query execution patterns over time
+- ✅ Identify problematic queries before they impact users
+- ✅ PostgreSQL restart completed successfully
+- ✅ All services reconnected without issues
+
+**Files Modified:**
+- Docker container: `analyticbot-db` postgresql.conf updated
+- New monitoring script: `scripts/monitor_query_performance.sh`
+- New database view: `query_performance`
+- DATABASE_AUDIT_REPORT.md (marked Issue #8 as resolved)
 
 ---
 
-### 9. **No Database Query Performance Monitoring**
+### 9. **No Automated VACUUM Operations**
 **Severity:** Medium
-**Impact:** Undetected slow queries, performance issues
+**Impact:** Table bloat, performance degradation, disk space waste
 
-**Issue:** No evidence of:
+**Issue:** No evidence of automated VACUUM configuration or monitoring
 - `pg_stat_statements` extension enabled
 - Query performance logging
 - Slow query monitoring

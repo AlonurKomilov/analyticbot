@@ -16,7 +16,6 @@ import ComparisonCard from './components/ComparisonCard';
 import MonthlyCalendarHeatmap from './components/MonthlyCalendarHeatmap';
 import ContentTypeFilter from './components/ContentTypeFilter';
 import SmartRecommendationsPanel from './components/SmartRecommendationsPanel';
-// import EnhancedCalendarTooltip from './components/EnhancedCalendarTooltip'; // TODO: Replace calendar tooltip in future iteration
 import { useRecommenderLogic } from './hooks/useRecommenderLogic';
 import { useChannelStore } from '@store';
 import { useNavigate } from 'react-router-dom';

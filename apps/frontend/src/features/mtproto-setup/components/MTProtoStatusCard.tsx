@@ -29,6 +29,7 @@ import {
   SignalCellularOff as MTProtoOffIcon,
 } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
+import { uiLogger } from '@/utils/logger';
 import { logger } from '@/utils/logger';
 import { toggleGlobalMTProto, connectMTProto } from '../api';
 
@@ -37,7 +38,7 @@ export const MTProtoStatusCard: React.FC = () => {
 
   // Debug: Log the status to see what we're receiving
   useEffect(() => {
-    console.log('🔍 MTProto Status Debug:', {
+    uiLogger.debug('MTProto Status Debug', {
       connected: status?.connected,
       actively_connected: status?.actively_connected,
       mtproto_enabled: status?.mtproto_enabled,
@@ -56,18 +57,18 @@ export const MTProtoStatusCard: React.FC = () => {
   useEffect(() => {
     // Don't override if user is actively toggling
     if (isUserToggling) {
-      console.log('⏸️ Skipping sync - user is toggling');
+      uiLogger.debug('Skipping sync - user is toggling');
       return;
     }
 
-    console.log('🔄 Toggle Sync Effect:', {
+    uiLogger.debug('Toggle Sync Effect', {
       status_mtproto_enabled: status?.mtproto_enabled,
       current_globalEnabled: globalEnabled,
       will_update: status?.mtproto_enabled !== undefined && !isUserToggling
     });
 
     if (status?.mtproto_enabled !== undefined) {
-      console.log('✅ Syncing globalEnabled to:', status.mtproto_enabled);
+      uiLogger.debug('Syncing globalEnabled', { value: status.mtproto_enabled });
       setGlobalEnabled(status.mtproto_enabled);
     }
   }, [status?.mtproto_enabled, isUserToggling]);
@@ -82,22 +83,22 @@ export const MTProtoStatusCard: React.FC = () => {
     const autoConnect = async () => {
       // Only auto-connect once per page load
       if (hasAutoConnected) {
-        console.log('⏸️ Already attempted auto-connect');
+        uiLogger.debug('Already attempted auto-connect');
         return;
       }
 
       // Check if MTProto is enabled, session is ready, but not actively connected
       if (status?.mtproto_enabled && status?.connected && !status?.actively_connected) {
-        console.log('🚀 Auto-connecting on page load...');
+        uiLogger.debug('Auto-connecting on page load');
         setHasAutoConnected(true); // Mark as attempted
 
         try {
           await connectMTProto();
-          console.log('✅ Auto-connect on load succeeded');
+          uiLogger.debug('Auto-connect on load succeeded');
           // Refresh status to show active connection
           await fetchStatus();
         } catch (err: any) {
-          console.warn('⚠️ Auto-connect on load failed:', err);
+          uiLogger.warn('Auto-connect on load failed', { error: err });
           // Don't show error to user - connection will happen automatically when needed
         }
       }
@@ -108,7 +109,7 @@ export const MTProtoStatusCard: React.FC = () => {
 
   const handleGlobalToggle = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.checked;
-    console.log('🎚️ Toggle clicked:', { from: globalEnabled, to: newValue });
+    uiLogger.debug('MTProto toggle clicked', { from: globalEnabled, to: newValue });
 
     // Mark that user is actively toggling - prevent race conditions
     setIsUserToggling(true);
@@ -121,19 +122,19 @@ export const MTProtoStatusCard: React.FC = () => {
 
     try {
       // Call API to toggle global MTProto setting (backend expects POST)
-      console.log('📤 Sending toggle request:', { enabled: newValue });
-      await toggleGlobalMTProto(newValue);
-      console.log('✅ Toggle API succeeded');
+      uiLogger.debug('Sending toggle request', { enabled: newValue });
+      await toggleMTProto(newValue);
+      uiLogger.debug('Toggle API succeeded');
 
       // 🚀 AUTO-CONNECT: When enabling MTProto, automatically connect the session
       if (newValue) {
-        console.log('🔌 Auto-connecting MTProto session...');
+        uiLogger.debug('Auto-connecting MTProto session');
         try {
           await connectMTProto();
-          console.log('✅ Auto-connect succeeded');
+          uiLogger.debug('Auto-connect succeeded');
           setToggleSuccess('MTProto enabled and connected automatically!');
         } catch (connectErr: any) {
-          console.warn('⚠️ Auto-connect failed:', connectErr);
+          uiLogger.warn('Auto-connect failed', { error: connectErr });
           // Don't fail the whole operation if connect fails - session will connect lazily
           setToggleSuccess('MTProto enabled globally (will connect automatically when needed)');
         }
@@ -144,9 +145,9 @@ export const MTProtoStatusCard: React.FC = () => {
       logger.log(`Global MTProto toggled: ${newValue}`);
 
       // Refetch status to update connection state
-      console.log('🔄 Refetching status...');
+      uiLogger.debug('Refetching status');
       await fetchStatus();
-      console.log('✅ Status refetched');
+      uiLogger.debug('Status refetched');
 
       // Wait a bit to ensure backend has processed and returned new state
       await new Promise(resolve => setTimeout(resolve, 300));

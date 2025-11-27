@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAnalyticsStore } from '@store';
 import { useChannelStore } from '@store';
 import type { AIInsight } from '../utils/timeUtils';
+import { uiLogger } from '@/utils/logger';
 
 interface BestTimeRecommendations {
     best_times?: Array<{
@@ -114,7 +115,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     const loadRecommendations = useCallback(async (silent: boolean = false) => {
         // Don't fetch if no channel is selected
         if (!selectedChannel?.id) {
-            console.warn('BestTimeRecommender: No channel selected, skipping fetch');
+            uiLogger.warn('BestTimeRecommender: No channel selected, skipping fetch');
             return;
         }
 
@@ -135,17 +136,18 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             };
             const days = daysMap[timeFrame] !== undefined ? daysMap[timeFrame] : 30;
 
-            console.log('📅 BestTimeRecommender: Fetching data');
-            console.log('   Channel ID:', selectedChannel.id);
-            console.log('   TimeFrame selected:', timeFrame);
-            console.log('   Days parameter:', days === null ? 'ALL TIME (unlimited)' : days);
-            console.log('   Silent mode:', silent);
+            uiLogger.debug('BestTimeRecommender: Fetching data', {
+                channelId: selectedChannel.id,
+                timeFrame,
+                days: days === null ? 'ALL TIME (unlimited)' : days,
+                silent
+            });
 
             await fetchBestTime(selectedChannel.id, days, silent);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Unknown error';
             setError(errorMessage);
-            console.error('Error loading recommendations:', err);
+            uiLogger.error('Error loading recommendations', { error: err });
             setAiInsights([]);
         }
     }, [fetchBestTime, selectedChannel, timeFrame]);
@@ -153,7 +155,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     // Update recommendations when store data changes
     useEffect(() => {
         if (bestTimes && bestTimes.length > 0) {
-            console.log('🔄 Processing bestTimes from store:', bestTimes);
+            uiLogger.debug('Processing bestTimes from store', { count: bestTimes.length });
 
             // Convert BestTimeRecommendation[] to the expected format
             // Handle both API format (avg_engagement) and any legacy format (avgEngagement)
@@ -169,16 +171,18 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                 accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + (bt.confidence || 0), 0) / bestTimes.length)
             };
 
-            console.log('✅ Formatted recommendations:', formatted);
-            console.log('📊 Day-hour combinations:', formatted.best_day_hour_combinations?.length || 0);
-            console.log('📊 Content-type recommendations:', formatted.content_type_recommendations?.length || 0);
+            uiLogger.debug('Formatted recommendations', {
+                bestTimesCount: formatted.best_times?.length || 0,
+                dayHourCombinations: formatted.best_day_hour_combinations?.length || 0,
+                contentTypeRecommendations: formatted.content_type_recommendations?.length || 0
+            });
             setBestTimeRecommendations(formatted);
 
             // Generate performance insights
             const insights = generateAIInsights(formatted);
             setAiInsights(insights);
         } else {
-            console.log('⚠️ No bestTimes data available');
+            uiLogger.debug('No bestTimes data available');
             setBestTimeRecommendations(null);
             setAiInsights([]);
         }
@@ -192,7 +196,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     // Listen for data source changes
     useEffect(() => {
         const handleDataSourceChange = () => {
-            console.log('BestTimeRecommender: Data source changed, reloading...');
+            uiLogger.debug('BestTimeRecommender: Data source changed, reloading');
             loadRecommendations();
         };
 

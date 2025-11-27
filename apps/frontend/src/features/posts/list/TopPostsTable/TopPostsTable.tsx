@@ -74,6 +74,7 @@ const TopPostsTable: React.FC<TopPostsTableProps> = ({ lastUpdated }) => {
                     loading={loading}
                     error={error}
                     {...topPostsTableConfig as any}
+                    enableSelection={false}
                     enableDensityToggle={false}
                     emptyStateMessage="No posts found. Try adjusting your filters or check back later."
                     aria-label="Top performing posts with engagement metrics"

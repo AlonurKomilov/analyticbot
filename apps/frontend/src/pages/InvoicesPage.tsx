@@ -16,10 +16,12 @@ import {
   TableHead,
   TableRow,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import { Download } from '@mui/icons-material';
+import { uiLogger } from '@/utils/logger';
 
-// Mock data - replace with real API call
+// Mock data - replace with real API call when backend is ready
 const mockInvoices = [
   { id: 'INV-001', date: '2025-10-01', amount: '$29.99', status: 'Paid' },
   { id: 'INV-002', date: '2025-09-01', amount: '$29.99', status: 'Paid' },
@@ -28,8 +30,31 @@ const mockInvoices = [
 
 const InvoicesPage: React.FC = () => {
   const handleDownload = (invoiceId: string) => {
-    console.log('Downloading invoice:', invoiceId);
-    // TODO: Implement invoice download
+    uiLogger.debug('Invoice download requested', { invoiceId });
+    
+    // Generate a simple PDF-like invoice (mock implementation)
+    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+    if (!invoice) return;
+
+    const invoiceText = `
+INVOICE ${invoice.id}
+Date: ${invoice.date}
+Amount: ${invoice.amount}
+Status: ${invoice.status}
+
+Thank you for your business!
+    `.trim();
+
+    // Create a downloadable text file (in production, this would be a PDF from backend)
+    const blob = new Blob([invoiceText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${invoiceId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   return (

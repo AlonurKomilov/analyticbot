@@ -17,6 +17,8 @@
  * ```
  */
 
+import { authLogger } from '@/utils/logger';
+
 interface QueueItem {
   resolve: (token: string) => void;
   reject: (error: any) => void;
@@ -51,7 +53,7 @@ export class TokenRefreshManager {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Failed to parse token:', error);
+      authLogger.error('Failed to parse token', { error });
       return null;
     }
   }
@@ -118,7 +120,7 @@ export class TokenRefreshManager {
     if (lastLoginTime) {
       const timeSinceLogin = Date.now() - parseInt(lastLoginTime);
       if (timeSinceLogin < 10000) { // 10 seconds
-        console.log('⏭️ Recent login detected, skipping token refresh');
+        authLogger.debug('Recent login detected, skipping token refresh');
         const token = localStorage.getItem(this.TOKEN_KEY);
         if (token) return token;
       }
@@ -127,8 +129,7 @@ export class TokenRefreshManager {
     const refreshToken = this.getRefreshToken();
 
     if (!refreshToken) {
-      console.warn('⚠️ No refresh token available - cannot refresh access token');
-      console.log('📊 Storage state:', {
+      authLogger.warn('No refresh token available - cannot refresh access token', {
         hasAccessToken: !!localStorage.getItem('auth_token'),
         hasRefreshToken: !!localStorage.getItem('refresh_token'),
         hasUser: !!localStorage.getItem('auth_user')
@@ -139,14 +140,14 @@ export class TokenRefreshManager {
 
     // If already refreshing, add to queue
     if (this.isRefreshing) {
-      console.log('🔄 Token refresh in progress, queuing request...');
+      authLogger.debug('Token refresh in progress, queuing request');
       return new Promise<string>((resolve, reject) => {
         this.refreshQueue.push({ resolve, reject });
       });
     }
 
     this.isRefreshing = true;
-    console.log('🔄 Refreshing access token...');
+    authLogger.debug('Refreshing access token');
 
     try {
       const baseURL = import.meta.env.VITE_API_BASE_URL ||
@@ -178,7 +179,7 @@ export class TokenRefreshManager {
       // Store new tokens (refresh token may be rotated)
       this.storeTokens(newAccessToken, data.refresh_token);
 
-      console.log('✅ Token refreshed successfully');
+      authLogger.debug('Token refreshed successfully');
 
       // Resolve all queued requests with new token
       this.refreshQueue.forEach(item => item.resolve(newAccessToken));
@@ -187,7 +188,7 @@ export class TokenRefreshManager {
       return newAccessToken;
 
     } catch (error: any) {
-      console.error('❌ Token refresh failed:', error.message);
+      authLogger.error('Token refresh failed', { message: error.message });
 
       // Reject all queued requests
       this.refreshQueue.forEach(item => item.reject(error));
@@ -225,7 +226,7 @@ export class TokenRefreshManager {
 
     // No refresh token means we can't refresh - don't attempt
     if (!refreshToken) {
-      console.warn('⚠️ Access token exists but no refresh token - cannot refresh');
+      authLogger.warn('Access token exists but no refresh token - cannot refresh');
       return false;
     }
 
@@ -234,7 +235,7 @@ export class TokenRefreshManager {
         await this.refreshToken();
         return true;
       } catch (error) {
-        console.error('Failed to refresh token:', error);
+        authLogger.error('Failed to refresh token', { error });
         return false;
       }
     }
@@ -252,13 +253,13 @@ export class TokenRefreshManager {
    */
   async handleAuthError<T>(retryRequest: () => Promise<T>): Promise<T> {
     try {
-      console.log('🔄 Got 401, attempting token refresh...');
+      authLogger.debug('Got 401, attempting token refresh');
       await this.refreshToken();
 
       // Retry original request with new token
       return await retryRequest();
     } catch (error) {
-      console.error('❌ Token refresh failed after 401, redirecting to login');
+      authLogger.error('Token refresh failed after 401, redirecting to login');
       throw error;
     }
   }
@@ -304,9 +305,9 @@ if (typeof window !== 'undefined') {
       const timeUntilExpiry = manager.getTimeUntilExpiry();
       if (timeUntilExpiry !== null && timeUntilExpiry < 120) {
         // Less than 2 minutes remaining - refresh proactively
-        console.log(`⏰ Token expiring in ${timeUntilExpiry}s, refreshing proactively...`);
+        authLogger.debug('Token expiring soon, refreshing proactively', { timeUntilExpiry });
         manager.refreshIfNeeded().catch(err => {
-          console.error('Background token refresh failed:', err);
+          authLogger.error('Background token refresh failed', { error: err });
         });
       }
     }

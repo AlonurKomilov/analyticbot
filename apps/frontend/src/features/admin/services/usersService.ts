@@ -13,6 +13,7 @@
  */
 
 import { apiClient } from '@/api/client';
+import { apiLogger } from '@/utils/logger';
 
 export type UserRole = 'user' | 'admin' | 'superadmin' | 'moderator';
 
@@ -120,7 +121,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to get users:', error);
+            apiLogger.error('Failed to get users', { error, page, limit, status, role });
             throw error;
         }
     }
@@ -138,7 +139,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to get user details:', error);
+            apiLogger.error('Failed to get user details', { error, userId });
             throw error;
         }
     }
@@ -167,7 +168,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to suspend user:', error);
+            apiLogger.error('Failed to suspend user', { error, userId });
             throw error;
         }
     }
@@ -187,7 +188,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to unsuspend user:', error);
+            apiLogger.error('Failed to unsuspend user', { error, userId });
             throw error;
         }
     }
@@ -210,7 +211,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to update user role:', error);
+            apiLogger.error('Failed to update user role', { error, userId, role });
             throw error;
         }
     }
@@ -235,7 +236,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to delete user:', error);
+            apiLogger.error('Failed to delete user', { error, userId, reason });
             throw error;
         }
     }
@@ -258,7 +259,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to get audit log:', error);
+            apiLogger.error('Failed to get audit log', { error, userId, limit });
             throw error;
         }
     }
@@ -277,7 +278,7 @@ class AdminUsersService {
             const response = await apiClient.get<UserStatistics>(url);
             return response;
         } catch (error) {
-            console.error('Failed to get user statistics:', error);
+            apiLogger.error('Failed to get user statistics', { error, userId });
             throw error;
         }
     }
@@ -295,7 +296,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to get user activity:', error);
+            apiLogger.error('Failed to get user activity', { error, userId });
             throw error;
         }
     }
@@ -318,7 +319,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to search users:', error);
+            apiLogger.error('Failed to search users', { error, query, limit });
             throw error;
         }
     }
@@ -343,7 +344,7 @@ class AdminUsersService {
             );
             return response;
         } catch (error) {
-            console.error('Failed to send notification:', error);
+            apiLogger.error('Failed to send notification', { error, userId, type });
             throw error;
         }
     }

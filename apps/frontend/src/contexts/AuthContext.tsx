@@ -253,7 +253,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // Validate required fields
             if (!access_token || !userData) {
-                console.error('Invalid login response structure:', { access_token: !!access_token, userData: !!userData });
+                authLogger.error('Invalid login response structure', { access_token: !!access_token, userData: !!userData });
                 throw new Error('Invalid login response: missing required fields');
             }
 
@@ -269,7 +269,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Verify tokens were actually stored
             const verifyToken = localStorage.getItem(TOKEN_KEY);
             const verifyRefresh = localStorage.getItem(REFRESH_TOKEN_KEY);
-            console.log('🔍 Token storage verification:', {
+            authLogger.debug('Token storage verification', {
                 tokenStored: !!verifyToken,
                 refreshStored: !!verifyRefresh,
                 tokenLength: verifyToken?.length || 0,
@@ -277,7 +277,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             if (!verifyToken || !verifyRefresh) {
-                console.error('❌ CRITICAL: Tokens not stored properly!');
+                authLogger.error('CRITICAL: Tokens not stored properly');
                 throw new Error('Failed to store authentication tokens');
             }
 
@@ -291,23 +291,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             if (isDemoUser) {
                 localStorage.setItem('is_demo_user', 'true');
-                console.info('🎭 Demo user detected - enhanced demo experience enabled');
+                authLogger.info('Demo user detected - enhanced demo experience enabled');
             } else {
                 localStorage.removeItem('is_demo_user');
             }
 
             // Set data source to API mode when logged in (not demo mode)
             localStorage.setItem('useRealAPI', 'true');
-            console.info('✅ Authenticated - using real API data');
+            authLogger.info('Authenticated - using real API data');
 
             // Update state
             setToken(access_token);
             setUser(userData);
 
-            console.log('Login successful:', userData?.username || userData?.email || 'user');
+            authLogger.debug('Login successful', { user: userData?.username || userData?.email || 'user' });
             return { success: true };
         } catch (error: any) {
-            console.error('Login error:', error);
+            authLogger.error('Login error', { error });
             return {
                 success: false,
                 error: error.message || 'Network error. Please try again.'
@@ -320,7 +320,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Register function
     const register = useCallback(async (userData: Record<string, any>): Promise<RegisterResponse> => {
         setIsLoading(true);
-        console.log('🔐 AuthContext register called with:', userData);
+        authLogger.debug('AuthContext register called', { userData });
         try {
             const response = await apiClient.post('/auth/register', userData);
             const data = (response as any).data || response; // Support both formats
@@ -333,7 +333,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             return { success: true };
         } catch (error: any) {
-            console.error('Registration error:', error);
+            authLogger.error('Registration error', { error });
             return {
                 success: false,
                 error: 'Network error. Please try again.'
@@ -351,7 +351,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 await apiClient.post('/auth/logout');
             }
         } catch (error) {
-            console.error('Logout error:', error);
+            authLogger.error('Logout error', { error });
         } finally {
             // Clear auth state regardless of API call success
             clearStoredAuth();
@@ -387,7 +387,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             return true;
         } catch (error) {
-            console.error('Token refresh error:', error);
+            authLogger.error('Token refresh error', { error });
             return false;
         }
     }, []);

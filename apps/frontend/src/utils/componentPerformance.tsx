@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useRef, useState, useMemo, ComponentType, ReactNode } from 'react';
+import { uiLogger } from '@/utils/logger';
 
 interface ComponentMetrics {
     totalRenderTime: number;
@@ -65,7 +66,7 @@ class ComponentPerformanceTracker {
             this.performanceObserver = new PerformanceObserver((list) => {
                 list.getEntries().forEach((entry) => {
                     if (entry.entryType === 'longtask' && entry.duration > 50) {
-                        console.warn(`🐌 Long task detected: ${entry.duration.toFixed(2)}ms`);
+                        uiLogger.warn('Long task detected', { duration: entry.duration.toFixed(2) });
                     }
                 });
             });
@@ -102,7 +103,7 @@ class ComponentPerformanceTracker {
         if (metrics.lastRenderProps && this.arePropsEqual(props, metrics.lastRenderProps)) {
             metrics.wastedRenders++;
             this.wastedRenders.set(componentName, metrics.wastedRenders);
-            console.warn(`🔄 Potentially wasted render in ${componentName}`);
+            uiLogger.warn('Potentially wasted render', { component: componentName });
         }
 
         metrics.lastRenderProps = { ...props };
@@ -114,7 +115,7 @@ class ComponentPerformanceTracker {
 
         // Log performance warnings
         if (renderTime > 50) {
-            console.warn(`⚠️ Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`);
+            uiLogger.warn('Slow render detected', { component: componentName, renderTime: renderTime.toFixed(2) });
         }
 
         return metrics;
@@ -166,46 +167,49 @@ class ComponentPerformanceTracker {
         const slowComponents = this.getTopSlowComponents();
         const wastedRenders = this.getTopWastedRenders();
 
-        console.group('🔧 Component Performance Optimization Report');
+        const reportData: any = {
+            slowComponents: [],
+            wastedRenders: [],
+            heavyComponents: [],
+            totalComponents: this.componentMetrics.size
+        };
 
         if (slowComponents.length > 0) {
-            console.group('🐌 Slowest Components');
-            slowComponents.forEach(({ name, averageRenderTime, renderCount, maxRenderTime }) => {
-                console.log(`${name}:`, {
-                    avgRenderTime: `${averageRenderTime.toFixed(2)}ms`,
-                    maxRenderTime: `${maxRenderTime.toFixed(2)}ms`,
-                    renderCount,
-                    recommendation: averageRenderTime > 16 ? 'Consider memoization or code splitting' : 'Performance is acceptable'
-                });
-            });
-            console.groupEnd();
+            reportData.slowComponents = slowComponents.map(({ name, averageRenderTime, renderCount, maxRenderTime }) => ({
+                name,
+                avgRenderTime: `${averageRenderTime.toFixed(2)}ms`,
+                maxRenderTime: `${maxRenderTime.toFixed(2)}ms`,
+                renderCount,
+                recommendation: averageRenderTime > 16 ? 'Consider memoization or code splitting' : 'Performance is acceptable'
+            }));
         }
 
         if (wastedRenders.length > 0) {
-            console.group('🔄 Components with Wasted Renders');
-            wastedRenders.forEach(({ name, wastedRenders }) => {
-                console.log(`${name}: ${wastedRenders} wasted renders - Consider using React.memo or useMemo`);
-            });
-            console.groupEnd();
+            reportData.wastedRenders = wastedRenders.map(({ name, wastedRenders }) => ({
+                name,
+                wastedRenders,
+                recommendation: 'Consider using React.memo or useMemo'
+            }));
         }
 
         // Heavy components recommendations
         if (this.heavyComponents.size > 0) {
-            console.group('⚡ Optimization Recommendations');
-            this.heavyComponents.forEach(componentName => {
+            reportData.heavyComponents = Array.from(this.heavyComponents).map(componentName => {
                 const metrics = this.componentMetrics.get(componentName);
-                console.log(`${componentName}:`, [
-                    '• Consider code splitting with React.lazy()',
-                    '• Use React.memo() to prevent unnecessary re-renders',
-                    '• Optimize expensive calculations with useMemo()',
-                    '• Consider virtualizing large lists',
-                    metrics && metrics.wastedRenders > 5 ? '• Check for prop drilling or unnecessary prop changes' : null
-                ].filter(Boolean));
+                return {
+                    component: componentName,
+                    recommendations: [
+                        'Consider code splitting with React.lazy()',
+                        'Use React.memo() to prevent unnecessary re-renders',
+                        'Optimize expensive calculations with useMemo()',
+                        'Consider virtualizing large lists',
+                        metrics && metrics.wastedRenders > 5 ? 'Check for prop drilling or unnecessary prop changes' : null
+                    ].filter(Boolean)
+                };
             });
-            console.groupEnd();
         }
 
-        console.groupEnd();
+        uiLogger.debug('Component Performance Optimization Report', reportData);
 
         return {
             slowComponents,

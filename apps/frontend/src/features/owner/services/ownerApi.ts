@@ -127,6 +127,66 @@ export const ownerApi = {
     );
     return handleResponse<BackupOperationResult>(response);
   },
+
+  /**
+   * Get query performance statistics
+   * GET /owner/database/query-performance
+   */
+  async getQueryPerformance(limit: number = 20, minCalls: number = 1): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/query-performance?limit=${limit}&min_calls=${minCalls}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Get slow queries exceeding threshold
+   * GET /owner/database/slow-queries
+   */
+  async getSlowQueries(thresholdMs: number = 100, limit: number = 20): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/slow-queries?threshold_ms=${thresholdMs}&limit=${limit}`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Get query statistics summary
+   * GET /owner/database/query-stats-summary
+   */
+  async getQueryStatsSummary(): Promise<any> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/query-stats-summary`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  /**
+   * Reset query statistics
+   * POST /owner/database/reset-query-stats
+   */
+  async resetQueryStats(): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(
+      `${API_BASE_URL}/owner/database/reset-query-stats`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      }
+    );
+    return handleResponse(response);
+  },
 };
 
 export default ownerApi;

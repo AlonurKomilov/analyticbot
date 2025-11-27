@@ -3,7 +3,7 @@
  * Edit an existing post
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -15,25 +15,80 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { Save, ArrowBack } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
+import { usePostStore } from '@store';
+import { uiLogger } from '@/utils/logger';
 
 const EditPostPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  // Mock data - replace with real API call
-  const [title, setTitle] = useState('Getting Started Guide');
-  const [content, setContent] = useState('This is a comprehensive guide...');
-  const [status, setStatus] = useState('published');
+  const { posts, updatePost, isLoading } = usePostStore();
+  
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [status, setStatus] = useState('draft');
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    console.log('Saving post:', { id, title, content, status });
-    // TODO: Implement save functionality
-    navigate(ROUTES.POSTS);
+  // Load post data
+  useEffect(() => {
+    if (id && posts.length > 0) {
+      const post = posts.find(p => p.id === id);
+      if (post) {
+        setTitle(post.title || '');
+        setContent(post.content || '');
+        setStatus(post.status || 'draft');
+      } else {
+        setError('Post not found');
+      }
+    }
+  }, [id, posts]);
+
+  const handleSave = async () => {
+    if (!id) {
+      setError('No post ID provided');
+      return;
+    }
+
+    if (!content.trim()) {
+      setError('Content cannot be empty');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await updatePost(id, {
+        title,
+        content,
+        status: status as any,
+      });
+      
+      uiLogger.debug('Post updated successfully', { postId: id });
+      navigate(ROUTES.POSTS);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update post';
+      setError(errorMessage);
+      uiLogger.error('Failed to update post', { error: err, postId: id });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -50,13 +105,20 @@ const EditPostPage: React.FC = () => {
           Edit Post
         </Typography>
 
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
         <Box component="form" sx={{ mt: 3 }}>
           <TextField
             fullWidth
-            label="Title"
+            label="Title (optional)"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             sx={{ mb: 3 }}
+            disabled={saving}
           />
 
           <TextField
@@ -67,6 +129,10 @@ const EditPostPage: React.FC = () => {
             multiline
             rows={10}
             sx={{ mb: 3 }}
+            required
+            disabled={saving}
+            error={!content.trim() && !!error}
+            helperText={!content.trim() && !!error ? 'Content is required' : ''}
           />
 
           <FormControl fullWidth sx={{ mb: 3 }}>
@@ -75,6 +141,7 @@ const EditPostPage: React.FC = () => {
               value={status}
               label="Status"
               onChange={(e) => setStatus(e.target.value)}
+              disabled={saving}
             >
               <MenuItem value="draft">Draft</MenuItem>
               <MenuItem value="published">Published</MenuItem>
@@ -84,10 +151,11 @@ const EditPostPage: React.FC = () => {
 
           <Button
             variant="contained"
-            startIcon={<Save />}
+            startIcon={saving ? <CircularProgress size={20} /> : <Save />}
             onClick={handleSave}
+            disabled={saving || !content.trim()}
           >
-            Save Changes
+            {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </Box>
       </Paper>

@@ -640,6 +640,219 @@ async def get_view_statistics(
     return stats
 
 
+# ===== QUERY PERFORMANCE MONITORING ENDPOINTS =====
+
+
+@router.get("/database/query-performance")
+async def get_query_performance(
+    limit: int = Query(20, ge=1, le=100, description="Number of queries to return"),
+    min_calls: int = Query(1, ge=1, description="Minimum number of calls"),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+    db: AsyncSession = Depends(get_db_connection),
+):
+    """
+    Get query performance statistics from pg_stat_statements.
+
+    Owner-only: Monitor database query performance in real-time.
+
+    Returns the top queries by total execution time with detailed metrics:
+    - Query text (truncated)
+    - Number of calls
+    - Mean, max, min execution time
+    - Total execution time
+    - Standard deviation
+
+    Use this to identify slow queries and optimization opportunities.
+    """
+    from sqlalchemy import text
+
+    query = f"""
+        SELECT 
+            substring(query, 1, 200) as query_text,
+            calls,
+            round(total_exec_time::numeric, 2) as total_time_ms,
+            round(mean_exec_time::numeric, 2) as mean_time_ms,
+            round(min_exec_time::numeric, 2) as min_time_ms,
+            round(max_exec_time::numeric, 2) as max_time_ms,
+            round(stddev_exec_time::numeric, 2) as stddev_time_ms,
+            round((100.0 * total_exec_time / sum(total_exec_time) OVER ())::numeric, 2) as percent_total
+        FROM pg_stat_statements
+        WHERE query NOT LIKE '%pg_stat%'
+          AND query NOT LIKE 'SET%'
+          AND query NOT LIKE 'SHOW%'
+          AND query NOT LIKE 'UNLISTEN%'
+          AND query NOT LIKE 'RESET%'
+          AND query NOT LIKE 'CLOSE%'
+          AND calls >= :min_calls
+        ORDER BY total_exec_time DESC
+        LIMIT :limit
+    """
+
+    result = await db.execute(text(query), {"limit": limit, "min_calls": min_calls})
+    rows = result.fetchall()
+
+    queries = []
+    for row in rows:
+        queries.append({
+            "query": row[0],
+            "calls": row[1],
+            "total_time_ms": float(row[2]),
+            "mean_time_ms": float(row[3]),
+            "min_time_ms": float(row[4]),
+            "max_time_ms": float(row[5]),
+            "stddev_time_ms": float(row[6]),
+            "percent_total": float(row[7]),
+        })
+
+    return {
+        "queries": queries,
+        "total_queries": len(queries),
+        "limit": limit,
+    }
+
+
+@router.get("/database/slow-queries")
+async def get_slow_queries(
+    threshold_ms: float = Query(100.0, ge=0, description="Minimum mean execution time in ms"),
+    limit: int = Query(20, ge=1, le=100),
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+    db: AsyncSession = Depends(get_db_connection),
+):
+    """
+    Get slow queries exceeding a time threshold.
+
+    Owner-only: Identify problematic queries that need optimization.
+
+    Args:
+        threshold_ms: Minimum mean execution time in milliseconds (default: 100ms)
+        limit: Maximum number of queries to return
+
+    Returns queries sorted by mean execution time.
+    """
+    from sqlalchemy import text
+
+    query = f"""
+        SELECT 
+            substring(query, 1, 200) as query_text,
+            calls,
+            round(mean_exec_time::numeric, 2) as mean_time_ms,
+            round(max_exec_time::numeric, 2) as max_time_ms,
+            round(total_exec_time::numeric, 2) as total_time_ms
+        FROM pg_stat_statements
+        WHERE mean_exec_time >= :threshold
+          AND query NOT LIKE '%pg_stat%'
+          AND query NOT LIKE 'SET%'
+          AND query NOT LIKE 'SHOW%'
+        ORDER BY mean_exec_time DESC
+        LIMIT :limit
+    """
+
+    result = await db.execute(text(query), {"threshold": threshold_ms, "limit": limit})
+    rows = result.fetchall()
+
+    queries = []
+    for row in rows:
+        queries.append({
+            "query": row[0],
+            "calls": row[1],
+            "mean_time_ms": float(row[2]),
+            "max_time_ms": float(row[3]),
+            "total_time_ms": float(row[4]),
+        })
+
+    return {
+        "queries": queries,
+        "threshold_ms": threshold_ms,
+        "count": len(queries),
+    }
+
+
+@router.get("/database/query-stats-summary")
+async def get_query_stats_summary(
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+    db: AsyncSession = Depends(get_db_connection),
+):
+    """
+    Get overall query performance statistics summary.
+
+    Owner-only: High-level overview of database query performance.
+
+    Returns:
+        - Total queries tracked
+        - Total execution time
+        - Average query time
+        - Slow queries count (>100ms)
+        - Most frequent query types
+    """
+    from sqlalchemy import text
+
+    # Get overall stats
+    summary_query = """
+        SELECT 
+            COUNT(*) as total_queries,
+            COUNT(*) FILTER (WHERE mean_exec_time > 100) as slow_queries_count,
+            round(SUM(total_exec_time)::numeric, 2) as total_exec_time_ms,
+            round(AVG(mean_exec_time)::numeric, 2) as avg_query_time_ms,
+            SUM(calls) as total_calls
+        FROM pg_stat_statements
+        WHERE query NOT LIKE '%pg_stat%'
+    """
+
+    result = await db.execute(text(summary_query))
+    summary = result.fetchone()
+
+    # Get most called queries
+    top_called_query = """
+        SELECT 
+            substring(query, 1, 100) as query_text,
+            calls
+        FROM pg_stat_statements
+        WHERE query NOT LIKE '%pg_stat%'
+          AND query NOT LIKE 'SET%'
+          AND query NOT LIKE 'SHOW%'
+          AND query NOT LIKE 'UNLISTEN%'
+        ORDER BY calls DESC
+        LIMIT 5
+    """
+
+    result = await db.execute(text(top_called_query))
+    top_called = [{"query": row[0], "calls": row[1]} for row in result.fetchall()]
+
+    return {
+        "total_queries_tracked": summary[0],
+        "slow_queries_count": summary[1],
+        "total_exec_time_ms": float(summary[2]) if summary[2] else 0,
+        "avg_query_time_ms": float(summary[3]) if summary[3] else 0,
+        "total_calls": summary[4],
+        "top_called_queries": top_called,
+    }
+
+
+@router.post("/database/reset-query-stats")
+async def reset_query_stats(
+    current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
+    db: AsyncSession = Depends(get_db_connection),
+):
+    """
+    Reset pg_stat_statements query statistics.
+
+    Owner-only: Clear all tracked query statistics and start fresh.
+
+    WARNING: This will clear all query performance data.
+    Use this after optimization to measure improvements.
+    """
+    from sqlalchemy import text
+
+    await db.execute(text("SELECT pg_stat_statements_reset()"))
+    await db.commit()
+
+    return {
+        "success": True,
+        "message": "Query statistics have been reset",
+        "reset_at": datetime.utcnow().isoformat(),
+    }
+
+
 # ===== HEALTH AND STATUS ENDPOINTS =====
 
 # NOTE: Health endpoint moved to health_system_router.py for consolidation

@@ -673,9 +673,15 @@ class MTProtoDataCollectionService:
                     )
 
                 # Sleep in small chunks to respond quickly to shutdown signals
-                for _ in range(int(remaining_wait)):
+                # and update heartbeat periodically to prevent timeout
+                for i in range(int(remaining_wait)):
                     if not should_run():
                         break
+                    
+                    # Update heartbeat every 60 seconds during wait to prevent timeout
+                    if process_manager and i % 60 == 0:
+                        process_manager.heartbeat()
+                    
                     await asyncio.sleep(1)
 
         except Exception as e:

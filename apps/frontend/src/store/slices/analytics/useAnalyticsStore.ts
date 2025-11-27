@@ -289,16 +289,15 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           : (response as any)?.data?.posts || (response as any)?.posts || [];
 
         // Transform backend response to frontend format
-        // Backend: { msg_id, date, text, views, forwards, comments_count, replies_count, reactions_count, engagement_rate }
-        // Frontend: { id, content, views, shares, reactions, comments, replies, engagementRate, publishedTime }
+        // Backend: { msg_id, date, text, views, forwards, replies_count, reactions_count, engagement_rate }
+        // Frontend: { id, content, views, shares, reactions, comments, engagementRate, publishedTime }
         const transformedPosts = rawPosts.map((post: any) => ({
           id: post.msg_id || post.id,
           content: post.text || post.content || '',
           views: post.views || 0,
           shares: post.forwards || post.shares || 0,
           reactions: post.reactions_count || post.reactions || 0,
-          comments: post.comments_count || post.comments || 0,  // Discussion group comments
-          replies: post.replies_count || 0,                      // Direct threaded replies
+          comments: post.replies_count || post.comments || 0,
           engagementRate: post.engagement_rate || 0,
           publishedTime: post.date || post.publishedTime || post.created_at,
           // Keep original fields for compatibility

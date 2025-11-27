@@ -20,7 +20,8 @@ import {
     Comment as CommentIcon,
     CalendarToday as CalendarIcon,
     MoreVert as MoreIcon,
-    TrendingUp as TrendingIcon
+    TrendingUp as TrendingIcon,
+    EmojiEvents as TrophyIcon
 } from '@mui/icons-material';
 import { formatNumber, calculateEngagementRate } from '@/utils/formatters';
 
@@ -299,9 +300,46 @@ export const createTopPostsColumns = (): TableColumn[] => [
         align: 'center',
         minWidth: 80,
         sortable: false,
-        Cell: ({ rowIndex = 0 }: { value: any; row: Post; rowIndex?: number }) => (
-            <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                #{rowIndex + 1}
+        Cell: ({ rowIndex = 0 }: { value: any; row: Post; rowIndex?: number }) => {
+            const rank = rowIndex + 1;
+            
+            // Trophy colors for top 3
+            const getTrophyColor = (rank: number) => {
+                if (rank === 1) return '#FFD700'; // Gold
+                if (rank === 2) return '#C0C0C0'; // Silver
+                if (rank === 3) return '#CD7F32'; // Bronze
+                return null;
+            };
+            
+            const trophyColor = getTrophyColor(rank);
+            
+            return (
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                    {trophyColor && (
+                        <TrophyIcon sx={{ color: trophyColor, fontSize: 20 }} />
+                    )}
+                    <Typography 
+                        variant="h6" 
+                        sx={{ 
+                            fontWeight: 600, 
+                            color: trophyColor || 'primary.main'
+                        }}
+                    >
+                        {rank}
+                    </Typography>
+                </Box>
+            );
+        }
+    },
+    {
+        id: 'message_id',
+        header: 'Message ID',
+        align: 'center',
+        minWidth: 120,
+        sortable: false,
+        Cell: ({ row }: { row: Post }) => (
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontFamily: 'monospace' }}>
+                {row.msg_id}
             </Typography>
         )
     },

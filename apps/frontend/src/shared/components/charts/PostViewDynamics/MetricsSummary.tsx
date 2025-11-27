@@ -9,10 +9,11 @@ import React from 'react';
 import { Grid, Paper, Box, Typography } from '@mui/material';
 import {
     Visibility as VisibilityIcon,
-    ThumbUp as ReactionIcon,
+    Favorite as ReactionIcon,
     Comment as CommentIcon,
-    Forward as ForwardIcon,
+    Share as ForwardIcon,
     TrendingUp as TrendingUpIcon,
+    Whatshot as PeakIcon,
     BarChart as ChartIcon
 } from '@mui/icons-material';
 
@@ -107,8 +108,8 @@ const MetricsSummary: React.FC<MetricsSummaryProps> = React.memo(({ stats }) => 
         {
             title: 'Peak Views',
             value: stats.peakViews.toLocaleString(),
-            icon: <TrendingUpIcon fontSize="medium" />,
-            color: 'error'
+            icon: <PeakIcon fontSize="medium" />,
+            color: 'warning'
         }
     ] : [];
 
@@ -127,16 +128,16 @@ const MetricsSummary: React.FC<MetricsSummaryProps> = React.memo(({ stats }) => 
             color: 'error'
         },
         {
-            title: 'Total Comments',
-            value: stats.totalComments.toLocaleString(),
-            icon: <CommentIcon fontSize="medium" />,
-            color: 'warning'
-        },
-        {
             title: 'Total Forwards',
             value: stats.totalForwards.toLocaleString(),
             icon: <ForwardIcon fontSize="medium" />,
             color: 'success'
+        },
+        {
+            title: 'Total Comments',
+            value: stats.totalComments.toLocaleString(),
+            icon: <CommentIcon fontSize="medium" />,
+            color: 'warning'
         }
     ];
 

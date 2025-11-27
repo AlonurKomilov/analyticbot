@@ -416,20 +416,26 @@ const PostViewDynamicsChart: React.FC = () => {
             const previousViews = previous.views || 0;
             const growth = previousViews > 0 ? ((currentViews - previousViews) / previousViews * 100) : 0;
 
-            // Calculate engagement metrics from chart data
-            const totalReactions = chartData.reduce((sum, item) => sum + (item.reactions || 0), 0);
-            const totalComments = chartData.reduce((sum, item) => sum + (item.comments || 0), 0);
-            const totalForwards = chartData.reduce((sum, item) => sum + (item.shares || 0), 0);
-
-            // Calculate totals for top stats (if available from raw data)
+            // Calculate engagement metrics for top stats
             const postsData = Array.isArray(data) ? data : [];
             const totalPosts = postsData.reduce((sum: number, point: any) =>
                 sum + (point.post_count || point.postCount || 0), 0
             );
             const totalViewsAll = postsData.reduce((sum: number, post: any) => sum + (post.views || 0), 0);
             const avgViewsAll = totalPosts > 0 ? Math.round(totalViewsAll / totalPosts) : 0;
+            
+            // Calculate totals for reactions, comments, replies, and forwards
+            const totalReactions = postsData.reduce((sum: number, post: any) =>
+                sum + (post.reactions_count || post.reactions || 0), 0
+            );
+            const totalComments = postsData.reduce((sum: number, post: any) =>
+                sum + (post.replies_count || post.replies || post.comments || 0), 0
+            );
             const totalReplies = postsData.reduce((sum: number, post: any) =>
                 sum + (post.threaded_replies_count || post.threaded_replies || 0), 0
+            );
+            const totalForwards = postsData.reduce((sum: number, post: any) =>
+                sum + (post.forwards || post.shares || 0), 0
             );
 
             const stats = {

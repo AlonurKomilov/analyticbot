@@ -11,6 +11,7 @@ export { default as OwnerDashboard } from './OwnerDashboard';
 // Components
 export { DatabaseStatsComponent } from './components/DatabaseStats';
 export { DatabaseBackupComponent } from './components/DatabaseBackup';
+export { QueryPerformanceMonitor } from './components/QueryPerformanceMonitor';
 
 // Services
 export { ownerApi } from './services/ownerApi';

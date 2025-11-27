@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import { uiLogger } from '@/utils/logger';
 
 interface PerformanceMetrics {
     loadTime: number;
@@ -183,7 +184,7 @@ class PerformanceMonitor {
 
                 return result;
             } catch (error) {
-                console.error('Dynamic import failed:', error);
+                uiLogger.error('Dynamic import failed', { error });
                 throw error;
             }
         };
@@ -230,23 +231,25 @@ class PerformanceMonitor {
         const metrics = this.getMetrics();
         const score = this.getPerformanceScore();
 
-        console.group('🚀 Performance Metrics');
-        console.log('📊 Load Time:', `${metrics.loadTime.toFixed(2)}ms`);
-        console.log('🎨 Render Time:', `${metrics.renderTime.toFixed(2)}ms`);
-        console.log('📦 Bundle Size:', `${(metrics.bundleSize / 1024).toFixed(2)}KB`);
-        console.log('🧠 Memory Usage:', `${metrics.memoryUsage.toFixed(2)}MB`);
-        console.log('🌐 Network Requests:', metrics.networkRequests);
-        console.log('🏆 Performance Score:', `${score}/100`);
+        const reportData: any = {
+            loadTime: `${metrics.loadTime.toFixed(2)}ms`,
+            renderTime: `${metrics.renderTime.toFixed(2)}ms`,
+            bundleSize: `${(metrics.bundleSize / 1024).toFixed(2)}KB`,
+            memoryUsage: `${metrics.memoryUsage.toFixed(2)}MB`,
+            networkRequests: metrics.networkRequests,
+            performanceScore: `${score}/100`
+        };
 
         if (Object.keys(metrics.chunkLoadTimes).length > 0) {
-            console.group('📦 Chunk Load Times');
-            Object.entries(metrics.chunkLoadTimes).forEach(([chunk, time]) => {
-                console.log(`${chunk}:`, `${time.toFixed(2)}ms`);
-            });
-            console.groupEnd();
+            reportData.chunkLoadTimes = Object.fromEntries(
+                Object.entries(metrics.chunkLoadTimes).map(([chunk, time]) => [
+                    chunk,
+                    `${time.toFixed(2)}ms`
+                ])
+            );
         }
 
-        console.groupEnd();
+        uiLogger.debug('Performance Metrics', reportData);
 
         return { metrics, score };
     }
@@ -294,7 +297,7 @@ export const usePerformanceMonitor = (options: PerformanceHookOptions = {}): Per
         // Track user interactions
         if (trackUserInteractions) {
             const trackInteraction = (event: Event) => {
-                console.log(`🖱️ User interaction: ${event.type}`);
+                uiLogger.debug('User interaction', { type: event.type });
             };
 
             ['click', 'scroll', 'keydown'].forEach(eventType => {

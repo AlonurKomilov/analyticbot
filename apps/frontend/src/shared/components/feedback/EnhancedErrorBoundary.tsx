@@ -6,6 +6,7 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { Alert, AlertTitle, Button, Box, Typography } from '@mui/material';
 import { ErrorOutline, Refresh, BugReport } from '@mui/icons-material';
+import { uiLogger } from '@/utils/logger';
 
 // Extend Window interface for gtag
 declare global {
@@ -146,12 +147,13 @@ class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
             props: this.props.errorContext || {}
         };
 
-        console.group('🚨 Enhanced Error Boundary');
-        console.error('Error:', error);
-        console.error('Error Info:', errorInfo);
-        console.log('Performance Impact:', performanceImpact);
-        console.log('Full Error Data:', errorData);
-        console.groupEnd();
+        uiLogger.error('Enhanced Error Boundary', {
+            error: error.toString(),
+            errorStack: error.stack,
+            componentStack: errorInfo.componentStack,
+            performanceImpact,
+            errorData
+        });
 
         try {
             const existingErrors = JSON.parse(sessionStorage.getItem('app_errors') || '[]');
@@ -159,7 +161,7 @@ class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
             if (existingErrors.length > 10) existingErrors.splice(0, existingErrors.length - 10);
             sessionStorage.setItem('app_errors', JSON.stringify(existingErrors));
         } catch (storageError) {
-            console.warn('Failed to store error in session storage:', storageError);
+            uiLogger.warn('Failed to store error in session storage', { error: storageError });
         }
     }
 
@@ -194,7 +196,7 @@ class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
                     timestamp: new Date().toISOString()
                 })
             }).catch((reportError) => {
-                console.error('Failed to report error:', reportError);
+                uiLogger.error('Failed to report error', { error: reportError });
             });
         }
 
@@ -207,10 +209,10 @@ class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
         const newRetryCount = this.state.retryCount + 1;
 
         if (newRetryCount <= this.maxRetries) {
-            console.log(`🔄 Retrying component render (attempt ${newRetryCount})`);
+            uiLogger.debug('Retrying component render', { attempt: newRetryCount });
             this.setState({ hasError: false, error: null, errorInfo: null, retryCount: newRetryCount, performanceImpact: null });
         } else {
-            console.warn(`❌ Max retry attempts (${this.maxRetries}) reached`);
+            uiLogger.warn('Max retry attempts reached', { maxRetries: this.maxRetries });
         }
     };
 
@@ -227,8 +229,8 @@ class EnhancedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryS
         navigator.clipboard.writeText(JSON.stringify(errorData, null, 2))
             .then(() => alert('Error details copied to clipboard!'))
             .catch(() => {
-                console.log('Error details:', errorData);
-                alert('Error details logged to console.');
+                uiLogger.debug('Error details', { errorData });
+                alert('Error details logged.');
             });
     };
 
@@ -310,7 +312,7 @@ export const useErrorHandler = () => {
     };
 
     const reportError = (error: Error | string, context: Record<string, any> = {}): void => {
-        console.error('Manual error report:', error, context);
+        uiLogger.error('Manual error report', { error, context });
         if (typeof window !== 'undefined' && window.gtag) {
             window.gtag('event', 'exception', {
                 description: error.toString(),
@@ -340,7 +342,7 @@ export const RouteErrorBoundary: React.FC<RouteErrorBoundaryProps> = ({ children
 
 export const setupGlobalErrorHandling = (): void => {
     window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
-        console.error('Unhandled promise rejection:', event.reason);
+        uiLogger.error('Unhandled promise rejection', { reason: event.reason });
         if (window.gtag) {
             window.gtag('event', 'exception', {
                 description: `Unhandled promise rejection: ${event.reason}`,
@@ -352,7 +354,7 @@ export const setupGlobalErrorHandling = (): void => {
     });
 
     window.addEventListener('error', (event: ErrorEvent) => {
-        console.error('Global error:', event.error);
+        uiLogger.error('Global error', { error: event.error, message: event.message });
         if (window.gtag) {
             window.gtag('event', 'exception', {
                 description: `Global error: ${event.error?.message || event.message}`,

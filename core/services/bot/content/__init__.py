@@ -12,13 +12,13 @@ external dependencies like image processing, video processing, and file system o
 """
 
 from core.services.bot.content.models import (
-    WatermarkConfig,
-    WatermarkResult,
-    TheftAnalysis,
     ContentProtectionRequest,
     ContentProtectionResponse,
-    WatermarkPosition,
     RiskLevel,
+    TheftAnalysis,
+    WatermarkConfig,
+    WatermarkPosition,
+    WatermarkResult,
 )
 
 __all__ = [

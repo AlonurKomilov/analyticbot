@@ -150,10 +150,10 @@ async def get_channels_statistics_overview(
                             "subscriber_count": channel.subscriber_count,
                             "post_count": post_count,
                             "total_views": views_count,
-                            "avg_views_per_post": round(views_count / post_count)
-                            if post_count > 0
-                            else 0,
-                            "latest_post_date": latest_post.isoformat() if latest_post else None,
+                            "avg_views_per_post": (
+                                round(views_count / post_count) if post_count > 0 else 0
+                            ),
+                            "latest_post_date": (latest_post.isoformat() if latest_post else None),
                             "is_active": channel.is_active,
                             "created_at": channel.created_at.isoformat(),
                         }
@@ -166,9 +166,9 @@ async def get_channels_statistics_overview(
                     "total_posts": total_posts,
                     "total_views": total_views,
                     "active_channels": active_channels,
-                    "avg_views_per_post": round(total_views / total_posts)
-                    if total_posts > 0
-                    else 0,
+                    "avg_views_per_post": (
+                        round(total_views / total_posts) if total_posts > 0 else 0
+                    ),
                 },
                 "channels": sorted(
                     channel_stats_list, key=lambda x: x["total_views"], reverse=True

@@ -164,9 +164,9 @@ class ExplanationGenerator:
             # Combine into executive narrative
             executive_summary = f"""
             Over the past {time_period}, {performance_summary} {trend_summary}
-            {action_summary} Key metrics show {kpis.get('primary_metric', 'engagement')}
-            at {kpis.get('current_level', 'baseline')} levels with
-            {kpis.get('confidence', 'moderate')} confidence in continued trajectory.
+            {action_summary} Key metrics show {kpis.get("primary_metric", "engagement")}
+            at {kpis.get("current_level", "baseline")} levels with
+            {kpis.get("confidence", "moderate")} confidence in continued trajectory.
             """.strip()
 
             # Clean up and format
@@ -422,7 +422,10 @@ class ExplanationGenerator:
             trend in ["declining", "decreasing"] and kpis.get("trend_strength", 0) > 0.7
         ):
             kpis["action_priority"] = "immediate"
-        elif performance in ["good", "excellent"] and trend in ["growing", "increasing"]:
+        elif performance in ["good", "excellent"] and trend in [
+            "growing",
+            "increasing",
+        ]:
             kpis["action_priority"] = "monitor"
         else:
             kpis["action_priority"] = "planned"
@@ -501,5 +504,8 @@ class ExplanationGenerator:
                 "dynamic_report_generation",
                 "multi_style_support",
             ],
-            "dependencies": {"template_manager": "initialized", "formatter": "initialized"},
+            "dependencies": {
+                "template_manager": "initialized",
+                "formatter": "initialized",
+            },
         }

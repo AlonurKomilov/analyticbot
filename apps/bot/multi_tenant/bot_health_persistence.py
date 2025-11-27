@@ -8,12 +8,11 @@ Runs as a background task to periodically persist in-memory metrics.
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import Any
 
-from sqlalchemy import select, delete, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, delete, select
 
-from apps.bot.multi_tenant.bot_health import get_health_monitor, BotHealthMetrics
+from apps.bot.multi_tenant.bot_health import BotHealthMetrics, get_health_monitor
 from infra.db.models.bot_health_orm import BotHealthMetricOrm
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BotHealthPersistenceService:
     """
     Service for persisting bot health metrics to database.
-    
+
     Features:
     - Periodic background persistence (every 5 minutes)
     - Load metrics from database on startup
@@ -38,7 +37,7 @@ class BotHealthPersistenceService:
     ):
         """
         Initialize persistence service.
-        
+
         Args:
             db_session_factory: Async database session factory
             persist_interval_seconds: How often to persist metrics
@@ -92,7 +91,7 @@ class BotHealthPersistenceService:
     async def persist_all_metrics(self):
         """
         Persist all current bot health metrics to database.
-        
+
         Creates a snapshot of all bot metrics at the current time.
         """
         try:
@@ -105,7 +104,9 @@ class BotHealthPersistenceService:
 
             async with self.db_session_factory() as session:
                 # Get circuit breaker states
-                from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
+                from apps.bot.multi_tenant.circuit_breaker import (
+                    get_circuit_breaker_registry,
+                )
 
                 circuit_registry = get_circuit_breaker_registry()
                 circuit_states = circuit_registry.get_all_states()
@@ -149,7 +150,7 @@ class BotHealthPersistenceService:
     async def cleanup_old_metrics(self):
         """
         Remove metrics older than retention period.
-        
+
         Keeps database size manageable by removing old historical data.
         """
         try:
@@ -157,9 +158,7 @@ class BotHealthPersistenceService:
 
             async with self.db_session_factory() as session:
                 # Delete old metrics
-                stmt = delete(BotHealthMetricOrm).where(
-                    BotHealthMetricOrm.timestamp < cutoff_date
-                )
+                stmt = delete(BotHealthMetricOrm).where(BotHealthMetricOrm.timestamp < cutoff_date)
                 result = await session.execute(stmt)
                 await session.commit()
 
@@ -172,15 +171,17 @@ class BotHealthPersistenceService:
     async def load_latest_metrics(self):
         """
         Load the most recent metrics from database on startup.
-        
+
         Restores the in-memory health monitor state from last persisted data.
         """
         try:
             async with self.db_session_factory() as session:
                 # Get the most recent timestamp
-                max_timestamp_stmt = select(BotHealthMetricOrm.timestamp).order_by(
-                    BotHealthMetricOrm.timestamp.desc()
-                ).limit(1)
+                max_timestamp_stmt = (
+                    select(BotHealthMetricOrm.timestamp)
+                    .order_by(BotHealthMetricOrm.timestamp.desc())
+                    .limit(1)
+                )
                 result = await session.execute(max_timestamp_stmt)
                 max_timestamp = result.scalar_one_or_none()
 
@@ -221,9 +222,7 @@ class BotHealthPersistenceService:
                     # Restore to monitor
                     health_monitor.metrics[metric_orm.user_id] = restored_metrics
 
-                logger.info(
-                    f"Loaded {len(metrics)} bot health metrics from {max_timestamp}"
-                )
+                logger.info(f"Loaded {len(metrics)} bot health metrics from {max_timestamp}")
 
         except Exception as e:
             logger.error(f"Failed to load metrics: {e}", exc_info=True)
@@ -232,14 +231,14 @@ class BotHealthPersistenceService:
         self,
         user_id: int,
         hours: int = 24,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get historical metrics for a specific user.
-        
+
         Args:
             user_id: User to get history for
             hours: How many hours of history to retrieve
-            
+
         Returns:
             List of metric snapshots ordered by timestamp
         """
@@ -283,13 +282,13 @@ class BotHealthPersistenceService:
     async def get_unhealthy_history(
         self,
         hours: int = 24,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get history of all unhealthy bots.
-        
+
         Args:
             hours: How many hours of history to retrieve
-            
+
         Returns:
             List of unhealthy bot snapshots
         """
@@ -350,7 +349,7 @@ def initialize_persistence_service(
 ) -> BotHealthPersistenceService:
     """
     Initialize the global persistence service.
-    
+
     Should be called once during application startup.
     """
     global _persistence_service

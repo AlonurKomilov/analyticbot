@@ -5,7 +5,6 @@ Manages webhook setup and validation for user bots
 
 import logging
 import secrets
-from typing import Optional
 
 from aiogram import Bot
 from aiogram.client.session.aiohttp import AiohttpSession
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 class WebhookManager:
     """
     Manages Telegram webhook configuration for user bots
-    
+
     Features:
     - Setup webhooks with unique secrets per bot
     - Remove webhooks (fallback to polling)
@@ -27,7 +26,7 @@ class WebhookManager:
     def __init__(self, base_url: str):
         """
         Initialize webhook manager
-        
+
         Args:
             base_url: Base URL for webhooks (e.g., "https://bot.analyticbot.org")
         """
@@ -37,7 +36,7 @@ class WebhookManager:
     def generate_webhook_secret(self) -> str:
         """
         Generate a secure random webhook secret token
-        
+
         Returns:
             32-character URL-safe random string
         """
@@ -46,10 +45,10 @@ class WebhookManager:
     def get_webhook_url(self, user_id: int) -> str:
         """
         Get webhook URL for specific user
-        
+
         Args:
             user_id: User ID
-            
+
         Returns:
             Full webhook URL (e.g., "https://bot.analyticbot.org/webhook/123")
         """
@@ -59,18 +58,18 @@ class WebhookManager:
         self,
         bot_token: str,
         user_id: int,
-        webhook_secret: Optional[str] = None,
+        webhook_secret: str | None = None,
         drop_pending_updates: bool = True,
     ) -> dict:
         """
         Configure webhook for user's bot
-        
+
         Args:
             bot_token: Telegram bot token
             user_id: User ID
             webhook_secret: Optional webhook secret (generates new if not provided)
             drop_pending_updates: Whether to drop pending updates
-            
+
         Returns:
             Dictionary with setup results:
             - success: bool
@@ -155,12 +154,12 @@ class WebhookManager:
     ) -> dict:
         """
         Remove webhook configuration (switch to polling mode)
-        
+
         Args:
             bot_token: Telegram bot token
             user_id: User ID
             drop_pending_updates: Whether to drop pending updates
-            
+
         Returns:
             Dictionary with removal results:
             - success: bool
@@ -196,11 +195,11 @@ class WebhookManager:
     async def get_webhook_info(self, bot_token: str, user_id: int) -> dict:
         """
         Get current webhook configuration from Telegram
-        
+
         Args:
             bot_token: Telegram bot token
             user_id: User ID
-            
+
         Returns:
             Dictionary with webhook info or error
         """
@@ -234,11 +233,11 @@ class WebhookManager:
     def validate_webhook_secret(self, provided_secret: str, expected_secret: str) -> bool:
         """
         Validate webhook secret token using constant-time comparison
-        
+
         Args:
             provided_secret: Secret from request header
             expected_secret: Expected secret from database
-            
+
         Returns:
             True if secrets match, False otherwise
         """
@@ -250,16 +249,16 @@ class WebhookManager:
 
 
 # Global instance (initialized by DI container)
-_webhook_manager: Optional[WebhookManager] = None
+_webhook_manager: WebhookManager | None = None
 
 
 def init_webhook_manager(base_url: str) -> WebhookManager:
     """
     Initialize global WebhookManager instance
-    
+
     Args:
         base_url: Base URL for webhooks
-        
+
     Returns:
         WebhookManager instance
     """
@@ -271,10 +270,10 @@ def init_webhook_manager(base_url: str) -> WebhookManager:
 def get_webhook_manager() -> WebhookManager:
     """
     Get global WebhookManager instance
-    
+
     Returns:
         WebhookManager instance
-        
+
     Raises:
         RuntimeError: If not initialized
     """

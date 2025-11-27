@@ -11,8 +11,10 @@ Single Responsibility: Gateway management and coordination only.
 import logging
 from typing import Any
 
-from apps.bot.services.adapters.payment_adapter_factory import PaymentAdapterFactory, PaymentGateway
-
+from apps.bot.services.adapters.payment_adapter_factory import (
+    PaymentAdapterFactory,
+    PaymentGateway,
+)
 from core.protocols.payment.payment_protocols import PaymentGatewayManagerProtocol
 
 logger = logging.getLogger(__name__)
@@ -148,7 +150,7 @@ class PaymentGatewayManagerService(PaymentGatewayManagerProtocol):
                     }
 
                 # Create temporary adapter for testing
-                original_adapter = PaymentAdapterFactory.get_current_adapter()
+                PaymentAdapterFactory.get_current_adapter()
                 PaymentAdapterFactory.set_current_adapter(gateway_enum)
                 adapter = PaymentAdapterFactory.get_current_adapter()
 
@@ -192,7 +194,7 @@ class PaymentGatewayManagerService(PaymentGatewayManagerProtocol):
             for gateway_name in supported_names:
                 health_result = await self.test_gateway_connection(gateway_name)
                 gateway_health[gateway_name] = {
-                    "status": "healthy" if health_result.get("connected", False) else "unhealthy",
+                    "status": ("healthy" if health_result.get("connected", False) else "unhealthy"),
                     "connected": health_result.get("connected", False),
                     "response_time": health_result.get("response_time", 0),
                     "error": health_result.get("error"),

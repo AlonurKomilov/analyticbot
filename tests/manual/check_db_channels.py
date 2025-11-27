@@ -10,7 +10,7 @@ async def main():
         port=int(os.getenv("POSTGRES_PORT", "10100")),
         database=os.getenv("POSTGRES_DB", "analytic_bot"),
         user=os.getenv("POSTGRES_USER", "analytic"),
-        password=os.getenv("POSTGRES_PASSWORD", "change_me"),
+        password=os.getenv("POSTGRES_PASSWORD", "rsDTxy3p&Y+F8LG2Z=KnAIed1a4etjrt4cX+sb@yo6-_7H-bjizWfrwSQ4iJXKg%"),
     )
 
     print("\n📺 All channels in database:")

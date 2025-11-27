@@ -9,7 +9,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from apps.api.middleware.auth import get_user_repository
-from apps.api.middleware.rate_limiter import limiter, RateLimitConfig
+from apps.api.middleware.rate_limiter import RateLimitConfig, limiter
 from apps.api.routers.auth.models import RegisterRequest
 from core.repositories.interfaces import UserRepository
 from core.security_engine import ApplicationRole, AuthProvider, User, UserStatus
@@ -25,7 +25,7 @@ async def register(
     request: Request,
     response: Response,
     register_data: RegisterRequest,
-    user_repo: UserRepository = Depends(get_user_repository)
+    user_repo: UserRepository = Depends(get_user_repository),
 ):
     """
     Register new user account
@@ -40,7 +40,8 @@ async def register(
         existing_user = await user_repo.get_user_by_email(register_data.email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
             )
 
         # Check if username already exists
@@ -73,7 +74,7 @@ async def register(
             "full_name": user.full_name,
             "hashed_password": user.hashed_password,
             "role": user.role,  # role is now a string, no .value needed
-            "status": user.status.value if isinstance(user.status, UserStatus) else user.status,
+            "status": (user.status.value if isinstance(user.status, UserStatus) else user.status),
             "plan_id": 1,  # Default plan
         }
 
@@ -92,5 +93,6 @@ async def register(
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Registration failed"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Registration failed",
         )

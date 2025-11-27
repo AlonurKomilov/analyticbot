@@ -246,7 +246,11 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
 
         except Exception as e:
             logger.error(f"❌ Intelligence insights aggregation failed: {e}")
-            return {"aggregation_id": str(uuid.uuid4()), "status": "failed", "error": str(e)}
+            return {
+                "aggregation_id": str(uuid.uuid4()),
+                "status": "failed",
+                "error": str(e),
+            }
 
     async def monitor_service_health(self) -> dict[str, Any]:
         """
@@ -274,7 +278,10 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
                         }
                     health_checks["contextual_analysis"] = contextual_health
                 except Exception as e:
-                    health_checks["contextual_analysis"] = {"status": "unhealthy", "error": str(e)}
+                    health_checks["contextual_analysis"] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                    }
 
             # Check temporal intelligence service
             if self.service_executor.temporal_service:
@@ -284,7 +291,10 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
                             await self.service_executor.temporal_service.health_check()
                         )  # type: ignore
                     else:
-                        temporal_health = {"status": "operational", "message": "Service available"}
+                        temporal_health = {
+                            "status": "operational",
+                            "message": "Service available",
+                        }
                     health_checks["temporal_intelligence"] = temporal_health
                 except Exception as e:
                     health_checks["temporal_intelligence"] = {
@@ -300,10 +310,16 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
                             await self.service_executor.modeling_service.health_check()
                         )  # type: ignore
                     else:
-                        modeling_health = {"status": "operational", "message": "Service available"}
+                        modeling_health = {
+                            "status": "operational",
+                            "message": "Service available",
+                        }
                     health_checks["predictive_modeling"] = modeling_health
                 except Exception as e:
-                    health_checks["predictive_modeling"] = {"status": "unhealthy", "error": str(e)}
+                    health_checks["predictive_modeling"] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                    }
 
             # Check cross-channel analysis service
             if self.service_executor.cross_channel_service:
@@ -414,7 +430,10 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
             # Run contextual analysis if available
             if self.service_executor.contextual_service and context_types:
                 try:
-                    if hasattr(self.service_executor.contextual_service, "analyze_context_factors"):
+                    if hasattr(
+                        self.service_executor.contextual_service,
+                        "analyze_context_factors",
+                    ):
                         contextual_result = (
                             await self.service_executor.contextual_service.analyze_context_factors(  # type: ignore
                                 channel_id, context_types
@@ -440,7 +459,8 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
             if self.service_executor.modeling_service:
                 try:
                     if hasattr(
-                        self.service_executor.modeling_service, "generate_enhanced_predictions"
+                        self.service_executor.modeling_service,
+                        "generate_enhanced_predictions",
                     ):
                         modeling_result = await self.service_executor.modeling_service.generate_enhanced_predictions(
                             prediction_request,
@@ -461,7 +481,10 @@ class PredictiveOrchestratorService(PredictiveOrchestratorProtocol):
             return {"status": "failed", "error": str(e), "workflow_id": workflow_id}
 
     async def orchestrate_temporal_prediction(
-        self, channel_id: int, prediction_horizon: PredictionHorizon, depth_days: int = 90
+        self,
+        channel_id: int,
+        prediction_horizon: PredictionHorizon,
+        depth_days: int = 90,
     ) -> dict[str, Any]:
         """
         Orchestrate temporal-focused prediction analysis (Protocol method).

@@ -55,13 +55,15 @@ interface SmartRecommendationsPanelProps {
     contentTypeRecommendations?: ContentTypeRecommendation[];
     selectedContentType?: 'all' | 'video' | 'image' | 'text' | 'link';
     onContentTypeChange?: (type: 'all' | 'video' | 'image' | 'text' | 'link') => void;
+    totalPostsAnalyzed?: number;
 }
 
 const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
     dayHourCombinations = [],
     contentTypeRecommendations = [],
     selectedContentType = 'all',
-    onContentTypeChange
+    onContentTypeChange,
+    totalPostsAnalyzed
 }) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -128,11 +130,21 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                         <TrendingUpIcon color="primary" />
                         Smart Recommendations
                     </Typography>
-                    <Tooltip title="Based on advanced analysis of your posting history">
-                        <IconButton size="small">
-                            <InfoIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {totalPostsAnalyzed && (
+                            <Chip 
+                                label={`${totalPostsAnalyzed.toLocaleString()} posts analyzed`}
+                                size="small"
+                                variant="outlined"
+                                color="primary"
+                            />
+                        )}
+                        <Tooltip title="Based on advanced analysis of your posting history">
+                            <IconButton size="small">
+                                <InfoIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                 </Box>
 
                 {/* Best Day + Time Combinations - Top 3 by Confidence */}

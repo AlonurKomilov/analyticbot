@@ -1,5 +1,5 @@
 # Database Audit Report - AnalyticBot
-**Date:** November 25, 2025
+**Date:** November 27, 2025 *(Updated)*
 **Database:** PostgreSQL (analytic_bot)
 **Total Tables:** 39
 
@@ -7,11 +7,193 @@
 
 ## Executive Summary
 
-This audit reviewed your PostgreSQL database configuration, schema design, migrations, indexing strategy, and performance. The database is generally well-structured with good indexing practices. However, there are **10 critical issues** and several areas for improvement identified below.
+This audit reviewed your PostgreSQL database configuration, schema design, migrations, indexing strategy, performance, and **data retention policies**. The database is generally well-structured with good indexing practices. However, there are **11 critical issues** identified, with a **NEW CRITICAL FINDING** (Issue #11) about excessive data retention causing 93% of storage waste.
 
 ---
 
-## 🔴 Top 10 Critical Issues
+## 🔴 Top Critical Issues
+
+### ⚠️ NEW - Issue #11: **Critical Data Retention Problem** 🚨
+**Severity:** CRITICAL
+**Impact:** Excessive storage costs, query performance degradation, unnecessary resource usage
+**Status:** ⚠️ **REQUIRES IMMEDIATE ACTION**
+
+**Discovery Date:** November 27, 2025
+
+### Problem Summary:
+Your database has a **massive data retention problem** consuming **1.7 GB (93% of total storage)** with excessive historical snapshots:
+
+**Evidence:**
+- **6.9 MILLION post_metrics records** for 1 user with only 2,770 posts
+- **2,497 snapshots per post average** (should be 10-50 max)
+- **3-6 snapshots per hour per post** (collecting every 10-20 minutes, 24/7)
+- **NO data retention/cleanup policy** implemented
+- **Individual posts have 3,946-3,964 snapshots** over 21 days
+
+**Storage Breakdown:**
+```
+Current State (21 days of data):
+- post_metrics: 1.7 GB (616 MB table + 1.1 GB indexes)
+- mtproto_audit_log: 17 MB (33,612 entries in 24 days)
+- All other tables: ~120 MB combined
+
+User Impact (abclegacyllc@gmail.com):
+- 6,918,136 post_metrics rows (~660 MB)
+- 2,770 unique posts tracked
+- 2,497.52 avg snapshots per post
+- 21 days of continuous collection
+```
+
+**Projected Growth (if not fixed):**
+- **Current rate:** ~80 MB/day
+- **1 year projection:** 30 GB for 1 user
+- **Multi-user projection:** 150-300 GB/year (5-10 active users)
+
+### Root Causes:
+
+**1. Excessive Collection Frequency:**
+- Collecting snapshots every 10-20 minutes (3-6x per hour)
+- No intelligent scheduling (collecting at night when engagement is low)
+- Treating all posts equally (new viral posts need frequent tracking, old posts don't)
+
+**Recent 24h Pattern:**
+```
+Hour 08:00: 2,765 snapshots (1x per post)
+Hour 07:00: 8,295 snapshots (3x per post)
+Hour 06:00: 16,590 snapshots (6x per post) ← Peak!
+Hour 05:00: 8,295 snapshots (3x per post)
+```
+
+**2. No Data Retention Policy:**
+- ALL snapshots kept forever (no cleanup)
+- No aggregation of old data to daily/weekly summaries
+- No archival to cheaper storage
+- No automated cleanup jobs
+
+**3. No Data Lifecycle Management:**
+- Missing strategy for hot/warm/cold data tiers
+- Raw snapshots never aggregated
+- Historical trends stored as individual rows instead of summaries
+
+**4. MTProto Audit Log Bloat:**
+- 33,612 entries in 24 days (1,400/day)
+- Tracking every `collection_progress_detail` event (too verbose)
+- Should be aggregated or have 30-day retention
+
+---
+
+### 🔥 IMMEDIATE ACTIONS REQUIRED:
+
+**Phase 1: Stop the Bleeding (Today)**
+
+1. **Reduce Collection Frequency** (80-90% reduction):
+```python
+# Change from:
+'collect-post-metrics': {
+    'schedule': crontab(minute='*/10'),  # Every 10 min ❌
+}
+
+# To age-based collection:
+'collect-recent': {
+    'schedule': crontab(minute='*/30'),  # Posts < 24h
+    'kwargs': {'max_age_hours': 24}
+},
+'collect-daily': {
+    'schedule': crontab(hour='*/6'),  # Posts 1-7 days
+    'kwargs': {'min_age_hours': 24, 'max_age_days': 7}
+},
+'collect-weekly': {
+    'schedule': crontab(day_of_week=1),  # Posts > 7 days
+    'kwargs': {'min_age_days': 7}
+}
+```
+
+2. **Clean Old Data** (Recover 1.4 GB):
+```sql
+-- Keep last 48h raw, delete older raw data
+DELETE FROM post_metrics
+WHERE snapshot_time < NOW() - INTERVAL '48 hours';
+
+-- Expected savings: ~5.5 million rows (~900 MB)
+```
+
+3. **Clean Audit Log**:
+```sql
+-- Keep last 30 days only
+DELETE FROM mtproto_audit_log
+WHERE timestamp < NOW() - INTERVAL '30 days';
+
+-- Delete verbose progress events older than 7 days
+DELETE FROM mtproto_audit_log
+WHERE action IN ('collection_progress_detail', 'collection_progress')
+  AND timestamp < NOW() - INTERVAL '7 days';
+
+-- Expected savings: ~10 MB
+```
+
+**Phase 2: Implement Retention (This Week)**
+
+4. **Create Aggregation Table:**
+```sql
+CREATE TABLE post_metrics_daily (
+    channel_id BIGINT NOT NULL,
+    msg_id BIGINT NOT NULL,
+    date DATE NOT NULL,
+    min_views BIGINT,
+    max_views BIGINT,
+    avg_views NUMERIC,
+    snapshots_count INT,
+    PRIMARY KEY (channel_id, msg_id, date)
+);
+```
+
+5. **Add Automated Cleanup Tasks:**
+```python
+# apps/celery/tasks/maintenance_tasks.py
+@shared_task(name="cleanup_old_post_metrics")
+def cleanup_old_post_metrics():
+    """Daily cleanup at 3 AM"""
+    # Aggregate 48h-7d data to hourly
+    # Aggregate 7d-30d data to daily
+    # Delete raw data > 48h
+    pass
+```
+
+**Phase 3: Long-term Strategy**
+
+6. **Table Partitioning** (for scalability)
+7. **Archive Storage** (S3/cheaper storage for old data)
+8. **Owner Dashboard** (storage monitoring)
+
+---
+
+### Expected Results:
+
+**After Immediate Cleanup:**
+- **Before:** 1.7 GB post_metrics, 17 MB audit log
+- **After:** 200-300 MB post_metrics, 5 MB audit log
+- **Savings:** ~1.4 GB (82% reduction)
+
+**After Retention Policy:**
+- **Daily growth:** 3-5 MB/day (vs current 80 MB/day)
+- **Monthly growth:** 150 MB/month (vs current 2.4 GB/month)
+- **Annual growth:** 1.8 GB/year (vs current 30 GB/year)
+- **Cost savings:** 95% reduction
+
+---
+
+### 📋 Detailed Analysis Document:
+See **[docs/DATABASE_STORAGE_ANALYSIS.md](docs/DATABASE_STORAGE_ANALYSIS.md)** for:
+- Complete root cause analysis
+- Step-by-step cleanup scripts
+- Celery task implementations
+- Monitoring queries
+- Table partitioning guide
+- Long-term retention strategy
+
+---
+
+## 🔴 Previous Critical Issues
 
 ### 1. **Duplicate Migration Files (High Priority)** ✅ **FIXED**
 **Severity:** High

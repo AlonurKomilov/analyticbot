@@ -22,6 +22,7 @@ interface BestTime {
 
 interface Recommendations {
     best_times?: BestTime[];
+    total_posts_analyzed?: number;
 }
 
 interface BestTimeCardsProps {
@@ -79,7 +80,10 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
                     🏆 Top 5 Best Times
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                    {recommendations.best_times.length} total recommendations analyzed
+                    {recommendations.total_posts_analyzed ? 
+                        `${recommendations.total_posts_analyzed.toLocaleString()} posts analyzed` : 
+                        `${recommendations.best_times.length} recommendations`
+                    }
                 </Typography>
             </Box>
             <Grid container spacing={2}>

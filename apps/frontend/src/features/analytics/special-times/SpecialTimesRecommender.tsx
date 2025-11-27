@@ -208,6 +208,7 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
                                                 contentTypeRecommendations={(recommendations as any).content_type_recommendations}
                                                 selectedContentType={selectedContentType}
                                                 onContentTypeChange={setSelectedContentType}
+                                                totalPostsAnalyzed={(recommendations as any).total_posts_analyzed}
                                             />
                                         </Box>
                                     )}

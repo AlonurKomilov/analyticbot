@@ -49,13 +49,6 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
 
     return (
         <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <AIIcon color="primary" />
-                <Typography variant="h5" component="h1">
-                    📊 Special Time Recommendations
-                </Typography>
-            </Box>
-
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                 <FormControl size="small" sx={{ minWidth: 200 }}>
                     <InputLabel id="timeframe-label">Analysis Period</InputLabel>

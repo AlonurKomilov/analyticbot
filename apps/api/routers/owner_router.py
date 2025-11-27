@@ -666,8 +666,8 @@ async def get_query_performance(
     """
     from sqlalchemy import text
 
-    query = f"""
-        SELECT 
+    query = """
+        SELECT
             substring(query, 1, 200) as query_text,
             calls,
             round(total_exec_time::numeric, 2) as total_time_ms,
@@ -693,16 +693,18 @@ async def get_query_performance(
 
     queries = []
     for row in rows:
-        queries.append({
-            "query": row[0],
-            "calls": row[1],
-            "total_time_ms": float(row[2]),
-            "mean_time_ms": float(row[3]),
-            "min_time_ms": float(row[4]),
-            "max_time_ms": float(row[5]),
-            "stddev_time_ms": float(row[6]),
-            "percent_total": float(row[7]),
-        })
+        queries.append(
+            {
+                "query": row[0],
+                "calls": row[1],
+                "total_time_ms": float(row[2]),
+                "mean_time_ms": float(row[3]),
+                "min_time_ms": float(row[4]),
+                "max_time_ms": float(row[5]),
+                "stddev_time_ms": float(row[6]),
+                "percent_total": float(row[7]),
+            }
+        )
 
     return {
         "queries": queries,
@@ -731,8 +733,8 @@ async def get_slow_queries(
     """
     from sqlalchemy import text
 
-    query = f"""
-        SELECT 
+    query = """
+        SELECT
             substring(query, 1, 200) as query_text,
             calls,
             round(mean_exec_time::numeric, 2) as mean_time_ms,
@@ -752,13 +754,15 @@ async def get_slow_queries(
 
     queries = []
     for row in rows:
-        queries.append({
-            "query": row[0],
-            "calls": row[1],
-            "mean_time_ms": float(row[2]),
-            "max_time_ms": float(row[3]),
-            "total_time_ms": float(row[4]),
-        })
+        queries.append(
+            {
+                "query": row[0],
+                "calls": row[1],
+                "mean_time_ms": float(row[2]),
+                "max_time_ms": float(row[3]),
+                "total_time_ms": float(row[4]),
+            }
+        )
 
     return {
         "queries": queries,
@@ -788,7 +792,7 @@ async def get_query_stats_summary(
 
     # Get overall stats
     summary_query = """
-        SELECT 
+        SELECT
             COUNT(*) as total_queries,
             COUNT(*) FILTER (WHERE mean_exec_time > 100) as slow_queries_count,
             round(SUM(total_exec_time)::numeric, 2) as total_exec_time_ms,
@@ -803,7 +807,7 @@ async def get_query_stats_summary(
 
     # Get most called queries
     top_called_query = """
-        SELECT 
+        SELECT
             substring(query, 1, 100) as query_text,
             calls
         FROM pg_stat_statements
@@ -863,9 +867,9 @@ async def get_vacuum_status(
 ) -> dict[str, Any]:
     """
     Get comprehensive VACUUM and table health status
-    
+
     **Owner Only**: Requires Level 4 (OWNER) access
-    
+
     Returns detailed information about:
     - Table health (dead tuples, bloat percentage)
     - Recent vacuum activity
@@ -873,10 +877,10 @@ async def get_vacuum_status(
     - Tables needing attention
     """
     from sqlalchemy import text
-    
+
     # Get table health status with dead tuples and bloat
     health_query = """
-        SELECT 
+        SELECT
             schemaname,
             relname AS table_name,
             n_live_tup AS live_tuples,
@@ -896,30 +900,32 @@ async def get_vacuum_status(
         ORDER BY n_dead_tup DESC, n_live_tup DESC
         LIMIT 50
     """
-    
+
     result = await db.execute(text(health_query))
     tables = []
     for row in result:
-        tables.append({
-            "schema": row[0],
-            "table_name": row[1],
-            "live_tuples": row[2],
-            "dead_tuples": row[3],
-            "dead_percent": float(row[4]) if row[4] else 0.0,
-            "modifications_since_analyze": row[5],
-            "total_size": row[6],
-            "total_size_bytes": row[7],
-            "last_vacuum": row[8].isoformat() if row[8] else None,
-            "last_autovacuum": row[9].isoformat() if row[9] else None,
-            "last_analyze": row[10].isoformat() if row[10] else None,
-            "last_autoanalyze": row[11].isoformat() if row[11] else None,
-            "vacuum_count": row[12],
-            "autovacuum_count": row[13],
-        })
-    
+        tables.append(
+            {
+                "schema": row[0],
+                "table_name": row[1],
+                "live_tuples": row[2],
+                "dead_tuples": row[3],
+                "dead_percent": float(row[4]) if row[4] else 0.0,
+                "modifications_since_analyze": row[5],
+                "total_size": row[6],
+                "total_size_bytes": row[7],
+                "last_vacuum": row[8].isoformat() if row[8] else None,
+                "last_autovacuum": row[9].isoformat() if row[9] else None,
+                "last_analyze": row[10].isoformat() if row[10] else None,
+                "last_autoanalyze": row[11].isoformat() if row[11] else None,
+                "vacuum_count": row[12],
+                "autovacuum_count": row[13],
+            }
+        )
+
     # Get overall database statistics
     summary_query = """
-        SELECT 
+        SELECT
             pg_size_pretty(pg_database_size(current_database())) AS database_size,
             COUNT(*) AS total_tables,
             SUM(n_live_tup) AS total_live_tuples,
@@ -927,10 +933,10 @@ async def get_vacuum_status(
             ROUND(100.0 * SUM(n_dead_tup) / NULLIF(SUM(n_live_tup + n_dead_tup), 0), 2) AS overall_dead_percent
         FROM pg_stat_user_tables
     """
-    
+
     summary_result = await db.execute(text(summary_query))
     summary_row = summary_result.first()
-    
+
     return {
         "tables": tables,
         "summary": {
@@ -951,24 +957,24 @@ async def get_autovacuum_config(
 ) -> dict[str, Any]:
     """
     Get current autovacuum configuration settings
-    
+
     **Owner Only**: Requires Level 4 (OWNER) access
-    
+
     Returns PostgreSQL autovacuum parameters including:
     - Global settings (thresholds, scale factors, timing)
     - Table-specific overrides
     - Performance settings
     """
     from sqlalchemy import text
-    
+
     # Get global autovacuum settings
     config_query = """
-        SELECT 
-            name, 
-            setting, 
+        SELECT
+            name,
+            setting,
             unit,
             short_desc
-        FROM pg_settings 
+        FROM pg_settings
         WHERE name IN (
             'autovacuum',
             'autovacuum_max_workers',
@@ -983,7 +989,7 @@ async def get_autovacuum_config(
         )
         ORDER BY name
     """
-    
+
     config_result = await db.execute(text(config_query))
     global_settings = {}
     for row in config_result:
@@ -992,10 +998,10 @@ async def get_autovacuum_config(
             "unit": row[2],
             "description": row[3],
         }
-    
+
     # Get table-specific settings
     table_settings_query = """
-        SELECT 
+        SELECT
             nspname AS schema,
             relname AS table_name,
             (SELECT option_value FROM pg_options_to_table(reloptions) WHERE option_name = 'autovacuum_vacuum_threshold') AS vacuum_threshold,
@@ -1010,20 +1016,22 @@ async def get_autovacuum_config(
           AND reloptions IS NOT NULL
         ORDER BY relname
     """
-    
+
     table_result = await db.execute(text(table_settings_query))
     table_specific_settings = []
     for row in table_result:
-        table_specific_settings.append({
-            "schema": row[0],
-            "table_name": row[1],
-            "vacuum_threshold": row[2],
-            "vacuum_scale_factor": row[3],
-            "analyze_threshold": row[4],
-            "analyze_scale_factor": row[5],
-            "vacuum_cost_delay": row[6],
-        })
-    
+        table_specific_settings.append(
+            {
+                "schema": row[0],
+                "table_name": row[1],
+                "vacuum_threshold": row[2],
+                "vacuum_scale_factor": row[3],
+                "analyze_threshold": row[4],
+                "analyze_scale_factor": row[5],
+                "vacuum_cost_delay": row[6],
+            }
+        )
+
     return {
         "global_settings": global_settings,
         "table_specific_settings": table_specific_settings,
@@ -1041,54 +1049,57 @@ async def manual_vacuum_table(
 ) -> dict[str, Any]:
     """
     Manually trigger VACUUM on a specific table
-    
+
     **Owner Only**: Requires Level 4 (OWNER) access
-    
+
     **WARNING**: VACUUM FULL requires an exclusive lock and can take significant time
     on large tables. Use with caution during business hours.
-    
+
     Parameters:
     - **table_name**: Name of the table to vacuum
     - **analyze**: Whether to run ANALYZE after VACUUM (default: true)
     - **full**: Whether to run VACUUM FULL for maximum space reclamation (default: false)
     """
-    from sqlalchemy import text
     import re
-    
+
+    from sqlalchemy import text
+
     # Validate table name (prevent SQL injection)
-    if not re.match(r'^[a-z_][a-z0-9_]*$', table_name):
+    if not re.match(r"^[a-z_][a-z0-9_]*$", table_name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid table name. Must contain only lowercase letters, numbers, and underscores."
+            detail="Invalid table name. Must contain only lowercase letters, numbers, and underscores.",
         )
-    
+
     # Verify table exists
     check_query = text("""
         SELECT EXISTS (
-            SELECT 1 FROM pg_tables 
+            SELECT 1 FROM pg_tables
             WHERE schemaname = 'public' AND tablename = :table_name
         )
     """)
     result = await db.execute(check_query, {"table_name": table_name})
     exists = result.scalar()
-    
+
     if not exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Table '{table_name}' not found in public schema"
+            detail=f"Table '{table_name}' not found in public schema",
         )
-    
+
     # Build VACUUM command
     vacuum_type = "VACUUM FULL" if full else "VACUUM"
     analyze_suffix = " ANALYZE" if analyze else ""
     vacuum_command = f"{vacuum_type}{analyze_suffix} {table_name}"
-    
+
     # Execute VACUUM (must be in its own transaction)
     try:
         await db.commit()  # Commit any pending transaction
-        await db.execute(text(f"VACUUM {'FULL ' if full else ''}{'ANALYZE ' if analyze else ''}{table_name}"))
+        await db.execute(
+            text(f"VACUUM {'FULL ' if full else ''}{'ANALYZE ' if analyze else ''}{table_name}")
+        )
         await db.commit()
-        
+
         return {
             "success": True,
             "message": f"Successfully executed {vacuum_command}",
@@ -1100,34 +1111,35 @@ async def manual_vacuum_table(
     except Exception as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"VACUUM failed: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"VACUUM failed: {str(e)}"
         )
 
 
 @router.get("/database/tables-needing-vacuum")
 async def get_tables_needing_vacuum(
-    dead_percent_threshold: float = Query(5.0, ge=0, le=100, description="Dead tuple percentage threshold"),
+    dead_percent_threshold: float = Query(
+        5.0, ge=0, le=100, description="Dead tuple percentage threshold"
+    ),
     min_dead_tuples: int = Query(100, ge=0, description="Minimum dead tuples to consider"),
     db: AsyncSession = Depends(get_db_connection),
     current_admin: AdminUser = Depends(lambda: require_admin_user(AdministrativeRole.OWNER.value)),
 ) -> dict[str, Any]:
     """
     Get tables that need VACUUM attention
-    
+
     **Owner Only**: Requires Level 4 (OWNER) access
-    
+
     Returns tables with high dead tuple ratios or significant bloat
     that would benefit from manual VACUUM.
-    
+
     Parameters:
     - **dead_percent_threshold**: Minimum % of dead tuples to flag (default: 5%)
     - **min_dead_tuples**: Minimum absolute dead tuples to consider (default: 100)
     """
     from sqlalchemy import text
-    
+
     query = text("""
-        SELECT 
+        SELECT
             schemaname,
             relname AS table_name,
             n_live_tup AS live_tuples,
@@ -1137,7 +1149,7 @@ async def get_tables_needing_vacuum(
             pg_total_relation_size(schemaname||'.'||relname) AS total_size_bytes,
             last_vacuum,
             last_autovacuum,
-            CASE 
+            CASE
                 WHEN last_autovacuum IS NULL AND last_vacuum IS NULL THEN 'NEVER_VACUUMED'
                 WHEN n_dead_tup > 10000 AND ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) > 10 THEN 'CRITICAL'
                 WHEN n_dead_tup > 1000 AND ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) > 5 THEN 'HIGH'
@@ -1146,42 +1158,44 @@ async def get_tables_needing_vacuum(
         FROM pg_stat_user_tables
         WHERE n_live_tup > 0
           AND (
-            (n_dead_tup >= :min_dead_tuples AND 
+            (n_dead_tup >= :min_dead_tuples AND
              ROUND(100.0 * n_dead_tup / NULLIF(n_live_tup + n_dead_tup, 0), 2) >= :dead_percent_threshold) OR
             (last_autovacuum IS NULL AND last_vacuum IS NULL)
           )
-        ORDER BY 
-            CASE 
+        ORDER BY
+            CASE
                 WHEN last_autovacuum IS NULL AND last_vacuum IS NULL THEN 0
                 ELSE 1
             END,
             n_dead_tup DESC
         LIMIT 30
     """)
-    
+
     result = await db.execute(
-        query, 
+        query,
         {
             "dead_percent_threshold": dead_percent_threshold,
             "min_dead_tuples": min_dead_tuples,
-        }
+        },
     )
-    
+
     tables = []
     for row in result:
-        tables.append({
-            "schema": row[0],
-            "table_name": row[1],
-            "live_tuples": row[2],
-            "dead_tuples": row[3],
-            "dead_percent": float(row[4]) if row[4] else 0.0,
-            "total_size": row[5],
-            "total_size_bytes": row[6],
-            "last_vacuum": row[7].isoformat() if row[7] else None,
-            "last_autovacuum": row[8].isoformat() if row[8] else None,
-            "priority": row[9],
-        })
-    
+        tables.append(
+            {
+                "schema": row[0],
+                "table_name": row[1],
+                "live_tuples": row[2],
+                "dead_tuples": row[3],
+                "dead_percent": float(row[4]) if row[4] else 0.0,
+                "total_size": row[5],
+                "total_size_bytes": row[6],
+                "last_vacuum": row[7].isoformat() if row[7] else None,
+                "last_autovacuum": row[8].isoformat() if row[8] else None,
+                "priority": row[9],
+            }
+        )
+
     return {
         "tables": tables,
         "count": len(tables),
@@ -1191,6 +1205,189 @@ async def get_tables_needing_vacuum(
         },
         "retrieved_at": datetime.utcnow().isoformat(),
     }
+
+
+@router.get("/database/index-usage")
+async def get_index_usage_statistics(
+    request: Request,
+    admin_user: AdminUser = Depends(require_admin_user),
+    min_scans: int = Query(0, description="Minimum index scans filter"),
+    max_scans: int = Query(None, description="Maximum index scans filter"),
+    unused_only: bool = Query(False, description="Show only unused indexes (0 scans)"),
+) -> dict[str, Any]:
+    """
+    Get comprehensive index usage statistics across all tables
+
+    Owner-only endpoint for database optimization.
+    Shows which indexes are being used and identifies candidates for removal.
+
+    **Use Cases:**
+    - Identify unused indexes (idx_scan = 0)
+    - Find low-usage indexes for potential removal
+    - Monitor index efficiency
+    - Optimize database schema
+
+    **Filters:**
+    - min_scans: Show indexes with at least N scans
+    - max_scans: Show indexes with at most N scans
+    - unused_only: Shortcut to show only unused indexes
+
+    **Response includes:**
+    - Per-table index statistics
+    - Index scan counts
+    - Index sizes
+    - Usage recommendations
+    - Overall summary statistics
+    """
+
+    db = request.state.db_connection
+
+    # Build WHERE clause based on filters
+    where_conditions = ["psi.schemaname = 'public'"]
+
+    if unused_only:
+        where_conditions.append("psi.idx_scan = 0")
+    else:
+        if min_scans > 0:
+            where_conditions.append(f"psi.idx_scan >= {min_scans}")
+        if max_scans is not None:
+            where_conditions.append(f"psi.idx_scan <= {max_scans}")
+
+    where_clause = " AND ".join(where_conditions)
+
+    # Query index usage statistics
+    query = f"""
+        WITH index_stats AS (
+            SELECT
+                psi.schemaname,
+                psi.relname as table_name,
+                psi.indexrelname as index_name,
+                psi.idx_scan,
+                psi.idx_tup_read,
+                psi.idx_tup_fetch,
+                pg_relation_size(psi.indexrelid) as index_size_bytes,
+                pg_size_pretty(pg_relation_size(psi.indexrelid)) as index_size,
+                pi.indexdef,
+                CASE
+                    WHEN pc.contype = 'p' THEN 'PRIMARY KEY'
+                    WHEN pc.contype = 'u' THEN 'UNIQUE'
+                    WHEN pc.contype = 'f' THEN 'FOREIGN KEY'
+                    ELSE 'INDEX'
+                END as constraint_type
+            FROM pg_stat_user_indexes psi
+            JOIN pg_indexes pi ON pi.indexname = psi.indexrelname AND pi.schemaname = psi.schemaname
+            LEFT JOIN pg_constraint pc ON pc.conname = psi.indexrelname
+            WHERE {where_clause}
+        )
+        SELECT *
+        FROM index_stats
+        ORDER BY idx_scan ASC, index_size_bytes DESC;
+    """
+
+    result = await db.fetch(query)
+
+    # Group indexes by table
+    tables = {}
+    total_indexes = 0
+    total_unused = 0
+    total_size_bytes = 0
+
+    for row in result:
+        table_name = row["table_name"]
+        is_unused = row["idx_scan"] == 0
+
+        if table_name not in tables:
+            tables[table_name] = {
+                "table_name": table_name,
+                "indexes": [],
+                "total_indexes": 0,
+                "unused_indexes": 0,
+                "total_size": 0,
+                "total_size_pretty": "",
+            }
+
+        index_info = {
+            "index_name": row["index_name"],
+            "scans": row["idx_scan"],
+            "tuples_read": row["idx_tup_read"],
+            "tuples_fetched": row["idx_tup_fetch"],
+            "size_bytes": row["index_size_bytes"],
+            "size": row["index_size"],
+            "constraint_type": row["constraint_type"],
+            "definition": row["indexdef"],
+            "recommendation": _get_index_recommendation(
+                row["idx_scan"], row["constraint_type"], row["index_size_bytes"]
+            ),
+        }
+
+        tables[table_name]["indexes"].append(index_info)
+        tables[table_name]["total_indexes"] += 1
+        tables[table_name]["total_size"] += row["index_size_bytes"]
+
+        if is_unused:
+            tables[table_name]["unused_indexes"] += 1
+            total_unused += 1
+
+        total_indexes += 1
+        total_size_bytes += row["index_size_bytes"]
+
+    # Add pretty size to each table
+    for table in tables.values():
+        table["total_size_pretty"] = _bytes_to_human(table["total_size"])
+
+    # Overall summary
+    summary = {
+        "total_indexes": total_indexes,
+        "unused_indexes": total_unused,
+        "total_size_bytes": total_size_bytes,
+        "total_size": _bytes_to_human(total_size_bytes),
+        "usage_rate_percent": round((total_indexes - total_unused) / total_indexes * 100, 2)
+        if total_indexes > 0
+        else 0,
+    }
+
+    return {
+        "summary": summary,
+        "tables": list(tables.values()),
+        "filters": {
+            "min_scans": min_scans,
+            "max_scans": max_scans,
+            "unused_only": unused_only,
+        },
+        "retrieved_at": datetime.utcnow().isoformat(),
+    }
+
+
+def _get_index_recommendation(scans: int, constraint_type: str, size_bytes: int) -> str:
+    """Generate index usage recommendation"""
+
+    if constraint_type in ("PRIMARY KEY", "UNIQUE"):
+        return "KEEP - Enforces constraint"
+
+    if scans == 0:
+        if size_bytes > 10 * 1024 * 1024:  # > 10 MB
+            return "REMOVE - Unused & large"
+        return "CONSIDER REMOVING - Unused"
+
+    if scans < 10:
+        return "REVIEW - Very low usage"
+
+    if scans < 100:
+        return "MONITOR - Moderate usage"
+
+    return "KEEP - Active use"
+
+
+def _bytes_to_human(size_bytes: int) -> str:
+    """Convert bytes to human-readable format"""
+
+    size = float(size_bytes)
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if size < 1024.0:
+            return f"{size:.1f} {unit}"
+        size /= 1024.0
+
+    return f"{size:.1f} PB"
 
 
 # ===== HEALTH AND STATUS ENDPOINTS =====

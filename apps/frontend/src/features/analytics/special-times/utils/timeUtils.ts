@@ -1,5 +1,5 @@
 /**
- * Time formatting and calculation utilities for BestTimeRecommender
+ * Time formatting and calculation utilities for SpecialTimesRecommender
  */
 
 export type ConfidenceColor = 'success' | 'warning' | 'error';

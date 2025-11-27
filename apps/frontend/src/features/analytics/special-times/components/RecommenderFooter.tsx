@@ -9,13 +9,27 @@ import {
  * Props for the RecommenderFooter component
  */
 interface RecommenderFooterProps {
-    /** Recommendations data containing accuracy */
+    /** Recommendations data containing accuracy/confidence */
     recommendations?: {
         accuracy?: number;
+        confidence?: number;
     };
 }
 
 const RecommenderFooter: React.FC<RecommenderFooterProps> = ({ recommendations }) => {
+    // Get accuracy value - handle both percentage (already 0-100) and decimal (0-1) formats
+    const getAccuracyValue = (): number | null => {
+        // Priority: accuracy > confidence
+        const value = recommendations?.accuracy ?? recommendations?.confidence;
+        if (!value) return null;
+        
+        // If value is between 0 and 1, it's a decimal that needs to be converted to percentage
+        // If value is between 1 and 100, it's already a percentage
+        return value <= 1 ? value * 100 : value;
+    };
+
+    const accuracyValue = getAccuracyValue();
+
     return (
         <Box sx={{
             display: 'flex',
@@ -36,10 +50,10 @@ const RecommenderFooter: React.FC<RecommenderFooterProps> = ({ recommendations }
                     color="primary"
                     variant="outlined"
                 />
-                {recommendations?.accuracy && (
+                {accuracyValue !== null && (
                     <Chip
                         size="small"
-                        label={`${recommendations.accuracy}% aniq`}
+                        label={`${Math.round(accuracyValue)}% accuracy`}
                         color="success"
                     />
                 )}

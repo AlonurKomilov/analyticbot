@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Box, Container, Typography, Paper } from '@mui/material';
-import MonthlyCalendarHeatmap from '../features/analytics/best-time/components/MonthlyCalendarHeatmap';
+import MonthlyCalendarHeatmap from '../features/analytics/special-times/components/MonthlyCalendarHeatmap';
 
 const PostingCalendarDemo: React.FC = () => {
     // Sample real data structure that matches backend API format

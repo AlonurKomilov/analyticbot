@@ -107,25 +107,9 @@ interface TableConfig {
 // ============================================================================
 
 export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ post }) => {
-    // Use msg_id if available, otherwise fall back to id
-    const postId = post.msg_id || post.id;
-
     return (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: 400 }}>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-                {/* Message ID Badge */}
-                {postId && (
-                    <Chip
-                        label={`#${postId}`}
-                        size="small"
-                        sx={{
-                            mb: 0.5,
-                            fontFamily: 'monospace',
-                            fontSize: '0.75rem'
-                        }}
-                    />
-                )}
-
                 {/* Post Text */}
                 <Typography
                     variant="body2"
@@ -135,8 +119,7 @@ export const PostDisplayCell: React.FC<PostDisplayCellProps> = ({ post }) => {
                         display: '-webkit-box',
                         WebkitLineClamp: 3,
                         WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        mt: 0.5
+                        overflow: 'hidden'
                     }}
                 >
                     {post.text || 'No text content'}

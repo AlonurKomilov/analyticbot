@@ -66,7 +66,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = React.memo(({
         },
         {
             icon: <ScheduleIcon />,
-            label: "Performance Time Recommendations",
+            label: "Special Time Recommendations",
             id: "analytics-tab-2",
             controls: "analytics-tabpanel-2"
         },

@@ -115,7 +115,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     const loadRecommendations = useCallback(async (silent: boolean = false) => {
         // Don't fetch if no channel is selected
         if (!selectedChannel?.id) {
-            uiLogger.warn('BestTimeRecommender: No channel selected, skipping fetch');
+            uiLogger.warn('SpecialTimesRecommender: No channel selected, skipping fetch');
             return;
         }
 
@@ -136,7 +136,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             };
             const days = daysMap[timeFrame] !== undefined ? daysMap[timeFrame] : 30;
 
-            uiLogger.debug('BestTimeRecommender: Fetching data', {
+            uiLogger.debug('SpecialTimesRecommender: Fetching data', {
                 channelId: selectedChannel.id,
                 timeFrame,
                 days: days === null ? 'ALL TIME (unlimited)' : days,
@@ -196,7 +196,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     // Listen for data source changes
     useEffect(() => {
         const handleDataSourceChange = () => {
-            uiLogger.debug('BestTimeRecommender: Data source changed, reloading');
+            uiLogger.debug('SpecialTimesRecommender: Data source changed, reloading');
             loadRecommendations();
         };
 

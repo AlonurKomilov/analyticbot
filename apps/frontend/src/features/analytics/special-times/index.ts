@@ -1,7 +1,7 @@
 /**
- * BestTimeRecommender - Refactored modular components
+ * SpecialTimesRecommender - Refactored modular components
  *
- * This is the new, refactored BestTimeRecommender with separated concerns:
+ * This is the new, refactored SpecialTimesRecommender with separated concerns:
  * - TimeFrameFilters: Time frame and content type filter controls
  * - BestTimeCards: Recommended time cards with confidence scores
  * - HeatmapVisualization: 24-hour activity heatmap
@@ -13,7 +13,7 @@
  * Analyzes real historical performance data from database
  */
 
-export { default } from './BestTimeRecommender';
+export { default } from './SpecialTimesRecommender';
 
 // Export individual components for reuse
 export { default as TimeFrameFilters } from './components/TimeFrameFilters';

@@ -549,7 +549,7 @@ LIMIT 50;
 
 ✅ **Query Insights Discovered:**
 - Post listing queries: 82ms average (needs optimization)
-- Channel analytics: 67ms average  
+- Channel analytics: 67ms average
 - Most called: UNLISTEN/RESET (11,740 calls - connection cleanup)
 - Bulk inserts: post_metrics averaging 0.66ms (good performance)
 
@@ -668,6 +668,145 @@ ORDER BY idx_scan;
 - idx_channels_user_analytics_cover (redundant)
 - idx_channels_user_count (simple count can use user_id index)
 ```
+
+---
+
+### 10. **Over-Indexing on Some Tables** ✅ **PARTIALLY FIXED**
+**Severity:** Low-Medium
+**Impact:** Slower writes, increased storage, maintenance overhead
+**Status:** ✅ **Analysis Complete** | Migration Ready | Owner API Added
+
+**Analysis:** `channels` table has **15 indexes** including many covering indexes with INCLUDE clauses:
+
+```sql
+-- Potentially redundant indexes on channels:
+idx_channels_user_id
+idx_channels_user_lookup_cover (user_id) INCLUDE (...)
+idx_channels_user_dashboard (user_id) INCLUDE (...)
+idx_channels_user_analytics_cover (user_id) INCLUDE (...)
+idx_channels_performance_lookup (user_id, created_at DESC)
+idx_channels_user_active (user_id, title)
+idx_channels_user_count (user_id)
+```
+
+**✅ COMPREHENSIVE AUDIT COMPLETED (Nov 27, 2025):**
+
+### Shocking Findings:
+- **226 total indexes** across all tables
+- **218 indexes with ZERO scans** (96% unused!)
+- **164 safe to remove** (excluding PKs and UNIQUE constraints)
+- **Wasting ~288 MB** of index storage
+
+### Worst Offenders:
+```
+1. scheduled_posts: 19 indexes, ALL 19 unused (22 rows, 19 indexes!)
+2. channels: 16 indexes, 13 unused (only 3 actually used)
+3. posts: 12 indexes, 9 unused
+4. users: 9 indexes, ALL 9 unused
+5. deliveries: 9 indexes, ALL 9 unused
+6. post_metrics: 7 indexes, 5 unused
+```
+
+### Actually Used Indexes (Top 5):
+```
+1. posts_pkey: 580,650 scans ✅ (critical)
+2. idx_post_metrics_lookup: 329,169 scans ✅ (critical)
+3. post_metrics_pkey: 193,550 scans ✅ (critical)
+4. channels_pkey: 19,737 scans ✅ (critical)
+5. idx_channels_user_lookup_cover: 5,180 scans ✅ (actively used)
+```
+
+### Implementation Created:
+
+**1. Monitoring Script:**
+```bash
+scripts/monitor_index_usage.sh
+# Provides comprehensive analysis:
+- Overall index statistics (total, unused, used)
+- Top 10 most over-indexed tables
+- Unused indexes list (0 scans)
+- Low-usage indexes (< 10 scans)
+- Most heavily used indexes
+- Duplicate/redundant index detection
+- Index efficiency report with recommendations
+- Table size vs index count analysis
+```
+
+**2. Migration File:**
+```python
+infra/db/alembic/versions/0037_remove_unused_indexes.py
+# Removes 164 unused indexes:
+- Admin tables: 17 indexes
+- Alert tables: 7 indexes
+- Bot health metrics: 4 indexes
+- Channels: 12 of 16 indexes (keep pkey, username_key, user_lookup_cover, user_id)
+- Scheduled posts: 18 of 19 indexes
+- Posts: 9 of 12 indexes (keep pkey, date, channel_date_content_type)
+- Post metrics: 5 of 7 indexes (keep pkey, lookup)
+- And many more...
+```
+
+**3. Owner API Endpoint:**
+```
+GET /owner/database/index-usage?unused_only=true&min_scans=0
+# Real-time index usage statistics:
+- Per-table breakdown
+- Scan counts, sizes, definitions
+- Usage recommendations
+- Constraint type identification
+- Filter by scan count or unused only
+```
+
+**4. Application Script:**
+```bash
+scripts/apply_migration_0037.sh
+# Applies migration using DROP INDEX CONCURRENTLY
+# Non-blocking, production-safe
+# Progress tracking with summary
+```
+
+### Benefits After Migration:
+- ✅ Faster INSERT/UPDATE operations (no wasted index maintenance)
+- ✅ Reduced storage: Saves ~288 MB of unused index space
+- ✅ Lower VACUUM overhead (fewer indexes to update)
+- ✅ Cleaner schema (from 226 → 62 indexes)
+- ✅ Better write performance on high-traffic tables
+
+### Kept Indexes (Safe):
+- All primary keys (essential)
+- All UNIQUE constraints (enforce data integrity)
+- Actively used indexes (>0 scans)
+- Foreign key supporting indexes (where needed)
+
+### Migration Status:
+- ✅ Analysis complete
+- ✅ Migration file created (0037_remove_unused_indexes.py)
+- ✅ Owner API endpoint added
+- ✅ Monitoring script operational
+- ⏳ Migration ready to apply (waiting for maintenance window)
+
+**Files Created:**
+- `scripts/monitor_index_usage.sh` - Index usage monitoring
+- `scripts/apply_migration_0037.sh` - Migration application script
+- `infra/db/alembic/versions/0037_remove_unused_indexes.py` - Migration
+- `apps/api/routers/owner_router.py` - Added GET /database/index-usage endpoint
+
+**Usage:**
+```bash
+# Monitor current index usage
+./scripts/monitor_index_usage.sh
+
+# View via API
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:10300/owner/database/index-usage?unused_only=true"
+
+# Apply migration (when ready)
+./scripts/apply_migration_0037.sh
+```
+
+**Recommendation:**
+Migration is ready and safe to apply. Use CONCURRENTLY option ensures zero downtime.
+Consider applying during low-traffic period for optimal performance.
 
 ---
 

@@ -19,7 +19,9 @@ import {
     Tooltip,
     IconButton,
     Divider,
-    Alert
+    Alert,
+    ToggleButtonGroup,
+    ToggleButton
 } from '@mui/material';
 import {
     Event as EventIcon,
@@ -52,12 +54,14 @@ interface SmartRecommendationsPanelProps {
     dayHourCombinations?: DayHourCombination[];
     contentTypeRecommendations?: ContentTypeRecommendation[];
     selectedContentType?: 'all' | 'video' | 'image' | 'text' | 'link';
+    onContentTypeChange?: (type: 'all' | 'video' | 'image' | 'text' | 'link') => void;
 }
 
 const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
     dayHourCombinations = [],
     contentTypeRecommendations = [],
-    selectedContentType = 'all'
+    selectedContentType = 'all',
+    onContentTypeChange
 }) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -182,23 +186,62 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                     </>
                 )}
 
-                {/* Content Type Quick Insights - Compact View */}
-                {topContentType.length > 0 && (
+                {/* Content Type Quick Insights - Always show filter if recommendations exist */}
+                {contentTypeRecommendations.length > 0 && (
                     <>
                         <Divider sx={{ my: 2 }} />
-                        <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            {getContentTypeIcon(selectedContentType)}
-                            📊 Content Type Insights
-                            {selectedContentType !== 'all' && (
-                                <Chip
-                                    label={selectedContentType}
-                                    size="small"
-                                    sx={{ ml: 1, textTransform: 'capitalize' }}
-                                    color="primary"
-                                />
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                {getContentTypeIcon(selectedContentType)}
+                                📊 Content Type Insights
+                            </Typography>
+                            {onContentTypeChange && (
+                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ mr: 1, alignSelf: 'center' }}>
+                                        Filter by Content Type
+                                    </Typography>
+                                    <ToggleButtonGroup
+                                        value={selectedContentType}
+                                        exclusive
+                                        onChange={(_e, newType) => newType && onContentTypeChange(newType)}
+                                        size="small"
+                                        aria-label="content type filter"
+                                    >
+                                        <ToggleButton value="all" aria-label="all content">
+                                            <EventIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                            ALL
+                                        </ToggleButton>
+                                        <ToggleButton value="video" aria-label="video content">
+                                            <VideoIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                            VIDEO
+                                            {contentTypeRecommendations.filter(r => r.content_type === 'video').length > 0 && (
+                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'video').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            )}
+                                        </ToggleButton>
+                                        <ToggleButton value="image" aria-label="image content">
+                                            <ImageIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                            IMAGE
+                                        </ToggleButton>
+                                        <ToggleButton value="text" aria-label="text content">
+                                            <TextIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                            TEXT
+                                            {contentTypeRecommendations.filter(r => r.content_type === 'text').length > 0 && (
+                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'text').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            )}
+                                        </ToggleButton>
+                                        <ToggleButton value="link" aria-label="link content">
+                                            <LinkIcon fontSize="small" sx={{ mr: 0.5 }} />
+                                            LINK
+                                            {contentTypeRecommendations.filter(r => r.content_type === 'link').length > 0 && (
+                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'link').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            )}
+                                        </ToggleButton>
+                                    </ToggleButtonGroup>
+                                </Box>
                             )}
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        </Box>
+                        {topContentType.length > 0 ? (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             {topContentType.map((rec, index) => (
                                 <Box
                                     key={index}
@@ -237,6 +280,11 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                                 </Box>
                             ))}
                         </Box>
+                        ) : (
+                            <Alert severity="info" sx={{ mt: 1 }}>
+                                No recommendations available for {selectedContentType === 'all' ? 'any content type' : selectedContentType} posts. Try selecting a different content type.
+                            </Alert>
+                        )}
                     </>
                 )}
 

@@ -17,7 +17,7 @@ import DataSourceBanner from './DataSourceBanner';
 // Import existing components
 import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import { EnhancedTopPostsTable } from '@features/posts';
-import { BestTimeRecommender } from '@features/analytics';
+import { SpecialTimesRecommender } from '@features/analytics';
 import { AdvancedAnalyticsDashboard } from '@features/analytics';
 import SmartAlertsPanel from '@features/analytics/advanced-dashboard/SmartAlertsPanel';
 import ContentProtectionDashboard from '@features/posts/components/ContentProtectionDashboard';
@@ -153,7 +153,7 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={2}>
-                    <BestTimeRecommender lastUpdated={lastUpdated} />
+                    <SpecialTimesRecommender lastUpdated={lastUpdated} />
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={3}>

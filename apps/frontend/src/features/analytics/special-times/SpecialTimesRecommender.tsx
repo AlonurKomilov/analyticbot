@@ -1,5 +1,5 @@
 /**
- * BestTimeRecommender Component
+ * SpecialTimesRecommender Component
  *
  * Complete recommender interface that displays optimal posting times
  * based on historical performance data and AI analysis.
@@ -14,18 +14,17 @@ import RecommenderFooter from './components/RecommenderFooter';
 import EngagementTrendChart from './components/EngagementTrendChart';
 import ComparisonCard from './components/ComparisonCard';
 import MonthlyCalendarHeatmap from './components/MonthlyCalendarHeatmap';
-import ContentTypeFilter from './components/ContentTypeFilter';
 import SmartRecommendationsPanel from './components/SmartRecommendationsPanel';
 import { useRecommenderLogic } from './hooks/useRecommenderLogic';
 import { useChannelStore } from '@store';
 import { useNavigate } from 'react-router-dom';
 import { useRef, useEffect } from 'react';
 
-interface BestTimeRecommenderProps {
+interface SpecialTimesRecommenderProps {
     lastUpdated?: Date;
 }
 
-const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }) => {
+const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastUpdated }) => {
     const {
         timeFrame,
         contentType,
@@ -50,7 +49,7 @@ const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }
     useEffect(() => {
         if (lastUpdated && prevLastUpdatedRef.current &&
             lastUpdated.getTime() !== prevLastUpdatedRef.current.getTime()) {
-            console.log('🔄 BestTimeRecommender: Silent auto-refresh triggered');
+            console.log('🔄 SpecialTimesRecommender: Silent auto-refresh triggered');
             loadRecommendations(true); // silent=true
         }
         prevLastUpdatedRef.current = lastUpdated;
@@ -133,22 +132,6 @@ const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }
                 setContentType={(ct) => setContentType(ct)}
             />
 
-            {/* Content Type Filter (NEW: Phase 5) */}
-            {recommendations && (recommendations as any).content_type_recommendations && (recommendations as any).content_type_recommendations.length > 0 && (
-                <Box sx={{ mt: 2 }}>
-                    <ContentTypeFilter
-                        selectedType={selectedContentType}
-                        onTypeChange={setSelectedContentType}
-                        contentTypeCounts={{
-                            video: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'video').length || 0,
-                            image: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'image').length || 0,
-                            text: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'text').length || 0,
-                            link: (recommendations as any).content_type_recommendations?.filter((r: any) => r.content_type === 'link').length || 0,
-                        }}
-                    />
-                </Box>
-            )}
-
             {/* Tabs */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={currentTab} onChange={handleTabChange} aria-label="recommendation views">
@@ -224,6 +207,7 @@ const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }
                                                 dayHourCombinations={(recommendations as any).best_day_hour_combinations}
                                                 contentTypeRecommendations={(recommendations as any).content_type_recommendations}
                                                 selectedContentType={selectedContentType}
+                                                onContentTypeChange={setSelectedContentType}
                                             />
                                         </Box>
                                     )}
@@ -262,4 +246,4 @@ const BestTimeRecommender: React.FC<BestTimeRecommenderProps> = ({ lastUpdated }
     );
 };
 
-export default BestTimeRecommender;
+export default SpecialTimesRecommender;

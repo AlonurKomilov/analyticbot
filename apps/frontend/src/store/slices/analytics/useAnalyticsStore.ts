@@ -44,6 +44,8 @@ interface AnalyticsState {
   bestTimes: BestTimeRecommendation[];
   bestDayHourCombinations: any[];  // Advanced: day-hour combinations
   contentTypeRecommendations: any[];  // Advanced: content-type specific recommendations
+  totalPostsAnalyzed: number | null;  // Total posts analyzed for recommendations
+  contentTypeSummary: Record<string, number> | null;  // Direct content type counts: { video: 995, image: 1219, ... }
 
   // Loading states
   isLoadingOverview: boolean;
@@ -96,6 +98,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     bestTimes: [],
     bestDayHourCombinations: [],
     contentTypeRecommendations: [],
+    totalPostsAnalyzed: null,
+    contentTypeSummary: null,
 
     // Loading states
     isLoadingOverview: false,
@@ -434,11 +438,15 @@ export const useAnalyticsStore = create<AnalyticsState>()(
         const recommendations = response.data?.best_times || [];
         const bestDayHourCombinations = response.data?.best_day_hour_combinations || [];
         const contentTypeRecommendations = response.data?.content_type_recommendations || [];
+        const totalPostsAnalyzed = response.data?.total_posts_analyzed || null;
+        const contentTypeSummary = response.data?.content_type_summary || null;
 
         storeLogger.debug('Best time API response received', {
           recommendationsCount: recommendations.length,
           dayHourCombosCount: bestDayHourCombinations.length,
-          contentTypeRecsCount: contentTypeRecommendations.length
+          contentTypeRecsCount: contentTypeRecommendations.length,
+          totalPostsAnalyzed,
+          contentTypeSummary
         });
 
         // Store all recommendations data
@@ -446,6 +454,8 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           bestTimes: recommendations,
           bestDayHourCombinations,
           contentTypeRecommendations,
+          totalPostsAnalyzed,
+          contentTypeSummary,
           lastUpdate: Date.now(),
           isLoadingBestTime: false
         });
@@ -459,7 +469,9 @@ export const useAnalyticsStore = create<AnalyticsState>()(
           isLoadingBestTime: false,
           bestTimes: [],
           bestDayHourCombinations: [],
-          contentTypeRecommendations: []
+          contentTypeRecommendations: [],
+          totalPostsAnalyzed: null,
+          contentTypeSummary: null
         });
       }
     },

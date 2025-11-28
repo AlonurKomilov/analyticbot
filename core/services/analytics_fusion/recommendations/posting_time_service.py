@@ -184,6 +184,8 @@ class PostingTimeRecommendationService:
                 }
                 for ct in (result.content_type_recommendations or [])
             ],
+            # NEW: Direct content type counts from database (more accurate than recommendations)
+            "content_type_summary": result.content_type_summary,
         }
 
     def _create_error_response(self, channel_id: int, error_message: str) -> dict[str, Any]:

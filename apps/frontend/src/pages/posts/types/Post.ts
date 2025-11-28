@@ -12,6 +12,21 @@ export interface PostMetrics {
   snapshot_time?: string;
 }
 
+/** Media type flags for content type icons */
+export interface PostMediaFlags {
+  has_photo: boolean;
+  has_video: boolean;
+  has_audio: boolean;
+  has_voice: boolean;
+  has_document: boolean;
+  has_gif: boolean;
+  has_sticker: boolean;
+  has_poll: boolean;
+  has_link: boolean;
+  has_web_preview: boolean;
+  text_length: number;
+}
+
 export interface Post {
   id: number;
   channel_id: number;
@@ -23,6 +38,7 @@ export interface Post {
   metrics?: PostMetrics;
   channel_name?: string;
   channel_username?: string;
+  media_flags?: PostMediaFlags;
 }
 
 export interface PostsResponse {

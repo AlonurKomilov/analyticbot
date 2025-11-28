@@ -66,8 +66,8 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
                 </Alert>
 
                 {formError && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {formError}
+                    <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+                        <strong>Error:</strong> {formError}
                     </Alert>
                 )}
 
@@ -193,8 +193,8 @@ export const EditChannelDialog: React.FC<EditChannelDialogProps> = ({
             </DialogTitle>
             <DialogContent>
                 {formError && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {formError}
+                    <Alert severity="error" sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+                        <strong>Error:</strong> {formError}
                     </Alert>
                 )}
 

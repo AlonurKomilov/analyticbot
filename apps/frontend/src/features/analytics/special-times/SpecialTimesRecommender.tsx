@@ -114,19 +114,31 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
         setCurrentTab(newValue);
     };
 
-    // Calculate content type breakdown from content_type_recommendations
+    // Calculate content type breakdown from content_type_summary (if available) or fallback to recommendations
     const contentTypeBreakdown = React.useMemo(() => {
+        // Use the summary if available (unique counts per content type)
+        const summary = (recommendations as any)?.content_type_summary;
+        if (summary && typeof summary === 'object') {
+            console.log('📊 Content Type Summary (from backend):', summary);
+            return summary;
+        }
+        
+        // Fallback: calculate from content_type_recommendations (may have duplicates)
         const contentTypeRecs = (recommendations as any)?.content_type_recommendations || [];
         const breakdown: Record<string, number> = {};
         
+        // Sum post_count for each content type across all hours
         contentTypeRecs.forEach((rec: any) => {
             const type = rec.content_type;
             const count = rec.post_count || 0;
             breakdown[type] = (breakdown[type] || 0) + count;
         });
 
+        console.log('📊 Content Type Breakdown (calculated, may have duplicates):', breakdown);
+        console.log('📈 Total Posts Analyzed:', (recommendations as any)?.total_posts_analyzed);
+        
         return breakdown;
-    }, [(recommendations as any)?.content_type_recommendations]);
+    }, [(recommendations as any)?.content_type_recommendations, (recommendations as any)?.content_type_summary]);
 
     return (
         <Paper sx={{ p: 3 }}>

@@ -166,6 +166,19 @@ class AsyncpgChannelRepository:
             record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", telegram_id)
             return dict(record) if record else None
 
+    async def get_channel_by_username(self, username: str) -> dict[str, Any] | None:
+        """Get channel by username (with or without @)"""
+        clean_username = username.strip().lstrip('@')
+        if not clean_username:
+            return None
+        async with self.pool.acquire() as conn:
+            # Try with and without @ prefix
+            record = await conn.fetchrow(
+                "SELECT * FROM channels WHERE username = $1 OR username = $2",
+                clean_username, f"@{clean_username}"
+            )
+            return dict(record) if record else None
+
     async def get_channel(self, channel_id: int) -> dict[str, Any] | None:
         """Get channel by ID - alias for get_channel_by_id for API compatibility"""
         return await self.get_channel_by_id(channel_id)

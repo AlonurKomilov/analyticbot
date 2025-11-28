@@ -24,6 +24,19 @@ class AsyncpgPostRepository:
         links_json: list | None = None,
         is_deleted: bool = False,
         deleted_at: datetime | None = None,
+        # Media type flags for content type analysis
+        has_video: bool = False,
+        has_media: bool = False,
+        has_photo: bool = False,
+        has_audio: bool = False,
+        has_document: bool = False,
+        has_voice: bool = False,
+        has_gif: bool = False,
+        has_sticker: bool = False,
+        has_poll: bool = False,
+        has_link: bool = False,
+        has_web_preview: bool = False,
+        text_length: int = 0,
     ) -> dict[str, Any]:
         """Insert or update a post with UPSERT behavior.
 
@@ -35,6 +48,18 @@ class AsyncpgPostRepository:
             links_json: List of extracted links (ignored for now, table doesn't have links column)
             is_deleted: Whether the message is deleted
             deleted_at: When the message was deleted
+            has_video: Contains video content
+            has_media: Contains photo/gif/sticker (visual media)
+            has_photo: Contains photo
+            has_audio: Contains audio file
+            has_document: Contains document/file
+            has_voice: Contains voice message
+            has_gif: Contains GIF animation
+            has_sticker: Contains sticker
+            has_poll: Contains poll
+            has_link: Contains URL link in text
+            has_web_preview: Contains web page preview
+            text_length: Length of text content
 
         Returns:
             Dictionary with upsert result information
@@ -53,6 +78,18 @@ class AsyncpgPostRepository:
                         text = $3,
                         is_deleted = $4,
                         deleted_at = $5,
+                        has_video = $6,
+                        has_media = $7,
+                        has_photo = $8,
+                        has_audio = $9,
+                        has_document = $10,
+                        has_voice = $11,
+                        has_gif = $12,
+                        has_sticker = $13,
+                        has_poll = $14,
+                        has_link = $15,
+                        has_web_preview = $16,
+                        text_length = $17,
                         updated_at = NOW()
                     WHERE channel_id = $1 AND msg_id = $2
                     """,
@@ -61,14 +98,31 @@ class AsyncpgPostRepository:
                     text,
                     is_deleted,
                     deleted_at,
+                    has_video,
+                    has_media,
+                    has_photo,
+                    has_audio,
+                    has_document,
+                    has_voice,
+                    has_gif,
+                    has_sticker,
+                    has_poll,
+                    has_link,
+                    has_web_preview,
+                    text_length,
                 )
                 return {"inserted": False, "updated": True}
             else:
                 # Insert new post
                 await conn.execute(
                     """
-                    INSERT INTO posts (channel_id, msg_id, date, text, is_deleted, deleted_at, created_at, updated_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+                    INSERT INTO posts (
+                        channel_id, msg_id, date, text, is_deleted, deleted_at,
+                        has_video, has_media, has_photo, has_audio, has_document,
+                        has_voice, has_gif, has_sticker, has_poll, has_link,
+                        has_web_preview, text_length, created_at, updated_at
+                    )
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), NOW())
                     """,
                     channel_id,
                     msg_id,
@@ -76,6 +130,18 @@ class AsyncpgPostRepository:
                     text,
                     is_deleted,
                     deleted_at,
+                    has_video,
+                    has_media,
+                    has_photo,
+                    has_audio,
+                    has_document,
+                    has_voice,
+                    has_gif,
+                    has_sticker,
+                    has_poll,
+                    has_link,
+                    has_web_preview,
+                    text_length,
                 )
                 return {"inserted": True, "updated": False}
 

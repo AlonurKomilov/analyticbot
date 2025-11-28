@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any
 
 from telethon import utils
+from telethon.tl.types import MessageMediaWebPage, MessageEntityUrl, MessageEntityTextUrl
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +72,105 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
                 channel_username = getattr(chat, "username", None)
                 channel_title = getattr(chat, "title", None)
                 is_supergroup = getattr(chat, "megagroup", False)
+
+        # ========== MEDIA TYPE DETECTION (FIXED) ==========
+        # Detect media types based on Telegram message structure
+        # Uses Telethon's convenience properties which match Telegram's own categorization
+        #
+        # Telethon provides these properties on message:
+        # - message.photo: Photo (not from web preview)
+        # - message.video: Video file (MessageMediaDocument with video attributes)
+        # - message.audio: Audio file (MessageMediaDocument with audio mime, not voice)
+        # - message.voice: Voice message (MessageMediaDocument with voice=True attribute)
+        # - message.video_note: Round video message
+        # - message.sticker: Sticker (MessageMediaDocument with sticker attribute)
+        # - message.gif: GIF animation (MessageMediaDocument with animated attribute)
+        # - message.document: Any other document (falls through if not specialized)
+        # - message.poll: Poll
+        # - message.contact: Contact
+        # - message.geo: Location
+        # - message.web_preview: Web page preview
+        
+        has_video = False
+        has_photo = False
+        has_audio = False
+        has_document = False
+        has_voice = False
+        has_gif = False
+        has_sticker = False
+        has_poll = False
+        has_video_note = False
+        has_web_preview = False
+        
+        # IMPORTANT: Check for web preview FIRST before other media types
+        # Web page previews may contain photos/videos but Telegram counts them as "Shared Links"
+        # not as Photos or Videos. We need to detect this early.
+        media = getattr(message, "media", None)
+        if isinstance(media, MessageMediaWebPage):
+            has_web_preview = True
+        
+        # Use Telethon's convenience properties - they match Telegram's categorization exactly
+        # BUT: Don't count photos/videos if they're from a web preview
+        if getattr(message, "photo", None) and not has_web_preview:
+            has_photo = True
+        
+        if getattr(message, "video", None):
+            has_video = True
+        
+        if getattr(message, "video_note", None):
+            # IMPORTANT: Video notes (round videos) count as "Voice" in Telegram stats!
+            # Telegram's media statistics groups video notes with voice messages.
+            # So we set has_video_note but do NOT set has_video (video_note is separate)
+            has_video_note = True
+            has_video = False  # Undo video flag - video notes are NOT counted as videos
+            has_voice = True  # Telegram counts video notes as voice/audio category
+        
+        if getattr(message, "gif", None):
+            has_gif = True
+            has_video = False  # GIFs are technically videos but should be counted separately
+        
+        if getattr(message, "sticker", None):
+            has_sticker = True
+        
+        if getattr(message, "voice", None):
+            has_voice = True
+        
+        if getattr(message, "audio", None):
+            has_audio = True
+        
+        # Only set has_document for actual files (not videos, audio, etc.)
+        # Telethon's message.document returns the document for ANY document type,
+        # so we only set has_document if none of the specialized types matched
+        if getattr(message, "document", None):
+            if not (has_video or has_audio or has_voice or has_gif or has_sticker or has_video_note):
+                has_document = True
+        
+        if getattr(message, "poll", None):
+            has_poll = True
+        
+        # Check for links in text (matches Telegram's "shared links" count)
+        # IMPORTANT: Telegram's "Shared links" category counts messages that have:
+        # 1. URL entities (MessageEntityUrl, MessageEntityTextUrl) - PRIMARY source
+        # 2. MessageMediaWebPage - counted as link too
+        # We already detected has_web_preview above
+        has_link = False
+        entities = getattr(message, "entities", None) or []
+        for entity in entities:
+            if isinstance(entity, (MessageEntityUrl, MessageEntityTextUrl)):
+                has_link = True
+                break
+        
+        # Web preview always counts as link
+        if has_web_preview:
+            has_link = True
+        
+        # Aggregate flags for backward compatibility
+        # has_media = any visual media (photo, gif, sticker) - NOT video (video is separate)
+        has_media = has_photo or has_gif or has_sticker
+        
+        # Calculate text length for content analysis
+        text_length = len(text) if text else 0
+        # ========== END MEDIA TYPE DETECTION ==========
 
         # Extract metrics
         views = getattr(message, "views", 0) or 0
@@ -147,6 +247,19 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
                 "date": date,
                 "text": text,
                 "links_json": links,
+                # Media type flags for content type analysis
+                "has_video": has_video,
+                "has_media": has_media,  # Photos, GIFs, stickers
+                "has_photo": has_photo,
+                "has_audio": has_audio,
+                "has_document": has_document,
+                "has_voice": has_voice,
+                "has_gif": has_gif,
+                "has_sticker": has_sticker,
+                "has_poll": has_poll,
+                "has_link": has_link,
+                "has_web_preview": has_web_preview,
+                "text_length": text_length,
             },
             "metrics": {
                 "channel_id": channel_id,

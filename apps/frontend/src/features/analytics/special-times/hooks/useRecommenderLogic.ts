@@ -24,6 +24,7 @@ interface BestTimeRecommendations {
         score: number;
         confidence: number;
     }>;
+    content_type_summary?: Record<string, number>;  // Direct counts: { video: 995, image: 1219, text: 508 }
     accuracy?: number;
     [key: string]: any;
 }
@@ -48,7 +49,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
     const [bestTimeRecommendations, setBestTimeRecommendations] = useState<BestTimeRecommendations | null>(null);
 
     // Get store methods and data
-    const { fetchBestTime, isLoadingBestTime, bestTimes, bestDayHourCombinations, contentTypeRecommendations } = useAnalyticsStore();
+    const { fetchBestTime, isLoadingBestTime, bestTimes, bestDayHourCombinations, contentTypeRecommendations, totalPostsAnalyzed, contentTypeSummary } = useAnalyticsStore();
     const { selectedChannel } = useChannelStore();
 
     // Generate performance insights based on recommendations
@@ -168,13 +169,17 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
                 })),
                 best_day_hour_combinations: bestDayHourCombinations || [],
                 content_type_recommendations: contentTypeRecommendations || [],
+                total_posts_analyzed: totalPostsAnalyzed || 0,
+                content_type_summary: contentTypeSummary || undefined,  // Direct counts from API
                 accuracy: Math.round(bestTimes.reduce((sum, bt) => sum + (bt.confidence || 0), 0) / bestTimes.length)
             };
 
             uiLogger.debug('Formatted recommendations', {
                 bestTimesCount: formatted.best_times?.length || 0,
                 dayHourCombinations: formatted.best_day_hour_combinations?.length || 0,
-                contentTypeRecommendations: formatted.content_type_recommendations?.length || 0
+                contentTypeRecommendations: formatted.content_type_recommendations?.length || 0,
+                totalPostsAnalyzed: formatted.total_posts_analyzed,
+                contentTypeSummary: formatted.content_type_summary
             });
             setBestTimeRecommendations(formatted);
 
@@ -186,7 +191,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             setBestTimeRecommendations(null);
             setAiInsights([]);
         }
-    }, [bestTimes, bestDayHourCombinations, contentTypeRecommendations]);
+    }, [bestTimes, bestDayHourCombinations, contentTypeRecommendations, totalPostsAnalyzed, contentTypeSummary]);
 
     // Load data on mount and when filters change
     useEffect(() => {

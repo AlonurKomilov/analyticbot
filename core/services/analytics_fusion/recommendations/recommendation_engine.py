@@ -89,6 +89,7 @@ class RecommendationEngine:
                 data_source="real_analytics",
                 best_day_hour_combinations=day_hour_combinations,
                 content_type_recommendations=content_type_recommendations,
+                content_type_summary=raw_data.content_type_summary,
             )
 
         except Exception as e:

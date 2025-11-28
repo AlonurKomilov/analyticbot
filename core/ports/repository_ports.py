@@ -168,6 +168,10 @@ class ChannelRepository(Protocol):
         """Get channel by telegram ID"""
         ...
 
+    async def get_channel_by_username(self, username: str) -> dict | None:
+        """Get channel by username (with or without @)"""
+        ...
+
     async def get_channel(self, channel_id: int) -> dict | None:
         """Get channel by ID (alias)"""
         ...

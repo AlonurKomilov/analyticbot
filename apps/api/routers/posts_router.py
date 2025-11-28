@@ -40,6 +40,21 @@ class PostMetrics(BaseModel):
     snapshot_time: datetime | None = None
 
 
+class PostMediaFlags(BaseModel):
+    """Media type flags for content type icons"""
+    has_photo: bool = False
+    has_video: bool = False
+    has_audio: bool = False
+    has_voice: bool = False
+    has_document: bool = False
+    has_gif: bool = False
+    has_sticker: bool = False
+    has_poll: bool = False
+    has_link: bool = False
+    has_web_preview: bool = False
+    text_length: int = 0
+
+
 class PostResponse(BaseModel):
     """Post response model"""
 
@@ -53,6 +68,7 @@ class PostResponse(BaseModel):
     metrics: PostMetrics | None = Field(None, description="Latest metrics")
     channel_name: str | None = Field(None, description="Channel name")
     channel_username: str | None = Field(None, description="Channel username")
+    media_flags: PostMediaFlags | None = Field(None, description="Media type flags")
 
 
 class PostsListResponse(BaseModel):
@@ -157,6 +173,19 @@ async def get_all_posts(
                     p.updated_at,
                     c.title as channel_name,
                     c.username as channel_username,
+                    -- Media type flags
+                    p.has_photo,
+                    p.has_video,
+                    p.has_audio,
+                    p.has_voice,
+                    p.has_document,
+                    p.has_gif,
+                    p.has_sticker,
+                    p.has_poll,
+                    p.has_link,
+                    p.has_web_preview,
+                    p.text_length,
+                    -- Metrics
                     pm.views,
                     pm.forwards,
                     pm.comments_count,
@@ -207,6 +236,21 @@ async def get_all_posts(
                         snapshot_time=record["snapshot_time"],
                     )
 
+                # Build media flags
+                media_flags = PostMediaFlags(
+                    has_photo=record.get("has_photo") or False,
+                    has_video=record.get("has_video") or False,
+                    has_audio=record.get("has_audio") or False,
+                    has_voice=record.get("has_voice") or False,
+                    has_document=record.get("has_document") or False,
+                    has_gif=record.get("has_gif") or False,
+                    has_sticker=record.get("has_sticker") or False,
+                    has_poll=record.get("has_poll") or False,
+                    has_link=record.get("has_link") or False,
+                    has_web_preview=record.get("has_web_preview") or False,
+                    text_length=record.get("text_length") or len(record["text"] or ""),
+                )
+
                 posts.append(
                     PostResponse(
                         id=record["msg_id"],
@@ -219,6 +263,7 @@ async def get_all_posts(
                         metrics=metrics,
                         channel_name=record["channel_name"],
                         channel_username=record["channel_username"],
+                        media_flags=media_flags,
                     )
                 )
 

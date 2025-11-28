@@ -45,7 +45,9 @@ class ChannelCreateRequest(BaseModel):
     """Request model for creating a channel"""
 
     name: str
+    telegram_id: int | None = None
     username: str | None = None
+    description: str = ""
     subscriber_count: int = 0
     is_active: bool = True
     settings: dict[str, Any] | None = None

@@ -18,6 +18,7 @@ class ChannelData:
 
     name: str
     telegram_id: int
+    username: str | None = None
     description: str = ""
     user_id: int | None = None
 
@@ -102,9 +103,50 @@ class ChannelService:
             channel_data.telegram_id
         )
         if existing_channel:
-            raise ValueError(f"Channel with Telegram ID {channel_data.telegram_id} already exists")
+            # Get owner info to provide helpful message
+            owner_id = existing_channel.get("user_id")
+            channel_name = existing_channel.get("title", "Unknown")
+            
+            if owner_id == channel_data.user_id:
+                # Same user trying to add again
+                raise ValueError(
+                    f"You have already added this channel ({channel_name}) to your account."
+                )
+            else:
+                # Different user owns it
+                raise ValueError(
+                    f"This channel is already registered by another user.\n\n"
+                    f"Channel: {channel_name}\n"
+                    f"If you believe this is an error, please contact support."
+                )
+
+        # Also check for duplicate username (important when telegram_id is a random fallback)
+        if channel_data.username:
+            existing_by_username = await self.channel_repo.get_channel_by_username(
+                channel_data.username
+            )
+            if existing_by_username:
+                owner_id = existing_by_username.get("user_id")
+                channel_name = existing_by_username.get("title", "Unknown")
+                
+                if owner_id == channel_data.user_id:
+                    raise ValueError(
+                        f"You have already added this channel ({channel_name}) to your account."
+                    )
+                else:
+                    raise ValueError(
+                        f"This channel is already registered by another user.\n\n"
+                        f"Channel: {channel_name}\n"
+                        f"If you believe this is an error, please contact support."
+                    )
 
         self.logger.info(f"Creating channel: {channel_data.name}")
+
+        # Determine the username to store
+        stored_username = channel_data.username
+        if not stored_username:
+            # Fallback: generate from name
+            stored_username = channel_data.name.lower().replace(" ", "_")
 
         try:
             # Use the protocol's create_channel method signature
@@ -112,7 +154,7 @@ class ChannelService:
                 channel_id=channel_data.telegram_id,
                 user_id=channel_data.user_id or 0,
                 title=channel_data.name.strip(),
-                username=channel_data.name.lower().replace(" ", "_"),
+                username=stored_username,
                 description=channel_data.description,
             )
 

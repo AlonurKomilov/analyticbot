@@ -19,6 +19,7 @@ class ChannelCreate(BaseModel):
 
     name: str
     telegram_id: int
+    username: str | None = None
     description: str = ""
     user_id: int | None = None
 
@@ -137,6 +138,7 @@ class ChannelManagementService:
             domain_data = ChannelData(
                 name=channel_data.name,
                 telegram_id=channel_data.telegram_id,
+                username=channel_data.username,
                 description=channel_data.description,
                 user_id=channel_data.user_id,
             )
@@ -147,8 +149,14 @@ class ChannelManagementService:
         except HTTPException:
             raise
         except ValueError as e:
-            self.logger.error(f"Validation error creating channel: {e}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+            error_msg = str(e)
+            self.logger.error(f"Validation error creating channel: {error_msg}")
+            
+            # Use 409 Conflict for duplicate channel errors
+            if "already" in error_msg.lower() and ("registered" in error_msg.lower() or "added" in error_msg.lower()):
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error_msg)
+            
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
         except Exception as e:
             self.logger.error(f"Error creating channel: {e}")
             raise HTTPException(

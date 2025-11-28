@@ -138,7 +138,33 @@ const ChannelsManagementPage: React.FC = () => {
             setCreateDialogOpen(false);
             await handleRefresh();
         } catch (err: any) {
-            setFormError(err.response?.data?.detail || 'Failed to add channel');
+            // Extract error message from various possible sources
+            let errorMessage = 'Failed to add channel';
+            
+            // Check for API response with detail
+            if (err.response?.data?.detail) {
+                errorMessage = err.response.data.detail;
+            } else if (err.message) {
+                // The ApiRequestError includes the detail in the message
+                // Check for specific error patterns
+                if (err.message.includes('already registered') || err.message.includes('already added')) {
+                    // Channel already exists - use the message as-is
+                    errorMessage = err.message;
+                } else if (err.message.includes('bot') && (err.message.includes('admin') || err.message.includes('administrator'))) {
+                    // Bot not admin error
+                    errorMessage = err.message;
+                } else if (err.message.includes('API is currently unavailable')) {
+                    errorMessage = 'The API server is currently unavailable. Please try again in a few moments.';
+                } else if (err.message.includes('CORS') || err.message.includes('Network')) {
+                    errorMessage = 'Cannot connect to the server. Please check your internet connection.';
+                } else if (err.message.includes('timeout')) {
+                    errorMessage = 'The request timed out. Please try again.';
+                } else {
+                    errorMessage = err.message;
+                }
+            }
+            
+            setFormError(errorMessage);
         } finally {
             setSubmitting(false);
         }
@@ -189,7 +215,7 @@ const ChannelsManagementPage: React.FC = () => {
 
     const handleOpenDelete = (channel: Channel) => {
         setSelectedChannel(channel);
-        setDeleteDialogOpen(false);
+        setDeleteDialogOpen(true);
     };
 
     const handleDelete = async () => {

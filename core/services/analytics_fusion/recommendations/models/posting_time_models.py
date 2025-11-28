@@ -89,6 +89,7 @@ class PostingTimeAnalysisResult:
     # NEW: Advanced recommendations
     best_day_hour_combinations: list[DayHourCombination] | None = None
     content_type_recommendations: list[ContentTypeRecommendation] | None = None
+    content_type_summary: dict[str, int] | None = None  # {"video": 995, "image": 1219, ...}
 
 
 @dataclass
@@ -102,6 +103,7 @@ class RawMetricsData:
     # NEW: Advanced analytics
     best_day_hour_combinations: list[dict[str, Any]] | None = None
     content_type_recommendations: list[dict[str, Any]] | None = None
+    content_type_summary: dict[str, int] | None = None  # {"video": 995, "image": 1219, ...}
 
 
 @dataclass

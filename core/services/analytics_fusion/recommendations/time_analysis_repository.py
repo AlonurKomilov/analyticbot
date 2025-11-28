@@ -107,6 +107,9 @@ class TimeAnalysisRepository:
                         content_type_recommendations=result.get("content_type_recommendations", [])
                         if ENABLE_ADVANCED_RECOMMENDATIONS
                         else None,
+                        content_type_summary=result.get("content_type_summary")
+                        if ENABLE_ADVANCED_RECOMMENDATIONS
+                        else None,
                     )
 
             except Exception as e:
@@ -134,24 +137,27 @@ class TimeAnalysisRepository:
         )
 
         # Determine if we should detect content types
-        # IMPROVED: Better content type detection logic that doesn't rely only on flags
+        # FIXED: Use actual media type flags from database
+        # IMPORTANT: Order matters! Check more specific types first (gif before video, voice before audio)
         content_type_detection = (
             """CASE
+                WHEN p.has_gif = TRUE THEN 'gif'
                 WHEN p.has_video = TRUE THEN 'video'
-                WHEN p.has_media = TRUE THEN 'image'
-                -- Check for common video/media keywords in text
-                WHEN p.text ~* '(video|watch|видео|смотреть|фильм)' THEN 'video'
-                WHEN p.text ~* '(photo|image|pic|picture|фото|картинка)' THEN 'image'
-                -- URLs indicate link posts
-                WHEN p.text ~ 'https?://' OR p.text LIKE '%http%' THEN 'link'
-                -- Short posts without URLs are likely text
+                WHEN p.has_photo = TRUE THEN 'image'
+                WHEN p.has_voice = TRUE THEN 'voice'
+                WHEN p.has_audio = TRUE THEN 'audio'
+                WHEN p.has_document = TRUE THEN 'document'
+                WHEN p.has_sticker = TRUE THEN 'sticker'
+                WHEN p.has_poll = TRUE THEN 'poll'
+                WHEN p.has_link = TRUE OR p.text ~ 'https?://' THEN 'link'
+                WHEN p.has_media = TRUE THEN 'media'
                 ELSE 'text'
             END as content_type,"""
             if ENABLE_CONTENT_TYPE_ANALYSIS
             else ""
         )
 
-        content_type_group = ", p.has_video, p.has_media, p.text" if ENABLE_CONTENT_TYPE_ANALYSIS else ", p.text"
+        content_type_group = ", p.has_video, p.has_photo, p.has_media, p.text" if ENABLE_CONTENT_TYPE_ANALYSIS else ", p.text"
 
         # For all-time, use a subquery with LIMIT instead of date filter
         if days is None:
@@ -167,15 +173,23 @@ class TimeAnalysisRepository:
                     MAX(pm.forwards) OVER (PARTITION BY p.msg_id) as forwards,
                     MAX(pm.reactions_count) OVER (PARTITION BY p.msg_id) as reactions,
                     MAX(pm.replies_count) OVER (PARTITION BY p.msg_id) as replies,
-                    -- NEW: Content type detection
+                    -- Raw media flags for content_type_summary (Telegram counts separately)
+                    p.has_photo,
+                    p.has_video,
+                    p.has_voice,
+                    p.has_audio,
+                    p.has_document,
+                    p.has_gif,
+                    p.has_link,
+                    -- Content type detection (for CASE-based single category)
                     {content_type_detection}
-                    -- NEW: Post length category
+                    -- Post length category
                     CASE
                         WHEN LENGTH(p.text) < 100 THEN 'short'
                         WHEN LENGTH(p.text) < 500 THEN 'medium'
                         ELSE 'long'
                     END as length_category,
-                    -- NEW: Time-decay weight (recent posts weighted more)
+                    -- Time-decay weight (recent posts weighted more)
                     {time_weight_expr} as time_weight
                 FROM (
                     SELECT * FROM posts
@@ -334,6 +348,23 @@ class TimeAnalysisRepository:
                             ORDER BY engagement_rate DESC
                             LIMIT 15
                         ) ct
+                    ),
+                    'content_type_summary', (
+                        -- Use direct flag counts to match Telegram's separate category counting
+                        -- Telegram counts each type separately (a post with photo+link counts in BOTH)
+                        SELECT json_build_object(
+                            'image', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_photo = TRUE),
+                            'video', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_video = TRUE),
+                            'voice', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_voice = TRUE),
+                            'audio', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_audio = TRUE),
+                            'document', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_document = TRUE),
+                            'gif', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_gif = TRUE),
+                            'link', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_link = TRUE),
+                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE 
+                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE 
+                                AND has_audio = FALSE AND has_document = FALSE AND has_gif = FALSE
+                                AND has_link = FALSE)
+                        )
                     )
                 ) as analysis
         """
@@ -350,15 +381,23 @@ class TimeAnalysisRepository:
                     MAX(pm.forwards) OVER (PARTITION BY p.msg_id) as forwards,
                     MAX(pm.reactions_count) OVER (PARTITION BY p.msg_id) as reactions,
                     MAX(pm.replies_count) OVER (PARTITION BY p.msg_id) as replies,
-                    -- NEW: Content type detection
+                    -- Raw media flags for content_type_summary (Telegram counts separately)
+                    p.has_photo,
+                    p.has_video,
+                    p.has_voice,
+                    p.has_audio,
+                    p.has_document,
+                    p.has_gif,
+                    p.has_link,
+                    -- Content type detection (for CASE-based single category)
                     {content_type_detection}
-                    -- NEW: Post length category
+                    -- Post length category
                     CASE
                         WHEN LENGTH(p.text) < 100 THEN 'short'
                         WHEN LENGTH(p.text) < 500 THEN 'medium'
                         ELSE 'long'
                     END as length_category,
-                    -- NEW: Time-decay weight (recent posts weighted more)
+                    -- Time-decay weight (recent posts weighted more)
                     {time_weight_expr} as time_weight
                 FROM posts p
                 LEFT JOIN post_metrics pm ON p.channel_id = pm.channel_id
@@ -516,6 +555,22 @@ class TimeAnalysisRepository:
                             ORDER BY engagement_rate DESC
                             LIMIT 15
                         ) ct
+                    ),
+                    'content_type_summary', (
+                        -- Use direct flag counts to match Telegram's separate category counting
+                        SELECT json_build_object(
+                            'image', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_photo = TRUE),
+                            'video', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_video = TRUE),
+                            'voice', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_voice = TRUE),
+                            'audio', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_audio = TRUE),
+                            'document', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_document = TRUE),
+                            'gif', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_gif = TRUE),
+                            'link', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_link = TRUE),
+                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE 
+                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE 
+                                AND has_audio = FALSE AND has_document = FALSE AND has_gif = FALSE
+                                AND has_link = FALSE)
+                        )
                     )
                 ) as analysis
         """

@@ -45,7 +45,10 @@ class IntelligenceAggregationService:
         }
 
     async def aggregate_predictive_intelligence(
-        self, intelligence_results: dict[str, Any], request: dict[str, Any], context: str
+        self,
+        intelligence_results: dict[str, Any],
+        request: dict[str, Any],
+        context: str,
     ) -> dict[str, Any]:
         """
         Aggregate intelligence from all services.
@@ -532,7 +535,10 @@ class IntelligenceAggregationService:
         Returns:
             Confidence breakdown by service
         """
-        breakdown = {"overall": aggregated_intelligence["overall_confidence"], "by_service": {}}
+        breakdown = {
+            "overall": aggregated_intelligence["overall_confidence"],
+            "by_service": {},
+        }
 
         summary = aggregated_intelligence.get("intelligence_summary", {})
 

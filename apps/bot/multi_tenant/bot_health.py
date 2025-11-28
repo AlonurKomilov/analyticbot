@@ -121,9 +121,7 @@ class BotHealthMonitor:
         # Update status based on metrics
         self._update_status(user_id)
 
-    def record_failure(
-        self, user_id: int, error_type: str, method: str = "unknown"
-    ) -> None:
+    def record_failure(self, user_id: int, error_type: str, method: str = "unknown") -> None:
         """
         Record failed request
 
@@ -182,13 +180,13 @@ class BotHealthMonitor:
             metrics.status = BotHealthStatus.UNHEALTHY
             print(
                 f"⚠️  Bot for user {user_id} marked UNHEALTHY: "
-                f"{metrics.error_rate*100:.1f}% error rate"
+                f"{metrics.error_rate * 100:.1f}% error rate"
             )
         elif metrics.error_rate >= self.error_rate_warning:
             metrics.status = BotHealthStatus.DEGRADED
             print(
                 f"⚠️  Bot for user {user_id} marked DEGRADED: "
-                f"{metrics.error_rate*100:.1f}% error rate"
+                f"{metrics.error_rate * 100:.1f}% error rate"
             )
         else:
             # Check response time
@@ -231,8 +229,7 @@ class BotHealthMonitor:
         return [
             user_id
             for user_id, metrics in self.metrics.items()
-            if metrics.status
-            in [BotHealthStatus.DEGRADED, BotHealthStatus.UNHEALTHY]
+            if metrics.status in [BotHealthStatus.DEGRADED, BotHealthStatus.UNHEALTHY]
         ]
 
     def get_health_summary(self) -> dict[str, any]:
@@ -295,12 +292,8 @@ class BotHealthMonitor:
             "overall_health": overall_health,
             "total_requests": total_requests,
             "total_failures": total_failures,
-            "global_error_rate": (
-                total_failures / total_requests if total_requests > 0 else 0
-            ),
-            "avg_response_time_ms": (
-                total_response_time / active_bots if active_bots > 0 else 0
-            ),
+            "global_error_rate": (total_failures / total_requests if total_requests > 0 else 0),
+            "avg_response_time_ms": (total_response_time / active_bots if active_bots > 0 else 0),
         }
 
     def suspend_bot(self, user_id: int, reason: str = "Manual suspension") -> None:

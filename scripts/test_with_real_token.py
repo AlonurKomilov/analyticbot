@@ -133,6 +133,7 @@ async def test_invalid_token():
 
 
 if __name__ == "__main__":
+
     async def main():
         # Test with real token
         real_token_valid = await test_real_token()

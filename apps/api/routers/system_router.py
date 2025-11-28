@@ -110,7 +110,11 @@ async def performance():
         raise HTTPException(status_code=500, detail="Failed to get performance metrics")
 
 
-@router.get("/initial-data", response_model=InitialDataResponse, summary="Application Startup Data")
+@router.get(
+    "/initial-data",
+    response_model=InitialDataResponse,
+    summary="Application Startup Data",
+)
 async def initial_data(request: Request, user_id: int = Depends(get_current_user_id)):
     """
     ## 🚀 Application Startup Data
@@ -143,7 +147,8 @@ async def initial_data(request: Request, user_id: int = Depends(get_current_user
 
 @router.post("/schedule", response_model=dict)
 async def create_scheduled_post(
-    request: ScheduleRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: ScheduleRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 📅 Create Scheduled Post
@@ -187,7 +192,8 @@ async def create_scheduled_post(
 
 @router.post("/send", response_model=dict)
 async def send_post_now(
-    request: SendNowRequest, schedule_service: ScheduleService = Depends(get_schedule_service)
+    request: SendNowRequest,
+    schedule_service: ScheduleService = Depends(get_schedule_service),
 ):
     """
     ## 🚀 Send Post Immediately
@@ -218,11 +224,16 @@ async def send_post_now(
             # Get the original message info from database
             from sqlalchemy import select
 
-            from apps.api.services.telegram_storage_service import TelegramStorageService
+            from apps.api.services.telegram_storage_service import (
+                TelegramStorageService,
+            )
 
             # Get database session from DI container
             from apps.di import get_container
-            from infra.db.models.telegram_storage import TelegramMedia, UserStorageChannel
+            from infra.db.models.telegram_storage import (
+                TelegramMedia,
+                UserStorageChannel,
+            )
 
             container = get_container()
             session_factory = await container.database.async_session_maker()
@@ -299,7 +310,7 @@ async def send_post_now(
                     sent_message = await storage_service.client.send_file(
                         entity=to_channel,
                         file=original_message.media,
-                        caption=request.message if request.message else media_record.caption,
+                        caption=(request.message if request.message else media_record.caption),
                         force_document=force_document,  # Keep as photo/video, not document
                     )
 
@@ -309,7 +320,8 @@ async def send_post_now(
                 except Exception as e:
                     logger.error(f"❌ MTProto send failed: {str(e)}", exc_info=True)
                     raise HTTPException(
-                        status_code=500, detail=f"Failed to send file from storage: {str(e)}"
+                        status_code=500,
+                        detail=f"Failed to send file from storage: {str(e)}",
                     )
         else:
             # Original logic for text-only or URL-based media using Bot API
@@ -453,12 +465,12 @@ async def get_user_scheduled_posts(
                 {
                     "id": str(post.id),
                     "channel_id": post.channel_id,
-                    "message": post.content[:100] + "..."
-                    if len(post.content) > 100
-                    else post.content,
+                    "message": (
+                        post.content[:100] + "..." if len(post.content) > 100 else post.content
+                    ),
                     "scheduled_time": post.scheduled_at.isoformat(),
                     "status": post.status.value,
-                    "created_at": post.created_at.isoformat() if post.created_at else None,
+                    "created_at": (post.created_at.isoformat() if post.created_at else None),
                 }
                 for post in posts
             ],
@@ -511,7 +523,9 @@ async def delete_scheduled_post(
 
 
 @router.get("/delivery/stats")
-async def get_delivery_stats(delivery_service: DeliveryService = Depends(get_delivery_service)):
+async def get_delivery_stats(
+    delivery_service: DeliveryService = Depends(get_delivery_service),
+):
     """
     ## 📊 Delivery Statistics
 

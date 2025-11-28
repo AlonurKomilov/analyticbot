@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from core.services.backup_service import BackupService
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
@@ -15,7 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apps.di import get_db_connection
 from core.security_engine import AdministrativeRole, UserStatus
 from core.security_engine import User as AdminUser
-from core.services.backup_service import BackupService
 from core.services.materialized_view_service import MaterializedViewService
 from core.services.owner_service import OwnerService
 
@@ -188,7 +188,7 @@ async def admin_login(
 ):
     """Authenticate admin user and create session"""
     ip_address = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("User-Agent", "Unknown")
+    request.headers.get("User-Agent", "Unknown")
 
     # Authenticate user
     admin_session = await admin_service.authenticate_admin(
@@ -197,7 +197,8 @@ async def admin_login(
 
     if not admin_session:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials or account locked"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials or account locked",
         )
 
     # Get admin user from session
@@ -216,7 +217,7 @@ async def admin_login(
             "username": admin_user.username,
             "full_name": admin_user.full_name,
             "role": admin_user.role,
-            "last_login": admin_user.last_login.isoformat() if admin_user.last_login else None,
+            "last_login": (admin_user.last_login.isoformat() if admin_user.last_login else None),
         },
     )
 
@@ -278,7 +279,7 @@ async def suspend_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Suspend a system user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.suspend_user(
         UUID(str(current_admin.id)), UUID(str(user_id)), suspension_request.reason
@@ -295,7 +296,7 @@ async def reactivate_user(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Reactivate a suspended user"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.reactivate_user(user_id, int(current_admin.id))
 
@@ -390,7 +391,7 @@ async def update_system_config(
     admin_service: OwnerService = Depends(get_owner_service),
 ):
     """Update system configuration (Owner only)"""
-    ip_address = request.client.host if request.client else "unknown"
+    request.client.host if request.client else "unknown"
 
     success = await admin_service.update_system_config(
         {key: config_update.value}, int(current_admin.id)
@@ -422,14 +423,16 @@ async def get_database_stats(
         "table_count": stats.table_count,
         "total_records": stats.total_records,
         "backup_count": stats.backup_count,
-        "last_backup": {
-            "filename": stats.last_backup.filename,
-            "size": stats.last_backup.size_human,
-            "created_at": stats.last_backup.created_at.isoformat(),
-            "age_days": stats.last_backup.age_days,
-        }
-        if stats.last_backup
-        else None,
+        "last_backup": (
+            {
+                "filename": stats.last_backup.filename,
+                "size": stats.last_backup.size_human,
+                "created_at": stats.last_backup.created_at.isoformat(),
+                "age_days": stats.last_backup.age_days,
+            }
+            if stats.last_backup
+            else None
+        ),
     }
 
 
@@ -567,7 +570,8 @@ async def get_backup_info(
 
     if not backup:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Backup not found: {filename}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Backup not found: {filename}",
         )
 
     return {
@@ -666,7 +670,7 @@ async def get_query_performance(
     """
     from sqlalchemy import text
 
-    query = f"""
+    query = """
         SELECT 
             substring(query, 1, 200) as query_text,
             calls,
@@ -693,16 +697,18 @@ async def get_query_performance(
 
     queries = []
     for row in rows:
-        queries.append({
-            "query": row[0],
-            "calls": row[1],
-            "total_time_ms": float(row[2]),
-            "mean_time_ms": float(row[3]),
-            "min_time_ms": float(row[4]),
-            "max_time_ms": float(row[5]),
-            "stddev_time_ms": float(row[6]),
-            "percent_total": float(row[7]),
-        })
+        queries.append(
+            {
+                "query": row[0],
+                "calls": row[1],
+                "total_time_ms": float(row[2]),
+                "mean_time_ms": float(row[3]),
+                "min_time_ms": float(row[4]),
+                "max_time_ms": float(row[5]),
+                "stddev_time_ms": float(row[6]),
+                "percent_total": float(row[7]),
+            }
+        )
 
     return {
         "queries": queries,
@@ -731,7 +737,7 @@ async def get_slow_queries(
     """
     from sqlalchemy import text
 
-    query = f"""
+    query = """
         SELECT 
             substring(query, 1, 200) as query_text,
             calls,
@@ -752,13 +758,15 @@ async def get_slow_queries(
 
     queries = []
     for row in rows:
-        queries.append({
-            "query": row[0],
-            "calls": row[1],
-            "mean_time_ms": float(row[2]),
-            "max_time_ms": float(row[3]),
-            "total_time_ms": float(row[4]),
-        })
+        queries.append(
+            {
+                "query": row[0],
+                "calls": row[1],
+                "mean_time_ms": float(row[2]),
+                "max_time_ms": float(row[3]),
+                "total_time_ms": float(row[4]),
+            }
+        )
 
     return {
         "queries": queries,

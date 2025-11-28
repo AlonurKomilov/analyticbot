@@ -99,6 +99,7 @@ async def create_channel(
             channel_data_dict["user_id"] = current_user["id"]
             # Convert to ChannelCreate model expected by service
             from apps.api.services.channel_management_service import ChannelCreate
+
             channel_create = ChannelCreate(**channel_data_dict)
             new_channel = await channel_service.create_channel(channel_create)
 

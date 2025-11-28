@@ -52,7 +52,7 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <AIIcon color="primary" />
                 <Typography variant="h5" component="h1">
-                    📊 Special Time Recommendations
+                    📊 Special Times Recommender
                 </Typography>
             </Box>
 

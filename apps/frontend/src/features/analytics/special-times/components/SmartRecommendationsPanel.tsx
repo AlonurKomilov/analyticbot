@@ -159,10 +159,10 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                                 <Grid item xs={12} key={index}>
                                     <Box sx={{
                                         p: 2,
-                                        bgcolor: index === 0 ? 'success.light' : 'background.default',
+                                        bgcolor: 'background.default',
                                         borderRadius: 1,
-                                        border: index === 0 ? 2 : 1,
-                                        borderColor: index === 0 ? 'success.main' : 'divider'
+                                        border: 1,
+                                        borderColor: 'divider'
                                     }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

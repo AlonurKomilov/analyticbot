@@ -57,7 +57,7 @@ const daysMap: Record<string, number> = {
 
 **Step 1: Check Default State**
 1. Open http://localhost:11300
-2. Navigate to Analytics → Special Time Recommendations
+2. Navigate to Analytics → Special Times Recommender
 3. ✅ Verify dropdown shows "⭐ All Time" selected
 4. ✅ Verify blue chip appears: "Analyzing complete history"
 

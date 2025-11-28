@@ -134,33 +134,39 @@ class TimeAnalysisRepository:
         )
 
         # Determine if we should detect content types
+        # IMPROVED: Better content type detection logic that doesn't rely only on flags
         content_type_detection = (
             """CASE
                 WHEN p.has_video = TRUE THEN 'video'
                 WHEN p.has_media = TRUE THEN 'image'
-                WHEN p.text LIKE '%http%' THEN 'link'
+                -- Check for common video/media keywords in text
+                WHEN p.text ~* '(video|watch|видео|смотреть|фильм)' THEN 'video'
+                WHEN p.text ~* '(photo|image|pic|picture|фото|картинка)' THEN 'image'
+                -- URLs indicate link posts
+                WHEN p.text ~ 'https?://' OR p.text LIKE '%http%' THEN 'link'
+                -- Short posts without URLs are likely text
                 ELSE 'text'
             END as content_type,"""
             if ENABLE_CONTENT_TYPE_ANALYSIS
             else ""
         )
 
-        content_type_group = ", p.has_video, p.has_media" if ENABLE_CONTENT_TYPE_ANALYSIS else ""
+        content_type_group = ", p.has_video, p.has_media, p.text" if ENABLE_CONTENT_TYPE_ANALYSIS else ", p.text"
 
         # For all-time, use a subquery with LIMIT instead of date filter
         if days is None:
             # All-time: limit to 10k most recent posts
             return f"""
             WITH post_times AS (
-                SELECT
+                SELECT DISTINCT ON (p.msg_id)
                     p.msg_id,
                     p.date as post_time,
                     EXTRACT(HOUR FROM p.date) as hour,
                     EXTRACT(DOW FROM p.date) as day_of_week,
-                    COALESCE(MAX(pm.views), 0) as views,
-                    COALESCE(MAX(pm.forwards), 0) as forwards,
-                    COALESCE(MAX(pm.reactions_count), 0) as reactions,
-                    COALESCE(MAX(pm.replies_count), 0) as replies,
+                    MAX(pm.views) OVER (PARTITION BY p.msg_id) as views,
+                    MAX(pm.forwards) OVER (PARTITION BY p.msg_id) as forwards,
+                    MAX(pm.reactions_count) OVER (PARTITION BY p.msg_id) as reactions,
+                    MAX(pm.replies_count) OVER (PARTITION BY p.msg_id) as replies,
                     -- NEW: Content type detection
                     {content_type_detection}
                     -- NEW: Post length category
@@ -178,7 +184,7 @@ class TimeAnalysisRepository:
                 ) p
                 LEFT JOIN post_metrics pm ON p.channel_id = pm.channel_id
                     AND p.msg_id = pm.msg_id
-                GROUP BY p.msg_id, p.date{content_type_group}, p.text
+                ORDER BY p.msg_id, pm.views DESC NULLS LAST
             ),
             hourly_stats AS (
                 SELECT
@@ -335,15 +341,15 @@ class TimeAnalysisRepository:
             # Time-bounded: filter by days, parameters: channel_id, days, min_hour, min_day
             return f"""
             WITH post_times AS (
-                SELECT
+                SELECT DISTINCT ON (p.msg_id)
                     p.msg_id,
                     p.date as post_time,
                     EXTRACT(HOUR FROM p.date) as hour,
                     EXTRACT(DOW FROM p.date) as day_of_week,
-                    COALESCE(MAX(pm.views), 0) as views,
-                    COALESCE(MAX(pm.forwards), 0) as forwards,
-                    COALESCE(MAX(pm.reactions_count), 0) as reactions,
-                    COALESCE(MAX(pm.replies_count), 0) as replies,
+                    MAX(pm.views) OVER (PARTITION BY p.msg_id) as views,
+                    MAX(pm.forwards) OVER (PARTITION BY p.msg_id) as forwards,
+                    MAX(pm.reactions_count) OVER (PARTITION BY p.msg_id) as reactions,
+                    MAX(pm.replies_count) OVER (PARTITION BY p.msg_id) as replies,
                     -- NEW: Content type detection
                     {content_type_detection}
                     -- NEW: Post length category
@@ -360,7 +366,7 @@ class TimeAnalysisRepository:
                 WHERE p.channel_id = $1
                     AND p.date >= NOW() - INTERVAL '1 day' * $2
                     AND p.is_deleted = FALSE
-                GROUP BY p.msg_id, p.date{content_type_group}, p.text
+                ORDER BY p.msg_id, pm.views DESC NULLS LAST
             ),
             hourly_stats AS (
                 SELECT

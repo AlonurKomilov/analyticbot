@@ -114,6 +114,20 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
         setCurrentTab(newValue);
     };
 
+    // Calculate content type breakdown from content_type_recommendations
+    const contentTypeBreakdown = React.useMemo(() => {
+        const contentTypeRecs = (recommendations as any)?.content_type_recommendations || [];
+        const breakdown: Record<string, number> = {};
+        
+        contentTypeRecs.forEach((rec: any) => {
+            const type = rec.content_type;
+            const count = rec.post_count || 0;
+            breakdown[type] = (breakdown[type] || 0) + count;
+        });
+
+        return breakdown;
+    }, [(recommendations as any)?.content_type_recommendations]);
+
     return (
         <Paper sx={{ p: 3 }}>
             {/* Header */}
@@ -130,6 +144,8 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
                 setTimeFrame={(tf) => setTimeFrame(tf)}
                 contentType={contentType as ContentType}
                 setContentType={(ct) => setContentType(ct)}
+                totalPostsAnalyzed={(recommendations as any)?.total_posts_analyzed}
+                contentTypeBreakdown={contentTypeBreakdown}
             />
 
             {/* Tabs */}

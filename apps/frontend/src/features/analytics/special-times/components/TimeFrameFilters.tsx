@@ -33,6 +33,15 @@ interface TimeFrameFiltersProps {
     contentType: ContentType;
     /** Callback to update content type */
     setContentType: (contentType: ContentType) => void;
+    /** Total posts analyzed */
+    totalPostsAnalyzed?: number;
+    /** Content type breakdown */
+    contentTypeBreakdown?: {
+        text?: number;
+        video?: number;
+        image?: number;
+        link?: number;
+    };
 }
 
 /**
@@ -41,7 +50,9 @@ interface TimeFrameFiltersProps {
  */
 const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
     timeFrame,
-    setTimeFrame
+    setTimeFrame,
+    totalPostsAnalyzed,
+    contentTypeBreakdown
 }) => {
     const handleTimeFrameChange = (event: SelectChangeEvent) => {
         setTimeFrame(event.target.value as TimeFrame);
@@ -69,19 +80,16 @@ const TimeFrameFilters: React.FC<TimeFrameFiltersProps> = ({
                         <MenuItem value="all">All Time</MenuItem>
                     </Select>
                 </FormControl>
-                {timeFrame === 'all' && (
+                {totalPostsAnalyzed !== undefined && totalPostsAnalyzed > 0 && (
                     <Chip
-                        label="Analyzing complete history (up to 10k posts)"
+                        label={`${totalPostsAnalyzed.toLocaleString()} posts analyzed${
+                            contentTypeBreakdown 
+                                ? ` (Text: ${contentTypeBreakdown.text || 0}, Video: ${contentTypeBreakdown.video || 0}, Image: ${contentTypeBreakdown.image || 0}, Link: ${contentTypeBreakdown.link || 0})`
+                                : ''
+                        }`}
                         color="primary"
                         size="small"
                         sx={{ fontWeight: 500 }}
-                    />
-                )}
-                {timeFrame === '1y' && (
-                    <Chip
-                        label="Last 365 days"
-                        color="info"
-                        size="small"
                     />
                 )}
             </Box>

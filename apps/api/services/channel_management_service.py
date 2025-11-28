@@ -151,11 +151,13 @@ class ChannelManagementService:
         except ValueError as e:
             error_msg = str(e)
             self.logger.error(f"Validation error creating channel: {error_msg}")
-            
+
             # Use 409 Conflict for duplicate channel errors
-            if "already" in error_msg.lower() and ("registered" in error_msg.lower() or "added" in error_msg.lower()):
+            if "already" in error_msg.lower() and (
+                "registered" in error_msg.lower() or "added" in error_msg.lower()
+            ):
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=error_msg)
-            
+
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
         except Exception as e:
             self.logger.error(f"Error creating channel: {e}")

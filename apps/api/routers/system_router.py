@@ -217,8 +217,10 @@ async def send_post_now(
             telegram_chat_id = -channel_id
         else:
             telegram_chat_id = channel_id
-        
-        logger.info(f"📍 Using telegram_chat_id: {telegram_chat_id} (from channel_id: {channel_id})")
+
+        logger.info(
+            f"📍 Using telegram_chat_id: {telegram_chat_id} (from channel_id: {channel_id})"
+        )
 
         # If using Telegram storage file, forward the message instead
         if request.telegram_file_id:
@@ -338,42 +340,43 @@ async def send_post_now(
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     response = await client.post(telegram_api_url, json=payload)
-                    
+
                     # Handle specific Telegram errors
                     if response.status_code == 400:
                         error_data = response.json()
                         error_description = error_data.get("description", "Unknown error")
                         logger.error(f"❌ Telegram 400 error: {error_description}")
-                        
+
                         # Provide user-friendly error messages
                         if "chat not found" in error_description.lower():
                             raise HTTPException(
                                 status_code=400,
-                                detail=f"Channel not found. Please make sure the bot is added as an administrator to your channel."
+                                detail="Channel not found. Please make sure the bot is added as an administrator to your channel.",
                             )
-                        elif "not enough rights" in error_description.lower() or "need administrator" in error_description.lower():
+                        elif (
+                            "not enough rights" in error_description.lower()
+                            or "need administrator" in error_description.lower()
+                        ):
                             raise HTTPException(
                                 status_code=403,
-                                detail=f"Bot doesn't have permission to post in this channel. Please add the bot as an administrator with 'Post messages' permission."
+                                detail="Bot doesn't have permission to post in this channel. Please add the bot as an administrator with 'Post messages' permission.",
                             )
                         elif "bot was kicked" in error_description.lower():
                             raise HTTPException(
                                 status_code=403,
-                                detail=f"The bot was removed from this channel. Please add it back as an administrator."
+                                detail="The bot was removed from this channel. Please add it back as an administrator.",
                             )
                         else:
                             raise HTTPException(
-                                status_code=400,
-                                detail=f"Telegram error: {error_description}"
+                                status_code=400, detail=f"Telegram error: {error_description}"
                             )
-                    
+
                     response.raise_for_status()
                     telegram_response = response.json()
             except httpx.HTTPStatusError as e:
                 logger.error(f"❌ Telegram API HTTP error: {e}")
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"Failed to send message to Telegram: {str(e)}"
+                    status_code=500, detail=f"Failed to send message to Telegram: {str(e)}"
                 )
 
             if not telegram_response.get("ok"):

@@ -122,11 +122,11 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
             console.log('📊 Content Type Summary (from backend):', summary);
             return summary;
         }
-        
+
         // Fallback: calculate from content_type_recommendations (may have duplicates)
         const contentTypeRecs = (recommendations as any)?.content_type_recommendations || [];
         const breakdown: Record<string, number> = {};
-        
+
         // Sum post_count for each content type across all hours
         contentTypeRecs.forEach((rec: any) => {
             const type = rec.content_type;
@@ -136,7 +136,7 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
 
         console.log('📊 Content Type Breakdown (calculated, may have duplicates):', breakdown);
         console.log('📈 Total Posts Analyzed:', (recommendations as any)?.total_posts_analyzed);
-        
+
         return breakdown;
     }, [(recommendations as any)?.content_type_recommendations, (recommendations as any)?.content_type_summary]);
 

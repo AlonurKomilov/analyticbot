@@ -125,7 +125,7 @@ class ChannelRepository(Protocol):
         user_id: int,
         title: str,
         username: str | None = None,
-        description: str | None = None
+        description: str | None = None,
     ) -> None:
         """Create a new channel"""
         ...

@@ -157,7 +157,11 @@ class TimeAnalysisRepository:
             else ""
         )
 
-        content_type_group = ", p.has_video, p.has_photo, p.has_media, p.text" if ENABLE_CONTENT_TYPE_ANALYSIS else ", p.text"
+        content_type_group = (
+            ", p.has_video, p.has_photo, p.has_media, p.text"
+            if ENABLE_CONTENT_TYPE_ANALYSIS
+            else ", p.text"
+        )
 
         # For all-time, use a subquery with LIMIT instead of date filter
         if days is None:
@@ -360,8 +364,8 @@ class TimeAnalysisRepository:
                             'document', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_document = TRUE),
                             'gif', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_gif = TRUE),
                             'link', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_link = TRUE),
-                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE 
-                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE 
+                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE
+                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE
                                 AND has_audio = FALSE AND has_document = FALSE AND has_gif = FALSE
                                 AND has_link = FALSE)
                         )
@@ -566,8 +570,8 @@ class TimeAnalysisRepository:
                             'document', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_document = TRUE),
                             'gif', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_gif = TRUE),
                             'link', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE has_link = TRUE),
-                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE 
-                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE 
+                            'text', (SELECT COUNT(DISTINCT msg_id) FROM post_times WHERE
+                                has_photo = FALSE AND has_video = FALSE AND has_voice = FALSE
                                 AND has_audio = FALSE AND has_document = FALSE AND has_gif = FALSE
                                 AND has_link = FALSE)
                         )

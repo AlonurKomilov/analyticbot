@@ -140,7 +140,7 @@ const ChannelsManagementPage: React.FC = () => {
         } catch (err: any) {
             // Extract error message from various possible sources
             let errorMessage = 'Failed to add channel';
-            
+
             // Check for API response with detail
             if (err.response?.data?.detail) {
                 errorMessage = err.response.data.detail;
@@ -163,7 +163,7 @@ const ChannelsManagementPage: React.FC = () => {
                     errorMessage = err.message;
                 }
             }
-            
+
             setFormError(errorMessage);
         } finally {
             setSubmitting(false);

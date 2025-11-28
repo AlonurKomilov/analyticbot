@@ -106,7 +106,7 @@ class ChannelService:
             # Get owner info to provide helpful message
             owner_id = existing_channel.get("user_id")
             channel_name = existing_channel.get("title", "Unknown")
-            
+
             if owner_id == channel_data.user_id:
                 # Same user trying to add again
                 raise ValueError(
@@ -128,7 +128,7 @@ class ChannelService:
             if existing_by_username:
                 owner_id = existing_by_username.get("user_id")
                 channel_name = existing_by_username.get("title", "Unknown")
-                
+
                 if owner_id == channel_data.user_id:
                     raise ValueError(
                         f"You have already added this channel ({channel_name}) to your account."

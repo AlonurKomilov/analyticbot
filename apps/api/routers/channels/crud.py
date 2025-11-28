@@ -113,18 +113,22 @@ async def create_channel(
             # Set user_id on the channel data
             channel_data_dict = channel_data.dict()
             channel_data_dict["user_id"] = current_user["id"]
-            
+
             # Ensure telegram_id is set (use random fallback if not provided)
             if not channel_data_dict.get("telegram_id"):
                 import random
+
                 channel_data_dict["telegram_id"] = random.randint(1000000000, 9999999999)
-                logger.warning(f"No telegram_id provided, using fallback: {channel_data_dict['telegram_id']}")
-            
+                logger.warning(
+                    f"No telegram_id provided, using fallback: {channel_data_dict['telegram_id']}"
+                )
+
             # Filter to only fields expected by ChannelCreate
             from apps.api.services.channel_management_service import ChannelCreate
+
             valid_fields = {"name", "telegram_id", "username", "description", "user_id"}
             filtered_data = {k: v for k, v in channel_data_dict.items() if k in valid_fields}
-            
+
             channel_create = ChannelCreate(**filtered_data)
             new_channel = await channel_service.create_channel(channel_create)
 

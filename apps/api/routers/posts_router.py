@@ -42,6 +42,7 @@ class PostMetrics(BaseModel):
 
 class PostMediaFlags(BaseModel):
     """Media type flags for content type icons"""
+
     has_photo: bool = False
     has_video: bool = False
     has_audio: bool = False

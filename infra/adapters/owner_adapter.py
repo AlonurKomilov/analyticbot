@@ -83,7 +83,8 @@ class SQLAlchemyAdminRepository:
             await self.db.scalar(
                 select(func.count(AdminSession.id)).where(
                     and_(
-                        AdminSession.is_active == True, AdminSession.expires_at > datetime.utcnow()
+                        AdminSession.is_active == True,
+                        AdminSession.expires_at > datetime.utcnow(),
                     )
                 )
             )

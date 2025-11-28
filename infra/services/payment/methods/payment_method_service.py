@@ -44,7 +44,10 @@ class PaymentMethodService(PaymentMethodProtocol):
         logger.info("💳 PaymentMethodService initialized")
 
     async def create_payment_method(
-        self, user_id: int, payment_method_data: PaymentMethodData, provider: str | None = None
+        self,
+        user_id: int,
+        payment_method_data: PaymentMethodData,
+        provider: str | None = None,
     ) -> PaymentMethodResult:
         """
         Create a new payment method for a user.
@@ -67,7 +70,8 @@ class PaymentMethodService(PaymentMethodProtocol):
             validation_result = await self._validate_payment_method_data(payment_method_data)
             if not validation_result["is_valid"]:
                 return PaymentMethodResult(
-                    success=False, error_message=f"Validation failed: {validation_result['errors']}"
+                    success=False,
+                    error_message=f"Validation failed: {validation_result['errors']}",
                 )
 
             # Create payment method with provider
@@ -80,7 +84,9 @@ class PaymentMethodService(PaymentMethodProtocol):
             if provider == PaymentProvider.STRIPE and "card" in provider_response:
                 card = provider_response["card"]
                 expires_at = datetime(
-                    year=card.get("exp_year", 2025), month=card.get("exp_month", 12), day=1
+                    year=card.get("exp_year", 2025),
+                    month=card.get("exp_month", 12),
+                    day=1,
                 )
 
             # Store payment method in repository
@@ -103,7 +109,7 @@ class PaymentMethodService(PaymentMethodProtocol):
             payment_method = PaymentMethod(
                 id=method_id,
                 user_id=user_id,
-                provider=PaymentProvider(provider) if isinstance(provider, str) else provider,
+                provider=(PaymentProvider(provider) if isinstance(provider, str) else provider),
                 method_type=payment_method_data.method_type,
                 last_four=payment_method_data.last_four,
                 brand=payment_method_data.brand,
@@ -115,7 +121,9 @@ class PaymentMethodService(PaymentMethodProtocol):
 
             logger.info(f"✅ Payment method created successfully: {method_id}")
             return PaymentMethodResult(
-                success=True, payment_method=payment_method, provider_response=provider_response
+                success=True,
+                payment_method=payment_method,
+                provider_response=provider_response,
             )
 
         except Exception as e:
@@ -377,4 +385,8 @@ class PaymentMethodService(PaymentMethodProtocol):
                 "adapter_name": self.payment_adapter.get_adapter_name(),
             }
         except Exception as e:
-            return {"service": "PaymentMethodService", "status": "unhealthy", "error": str(e)}
+            return {
+                "service": "PaymentMethodService",
+                "status": "unhealthy",
+                "error": str(e),
+            }

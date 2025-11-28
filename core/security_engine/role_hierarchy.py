@@ -204,7 +204,7 @@ class RoleHierarchyService:
         Returns:
             True if assignment is allowed
         """
-        assigner_level = get_role_level(assigner_role)
+        get_role_level(assigner_role)
         target_level = get_role_level(target_role)
 
         # OWNER can assign any role
@@ -294,13 +294,17 @@ def check_user_access(
         True if user has access
     """
     user_info = role_hierarchy_service.get_user_role_info(
-        role=user_role, additional_permissions=user_permissions, migration_profile=migration_profile
+        role=user_role,
+        additional_permissions=user_permissions,
+        migration_profile=migration_profile,
     )
 
     req_perm = Permission(required_permission) if required_permission else None
 
     return role_hierarchy_service.can_user_access_resource(
-        user_role_info=user_info, required_role=required_role, required_permission=req_perm
+        user_role_info=user_info,
+        required_role=required_role,
+        required_permission=req_perm,
     )
 
 

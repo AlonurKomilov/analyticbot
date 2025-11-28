@@ -39,7 +39,8 @@ def upgrade():
     # Problem: Currently RESTRICT - prevents channel deletion if posts exist
     # Solution: Change to CASCADE - delete scheduled posts when channel deleted
 
-    op.execute("""
+    op.execute(
+        """
         -- Drop existing constraint
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_channel_id_fkey;
@@ -50,7 +51,8 @@ def upgrade():
             FOREIGN KEY (channel_id)
             REFERENCES channels(id)
             ON DELETE CASCADE;
-    """)
+    """
+    )
 
     # ========================================================================
     # Verification: Document current FK patterns (no changes needed)
@@ -91,7 +93,8 @@ def downgrade():
     """Revert foreign key changes"""
 
     # Revert scheduled_posts.channel_id to RESTRICT
-    op.execute("""
+    op.execute(
+        """
         ALTER TABLE scheduled_posts
         DROP CONSTRAINT IF EXISTS scheduled_posts_channel_id_fkey;
 
@@ -100,4 +103,5 @@ def downgrade():
             FOREIGN KEY (channel_id)
             REFERENCES channels(id)
             ON DELETE RESTRICT;
-    """)
+    """
+    )

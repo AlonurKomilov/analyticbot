@@ -11,7 +11,11 @@ from datetime import datetime
 from typing import Any
 
 from ..protocols.learning_protocols import UpdateStatus
-from .workflow_models import AdaptiveLearningWorkflow, OrchestrationStrategy, WorkflowStage
+from .workflow_models import (
+    AdaptiveLearningWorkflow,
+    OrchestrationStrategy,
+    WorkflowStage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +127,10 @@ class WorkflowManager:
             return False
 
     async def update_workflow_status(
-        self, workflow_id: str, status: UpdateStatus, results: dict[str, Any] | None = None
+        self,
+        workflow_id: str,
+        status: UpdateStatus,
+        results: dict[str, Any] | None = None,
     ) -> bool:
         """Update workflow status and results"""
         try:

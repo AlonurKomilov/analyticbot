@@ -149,7 +149,6 @@ class Container:
         logger.debug(
             f"Legacy register call for {cls.__name__ if hasattr(cls, '__name__') else cls} - delegated to clean container"
         )
-        pass
 
     # === Legacy Repository Methods ===
 

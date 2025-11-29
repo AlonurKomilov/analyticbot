@@ -119,7 +119,6 @@ class DriftDetectionProtocol(ABC):
         Returns:
             List of drift alerts
         """
-        pass
 
     @abstractmethod
     async def analyze_drift_trends(
@@ -135,7 +134,6 @@ class DriftDetectionProtocol(ABC):
         Returns:
             Comprehensive drift analysis
         """
-        pass
 
     @abstractmethod
     async def get_drift_alerts(
@@ -151,7 +149,6 @@ class DriftDetectionProtocol(ABC):
         Returns:
             List of drift alerts
         """
-        pass
 
 
 class DriftAnalyzerProtocol(ABC):
@@ -164,7 +161,9 @@ class DriftAnalyzerProtocol(ABC):
 
     @abstractmethod
     async def calculate_drift_score(
-        self, reference_distribution: DataDistribution, current_distribution: DataDistribution
+        self,
+        reference_distribution: DataDistribution,
+        current_distribution: DataDistribution,
     ) -> float:
         """
         Calculate drift score between distributions
@@ -176,11 +175,13 @@ class DriftAnalyzerProtocol(ABC):
         Returns:
             Drift score (0.0 = no drift, 1.0 = maximum drift)
         """
-        pass
 
     @abstractmethod
     async def analyze_feature_drift(
-        self, reference_data: np.ndarray, current_data: np.ndarray, feature_names: list[str]
+        self,
+        reference_data: np.ndarray,
+        current_data: np.ndarray,
+        feature_names: list[str],
     ) -> dict[str, float]:
         """
         Analyze drift for individual features
@@ -193,7 +194,6 @@ class DriftAnalyzerProtocol(ABC):
         Returns:
             Dictionary mapping feature names to drift scores
         """
-        pass
 
     @abstractmethod
     async def generate_recommendations(self, drift_analysis: DriftAnalysis) -> list[str]:
@@ -206,7 +206,6 @@ class DriftAnalyzerProtocol(ABC):
         Returns:
             List of recommended actions
         """
-        pass
 
 
 class PerformanceDriftDetectorProtocol(ABC):
@@ -235,7 +234,6 @@ class PerformanceDriftDetectorProtocol(ABC):
         Returns:
             Drift alert if performance drift detected, None otherwise
         """
-        pass
 
     @abstractmethod
     async def set_performance_thresholds(self, model_id: str, thresholds: dict[str, float]) -> bool:
@@ -249,7 +247,6 @@ class PerformanceDriftDetectorProtocol(ABC):
         Returns:
             True if thresholds were set successfully
         """
-        pass
 
 
 class StatisticalDriftDetectorProtocol(ABC):
@@ -262,7 +259,10 @@ class StatisticalDriftDetectorProtocol(ABC):
 
     @abstractmethod
     async def kolmogorov_smirnov_test(
-        self, reference_data: np.ndarray, current_data: np.ndarray, significance_level: float = 0.05
+        self,
+        reference_data: np.ndarray,
+        current_data: np.ndarray,
+        significance_level: float = 0.05,
     ) -> tuple[float, float]:
         """
         Perform Kolmogorov-Smirnov test for drift detection
@@ -275,7 +275,6 @@ class StatisticalDriftDetectorProtocol(ABC):
         Returns:
             Tuple of (test_statistic, p_value)
         """
-        pass
 
     @abstractmethod
     async def jensen_shannon_divergence(
@@ -291,7 +290,6 @@ class StatisticalDriftDetectorProtocol(ABC):
         Returns:
             Jensen-Shannon divergence value
         """
-        pass
 
     @abstractmethod
     async def population_stability_index(
@@ -308,4 +306,3 @@ class StatisticalDriftDetectorProtocol(ABC):
         Returns:
             PSI value
         """
-        pass

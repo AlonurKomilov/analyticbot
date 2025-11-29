@@ -11,7 +11,10 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.di import get_container
-from core.ports.mtproto_repository import IMTProtoAuditRepository, IMTProtoChannelRepository
+from core.ports.mtproto_repository import (
+    IMTProtoAuditRepository,
+    IMTProtoChannelRepository,
+)
 from infra.db.adapters.mtproto_repository_adapter import (
     MTProtoAuditRepositoryAdapter,
     MTProtoChannelRepositoryAdapter,

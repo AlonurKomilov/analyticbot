@@ -16,6 +16,7 @@ from typing import Any
 # Domain Enums
 class PaymentStatus(str, Enum):
     """Payment status enumeration"""
+
     PENDING = "pending"
     PROCESSING = "processing"
     SUCCEEDED = "succeeded"
@@ -26,6 +27,7 @@ class PaymentStatus(str, Enum):
 
 class SubscriptionStatus(str, Enum):
     """Subscription status enumeration"""
+
     ACTIVE = "active"
     CANCELED = "canceled"
     PAST_DUE = "past_due"
@@ -37,6 +39,7 @@ class SubscriptionStatus(str, Enum):
 
 class PaymentProvider(str, Enum):
     """Payment provider enumeration"""
+
     STRIPE = "stripe"
     PAYME = "payme"
     CLICK = "click"
@@ -45,12 +48,14 @@ class PaymentProvider(str, Enum):
 
 class BillingCycle(str, Enum):
     """Billing cycle enumeration"""
+
     MONTHLY = "monthly"
     YEARLY = "yearly"
 
 
 class PaymentMethodType(str, Enum):
     """Payment method type enumeration"""
+
     CARD = "card"
     BANK_ACCOUNT = "bank_account"
     DIGITAL_WALLET = "digital_wallet"
@@ -60,6 +65,7 @@ class PaymentMethodType(str, Enum):
 @dataclass(frozen=True)
 class Money:
     """Money value object"""
+
     amount: Decimal
     currency: str = "USD"
 
@@ -71,6 +77,7 @@ class Money:
 @dataclass
 class PaymentMethodData:
     """Payment method creation data"""
+
     method_type: PaymentMethodType
     provider: PaymentProvider
     last_four: str | None = None
@@ -84,6 +91,7 @@ class PaymentMethodData:
 @dataclass
 class PaymentData:
     """Payment creation data"""
+
     payment_method_id: str
     amount: Money
     description: str | None = None
@@ -94,6 +102,7 @@ class PaymentData:
 @dataclass
 class SubscriptionData:
     """Subscription creation data"""
+
     plan_id: str
     payment_method_id: str
     billing_cycle: BillingCycle
@@ -105,6 +114,7 @@ class SubscriptionData:
 @dataclass
 class PaymentMethod:
     """Payment method domain entity"""
+
     id: str
     user_id: int
     provider: PaymentProvider
@@ -121,6 +131,7 @@ class PaymentMethod:
 @dataclass
 class Payment:
     """Payment domain entity"""
+
     id: str
     user_id: int
     payment_method_id: str
@@ -138,6 +149,7 @@ class Payment:
 @dataclass
 class Subscription:
     """Subscription domain entity"""
+
     id: str
     user_id: int
     plan_id: str

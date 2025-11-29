@@ -287,11 +287,13 @@ async def handle_schedule(
             try:
                 # Use new ScheduleManager (Clean Architecture)
                 await schedule_manager.create_scheduled_post(
-                    user_id=uid, channel_id=channel_id, post_text=text, schedule_time=aware_dt
+                    user_id=uid,
+                    channel_id=channel_id,
+                    post_text=text,
+                    schedule_time=aware_dt,
                 )
             except Exception as e:
                 logger.warning(f"Failed to schedule post: {e}")
-                pass
         await message.reply(
             i18n.get(
                 "schedule-success",

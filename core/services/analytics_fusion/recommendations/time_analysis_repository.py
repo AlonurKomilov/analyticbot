@@ -101,15 +101,21 @@ class TimeAnalysisRepository:
                         best_days=result.get("best_days", []),
                         daily_performance=result.get("daily_performance", []),
                         total_posts_analyzed=result.get("total_posts_analyzed", 0),
-                        best_day_hour_combinations=result.get("best_day_hour_combinations", [])
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
-                        content_type_recommendations=result.get("content_type_recommendations", [])
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
-                        content_type_summary=result.get("content_type_summary")
-                        if ENABLE_ADVANCED_RECOMMENDATIONS
-                        else None,
+                        best_day_hour_combinations=(
+                            result.get("best_day_hour_combinations", [])
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
+                        content_type_recommendations=(
+                            result.get("content_type_recommendations", [])
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
+                        content_type_summary=(
+                            result.get("content_type_summary")
+                            if ENABLE_ADVANCED_RECOMMENDATIONS
+                            else None
+                        ),
                     )
 
             except Exception as e:

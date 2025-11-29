@@ -7,7 +7,11 @@ system components.
 
 import logging
 
-from core.services.bot.metrics.models import HealthCheckResult, MetricDefinition, MetricType
+from core.services.bot.metrics.models import (
+    HealthCheckResult,
+    MetricDefinition,
+    MetricType,
+)
 from core.services.bot.metrics.protocols import MetricsBackendPort
 
 logger = logging.getLogger(__name__)
@@ -62,15 +66,11 @@ class HealthCheckService:
                 labels={"check_name": result.check_name},
             )
             if not result.is_healthy:
-                logger.warning(
-                    f"Health check '{result.check_name}' failed: {result.message}"
-                )
+                logger.warning(f"Health check '{result.check_name}' failed: {result.message}")
         except Exception as e:
             logger.error(f"Failed to update health check: {e}")
 
-    async def update_multiple_health_checks(
-        self, results: list[HealthCheckResult]
-    ) -> None:
+    async def update_multiple_health_checks(self, results: list[HealthCheckResult]) -> None:
         """
         Update multiple health checks at once.
 

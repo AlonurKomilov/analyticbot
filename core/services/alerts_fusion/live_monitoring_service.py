@@ -743,7 +743,11 @@ class LiveMonitoringService:
         try:
             metrics = await self.collect_live_metrics(channel_id)
             if metrics is None:
-                return {"channel_id": channel_id, "status": "no_data", "timestamp": datetime.now()}
+                return {
+                    "channel_id": channel_id,
+                    "status": "no_data",
+                    "timestamp": datetime.now(),
+                }
 
             # Convert LiveMetrics dataclass to dict for current snapshot
             return {

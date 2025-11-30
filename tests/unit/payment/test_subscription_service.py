@@ -277,9 +277,7 @@ class TestSubscriptionService:
         mock_payment_repository.get_subscription.assert_called_once_with(subscription_id)
 
     @pytest.mark.asyncio
-    async def test_get_user_subscriptions(
-        self, subscription_service, mock_payment_repository
-    ):
+    async def test_get_user_subscriptions(self, subscription_service, mock_payment_repository):
         """Test retrieving all subscriptions for a user"""
         # Arrange
         user_id = 123
@@ -319,9 +317,7 @@ class TestSubscriptionService:
         assert user_subs[1].status == SubscriptionStatus.CANCELED
 
     @pytest.mark.asyncio
-    async def test_check_subscription_status(
-        self, subscription_service, mock_payment_repository
-    ):
+    async def test_check_subscription_status(self, subscription_service, mock_payment_repository):
         """Test checking if subscription is active"""
         # Arrange
         subscription_id = 1
@@ -346,9 +342,7 @@ class TestSubscriptionService:
         assert is_active is True
 
     @pytest.mark.asyncio
-    async def test_subscription_expired_status(
-        self, subscription_service, mock_payment_repository
-    ):
+    async def test_subscription_expired_status(self, subscription_service, mock_payment_repository):
         """Test detecting expired subscriptions"""
         # Arrange
         subscription_id = 1
@@ -422,9 +416,7 @@ class TestSubscriptionEdgeCases:
         assert "already canceled" in result["error_message"].lower()
 
     @pytest.mark.asyncio
-    async def test_renew_canceled_subscription(
-        self, subscription_service, mock_payment_repository
-    ):
+    async def test_renew_canceled_subscription(self, subscription_service, mock_payment_repository):
         """Test attempting to renew a canceled subscription"""
         # Arrange
         subscription_id = 1

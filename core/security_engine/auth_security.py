@@ -166,16 +166,22 @@ class AuthSecurityService:
             # Check 1: Too many logins in short time
             if len(recent_attempts) > 10:
                 logger.warning(f"🚨 Suspicious: Too many login attempts for user {user_id}")
-                return True, f"Too many login attempts ({len(recent_attempts)} in last hour)"
+                return (
+                    True,
+                    f"Too many login attempts ({len(recent_attempts)} in last hour)",
+                )
 
             # Check 2: Multiple IPs in short time (VPN hopping / account sharing)
-            recent_ips = set(a["ip"] for a in recent_attempts)
+            recent_ips = {a["ip"] for a in recent_attempts}
             if len(recent_ips) > 5:
                 logger.warning(f"🚨 Suspicious: Multiple IPs for user {user_id}")
-                return True, f"Multiple IPs detected ({len(recent_ips)} different IPs in last hour)"
+                return (
+                    True,
+                    f"Multiple IPs detected ({len(recent_ips)} different IPs in last hour)",
+                )
 
             # Check 3: Rapid device switching
-            recent_devices = set(a["device"] for a in recent_attempts)
+            recent_devices = {a["device"] for a in recent_attempts}
             if len(recent_devices) > 3:
                 logger.warning(f"🚨 Suspicious: Multiple devices for user {user_id}")
                 return (
@@ -316,8 +322,8 @@ class AuthSecurityService:
             return {
                 "total_attempts": len(attempts),
                 "recent_attempts": len(recent_attempts),
-                "unique_ips": len(set(a["ip"] for a in attempts)),
-                "unique_devices": len(set(a["device"] for a in attempts)),
+                "unique_ips": len({a["ip"] for a in attempts}),
+                "unique_devices": len({a["device"] for a in attempts}),
                 "last_login": attempts[-1]["timestamp"] if attempts else None,
                 "last_ip": attempts[-1]["ip"] if attempts else None,
             }

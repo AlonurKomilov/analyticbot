@@ -13,30 +13,22 @@ from dependency_injector import containers, providers
 from apps.bot.config import Settings as BotSettings
 
 # Import all provider factories from modular packages
-from apps.di.provider_modules import (
-    # Adapters
+from apps.di.provider_modules import (  # Adapters; Alert services; Bot services; Infrastructure; Metrics; MTProto services; Content protection; Scheduling
     create_aiogram_markup_builder,
     create_aiogram_message_sender,
-    # Alert services
     create_alert_condition_evaluator,
     create_alert_event_manager,
     create_alert_rule_manager,
-    # Bot services
     create_analytics_service,
     create_bot_analytics_adapter,
-    # Infrastructure
     create_bot_client,
     create_bot_dashboard_adapter,
     create_bot_reporting_adapter,
-    # Metrics
     create_business_metrics_service,
-    # MTProto services
     create_channel_admin_check_service,
     create_channel_management_service,
     create_chart_service,
-    # Content protection
     create_content_protection_service,
-    # Scheduling
     create_delivery_status_tracker,
     create_dispatcher,
     create_file_system_adapter,

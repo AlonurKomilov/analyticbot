@@ -101,7 +101,9 @@ class ModelTrainingExecutor:
         logger.info(f"🚀 Model Training Executor initialized (device: {self.device})")
 
     async def execute_training_task(
-        self, task: LearningTask, progress_callback: Callable[[str, float, str], Any] | None = None
+        self,
+        task: LearningTask,
+        progress_callback: Callable[[str, float, str], Any] | None = None,
     ) -> dict[str, Any]:
         """Execute training task with monitoring"""
         try:
@@ -112,7 +114,7 @@ class ModelTrainingExecutor:
                 task_id=task_id,
                 phase=ExecutionPhase.INITIALIZING,
                 epoch=0,
-                total_epochs=task.parameters.get("epochs", 10) if task.parameters else 10,
+                total_epochs=(task.parameters.get("epochs", 10) if task.parameters else 10),
                 batch=0,
                 total_batches=0,
                 current_loss=float("inf"),
@@ -147,7 +149,8 @@ class ModelTrainingExecutor:
             data_preparation_result = await self._prepare_training_data(task)
             if not data_preparation_result["success"]:
                 return await self._fail_execution(
-                    task_id, f"Data preparation failed: {data_preparation_result['error']}"
+                    task_id,
+                    f"Data preparation failed: {data_preparation_result['error']}",
                 )
 
             # Phase 3: Training
@@ -155,7 +158,8 @@ class ModelTrainingExecutor:
             training_result = await self._execute_training_strategy(task, model)
             if not training_result["success"]:
                 return await self._fail_execution(
-                    task_id, f"Training failed: {training_result.get('error', 'Unknown error')}"
+                    task_id,
+                    f"Training failed: {training_result.get('error', 'Unknown error')}",
                 )
 
             # Phase 4: Validation
@@ -303,7 +307,9 @@ class ModelTrainingExecutor:
             validation_data = task.parameters.get("validation_data") if task.parameters else None
 
             result = self.learning_engine.perform_incremental_update(
-                context=context, training_data=training_data, validation_data=validation_data
+                context=context,
+                training_data=training_data,
+                validation_data=validation_data,
             )
 
             # Update progress throughout training (simplified)

@@ -22,7 +22,9 @@ async def test_connection():
 
     try:
         # Import required services
-        from apps.mtproto.multi_tenant.user_mtproto_service import get_user_mtproto_service
+        from apps.mtproto.multi_tenant.user_mtproto_service import (
+            get_user_mtproto_service,
+        )
 
         print("1️⃣ Getting MTProto service...")
         mtproto_service = get_user_mtproto_service()  # Not async
@@ -57,7 +59,7 @@ async def test_connection():
                 print(f"      Title: {channel.title}")  # type: ignore
                 print(f"      ID: {channel.id}")  # type: ignore
                 print(f"      Username: @{channel.username}")  # type: ignore
-                if hasattr(channel, 'participants_count'):
+                if hasattr(channel, "participants_count"):
                     print(f"      Subscribers: {channel.participants_count}")  # type: ignore
                 print()
 
@@ -75,7 +77,7 @@ async def test_connection():
                         print(f"         Views: {getattr(msg, 'views', 0)}")
                         print(f"         Forwards: {getattr(msg, 'forwards', 0)}")
                         if msg.message:
-                            preview = msg.message[:60].replace('\n', ' ')
+                            preview = msg.message[:60].replace("\n", " ")
                             print(f"         Text: {preview}...")
                         print()
 
@@ -100,16 +102,19 @@ async def test_connection():
             except Exception as e:
                 print(f"   ❌ Error accessing channel: {e}")
                 import traceback
+
                 traceback.print_exc()
 
         except Exception as e:
             print(f"   ❌ Error getting client: {e}")
             import traceback
+
             traceback.print_exc()
 
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 

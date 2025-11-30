@@ -3,10 +3,13 @@ Health Metrics Module
 Calculate system-wide metrics and overall health status
 """
 
-
 import psutil
 
-from apps.api.services.health_monitoring.base import ComponentHealth, HealthStatus, HealthThresholds
+from apps.api.services.health_monitoring.base import (
+    ComponentHealth,
+    HealthStatus,
+    HealthThresholds,
+)
 
 
 class HealthMetrics:
@@ -15,9 +18,7 @@ class HealthMetrics:
     def __init__(self, thresholds: HealthThresholds):
         self.thresholds = thresholds
 
-    def calculate_overall_status(
-        self, components: dict[str, ComponentHealth]
-    ) -> HealthStatus:
+    def calculate_overall_status(self, components: dict[str, ComponentHealth]) -> HealthStatus:
         """
         Calculate overall system health based on component statuses
 
@@ -76,9 +77,7 @@ class HealthMetrics:
         except Exception:
             return 0.0
 
-    def generate_alerts(
-        self, components: dict[str, ComponentHealth]
-    ) -> list[str]:
+    def generate_alerts(self, components: dict[str, ComponentHealth]) -> list[str]:
         """Generate alerts based on component statuses and performance"""
         alerts = []
 

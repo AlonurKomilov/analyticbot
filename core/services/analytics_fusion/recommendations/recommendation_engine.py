@@ -31,7 +31,15 @@ class RecommendationEngine:
     """
 
     # Day names mapping
-    DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    DAY_NAMES = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+    ]
 
     def generate_recommendations(
         self, raw_data: RawMetricsData, params: AnalysisParameters

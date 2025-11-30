@@ -264,10 +264,9 @@ class MonitoringInfrastructureService:
                         for metric_file in model_dir.glob("*.json"):
                             try:
                                 with open(metric_file) as f:
-                                    metric_data = json.load(f)
+                                    json.load(f)
                                     # Convert to PerformanceMetric object
                                     # This is a simplified version - full implementation would handle serialization
-                                    pass
                             except Exception as e:
                                 logger.warning(f"Failed to load metric file {metric_file}: {e}")
 
@@ -275,10 +274,9 @@ class MonitoringInfrastructureService:
             thresholds_file = self.storage_path / "thresholds.json"
             if thresholds_file.exists():
                 with open(thresholds_file) as f:
-                    thresholds_data = json.load(f)
+                    json.load(f)
                     # Load threshold configurations
                     # This is a simplified version
-                    pass
 
             logger.info("📂 Loaded existing monitoring data")
 
@@ -355,7 +353,10 @@ class MonitoringInfrastructureService:
             # Update with current thresholds
             if model_id in self.thresholds_cache:
                 all_thresholds[model_id] = {
-                    metric_type.value: {"threshold": threshold, "severity": severity.value}
+                    metric_type.value: {
+                        "threshold": threshold,
+                        "severity": severity.value,
+                    }
                     for metric_type, (threshold, severity) in self.thresholds_cache[
                         model_id
                     ].items()

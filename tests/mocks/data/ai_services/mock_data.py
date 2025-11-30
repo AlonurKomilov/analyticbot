@@ -28,7 +28,10 @@ def get_mock_churn_prediction(demo_type: str = "full_featured") -> dict:
             "risk_level": "medium",
             "confidence_score": 0.76,
             "key_factors": ["Declining engagement", "Reduced posting frequency"],
-            "immediate_actions": ["Increase content variety", "Analyze top performing posts"],
+            "immediate_actions": [
+                "Increase content variety",
+                "Analyze top performing posts",
+            ],
         },
         "limited": {
             "churn_probability": 0.08,
@@ -58,21 +61,33 @@ def get_mock_security_analysis(demo_type: str = "full_featured", content: str = 
                 "Review content engagement metrics",
                 "Consider premium security features",
             ],
-            "analysis_metadata": {"scan_duration": "0.3s", "rules_applied": 47, "confidence": 0.94},
+            "analysis_metadata": {
+                "scan_duration": "0.3s",
+                "rules_applied": 47,
+                "confidence": 0.94,
+            },
         },
         "read_only": {
             "threat_level": "low",
             "security_score": 88.5,
             "detected_risks": [],
             "recommendations": ["Enable 2FA", "Review account permissions"],
-            "analysis_metadata": {"scan_duration": "0.2s", "rules_applied": 23, "confidence": 0.88},
+            "analysis_metadata": {
+                "scan_duration": "0.2s",
+                "rules_applied": 23,
+                "confidence": 0.88,
+            },
         },
         "limited": {
             "threat_level": "low",
             "security_score": 92.0,
             "detected_risks": [],
             "recommendations": ["Complete security setup", "Enable account monitoring"],
-            "analysis_metadata": {"scan_duration": "0.1s", "rules_applied": 12, "confidence": 0.92},
+            "analysis_metadata": {
+                "scan_duration": "0.1s",
+                "rules_applied": 12,
+                "confidence": 0.92,
+            },
         },
         "admin": {
             "threat_level": "medium",
@@ -88,7 +103,11 @@ def get_mock_security_analysis(demo_type: str = "full_featured", content: str = 
                 "Monitor privileged operations",
                 "Implement session timeout policies",
             ],
-            "analysis_metadata": {"scan_duration": "0.5s", "rules_applied": 73, "confidence": 0.87},
+            "analysis_metadata": {
+                "scan_duration": "0.5s",
+                "rules_applied": 73,
+                "confidence": 0.87,
+            },
         },
     }
 
@@ -117,19 +136,34 @@ def get_mock_content_optimization(demo_type: str = "full_featured") -> dict:
                 "Consider adding video content for 40% higher engagement",
                 "Use emojis to increase readability by 15%",
             ],
-            "predicted_engagement": {"views": 12500, "likes": 845, "shares": 127, "comments": 89},
+            "predicted_engagement": {
+                "views": 12500,
+                "likes": 845,
+                "shares": 127,
+                "comments": 89,
+            },
             "improvement_potential": "+23% engagement",
         },
         "read_only": {
             "optimization_score": 73.1,
             "suggestions": ["Add relevant hashtags", "Post during peak hours"],
-            "predicted_engagement": {"views": 3200, "likes": 156, "shares": 23, "comments": 12},
+            "predicted_engagement": {
+                "views": 3200,
+                "likes": 156,
+                "shares": 23,
+                "comments": 12,
+            },
             "improvement_potential": "+15% engagement",
         },
         "limited": {
             "optimization_score": 68.5,
             "suggestions": ["Include call-to-action", "Add visual content"],
-            "predicted_engagement": {"views": 850, "likes": 67, "shares": 8, "comments": 3},
+            "predicted_engagement": {
+                "views": 850,
+                "likes": 67,
+                "shares": 8,
+                "comments": 3,
+            },
             "improvement_potential": "+12% engagement",
         },
     }
@@ -154,7 +188,11 @@ def get_mock_trending_analysis(demo_type: str = "full_featured") -> dict:
                     "trend_score": 87.6,
                     "volume": 23450,
                     "sentiment": "positive",
-                    "related_hashtags": ["#GreenTech", "#Sustainability", "#CleanEnergy"],
+                    "related_hashtags": [
+                        "#GreenTech",
+                        "#Sustainability",
+                        "#CleanEnergy",
+                    ],
                 },
                 {
                     "topic": "Cryptocurrency Updates",
@@ -180,7 +218,10 @@ def get_mock_trending_analysis(demo_type: str = "full_featured") -> dict:
                     "related_hashtags": ["#Tech", "#News"],
                 }
             ],
-            "recommendations": ["Follow tech news trends", "Engage with trending topics"],
+            "recommendations": [
+                "Follow tech news trends",
+                "Engage with trending topics",
+            ],
         },
         "limited": {
             "trending_topics": [

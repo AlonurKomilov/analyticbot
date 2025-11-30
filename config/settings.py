@@ -78,9 +78,11 @@ class Settings:
     )
     ADMIN_IDS_STR: str | None = field(default_factory=lambda: os.getenv("ADMIN_IDS_STR"))
     SUPPORTED_LOCALES: str | list[str] = field(
-        default_factory=lambda: os.getenv("SUPPORTED_LOCALES", "en,uz").split(",")
-        if "," in os.getenv("SUPPORTED_LOCALES", "")
-        else ["en", "uz"]
+        default_factory=lambda: (
+            os.getenv("SUPPORTED_LOCALES", "en,uz").split(",")
+            if "," in os.getenv("SUPPORTED_LOCALES", "")
+            else ["en", "uz"]
+        )
     )
     DEFAULT_LOCALE: str = field(default_factory=lambda: os.getenv("DEFAULT_LOCALE", "en"))
     ENFORCE_PLAN_LIMITS: bool = field(

@@ -96,8 +96,29 @@ async def get_channel_overview(
         return response
 
     except Exception as e:
-        logger.error(f"Historical overview fetch failed for channel {channel_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch historical overview")
+        logger.error(f"Historical overview fetch failed for channel {channel_id}: {e}", exc_info=True)
+        # Return empty data instead of 500 error when no data available
+        if "not found" in str(e).lower() or "no data" in str(e).lower():
+            return JSONResponse(content={
+                "channel_id": channel_id,
+                "overview": {
+                    "total_views": 0,
+                    "total_reactions": 0,
+                    "total_shares": 0,
+                    "engagement_rate": 0,
+                    "growth_rate": 0,
+                    "subscriber_count": 0,
+                    "post_count": 0,
+                },
+                "period": {
+                    "from": from_.isoformat(),
+                    "to": to_.isoformat(),
+                },
+                "statistics_type": "historical_overview",
+                "last_updated": "",
+                "message": "No historical data available for this channel yet"
+            })
+        raise HTTPException(status_code=500, detail=f"Failed to fetch historical overview: {str(e)}")
 
 
 @router.get("/growth/{channel_id}", response_model=SeriesResponse)

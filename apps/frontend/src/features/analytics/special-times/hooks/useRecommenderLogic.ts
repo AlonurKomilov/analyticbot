@@ -10,12 +10,18 @@ interface BestTimeRecommendations {
         day: number;
         confidence: number;
         avg_engagement: number;
+        avg_views: number;  // Added: average views for this time slot
+        relative_performance?: number;  // Added: % above/below channel average
+        confidence_level?: 'high' | 'medium' | 'low';  // Added: data quality indicator
     }>;
     best_day_hour_combinations?: Array<{
         day_name: string;
         hour: number;
         score: number;
         confidence: number;
+        avg_views?: number;
+        relative_performance?: number;
+        confidence_level?: 'high' | 'medium' | 'low';
     }>;
     content_type_recommendations?: Array<{
         content_type: string;
@@ -23,9 +29,12 @@ interface BestTimeRecommendations {
         hour: number;
         score: number;
         confidence: number;
+        avg_views?: number;
+        relative_performance?: number;
     }>;
     content_type_summary?: Record<string, number>;  // Direct counts: { video: 995, image: 1219, text: 508 }
     accuracy?: number;
+    global_avg_views?: number;  // Added: channel-wide average views for comparison
     [key: string]: any;
 }
 
@@ -61,20 +70,26 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
         const insights: AIInsight[] = [];
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-        // Get best time (first recommendation)
-        const bestTime = data.best_times[0];
+        // Get best time - SORT BY CONFIDENCE FIRST to match BestTimeCards display
+        const sortedTimes = [...data.best_times].sort((a, b) => b.confidence - a.confidence);
+        const bestTime = sortedTimes[0];
         const dayName = daysOfWeek[bestTime.day] || 'Unknown';
         const hour = bestTime.hour;
         const period = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
         const timeStr = `${displayHour}:00 ${period}`;
 
+        // Calculate performance metric - use relative_performance if available, otherwise confidence
+        const performanceMetric = bestTime.relative_performance 
+            ? `${Math.abs(bestTime.relative_performance).toFixed(0)}% ${bestTime.relative_performance > 0 ? 'more views' : 'fewer views'}`
+            : `${bestTime.confidence}% higher engagement`;
+
         // Insight 1: Optimal Posting Time (from real data)
         insights.push({
             type: 'time',
-            message: `Highest engagement observed on ${dayName} at ${timeStr}`,
+            message: `Highest performance observed on ${dayName} at ${timeStr}`,
             title: 'Best Performing Time',
-            description: `Based on historical data analysis, posts on ${dayName} at ${timeStr} receive ${bestTime.confidence}% higher engagement`
+            description: `Based on historical data analysis, posts on ${dayName} at ${timeStr} receive ${performanceMetric}`
         });
 
         // Insight 2: Audience Activity (based on time of day)
@@ -83,7 +98,7 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             type: 'audience',
             message: `Your audience is most active in the ${timeOfDay}`,
             title: 'Audience Activity Pattern',
-            description: `Historical data shows peak engagement during ${timeOfDay} hours across ${data.best_times.length} analyzed time slots`
+            description: `Historical data shows peak activity during ${timeOfDay} hours across ${sortedTimes.length} analyzed time slots`
         });
 
         // Insight 3: Content Strategy (based on day type)
@@ -98,15 +113,24 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
             description: `${isWeekend ? 'Weekend' : 'Weekday'} posts perform best for your channel`
         });
 
-        // Insight 4: Engagement Trend (calculate from data if multiple times available)
-        if (data.best_times.length >= 2) {
-            const avgEngagement = data.best_times.reduce((sum, t) => sum + t.avg_engagement, 0) / data.best_times.length;
-            insights.push({
-                type: 'trend',
-                message: `Average engagement rate is ${avgEngagement.toFixed(2)} across top performing times`,
-                title: 'Engagement Trend',
-                description: `Consistent posting during optimal times can improve overall channel performance`
-            });
+        // Insight 4: Views Trend (calculate from view data if available)
+        if (sortedTimes.length >= 2) {
+            const avgViews = sortedTimes.reduce((sum, t) => sum + (t.avg_views || 0), 0) / sortedTimes.length;
+            if (avgViews > 0) {
+                insights.push({
+                    type: 'trend',
+                    message: `Average ${avgViews.toFixed(0)} views across top performing time slots`,
+                    title: 'Views Trend',
+                    description: `Consistent posting during optimal times can improve overall channel performance`
+                });
+            } else {
+                insights.push({
+                    type: 'trend',
+                    message: `Consistent posting during optimal times can improve overall channel performance`,
+                    title: 'Performance Trend',
+                    description: `Your channel shows stable activity patterns across analyzed time slots`
+                });
+            }
         }
 
         return insights;
@@ -160,12 +184,16 @@ export const useRecommenderLogic = (): UseRecommenderLogicReturn => {
 
             // Convert BestTimeRecommendation[] to the expected format
             // Handle both API format (avg_engagement) and any legacy format (avgEngagement)
+            // Now includes avg_views and relative_performance from view-based scoring
             const formatted: BestTimeRecommendations = {
                 best_times: bestTimes.map(bt => ({
                     hour: bt.hour,
                     day: typeof bt.day === 'string' ? parseInt(bt.day) : bt.day,
                     confidence: bt.confidence,
-                    avg_engagement: bt.avg_engagement || bt.avgEngagement || 0
+                    avg_engagement: bt.avg_engagement || bt.avgEngagement || 0,
+                    avg_views: bt.avg_views || 0,  // View-based metric
+                    relative_performance: bt.relative_performance || 0,  // % above/below average
+                    confidence_level: bt.confidence_level || 'low'  // Data quality indicator
                 })),
                 best_day_hour_combinations: bestDayHourCombinations || [],
                 content_type_recommendations: contentTypeRecommendations || [],

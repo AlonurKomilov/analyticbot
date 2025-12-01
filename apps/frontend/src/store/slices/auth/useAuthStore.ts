@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
+import offlineStorage from '@/utils/offlineStorage';
 import type { User, UserPreferences } from '@/types';
 
 interface Plan {
@@ -190,10 +191,18 @@ export const useAuthStore = create<AuthState>()(
     },
 
     // Logout user
-    logout: () => {
+    logout: async () => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('authToken');
+
+      // Clear all cached channel data to prevent data leaking between users
+      try {
+        await offlineStorage.clearCache();
+        console.log('✅ Cleared offline cache on logout');
+      } catch (error) {
+        console.warn('Failed to clear offline cache:', error);
+      }
 
       set({
         user: null,

@@ -35,14 +35,26 @@ class RedisJSONCache:
 
         return None
 
-    async def set_json(self, key: str, value: dict, ttl_s: int = 60) -> None:
-        """Set JSON data in cache with TTL"""
+    async def set_json(
+        self, key: str, value: dict, ttl_s: int = 60, *, expire_seconds: int | None = None
+    ) -> None:
+        """Set JSON data in cache with TTL
+        
+        Args:
+            key: Cache key
+            value: JSON-serializable dictionary
+            ttl_s: TTL in seconds (default 60)
+            expire_seconds: Alternative name for ttl_s (for backward compatibility)
+        """
         if not self.enabled or self.redis is None:
             return
 
+        # Support both parameter names
+        ttl = expire_seconds if expire_seconds is not None else ttl_s
+
         try:
             json_value = json.dumps(value, default=self._json_serializer)
-            await self.redis.set(key, json_value, ex=ttl_s)
+            await self.redis.set(key, json_value, ex=ttl)
         except Exception as e:
             logger.error(f"Cache set error for key {key}: {e}")
 
@@ -97,7 +109,9 @@ class NoOpCache:
     async def get_json(self, key: str) -> dict | None:
         return None
 
-    async def set_json(self, key: str, value: dict, ttl_s: int = 60) -> None:
+    async def set_json(
+        self, key: str, value: dict, ttl_s: int = 60, *, expire_seconds: int | None = None
+    ) -> None:
         pass
 
     async def delete(self, key: str) -> None:

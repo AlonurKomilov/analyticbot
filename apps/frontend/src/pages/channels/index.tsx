@@ -140,7 +140,7 @@ const ChannelsManagementPage: React.FC = () => {
         } catch (err: any) {
             // Extract error message from various possible sources
             let errorMessage = 'Failed to add channel';
-
+            
             // Check for API response with detail
             if (err.response?.data?.detail) {
                 errorMessage = err.response.data.detail;
@@ -163,7 +163,7 @@ const ChannelsManagementPage: React.FC = () => {
                     errorMessage = err.message;
                 }
             }
-
+            
             setFormError(errorMessage);
         } finally {
             setSubmitting(false);
@@ -298,7 +298,7 @@ const ChannelsManagementPage: React.FC = () => {
 
             {/* Info Banner */}
             <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 3 }}>
-                <strong>Note:</strong> To sync data from Telegram, make sure your bot is added as an administrator to each channel.
+                <strong>Note:</strong> To sync data from Telegram, make sure your Bot and MTProto is added as an administrator to each channel.
             </Alert>
 
             {/* Channels Grid - Microservice Component */}

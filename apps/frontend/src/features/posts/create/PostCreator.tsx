@@ -3,7 +3,7 @@
  *
  * This component has been decomposed from a 396-line monolith into:
  * - PostContentInput: Text content input with validation
- * - ChannelSelector: Channel selection with memoized options
+ * - SimpleChannelSelect: Channel selection with memoized options
  * - ScheduleTimeInput: Date/time scheduling input
  * - PostButtonManager: Inline button management
  * - PostSubmitButton: Submit button with loading states
@@ -19,7 +19,7 @@ import { useResponsive } from '@/theme/responsive';
 
 // Import decomposed sub-components
 import PostContentInput from './PostContentInput';
-import ChannelSelector from './ChannelSelector';
+import SimpleChannelSelect from './SimpleChannelSelect';
 import ScheduleTimeInput from './ScheduleTimeInput';
 import PostButtonManager from './PostButtonManager';
 
@@ -222,7 +222,7 @@ const PostCreator: React.FC<PostCreatorProps> = React.memo(({
             {/* Channel Selection Section */}
             <fieldset style={{ border: 'none', padding: 0, margin: 0, marginBottom: 24 }}>
                 <legend className="sr-only">Channel Selection</legend>
-                <ChannelSelector
+                <SimpleChannelSelect
                     channels={channels}
                     selectedChannel={formState.selectedChannel}
                     onChange={(value: string | number) => updateField('selectedChannel', String(value))}

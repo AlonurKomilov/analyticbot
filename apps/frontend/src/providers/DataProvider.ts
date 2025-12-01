@@ -183,7 +183,8 @@ export class ApiDataProvider extends DataProvider {
       // Fallback if response structure is unexpected
       return this.getEmptyAnalyticsOverview();
     } catch (error) {
-      apiLogger.error('Failed to fetch analytics', error);
+      // Log at debug level instead of error - this is expected when channel has no data
+      apiLogger.debug('Analytics data not available', { error });
       return this.getEmptyAnalyticsOverview();
     }
   }

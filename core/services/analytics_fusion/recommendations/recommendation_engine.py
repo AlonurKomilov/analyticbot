@@ -125,14 +125,31 @@ class RecommendationEngine:
     def _process_best_times(self, raw_data: RawMetricsData) -> list[PostingTimeRecommendation]:
         """
         Process best posting times from raw data.
-        CRITICAL FIX: Generate recommendations for EACH day of the week, not just one day!
+        FIXED: Use best_day_hour_combinations for accurate per-day per-hour data.
+        This ensures each time slot has its own unique avg_views and relative_performance.
         """
         best_times = []
 
-        # Group hours by day of week to create recommendations for each day
-        # This ensures frontend shows DIFFERENT times for different days
+        # PRIORITY 1: Use best_day_hour_combinations if available (most accurate)
+        # This has specific day+hour combinations with their actual metrics
+        if raw_data.best_day_hour_combinations:
+            for combo in raw_data.best_day_hour_combinations:
+                best_times.append(
+                    PostingTimeRecommendation(
+                        hour=combo["hour"],
+                        day=combo["day"],
+                        confidence=combo.get("confidence", 75.0),
+                        avg_engagement=combo.get("avg_engagement", 0.0),
+                        avg_views=combo.get("avg_views", 0.0),
+                        relative_performance=combo.get("relative_performance", 0.0),
+                        confidence_level=combo.get("confidence_level", "low"),
+                    )
+                )
+            return best_times
+
+        # FALLBACK: Use best_hours if no day-hour combos available
+        # This distributes hour data across days (less accurate)
         if raw_data.best_hours:
-            # If we have hourly data, distribute it across days
             hours_per_day = {}
 
             # First, try to get day-specific data if available
@@ -148,10 +165,13 @@ class RecommendationEngine:
                             "hour": hour,
                             "confidence": day_hour_data.get("confidence", 75.0),
                             "avg_engagement": day_hour_data.get("avg_engagement", 0.0),
+                            "avg_views": day_hour_data.get("avg_views", 0.0),
+                            "relative_performance": day_hour_data.get("relative_performance", 0.0),
+                            "confidence_level": day_hour_data.get("confidence_level", "low"),
                         }
                     )
             else:
-                # Fallback: Distribute top hours across all days with slight variations
+                # Last resort: Distribute top hours across all days with slight variations
                 top_hours = sorted(
                     raw_data.best_hours, key=lambda x: x["confidence"], reverse=True
                 )[:5]
@@ -170,6 +190,9 @@ class RecommendationEngine:
                                 "confidence": hour_data["confidence"]
                                 * (0.95 + day * 0.01),  # Slight variation
                                 "avg_engagement": hour_data["avg_engagement"],
+                                "avg_views": hour_data.get("avg_views", 0.0),
+                                "relative_performance": hour_data.get("relative_performance", 0.0),
+                                "confidence_level": hour_data.get("confidence_level", "low"),
                             }
                         )
 
@@ -182,6 +205,9 @@ class RecommendationEngine:
                             day=day,
                             confidence=hour_data["confidence"],
                             avg_engagement=hour_data["avg_engagement"],
+                            avg_views=hour_data.get("avg_views", 0.0),
+                            relative_performance=hour_data.get("relative_performance", 0.0),
+                            confidence_level=hour_data.get("confidence_level", "low"),
                         )
                     )
 
@@ -267,6 +293,9 @@ class RecommendationEngine:
                         confidence=combo_data["confidence"],
                         avg_engagement=combo_data["avg_engagement"],
                         post_count=combo_data["post_count"],
+                        avg_views=combo_data.get("avg_views", 0.0),  # New view-based metric
+                        relative_performance=combo_data.get("relative_performance", 0.0),
+                        confidence_level=combo_data.get("confidence_level", "low"),
                     )
                 )
 
@@ -287,6 +316,8 @@ class RecommendationEngine:
                         confidence=ct_data["confidence"],
                         avg_engagement=ct_data["avg_engagement"],
                         post_count=ct_data["post_count"],
+                        avg_views=ct_data.get("avg_views", 0.0),  # New view-based metric
+                        relative_performance=ct_data.get("relative_performance", 0.0),
                     )
                 )
 

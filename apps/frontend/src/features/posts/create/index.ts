@@ -9,7 +9,7 @@ export { default as PostCreator } from './PostCreator';
 // Form components
 export { default as PostCreatorForm } from './PostCreatorForm';
 export { default as PostContentInput } from './PostContentInput';
-export { default as ChannelSelector } from './ChannelSelector';
+export { default as SimpleChannelSelect } from './SimpleChannelSelect';
 export { default as ScheduleTimeInput } from './ScheduleTimeInput';
 
 // Button components

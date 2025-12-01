@@ -39,10 +39,10 @@ const ContentTypeChips: React.FC<{ flags?: PostMediaFlags; hasText: boolean }> =
 
   const iconSize = 12;
   const iconStyle = { fontSize: iconSize };
-
+  
   // Build list of content types present
   const contentTypes: Array<{ icon: React.ReactNode; label: string; color: string }> = [];
-
+  
   if (flags.has_photo) {
     contentTypes.push({ icon: <ImageIcon sx={iconStyle} />, label: 'Photo', color: '#4CAF50' });
   }
@@ -82,8 +82,8 @@ const ContentTypeChips: React.FC<{ flags?: PostMediaFlags; hasText: boolean }> =
             icon={<TextFields sx={iconStyle} />}
             label="Text"
             size="small"
-            sx={{
-              height: 20,
+            sx={{ 
+              height: 20, 
               fontSize: '0.7rem',
               '& .MuiChip-icon': { color: '#795548' },
               '& .MuiChip-label': { px: 0.5 }
@@ -100,9 +100,9 @@ const ContentTypeChips: React.FC<{ flags?: PostMediaFlags; hasText: boolean }> =
     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
       {contentTypes.map((ct, index) => (
         <Tooltip key={index} title={ct.label} arrow placement="top">
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
             color: ct.color,
             opacity: 0.9,
           }}>
@@ -154,9 +154,9 @@ export const PostsGrid: React.FC<PostsGridProps> = ({
                 >
                   {post.text || '(Media post)'}
                 </Typography>
-                <ContentTypeChips
-                  flags={post.media_flags}
-                  hasText={Boolean(post.text && post.text.trim().length > 0)}
+                <ContentTypeChips 
+                  flags={post.media_flags} 
+                  hasText={Boolean(post.text && post.text.trim().length > 0)} 
                 />
               </Box>
 

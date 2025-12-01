@@ -1,6 +1,9 @@
 /**
- * Form Components
- * Form inputs and controls
+ * Form Components Module
+ *
+ * Provides reusable form components and validation utilities
+ * for consistent form experiences across the application.
  */
 
-export * from './forms';
+export * from './FormComponents';
+export { default as useFormValidation } from './useFormValidation';

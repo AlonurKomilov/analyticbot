@@ -83,12 +83,16 @@ class BotContainer(containers.DeclarativeContainer):
     bot_client = providers.Factory(create_bot_client, settings=bot_settings)
     dispatcher = providers.Factory(create_dispatcher)
 
-    # Telegram Alert Delivery Service
+    # Telegram Alert Delivery Service (Optional - gracefully handles missing bot)
     telegram_alert_delivery = providers.Factory(
-        lambda bot: __import__(
-            "infra.adapters.telegram_alert_delivery",
-            fromlist=["TelegramAlertDeliveryService"],
-        ).TelegramAlertDeliveryService(bot_client=bot),
+        lambda bot: (
+            __import__(
+                "infra.adapters.telegram_alert_delivery",
+                fromlist=["TelegramAlertDeliveryService"],
+            ).TelegramAlertDeliveryService(bot_client=bot)
+            if bot is not None
+            else None
+        ),
         bot=bot_client,
     )
 
@@ -287,7 +291,7 @@ class BotContainer(containers.DeclarativeContainer):
     )
 
     alerts_management_service = providers.Factory(
-        lambda posts_repo, daily_repo, channels_repo, telegram_delivery, rule_manager: __import__(
+        lambda posts_repo, daily_repo, channels_repo, telegram_delivery: __import__(
             "core.services.alerts_fusion.alerts.alerts_management_service",
             fromlist=["AlertsManagementService"],
         ).AlertsManagementService(
@@ -295,13 +299,12 @@ class BotContainer(containers.DeclarativeContainer):
             daily_repo=daily_repo,
             channels_repo=channels_repo,
             telegram_delivery_service=telegram_delivery,
-            alert_rule_manager=rule_manager,
+            alert_rule_manager=None,  # Optional: alert_repo not configured
         ),
         posts_repo=database.post_repo,
         daily_repo=database.channel_daily_repo,
         channels_repo=database.channel_repo,
         telegram_delivery=telegram_alert_delivery,
-        rule_manager=alert_rule_manager,
     )
 
     # Alerts orchestrator - coordinates all alert fusion services

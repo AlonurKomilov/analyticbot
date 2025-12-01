@@ -5,11 +5,9 @@ import {
     InputLabel,
     Select,
     MenuItem,
-    Typography,
     SelectChangeEvent,
     Chip
 } from '@mui/material';
-import { Psychology as AIIcon } from '@mui/icons-material';
 
 /**
  * Time frame options (standardized format)

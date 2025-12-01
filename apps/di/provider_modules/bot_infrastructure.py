@@ -22,6 +22,7 @@ def create_bot_client(settings: BotSettings) -> Any | None:
         token = os.getenv("BOT_TOKEN")
 
     if not token or token == "replace_me":
+        logger.info("Bot token not configured - running in API-only mode")
         return None
 
     try:
@@ -31,6 +32,11 @@ def create_bot_client(settings: BotSettings) -> Any | None:
 
         return _AioBot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     except ImportError:
+        logger.warning("aiogram not installed - bot client unavailable")
+        return None
+    except Exception as e:
+        # Handle invalid token format or other errors gracefully
+        logger.warning(f"Failed to create bot client: {e} - running in API-only mode")
         return None
 
 

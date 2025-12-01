@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Any
 
 from telethon import utils
-from telethon.tl.types import MessageEntityTextUrl, MessageEntityUrl, MessageMediaWebPage
+from telethon.tl.types import MessageMediaWebPage, MessageEntityUrl, MessageEntityTextUrl
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
         # - message.contact: Contact
         # - message.geo: Location
         # - message.web_preview: Web page preview
-
+        
         has_video = False
         has_photo = False
         has_audio = False
@@ -101,22 +101,22 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
         has_poll = False
         has_video_note = False
         has_web_preview = False
-
+        
         # IMPORTANT: Check for web preview FIRST before other media types
         # Web page previews may contain photos/videos but Telegram counts them as "Shared Links"
         # not as Photos or Videos. We need to detect this early.
         media = getattr(message, "media", None)
         if isinstance(media, MessageMediaWebPage):
             has_web_preview = True
-
+        
         # Use Telethon's convenience properties - they match Telegram's categorization exactly
         # BUT: Don't count photos/videos if they're from a web preview
         if getattr(message, "photo", None) and not has_web_preview:
             has_photo = True
-
+        
         if getattr(message, "video", None):
             has_video = True
-
+        
         if getattr(message, "video_note", None):
             # IMPORTANT: Video notes (round videos) count as "Voice" in Telegram stats!
             # Telegram's media statistics groups video notes with voice messages.
@@ -124,32 +124,30 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
             has_video_note = True
             has_video = False  # Undo video flag - video notes are NOT counted as videos
             has_voice = True  # Telegram counts video notes as voice/audio category
-
+        
         if getattr(message, "gif", None):
             has_gif = True
             has_video = False  # GIFs are technically videos but should be counted separately
-
+        
         if getattr(message, "sticker", None):
             has_sticker = True
-
+        
         if getattr(message, "voice", None):
             has_voice = True
-
+        
         if getattr(message, "audio", None):
             has_audio = True
-
+        
         # Only set has_document for actual files (not videos, audio, etc.)
         # Telethon's message.document returns the document for ANY document type,
         # so we only set has_document if none of the specialized types matched
         if getattr(message, "document", None):
-            if not (
-                has_video or has_audio or has_voice or has_gif or has_sticker or has_video_note
-            ):
+            if not (has_video or has_audio or has_voice or has_gif or has_sticker or has_video_note):
                 has_document = True
-
+        
         if getattr(message, "poll", None):
             has_poll = True
-
+        
         # Check for links in text (matches Telegram's "shared links" count)
         # IMPORTANT: Telegram's "Shared links" category counts messages that have:
         # 1. URL entities (MessageEntityUrl, MessageEntityTextUrl) - PRIMARY source
@@ -161,15 +159,15 @@ def normalize_message(message: Any) -> dict[str, Any] | None:
             if isinstance(entity, (MessageEntityUrl, MessageEntityTextUrl)):
                 has_link = True
                 break
-
+        
         # Web preview always counts as link
         if has_web_preview:
             has_link = True
-
+        
         # Aggregate flags for backward compatibility
         # has_media = any visual media (photo, gif, sticker) - NOT video (video is separate)
         has_media = has_photo or has_gif or has_sticker
-
+        
         # Calculate text length for content analysis
         text_length = len(text) if text else 0
         # ========== END MEDIA TYPE DETECTION ==========

@@ -175,13 +175,13 @@ class ChannelService:
         Get channel by ID
 
         Args:
-            channel_id: Channel ID to search for
+            channel_id: Channel ID to search for (can be negative for Telegram channels)
 
         Returns:
             Channel entity if found, None otherwise
         """
-        if channel_id <= 0:
-            raise ValueError("Channel ID must be positive")
+        if channel_id == 0:
+            raise ValueError("Channel ID cannot be zero")
 
         try:
             record = await self.channel_repo.get_channel_by_id(channel_id)
@@ -195,13 +195,13 @@ class ChannelService:
         Get channel by Telegram ID
 
         Args:
-            telegram_id: Telegram ID to search for
+            telegram_id: Telegram ID to search for (can be negative for Telegram channels)
 
         Returns:
             Channel entity if found, None otherwise
         """
-        if telegram_id <= 0:
-            raise ValueError("Telegram ID must be positive")
+        if telegram_id == 0:
+            raise ValueError("Telegram ID cannot be zero")
 
         try:
             record = await self.channel_repo.get_channel_by_telegram_id(telegram_id)
@@ -217,14 +217,14 @@ class ChannelService:
         ✅ Issue #3 Phase 4: Added for channel suspension functionality
 
         Args:
-            channel_id: Channel ID to update
+            channel_id: Channel ID to update (can be negative for Telegram channels)
             is_active: New active status (True=active, False=suspended)
 
         Raises:
             ValueError: If channel_id is invalid
         """
-        if channel_id <= 0:
-            raise ValueError("Channel ID must be positive")
+        if channel_id == 0:
+            raise ValueError("Channel ID cannot be zero")
 
         self.logger.info(
             f"Updating channel {channel_id} status to {'active' if is_active else 'suspended'}"
@@ -252,8 +252,8 @@ class ChannelService:
         Raises:
             ValueError: If channel_id is invalid or channel not found
         """
-        if channel_id <= 0:
-            raise ValueError("Channel ID must be positive")
+        if channel_id == 0:
+            raise ValueError("Channel ID cannot be zero")
 
         if not kwargs:
             raise ValueError("No fields provided for update")
@@ -276,13 +276,13 @@ class ChannelService:
         Soft delete a channel
 
         Args:
-            channel_id: Channel ID to delete
+            channel_id: Channel ID to delete (can be negative for Telegram channels)
 
         Returns:
             True if deleted successfully
         """
-        if channel_id <= 0:
-            raise ValueError("Channel ID must be positive")
+        if channel_id == 0:
+            raise ValueError("Channel ID cannot be zero")
 
         self.logger.info(f"Deleting channel {channel_id}")
 

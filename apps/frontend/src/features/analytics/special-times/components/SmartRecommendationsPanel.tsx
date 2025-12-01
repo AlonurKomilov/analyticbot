@@ -39,6 +39,9 @@ interface DayHourCombination {
     hour: number; // 0-23
     confidence: number;
     avg_engagement: number;
+    avg_views?: number;
+    relative_performance?: number;
+    confidence_level?: 'high' | 'medium' | 'low';
     post_count: number;
 }
 
@@ -47,7 +50,20 @@ interface ContentTypeRecommendation {
     hour: number;
     confidence: number;
     avg_engagement: number;
+    avg_views?: number;
+    relative_performance?: number;
     post_count: number;
+}
+
+interface ContentTypeSummary {
+    image?: number;
+    video?: number;
+    text?: number;
+    link?: number;
+    voice?: number;
+    audio?: number;
+    document?: number;
+    gif?: number;
 }
 
 interface SmartRecommendationsPanelProps {
@@ -56,6 +72,7 @@ interface SmartRecommendationsPanelProps {
     selectedContentType?: 'all' | 'video' | 'image' | 'text' | 'link';
     onContentTypeChange?: (type: 'all' | 'video' | 'image' | 'text' | 'link') => void;
     totalPostsAnalyzed?: number;
+    contentTypeSummary?: ContentTypeSummary;
 }
 
 const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
@@ -63,7 +80,8 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
     contentTypeRecommendations = [],
     selectedContentType = 'all',
     onContentTypeChange,
-    totalPostsAnalyzed
+    totalPostsAnalyzed = 0,
+    contentTypeSummary = {}
 }) => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -177,12 +195,34 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                                                 size="small"
                                             />
                                         </Box>
-                                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
-                                            <Typography variant="caption" color="text.secondary">
-                                                Avg Engagement: <strong>{rec.avg_engagement.toFixed(1)}</strong>
-                                            </Typography>
+                                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
+                                            {rec.avg_views !== undefined && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    📊 Avg Views: <strong>{rec.avg_views.toLocaleString()}</strong>
+                                                </Typography>
+                                            )}
+                                            {rec.relative_performance !== undefined && (
+                                                <Typography 
+                                                    variant="caption" 
+                                                    sx={{ 
+                                                        color: rec.relative_performance >= 0 ? 'success.main' : 'error.main',
+                                                        fontWeight: 'bold'
+                                                    }}
+                                                >
+                                                    {rec.relative_performance >= 0 ? '📈' : '📉'} 
+                                                    {rec.relative_performance >= 0 ? '+' : ''}{rec.relative_performance.toFixed(0)}% vs avg
+                                                </Typography>
+                                            )}
                                             <Typography variant="caption" color="text.secondary">
                                                 Based on {rec.post_count} posts
+                                                {rec.confidence_level && (
+                                                    <Chip 
+                                                        label={rec.confidence_level}
+                                                        size="small"
+                                                        sx={{ ml: 0.5, height: 16, fontSize: '0.65rem' }}
+                                                        color={rec.confidence_level === 'high' ? 'success' : rec.confidence_level === 'medium' ? 'warning' : 'default'}
+                                                    />
+                                                )}
                                             </Typography>
                                         </Box>
                                         <LinearProgress
@@ -226,26 +266,29 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                                         <ToggleButton value="video" aria-label="video content">
                                             <VideoIcon fontSize="small" sx={{ mr: 0.5 }} />
                                             VIDEO
-                                            {contentTypeRecommendations.filter(r => r.content_type === 'video').length > 0 && (
-                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'video').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            {(contentTypeSummary?.video ?? 0) > 0 && (
+                                                <Chip label={contentTypeSummary.video} size="small" sx={{ ml: 0.5, height: 18 }} />
                                             )}
                                         </ToggleButton>
                                         <ToggleButton value="image" aria-label="image content">
                                             <ImageIcon fontSize="small" sx={{ mr: 0.5 }} />
                                             IMAGE
+                                            {(contentTypeSummary?.image ?? 0) > 0 && (
+                                                <Chip label={contentTypeSummary.image} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            )}
                                         </ToggleButton>
                                         <ToggleButton value="text" aria-label="text content">
                                             <TextIcon fontSize="small" sx={{ mr: 0.5 }} />
                                             TEXT
-                                            {contentTypeRecommendations.filter(r => r.content_type === 'text').length > 0 && (
-                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'text').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            {(contentTypeSummary?.text ?? 0) > 0 && (
+                                                <Chip label={contentTypeSummary.text} size="small" sx={{ ml: 0.5, height: 18 }} />
                                             )}
                                         </ToggleButton>
                                         <ToggleButton value="link" aria-label="link content">
                                             <LinkIcon fontSize="small" sx={{ mr: 0.5 }} />
                                             LINK
-                                            {contentTypeRecommendations.filter(r => r.content_type === 'link').length > 0 && (
-                                                <Chip label={contentTypeRecommendations.filter(r => r.content_type === 'link').length} size="small" sx={{ ml: 0.5, height: 18 }} />
+                                            {(contentTypeSummary?.link ?? 0) > 0 && (
+                                                <Chip label={contentTypeSummary.link} size="small" sx={{ ml: 0.5, height: 18 }} />
                                             )}
                                         </ToggleButton>
                                     </ToggleButtonGroup>
@@ -277,11 +320,21 @@ const SmartRecommendationsPanel: React.FC<SmartRecommendationsPanelProps> = ({
                                         <Typography variant="body2" color="text.secondary">
                                             → {formatHour(rec.hour)}
                                         </Typography>
+                                        {rec.relative_performance !== undefined && (
+                                            <Chip
+                                                label={`${rec.relative_performance >= 0 ? '+' : ''}${rec.relative_performance.toFixed(0)}%`}
+                                                size="small"
+                                                sx={{ height: 18, fontSize: '0.7rem' }}
+                                                color={rec.relative_performance >= 0 ? 'success' : 'error'}
+                                            />
+                                        )}
                                     </Box>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {rec.avg_engagement.toFixed(1)} avg
-                                        </Typography>
+                                        {rec.avg_views !== undefined && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {rec.avg_views.toLocaleString()} views
+                                            </Typography>
+                                        )}
                                         <Chip
                                             label={`${rec.confidence.toFixed(0)}%`}
                                             color={getConfidenceColor(rec.confidence)}

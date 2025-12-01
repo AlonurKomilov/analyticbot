@@ -55,6 +55,12 @@ const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManageme
 const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
 const MTProtoMonitoringPage = React.lazy(() => import('./pages/MTProtoMonitoringPage'));
 
+// Smart Alerts Settings Page
+const SmartAlertsSettingsPage = React.lazy(() => import('./pages/settings/SmartAlertsSettingsPage'));
+
+// Content Protection Settings Page
+const ContentProtectionSettingsPage = React.lazy(() => import('./pages/settings/ContentProtectionSettingsPage'));
+
 // Storage Channels Page
 const StorageChannelsPage = React.lazy(() => import('./pages/StorageChannelsPage'));
 
@@ -346,6 +352,30 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <MTProtoMonitoringPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Smart Alerts Settings */}
+                                <Route
+                                    path="/settings/alerts"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <SmartAlertsSettingsPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Content Protection Settings */}
+                                <Route
+                                    path="/settings/content-protection"
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <ContentProtectionSettingsPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

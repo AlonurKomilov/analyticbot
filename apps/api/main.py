@@ -479,6 +479,7 @@ app.include_router(admin_system_router)  # Admin - System Management
 from apps.api.routers.analytics_alerts_router import router as analytics_alerts_router
 from apps.api.routers.analytics_channels_router import router as analytics_channels_router
 from apps.api.routers.analytics_live_router import router as analytics_live_router
+from apps.api.routers.analytics_overview_router import router as analytics_overview_router
 from apps.api.routers.analytics_post_dynamics_router import router as analytics_post_dynamics_router
 from apps.api.routers.analytics_top_posts_router import router as analytics_top_posts_router
 from apps.api.routers.insights_engagement_router import router as insights_engagement_router
@@ -489,6 +490,9 @@ from apps.api.routers.statistics_reports_router import router as statistics_repo
 from apps.demo.routers.main import router as demo_router
 
 # NEW: Organized analytics domain structure
+app.include_router(
+    analytics_overview_router, prefix="/analytics/overview", tags=["Analytics - Overview"]
+)  # TGStat-style dashboard overview
 app.include_router(
     analytics_channels_router, prefix="/analytics/channels", tags=["Analytics - Channels"]
 )

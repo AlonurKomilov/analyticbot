@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import TopPostsTable from '../components/analytics/TopPostsTable/TopPostsTable';
+import { TopPostsTable } from '@features/posts';
 import React from 'react';
 
 const theme = createTheme();

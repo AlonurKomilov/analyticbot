@@ -1,19 +1,19 @@
 /**
- * Services Index - Updated for Feature-First Architecture (Phase 3 Task 1.5)
+ * Services Index - Updated for Feature-First Architecture
  *
- * Services have been reorganized into feature-specific directories.
- * This file maintains backward compatibility by re-exporting from new locations.
+ * NOTE: AI Service PAGES have been moved to pages/ai-services/
+ * This folder now only contains:
+ * - Re-exports for backward compatibility
+ * - userBotApi.ts - Bot API utilities
  *
  * New structure:
- * - features/analytics/services/ - Analytics service
+ * - pages/ai-services/ - AI service PAGE components
+ * - features/analytics/services/ - Analytics service logic
  * - features/admin/services/ - Admin services (users, channels)
- * - features/ai-services/api/ - AI services API
- * - features/ai-services/services/ - AI service logic
- * - features/payment/api/ - Payment API
+ * - features/ai-services/services/ - AI service LOGIC (not pages)
  * - features/payment/services/ - Payment services
  * - features/protection/services/ - Content protection
  * - features/posts/services/ - Sharing services
- * - shared/services/api/ - Shared API utilities
  * - shared/services/ - Shared service utilities
  */
 

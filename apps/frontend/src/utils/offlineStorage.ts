@@ -424,6 +424,19 @@ class OfflineStorage {
             await localforage.setItem('test', 'test');
             await localforage.removeItem('test');
 
+            // Version-based cache invalidation to prevent stale data issues
+            const CACHE_VERSION = '2.0.0'; // Increment this when cache format changes
+            const storedVersion = await localforage.getItem<string>('_cache_version');
+            
+            if (storedVersion !== CACHE_VERSION) {
+                logger.info('Cache version mismatch, clearing old cache', { 
+                    storedVersion, 
+                    newVersion: CACHE_VERSION 
+                });
+                await this.clearCache();
+                await localforage.setItem('_cache_version', CACHE_VERSION);
+            }
+
             // Clean up old cache on startup
             await this.cleanupCache();
 

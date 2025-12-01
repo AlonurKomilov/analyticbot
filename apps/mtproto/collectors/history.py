@@ -211,7 +211,7 @@ class HistoryCollector:
         return stats
 
     async def _update_channel_metadata(self, channel_id: int) -> None:
-        """Update channel metadata (subscriber count, title, etc.) from Telegram.
+        """Update channel metadata (subscriber count, title, description, etc.) from Telegram.
 
         Args:
             channel_id: Telegram channel ID to update
@@ -223,31 +223,67 @@ class HistoryCollector:
             full_channel_response = await self.tg_client.get_full_channel(channel_id)
 
             if full_channel_response:
-                # Telethon returns a messages.ChatFull object with full_chat attribute
+                # Telethon returns a messages.ChatFull object with full_chat and chats attributes
                 full_chat = getattr(full_channel_response, "full_chat", None)
+                chats = getattr(full_channel_response, "chats", [])
+                
                 if full_chat:
                     subscriber_count = getattr(full_chat, "participants_count", 0)
+                    about = getattr(full_chat, "about", None)  # Channel description
+
+                    # Get channel entity from chats list for title/username
+                    channel_entity = None
+                    for chat in chats:
+                        if getattr(chat, "id", None) == abs(channel_id):
+                            channel_entity = chat
+                            break
+                    
+                    # Extract title and username from channel entity
+                    title = getattr(channel_entity, "title", None) if channel_entity else None
+                    username = getattr(channel_entity, "username", None) if channel_entity else None
 
                     self.logger.info(
-                        f"✅ Channel {channel_id} has {subscriber_count:,} subscribers"
+                        f"✅ Channel {channel_id}: subscribers={subscriber_count:,}, "
+                        f"title='{title}', username='{username}', description='{about[:50] if about else None}...'"
                     )
 
                     # Update channel in database using repository pool
                     pool = self.repos.channel_repo.pool
 
                     async with pool.acquire() as conn:
-                        await conn.execute(
-                            """
+                        # Build dynamic update query based on available data
+                        update_fields = ["subscriber_count = $1", "updated_at = NOW()"]
+                        params = [subscriber_count]
+                        param_idx = 2
+                        
+                        if about is not None:
+                            update_fields.append(f"description = ${param_idx}")
+                            params.append(about)
+                            param_idx += 1
+                        
+                        if title is not None:
+                            update_fields.append(f"title = ${param_idx}")
+                            params.append(title)
+                            param_idx += 1
+                        
+                        if username is not None:
+                            update_fields.append(f"username = ${param_idx}")
+                            params.append(username)
+                            param_idx += 1
+                        
+                        params.append(abs(channel_id))  # WHERE clause param
+                        
+                        query = f"""
                             UPDATE channels
-                            SET subscriber_count = $1,
-                                updated_at = NOW()
-                            WHERE id = $2
-                            """,
-                            subscriber_count,
-                            abs(channel_id),  # Use absolute value for DB
-                        )
+                            SET {', '.join(update_fields)}
+                            WHERE id = ${param_idx}
+                        """
+                        
+                        await conn.execute(query, *params)
+                        
                     self.logger.info(
-                        f"💾 Updated subscriber_count={subscriber_count:,} in database for channel {abs(channel_id)}"
+                        f"💾 Updated channel {abs(channel_id)}: subscriber_count={subscriber_count:,}, "
+                        f"description synced, title synced"
                     )
                 else:
                     self.logger.warning(f"No full_chat data in response for {channel_id}")

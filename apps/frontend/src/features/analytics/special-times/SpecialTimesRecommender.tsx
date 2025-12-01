@@ -63,11 +63,15 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
         console.log('📅 Processing calendar data:', dailyPerformance);
 
         // Convert backend format to component format
+        // Now includes month/year for proper filtering and avgViews as primary metric
         return dailyPerformance.map((day: any) => ({
             date: day.date,
-            dayOfWeek: day.dayOfWeek || day.day_of_week,
-            avgEngagement: day.avgEngagement || day.avg_engagement,
-            postCount: day.postCount || day.post_count
+            dayOfWeek: day.dayOfWeek ?? day.day_of_week,
+            month: day.month,  // 1-12 for proper filtering
+            year: day.year,   // Year for proper filtering
+            avgEngagement: day.avgEngagement ?? day.avg_engagement ?? 0,
+            avgViews: day.avgViews ?? day.avg_views ?? 0,  // Primary metric
+            postCount: day.postCount ?? day.post_count ?? 0
         }));
     }, [(recommendations as any)?.daily_performance]);
 
@@ -105,9 +109,71 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
         return timesByDay;
     }, [recommendations]);
 
-    const handleDateSelect = (date: Date) => {
-        // Navigate to create post page with pre-selected date
-        navigate(`/posts/create?scheduledDate=${date.toISOString()}`);
+    // Extract best days performance scores from backend (day 0-6 -> performance score)
+    const dayPerformanceScores = React.useMemo(() => {
+        const scores: Record<number, { score: number; confidence: number; avgViews: number }> = {};
+        
+        // Use best_day_hour_combinations for day-of-week performance
+        const combos = (recommendations as any)?.best_day_hour_combinations || [];
+        if (combos.length > 0) {
+            // Group by day and take the best score for each day
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            dayNames.forEach((dayName, dayIndex) => {
+                const dayData = combos.filter((c: any) => c.day_name === dayName);
+                if (dayData.length > 0) {
+                    const best = dayData.reduce((a: any, b: any) => (a.score > b.score ? a : b));
+                    scores[dayIndex] = {
+                        score: best.score || 50,
+                        confidence: best.confidence || 50,
+                        avgViews: best.avg_views || 0
+                    };
+                }
+            });
+        }
+        
+        // Fallback: use best_times if no day_hour_combinations
+        if (Object.keys(scores).length === 0 && recommendations?.best_times) {
+            recommendations.best_times.forEach((time: any) => {
+                const day = time.day;
+                if (day !== undefined && !scores[day]) {
+                    scores[day] = {
+                        score: time.confidence || 50,
+                        confidence: time.confidence || 50,
+                        avgViews: time.avg_views || 0
+                    };
+                }
+            });
+        }
+        
+        return scores;
+    }, [recommendations]);
+
+    const handleDateSelect = (date: Date, time?: string) => {
+        // Create scheduled datetime
+        let scheduledTime: string;
+        
+        if (time) {
+            // Use the selected time (e.g., "10:00", "13:00")
+            const [hours, minutes] = time.split(':').map(Number);
+            date.setHours(hours, minutes || 0, 0, 0);
+        }
+        
+        // Format as datetime-local string (YYYY-MM-DDTHH:mm) in local timezone
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        scheduledTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+        // Navigate to create post page with pre-selected date/time using state (like BestTimeCards)
+        navigate('/posts/create', {
+            state: {
+                channelId: selectedChannel?.id?.toString(),
+                scheduledTime: scheduledTime,
+                fromRecommendation: true
+            }
+        });
     };
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -237,6 +303,7 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
                                                 selectedContentType={selectedContentType}
                                                 onContentTypeChange={setSelectedContentType}
                                                 totalPostsAnalyzed={(recommendations as any).total_posts_analyzed}
+                                                contentTypeSummary={(recommendations as any).content_type_summary}
                                             />
                                         </Box>
                                     )}
@@ -254,6 +321,7 @@ const SpecialTimesRecommender: React.FC<SpecialTimesRecommenderProps> = ({ lastU
                                 dailyPerformance={calendarData}
                                 month={new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                 bestTimesByDay={bestTimesByDay}
+                                dayPerformanceScores={dayPerformanceScores}
                                 onDateSelect={handleDateSelect}
                                 showFuturePredictions={true}
                             />

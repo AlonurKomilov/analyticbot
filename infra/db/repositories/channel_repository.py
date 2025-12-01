@@ -161,9 +161,19 @@ class AsyncpgChannelRepository:
             return [dict(record) for record in records]
 
     async def get_channel_by_telegram_id(self, telegram_id: int) -> dict[str, Any] | None:
-        """Get channel by telegram ID - API compatibility method"""
+        """Get channel by telegram ID - API compatibility method
+        
+        Checks both positive and negative versions of the ID since Telegram
+        channel IDs can be stored with different signs (legacy issue).
+        """
         async with self.pool.acquire() as conn:
-            record = await conn.fetchrow("SELECT * FROM channels WHERE id = $1", telegram_id)
+            # Check both positive and negative versions to catch duplicates
+            # (some older entries may have wrong sign)
+            record = await conn.fetchrow(
+                "SELECT * FROM channels WHERE id = $1 OR id = $2",
+                telegram_id,
+                -telegram_id,
+            )
             return dict(record) if record else None
 
     async def get_channel_by_username(self, username: str) -> dict[str, Any] | None:

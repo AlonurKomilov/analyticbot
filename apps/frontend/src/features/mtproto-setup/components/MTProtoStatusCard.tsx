@@ -29,8 +29,7 @@ import {
   SignalCellularOff as MTProtoOffIcon,
 } from '@mui/icons-material';
 import { useMTProtoStore } from '../hooks';
-import { uiLogger } from '@/utils/logger';
-import { logger } from '@/utils/logger';
+import { uiLogger, logger } from '@/utils/logger';
 import { toggleGlobalMTProto, connectMTProto } from '../api';
 
 export const MTProtoStatusCard: React.FC = () => {
@@ -123,7 +122,7 @@ export const MTProtoStatusCard: React.FC = () => {
     try {
       // Call API to toggle global MTProto setting (backend expects POST)
       uiLogger.debug('Sending toggle request', { enabled: newValue });
-      await toggleMTProto(newValue);
+      await toggleGlobalMTProto(newValue);
       uiLogger.debug('Toggle API succeeded');
 
       // 🚀 AUTO-CONNECT: When enabling MTProto, automatically connect the session

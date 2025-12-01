@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Container } from '@mui/material';
-import { AdminBotPanel } from '@/components/bot';
+import { AdminBotPanel } from '@features/bot';
 
 export const AdminBotManagementPage: React.FC = () => {
   return (

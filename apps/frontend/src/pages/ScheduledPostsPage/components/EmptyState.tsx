@@ -1,46 +1,31 @@
 /**
- * EmptyState Component
- * Displays a friendly message when no scheduled posts exist
+ * EmptyState Component - Re-export from shared feedback
+ * 
+ * @deprecated Import from '@shared/components/feedback/EmptyState' instead
  */
 
 import React from 'react';
-import { Paper, Typography, Button, Box } from '@mui/material';
 import { Schedule } from '@mui/icons-material';
+import SharedEmptyState from '@shared/components/feedback/EmptyState';
 import { EmptyStateProps } from '../types';
 
+/**
+ * ScheduledPosts-specific EmptyState with Schedule icon preset
+ */
 const EmptyState: React.FC<EmptyStateProps> = ({
   message = "No scheduled posts yet",
   actionText,
   onAction
 }) => {
   return (
-    <Paper
-      sx={{
-        p: 6,
-        textAlign: 'center',
-        bgcolor: 'background.paper'
-      }}
-      elevation={2}
-    >
-      <Box sx={{ mb: 2 }}>
-        <Schedule sx={{ fontSize: 64, color: 'text.secondary', opacity: 0.5 }} />
-      </Box>
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        {message}
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Schedule a post to see it appear here!
-      </Typography>
-      {actionText && onAction && (
-        <Button
-          variant="contained"
-          onClick={onAction}
-          sx={{ mt: 2 }}
-        >
-          {actionText}
-        </Button>
-      )}
-    </Paper>
+    <SharedEmptyState
+      message={message}
+      description="Schedule a post to see it appear here!"
+      icon={<Schedule sx={{ fontSize: 64, color: 'text.secondary' }} />}
+      actionText={actionText}
+      onAction={onAction}
+      usePaper
+    />
   );
 };
 

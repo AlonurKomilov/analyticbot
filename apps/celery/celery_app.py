@@ -268,6 +268,12 @@ celery_app.conf.beat_schedule = {
         "schedule": 300.0,  # Every 5 minutes
         "options": {"queue": "monitoring", "priority": 3},
     },
+    # Channel metadata sync (every 6 hours) - syncs title, description, subscriber count from Telegram
+    "sync-channel-metadata": {
+        "task": "apps.celery.tasks.mtproto_tasks.sync_channel_metadata_task",
+        "schedule": 21600.0,  # Every 6 hours (6 * 60 * 60)
+        "options": {"queue": "maintenance", "priority": 2},
+    },
     # Materialized view refresh (every 4 hours)
     "refresh-materialized-views": {
         "task": "apps.celery.tasks.maintenance_tasks.refresh_materialized_views",

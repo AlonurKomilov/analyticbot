@@ -9,6 +9,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { apiClient } from '@/api/client';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { storeLogger } from '@/utils/logger';
+import offlineStorage from '@/utils/offlineStorage';
 import type { Channel, ValidationResult, ChannelValidationResponse } from '@/types';
 
 interface ChannelState {
@@ -286,6 +287,14 @@ export const useChannelStore = create<ChannelState>()(
       try {
         storeLogger.debug('Deleting channel', { channelId });
         await apiClient.delete(`/channels/${channelId}`);
+
+        // Clear cached data for this channel from IndexedDB
+        try {
+          const clearedCount = await offlineStorage.clearChannelCache(channelId);
+          storeLogger.debug('Cleared channel cache', { channelId, clearedCount });
+        } catch (cacheError) {
+          storeLogger.warn('Failed to clear channel cache', { channelId, cacheError });
+        }
 
         // Remove from local state
         set(state => ({

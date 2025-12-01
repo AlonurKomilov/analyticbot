@@ -109,24 +109,24 @@ export const apiClient = {
 class ServiceFactory {
     static async getChurnPredictorService() {
         if (isDemoUser()) {
-            console.log('🎭 Loading mock ChurnPredictorService');
+            console.log('🎭 Loading mock ChurnPredictorPage');
             const { default: MockChurnService } = await import('@/__mocks__/services/ChurnPredictorService');
             return MockChurnService;
         } else {
-            console.log('🔗 Loading real ChurnPredictorService');
-            const { default: RealChurnService } = await import('@/services/ChurnPredictorService');
+            console.log('🔗 Loading real ChurnPredictorPage');
+            const { default: RealChurnService } = await import('@/pages/ai-services/ChurnPredictorPage');
             return RealChurnService;
         }
     }
 
     static async getPredictiveAnalyticsService() {
         if (isDemoUser()) {
-            console.log('🎭 Loading mock PredictiveAnalyticsService');
+            console.log('🎭 Loading mock PredictiveAnalyticsPage');
             const { default: MockPredictiveService } = await import('@/__mocks__/services/PredictiveAnalyticsService');
             return MockPredictiveService;
         } else {
-            console.log('🔗 Loading real PredictiveAnalyticsService');
-            const { default: RealPredictiveService } = await import('@/services/PredictiveAnalyticsService');
+            console.log('🔗 Loading real PredictiveAnalyticsPage');
+            const { default: RealPredictiveService } = await import('@/pages/ai-services/PredictiveAnalyticsPage');
             return RealPredictiveService;
         }
     }

@@ -18,6 +18,9 @@ interface BestTime {
     hour: number;
     confidence: number;
     avg_engagement: number;
+    avg_views: number;  // Primary metric for display
+    relative_performance?: number;  // % above/below channel average
+    confidence_level?: 'high' | 'medium' | 'low';  // Data quality indicator
 }
 
 interface Recommendations {
@@ -126,9 +129,22 @@ const BestTimeCards: React.FC<BestTimeCardsProps> = ({ recommendations, channelI
                                         {time.confidence}%
                                     </Typography>
                                 </Box>
-                                <Typography variant="body2" color="text.secondary">
-                                    Average: {time.avg_engagement} engagement
-                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Avg. Views: <strong>{typeof time.avg_views === 'number' ? time.avg_views.toLocaleString(undefined, { maximumFractionDigits: 1 }) : '0'}</strong>
+                                    </Typography>
+                                    {time.relative_performance !== undefined && time.relative_performance !== 0 && (
+                                        <Typography 
+                                            variant="caption" 
+                                            sx={{ 
+                                                color: time.relative_performance > 0 ? 'success.main' : 'error.main',
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            {time.relative_performance > 0 ? '▲' : '▼'} {Math.abs(time.relative_performance).toFixed(1)}% vs avg
+                                        </Typography>
+                                    )}
+                                </Box>
 
                                 {channelId && (
                                     <Button

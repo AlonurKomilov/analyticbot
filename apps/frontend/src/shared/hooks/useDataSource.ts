@@ -287,9 +287,9 @@ export const useAnalytics = (
             setData(analyticsData);
             return analyticsData;
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-            setError(errorMessage);
-            console.error('Analytics fetch failed:', err);
+            // Analytics errors are expected when channel has no data yet
+            // Don't set error state - just return null and let UI show empty state
+            console.debug('Analytics not available:', err);
             return null;
         } finally {
             setIsLoading(false);

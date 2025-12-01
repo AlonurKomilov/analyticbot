@@ -11,8 +11,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Dialog,
@@ -38,7 +36,6 @@ import {
   Delete as DeleteIcon,
   VerifiedUser as VerifyIcon,
   Refresh as RefreshIcon,
-  Download as DownloadIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
   Warning as WarningIcon,
@@ -148,14 +145,6 @@ export const DatabaseBackupComponent: React.FC = () => {
       setDeleting(null);
       setDeleteDialog({ open: false, filename: null });
     }
-  };
-
-  const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const getAgeColor = (ageDays: number) => {

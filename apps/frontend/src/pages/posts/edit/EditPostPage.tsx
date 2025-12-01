@@ -1,6 +1,6 @@
 /**
  * Edit Post Page
- * Edit an existing post
+ * Edit an existing post (text content only - Telegram posts don't have separate title/status)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -11,10 +11,6 @@ import {
   Paper,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -30,20 +26,18 @@ const EditPostPage: React.FC = () => {
 
   const { posts, updatePost, isLoading } = usePostStore();
   
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [status, setStatus] = useState('draft');
+  const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Load post data
   useEffect(() => {
     if (id && posts.length > 0) {
-      const post = posts.find(p => p.id === id);
+      // Post.id can be string or number, handle both
+      const post = posts.find(p => String(p.id) === id);
       if (post) {
-        setTitle(post.title || '');
-        setContent(post.content || '');
-        setStatus(post.status || 'draft');
+        // Post type has [key: string]: any, so text access is safe
+        setText((post as any).text || '');
       } else {
         setError('Post not found');
       }
@@ -56,7 +50,7 @@ const EditPostPage: React.FC = () => {
       return;
     }
 
-    if (!content.trim()) {
+    if (!text.trim()) {
       setError('Content cannot be empty');
       return;
     }
@@ -65,11 +59,8 @@ const EditPostPage: React.FC = () => {
     setError(null);
 
     try {
-      await updatePost(id, {
-        title,
-        content,
-        status: status as any,
-      });
+      // Post type allows any properties via [key: string]: any
+      await updatePost(id, { text } as any);
       
       uiLogger.debug('Post updated successfully', { postId: id });
       navigate(ROUTES.POSTS);
@@ -114,46 +105,23 @@ const EditPostPage: React.FC = () => {
         <Box component="form" sx={{ mt: 3 }}>
           <TextField
             fullWidth
-            label="Title (optional)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            sx={{ mb: 3 }}
-            disabled={saving}
-          />
-
-          <TextField
-            fullWidth
-            label="Content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+            label="Post Content"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             multiline
             rows={10}
             sx={{ mb: 3 }}
             required
             disabled={saving}
-            error={!content.trim() && !!error}
-            helperText={!content.trim() && !!error ? 'Content is required' : ''}
+            error={!text.trim() && !!error}
+            helperText={!text.trim() && !!error ? 'Content is required' : ''}
           />
-
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={status}
-              label="Status"
-              onChange={(e) => setStatus(e.target.value)}
-              disabled={saving}
-            >
-              <MenuItem value="draft">Draft</MenuItem>
-              <MenuItem value="published">Published</MenuItem>
-              <MenuItem value="scheduled">Scheduled</MenuItem>
-            </Select>
-          </FormControl>
 
           <Button
             variant="contained"
             startIcon={saving ? <CircularProgress size={20} /> : <Save />}
             onClick={handleSave}
-            disabled={saving || !content.trim()}
+            disabled={saving || !text.trim()}
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>

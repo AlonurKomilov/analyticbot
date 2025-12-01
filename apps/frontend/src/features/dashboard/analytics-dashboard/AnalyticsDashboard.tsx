@@ -1,6 +1,5 @@
 import React, { useState, useEffect, SyntheticEvent } from 'react';
 import {
-    Box,
     Container,
     Paper
 } from '@mui/material';
@@ -18,9 +17,7 @@ import DataSourceBanner from './DataSourceBanner';
 import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import { EnhancedTopPostsTable } from '@features/posts';
 import { SpecialTimesRecommender } from '@features/analytics';
-import { AdvancedAnalyticsDashboard } from '@features/analytics';
-import SmartAlertsPanel from '@features/analytics/advanced-dashboard/SmartAlertsPanel';
-import ContentProtectionDashboard from '@features/posts/components/ContentProtectionDashboard';
+import { AnalyticsOverview, OverviewPage } from '@features/analytics';
 import ApiFailureDialog from '@shared/components/dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@store';
 import { useApiFailureDialog } from '@shared/hooks';
@@ -142,31 +139,28 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
             {/* Tab Content */}
             <main role="main">
                 <TabPanel value={activeTab} index={0}>
+                    {/* TGStat-style Channel Overview */}
+                    <OverviewPage channelId={channelId} />
+                </TabPanel>
+
+                <TabPanel value={activeTab} index={1}>
                     {/* Chart Component with integrated summary stats */}
                     <Paper sx={{ p: 3, mb: 3 }}>
                         <PostViewDynamicsChart />
                     </Paper>
                 </TabPanel>
 
-                <TabPanel value={activeTab} index={1}>
+                <TabPanel value={activeTab} index={2}>
                     <EnhancedTopPostsTable lastUpdated={lastUpdated} />
                 </TabPanel>
 
-                <TabPanel value={activeTab} index={2}>
+                <TabPanel value={activeTab} index={3}>
                     <SpecialTimesRecommender lastUpdated={lastUpdated} />
                 </TabPanel>
 
-                <TabPanel value={activeTab} index={3}>
-                    {/* Smart Alerts & Analytics Overview */}
-                    <SmartAlertsPanel channelId={channelId} />
-                    <Box sx={{ mt: 3 }}>
-                        <AdvancedAnalyticsDashboard channelId={channelId} lastUpdated={lastUpdated} />
-                    </Box>
-                </TabPanel>
-
                 <TabPanel value={activeTab} index={4}>
-                    {/* Week 5-6 Content Protection */}
-                    <ContentProtectionDashboard channelId={channelId} lastUpdated={lastUpdated} />
+                    {/* Analytics Overview */}
+                    <AnalyticsOverview channelId={channelId} lastUpdated={lastUpdated} />
                 </TabPanel>
             </main>
 

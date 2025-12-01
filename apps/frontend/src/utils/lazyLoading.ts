@@ -65,8 +65,9 @@ export function lazyWithPreload<T extends ComponentType<any>>(
  * Critical route components with immediate preloading
  */
 export const CriticalComponents = {
+  // MainDashboard now points directly to DashboardPage (MainDashboard.tsx was just a wrapper)
   MainDashboard: lazyWithPreload(
-    () => import('../MainDashboard.jsx'),
+    () => import('../pages/DashboardPage'),
     { preloadAfter: 0 }
   ),
 
@@ -81,7 +82,7 @@ export const CriticalComponents = {
  */
 export const PageComponents = {
   DashboardPage: lazyWithPreload(
-    () => import('../pages/DashboardPage.jsx'),
+    () => import('../pages/DashboardPage'),
     { preloadAfter: 0 } // Critical page
   ),
 
@@ -91,22 +92,22 @@ export const PageComponents = {
   ),
 
   AnalyticsPage: lazyWithPreload(
-    () => import('../pages/AnalyticsPage.jsx'),
+    () => import('../pages/AnalyticsPage'),
     { preloadAfter: 1500 }
   ),
 
   AuthPage: lazyWithPreload(
-    () => import('../pages/AuthPage.jsx'),
+    () => import('../pages/AuthPage'),
     { preloadAfter: 0 } // Critical for login flow
   ),
 
   ProfilePage: lazyWithPreload(
-    () => import('../pages/ProfilePage.jsx'),
+    () => import('../pages/ProfilePage'),
     { preloadAfter: 3000 }
   ),
 
   AdminDashboard: lazyWithPreload(
-    () => import('../pages/AdminDashboard.jsx'),
+    () => import('../pages/AdminDashboard'),
     { preloadAfter: 5000 }
   ),
 
@@ -128,31 +129,33 @@ export const AdminComponents = {
 };
 
 /**
- * Service components with lazy preloading
+ * AI Service page components with lazy preloading
+ * NOTE: These are PAGE components, not service logic.
+ * Service logic is in features/ai-services/services/
  */
 export const ServiceComponents = {
   ServicesLayout: lazyWithPreload(
-    () => import('../services/ServicesLayout.jsx'),
+    () => import('../pages/ai-services/ServicesLayout'),
     { preloadAfter: 4000 }
   ),
 
   ContentOptimizerService: lazyWithPreload(
-    () => import('../features/ai-services/ContentOptimizer').then(m => ({ default: m.ContentOptimizerPage })),
+    () => import('../pages/ai-services/ContentOptimizerPage'),
     { preloadAfter: 6000 }
   ),
 
   PredictiveAnalyticsService: lazyWithPreload(
-    () => import('../services/PredictiveAnalyticsService.jsx'),
+    () => import('../pages/ai-services/PredictiveAnalyticsPage'),
     { preloadAfter: 8000 }
   ),
 
   ChurnPredictorService: lazyWithPreload(
-    () => import('../services/ChurnPredictorService.jsx'),
+    () => import('../pages/ai-services/ChurnPredictorPage'),
     { preloadAfter: 10000 }
   ),
 
   SecurityMonitoringService: lazyWithPreload(
-    () => import('../features/ai-services/SecurityMonitoring').then(m => ({ default: m.SecurityMonitoringPage })),
+    () => import('../features/ai-services/SecurityMonitoring/SecurityMonitoringPage'),
     { preloadAfter: 12000 }
   ),
 };
@@ -168,12 +171,12 @@ export const UtilityComponents = {
   // ),
 
   SettingsPage: lazyWithPreload(
-    () => import('../pages/SettingsPage.jsx'),
+    () => import('../pages/SettingsPage'),
     { preloadOnHover: true }
   ),
 
   HelpPage: lazyWithPreload(
-    () => import('../pages/HelpPage.jsx'),
+    () => import('../pages/HelpPage'),
     { preloadOnHover: true }
   ),
 

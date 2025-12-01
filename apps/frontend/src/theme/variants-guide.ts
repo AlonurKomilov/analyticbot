@@ -73,7 +73,7 @@
  * 5. Easier refactoring and updates
  *
  * Migration Status:
- * ✅ MainDashboard.jsx - Partially converted (major patterns)
+ * ✅ DashboardPage.tsx - Main dashboard (MainDashboard.tsx archived - was just a wrapper)
  * ✅ PostViewDynamicsChart.jsx - Partially converted (tooltip, loading states)
  * ✅ App.test.jsx - Fully converted
  * ✅ ButtonConstructor.jsx - Partially converted

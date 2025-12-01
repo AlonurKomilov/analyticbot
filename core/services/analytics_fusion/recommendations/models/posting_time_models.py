@@ -18,6 +18,9 @@ class PostingTimeRecommendation:
     day: int  # 0-6 (Sunday-Saturday)
     confidence: float
     avg_engagement: float
+    avg_views: float = 0.0  # Primary metric - average views for this time slot
+    relative_performance: float = 0.0  # % above/below channel average
+    confidence_level: str = "low"  # 'high', 'medium', 'low' based on sample size
 
 
 @dataclass
@@ -58,6 +61,9 @@ class DayHourCombination:
     confidence: float
     avg_engagement: float
     post_count: int
+    avg_views: float = 0.0  # Primary metric - average views
+    relative_performance: float = 0.0  # % above/below channel average
+    confidence_level: str = "low"  # 'high', 'medium', 'low'
 
 
 @dataclass
@@ -69,6 +75,8 @@ class ContentTypeRecommendation:
     confidence: float
     avg_engagement: float
     post_count: int
+    avg_views: float = 0.0  # Primary metric - average views
+    relative_performance: float = 0.0  # % above/below channel average
 
 
 @dataclass

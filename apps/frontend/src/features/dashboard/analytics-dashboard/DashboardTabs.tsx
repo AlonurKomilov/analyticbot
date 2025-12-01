@@ -11,7 +11,7 @@ import {
     Dashboard as DashboardIcon,
     Schedule as ScheduleIcon,
     Analytics as AnalyticsIcon,
-    Security as SecurityIcon
+    Assessment as AssessmentIcon
 } from '@mui/icons-material';
 import ChannelSelector from '@shared/components/ui/ChannelSelector';
 
@@ -53,35 +53,34 @@ const DashboardTabs: React.FC<DashboardTabsProps> = React.memo(({
 }) => {
     const tabConfig: TabConfigItem[] = [
         {
-            icon: <TrendingIcon />,
-            label: "Post Dynamics",
+            icon: <AssessmentIcon />,
+            label: "Channel Overview",
             id: "analytics-tab-0",
             controls: "analytics-tabpanel-0"
         },
         {
-            icon: <DashboardIcon />,
-            label: "Top Posts",
+            icon: <TrendingIcon />,
+            label: "Post Dynamics",
             id: "analytics-tab-1",
             controls: "analytics-tabpanel-1"
         },
         {
-            icon: <ScheduleIcon />,
-            label: "Special Times Recommender",
+            icon: <DashboardIcon />,
+            label: "Top Posts",
             id: "analytics-tab-2",
             controls: "analytics-tabpanel-2"
         },
         {
-            icon: <AnalyticsIcon />,
-            label: "Analytics Overview",
+            icon: <ScheduleIcon />,
+            label: "Special Times Recommender",
             id: "analytics-tab-3",
             controls: "analytics-tabpanel-3"
         },
         {
-            icon: <SecurityIcon />,
-            label: "🛡️ Content Protection",
+            icon: <AnalyticsIcon />,
+            label: "Analytics Overview",
             id: "analytics-tab-4",
-            controls: "analytics-tabpanel-4",
-            specialColor: 'primary.main'
+            controls: "analytics-tabpanel-4"
         }
     ];
 

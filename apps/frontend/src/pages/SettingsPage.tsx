@@ -22,7 +22,9 @@ import {
     Language as LanguageIcon,
     SmartToy as BotIcon,
     Timeline as MonitoringIcon,
-    CloudQueue as StorageIcon
+    CloudQueue as StorageIcon,
+    NotificationsActive as AlertsIcon,
+    Shield as ShieldIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,6 +41,20 @@ const SettingsPage: React.FC = () => {
             description: 'Configure your Telegram bot credentials and settings',
             icon: <BotIcon />,
             path: '/bot/setup',
+            available: true
+        },
+        {
+            title: 'Smart Alerts',
+            description: 'Configure intelligent alerts for channel performance monitoring',
+            icon: <AlertsIcon />,
+            path: '/settings/alerts',
+            available: true
+        },
+        {
+            title: 'Content Protection',
+            description: 'Protect your content with watermarks and theft detection',
+            icon: <ShieldIcon />,
+            path: '/settings/content-protection',
             available: true
         },
         {

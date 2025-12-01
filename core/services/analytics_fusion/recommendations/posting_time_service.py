@@ -123,6 +123,7 @@ class PostingTimeRecommendationService:
         """
         Format internal result to match expected API response format.
         Maintains backward compatibility with existing frontend code.
+        Now includes view-based metrics for more meaningful recommendations.
         """
         return {
             "channel_id": result.channel_id,
@@ -132,6 +133,9 @@ class PostingTimeRecommendationService:
                     "day": bt.day,
                     "confidence": bt.confidence,
                     "avg_engagement": bt.avg_engagement,
+                    "avg_views": bt.avg_views,  # Primary metric - average views
+                    "relative_performance": bt.relative_performance,  # % vs channel avg
+                    "confidence_level": bt.confidence_level,  # Data quality indicator
                 }
                 for bt in result.best_times
             ],
@@ -163,13 +167,16 @@ class PostingTimeRecommendationService:
             "confidence": result.confidence,
             "generated_at": result.generated_at,
             "data_source": result.data_source,
-            # NEW: Advanced recommendations
+            # NEW: Advanced recommendations with view-based metrics
             "best_day_hour_combinations": [
                 {
                     "day": combo.day,
                     "hour": combo.hour,
                     "confidence": combo.confidence,
                     "avg_engagement": combo.avg_engagement,
+                    "avg_views": combo.avg_views,  # Primary metric
+                    "relative_performance": combo.relative_performance,
+                    "confidence_level": combo.confidence_level,
                     "post_count": combo.post_count,
                 }
                 for combo in (result.best_day_hour_combinations or [])
@@ -180,6 +187,8 @@ class PostingTimeRecommendationService:
                     "hour": ct.hour,
                     "confidence": ct.confidence,
                     "avg_engagement": ct.avg_engagement,
+                    "avg_views": ct.avg_views,  # Primary metric
+                    "relative_performance": ct.relative_performance,
                     "post_count": ct.post_count,
                 }
                 for ct in (result.content_type_recommendations or [])

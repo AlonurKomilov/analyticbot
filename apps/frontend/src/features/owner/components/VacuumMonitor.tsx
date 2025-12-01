@@ -53,8 +53,6 @@ import {
   Error as ErrorIcon,
   Info as InfoIcon,
   CleaningServices as CleaningServicesIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { ownerApi } from '../services/ownerApi';
@@ -197,16 +195,6 @@ export const VacuumMonitor: React.FC = () => {
       return <Chip label="Moderate" color="info" size="small" icon={<InfoIcon />} />;
     }
     return <Chip label="Healthy" color="success" size="small" icon={<CheckCircleIcon />} />;
-  };
-
-  const getPriorityColor = (priority: string | undefined) => {
-    switch (priority) {
-      case 'CRITICAL': return 'error';
-      case 'HIGH': return 'warning';
-      case 'MODERATE': return 'info';
-      case 'NEVER_VACUUMED': return 'error';
-      default: return 'default';
-    }
   };
 
   useEffect(() => {

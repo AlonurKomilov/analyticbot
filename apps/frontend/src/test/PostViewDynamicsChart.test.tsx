@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import PostViewDynamicsChart from '../components/charts/PostViewDynamics';
+import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import React from 'react';
 
 // Mock recharts components completely

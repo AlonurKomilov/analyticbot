@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Container } from '@mui/material';
-import { UserBotDashboard } from '@/components/bot';
+import { UserBotDashboard } from '@features/bot';
 
 export const BotDashboardPage: React.FC = () => {
   return (

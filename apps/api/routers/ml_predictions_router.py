@@ -38,7 +38,11 @@ class GrowthPredictionRequest(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {"channel_id": 123, "forecast_horizon": 7, "include_uncertainty": True}
+            "example": {
+                "channel_id": 123,
+                "forecast_horizon": 7,
+                "include_uncertainty": True,
+            }
         }
 
 
@@ -205,9 +209,13 @@ async def get_task_status(task_id: str):
 
 
 @router.get(
-    "/health", summary="ML Service Health", description="Check health and statistics of ML services"
+    "/health",
+    summary="ML Service Health",
+    description="Check health and statistics of ML services",
 )
-async def ml_service_health(dl_service: DeepLearningServiceProtocol = Depends(get_dl_service)):
+async def ml_service_health(
+    dl_service: DeepLearningServiceProtocol = Depends(get_dl_service),
+):
     """
     Get ML service health statistics.
 
@@ -225,9 +233,13 @@ async def ml_service_health(dl_service: DeepLearningServiceProtocol = Depends(ge
 
 
 @router.post(
-    "/clear-cache", summary="Clear ML Cache", description="Clear prediction cache (admin only)"
+    "/clear-cache",
+    summary="Clear ML Cache",
+    description="Clear prediction cache (admin only)",
 )
-async def clear_ml_cache(dl_service: DeepLearningServiceProtocol = Depends(get_dl_service)):
+async def clear_ml_cache(
+    dl_service: DeepLearningServiceProtocol = Depends(get_dl_service),
+):
     """
     Clear ML prediction cache.
 

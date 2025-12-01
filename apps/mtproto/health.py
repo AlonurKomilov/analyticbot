@@ -191,7 +191,11 @@ class HealthCheck:
             components["configuration"] = "disabled"
             components["tg_client"] = "disabled"
 
-        return {"ready": ready, "timestamp": datetime.now().isoformat(), "components": components}
+        return {
+            "ready": ready,
+            "timestamp": datetime.now().isoformat(),
+            "components": components,
+        }
 
     async def get_liveness_status(self) -> dict[str, Any]:
         """Get liveness status for deployment health checks.

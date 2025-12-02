@@ -179,7 +179,8 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
 
             # Sort by impact and frequency
             triggers.sort(
-                key=lambda t: t.get("impact_score", 0) * t.get("frequency", 0), reverse=True
+                key=lambda t: t.get("impact_score", 0) * t.get("frequency", 0),
+                reverse=True,
             )
 
             logger.info(
@@ -305,9 +306,9 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
             "avg_session_duration": sum(session_durations) / len(session_durations),
             "frequency_trend": frequency_trend,
             "consistency_score": 1.0 - (len(set(session_counts)) / max(len(session_counts), 1)),
-            "last_session_days_ago": (datetime.now() - sessions[0]["date"]).days
-            if sessions
-            else 999,
+            "last_session_days_ago": (
+                (datetime.now() - sessions[0]["date"]).days if sessions else 999
+            ),
         }
 
     async def _analyze_feature_usage_patterns(
@@ -398,9 +399,9 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
             "activity_rate": activity_rate,
             "recency_score": recency_score,
             "regularity": min(activity_rate * 2, 1.0),
-            "days_since_last_activity": (datetime.now() - sessions[0]["date"]).days
-            if sessions
-            else 999,
+            "days_since_last_activity": (
+                (datetime.now() - sessions[0]["date"]).days if sessions else 999
+            ),
         }
 
     async def _calculate_engagement_trends(self, behavioral_data: dict[str, Any]) -> dict[str, Any]:
@@ -462,7 +463,7 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
                 {
                     "type": "sudden_activity_drop",
                     "severity": "high",
-                    "description": f"Session frequency dropped by {(1 - recent_activity/historical_activity)*100:.1f}%",
+                    "description": f"Session frequency dropped by {(1 - recent_activity / historical_activity) * 100:.1f}%",
                     "detected_at": datetime.now(),
                 }
             )
@@ -482,7 +483,7 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
                     {
                         "type": "feature_usage_decline",
                         "severity": "medium",
-                        "description": f"Feature usage dropped by {(1 - recent_avg/historical_avg)*100:.1f}%",
+                        "description": f"Feature usage dropped by {(1 - recent_avg / historical_avg) * 100:.1f}%",
                         "detected_at": datetime.now(),
                     }
                 )
@@ -502,7 +503,7 @@ class BehavioralAnalysisService(BehavioralAnalysisProtocol):
                     {
                         "type": "interaction_quality_decline",
                         "severity": "medium",
-                        "description": f"Interaction quality dropped by {(1 - recent_avg/historical_avg)*100:.1f}%",
+                        "description": f"Interaction quality dropped by {(1 - recent_avg / historical_avg) * 100:.1f}%",
                         "detected_at": datetime.now(),
                     }
                 )

@@ -292,9 +292,9 @@ async def collect_system_metrics():
             from apps.di import get_container
 
             container = get_container()
-            channel_repo = await container.database.channel_repo()
-            user_repo = await container.database.user_repo()
-            scheduler_repo = await container.database.schedule_repo()
+            await container.database.channel_repo()
+            await container.database.user_repo()
+            await container.database.schedule_repo()
             # TODO: Implement count methods using clean architecture
             # For now, use placeholder values
             channels_count = 0  # await channel_repo.count()

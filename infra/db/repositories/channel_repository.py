@@ -162,7 +162,7 @@ class AsyncpgChannelRepository:
 
     async def get_channel_by_telegram_id(self, telegram_id: int) -> dict[str, Any] | None:
         """Get channel by telegram ID - API compatibility method
-        
+
         Checks both positive and negative versions of the ID since Telegram
         channel IDs can be stored with different signs (legacy issue).
         """

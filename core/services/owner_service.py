@@ -32,7 +32,11 @@ class OwnerService:
             if not admin:
                 await self.security_logger.log_security_event(
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "user_not_found"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "user_not_found",
+                    },
                 )
                 return None
 
@@ -40,7 +44,11 @@ class OwnerService:
             if not self.pwd_context.verify(password, admin.get("password_hash", "")):
                 await self.security_logger.log_security_event(
                     "failed_login",
-                    {"username": username, "ip": ip_address, "reason": "invalid_password"},
+                    {
+                        "username": username,
+                        "ip": ip_address,
+                        "reason": "invalid_password",
+                    },
                 )
                 return None
 
@@ -53,7 +61,9 @@ class OwnerService:
             )
 
             await self.security_logger.log_security_event(
-                "successful_login", {"username": username, "ip": ip_address}, admin["id"]
+                "successful_login",
+                {"username": username, "ip": ip_address},
+                admin["id"],
             )
             return session_data
 

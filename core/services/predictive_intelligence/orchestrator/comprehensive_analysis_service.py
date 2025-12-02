@@ -218,11 +218,13 @@ class ComprehensiveAnalysisService:
             "services_contributing": len(
                 aggregated_intelligence["aggregation_metadata"]["services_included"]
             ),
-            "quality_assessment": "high"
-            if overall_confidence > 0.7
-            else "medium"
-            if overall_confidence > 0.5
-            else "low",
+            "quality_assessment": (
+                "high"
+                if overall_confidence > 0.7
+                else "medium"
+                if overall_confidence > 0.5
+                else "low"
+            ),
         }
 
     def create_next_steps(
@@ -265,7 +267,9 @@ class ComprehensiveAnalysisService:
         return next_steps
 
     def create_executive_summary(
-        self, aggregated_intelligence: dict[str, Any], intelligence_results: dict[str, Any]
+        self,
+        aggregated_intelligence: dict[str, Any],
+        intelligence_results: dict[str, Any],
     ) -> dict[str, Any]:
         """
         Create executive summary for leadership.

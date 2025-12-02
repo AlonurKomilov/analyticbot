@@ -391,11 +391,13 @@ class OptimizationOrchestratorService(OptimizationOrchestratorProtocol):
             "trending_up_metrics": trending_up,
             "trending_down_metrics": trending_down,
             "system_health_score": self._calculate_system_health_score(performance_baselines),
-            "optimization_priority": "high"
-            if len(concerning_metrics) > 2
-            else "medium"
-            if len(concerning_metrics) > 0
-            else "low",
+            "optimization_priority": (
+                "high"
+                if len(concerning_metrics) > 2
+                else "medium"
+                if len(concerning_metrics) > 0
+                else "low"
+            ),
         }
 
     def _analyze_recommendations(
@@ -433,9 +435,9 @@ class OptimizationOrchestratorService(OptimizationOrchestratorProtocol):
             "auto_applicable_count": auto_applicable,
             "auto_applicable_percentage": (auto_applicable / len(recommendations)) * 100,
             "average_expected_impact": total_expected_impact / len(recommendations),
-            "recommendation_quality": "high"
-            if auto_applicable > len(recommendations) * 0.3
-            else "medium",
+            "recommendation_quality": (
+                "high" if auto_applicable > len(recommendations) * 0.3 else "medium"
+            ),
         }
 
     def _calculate_system_health_score(

@@ -14,12 +14,13 @@ from typing import Any
 @dataclass
 class SubscriberStats:
     """Subscriber statistics"""
+
     total: int = 0
     today_change: int = 0
     week_change: int = 0
     month_change: int = 0
     growth_rate: float = 0.0  # Percentage
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "total": self.total,
@@ -33,12 +34,13 @@ class SubscriberStats:
 @dataclass
 class PostsStats:
     """Posts statistics"""
+
     total: int = 0
     today: int = 0
     week: int = 0
     month: int = 0
     avg_per_day: float = 0.0
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "total": self.total,
@@ -52,6 +54,7 @@ class PostsStats:
 @dataclass
 class EngagementStats:
     """Engagement statistics"""
+
     total_views: int = 0
     total_reactions: int = 0
     total_forwards: int = 0
@@ -61,7 +64,7 @@ class EngagementStats:
     engagement_rate: float = 0.0  # (reactions + forwards + comments) / views * 100
     err: float = 0.0  # Engagement Rate Ratio
     err_24h: float = 0.0  # ERR for last 24 hours
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "total_views": self.total_views,
@@ -79,13 +82,14 @@ class EngagementStats:
 @dataclass
 class ReachStats:
     """Reach and advertising statistics"""
+
     avg_post_reach: int = 0
     avg_ad_reach: int = 0  # Average advertising reach
     reach_12h: int = 0
     reach_24h: int = 0
     reach_48h: int = 0
     citation_index: float = 0.0  # Based on forwards/mentions
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "avg_post_reach": self.avg_post_reach,
@@ -100,6 +104,7 @@ class ReachStats:
 @dataclass
 class ChannelInfo:
     """Basic channel information"""
+
     id: int = 0
     title: str = ""
     username: str | None = None
@@ -108,7 +113,7 @@ class ChannelInfo:
     age_days: int = 0
     age_formatted: str = ""  # e.g., "2 years 3 months"
     is_active: bool = True
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
@@ -125,6 +130,7 @@ class ChannelInfo:
 @dataclass
 class GrowthDataPoint:
     """Single data point for growth charts"""
+
     date: str  # ISO date string
     value: int = 0
     change: int = 0
@@ -133,9 +139,10 @@ class GrowthDataPoint:
 @dataclass
 class GrowthTimeSeries:
     """Time series data for growth charts"""
+
     metric: str  # subscribers, views, posts, etc.
     data: list[GrowthDataPoint] = field(default_factory=list)
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "metric": self.metric,
@@ -146,21 +153,22 @@ class GrowthTimeSeries:
 @dataclass
 class ChannelOverviewMetrics:
     """Complete channel overview metrics - TGStat style"""
+
     channel_info: ChannelInfo = field(default_factory=ChannelInfo)
     subscribers: SubscriberStats = field(default_factory=SubscriberStats)
     posts: PostsStats = field(default_factory=PostsStats)
     engagement: EngagementStats = field(default_factory=EngagementStats)
     reach: ReachStats = field(default_factory=ReachStats)
-    
+
     # Time series data for charts
     subscribers_history: list[dict] = field(default_factory=list)
     views_history: list[dict] = field(default_factory=list)
     posts_history: list[dict] = field(default_factory=list)
-    
+
     # Metadata
     generated_at: datetime = field(default_factory=datetime.utcnow)
     data_freshness: str = "real-time"  # real-time, cached, historical
-    
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "channel_info": self.channel_info.to_dict(),

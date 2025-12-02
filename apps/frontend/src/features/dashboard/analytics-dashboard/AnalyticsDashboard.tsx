@@ -16,8 +16,7 @@ import DataSourceBanner from './DataSourceBanner';
 // Import existing components
 import PostViewDynamicsChart from '@shared/components/charts/PostViewDynamics';
 import { EnhancedTopPostsTable } from '@features/posts';
-import { SpecialTimesRecommender } from '@features/analytics';
-import { AnalyticsOverview, OverviewPage } from '@features/analytics';
+import { SpecialTimesRecommender, OverviewPage } from '@features/analytics';
 import ApiFailureDialog from '@shared/components/dialogs/ApiFailureDialog';
 import { useChannelStore, useUIStore, useAnalyticsStore } from '@store';
 import { useApiFailureDialog } from '@shared/hooks';
@@ -156,11 +155,6 @@ const AnalyticsDashboard: React.FC = React.memo(() => {
 
                 <TabPanel value={activeTab} index={3}>
                     <SpecialTimesRecommender lastUpdated={lastUpdated} />
-                </TabPanel>
-
-                <TabPanel value={activeTab} index={4}>
-                    {/* Analytics Overview */}
-                    <AnalyticsOverview channelId={channelId} lastUpdated={lastUpdated} />
                 </TabPanel>
             </main>
 

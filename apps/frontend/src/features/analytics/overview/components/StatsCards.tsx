@@ -4,14 +4,13 @@
  */
 
 import React from 'react';
-import { Box, Paper, Typography, Divider, Tooltip, LinearProgress, Chip } from '@mui/material';
+import { Box, Paper, Typography, Divider, Tooltip, Chip } from '@mui/material';
 import { HelpOutline, TrendingUp, TrendingDown, Remove } from '@mui/icons-material';
 import { 
   formatNumber, 
   formatPercentage,
   getEngagementRatePerformance,
   getPostingFrequencyPerformance,
-  METRIC_TOOLTIPS,
 } from './utils';
 import type { ChannelOverviewData } from '../types';
 

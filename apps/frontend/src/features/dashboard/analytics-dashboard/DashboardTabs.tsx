@@ -10,7 +10,6 @@ import {
     TrendingUp as TrendingIcon,
     Dashboard as DashboardIcon,
     Schedule as ScheduleIcon,
-    Analytics as AnalyticsIcon,
     Assessment as AssessmentIcon
 } from '@mui/icons-material';
 import ChannelSelector from '@shared/components/ui/ChannelSelector';
@@ -75,12 +74,6 @@ const DashboardTabs: React.FC<DashboardTabsProps> = React.memo(({
             label: "Special Times Recommender",
             id: "analytics-tab-3",
             controls: "analytics-tabpanel-3"
-        },
-        {
-            icon: <AnalyticsIcon />,
-            label: "Analytics Overview",
-            id: "analytics-tab-4",
-            controls: "analytics-tabpanel-4"
         }
     ];
 

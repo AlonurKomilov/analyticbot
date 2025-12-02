@@ -8,7 +8,7 @@ import { apiClient, UnifiedApiClient, AuthStrategies, apiFetch, ApiRequestError 
 
 // Import channels API
 import { channelsApi } from './channels';
-export type { ChannelLookupResult, CreateChannelRequest, ChannelResponse } from './channels';
+export type { ChannelLookupResult, ChannelResponse, AddChannelRequest } from './channels';
 
 // Re-export everything for easy access
 export {

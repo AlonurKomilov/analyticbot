@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import SmartAlertsPanel from '@features/analytics/analytics-overview/SmartAlertsPanel';
+import { SmartAlertsPanel } from '@features/alerts';
 import { useChannelStore } from '@store';
 
 const SmartAlertsSettingsPage: React.FC = () => {

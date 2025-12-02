@@ -1,39 +1,19 @@
 /**
  * DashboardPage Component
  *
- * Main dashboard orchestrator with comprehensive analytics.
- * Uses full-featured AnalyticsDashboard with tab navigation.
+ * Main dashboard/home page showing quick overview and navigation.
+ * Different from AnalyticsPage which shows detailed analytics.
  *
- * Updated: October 2025
- * - Switched from minimal dashboard to comprehensive AnalyticsDashboard
- * - Provides better analytics overview with KPIs, charts, and insights
- * - Enhanced dashboard available via feature flag if needed
+ * Updated: December 2025
+ * - Changed to HomeDashboard for quick overview
+ * - Analytics moved to dedicated /analytics route
  */
 
 import React from 'react';
-import { TouchTargetProvider } from '@shared/components/ui';
-import { AnalyticsDashboard } from '@features/dashboard';
-import EnhancedDashboardPage from './EnhancedDashboardPage';
+import HomeDashboard from './HomeDashboard';
 
 const DashboardPage: React.FC = () => {
-    // Feature flag: Set to true to enable premium enhanced dashboard with animations
-    const showEnhancedDashboard = false;
-
-    // Enhanced dashboard with micro-interactions and advanced features
-    if (showEnhancedDashboard) {
-        return (
-            <TouchTargetProvider>
-                <EnhancedDashboardPage />
-            </TouchTargetProvider>
-        );
-    }
-
-    // Standard comprehensive analytics dashboard (recommended for most users)
-    return (
-        <TouchTargetProvider>
-            <AnalyticsDashboard />
-        </TouchTargetProvider>
-    );
+    return <HomeDashboard />;
 };
 
 export default DashboardPage;

@@ -1,21 +1,35 @@
 # Development-specific Makefile targets
 # Use this for venv-based development
 
-.PHONY: dev-help dev-start dev-stop dev-status dev-logs dev-install dev-migrate dev-test dev-clean
+.PHONY: dev-help dev-start dev-stop dev-status dev-logs dev-install dev-migrate dev-test dev-clean dev-cleanup dev-cleanup-cron-install dev-cleanup-cron-remove dev-kill-zombies dev-admin-install dev-admin-start dev-admin-stop dev-admin-build
 
 dev-help:
 	@echo "🔥 Development Commands (venv-based)"
 	@echo "===================================="
 	@echo "  dev-install       - Install dependencies in venv"
 	@echo "  dev-start         - Start development servers + CloudFlare Tunnel"
-	@echo "  dev-stop          - Stop all development services"
+	@echo "  dev-stop          - Stop all development services + cleanup orphans"
 	@echo "  dev-tunnel        - Start CloudFlare Tunnel only (public access)"
 	@echo "  dev-tunnel-status - Show current tunnel URL and frontend config"
 	@echo "  dev-status        - Check service status"
 	@echo "  dev-logs          - Show development logs"
-	@echo "  dev-migrate    - Run database migrations"
-	@echo "  dev-test       - Run tests in venv"
-	@echo "  dev-clean      - Clean development artifacts"
+	@echo "  dev-migrate       - Run database migrations"
+	@echo "  dev-test          - Run tests in venv"
+	@echo "  dev-clean         - Clean development artifacts"
+	@echo ""
+	@echo "🔐 Admin Panel Commands"
+	@echo "======================="
+	@echo "  dev-admin-install  - Install admin frontend dependencies"
+	@echo "  dev-admin-start    - Start admin frontend (port 11301)"
+	@echo "  dev-admin-stop     - Stop admin frontend"
+	@echo "  dev-admin-build    - Build admin frontend for production"
+	@echo ""
+	@echo "🧹 Cleanup Commands"
+	@echo "==================="
+	@echo "  dev-cleanup             - Run orphaned process cleanup now"
+	@echo "  dev-cleanup-cron-install - Install auto-cleanup cron (every 5 min)"
+	@echo "  dev-cleanup-cron-remove  - Remove auto-cleanup cron job"
+	@echo "  dev-kill-zombies        - Force kill zombie parent processes"
 	@echo ""
 	@echo "🐳 Production Commands (Docker-based)"
 	@echo "====================================="
@@ -37,6 +51,9 @@ dev-start:
 dev-stop:
 	@echo "🛑 Stopping development environment..."
 	./scripts/dev-start.sh stop
+	@echo "🧹 Running orphaned process cleanup..."
+	./scripts/cleanup_orphaned_processes.sh || true
+	@echo "✅ All development services stopped and cleaned up"
 
 dev-tunnel:
 	@echo "🌐 Starting CloudFlare Tunnel for public access..."
@@ -94,3 +111,69 @@ dev-clean:
 	find . -name "*.pyc" -delete 2>/dev/null || true
 	rm -rf var/logs/dev_*.log var/logs/dev_*.pid
 	rm -rf apps/frontend/dist apps/frontend/.vite
+
+dev-cleanup:
+	@echo "🧹 Running orphaned process cleanup..."
+	./scripts/cleanup_orphaned_processes.sh
+
+dev-cleanup-cron-install:
+	@echo "⏰ Installing cleanup cron job (runs every 5 minutes)..."
+	@(crontab -l 2>/dev/null | grep -v "cleanup_orphaned_processes.sh"; \
+		echo "*/5 * * * * /home/abcdeveloper/projects/analyticbot/scripts/cleanup_orphaned_processes.sh >> /tmp/analyticbot_cleanup.log 2>&1") | crontab -
+	@echo "✅ Cron job installed. View with: crontab -l"
+	@echo "📋 Logs at: /tmp/analyticbot_cleanup.log"
+
+dev-cleanup-cron-remove:
+	@echo "🗑️  Removing cleanup cron job..."
+	@(crontab -l 2>/dev/null | grep -v "cleanup_orphaned_processes.sh") | crontab -
+	@echo "✅ Cron job removed"
+
+dev-kill-zombies:
+	@echo "💀 Force killing all zombie parent processes..."
+	@ps aux | awk '$$8=="Z" {print $$3}' | while read ppid; do \
+		if [ "$$ppid" != "1" ]; then \
+			echo "Killing parent $$ppid"; \
+			kill -TERM $$ppid 2>/dev/null || true; \
+		fi; \
+	done
+	@echo "✅ Zombie cleanup complete"
+
+dev-prod-start:
+	@echo "🚀 Starting production API service (systemd)..."
+	@sudo systemctl start analyticbot-api.service
+	@sudo systemctl enable analyticbot-api.service
+	@echo "✅ Production API service started"
+
+dev-prod-stop:
+	@echo "🛑 Stopping production API service (systemd)..."
+	@sudo systemctl stop analyticbot-api.service
+	@echo "✅ Production API service stopped"
+
+dev-prod-status:
+	@systemctl status analyticbot-api.service | head -15
+
+# ============================================================================
+# Admin Panel Commands
+# ============================================================================
+
+dev-admin-install:
+	@echo "📦 Installing admin frontend dependencies..."
+	cd apps/admin-frontend && npm install
+
+dev-admin-start:
+	@echo "🔐 Starting admin frontend on port 11301..."
+	@cd apps/admin-frontend && npm run dev &
+	@echo "✅ Admin panel starting at http://localhost:11301"
+	@echo "   Production URL: https://admin.analyticbot.org"
+
+dev-admin-stop:
+	@echo "🛑 Stopping admin frontend..."
+	@pkill -f "vite.*11301" 2>/dev/null || true
+	@echo "✅ Admin frontend stopped"
+
+dev-admin-build:
+	@echo "🏗️  Building admin frontend for production..."
+	cd apps/admin-frontend && npm run build
+	@echo "✅ Admin frontend built to apps/admin-frontend/dist"
+	@echo "   Deploy to: /var/www/analyticbot/admin"
+

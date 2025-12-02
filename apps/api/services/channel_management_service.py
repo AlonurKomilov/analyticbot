@@ -80,9 +80,9 @@ class ChannelManagementService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch channels"
             )
 
-    async def create_channel(self, channel_data: ChannelCreate) -> ChannelResponse:
+    async def add_channel(self, channel_data: ChannelCreate) -> ChannelResponse:
         """
-        Create a new channel (HTTP interface)
+        Add an existing Telegram channel for analytics (HTTP interface)
 
         If Telegram validation service is available, validates the channel first
         and enriches data with real Telegram information.
@@ -91,16 +91,24 @@ class ChannelManagementService:
             channel_data: Pydantic model with channel data
 
         Returns:
-            Created channel as ChannelResponse
+            Added channel as ChannelResponse
 
         Raises:
-            HTTPException: If creation fails or validation fails
+            HTTPException: If addition fails or validation fails
         """
         try:
             # If we have telegram service and telegram_id is temporary/missing, validate
-            if self.telegram_service and (
-                channel_data.telegram_id <= 0 or channel_data.telegram_id > 1000000000
-            ):
+            # Skip re-validation if telegram_id already has proper 100 prefix (from lookup)
+            telegram_id_str = str(channel_data.telegram_id) if channel_data.telegram_id else ""
+            needs_validation = (
+                self.telegram_service 
+                and (
+                    channel_data.telegram_id <= 0 
+                    or (channel_data.telegram_id > 1000000000 and not telegram_id_str.startswith("100"))
+                )
+            )
+            
+            if needs_validation:
                 self.logger.info(f"Validating channel via Telegram: {channel_data.name}")
 
                 # Try to extract username from name or description
@@ -132,7 +140,7 @@ class ChannelManagementService:
                 except Exception as telegram_error:
                     self.logger.warning(f"Telegram validation failed: {telegram_error}")
                     # Continue without validation in case of Telegram API issues
-                    self.logger.info("Proceeding with channel creation without Telegram validation")
+                    self.logger.info("Proceeding with channel addition without Telegram validation")
 
             # Convert Pydantic model to domain data
             domain_data = ChannelData(
@@ -143,14 +151,14 @@ class ChannelManagementService:
                 user_id=channel_data.user_id,
             )
 
-            created_channel = await self.core_service.create_channel(domain_data)
-            return self._map_domain_to_response(created_channel)
+            added_channel = await self.core_service.add_channel(domain_data)
+            return self._map_domain_to_response(added_channel)
 
         except HTTPException:
             raise
         except ValueError as e:
             error_msg = str(e)
-            self.logger.error(f"Validation error creating channel: {error_msg}")
+            self.logger.error(f"Validation error adding channel: {error_msg}")
 
             # Use 409 Conflict for duplicate channel errors
             if "already" in error_msg.lower() and (
@@ -160,9 +168,9 @@ class ChannelManagementService:
 
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
         except Exception as e:
-            self.logger.error(f"Error creating channel: {e}")
+            self.logger.error(f"Error adding channel: {e}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create channel"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to add channel"
             )
 
     async def get_channel(self, channel_id: int) -> ChannelResponse:

@@ -40,6 +40,13 @@ def cache_channels(user_id: int, channels: list[dict]) -> None:
     logger.info(f"💾 Cached {len(channels)} channels for user {user_id}")
 
 
+def invalidate_user_channel_cache(user_id: int) -> None:
+    """Invalidate cache for a specific user (e.g., after channel add/delete)"""
+    if user_id in _channel_cache:
+        del _channel_cache[user_id]
+        logger.info(f"🗑️ Cache invalidated for user {user_id}")
+
+
 router = APIRouter(
     prefix="",  # Fixed: No prefix here since main.py adds /analytics/channels
     tags=["Analytics - Channels"],

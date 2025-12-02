@@ -72,9 +72,12 @@ class ChannelInfoResponse(BaseModel):
     title: str = Field(description="Channel title")
     username: str | None = Field(description="Channel username")
     description: str | None = Field(description="Channel description")
-    created_at: str | None = Field(description="Channel creation date")
-    age_days: int = Field(description="Channel age in days")
-    age_formatted: str = Field(description="Channel age formatted")
+    created_at: str | None = Field(description="When channel was added to analytics system")
+    telegram_created_at: str | None = Field(description="Actual Telegram channel creation date")
+    age_days: int = Field(description="Days tracked in analytics system")
+    channel_age_days: int | None = Field(description="Actual channel age in days (from Telegram)")
+    age_formatted: str = Field(description="Formatted tracking duration")
+    channel_age_formatted: str | None = Field(description="Formatted actual channel age")
     is_active: bool = Field(description="Whether channel is active")
 
 
@@ -449,3 +452,102 @@ async def get_telegram_stats(
             "period_start": None,
             "period_end": None,
         }
+
+
+@router.post(
+    "/sync-creation-date/{channel_id}",
+    summary="Sync Telegram Channel Creation Date",
+    description="""
+    Fetch and update the actual Telegram channel creation date.
+    
+    This endpoint fetches the real channel creation date from Telegram API
+    and stores it in the database. Useful for channels that were added
+    before this feature was implemented.
+    
+    **Returns:**
+    - Updated channel info with telegram_created_at
+    """,
+)
+async def sync_channel_creation_date(
+    channel_id: int,
+    pool=Depends(get_database_pool),
+    current_user: dict = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Sync Telegram channel creation date from API"""
+    try:
+        logger.info(f"🔄 Syncing creation date for channel {channel_id}")
+        
+        from apps.di import get_container
+        from apps.api.services.telegram_validation_service import TelegramValidationService
+        
+        container = get_container()
+        
+        # Get channel info first
+        async with pool.acquire() as conn:
+            channel = await conn.fetchrow(
+                "SELECT id, username, title FROM channels WHERE id = $1 OR id = $2",
+                channel_id,
+                -abs(channel_id),
+            )
+        
+        if not channel:
+            raise HTTPException(status_code=404, detail="Channel not found")
+        
+        username = channel["username"]
+        if not username:
+            raise HTTPException(status_code=400, detail="Channel has no username, cannot sync")
+        
+        # Get Telegram client and validate
+        try:
+            telethon_client = await container.mtproto.telethon_client()
+            validation_service = TelegramValidationService(telethon_client)
+            
+            result = await validation_service.validate_channel_by_username(username)
+            
+            if not result.is_valid:
+                raise HTTPException(status_code=400, detail=f"Could not validate channel: {result.error_message}")
+            
+            telegram_created_at = result.telegram_created_at
+            
+            if not telegram_created_at:
+                return {
+                    "channel_id": channel_id,
+                    "success": False,
+                    "message": "Channel creation date not available from Telegram API",
+                }
+            
+            # Parse and update
+            created_dt = datetime.fromisoformat(telegram_created_at.replace('Z', '+00:00'))
+            
+            async with pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    UPDATE channels 
+                    SET telegram_created_at = $1, updated_at = NOW()
+                    WHERE id = $2 OR id = $3
+                    """,
+                    created_dt,
+                    channel_id,
+                    -abs(channel_id),
+                )
+            
+            logger.info(f"✅ Synced creation date for channel {channel_id}: {created_dt}")
+            
+            return {
+                "channel_id": channel_id,
+                "success": True,
+                "telegram_created_at": telegram_created_at,
+                "message": f"Channel creation date synced: {created_dt.strftime('%B %d, %Y')}",
+            }
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error syncing creation date: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to sync: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error syncing creation date for channel {channel_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync creation date: {str(e)}")

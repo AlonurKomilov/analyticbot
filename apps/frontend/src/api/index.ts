@@ -6,10 +6,17 @@
 // Import unified client
 import { apiClient, UnifiedApiClient, AuthStrategies, apiFetch, ApiRequestError } from './client';
 
+// Import channels API
+import { channelsApi } from './channels';
+export type { ChannelLookupResult, CreateChannelRequest, ChannelResponse } from './channels';
+
 // Re-export everything for easy access
 export {
   // Main client instance
   apiClient,
+
+  // Channels API
+  channelsApi,
 
   // Class for custom instances
   UnifiedApiClient,

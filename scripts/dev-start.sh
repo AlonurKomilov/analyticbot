@@ -24,6 +24,28 @@ fi
 echo -e "${BLUE}🐍 Activating virtual environment...${NC}"
 source .venv/bin/activate
 
+# ============================================================================
+# DUPLICATE SERVER GUARD
+# Kill any uvicorn servers using old 'venv' directory (should use .venv only)
+# Also stop the production systemd service if running
+# ============================================================================
+if systemctl is-active --quiet analyticbot-api.service 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  Production systemd service is running, stopping it for dev mode...${NC}"
+    sudo systemctl stop analyticbot-api.service 2>/dev/null || true
+    sleep 1
+    echo -e "${GREEN}✅ Production service stopped${NC}"
+fi
+
+# Check for uvicorn from analyticbot/venv (NOT .venv) - the old production setup
+if pgrep -af "analyticbot/venv/bin/uvicorn" 2>/dev/null | grep -v ".venv" > /dev/null; then
+    echo -e "${YELLOW}⚠️  Found uvicorn running from old 'venv' directory, stopping it...${NC}"
+    # Only kill processes from analyticbot/venv (not .venv)
+    pkill -9 -f "analyticbot/venv/bin/uvicorn" 2>/dev/null || true
+    pkill -9 -f "analyticbot/venv/bin/python" 2>/dev/null || true
+    sleep 1
+    echo -e "${GREEN}✅ Old venv processes cleaned up${NC}"
+fi
+
 # Load development environment variables - Clean Architecture (Two-File System)
 if [ -f ".env.development" ]; then
     echo -e "${BLUE}⚙️  Loading development environment (.env.development)...${NC}"
@@ -413,10 +435,20 @@ case $SERVICE in
         # More selective port cleanup - only kill our specific processes
         echo -e "${BLUE}🔍 Checking for remaining development processes...${NC}"
 
-        # Check for uvicorn (API) processes specifically
+        # Check for ALL uvicorn processes (both .venv and venv) on port 11400
         if pgrep -f "uvicorn.*11400" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping remaining API processes${NC}"
-            pkill -f "uvicorn.*11400" || true
+            pkill -TERM -f "uvicorn.*11400" || true
+            sleep 1
+            pkill -9 -f "uvicorn.*11400" 2>/dev/null || true
+        fi
+        
+        # Also kill any uvicorn from both venv directories
+        if pgrep -f "analyticbot.*uvicorn" > /dev/null; then
+            echo -e "${YELLOW}🔄 Stopping all analyticbot uvicorn servers${NC}"
+            pkill -TERM -f "analyticbot.*uvicorn" || true
+            sleep 1
+            pkill -9 -f "analyticbot.*uvicorn" 2>/dev/null || true
         fi
 
         # Check for npm/vite (Frontend) processes specifically
@@ -440,8 +472,21 @@ case $SERVICE in
         # Check for multiprocessing spawn/resource_tracker (orphaned child processes)
         if pgrep -f "multiprocessing" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping orphaned multiprocessing processes${NC}"
-            pkill -f "multiprocessing.spawn" || true
-            pkill -f "multiprocessing.resource_tracker" || true
+            pkill -9 -f "multiprocessing.spawn" || true
+            pkill -9 -f "multiprocessing.resource_tracker" || true
+        fi
+        
+        # Kill zombie parent processes (uvicorn workers that became zombies)
+        echo -e "${BLUE}💀 Checking for zombie processes...${NC}"
+        zombie_parents=$(ps aux | awk '$8=="Z" {print}' | awk '{print $3}' | sort -u)
+        if [ -n "$zombie_parents" ]; then
+            echo -e "${YELLOW}🔄 Found zombie processes, killing parents...${NC}"
+            for ppid in $zombie_parents; do
+                if [ "$ppid" != "1" ] && [ -n "$ppid" ]; then
+                    kill -TERM $ppid 2>/dev/null || true
+                fi
+            done
+            sleep 1
         fi
 
         # Check for CloudFlare Tunnel processes (NOT VS Code tunnel!)

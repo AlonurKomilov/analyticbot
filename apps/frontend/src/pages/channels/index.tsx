@@ -123,6 +123,10 @@ const ChannelsManagementPage: React.FC = () => {
         setCreateDialogOpen(true);
     };
 
+    const handleFormDataChange = (data: Partial<ChannelFormData>) => {
+        setFormData(prev => ({ ...prev, ...data }));
+    };
+
     const handleCreate = async () => {
         try {
             setSubmitting(true);
@@ -132,7 +136,8 @@ const ChannelsManagementPage: React.FC = () => {
                 name: formData.name.trim(),
                 description: formData.description.trim(),
                 username: formData.username.trim(),
-                telegram_id: formData.telegram_id.trim() || undefined
+                telegram_id: formData.telegram_id.trim() || undefined,
+                subscriber_count: formData.subscriber_count || 0
             });
 
             setCreateDialogOpen(false);
@@ -321,6 +326,8 @@ const ChannelsManagementPage: React.FC = () => {
                 onClose={() => setCreateDialogOpen(false)}
                 onInputChange={handleInputChange}
                 onSubmit={handleCreate}
+                onFormDataChange={handleFormDataChange}
+                onClearError={() => setFormError('')}
             />
 
             <EditChannelDialog

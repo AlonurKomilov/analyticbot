@@ -47,9 +47,12 @@ export interface ChannelInfo {
   title: string;
   username: string | null;
   description: string | null;
-  created_at: string | null;
-  age_days: number;
-  age_formatted: string;
+  created_at: string | null;  // When added to analytics system
+  telegram_created_at: string | null;  // Actual Telegram channel creation date
+  age_days: number;  // Days tracked in analytics system
+  channel_age_days: number | null;  // Actual channel age (from Telegram)
+  age_formatted: string;  // Formatted tracking duration
+  channel_age_formatted: string | null;  // Formatted actual channel age
   is_active: boolean;
 }
 

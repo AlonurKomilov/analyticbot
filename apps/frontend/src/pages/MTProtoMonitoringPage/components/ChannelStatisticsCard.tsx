@@ -77,7 +77,7 @@ export const ChannelStatisticsCard: React.FC<ChannelStatisticsCardProps> = ({ ch
                       <Typography variant="body2" fontWeight="medium">
                         {formatTimeAgo(channel.latest_post_date)}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">Latest</Typography>
+                      <Typography variant="caption" color="text.secondary">Newest Post</Typography>
                     </Box>
                   </Grid>
 
@@ -86,7 +86,7 @@ export const ChannelStatisticsCard: React.FC<ChannelStatisticsCardProps> = ({ ch
                       <Typography variant="body2" fontWeight="medium">
                         {formatTimeAgo(channel.last_collected)}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">Last collected</Typography>
+                      <Typography variant="caption" color="text.secondary">Last Synced</Typography>
                     </Box>
                   </Grid>
                 </Grid>

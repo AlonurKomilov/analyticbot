@@ -14,7 +14,7 @@ class AsyncpgChannelRepository:
     def __init__(self, pool: asyncpg.Pool):
         self.pool = pool
 
-    async def create_channel(
+    async def add_channel(
         self,
         channel_id: int,
         user_id: int,
@@ -22,7 +22,7 @@ class AsyncpgChannelRepository:
         username: str | None = None,
         description: str | None = None,
     ) -> None:
-        """Adds a new channel to the database for a specific user.
+        """Adds an existing Telegram channel to the database for analytics tracking.
 
         If the channel already exists, its title, username, and description are refreshed.
         """
@@ -74,6 +74,7 @@ class AsyncpgChannelRepository:
                     username,
                     COALESCE(description, '') as description,
                     created_at,
+                    telegram_created_at,
                     user_id,
                     subscriber_count,
                     updated_at
@@ -228,8 +229,11 @@ class AsyncpgChannelRepository:
         values = []
         param_num = 1
 
+        # Allowed fields for update
+        allowed_fields = ["name", "description", "username", "is_active", "telegram_created_at", "subscriber_count"]
+        
         for key, value in kwargs.items():
-            if key in ["name", "description", "username", "is_active"]:
+            if key in allowed_fields:
                 set_clauses.append(f"{key} = ${param_num}")
                 values.append(value)
                 param_num += 1
@@ -251,6 +255,33 @@ class AsyncpgChannelRepository:
         async with self.pool.acquire() as conn:
             record = await conn.fetchrow(query, *values[:-1], values[-1])
             return dict(record) if record else None
+
+    async def update_telegram_created_at(
+        self, 
+        channel_id: int, 
+        telegram_created_at: Any
+    ) -> bool:
+        """Update the Telegram channel creation date.
+        
+        Args:
+            channel_id: Channel ID (can be positive or negative)
+            telegram_created_at: The actual creation date from Telegram
+            
+        Returns:
+            True if updated successfully
+        """
+        async with self.pool.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE channels 
+                SET telegram_created_at = $1, updated_at = NOW()
+                WHERE id = $2 OR id = $3
+                """,
+                telegram_created_at,
+                channel_id,
+                -abs(channel_id),  # Also try the negative version
+            )
+            return result != "UPDATE 0"
 
 
 # Alias for backwards compatibility and cleaner imports

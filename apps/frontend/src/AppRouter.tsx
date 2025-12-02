@@ -24,7 +24,7 @@ const {
     AnalyticsPage,
     AuthPage,
     ProfilePage,
-    AdminDashboard,
+    // AdminDashboard - MOVED to admin.analyticbot.org
     ResetPasswordForm
 } = PageComponents;
 
@@ -49,7 +49,7 @@ const ServerErrorPage = React.lazy(() => import('./pages/ServerErrorPage'));
 // Bot Management Pages
 const BotSetupPage = React.lazy(() => import('./pages/BotSetupPage'));
 const BotDashboardPage = React.lazy(() => import('./pages/BotDashboardPage'));
-const AdminBotManagementPage = React.lazy(() => import('./pages/AdminBotManagementPage'));
+// AdminBotManagementPage - MOVED to admin.analyticbot.org
 
 // MTProto Setup Page
 const MTProtoSetupPage = React.lazy(() => import('@features/mtproto-setup'));
@@ -243,16 +243,15 @@ const AppRouter: React.FC = () => {
                                     }
                                 />
 
-                                {/* Admin Dashboard - Role-based protection */}
+                                {/* Admin Routes - MOVED to admin.analyticbot.org */}
+                                {/* Users should visit https://admin.analyticbot.org for admin access */}
                                 <Route
                                     path="/admin"
-                                    element={
-                                        <ProtectedRoute requiredRole="admin">
-                                            <OptimizedSuspense skeletonType="dashboard">
-                                                <AdminDashboard />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
+                                    element={<Navigate to="https://admin.analyticbot.org" replace />}
+                                />
+                                <Route
+                                    path="/admin/*"
+                                    element={<Navigate to="https://admin.analyticbot.org" replace />}
                                 />
 
                                 {/* Bot Management Routes */}
@@ -276,16 +275,7 @@ const AppRouter: React.FC = () => {
                                         </ProtectedRoute>
                                     }
                                 />
-                                <Route
-                                    path="/admin/bots"
-                                    element={
-                                        <ProtectedRoute requiredRole="admin">
-                                            <OptimizedSuspense skeletonType="list">
-                                                <AdminBotManagementPage />
-                                            </OptimizedSuspense>
-                                        </ProtectedRoute>
-                                    }
-                                />
+                                {/* AdminBotManagementPage - MOVED to admin.analyticbot.org */}
 
                                 {/* Owner Dashboard - ARCHIVED - Use /admin instead */}
                                 {/* <Route

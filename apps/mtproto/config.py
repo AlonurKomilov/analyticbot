@@ -58,6 +58,11 @@ class MTProtoSettings(BaseSettings):
         default=None, description="Telegram API Hash from my.telegram.org"
     )
 
+    # Bot token for API access (alternative to user session)
+    TELEGRAM_BOT_TOKEN: str | None = Field(
+        default=None, description="Telegram Bot Token for API access (from @BotFather)"
+    )
+
     # Session configuration
     TELEGRAM_SESSION_NAME: str = Field(
         default="mtproto_session", description="Name for the Telegram session file"

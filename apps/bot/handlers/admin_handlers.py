@@ -116,7 +116,7 @@ async def add_channel_handler(
         await message.reply(i18n.get("add-channel-not-found", channel_name=channel_username))
         return
     try:
-        await channel_repo.create_channel(
+        await channel_repo.add_channel(
             channel_id=channel.id,
             user_id=uid,
             title=channel.title or "",

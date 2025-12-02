@@ -109,6 +109,8 @@ async def get_channels_statistics_overview(
             async with pool.acquire() as conn:
                 for channel in channels:
                     # Get post count and views for this channel
+                    # Check both positive and negative ID formats for compatibility
+                    channel_id = abs(channel.id)  # Normalize to positive
                     stats = await conn.fetchrow(
                         """
                         SELECT
@@ -123,9 +125,10 @@ async def get_channels_statistics_overview(
                             ORDER BY snapshot_time DESC
                             LIMIT 1
                         ) latest_metrics ON true
-                        WHERE p.channel_id = $1 AND p.is_deleted = FALSE
+                        WHERE (p.channel_id = $1 OR p.channel_id = $2) AND p.is_deleted = FALSE
                         """,
-                        channel.id,
+                        channel_id,
+                        -channel_id,
                     )
 
                     post_count = stats["post_count"] or 0

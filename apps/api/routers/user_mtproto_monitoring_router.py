@@ -659,7 +659,13 @@ async def _get_channel_stats(conn, user_id: int) -> list[ChannelCollectionStats]
             COUNT(p.msg_id) as total_posts,
             MAX(p.date) as latest_post,
             MIN(p.date) as oldest_post,
-            COALESCE(cms.mtproto_enabled, false) as collection_enabled
+            COALESCE(cms.mtproto_enabled, false) as collection_enabled,
+            (
+                SELECT MAX(mal.timestamp)
+                FROM mtproto_audit_log mal
+                WHERE mal.channel_id = c.id
+                AND mal.action IN ('collection_progress', 'collection_progress_detail')
+            ) as last_sync_time
         FROM channels c
         LEFT JOIN posts p ON c.id = p.channel_id
         LEFT JOIN channel_mtproto_settings cms ON c.id = cms.channel_id
@@ -679,7 +685,7 @@ async def _get_channel_stats(conn, user_id: int) -> list[ChannelCollectionStats]
                 total_posts=row["total_posts"] or 0,
                 latest_post_date=row["latest_post"],
                 oldest_post_date=row["oldest_post"],
-                last_collected=row["latest_post"],  # Use latest post as proxy
+                last_collected=row["last_sync_time"] or row["latest_post"],  # Use actual sync time, fallback to latest post
                 collection_enabled=row["collection_enabled"],
             )
         )

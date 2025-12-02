@@ -67,18 +67,16 @@ export const ChannelMTProtoToggle: React.FC<ChannelMTProtoToggleProps> = ({
 
       // SECOND: Try to get per-channel override
       const numericChannelId = typeof channelId === 'string' ? parseInt(channelId, 10) : channelId;
-      try {
-        const result = await getChannelMTProtoSetting(numericChannelId);
+      const result = await getChannelMTProtoSetting(numericChannelId);
+      
+      if (result !== null) {
+        // Has per-channel override
         console.log(`📌 Channel ${channelId} has override:`, result.mtproto_enabled);
         setEnabled(result.mtproto_enabled);
-      } catch (err: any) {
-        if (err.status === 404) {
-          // 404 = no per-channel override, inherit from global setting
-          console.log(`📌 Channel ${channelId} inherits global:`, globalSetting);
-          setEnabled(globalSetting); // ✅ Use global setting, NOT hardcoded true!
-        } else {
-          throw err; // Re-throw non-404 errors
-        }
+      } else {
+        // No per-channel setting, inherit from global
+        console.log(`📌 Channel ${channelId} inherits global:`, globalSetting);
+        setEnabled(globalSetting);
       }
     } catch (err: any) {
       logger.error(`Failed to load MTProto setting for channel ${channelId}:`, err);

@@ -49,6 +49,12 @@ import {
   TelegramStatsSection,
   formatNumber,
   formatPercentage,
+  getEngagementRatePerformance,
+  getGrowthPerformance,
+  getPostingFrequencyPerformance,
+  getCitationIndexPerformance,
+  getViewsPerformance,
+  METRIC_TOOLTIPS,
 } from './components';
 
 interface OverviewPageProps {
@@ -142,16 +148,29 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ channelId }) => {
             title="Subscribers"
             value={data.subscribers.total}
             change={data.subscribers.week_change}
-            subtitle={`${formatPercentage(data.subscribers.growth_rate)} growth`}
+            subtitle={data.subscribers.week_change !== 0 
+              ? `${data.subscribers.week_change > 0 ? '+' : ''}${data.subscribers.week_change} this week`
+              : 'No change this week'
+            }
             icon={<TrendingUp />}
+            performance={getGrowthPerformance(data.subscribers.growth_rate)}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.subscribers.description,
+              calculation: METRIC_TOOLTIPS.subscribers.calculation,
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Total Posts"
             value={data.posts.total}
-            subtitle={`${data.posts.avg_per_day.toFixed(1)} per day`}
+            subtitle={`${data.posts.avg_per_day.toFixed(1)} posts per day`}
             icon={<CalendarToday />}
+            performance={getPostingFrequencyPerformance(data.posts.avg_per_day)}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.totalPosts.description,
+              calculation: METRIC_TOOLTIPS.totalPosts.calculation,
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
@@ -160,15 +179,25 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ channelId }) => {
             value={data.engagement.total_views}
             subtitle={`${formatNumber(data.engagement.avg_views_per_post)} avg per post`}
             icon={<Visibility />}
+            performance={getViewsPerformance(data.engagement.avg_views_per_post, data.subscribers.total)}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.totalViews.description,
+              calculation: METRIC_TOOLTIPS.avgViewsPerPost.calculation,
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Engagement Rate"
             value={formatPercentage(data.engagement.engagement_rate)}
-            subtitle={`ER: ${formatPercentage(data.engagement.err)}`}
+            subtitle={`${formatNumber(data.engagement.total_reactions + data.engagement.total_forwards)} interactions`}
             icon={<ThumbUp />}
-            tooltip="Engagement Rate measures audience interaction. Calculated as total engagements (reactions, forwards, comments) divided by total views."
+            performance={getEngagementRatePerformance(data.engagement.engagement_rate)}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.engagementRate.description,
+              calculation: METRIC_TOOLTIPS.engagementRate.calculation,
+              benchmark: METRIC_TOOLTIPS.engagementRate.benchmark,
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
@@ -177,14 +206,24 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ channelId }) => {
             value={data.reach.avg_post_reach}
             subtitle={`Ad Reach: ${formatNumber(data.reach.avg_ad_reach)}`}
             icon={<Share />}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.avgPostReach.description,
+              calculation: METRIC_TOOLTIPS.avgPostReach.calculation,
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Citation Index"
             value={data.reach.citation_index.toFixed(1)}
-            tooltip="Based on forwards and mentions"
+            subtitle="Virality score"
             icon={<Comment />}
+            performance={getCitationIndexPerformance(data.reach.citation_index)}
+            tooltipDetails={{
+              description: METRIC_TOOLTIPS.citationIndex.description,
+              calculation: METRIC_TOOLTIPS.citationIndex.calculation,
+              benchmark: METRIC_TOOLTIPS.citationIndex.benchmark,
+            }}
           />
         </Grid>
       </Grid>

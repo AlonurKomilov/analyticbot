@@ -10,6 +10,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote_plus
 
 import asyncpg
 from asyncpg import Connection, Pool
@@ -115,8 +116,9 @@ class OptimizedAsyncPgPool:
         if self._pool:
             return self._pool
 
-        # Build connection string
-        dsn = f"postgresql://{self.config.user}:{self.config.password}@{self.config.host}:{self.config.port}/{self.config.database}"
+        # Build connection string with URL-encoded password (handles special chars like @, &, %, etc.)
+        encoded_password = quote_plus(self.config.password)
+        dsn = f"postgresql://{self.config.user}:{encoded_password}@{self.config.host}:{self.config.port}/{self.config.database}"
 
         # Create pool with optimized settings
         self._pool = await asyncpg.create_pool(

@@ -143,7 +143,7 @@ class AnalyticsOverviewService:
         row = await conn.fetchrow(
             """
             SELECT id, title, username, description, created_at, 
-                   subscriber_count, is_active
+                   telegram_created_at, subscriber_count, is_active
             FROM channels 
             WHERE id = $1 OR id = $2
             """,
@@ -155,8 +155,18 @@ class AnalyticsOverviewService:
             logger.warning(f"Channel {channel_id} not found")
             return ChannelInfo(id=channel_id)
         
+        # Use telegram_created_at if available, otherwise fall back to created_at
+        telegram_created_at = row["telegram_created_at"]
         created_at = row["created_at"]
-        age_days = (datetime.utcnow() - created_at).days if created_at else 0
+        
+        # Calculate age based on tracking start (created_at)
+        tracking_days = (datetime.utcnow() - created_at).days if created_at else 0
+        
+        # Calculate channel age based on Telegram creation if available
+        if telegram_created_at:
+            channel_age_days = (datetime.utcnow() - telegram_created_at.replace(tzinfo=None)).days
+        else:
+            channel_age_days = None
         
         return ChannelInfo(
             id=row["id"],
@@ -164,8 +174,11 @@ class AnalyticsOverviewService:
             username=row["username"],
             description=row["description"],
             created_at=created_at,
-            age_days=age_days,
-            age_formatted=self._format_age(age_days),
+            telegram_created_at=telegram_created_at,
+            age_days=tracking_days,  # Days tracked in our system
+            channel_age_days=channel_age_days,  # Actual Telegram channel age
+            age_formatted=self._format_age(tracking_days),
+            channel_age_formatted=self._format_age(channel_age_days) if channel_age_days else None,
             is_active=row["is_active"],
         )
     

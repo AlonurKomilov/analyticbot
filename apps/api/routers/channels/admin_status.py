@@ -109,12 +109,19 @@ async def check_all_channels_admin_status(
 
             # 2. Telegram ID - needs conversion for Bot API (requires -100 prefix)
             # Bot API format: -100 + channel_id (for channels/supergroups)
+            # Our DB stores IDs with 100 prefix already (e.g., 1002678877654)
+            # So we just need to make it negative for Bot API (-1002678877654)
             bot_api_chat_id = None
             if channel.telegram_id:
-                # If ID is positive, convert to Bot API format
-                if channel.telegram_id > 0:
+                channel_id_str = str(abs(channel.telegram_id))
+                # If ID already has 100 prefix, just make negative
+                if channel_id_str.startswith("100") and len(channel_id_str) > 10:
+                    bot_api_chat_id = -abs(channel.telegram_id)
+                elif channel.telegram_id > 0:
+                    # Raw ID without 100 prefix - add it
                     bot_api_chat_id = int(f"-100{channel.telegram_id}")
                 else:
+                    # Already negative
                     bot_api_chat_id = channel.telegram_id
 
             # Check bot admin status (if user has configured a bot)

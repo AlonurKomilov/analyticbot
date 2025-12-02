@@ -41,8 +41,8 @@ class ChannelResponse(BaseModel):
         from_attributes = True
 
 
-class ChannelCreateRequest(BaseModel):
-    """Request model for creating a channel"""
+class AddChannelRequest(BaseModel):
+    """Request model for adding a channel to analytics"""
 
     name: str
     telegram_id: int | None = None
@@ -66,3 +66,19 @@ class ValidateChannelRequest(BaseModel):
     """Request model for channel validation"""
 
     username: str
+
+
+class ChannelLookupResponse(BaseModel):
+    """Response model for channel lookup - auto-fetched from Telegram"""
+
+    is_valid: bool
+    telegram_id: int | None = None
+    username: str | None = None
+    title: str | None = None  # Channel name from Telegram
+    subscriber_count: int | None = None
+    description: str | None = None
+    telegram_created_at: str | None = None
+    is_verified: bool = False
+    is_scam: bool = False
+    is_admin: bool | None = None  # Whether bot has admin access
+    error_message: str | None = None

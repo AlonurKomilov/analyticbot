@@ -66,10 +66,10 @@ class AdminRepository(Protocol):
 class ChannelRepository(Protocol):
     """Channel repository interface using Protocol"""
 
-    async def create_channel(
+    async def add_channel(
         self, channel_id: int, user_id: int, title: str, username: str | None = None
     ) -> None:
-        """Create a new channel"""
+        """Add an existing Telegram channel for analytics"""
         ...
 
     async def get_channel_by_id(self, channel_id: int) -> dict | None:

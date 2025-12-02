@@ -58,12 +58,36 @@ class TelegramClientAdapter:
             Message objects
         """
         # Resolve entity first to ensure it's in cache
+        # Try multiple ID formats for robustness
+        entity = None
         try:
             entity = await self._client.get_entity(peer)
+        except Exception as e1:
+            logger.warning(f"Could not resolve entity for {peer}: {e1}")
+            
+            # If peer is an int, try alternate formats
+            if isinstance(peer, int):
+                # Try negative format
+                try:
+                    negative_id = -abs(peer)
+                    entity = await self._client.get_entity(negative_id)
+                    logger.info(f"Resolved entity using negative ID: {negative_id}")
+                except Exception as e2:
+                    logger.debug(f"Negative ID failed: {e2}")
+                    
+                    # Try without 100 prefix if present
+                    id_str = str(abs(peer))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        try:
+                            raw_id = int(id_str[3:])
+                            entity = await self._client.get_entity(raw_id)
+                            logger.info(f"Resolved entity using raw ID: {raw_id}")
+                        except Exception as e3:
+                            logger.debug(f"Raw ID failed: {e3}")
+        
+        if entity:
             peer = entity  # Use resolved entity for iteration
-        except Exception as e:
-            logger.warning(f"Could not resolve entity for {peer}: {e}")
-            # Continue with original peer, might still work
+        # Continue with original peer if resolution failed, might still work
 
         async for message in self._client.iter_messages(peer, offset_id=offset_id, limit=limit):
             yield message
@@ -84,8 +108,22 @@ class TelegramClientAdapter:
         """Get full channel information including participant count."""
         from telethon.tl.functions.channels import GetFullChannelRequest
 
-        # Resolve entity first
-        entity = await self._client.get_entity(channel)
+        # Resolve entity first with fallback formats
+        entity = None
+        try:
+            entity = await self._client.get_entity(channel)
+        except Exception as e1:
+            if isinstance(channel, int):
+                # Try alternate formats
+                try:
+                    entity = await self._client.get_entity(-abs(channel))
+                except Exception:
+                    id_str = str(abs(channel))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        entity = await self._client.get_entity(int(id_str[3:]))
+        
+        if not entity:
+            entity = channel  # Fallback to original
 
         # Get full channel info
         full_channel = await self._client(GetFullChannelRequest(entity))

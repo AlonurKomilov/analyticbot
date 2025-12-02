@@ -31,6 +31,7 @@ class ChannelValidationResult(BaseModel):
     title: str | None = None
     subscriber_count: int | None = None
     description: str | None = None
+    telegram_created_at: str | None = None  # Actual Telegram channel creation date
     is_verified: bool = False
     is_scam: bool = False
     is_admin: bool | None = None  # Bot/MTProto session's admin status in the channel
@@ -112,6 +113,15 @@ class TelegramValidationService:
             username_from_entity = getattr(entity, "username", clean_username)
             is_verified = getattr(entity, "verified", False)
             is_scam = getattr(entity, "scam", False)
+            
+            # Get channel creation date from entity
+            telegram_created_at = None
+            entity_date = getattr(entity, "date", None)
+            if entity_date:
+                try:
+                    telegram_created_at = entity_date.isoformat()
+                except Exception:
+                    pass
 
             # Get full channel info for subscriber count
             subscriber_count = None
@@ -134,6 +144,7 @@ class TelegramValidationService:
                 title=title,
                 subscriber_count=subscriber_count,
                 description=description,
+                telegram_created_at=telegram_created_at,
                 is_verified=is_verified,
                 is_scam=is_scam,
             )
@@ -164,7 +175,36 @@ class TelegramValidationService:
             if self.client._client is None:
                 return {"error": "Telegram client not initialized"}
 
-            entity = await self.client._client.get_entity(telegram_id)  # type: ignore
+            # Try multiple ID formats for robustness
+            entity = None
+            errors = []
+            
+            # Method 1: Try with provided ID directly
+            try:
+                entity = await self.client._client.get_entity(telegram_id)  # type: ignore
+            except Exception as e1:
+                errors.append(f"direct({telegram_id}): {e1}")
+                
+                # Method 2: Try with negative format
+                try:
+                    negative_id = -abs(telegram_id)
+                    entity = await self.client._client.get_entity(negative_id)  # type: ignore
+                except Exception as e2:
+                    errors.append(f"negative({negative_id}): {e2}")
+                    
+                    # Method 3: If ID has 100 prefix, try without it
+                    id_str = str(abs(telegram_id))
+                    if len(id_str) > 10 and id_str.startswith("100"):
+                        try:
+                            raw_id = int(id_str[3:])  # Remove 100 prefix
+                            entity = await self.client._client.get_entity(raw_id)  # type: ignore
+                        except Exception as e3:
+                            errors.append(f"raw({raw_id}): {e3}")
+            
+            if not entity:
+                error_details = "; ".join(errors)
+                return {"error": f"Could not resolve channel: {error_details}"}
+            
             full_channel = await self.client.get_full_channel(entity)
 
             metadata = {

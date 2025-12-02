@@ -83,20 +83,29 @@ export async function connectMTProto(): Promise<MTProtoActionResponse> {
 
 /**
  * Get MTProto setting for a specific channel
+ * Returns null if no per-channel setting exists (uses global default)
  */
 export async function getChannelMTProtoSetting(channelId: number): Promise<{
   mtproto_enabled: boolean;
   channel_id: number;
   created_at?: string;
   updated_at?: string
-}> {
-  const response = await apiClient.get<{
-    mtproto_enabled: boolean;
-    channel_id: number;
-    created_at?: string;
-    updated_at?: string
-  }>(`/user-mtproto/channels/${channelId}/settings`);
-  return response;
+} | null> {
+  try {
+    const response = await apiClient.get<{
+      mtproto_enabled: boolean;
+      channel_id: number;
+      created_at?: string;
+      updated_at?: string
+    }>(`/user-mtproto/channels/${channelId}/settings`);
+    return response;
+  } catch (error: any) {
+    // 404 is expected when no per-channel setting exists (uses global default)
+    if (error.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 /**

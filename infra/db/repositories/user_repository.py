@@ -33,16 +33,18 @@ class AsyncpgUserRepository(IUserRepository):
     async def create_user(self, user_data: dict) -> dict:
         """Create new user with upsert (handles both Telegram and regular users)"""
         query = """
-            INSERT INTO users (id, username, email, full_name, hashed_password, role, status, plan_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            INSERT INTO users (id, username, email, full_name, hashed_password, role, status, plan_id, telegram_id, auth_provider)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             ON CONFLICT (id) DO UPDATE SET
                 username = EXCLUDED.username,
                 email = EXCLUDED.email,
                 full_name = EXCLUDED.full_name,
                 hashed_password = EXCLUDED.hashed_password,
                 role = EXCLUDED.role,
-                status = EXCLUDED.status
-            RETURNING id, username, email, full_name, role, status, created_at
+                status = EXCLUDED.status,
+                telegram_id = COALESCE(EXCLUDED.telegram_id, users.telegram_id),
+                auth_provider = COALESCE(EXCLUDED.auth_provider, users.auth_provider)
+            RETURNING id, username, email, full_name, role, status, created_at, telegram_id, auth_provider
         """
         user_id = user_data.get("id") or user_data.get("telegram_id")
         username = user_data.get("username")
@@ -52,9 +54,11 @@ class AsyncpgUserRepository(IUserRepository):
         role = user_data.get("role", "user")
         status = user_data.get("status", "pending_verification")
         plan_id = user_data.get("plan_id", 1)  # Default plan
+        telegram_id = user_data.get("telegram_id")  # Store Telegram ID separately
+        auth_provider = user_data.get("auth_provider", "local")  # Default to 'local'
 
         row = await self._pool.fetchrow(
-            query, user_id, username, email, full_name, hashed_password, role, status, plan_id
+            query, user_id, username, email, full_name, hashed_password, role, status, plan_id, telegram_id, auth_provider
         )
         return dict(row) if row else {}
 
@@ -78,6 +82,7 @@ class AsyncpgUserRepository(IUserRepository):
             "telegram_username",
             "telegram_photo_url",
             "telegram_verified",
+            "auth_provider",
         ]
 
         for key, value in updates.items():

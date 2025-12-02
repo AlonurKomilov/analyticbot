@@ -104,9 +104,12 @@ class ChannelInfo:
     title: str = ""
     username: str | None = None
     description: str | None = None
-    created_at: datetime | None = None
-    age_days: int = 0
-    age_formatted: str = ""  # e.g., "2 years 3 months"
+    created_at: datetime | None = None  # When added to our analytics system
+    telegram_created_at: datetime | None = None  # Actual Telegram channel creation date
+    age_days: int = 0  # Days tracked in our system
+    channel_age_days: int | None = None  # Actual channel age (from Telegram)
+    age_formatted: str = ""  # Formatted tracking duration
+    channel_age_formatted: str | None = None  # Formatted actual channel age
     is_active: bool = True
     
     def to_dict(self) -> dict[str, Any]:
@@ -116,8 +119,11 @@ class ChannelInfo:
             "username": self.username,
             "description": self.description,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "telegram_created_at": self.telegram_created_at.isoformat() if self.telegram_created_at else None,
             "age_days": self.age_days,
+            "channel_age_days": self.channel_age_days,
             "age_formatted": self.age_formatted,
+            "channel_age_formatted": self.channel_age_formatted,
             "is_active": self.is_active,
         }
 

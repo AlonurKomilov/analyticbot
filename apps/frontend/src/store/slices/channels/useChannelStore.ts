@@ -28,6 +28,7 @@ interface ChannelState {
     username: string;
     description?: string;
     telegram_id?: string;  // Optional telegram_id as string (will be parsed to number)
+    subscriber_count?: number;  // Subscriber count from lookup
   }) => Promise<void>;
   updateChannel: (channelId: string, data: Partial<Channel>) => Promise<void>;
   deleteChannel: (channelId: string) => Promise<void>;
@@ -221,7 +222,8 @@ export const useChannelStore = create<ChannelState>()(
           name: channelData.name || usernameWithAt,
           telegram_id: finalTelegramId,
           username: usernameWithAt,
-          description: channelData.description || ''
+          description: channelData.description || '',
+          subscriber_count: channelData.subscriber_count || 0
         });
 
         // Step 3: Add to local state

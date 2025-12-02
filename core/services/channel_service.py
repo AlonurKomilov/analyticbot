@@ -75,15 +75,15 @@ class ChannelService:
             self.logger.error(f"Error fetching channels: {e}")
             raise
 
-    async def create_channel(self, channel_data: ChannelData) -> Channel:
+    async def add_channel(self, channel_data: ChannelData) -> Channel:
         """
-        Create a new channel with business validation
+        Add an existing Telegram channel for analytics with business validation
 
         Args:
-            channel_data: Channel data to create
+            channel_data: Channel data to add
 
         Returns:
-            Created Channel entity
+            Added Channel entity
 
         Raises:
             ValueError: If validation fails
@@ -140,7 +140,7 @@ class ChannelService:
                         f"If you believe this is an error, please contact support."
                     )
 
-        self.logger.info(f"Creating channel: {channel_data.name}")
+        self.logger.info(f"Adding channel: {channel_data.name}")
 
         # Determine the username to store
         stored_username = channel_data.username
@@ -149,8 +149,8 @@ class ChannelService:
             stored_username = channel_data.name.lower().replace(" ", "_")
 
         try:
-            # Use the protocol's create_channel method signature
-            await self.channel_repo.create_channel(
+            # Use the repository's add_channel method
+            await self.channel_repo.add_channel(
                 channel_id=channel_data.telegram_id,
                 user_id=channel_data.user_id or 0,
                 title=channel_data.name.strip(),
@@ -158,16 +158,16 @@ class ChannelService:
                 description=channel_data.description,
             )
 
-            # Get the created channel back
-            created_record = await self.channel_repo.get_channel_by_telegram_id(
+            # Get the added channel back
+            added_record = await self.channel_repo.get_channel_by_telegram_id(
                 channel_data.telegram_id
             )
-            if not created_record:
-                raise RuntimeError("Failed to retrieve created channel")
+            if not added_record:
+                raise RuntimeError("Failed to retrieve added channel")
 
-            return self._map_record_to_entity(created_record)
+            return self._map_record_to_entity(added_record)
         except Exception as e:
-            self.logger.error(f"Error creating channel: {e}")
+            self.logger.error(f"Error adding channel: {e}")
             raise
 
     async def get_channel_by_id(self, channel_id: int) -> Channel | None:

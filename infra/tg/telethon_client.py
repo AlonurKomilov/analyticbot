@@ -99,9 +99,15 @@ class TelethonTGClient:
             if hasattr(self._client, "parse_mode"):
                 self._client.parse_mode = None  # type: ignore
 
-            # Start the client
+            # Start the client - use bot token if available, otherwise user session
             if hasattr(self._client, "start") and callable(self._client.start):
-                await self._client.start()  # type: ignore[misc]
+                bot_token = getattr(self.settings, 'TELEGRAM_BOT_TOKEN', None)
+                if bot_token:
+                    self.logger.info("Starting Telethon client with bot token...")
+                    await self._client.start(bot_token=bot_token)  # type: ignore[misc]
+                else:
+                    self.logger.info("Starting Telethon client with user session...")
+                    await self._client.start()  # type: ignore[misc]
             self._started = True
             self.logger.info("Telethon client started successfully")
 

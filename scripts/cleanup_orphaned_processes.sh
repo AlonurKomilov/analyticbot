@@ -1,10 +1,12 @@
 #!/bin/bash
 # Automated Cleanup Script for Orphaned Processes
 # Runs periodically to clean up stuck workers, old connections, and zombie processes
+# Can be run via cron or manually via: make -f Makefile.dev dev-stop
 
 set -e
 
 LOG_FILE="/tmp/analyticbot_cleanup.log"
+PROJECT_DIR="/home/abcdeveloper/projects/analyticbot"
 MAX_PROCESS_AGE_DAYS=1  # Kill processes older than 1 day
 MAX_MEMORY_PERCENT=85   # Trigger cleanup if memory exceeds 85%
 
@@ -21,6 +23,34 @@ log "=========================================="
 check_memory() {
     local mem_percent=$(free | grep Mem | awk '{printf("%.0f", $3/$2 * 100)}')
     echo "$mem_percent"
+}
+
+# Function to cleanup duplicate uvicorn servers
+cleanup_duplicate_uvicorn() {
+    log "Checking for duplicate uvicorn servers..."
+    
+    # Find all uvicorn processes on port 11400
+    local uvicorn_pids=$(pgrep -f "uvicorn.*11400" 2>/dev/null || true)
+    local count=$(echo "$uvicorn_pids" | grep -c . 2>/dev/null || echo "0")
+    
+    if [ "$count" -gt 1 ]; then
+        log "⚠️  Found $count uvicorn servers on port 11400 - keeping only the newest"
+        
+        # Keep the newest (highest PID), kill the rest
+        local newest_pid=$(echo "$uvicorn_pids" | sort -rn | head -1)
+        
+        for pid in $uvicorn_pids; do
+            if [ "$pid" != "$newest_pid" ]; then
+                log "  Killing duplicate uvicorn PID $pid"
+                kill -TERM "$pid" 2>/dev/null || true
+                sleep 1
+                kill -9 "$pid" 2>/dev/null || true
+            fi
+        done
+        log "✅ Duplicate uvicorn servers cleaned up"
+    else
+        log "✅ No duplicate uvicorn servers"
+    fi
 }
 
 # Function to kill orphaned multiprocessing workers
@@ -117,13 +147,18 @@ main() {
     local mem_percent=$(check_memory)
     log "Current memory usage: ${mem_percent}%"
 
+    # Always cleanup duplicate uvicorn servers first
+    cleanup_duplicate_uvicorn
+
     # Always cleanup orphaned workers
     cleanup_orphaned_workers
+    
+    # Always cleanup zombie processes
+    cleanup_zombies
 
     # If memory is high, do more aggressive cleanup
     if [ "$mem_percent" -gt "$MAX_MEMORY_PERCENT" ]; then
         log "⚠️  High memory usage detected (${mem_percent}% > ${MAX_MEMORY_PERCENT}%)"
-        cleanup_zombies
         restart_stuck_services
     fi
 

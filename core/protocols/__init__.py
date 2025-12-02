@@ -434,8 +434,8 @@ class ChannelRepositoryProtocol(Protocol):
         """Get channels for a user"""
         ...
 
-    async def create_channel(self, channel_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new channel"""
+    async def add_channel(self, channel_data: dict[str, Any]) -> dict[str, Any]:
+        """Add an existing Telegram channel for analytics"""
         ...
 
     async def update_channel(self, channel_id: int, channel_data: dict[str, Any]) -> dict[str, Any]:

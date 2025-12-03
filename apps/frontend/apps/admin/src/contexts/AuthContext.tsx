@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = localStorage.getItem('admin_token');
       if (token) {
         try {
-          const response = await apiClient.get(API_ENDPOINTS.AUTH.VERIFY);
+          const response = await apiClient.get(API_ENDPOINTS.AUTH.ME);
           const userData = response.data.user || response.data;
 
           // Only allow admin users

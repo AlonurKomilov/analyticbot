@@ -25,9 +25,9 @@ interface SystemStats {
   total_users: number;
   total_channels: number;
   total_posts: number;
+  total_views: number;
+  active_channels: number;
   system_health: string;
-  active_users_today: number;
-  storage_used_gb: number;
 }
 
 interface StatCardProps {
@@ -97,9 +97,9 @@ const DashboardPage: React.FC = () => {
           total_users: 0,
           total_channels: 0,
           total_posts: 0,
+          total_views: 0,
+          active_channels: 0,
           system_health: 'Unknown',
-          active_users_today: 0,
-          storage_used_gb: 0,
         });
       } finally {
         setLoading(false);
@@ -167,20 +167,20 @@ const DashboardPage: React.FC = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="Active Today"
-            value={stats?.active_users_today || 0}
+            title="Active Channels"
+            value={stats?.active_channels || 0}
             icon={<TrendingIcon />}
             color={theme.palette.secondary.main}
-            subtitle="Users online today"
+            subtitle="Currently active"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <StatCard
-            title="Storage Used"
-            value={`${(stats?.storage_used_gb || 0).toFixed(1)} GB`}
+            title="Total Views"
+            value={(stats?.total_views || 0).toLocaleString()}
             icon={<StorageIcon />}
             color={theme.palette.warning.main}
-            subtitle="Database storage"
+            subtitle="Tracked views"
           />
         </Grid>
       </Grid>

@@ -10,20 +10,20 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
-    VERIFY: '/auth/verify',
+    ME: '/auth/me',  // Use /auth/me to verify token and get user info
   },
   // Admin
   ADMIN: {
-    STATS: '/admin/analytics/system-stats',
+    STATS: '/admin/system/stats',  // Correct endpoint
     USERS: '/admin/users',
     CHANNELS: '/admin/channels',
-    AUDIT_LOG: '/admin/audit-log',
-    HEALTH: '/admin/health',
+    AUDIT_LOG: '/admin/system/audit-logs',  // Correct endpoint
+    HEALTH: '/admin/system/health',  // Correct endpoint
   },
   // Bot Management
   BOTS: {
     LIST: '/admin/bots',
     DETAILS: (id: string) => `/admin/bots/${id}`,
-    ACTIONS: '/admin/bot-actions',
+    ACTIONS: '/admin/bots/actions',
   },
 };

@@ -18,7 +18,7 @@ class AsyncpgUserRepository(IUserRepository):
     async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID"""
         query = """
-            SELECT u.id, u.username, u.created_at, p.name as subscription_tier
+            SELECT u.id, u.username, u.email, u.role, u.status, u.created_at, p.name as subscription_tier
             FROM users u
             LEFT JOIN plans p ON u.plan_id = p.id
             WHERE u.id = $1

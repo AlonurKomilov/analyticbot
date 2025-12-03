@@ -27,6 +27,7 @@ import {
   ChannelHealthCard,
   RecentActivityFeed,
   QuickActionsPanel,
+  PerformanceSparkline,
   type ActionAlert,
   type TodayStatsData,
   type ChannelHealthData,
@@ -42,6 +43,8 @@ interface DashboardData {
   channels: ChannelHealthData[];
   activity: ActivityItem[];
   quick_actions: QuickAction[];
+  sparkline_views: number[];
+  sparkline_labels: string[];
   last_updated: string;
   has_channels: boolean;
   has_bot: boolean;
@@ -193,9 +196,18 @@ const HomeDashboard: React.FC = () => {
             )}
           </Grid>
 
-          {/* Right Column: Activity Feed + Quick Actions */}
+          {/* Right Column: Activity Feed + Quick Actions + Sparkline */}
           <Grid item xs={12} lg={4}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* 7-Day Performance Sparkline */}
+              {data.has_channels && (
+                <PerformanceSparkline
+                  data={data.sparkline_views}
+                  labels={data.sparkline_labels}
+                  isLoading={false}
+                />
+              )}
+
               {/* Recent Activity */}
               <RecentActivityFeed
                 activities={data.activity}

@@ -18,3 +18,5 @@ export type { ActivityItem } from './RecentActivityFeed';
 
 export { default as QuickActionsPanel } from './QuickActionsPanel';
 export type { QuickAction } from './QuickActionsPanel';
+
+export { default as PerformanceSparkline } from './PerformanceSparkline';

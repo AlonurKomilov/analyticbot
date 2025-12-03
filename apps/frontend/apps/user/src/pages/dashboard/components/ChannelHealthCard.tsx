@@ -20,8 +20,6 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
   Visibility as ViewsIcon,
   Schedule as ScheduleIcon,
   CheckCircle as HealthyIcon,
@@ -168,21 +166,9 @@ const ChannelHealthCard: React.FC<ChannelHealthCardProps> = ({ channel, onCollec
             <Typography variant="h6" fontWeight="bold">
               {formatNumber(channel.subscribers)}
             </Typography>
-            {channel.subscriber_growth_week !== 0 && (
-              <Chip
-                size="small"
-                icon={channel.subscriber_growth_week > 0 ?
-                  <TrendingUpIcon sx={{ fontSize: '12px !important' }} /> :
-                  <TrendingDownIcon sx={{ fontSize: '12px !important' }} />
-                }
-                label={`${channel.subscriber_growth_week > 0 ? '+' : ''}${formatNumber(channel.subscriber_growth_week)}`}
-                color={channel.subscriber_growth_week > 0 ? 'success' : 'error'}
-                sx={{ height: 18, fontSize: 10, '& .MuiChip-icon': { ml: 0.5 } }}
-              />
-            )}
           </Box>
           <Typography variant="caption" color="text.secondary">
-            this week
+            total
           </Typography>
         </Box>
 
@@ -224,17 +210,9 @@ const ChannelHealthCard: React.FC<ChannelHealthCardProps> = ({ channel, onCollec
             <Typography variant="h6" fontWeight="bold">
               {channel.engagement_rate.toFixed(1)}%
             </Typography>
-            {channel.engagement_change !== 0 && (
-              <Typography
-                variant="caption"
-                color={channel.engagement_change > 0 ? 'success.main' : 'error.main'}
-              >
-                {channel.engagement_change > 0 ? '↑' : '↓'}{Math.abs(channel.engagement_change).toFixed(1)}%
-              </Typography>
-            )}
           </Box>
           <Typography variant="caption" color="text.secondary">
-            vs last week
+            avg rate
           </Typography>
         </Box>
       </Box>

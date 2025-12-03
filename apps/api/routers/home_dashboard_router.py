@@ -52,14 +52,14 @@ class ActionAlert(BaseModel):
 
 class TodayStats(BaseModel):
     """Today's snapshot statistics"""
-    new_subscribers: int = 0
-    subscriber_change_percent: float = 0.0
-    total_views: int = 0
-    views_change_percent: float = 0.0
+    total_subscribers: int = 0  # Total across all channels
+    total_views: int = 0  # Total views across all posts
     posts_today: int = 0
+    posts_this_week: int = 0
     best_post_title: str | None = None
     best_post_views: int = 0
     best_post_id: int | None = None
+    best_post_channel_id: int | None = None
 
 
 class ChannelHealth(BaseModel):
@@ -122,6 +122,10 @@ class HomeDashboardResponse(BaseModel):
     
     # Contextual quick actions
     quick_actions: list[QuickAction] = []
+    
+    # 7-day performance sparkline
+    sparkline_views: list[int] = []  # Last 7 days views per day
+    sparkline_labels: list[str] = []  # Day labels (Mon, Tue, etc.)
     
     # Meta
     last_updated: datetime
@@ -241,11 +245,20 @@ async def _get_user_alerts(pool, user_id: int) -> list[ActionAlert]:
 
 
 async def _get_today_stats(pool, user_id: int) -> TodayStats:
-    """Get today's snapshot statistics"""
+    """Get today's snapshot statistics - shows REAL accurate data"""
     stats = TodayStats()
     
     async with pool.acquire() as conn:
         today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        week_start = today_start - timedelta(days=7)
+        
+        # Total subscribers across all channels
+        total_subs = await conn.fetchval("""
+            SELECT COALESCE(SUM(subscriber_count), 0)
+            FROM channels
+            WHERE user_id = $1
+        """, user_id)
+        stats.total_subscribers = total_subs or 0
         
         # Posts today
         posts_today = await conn.fetchval("""
@@ -257,17 +270,31 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
         """, user_id, today_start)
         stats.posts_today = posts_today or 0
         
-        # Total views today (from post_metrics)
-        views_data = await conn.fetchrow("""
-            SELECT COALESCE(SUM(pm.views), 0) as total_views
-            FROM post_metrics pm
-            JOIN channels c ON pm.channel_id = c.id
+        # Posts this week  
+        posts_week = await conn.fetchval("""
+            SELECT COUNT(*)
+            FROM posts p
+            JOIN channels c ON p.channel_id = c.id
             WHERE c.user_id = $1
-            AND pm.snapshot_time >= $2
-        """, user_id, today_start)
+            AND p.date >= $2
+        """, user_id, week_start)
+        stats.posts_this_week = posts_week or 0
+        
+        # Total views across all posts (latest snapshot for each post)
+        # This gets the most recent view count for each post and sums them
+        views_data = await conn.fetchrow("""
+            SELECT COALESCE(SUM(latest_views), 0) as total_views
+            FROM (
+                SELECT DISTINCT ON (pm.channel_id, pm.msg_id) pm.views as latest_views
+                FROM post_metrics pm
+                JOIN channels c ON pm.channel_id = c.id
+                WHERE c.user_id = $1
+                ORDER BY pm.channel_id, pm.msg_id, pm.snapshot_time DESC
+            ) latest
+        """, user_id)
         stats.total_views = int(views_data['total_views']) if views_data else 0
         
-        # Best post today
+        # Best performing post (highest views overall, not just today)
         best_post = await conn.fetchrow("""
             SELECT p.msg_id, COALESCE(LEFT(p.text, 50), 'Untitled Post') as title,
                    COALESCE(pm.views, 0) as views, c.id as channel_id
@@ -279,10 +306,9 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
                 ORDER BY snapshot_time DESC LIMIT 1
             ) pm ON true
             WHERE c.user_id = $1
-            AND p.date >= $2
             ORDER BY pm.views DESC NULLS LAST
             LIMIT 1
-        """, user_id, today_start)
+        """, user_id)
         
         if best_post and best_post['views'] > 0:
             title = best_post['title']
@@ -291,14 +317,7 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
             stats.best_post_title = title
             stats.best_post_views = best_post['views']
             stats.best_post_id = best_post['msg_id']
-        
-        # Subscriber count (total across all channels)
-        total_subs = await conn.fetchval("""
-            SELECT COALESCE(SUM(subscriber_count), 0)
-            FROM channels
-            WHERE user_id = $1
-        """, user_id)
-        stats.new_subscribers = 0  # We don't have historical data to calculate change
+            stats.best_post_channel_id = best_post['channel_id']
     
     return stats
 
@@ -515,6 +534,33 @@ async def _get_quick_actions(has_channels: bool, has_bot: bool, has_mtproto: boo
     return actions[:4]  # Max 4 quick actions
 
 
+async def _get_sparkline_data(pool, user_id: int) -> tuple[list[int], list[str]]:
+    """Get 7-day performance sparkline data (posts per day)"""
+    views_data = []
+    labels = []
+    
+    async with pool.acquire() as conn:
+        # Get posts count per day for last 7 days
+        for i in range(6, -1, -1):  # 6 days ago to today
+            day = datetime.now(UTC) - timedelta(days=i)
+            day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
+            day_end = day_start + timedelta(days=1)
+            
+            # Count posts on this day
+            count = await conn.fetchval("""
+                SELECT COUNT(*)
+                FROM posts p
+                JOIN channels c ON p.channel_id = c.id
+                WHERE c.user_id = $1
+                AND p.date >= $2 AND p.date < $3
+            """, user_id, day_start, day_end)
+            
+            views_data.append(count or 0)
+            labels.append(day.strftime('%a'))  # Mon, Tue, Wed, etc.
+    
+    return views_data, labels
+
+
 # ============================================================================
 # ENDPOINTS
 # ============================================================================
@@ -572,6 +618,7 @@ async def get_home_dashboard(
         channels = await _get_channel_health(pool, user_id)
         activity = await _get_activity_feed(pool, user_id)
         quick_actions = await _get_quick_actions(has_channels, has_bot, has_mtproto)
+        sparkline_views, sparkline_labels = await _get_sparkline_data(pool, user_id)
         
         return HomeDashboardResponse(
             user_id=user_id,
@@ -581,6 +628,8 @@ async def get_home_dashboard(
             channels=channels,
             activity=activity,
             quick_actions=quick_actions,
+            sparkline_views=sparkline_views,
+            sparkline_labels=sparkline_labels,
             last_updated=datetime.now(UTC),
             has_channels=has_channels,
             has_bot=has_bot,

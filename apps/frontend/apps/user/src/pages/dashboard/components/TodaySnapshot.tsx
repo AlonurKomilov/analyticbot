@@ -26,14 +26,14 @@ import {
 } from '@mui/icons-material';
 
 export interface TodayStatsData {
-  new_subscribers: number;
-  subscriber_change_percent: number;
+  total_subscribers: number;
   total_views: number;
-  views_change_percent: number;
   posts_today: number;
+  posts_this_week: number;
   best_post_title?: string;
   best_post_views: number;
   best_post_id?: number;
+  best_post_channel_id?: number;
 }
 
 interface TodaySnapshotProps {
@@ -160,32 +160,27 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Typography variant="h6" fontWeight="600">
-          📅 Today's Activity
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          ({new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })})
+          📊 Overview
         </Typography>
       </Box>
 
       <Grid container spacing={2.5}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="New Subscribers"
-            value={data ? (data.new_subscribers >= 0 ? `+${formatNumber(data.new_subscribers)}` : formatNumber(data.new_subscribers)) : '0'}
+            title="Total Subscribers"
+            value={data ? formatNumber(data.total_subscribers) : '0'}
             icon={<SubscribersIcon fontSize="small" />}
-            trend={data?.subscriber_change_percent}
             color={theme.palette.primary.main}
-            subtitle="vs yesterday"
+            subtitle="across all channels"
             isLoading={isLoading}
           />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Views Today"
+            title="Total Views"
             value={data ? formatNumber(data.total_views) : '0'}
             icon={<ViewsIcon fontSize="small" />}
-            trend={data?.views_change_percent}
             color={theme.palette.info.main}
             subtitle="across all posts"
             isLoading={isLoading}
@@ -194,11 +189,11 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
 
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Posts Today"
+            title="Posts"
             value={data?.posts_today ?? 0}
             icon={<PostsIcon fontSize="small" />}
             color={theme.palette.success.main}
-            subtitle="published today"
+            subtitle={`today (${data?.posts_this_week ?? 0} this week)`}
             isLoading={isLoading}
           />
         </Grid>
@@ -243,7 +238,7 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
                   <TrophyIcon fontSize="small" />
                 </Box>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                  Best Post Today
+                  Best Post
                 </Typography>
               </Box>
 
@@ -284,7 +279,7 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
             >
               <TrophyIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 1 }} />
               <Typography variant="body2" color="text.secondary" textAlign="center">
-                No posts today yet
+                No posts yet
               </Typography>
             </Paper>
           )}

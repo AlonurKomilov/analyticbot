@@ -155,7 +155,6 @@ class MockConfig:
         """Setup all service mocks in DI container"""
         # This would be called in test setup to configure
         # the DI container with mock services
-        pass
 
     @staticmethod
     def reset_all_mocks(*mocks):

@@ -154,6 +154,7 @@ class DataCleaningMixin:
 
 # Utility functions
 
+
 def validate_data(df: pd.DataFrame) -> pd.DataFrame:
     """Basic data validation and cleaning"""
     # Remove empty columns

@@ -43,7 +43,8 @@ from apps.api.main import app
 
 # Test database URL - use a separate test database
 TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://analytic:change_me@localhost:10100/analytic_bot_test"
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://analytic:change_me@localhost:10100/analytic_bot_test",
 )
 
 
@@ -212,7 +213,8 @@ def pytest_configure(config):
     """
     config.addinivalue_line("markers", "unit: Unit tests - fast, isolated tests")
     config.addinivalue_line(
-        "markers", "integration: Integration tests - tests that interact with external systems"
+        "markers",
+        "integration: Integration tests - tests that interact with external systems",
     )
     config.addinivalue_line("markers", "slow: Slow tests - tests that take more than 1 second")
     config.addinivalue_line("markers", "asyncio: Async tests - tests that use asyncio")
@@ -278,4 +280,3 @@ def cleanup_after_tests():
 
     # Add any cleanup logic here
     # For example: clear test database, remove temporary files, etc.
-    pass

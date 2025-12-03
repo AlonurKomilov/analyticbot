@@ -146,8 +146,7 @@ class StubSubscriptionService:
             Use SubscriptionAdapter with real subscription service instead.
         """
         logger.warning(
-            "⚠️ StubSubscriptionService.check_premium_status called - "
-            "migrate to SubscriptionAdapter"
+            "⚠️ StubSubscriptionService.check_premium_status called - migrate to SubscriptionAdapter"
         )
         # For now, return True to allow testing watermark features
         return True
@@ -167,6 +166,6 @@ class StubSubscriptionService:
             Use SubscriptionAdapter with real subscription service instead.
         """
         logger.warning(
-            "⚠️ StubSubscriptionService.get_user_tier called - " "migrate to SubscriptionAdapter"
+            "⚠️ StubSubscriptionService.get_user_tier called - migrate to SubscriptionAdapter"
         )
         return "pro"

@@ -32,8 +32,7 @@ class CircuitBreakerOpenError(Exception):
         self.user_id = user_id
         self.timeout_remaining = timeout_remaining
         super().__init__(
-            f"Circuit breaker is OPEN for user {user_id}. "
-            f"Retry in {timeout_remaining:.1f} seconds."
+            f"Circuit breaker is OPEN for user {user_id}. Retry in {timeout_remaining:.1f} seconds."
         )
 
 
@@ -108,7 +107,8 @@ class CircuitBreaker:
                 # Still in timeout, reject request
                 timeout_remaining = self.timeout_seconds - (time.time() - self.opened_at)
                 raise CircuitBreakerOpenError(
-                    user_id=kwargs.get("user_id", 0), timeout_remaining=timeout_remaining
+                    user_id=kwargs.get("user_id", 0),
+                    timeout_remaining=timeout_remaining,
                 )
 
         # Execute function

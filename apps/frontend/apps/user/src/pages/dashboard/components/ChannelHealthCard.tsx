@@ -24,7 +24,6 @@ import {
   TrendingDown as TrendingDownIcon,
   Visibility as ViewsIcon,
   Schedule as ScheduleIcon,
-  Sync as SyncIcon,
   CheckCircle as HealthyIcon,
   Warning as StaleIcon,
   Error as ErrorIcon,

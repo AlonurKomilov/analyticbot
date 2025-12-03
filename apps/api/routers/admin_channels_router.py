@@ -19,7 +19,7 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.di.analytics_container import get_channel_management_service
+from apps.di.analytics_container import get_channel_management_service, get_database_pool
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,6 @@ async def get_all_channels(
     ),
     offset: int = Query(default=0, ge=0, description="Number of channels to skip for pagination"),
     current_user: dict = Depends(get_current_user),
-    channel_service: ChannelManagementService = Depends(get_channel_management_service),
 ):
     """
     ## 👑 Get All Channels (Admin)
@@ -75,23 +74,49 @@ async def get_all_channels(
     """
     try:
         await require_admin_user(current_user)
+        pool = await get_database_pool()
 
-        with performance_timer("admin_all_channels_fetch"):
-            channels = await channel_service.get_all_channels_admin(limit=limit, skip=offset)
+        async with pool.acquire() as conn:
+            channels = await conn.fetch("""
+                SELECT 
+                    c.id,
+                    c.title as name,
+                    c.username,
+                    c.user_id as owner_id,
+                    u.username as owner_username,
+                    c.subscriber_count,
+                    c.is_active,
+                    c.created_at,
+                    c.updated_at as last_activity,
+                    COALESCE(post_stats.total_posts, 0) as total_posts,
+                    COALESCE(post_stats.total_views, 0) as total_views
+                FROM channels c
+                LEFT JOIN users u ON c.user_id = u.id
+                LEFT JOIN (
+                    SELECT 
+                        channel_id,
+                        COUNT(*) as total_posts,
+                        COALESCE(SUM(views), 0) as total_views
+                    FROM scheduled_posts
+                    GROUP BY channel_id
+                ) post_stats ON c.id = post_stats.channel_id
+                ORDER BY c.created_at DESC
+                LIMIT $1 OFFSET $2
+            """, limit, offset)
 
             return [
                 AdminChannelInfo(
-                    id=channel.id,
-                    name=channel.name,
-                    username=getattr(channel, "username", None),
-                    owner_id=getattr(channel, "user_id", 0),
-                    owner_username=getattr(channel, "owner_username", "Unknown"),
-                    subscriber_count=channel.subscriber_count,
-                    is_active=channel.is_active,
-                    created_at=channel.created_at,
-                    last_activity=getattr(channel, "last_activity", None),
-                    total_posts=getattr(channel, "total_posts", 0),
-                    total_views=getattr(channel, "total_views", 0),
+                    id=channel["id"],
+                    name=channel["name"] or "Unnamed Channel",
+                    username=channel["username"],
+                    owner_id=channel["owner_id"] or 0,
+                    owner_username=channel["owner_username"],
+                    subscriber_count=channel["subscriber_count"] or 0,
+                    is_active=channel["is_active"] if channel["is_active"] is not None else True,
+                    created_at=channel["created_at"],
+                    last_activity=channel["last_activity"],
+                    total_posts=channel["total_posts"],
+                    total_views=channel["total_views"],
                 )
                 for channel in channels
             ]

@@ -326,7 +326,8 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
         # Create analytics orchestrator service with new architecture
         _analytics_fusion_service = AnalyticsOrchestratorService(
             data_access_service=data_access_service,
-            posting_time_service=posting_time_service
+            posting_time_service=posting_time_service,
+            db_pool=pool,  # Pass db_pool for real admin statistics
         )
 
         logger.info("🎯 Analytics Orchestrator Service V2 initialized successfully")

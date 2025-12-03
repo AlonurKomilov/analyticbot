@@ -11,13 +11,13 @@ print("🗺️  PHASE 0: CREATING ENDPOINT MIGRATION MAP")
 print("=" * 100)
 
 # Check if openapi_current.json exists
-if not Path("reports/openapi_current.json").exists():
+if not Path("docs/reports/openapi_current.json").exists():
     print("❌ Error: reports/openapi_current.json not found")
     print("⚠️  Please run phase0_analyze_current_structure.py first")
     exit(1)
 
 # Load current structure
-with open("reports/openapi_current.json") as f:
+with open("docs/reports/openapi_current.json") as f:
     spec = json.load(f)
 
 # Define migration rules for Option A (Flat Resources)
@@ -233,11 +233,11 @@ action_priority = {"DEPRECATE": 1, "REDIRECT": 2, "MOVE": 3, "KEEP": 4, "REVIEW"
 migration_map.sort(key=lambda x: (action_priority.get(x["action"], 99), x["current_path"]))
 
 # Save migration map
-with open("reports/phase0_migration_map.json", "w") as f:
+with open("docs/reports/phase0_migration_map.json", "w") as f:
     json.dump(migration_map, f, indent=2)
 
 # Create human-readable report
-with open("reports/phase0_migration_map.txt", "w") as report:
+with open("docs/reports/phase0_migration_map.txt", "w") as report:
     report.write("=" * 120 + "\n")
     report.write("PHASE 0: ENDPOINT MIGRATION MAP (Option A - Flat Resources)\n")
     report.write("Target: https://api.analyticbot.org/{resource}/{action}\n")

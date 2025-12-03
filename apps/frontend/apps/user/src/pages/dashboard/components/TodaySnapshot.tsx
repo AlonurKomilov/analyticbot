@@ -2,7 +2,7 @@
  * TodaySnapshot Component
  *
  * Shows real-time today's statistics with trend indicators.
- * Includes: new subscribers, views today, posts today, best performing post
+ * 4 cards: New Subs, Views Today, Posts Today, Best Post Today
  */
 
 import React from 'react';
@@ -27,7 +27,11 @@ import {
 
 export interface TodayStatsData {
   total_subscribers: number;
+  new_subscribers_today: number;
+  subscriber_change_percent: number;
   total_views: number;
+  views_gained_today: number;
+  views_change_percent: number;
   posts_today: number;
   posts_this_week: number;
   best_post_title?: string;
@@ -160,44 +164,53 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Typography variant="h6" fontWeight="600">
-          📊 Overview
+          📅 Today's Snapshot
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          (Real-time)
         </Typography>
       </Box>
 
       <Grid container spacing={2.5}>
+        {/* New Subscribers */}
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Total Subscribers"
-            value={data ? formatNumber(data.total_subscribers) : '0'}
+            title="New Subs"
+            value={data ? `+${formatNumber(data.new_subscribers_today)}` : '+0'}
             icon={<SubscribersIcon fontSize="small" />}
+            trend={data?.subscriber_change_percent}
             color={theme.palette.primary.main}
-            subtitle="across all channels"
+            subtitle="vs yesterday"
             isLoading={isLoading}
           />
         </Grid>
 
+        {/* Views Today */}
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Total Views"
-            value={data ? formatNumber(data.total_views) : '0'}
+            title="Views"
+            value={data ? formatNumber(data.views_gained_today) : '0'}
             icon={<ViewsIcon fontSize="small" />}
+            trend={data?.views_change_percent}
             color={theme.palette.info.main}
-            subtitle="across all posts"
+            subtitle="gained today"
             isLoading={isLoading}
           />
         </Grid>
 
+        {/* Posts Today */}
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Posts"
             value={data?.posts_today ?? 0}
             icon={<PostsIcon fontSize="small" />}
             color={theme.palette.success.main}
-            subtitle={`today (${data?.posts_this_week ?? 0} this week)`}
+            subtitle="today"
             isLoading={isLoading}
           />
         </Grid>
 
+        {/* Best Post Today */}
         <Grid item xs={12} sm={6} md={3}>
           {isLoading ? (
             <Paper sx={{ p: 2.5, height: '100%' }}>
@@ -238,7 +251,7 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
                   <TrophyIcon fontSize="small" />
                 </Box>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                  Best Post
+                  Best Post Today
                 </Typography>
               </Box>
 
@@ -254,13 +267,13 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
                   WebkitBoxOrient: 'vertical',
                 }}
               >
-                "{truncateText(data.best_post_title, 60)}"
+                "{truncateText(data.best_post_title, 40)}"
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary' }}>
                 <ViewsIcon sx={{ fontSize: 14 }} />
                 <Typography variant="caption">
-                  {formatNumber(data.best_post_views)} views
+                  {formatNumber(data.best_post_views)}
                 </Typography>
               </Box>
             </Paper>
@@ -279,7 +292,7 @@ const TodaySnapshot: React.FC<TodaySnapshotProps> = ({ data, isLoading }) => {
             >
               <TrophyIcon sx={{ fontSize: 32, color: 'text.disabled', mb: 1 }} />
               <Typography variant="body2" color="text.secondary" textAlign="center">
-                No posts yet
+                No posts today yet
               </Typography>
             </Paper>
           )}

@@ -105,10 +105,10 @@ async def get_all_users(
                     u.status,
                     u.created_at,
                     u.last_login,
-                    COUNT(uc.channel_id) as channels_count
+                    COUNT(c.id) as channels_count
                 FROM users u
-                LEFT JOIN user_channels uc ON u.id = uc.user_id
-                GROUP BY u.id
+                LEFT JOIN channels c ON u.id = c.user_id
+                GROUP BY u.id, u.email, u.username, u.role, u.status, u.created_at, u.last_login
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
             """, limit, offset)
@@ -116,9 +116,9 @@ async def get_all_users(
             return [
                 AdminUserInfo(
                     id=user["id"],
-                    email=user["email"],
+                    email=user["email"] or "",
                     username=user["username"],
-                    role=user["role"],
+                    role=user["role"] or "user",
                     status=user["status"] or "active",
                     created_at=user["created_at"],
                     last_login=user["last_login"],

@@ -41,7 +41,7 @@ router = APIRouter(
 class ActionAlert(BaseModel):
     """An alert requiring user action"""
     id: str
-    type: str  # "error", "warning", "info"
+    type: str  # "critical", "error", "warning", "info"
     title: str
     description: str
     action_url: str | None = None
@@ -51,11 +51,22 @@ class ActionAlert(BaseModel):
 
 
 class TodayStats(BaseModel):
-    """Today's snapshot statistics"""
-    total_subscribers: int = 0  # Total across all channels
-    total_views: int = 0  # Total views across all posts
+    """Today's snapshot statistics with daily changes"""
+    # Subscriber stats
+    total_subscribers: int = 0
+    new_subscribers_today: int = 0  # Change from yesterday (estimated)
+    subscriber_change_percent: float = 0.0
+    
+    # View stats
+    total_views: int = 0
+    views_gained_today: int = 0  # Views gained since yesterday
+    views_change_percent: float = 0.0
+    
+    # Post stats
     posts_today: int = 0
     posts_this_week: int = 0
+    
+    # Best post
     best_post_title: str | None = None
     best_post_views: int = 0
     best_post_id: int | None = None
@@ -93,6 +104,13 @@ class ActivityItem(BaseModel):
     time_ago: str  # "2 minutes ago"
 
 
+class WelcomeMessage(BaseModel):
+    """Smart personalized welcome message"""
+    greeting: str  # "Good morning", "Good evening", etc.
+    message: str  # Additional context message
+    emoji: str  # Emoji to show
+
+
 class QuickAction(BaseModel):
     """Contextual quick action"""
     id: str
@@ -107,6 +125,9 @@ class HomeDashboardResponse(BaseModel):
     """Complete home dashboard data"""
     user_id: int
     username: str | None = None
+    
+    # Smart welcome message
+    welcome: WelcomeMessage
     
     # Action required alerts
     alerts: list[ActionAlert] = []
@@ -139,6 +160,73 @@ class HomeDashboardResponse(BaseModel):
 # ============================================================================
 
 
+def _get_smart_welcome(
+    username: str | None,
+    last_login: datetime | None,
+    has_channels: bool,
+    posts_today: int,
+    views_gained: int,
+) -> WelcomeMessage:
+    """Generate smart personalized welcome message"""
+    now = datetime.now(UTC)
+    hour = now.hour
+    weekday = now.weekday()  # 0=Monday, 6=Sunday
+    
+    # Get display name
+    name = username or "there"
+    
+    # Time-based greeting
+    if 5 <= hour < 12:
+        greeting = f"Good morning, {name}!"
+        emoji = "☀️"
+    elif 12 <= hour < 17:
+        greeting = f"Good afternoon, {name}!"
+        emoji = "👋"
+    elif 17 <= hour < 21:
+        greeting = f"Good evening, {name}!"
+        emoji = "🌆"
+    else:
+        greeting = f"Hey there, {name}!"
+        emoji = "🌙"
+    
+    # Context message based on various factors
+    message = "Here's what's happening with your channels today."
+    
+    # Check last login (if available)
+    if last_login:
+        days_since_login = (now - last_login).days if last_login.tzinfo else 0
+        if days_since_login >= 7:
+            message = "Long time no see! Let's catch up on your channels."
+            emoji = "👀"
+        elif days_since_login >= 3:
+            message = "Welcome back! Here's what you missed."
+            emoji = "🎉"
+    
+    # Day-specific messages (override if special day)
+    if weekday == 0:  # Monday
+        message = "Happy Monday! Fresh week, fresh opportunities."
+        emoji = "💪"
+    elif weekday == 4:  # Friday
+        message = "TGIF! Let's see how your week went."
+        emoji = "🎉"
+    elif weekday in [5, 6]:  # Weekend
+        message = "Enjoy your weekend! Here's a quick overview."
+        emoji = "🌴"
+    
+    # Activity-based messages (highest priority)
+    if posts_today > 0:
+        message = f"You've been productive! {posts_today} post{'s' if posts_today > 1 else ''} today."
+        emoji = "🔥"
+    elif views_gained > 100:
+        message = f"Your content is getting attention! +{views_gained:,} views today."
+        emoji = "📈"
+    elif not has_channels:
+        message = "Ready to get started? Add your first channel!"
+        emoji = "🚀"
+    
+    return WelcomeMessage(greeting=greeting, message=message, emoji=emoji)
+
+
 def _time_ago(dt: datetime | None) -> str:
     """Convert datetime to human-readable 'time ago' string"""
     if not dt:
@@ -168,88 +256,161 @@ def _time_ago(dt: datetime | None) -> str:
 
 
 async def _get_user_alerts(pool, user_id: int) -> list[ActionAlert]:
-    """Get action required alerts for user"""
+    """
+    Get CRITICAL action required alerts for dashboard.
+    These are blocking issues that prevent core functionality.
+    
+    Warning/Info alerts go to top bar notifications (separate endpoint).
+    """
     alerts = []
     
     async with pool.acquire() as conn:
-        # Check if user has a bot configured
+        # ==============================================
+        # CRITICAL ALERT 1: Bot Not Configured
+        # User hasn't set up their Telegram bot yet
+        # This blocks: adding channels, posting, everything
+        # ==============================================
         has_bot = await conn.fetchval(
             "SELECT EXISTS(SELECT 1 FROM user_bot_credentials WHERE user_id = $1 AND status = 'active')",
             user_id
         )
         
         if not has_bot:
-            # Check if user has channels
-            has_channels = await conn.fetchval(
-                "SELECT EXISTS(SELECT 1 FROM channels WHERE user_id = $1)",
-                user_id
+            alerts.append(ActionAlert(
+                id="no_bot_configured",
+                type="critical",
+                title="Bot Not Configured",
+                description="Set up your Telegram bot to start managing channels",
+                action_url="/bot/setup",
+                action_label="Configure Bot",
+                created_at=datetime.now(UTC)
+            ))
+            # If no bot, no point checking other alerts
+            return alerts
+        
+        # ==============================================
+        # CRITICAL ALERT 2: MTProto Not Configured
+        # User has bot but no MTProto session
+        # This blocks: data collection, analytics
+        # ==============================================
+        mtproto_config = await conn.fetchrow("""
+            SELECT mtproto_enabled, session_string, telegram_api_id, telegram_api_hash
+            FROM user_bot_credentials 
+            WHERE user_id = $1 AND status = 'active'
+        """, user_id)
+        
+        if mtproto_config:
+            has_mtproto_credentials = (
+                mtproto_config['telegram_api_id'] is not None and
+                mtproto_config['telegram_api_hash'] is not None
             )
-            if has_channels:
+            has_session = mtproto_config['session_string'] is not None
+            mtproto_enabled = mtproto_config['mtproto_enabled']
+            
+            if not has_mtproto_credentials:
                 alerts.append(ActionAlert(
-                    id="no_bot_configured",
-                    type="warning",
-                    title="Bot Not Configured",
-                    description="Configure your Telegram bot to enable posting and data collection",
-                    action_url="/bot/dashboard",
-                    action_label="Configure Bot",
+                    id="no_mtproto_credentials",
+                    type="critical",
+                    title="MTProto Not Configured",
+                    description="Connect your Telegram account to enable data collection",
+                    action_url="/settings/mtproto-setup",
+                    action_label="Connect Account",
                     created_at=datetime.now(UTC)
                 ))
+                return alerts
+            
+            if not has_session:
+                alerts.append(ActionAlert(
+                    id="mtproto_session_missing",
+                    type="critical",
+                    title="MTProto Session Required",
+                    description="Complete phone verification to start collecting data",
+                    action_url="/settings/mtproto-setup",
+                    action_label="Verify Phone",
+                    created_at=datetime.now(UTC)
+                ))
+                return alerts
         
-        # Check for stale sync (no data collection in 24 hours)
-        stale_channels = await conn.fetch("""
-            SELECT c.id, c.title as name
-            FROM channels c
-            JOIN channel_mtproto_settings cms ON c.id = cms.channel_id AND cms.user_id = c.user_id
+        # ==============================================
+        # CRITICAL ALERT 3: No Channels Added
+        # User has bot + MTProto but no channels
+        # ==============================================
+        channel_count = await conn.fetchval(
+            "SELECT COUNT(*) FROM channels WHERE user_id = $1",
+            user_id
+        )
+        
+        if channel_count == 0:
+            alerts.append(ActionAlert(
+                id="no_channels",
+                type="critical",
+                title="No Channels Added",
+                description="Add your first Telegram channel to start tracking",
+                action_url="/channels",
+                action_label="Add Channel",
+                created_at=datetime.now(UTC)
+            ))
+            return alerts
+        
+        # ==============================================
+        # CRITICAL ALERT 4: MTProto Collection Disabled for All Channels
+        # User has everything but disabled data collection
+        # ==============================================
+        mtproto_enabled_channels = await conn.fetchval("""
+            SELECT COUNT(*) 
+            FROM channel_mtproto_settings cms
+            JOIN channels c ON cms.channel_id = c.id AND cms.user_id = c.user_id
             WHERE c.user_id = $1
             AND cms.mtproto_enabled = true
-            AND NOT EXISTS (
-                SELECT 1 FROM posts p 
-                WHERE p.channel_id = c.id 
-                AND p.date > NOW() - INTERVAL '24 hours'
-            )
         """, user_id)
         
-        for ch in stale_channels:
+        if mtproto_enabled_channels == 0 and channel_count > 0:
             alerts.append(ActionAlert(
-                id=f"stale_sync_{ch['id']}",
-                type="warning",
-                title="Data Collection Stale",
-                description=f"'{ch['name']}' hasn't synced in 24+ hours",
-                action_url="/mtproto-monitoring",
-                action_label="Check Status",
-                channel_id=ch['id'],
+                id="mtproto_disabled_all",
+                type="critical",
+                title="Data Collection Disabled",
+                description="Enable data collection for your channels to get analytics",
+                action_url="/settings/mtproto-monitoring",
+                action_label="Enable Collection",
                 created_at=datetime.now(UTC)
             ))
         
-        # Check for scheduled posts needing review (draft status)
-        pending_posts = await conn.fetchval("""
-            SELECT COUNT(*)
-            FROM scheduled_posts sp
-            JOIN channels c ON sp.channel_id = c.id
-            WHERE c.user_id = $1
-            AND sp.status = 'draft'
-        """, user_id)
-        
-        if pending_posts and pending_posts > 0:
-            alerts.append(ActionAlert(
-                id="pending_posts",
-                type="info",
-                title=f"{pending_posts} Scheduled Post{'s' if pending_posts != 1 else ''} Pending",
-                description="Review and publish your scheduled posts",
-                action_url="/scheduled",
-                action_label="View Posts",
-                created_at=datetime.now(UTC)
-            ))
+        # ==============================================
+        # CRITICAL ALERT 5: MTProto Session Expired/Disconnected
+        # Check if last successful sync was too long ago (48+ hours)
+        # This indicates session issues, not just no new posts
+        # ==============================================
+        if mtproto_enabled_channels > 0:
+            last_successful_sync = await conn.fetchval("""
+                SELECT MAX(mal.timestamp)
+                FROM mtproto_audit_log mal
+                WHERE mal.user_id = $1
+                AND mal.action IN ('collection_progress', 'collection_completed', 'channel_data_collected')
+            """, user_id)
+            
+            if last_successful_sync:
+                hours_since_sync = (datetime.now(UTC) - last_successful_sync).total_seconds() / 3600
+                if hours_since_sync > 48:
+                    alerts.append(ActionAlert(
+                        id="mtproto_session_stale",
+                        type="critical",
+                        title="Data Collection Stopped",
+                        description=f"No data collected in {int(hours_since_sync)} hours. Session may have expired.",
+                        action_url="/settings/mtproto-monitoring",
+                        action_label="Check Status",
+                        created_at=datetime.now(UTC)
+                    ))
     
     return alerts
 
 
 async def _get_today_stats(pool, user_id: int) -> TodayStats:
-    """Get today's snapshot statistics - shows REAL accurate data"""
+    """Get today's snapshot statistics with daily changes"""
     stats = TodayStats()
     
     async with pool.acquire() as conn:
         today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday_start = today_start - timedelta(days=1)
         week_start = today_start - timedelta(days=7)
         
         # Total subscribers across all channels
@@ -280,21 +441,42 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
         """, user_id, week_start)
         stats.posts_this_week = posts_week or 0
         
-        # Total views across all posts (latest snapshot for each post)
-        # This gets the most recent view count for each post and sums them
-        views_data = await conn.fetchrow("""
-            SELECT COALESCE(SUM(latest_views), 0) as total_views
+        # Today's views (latest snapshot per post from today)
+        today_views = await conn.fetchval("""
+            SELECT COALESCE(SUM(latest_views), 0)
             FROM (
                 SELECT DISTINCT ON (pm.channel_id, pm.msg_id) pm.views as latest_views
                 FROM post_metrics pm
                 JOIN channels c ON pm.channel_id = c.id
                 WHERE c.user_id = $1
+                AND DATE(pm.snapshot_time) = CURRENT_DATE
                 ORDER BY pm.channel_id, pm.msg_id, pm.snapshot_time DESC
             ) latest
         """, user_id)
-        stats.total_views = int(views_data['total_views']) if views_data else 0
+        stats.total_views = int(today_views) if today_views else 0
         
-        # Best performing post (highest views overall, not just today)
+        # Yesterday's views (latest snapshot per post from yesterday)
+        yesterday_views = await conn.fetchval("""
+            SELECT COALESCE(SUM(latest_views), 0)
+            FROM (
+                SELECT DISTINCT ON (pm.channel_id, pm.msg_id) pm.views as latest_views
+                FROM post_metrics pm
+                JOIN channels c ON pm.channel_id = c.id
+                WHERE c.user_id = $1
+                AND DATE(pm.snapshot_time) = CURRENT_DATE - 1
+                ORDER BY pm.channel_id, pm.msg_id, pm.snapshot_time DESC
+            ) latest
+        """, user_id)
+        yesterday_views = int(yesterday_views) if yesterday_views else 0
+        
+        # Calculate views gained today
+        stats.views_gained_today = max(0, stats.total_views - yesterday_views)
+        if yesterday_views > 0:
+            stats.views_change_percent = round(
+                (stats.views_gained_today / yesterday_views) * 100, 1
+            )
+        
+        # Best performing post TODAY (only posts published today)
         best_post = await conn.fetchrow("""
             SELECT p.msg_id, COALESCE(LEFT(p.text, 50), 'Untitled Post') as title,
                    COALESCE(pm.views, 0) as views, c.id as channel_id
@@ -306,9 +488,10 @@ async def _get_today_stats(pool, user_id: int) -> TodayStats:
                 ORDER BY snapshot_time DESC LIMIT 1
             ) pm ON true
             WHERE c.user_id = $1
+            AND p.date >= $2
             ORDER BY pm.views DESC NULLS LAST
             LIMIT 1
-        """, user_id)
+        """, user_id, today_start)
         
         if best_post and best_post['views'] > 0:
             title = best_post['title']
@@ -590,7 +773,7 @@ async def get_home_dashboard(
         # Get user info
         async with pool.acquire() as conn:
             user = await conn.fetchrow(
-                "SELECT id, username FROM users WHERE id = $1", user_id
+                "SELECT id, username, last_login FROM users WHERE id = $1", user_id
             )
             
             if not user:
@@ -620,9 +803,19 @@ async def get_home_dashboard(
         quick_actions = await _get_quick_actions(has_channels, has_bot, has_mtproto)
         sparkline_views, sparkline_labels = await _get_sparkline_data(pool, user_id)
         
+        # Generate smart welcome message
+        welcome = _get_smart_welcome(
+            username=user['username'],
+            last_login=user.get('last_login'),
+            has_channels=has_channels,
+            posts_today=today.posts_today,
+            views_gained=today.views_gained_today,
+        )
+        
         return HomeDashboardResponse(
             user_id=user_id,
             username=user['username'],
+            welcome=welcome,
             alerts=alerts,
             today=today,
             channels=channels,

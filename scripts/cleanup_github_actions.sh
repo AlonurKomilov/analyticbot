@@ -194,7 +194,7 @@ echo -e "${GREEN}✅ CLEANUP COMPLETED SUCCESSFULLY!${NC}"
 echo
 
 # Create summary report
-REPORT_FILE="$PROJECT_ROOT/docs/reports/WORKFLOW_CLEANUP_$(date +%Y%m%d_%H%M%S).md"
+REPORT_FILE="$PROJECT_ROOT/docs/docs/reports/WORKFLOW_CLEANUP_$(date +%Y%m%d_%H%M%S).md"
 cat > "$REPORT_FILE" << EOF
 # GitHub Actions Cleanup Report
 

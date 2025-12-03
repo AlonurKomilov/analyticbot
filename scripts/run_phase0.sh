@@ -11,7 +11,7 @@ echo "╚═══════════════════════�
 echo ""
 
 # Create reports directory
-mkdir -p reports
+mkdir -p docs/reports
 
 # Check if API is running
 echo "🔍 Checking if API server is running..."
@@ -76,7 +76,7 @@ echo "STEP 4: Create Migration Map"
 echo "════════════════════════════════════════════════════════════════════════════"
 echo ""
 
-if [ -f "reports/openapi_current.json" ]; then
+if [ -f "docs/reports/openapi_current.json" ]; then
     python3 scripts/phase0_create_migration_map.py
     if [ $? -eq 0 ]; then
         echo "✅ Step 4 completed successfully"
@@ -96,42 +96,42 @@ echo ""
 echo "📊 Generated Reports:"
 echo "══════════════════════════════════════════════════════════════════════════"
 
-if [ -f "reports/openapi_current.json" ]; then
-    echo "✅ reports/openapi_current.json            - Current OpenAPI spec"
+if [ -f "docs/reports/openapi_current.json" ]; then
+    echo "✅ docs/reports/openapi_current.json            - Current OpenAPI spec"
 fi
-if [ -f "reports/phase0_current_structure.txt" ]; then
-    ENDPOINTS=$(grep "Total Endpoints:" reports/phase0_current_structure.txt | awk '{print $3}')
-    PREFIXES=$(grep "Total Prefix Groups:" reports/phase0_current_structure.txt | awk '{print $4}')
-    echo "✅ reports/phase0_current_structure.txt    - $ENDPOINTS endpoints, $PREFIXES prefixes"
+if [ -f "docs/reports/phase0_current_structure.txt" ]; then
+    ENDPOINTS=$(grep "Total Endpoints:" docs/reports/phase0_current_structure.txt | awk '{print $3}')
+    PREFIXES=$(grep "Total Prefix Groups:" docs/reports/phase0_current_structure.txt | awk '{print $4}')
+    echo "✅ docs/reports/phase0_current_structure.txt    - $ENDPOINTS endpoints, $PREFIXES prefixes"
 fi
-if [ -f "reports/phase0_issues.txt" ]; then
-    ISSUES=$(wc -l < reports/phase0_issues.txt)
-    echo "✅ reports/phase0_issues.txt               - $ISSUES issues detected"
+if [ -f "docs/reports/phase0_issues.txt" ]; then
+    ISSUES=$(wc -l < docs/reports/phase0_issues.txt)
+    echo "✅ docs/reports/phase0_issues.txt               - $ISSUES issues detected"
 fi
-if [ -f "reports/phase0_endpoint_usage.txt" ]; then
-    REQUESTS=$(grep "Total API Requests:" reports/phase0_endpoint_usage.txt | awk '{print $4}')
-    echo "✅ reports/phase0_endpoint_usage.txt       - $REQUESTS requests analyzed"
+if [ -f "docs/reports/phase0_endpoint_usage.txt" ]; then
+    REQUESTS=$(grep "Total API Requests:" docs/reports/phase0_endpoint_usage.txt | awk '{print $4}')
+    echo "✅ docs/reports/phase0_endpoint_usage.txt       - $REQUESTS requests analyzed"
 fi
-if [ -f "reports/phase0_frontend_api_calls.txt" ]; then
-    echo "✅ reports/phase0_frontend_api_calls.txt   - Frontend API calls"
+if [ -f "docs/reports/phase0_frontend_api_calls.txt" ]; then
+    echo "✅ docs/reports/phase0_frontend_api_calls.txt   - Frontend API calls"
 fi
-if [ -f "reports/phase0_frontend_endpoints.txt" ]; then
-    FE_ENDPOINTS=$(wc -l < reports/phase0_frontend_endpoints.txt)
-    echo "✅ reports/phase0_frontend_endpoints.txt   - $FE_ENDPOINTS unique endpoints"
+if [ -f "docs/reports/phase0_frontend_endpoints.txt" ]; then
+    FE_ENDPOINTS=$(wc -l < docs/reports/phase0_frontend_endpoints.txt)
+    echo "✅ docs/reports/phase0_frontend_endpoints.txt   - $FE_ENDPOINTS unique endpoints"
 fi
-if [ -f "reports/phase0_migration_map.json" ]; then
-    echo "✅ reports/phase0_migration_map.json       - Migration map (JSON)"
+if [ -f "docs/reports/phase0_migration_map.json" ]; then
+    echo "✅ docs/reports/phase0_migration_map.json       - Migration map (JSON)"
 fi
-if [ -f "reports/phase0_migration_map.txt" ]; then
-    echo "✅ reports/phase0_migration_map.txt        - Migration map (readable)"
+if [ -f "docs/reports/phase0_migration_map.txt" ]; then
+    echo "✅ docs/reports/phase0_migration_map.txt        - Migration map (readable)"
 fi
 
 echo ""
 echo "📋 Next Steps:"
 echo "══════════════════════════════════════════════════════════════════════════"
-echo "1. Review the migration map:     cat reports/phase0_migration_map.txt"
-echo "2. Check detected issues:        cat reports/phase0_issues.txt"
-echo "3. Review most-used endpoints:   head -20 reports/phase0_endpoint_usage.txt"
+echo "1. Review the migration map:     cat docs/reports/phase0_migration_map.txt"
+echo "2. Check detected issues:        cat docs/reports/phase0_issues.txt"
+echo "3. Review most-used endpoints:   head -20 docs/reports/phase0_endpoint_usage.txt"
 echo "4. Proceed to Step 5:            See docs/API_RESTRUCTURE_PHASE_0_PREPARATION.md"
 echo ""
 echo "⚠️  IMPORTANT: Review all reports before proceeding to Phase 1!"

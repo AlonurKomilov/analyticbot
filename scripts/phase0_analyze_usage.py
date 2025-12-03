@@ -50,7 +50,7 @@ print("\n" + "=" * 100)
 print("🔥 TOP 50 MOST-USED ENDPOINTS")
 print("=" * 100)
 
-with open("reports/phase0_endpoint_usage.txt", "w") as report:
+with open("docs/reports/phase0_endpoint_usage.txt", "w") as report:
     report.write("=" * 100 + "\n")
     report.write("PHASE 0: ENDPOINT USAGE ANALYSIS\n")
     report.write("=" * 100 + "\n\n")

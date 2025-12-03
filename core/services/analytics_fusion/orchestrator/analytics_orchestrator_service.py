@@ -50,8 +50,10 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
         monitoring_service: Any | None = None,
         optimization_service: Any | None = None,
         posting_time_service: PostingTimeRecommendationService | None = None,
+        db_pool: Any | None = None,
     ):
         self.data_access = data_access_service
+        self.db_pool = db_pool  # Direct database access for admin stats
 
         # Service registry
         self.services = {}
@@ -257,37 +259,82 @@ class AnalyticsOrchestratorService(OrchestratorProtocol, AnalyticsFusionServiceP
             return {}
 
     async def get_system_statistics_admin(self) -> dict[str, Any]:
-        """Get system statistics for admin dashboard"""
+        """Get system statistics for admin dashboard - REAL DATABASE QUERIES"""
         try:
-            logger.info("📊 Fetching system statistics for admin")
+            logger.info("📊 Fetching system statistics for admin from database")
 
-            # Coordinate with core service for basic stats
-            basic_stats = {}
-            if "core" in self.service_instances:
-                core_service = self.service_instances["core"]
-                if hasattr(core_service, "get_basic_analytics"):
-                    basic_stats = await core_service.get_basic_analytics({})
+            # Initialize with defaults
+            total_users = 0
+            total_channels = 0
+            total_posts = 0
+            total_views = 0
+            active_channels = 0
 
-            # Coordinate with monitoring service for health
-            health_info = {}
-            if "monitoring" in self.service_instances:
-                monitoring_service = self.service_instances["monitoring"]
-                if hasattr(monitoring_service, "track_real_time_metrics"):
-                    health_info = await monitoring_service.track_real_time_metrics(0)  # System-wide
+            # Query real data from database if pool is available
+            if self.db_pool:
+                try:
+                    # Count total users
+                    total_users = await self.db_pool.fetchval(
+                        "SELECT COUNT(*) FROM users"
+                    ) or 0
 
-            # Compile system statistics
+                    # Count total channels
+                    total_channels = await self.db_pool.fetchval(
+                        "SELECT COUNT(*) FROM channels"
+                    ) or 0
+
+                    # Count total posts (from posts table - actual tracked posts)
+                    total_posts = await self.db_pool.fetchval(
+                        "SELECT COUNT(*) FROM posts"
+                    ) or 0
+
+                    # Sum total views from post_metrics (latest views per post)
+                    # Use a subquery to get the most recent view count for each post
+                    total_views = await self.db_pool.fetchval(
+                        """
+                        SELECT COALESCE(SUM(latest_views.views), 0)
+                        FROM (
+                            SELECT DISTINCT ON (channel_id, msg_id) views
+                            FROM post_metrics
+                            WHERE views IS NOT NULL
+                            ORDER BY channel_id, msg_id, snapshot_time DESC
+                        ) latest_views
+                        """
+                    ) or 0
+
+                    # Count active channels (channels with activity in last 30 days)
+                    active_channels = await self.db_pool.fetchval(
+                        """
+                        SELECT COUNT(DISTINCT channel_id) 
+                        FROM posts 
+                        WHERE created_at >= NOW() - INTERVAL '30 days'
+                        """
+                    ) or 0
+
+                    logger.info(
+                        f"✅ Real DB stats: users={total_users}, channels={total_channels}, "
+                        f"posts={total_posts}, views={total_views}, active={active_channels}"
+                    )
+
+                except Exception as db_error:
+                    logger.error(f"❌ Database query failed: {db_error}")
+                    # Fall through to return zeros
+            else:
+                logger.warning("⚠️ No database pool available for admin stats")
+
+            # Compile system statistics from real database
             stats = {
-                "total_users": basic_stats.get("total_users", 1250),
-                "total_channels": basic_stats.get("total_channels", 45),
-                "total_posts": basic_stats.get("total_posts", 15780),
-                "total_views": basic_stats.get("total_views", 234560),
-                "active_channels": basic_stats.get("active_channels", 38),
+                "total_users": total_users,
+                "total_channels": total_channels,
+                "total_posts": total_posts,
+                "total_views": total_views,
+                "active_channels": active_channels,
                 "system_health": "healthy",
                 "last_updated": datetime.utcnow().isoformat(),
                 "orchestrator_requests": self.request_count,
             }
 
-            logger.info("✅ System statistics compiled")
+            logger.info("✅ System statistics compiled from database")
             return stats
 
         except Exception as e:

@@ -18,7 +18,6 @@ import {
   Skeleton,
   Alert,
 } from '@mui/material';
-import { useAuthStore } from '@store';
 import { apiClient } from '@/api/client';
 import { TouchTargetProvider } from '@shared/components/ui';
 import {
@@ -35,9 +34,16 @@ import {
   type QuickAction,
 } from './components';
 
+interface WelcomeMessage {
+  greeting: string;
+  message: string;
+  emoji: string;
+}
+
 interface DashboardData {
   user_id: number;
   username?: string;
+  welcome: WelcomeMessage;
   alerts: ActionAlert[];
   today: TodayStatsData;
   channels: ChannelHealthData[];
@@ -52,7 +58,6 @@ interface DashboardData {
 }
 
 const HomeDashboard: React.FC = () => {
-  const { user } = useAuthStore();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,13 +91,6 @@ const HomeDashboard: React.FC = () => {
     } catch (err) {
       console.error('Failed to trigger collection:', err);
     }
-  };
-
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
   };
 
   // Loading state
@@ -150,13 +148,13 @@ const HomeDashboard: React.FC = () => {
   return (
     <TouchTargetProvider>
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* Welcome Header */}
+        {/* Smart Welcome Header */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
-            {greeting()}, {data.username || user?.username || 'there'}! 👋
+            {data.welcome.greeting} {data.welcome.emoji}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Here's what's happening with your channels today.
+            {data.welcome.message}
           </Typography>
         </Box>
 

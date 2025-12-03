@@ -261,6 +261,7 @@ class SecurityManager:
             "sub": user.id,
             "email": user.email,
             "username": user.username,
+            "full_name": user.full_name,  # Include full_name for profile display
             "role": role_val,
             "status": status_val,
             "exp": int(expire.timestamp()),  # Must be Unix timestamp (int)

@@ -44,8 +44,10 @@ export const AccountLinking: React.FC<AccountLinkingProps> = ({ user, onUpdate }
         confirmPassword: ''
     });
 
+    // Check login methods using API-provided fields
     const hasTelegram = user?.telegram_id || user?.telegram_username;
-    const hasEmailPassword = user?.email && !user?.email?.includes('@telegram.user') && user?.hashed_password;
+    // Use has_password from API (not hashed_password which is never sent to frontend)
+    const hasEmailPassword = user?.has_password && user?.email && !user?.email?.includes('@telegram.local');
     const isTelegramOnly = hasTelegram && !hasEmailPassword;
     const isEmailOnly = !hasTelegram && hasEmailPassword;
 

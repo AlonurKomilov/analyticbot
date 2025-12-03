@@ -10,7 +10,7 @@ from pathlib import Path
 import requests
 
 # Ensure reports directory exists
-Path("reports").mkdir(exist_ok=True)
+Path("docs/reports").mkdir(parents=True, exist_ok=True)
 
 print("=" * 100)
 print("🔍 PHASE 0: ANALYZING CURRENT API STRUCTURE")
@@ -23,7 +23,7 @@ try:
     spec = response.json()
 
     # Save for reference
-    with open("reports/openapi_current.json", "w") as f:
+    with open("docs/reports/openapi_current.json", "w") as f:
         json.dump(spec, f, indent=2)
     print("✅ Saved to reports/openapi_current.json")
 except Exception as e:
@@ -64,7 +64,7 @@ print(f"📁 Total Prefix Groups: {len(prefix_groups)}")
 print("\n" + "-" * 100)
 
 # Create detailed report
-with open("reports/phase0_current_structure.txt", "w") as report:
+with open("docs/reports/phase0_current_structure.txt", "w") as report:
     report.write("=" * 100 + "\n")
     report.write("PHASE 0: CURRENT API STRUCTURE ANALYSIS\n")
     report.write("=" * 100 + "\n\n")
@@ -132,7 +132,7 @@ else:
     print("✅ No major issues detected")
 
 # Save issues
-with open("reports/phase0_issues.txt", "w") as f:
+with open("docs/reports/phase0_issues.txt", "w") as f:
     for issue in issues:
         f.write(issue + "\n")
 

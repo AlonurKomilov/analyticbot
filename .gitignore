@@ -340,11 +340,30 @@ docker-compose.override.yml
 # ========================
 # Logs and Temporary Files
 # ========================
-logs/
+# Symlinks in root (pointing to infra/developer/)
+logs
+data  
+backups
+reports
+temp
+
+# Actual data locations
+infra/developer/logs/*
+!infra/developer/logs/.gitkeep
+infra/developer/data/*
+!infra/developer/data/.gitkeep
+infra/developer/backups/*
+!infra/developer/backups/.gitkeep
+infra/developer/reports/*
+!infra/developer/reports/.gitkeep
+infra/developer/temp/*
+!infra/developer/temp/.gitkeep
+
+# Log files anywhere
 *.log
 results/
-temp/
 tmp/
+pids/
 
 # ========================
 # Application Specific
@@ -393,9 +412,8 @@ archive/
 backup_*
 
 venv/
-backups/*.sql
 
 # Temporary runtime files
-temp/
 *.session
+*.session-journal
 .tunnel-current

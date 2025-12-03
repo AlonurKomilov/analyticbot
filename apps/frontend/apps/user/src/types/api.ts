@@ -86,6 +86,7 @@ export interface User {
   username?: string;
   firstName?: string;
   lastName?: string;
+  full_name?: string;  // API returns full_name
   role: UserRole;
   tier?: UserTier;      // ✅ ADDED: User subscription tier
   status: UserStatus;   // ✅ CHANGED: from isActive: boolean
@@ -93,6 +94,10 @@ export interface User {
   createdAt: string;
   updatedAt?: string;
   preferences?: UserPreferences;
+  // Login method indicators
+  has_password?: boolean;       // True if user can login with email/password
+  telegram_id?: number;         // Telegram user ID if linked
+  telegram_username?: string;   // Telegram username if linked
 }
 
 export interface UserPreferences {

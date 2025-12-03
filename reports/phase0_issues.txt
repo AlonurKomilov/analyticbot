@@ -1,5 +1,0 @@
-DUPLICATE: /payment (8) and /payments (8)
-DUPLICATE: /ai (39) and /ai-chat (6)
-DUPLICATE: /ai (39) and /ai-insights (6)
-DUPLICATE: /ai (39) and /ai-services (7)
-DUPLICATE: /content (7) and /content-protection (7)

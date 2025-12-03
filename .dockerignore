@@ -67,7 +67,9 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
-data/*.session
+*.session
+*.session-journal
+data/
 
 # Backup files
 backups/

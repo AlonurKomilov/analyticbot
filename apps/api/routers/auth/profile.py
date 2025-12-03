@@ -41,7 +41,7 @@ def get_mfa_manager() -> MFAManager:
 async def get_current_user_profile(request: Request):
     """
     Get current user's profile information (CACHED)
-    Uses JWT token to identify user without database lookup
+    Uses JWT token to identify user, fetches additional data from database
 
     **Performance:** Cached for 5 minutes (300 seconds) per user
     """
@@ -51,6 +51,7 @@ async def get_current_user_profile(request: Request):
     try:
         # Extract user info from JWT token
         from apps.api.middleware.auth import get_current_user_id_from_request
+        from apps.di import get_container
 
         step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
@@ -65,16 +66,49 @@ async def get_current_user_profile(request: Request):
             claims = security_manager.verify_token(token)
             logger.info(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
 
-            # Extract user info from JWT claims
+            # Fetch additional user data from database (full_name, telegram info, password status)
+            step3 = time.time()
+            container = get_container()
+            pool = await container.database.asyncpg_pool()
+            
+            full_name = claims.get("full_name")
+            has_password = False
+            telegram_id = None
+            telegram_username = None
+            
+            async with pool.acquire() as conn:
+                row = await conn.fetchrow("""
+                    SELECT 
+                        full_name,
+                        hashed_password IS NOT NULL as has_password,
+                        telegram_id,
+                        CASE 
+                            WHEN telegram_id IS NOT NULL THEN username 
+                            ELSE NULL 
+                        END as telegram_username
+                    FROM users WHERE id = $1
+                """, int(user_id))
+                if row:
+                    full_name = row['full_name'] or full_name
+                    has_password = row['has_password'] or False
+                    telegram_id = row['telegram_id']
+                    telegram_username = row['telegram_username']
+            
+            logger.info(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
+
+            # Extract user info from JWT claims + database
             response = UserResponse(
                 id=str(claims.get("sub", user_id)),
                 email=claims.get("email", f"user_{user_id}@example.com"),
                 username=claims.get("username", f"user_{user_id}"),
-                full_name=claims.get("full_name"),
+                full_name=full_name,
                 role=claims.get("role", "user"),
                 status=claims.get("status", "active"),
                 created_at=datetime.utcnow(),
                 last_login=datetime.utcnow(),
+                has_password=has_password,
+                telegram_id=telegram_id,
+                telegram_username=telegram_username,
             )
 
             total_time = (time.time() - start_time) * 1000

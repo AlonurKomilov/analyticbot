@@ -1,4 +1,4 @@
-name: Security Audit Pipeline
+name: Security Scanning
 
 on:
   schedule:

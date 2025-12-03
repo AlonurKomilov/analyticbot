@@ -1,9 +1,0 @@
-name: (archived) Python Tests and Checks
-on:
-  workflow_dispatch:
-
-jobs:
-  noop:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Archived: this workflow is disabled and kept for history only."

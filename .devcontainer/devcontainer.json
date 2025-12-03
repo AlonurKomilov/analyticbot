@@ -2,14 +2,14 @@
   "name": "Analytic Bot Codespace",
   "image": "mcr.microsoft.com/devcontainers/python:3.11",
 
-  // Docker-in-Docker: dockerd ni konteyner ichida ishga tushiradi
+  // Docker-in-Docker: runs dockerd inside the container
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
       "moby": true
     }
   },
 
-  // Ishga tushgach Poetry o‘rnatish + userni docker guruhiga qo‘shish
+  // Post-create: install Poetry + add user to docker group
   "postCreateCommand": "pipx install poetry && poetry config virtualenvs.in-project true && poetry install --no-root && sudo usermod -aG docker $USER || true",
 
   "customizations": {
@@ -28,10 +28,10 @@
     }
   },
 
-  // Foydali portlar (ixtiyoriy): API, Postgres, Redis
+  // Useful ports (optional): API, Postgres, Redis
   "forwardPorts": [10400, 5432, 6379],
 
-  // Docker ma'lumotlarini konteyner ichida saqlash uchun nomli volume (rebuildlarda saqlanadi)
+  // Named volume to persist Docker data inside container (survives rebuilds)
   "mounts": [
     "source=dind-var-lib-docker,target=/var/lib/docker,type=volume"
   ]

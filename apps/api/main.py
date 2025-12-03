@@ -24,6 +24,7 @@ from apps.api.routers.content_protection_router import router as content_protect
 # DEPRECATED ROUTERS REMOVED - cleanup
 from apps.api.routers.exports_router import router as exports_router
 from apps.api.routers.health_router import router as health_router
+from apps.api.routers.home_dashboard_router import router as home_dashboard_router
 from apps.api.routers.media_router import router as media_router
 from apps.api.routers.ml_predictions_router import router as ml_predictions_router
 from apps.api.routers.mobile_router import router as mobile_router
@@ -463,6 +464,7 @@ async def root_health_check():
 
 
 # ✅ NEW MICROROUTER ARCHITECTURE - Domain-Focused Routing
+app.include_router(home_dashboard_router)  # Home dashboard (quick overview after login)
 app.include_router(system_router)  # Core system operations (performance, scheduling)
 app.include_router(health_router)  # Comprehensive health monitoring (consolidated)
 # app.include_router(analytics_router)     # ❌ REMOVED - analytics_microrouter merged into analytics_core_router (Phase 3A)

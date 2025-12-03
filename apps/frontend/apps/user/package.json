@@ -1,27 +1,17 @@
 {
-  "name": "analyticbot-frontend",
+  "name": "@analyticbot/user-app",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev": "npm run dev:user",
-    "dev:user": "cd apps/user && npm run dev",
-    "dev:admin": "cd apps/admin && npm run dev",
-    "build": "npm run build:user && npm run build:admin",
-    "build:user": "cd apps/user && npm run build",
-    "build:admin": "cd apps/admin && npm run build",
-    "type-check": "npm run type-check:user && npm run type-check:admin",
-    "type-check:user": "cd apps/user && npm run type-check",
-    "type-check:admin": "cd apps/admin && npm run type-check",
+    "dev": "vite --port 11300 --host 0.0.0.0",
+    "build": "tsc && vite build",
+    "build:analyze": "tsc && vite build && open dist/stats.html",
+    "type-check": "tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "npm run test:user",
-    "test:user": "cd apps/user && npm run test",
-    "install:all": "npm install && cd apps/user && npm install && cd ../admin && npm install"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

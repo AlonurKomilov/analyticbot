@@ -223,14 +223,14 @@ case $SERVICE in
         start_service "mtproto" 'python -m apps.mtproto.worker --interval 10 --max-runtime 24 --memory-limit 2048 --cpu-limit 80 --health-port 9091' ""
         ;;
     "frontend")
-        # Start Frontend (in frontend directory) - Development Environment Port 11300
-        cd apps/frontend
+        # Start Frontend (in frontend/apps/user directory) - Development Environment Port 11300
+        cd apps/frontend/apps/user
         if [ ! -d "node_modules" ]; then
             echo -e "${BLUE}📦 Installing frontend dependencies...${NC}"
             npm install
         fi
-        start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300
-        cd ../..
+        start_service "frontend" 'npm run dev' 11300
+        cd ../../../..
         ;;
     "tunnel")
         # Tunnel disabled - Using production domain analyticbot.org
@@ -404,7 +404,7 @@ case $SERVICE in
 
         echo ""
         echo -e "${BLUE}🚀 Starting frontend with updated tunnel URL...${NC}"
-        cd apps/frontend && start_service "frontend" 'npm run dev -- --port 11300 --host 0.0.0.0' 11300 && cd ../..
+        cd apps/frontend/apps/user && start_service "frontend" 'npm run dev' 11300 && cd ../../../..
         ;;
     "stop")
         # Stop all development services
@@ -442,7 +442,7 @@ case $SERVICE in
             sleep 1
             pkill -9 -f "uvicorn.*11400" 2>/dev/null || true
         fi
-        
+
         # Also kill any uvicorn from both venv directories
         if pgrep -f "analyticbot.*uvicorn" > /dev/null; then
             echo -e "${YELLOW}🔄 Stopping all analyticbot uvicorn servers${NC}"
@@ -475,7 +475,7 @@ case $SERVICE in
             pkill -9 -f "multiprocessing.spawn" || true
             pkill -9 -f "multiprocessing.resource_tracker" || true
         fi
-        
+
         # Kill zombie parent processes (uvicorn workers that became zombies)
         echo -e "${BLUE}💀 Checking for zombie processes...${NC}"
         zombie_parents=$(ps aux | awk '$8=="Z" {print}' | awk '{print $3}' | sort -u)

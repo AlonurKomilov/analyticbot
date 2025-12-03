@@ -20,7 +20,7 @@ dev-help:
 	@echo "🔐 Admin Panel Commands"
 	@echo "======================="
 	@echo "  dev-admin-install  - Install admin frontend dependencies"
-	@echo "  dev-admin-start    - Start admin frontend (port 11301)"
+	@echo "  dev-admin-start    - Start admin frontend (port 11310)"
 	@echo "  dev-admin-stop     - Stop admin frontend"
 	@echo "  dev-admin-build    - Build admin frontend for production"
 	@echo ""
@@ -153,27 +153,53 @@ dev-prod-status:
 	@systemctl status analyticbot-api.service | head -15
 
 # ============================================================================
-# Admin Panel Commands
+# Admin Panel Commands (Monorepo Structure: apps/frontend/apps/admin)
 # ============================================================================
 
 dev-admin-install:
 	@echo "📦 Installing admin frontend dependencies..."
-	cd apps/admin-frontend && npm install
+	cd apps/frontend/apps/admin && npm install
 
 dev-admin-start:
-	@echo "🔐 Starting admin frontend on port 11301..."
-	@cd apps/admin-frontend && npm run dev &
-	@echo "✅ Admin panel starting at http://localhost:11301"
+	@echo "🔐 Starting admin frontend on port 11310..."
+	@cd apps/frontend/apps/admin && npm run dev &
+	@echo "✅ Admin panel starting at http://localhost:11310"
 	@echo "   Production URL: https://admin.analyticbot.org"
 
 dev-admin-stop:
 	@echo "🛑 Stopping admin frontend..."
-	@pkill -f "vite.*11301" 2>/dev/null || true
+	@pkill -f "vite.*11310" 2>/dev/null || true
 	@echo "✅ Admin frontend stopped"
 
 dev-admin-build:
 	@echo "🏗️  Building admin frontend for production..."
-	cd apps/admin-frontend && npm run build
-	@echo "✅ Admin frontend built to apps/admin-frontend/dist"
+	cd apps/frontend/apps/admin && npm run build
+	@echo "✅ Admin frontend built to apps/frontend/apps/admin/dist"
 	@echo "   Deploy to: /var/www/analyticbot/admin"
 
+# ============================================================================
+# User Frontend Commands (Monorepo Structure: apps/frontend/apps/user)
+# ============================================================================
+
+dev-user-start:
+	@echo "🌐 Starting user frontend on port 11300..."
+	@cd apps/frontend/apps/user && npm run dev &
+	@echo "✅ User frontend starting at http://localhost:11300"
+	@echo "   Production URL: https://dev.analyticbot.org"
+
+dev-user-stop:
+	@echo "🛑 Stopping user frontend..."
+	@pkill -f "vite.*11300" 2>/dev/null || true
+	@echo "✅ User frontend stopped"
+
+dev-user-build:
+	@echo "🏗️  Building user frontend for production..."
+	cd apps/frontend/apps/user && npm run build
+	@echo "✅ User frontend built to apps/frontend/apps/user/dist"
+	@echo "   Deploy to: /var/www/analyticbot/frontend"
+
+dev-frontend-install:
+	@echo "📦 Installing all frontend dependencies..."
+	cd apps/frontend/apps/user && npm install
+	cd apps/frontend/apps/admin && npm install
+	@echo "✅ All frontend dependencies installed"

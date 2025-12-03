@@ -45,7 +45,7 @@ const SystemHealthPage: React.FC = () => {
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const response = await apiClient.get('/admin/health');
+        const response = await apiClient.get('/admin/system/health');
         setHealth(response.data);
       } catch (error) {
         console.error('Failed to fetch health:', error);

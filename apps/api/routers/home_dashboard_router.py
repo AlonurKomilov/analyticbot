@@ -10,7 +10,7 @@ Uses actual database schema:
 - channel_mtproto_settings (user_id, channel_id, mtproto_enabled)
 - posts (channel_id, msg_id, date, text)
 - post_metrics (channel_id, msg_id, snapshot_time, views, forwards, reactions_count)
-- mtproto_audit_log (channel_id, started_at, posts_collected, status)
+- mtproto_audit_log (channel_id, timestamp, action)
 - user_bot_credentials (user_id, status)
 - scheduled_posts (channel_id, status)
 """
@@ -199,9 +199,9 @@ async def _get_user_alerts(pool, user_id: int) -> list[ActionAlert]:
             WHERE c.user_id = $1
             AND cms.mtproto_enabled = true
             AND NOT EXISTS (
-                SELECT 1 FROM mtproto_audit_log mal 
-                WHERE mal.channel_id = c.id 
-                AND mal.started_at > NOW() - INTERVAL '24 hours'
+                SELECT 1 FROM posts p 
+                WHERE p.channel_id = c.id 
+                AND p.date > NOW() - INTERVAL '24 hours'
             )
         """, user_id)
         
@@ -312,7 +312,7 @@ async def _get_channel_health(pool, user_id: int) -> list[ChannelHealth]:
             SELECT 
                 c.id, c.title as name, c.username, c.subscriber_count,
                 cms.mtproto_enabled,
-                (SELECT MAX(mal.started_at) FROM mtproto_audit_log mal WHERE mal.channel_id = c.id) as last_collected_at,
+                (SELECT MAX(p.date) FROM posts p WHERE p.channel_id = c.id) as last_collected_at,
                 EXISTS(SELECT 1 FROM user_bot_credentials WHERE user_id = $1 AND status = 'active') as has_bot
             FROM channels c
             LEFT JOIN channel_mtproto_settings cms ON c.id = cms.channel_id AND cms.user_id = c.user_id
@@ -380,43 +380,40 @@ async def _get_activity_feed(pool, user_id: int, limit: int = 10) -> list[Activi
     activities = []
     
     async with pool.acquire() as conn:
-        # Get recent syncs
-        syncs = await conn.fetch("""
+        # Get recent MTProto setting changes (enable/disable actions)
+        settings_changes = await conn.fetch("""
             SELECT 
                 mal.id, mal.channel_id, c.title as channel_name,
-                mal.posts_collected, mal.started_at as timestamp,
-                mal.status
+                mal.action, mal.timestamp
             FROM mtproto_audit_log mal
             JOIN channels c ON mal.channel_id = c.id
             WHERE c.user_id = $1
-            AND mal.started_at >= NOW() - INTERVAL '24 hours'
-            ORDER BY mal.started_at DESC
-            LIMIT 5
+            AND mal.timestamp >= NOW() - INTERVAL '7 days'
+            ORDER BY mal.timestamp DESC
+            LIMIT 3
         """, user_id)
         
-        for sync in syncs:
-            posts = sync['posts_collected'] or 0
-            status = sync['status']
-            
-            if status == 'completed':
-                message = f"Collected {posts} new post{'s' if posts != 1 else ''}"
-                icon = "📊"
-            elif status == 'failed':
-                message = "Sync failed"
-                icon = "❌"
+        for change in settings_changes:
+            action = change['action']
+            if action == 'enabled':
+                message = "MTProto data collection enabled"
+                icon = "✅"
+            elif action == 'disabled':
+                message = "MTProto data collection disabled"
+                icon = "⏸️"
             else:
-                message = "Sync in progress..."
-                icon = "🔄"
+                message = f"Settings updated: {action}"
+                icon = "⚙️"
             
             activities.append(ActivityItem(
-                id=f"sync_{sync['id']}",
-                type="sync",
+                id=f"setting_{change['id']}",
+                type="settings",
                 icon=icon,
                 message=message,
-                channel_name=sync['channel_name'],
-                channel_id=sync['channel_id'],
-                timestamp=sync['timestamp'],
-                time_ago=_time_ago(sync['timestamp'])
+                channel_name=change['channel_name'],
+                channel_id=change['channel_id'],
+                timestamp=change['timestamp'],
+                time_ago=_time_ago(change['timestamp'])
             ))
         
         # Get recent posts

@@ -81,7 +81,7 @@ async def get_system_statistics(
     - System-wide statistics and health status
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_system_stats_fetch"):
             stats = await analytics_service.get_system_statistics_admin()
@@ -122,7 +122,7 @@ async def get_recent_admin_actions(
     - List of recent administrative actions
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_audit_logs_fetch"):
             audit_logs = await analytics_service.get_admin_audit_logs(limit=limit)
@@ -163,7 +163,7 @@ async def get_system_health(
     - Detailed system health information
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_system_health_check"):
             health_data = await analytics_service.check_system_health()
@@ -208,7 +208,7 @@ async def get_rate_limiter_statistics(
     Monitor system-wide Telegram API usage to prevent hitting rate limits.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.global_rate_limiter import GlobalRateLimiter
 
@@ -258,7 +258,7 @@ async def get_bot_health_summary(
     Monitor overall bot system health and identify problematic bots.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health import get_health_monitor
 
@@ -297,7 +297,7 @@ async def get_unhealthy_bots(
     Identify and investigate bots that need attention.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health import get_health_monitor
 
@@ -361,7 +361,7 @@ async def get_bot_health_metrics(
     Deep dive into a specific bot's health and performance.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health import get_health_monitor
 
@@ -420,7 +420,7 @@ async def get_circuit_breakers_summary(
     Monitor which bots are being protected by circuit breakers.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
 
@@ -477,7 +477,7 @@ async def get_circuit_breaker_state(
     Investigate why a specific bot is being blocked.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
 
@@ -520,7 +520,7 @@ async def reset_circuit_breaker(
     - New circuit breaker state
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.circuit_breaker import get_circuit_breaker_registry
 
@@ -568,7 +568,7 @@ async def get_retry_statistics(
     Monitor retry behavior and identify problematic error patterns.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.retry_logic import get_retry_statistics
 
@@ -606,7 +606,7 @@ async def reset_retry_statistics(
     - Success status
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.retry_logic import get_retry_statistics
 
@@ -655,7 +655,7 @@ async def get_bot_health_history(
     Analyze bot health trends, identify patterns, diagnose recurring issues.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
 
@@ -709,7 +709,7 @@ async def get_unhealthy_bot_history(
     Identify users with chronic bot health issues, detect system-wide problems.
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
 
@@ -757,7 +757,7 @@ async def persist_health_metrics_now(
     - Number of metrics persisted
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         from apps.bot.multi_tenant.bot_health_persistence import get_persistence_service
 
@@ -898,7 +898,7 @@ async def get_mtproto_pool_config(
     - Current pool configuration settings
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         # Read from environment
         return MTProtoPoolConfig(
@@ -941,7 +941,7 @@ async def update_mtproto_pool_config(
     **Note:** Requires MTProto worker restart to apply changes
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         # Update .env.development file
         env_file = ".env.development"
@@ -1013,7 +1013,7 @@ async def get_mtproto_pool_status(
     - Current pool status and metrics
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         # Get current configuration
         config = {

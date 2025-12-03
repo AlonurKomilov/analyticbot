@@ -20,7 +20,7 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.di.analytics_container import get_channel_management_service
+from apps.di.analytics_container import get_channel_management_service, get_database_pool
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,73 @@ class UserChannelInfo(BaseModel):
     last_activity: datetime | None = None
 
 
+class AdminUserInfo(BaseModel):
+    id: int
+    email: str
+    username: str | None = None
+    role: str = "user"
+    status: str = "active"
+    created_at: datetime
+    last_login: datetime | None = None
+    channels_count: int = 0
+
+
 # === ADMIN USER ENDPOINTS ===
+
+
+@router.get("", response_model=list[AdminUserInfo])
+async def get_all_users(
+    current_user: dict = Depends(get_current_user),
+    limit: int = 100,
+    offset: int = 0,
+):
+    """
+    ## 👥 Get All Users (Admin)
+
+    Retrieve all users in the system with administrative details.
+
+    **Admin Only**: Requires admin role
+    """
+    try:
+        await require_admin_user(current_user)
+        pool = await get_database_pool()
+
+        async with pool.acquire() as conn:
+            users = await conn.fetch("""
+                SELECT 
+                    u.id,
+                    u.email,
+                    u.username,
+                    u.role,
+                    u.status,
+                    u.created_at,
+                    u.last_login,
+                    COUNT(uc.channel_id) as channels_count
+                FROM users u
+                LEFT JOIN user_channels uc ON u.id = uc.user_id
+                GROUP BY u.id
+                ORDER BY u.created_at DESC
+                LIMIT $1 OFFSET $2
+            """, limit, offset)
+
+            return [
+                AdminUserInfo(
+                    id=user["id"],
+                    email=user["email"],
+                    username=user["username"],
+                    role=user["role"],
+                    status=user["status"] or "active",
+                    created_at=user["created_at"],
+                    last_login=user["last_login"],
+                    channels_count=user["channels_count"],
+                )
+                for user in users
+            ]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Admin users fetch failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch users")
 
 
 @router.get("/{user_id}/channels", response_model=UserChannelInfo)
@@ -87,7 +153,7 @@ async def get_user_channels_admin(
     - User channel information and statistics
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_user_channels_fetch"):
             user_channels = await channel_service.get_user_channels(user_id=user_id)

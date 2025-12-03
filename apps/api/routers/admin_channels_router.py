@@ -74,7 +74,7 @@ async def get_all_channels(
     - List of all channels with administrative information
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_all_channels_fetch"):
             channels = await channel_service.get_all_channels_admin(limit=limit, skip=offset)
@@ -123,7 +123,7 @@ async def delete_channel_admin(
     - Deletion confirmation
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_channel_deletion"):
             result = await channel_service.admin_delete_channel(channel_id)
@@ -168,7 +168,7 @@ async def suspend_channel(
     - Suspension confirmation
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_channel_suspension"):
             result = await channel_service.suspend_channel(channel_id)
@@ -212,7 +212,7 @@ async def unsuspend_channel(
     - Reactivation confirmation
     """
     try:
-        await require_admin_user(current_user["id"])
+        await require_admin_user(current_user)
 
         with performance_timer("admin_channel_unsuspension"):
             result = await channel_service.unsuspend_channel(channel_id)

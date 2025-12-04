@@ -14,11 +14,18 @@ export const API_ENDPOINTS = {
   },
   // Admin
   ADMIN: {
-    STATS: '/admin/system/stats',  // Correct endpoint
+    STATS: '/admin/system/stats',
     USERS: '/admin/users',
+    USER_DETAIL: (id: number) => `/admin/users/${id}`,
+    USER_SUSPEND: (id: number) => `/admin/users/${id}/suspend`,
+    USER_UNSUSPEND: (id: number) => `/admin/users/${id}/unsuspend`,
+    USER_DELETE: (id: number) => `/admin/users/${id}`,
+    USER_CREDITS: (id: number) => `/admin/users/${id}/credits`,
+    USER_CREDITS_ADJUST: (id: number) => `/admin/users/${id}/credits/adjust`,
+    ALL_USER_CREDITS: '/admin/users/credits/all',
     CHANNELS: '/admin/channels',
-    AUDIT_LOG: '/admin/system/audit-logs',  // Correct endpoint
-    HEALTH: '/admin/system/health',  // Correct endpoint
+    AUDIT_LOG: '/admin/system/audit-logs',
+    HEALTH: '/admin/system/health',
   },
   // Bot Management
   BOTS: {

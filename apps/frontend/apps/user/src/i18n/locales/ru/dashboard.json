@@ -1,0 +1,49 @@
+{
+  "title": "Панель управления",
+  "welcome": "С возвращением",
+  "welcomeMessage": "Вот что происходит с вашими каналами",
+  "quickStats": {
+    "title": "Краткая статистика",
+    "totalChannels": "Всего каналов",
+    "totalSubscribers": "Всего подписчиков",
+    "totalPosts": "Всего постов",
+    "totalViews": "Всего просмотров",
+    "activeChannels": "Активные каналы",
+    "todayViews": "Просмотры сегодня",
+    "todayGrowth": "Рост сегодня",
+    "weeklyGrowth": "Рост за неделю"
+  },
+  "quickAccess": {
+    "title": "Быстрый доступ",
+    "analytics": "Аналитика",
+    "analyticsDesc": "Подробная аналитика и статистика",
+    "channels": "Каналы",
+    "channelsDesc": "Управление Telegram-каналами",
+    "posts": "Посты",
+    "postsDesc": "Просмотр и управление постами",
+    "scheduler": "Планировщик",
+    "schedulerDesc": "Планирование постов и контента"
+  },
+  "recentActivity": {
+    "title": "Последняя активность",
+    "noActivity": "Нет недавней активности",
+    "viewAll": "Смотреть всю активность"
+  },
+  "topChannels": {
+    "title": "Топ каналов",
+    "bySubscribers": "По подписчикам",
+    "byViews": "По просмотрам",
+    "byEngagement": "По вовлечённости"
+  },
+  "overview": {
+    "title": "Обзор",
+    "channelOverview": "Обзор каналов",
+    "performanceSummary": "Сводка эффективности",
+    "growthTrends": "Тренды роста"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "markAllRead": "Отметить все как прочитанные",
+    "noNotifications": "Нет новых уведомлений"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "title": "Settings",
+  "subtitle": "Manage your account and preferences",
+  "tabs": {
+    "profile": "Profile",
+    "account": "Account",
+    "notifications": "Notifications",
+    "appearance": "Appearance",
+    "language": "Language",
+    "security": "Security",
+    "integrations": "Integrations",
+    "billing": "Billing",
+    "api": "API"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "avatar": "Avatar",
+    "changeAvatar": "Change Avatar",
+    "removeAvatar": "Remove Avatar",
+    "name": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "bio": "Bio",
+    "timezone": "Timezone",
+    "save": "Save Profile",
+    "saved": "Profile saved successfully"
+  },
+  "account": {
+    "title": "Account Settings",
+    "username": "Username",
+    "email": "Email",
+    "changeEmail": "Change Email",
+    "deleteAccount": "Delete Account",
+    "deleteAccountWarning": "This action is irreversible. All your data will be permanently deleted.",
+    "confirmDelete": "Type 'DELETE' to confirm"
+  },
+  "notifications": {
+    "title": "Notification Settings",
+    "email": {
+      "title": "Email Notifications",
+      "weeklyReport": "Weekly Analytics Report",
+      "channelAlerts": "Channel Alerts",
+      "newFeatures": "New Features & Updates",
+      "marketing": "Marketing & Promotions"
+    },
+    "push": {
+      "title": "Push Notifications",
+      "enabled": "Enable Push Notifications",
+      "subscriberMilestones": "Subscriber Milestones",
+      "postPerformance": "Post Performance Alerts",
+      "systemAlerts": "System Alerts"
+    },
+    "telegram": {
+      "title": "Telegram Notifications",
+      "enabled": "Enable Telegram Bot",
+      "dailyDigest": "Daily Digest",
+      "instantAlerts": "Instant Alerts"
+    }
+  },
+  "appearance": {
+    "title": "Appearance",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "colorScheme": "Color Scheme",
+    "compactMode": "Compact Mode",
+    "animations": "Enable Animations"
+  },
+  "language": {
+    "title": "Language Settings",
+    "interface": "Interface Language",
+    "dateFormat": "Date Format",
+    "timeFormat": "Time Format",
+    "numberFormat": "Number Format"
+  },
+  "security": {
+    "title": "Security Settings",
+    "password": {
+      "title": "Password",
+      "change": "Change Password",
+      "current": "Current Password",
+      "new": "New Password",
+      "confirm": "Confirm Password",
+      "updated": "Password updated successfully"
+    },
+    "twoFactor": {
+      "title": "Two-Factor Authentication",
+      "enabled": "2FA is enabled",
+      "disabled": "2FA is disabled",
+      "enable": "Enable 2FA",
+      "disable": "Disable 2FA",
+      "setup": "Set up Two-Factor Authentication",
+      "backupCodes": "Backup Codes"
+    },
+    "sessions": {
+      "title": "Active Sessions",
+      "current": "Current Session",
+      "lastActive": "Last Active",
+      "revokeAll": "Revoke All Sessions",
+      "revoke": "Revoke"
+    },
+    "loginHistory": {
+      "title": "Login History",
+      "date": "Date",
+      "device": "Device",
+      "location": "Location",
+      "status": "Status"
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "telegram": {
+      "title": "Telegram",
+      "connected": "Connected",
+      "notConnected": "Not Connected",
+      "connect": "Connect Telegram",
+      "disconnect": "Disconnect"
+    }
+  },
+  "billing": {
+    "title": "Billing & Subscription",
+    "currentPlan": "Current Plan",
+    "free": "Free",
+    "pro": "Pro",
+    "business": "Business",
+    "upgrade": "Upgrade",
+    "manage": "Manage Subscription",
+    "invoices": "Invoices",
+    "paymentMethod": "Payment Method"
+  },
+  "api": {
+    "title": "API Settings",
+    "keys": "API Keys",
+    "createKey": "Create API Key",
+    "keyName": "Key Name",
+    "created": "Created",
+    "lastUsed": "Last Used",
+    "revoke": "Revoke",
+    "documentation": "API Documentation"
+  }
+}

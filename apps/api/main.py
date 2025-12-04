@@ -19,6 +19,7 @@ from apps.api.routers.auth import router as auth_router
 # analytics_microrouter merged into analytics_core_router (Phase 3A consolidation)
 from apps.api.routers.channels import router as channels_router  # ✅ Microservice
 from apps.api.routers.content_protection_router import router as content_protection_router
+from apps.api.routers.credits_router import router as credits_router  # 💰 Credit System
 
 # Legacy routers (keeping for compatibility during transition)
 # DEPRECATED ROUTERS REMOVED - cleanup
@@ -475,6 +476,7 @@ app.include_router(telegram_storage_router)  # Telegram storage (user-owned chan
 app.include_router(admin_channels_router)  # Admin - Channel Management
 app.include_router(admin_users_router)  # Admin - User Management
 app.include_router(admin_system_router)  # Admin - System Management
+app.include_router(credits_router)  # 💰 Credit System - balance, transactions, packages
 
 # ✅ PHASE 4: ANALYTICS DOMAIN REORGANIZATION (October 22, 2025)
 # Consolidated analytics domain architecture - all analytics under /analytics/*

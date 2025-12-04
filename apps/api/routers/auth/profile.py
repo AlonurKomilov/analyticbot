@@ -14,7 +14,6 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from apps.api.middleware.auth import get_current_user
-from core.common.cache_decorator import cache_endpoint
 from core.security_engine import get_security_manager
 from core.security_engine.decorators import require_analytics_access, require_permission
 from core.security_engine.mfa import MFAManager
@@ -37,13 +36,13 @@ def get_mfa_manager() -> MFAManager:
 
 
 @router.get("/me", response_model=UserResponse)
-@cache_endpoint(prefix="auth:me", ttl=300)  # Cache for 5 minutes
 async def get_current_user_profile(request: Request):
     """
-    Get current user's profile information (CACHED)
-    Uses JWT token to identify user, fetches additional data from database
+    Get current user's profile information.
+    Uses JWT token to identify user, fetches additional data from database.
 
-    **Performance:** Cached for 5 minutes (300 seconds) per user
+    NOTE: Caching REMOVED - was causing cross-user data leaks because
+    cache key was not properly including user_id from JWT token.
     """
     start_time = time.time()
     logger.info("⏱️ /auth/me endpoint called")
@@ -70,30 +69,36 @@ async def get_current_user_profile(request: Request):
             step3 = time.time()
             container = get_container()
             pool = await container.database.asyncpg_pool()
-            
+
             full_name = claims.get("full_name")
             has_password = False
             telegram_id = None
             telegram_username = None
-            
+            credit_balance = 0.0
+
             async with pool.acquire() as conn:
-                row = await conn.fetchrow("""
-                    SELECT 
+                row = await conn.fetchrow(
+                    """
+                    SELECT
                         full_name,
                         hashed_password IS NOT NULL as has_password,
                         telegram_id,
-                        CASE 
-                            WHEN telegram_id IS NOT NULL THEN username 
-                            ELSE NULL 
+                        COALESCE(credit_balance, 0) as credit_balance,
+                        CASE
+                            WHEN telegram_id IS NOT NULL THEN username
+                            ELSE NULL
                         END as telegram_username
                     FROM users WHERE id = $1
-                """, int(user_id))
+                """,
+                    int(user_id),
+                )
                 if row:
-                    full_name = row['full_name'] or full_name
-                    has_password = row['has_password'] or False
-                    telegram_id = row['telegram_id']
-                    telegram_username = row['telegram_username']
-            
+                    full_name = row["full_name"] or full_name
+                    has_password = row["has_password"] or False
+                    telegram_id = row["telegram_id"]
+                    telegram_username = row["telegram_username"]
+                    credit_balance = float(row["credit_balance"] or 0)
+
             logger.info(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
 
             # Extract user info from JWT claims + database
@@ -109,6 +114,7 @@ async def get_current_user_profile(request: Request):
                 has_password=has_password,
                 telegram_id=telegram_id,
                 telegram_username=telegram_username,
+                credit_balance=credit_balance,
             )
 
             total_time = (time.time() - start_time) * 1000
@@ -265,6 +271,13 @@ async def update_profile(
             # Hash the new password
             hashed_password = pwd_context.hash(body["password"])
             updates["hashed_password"] = hashed_password
+            # When user sets a password, activate their account if pending
+            # This allows Telegram users to complete setup
+            if current_user.get("status") == "pending_verification":
+                updates["status"] = "active"
+                logger.info(
+                    f"Activating user {user_id} - password set by pending_verification user"
+                )
 
         if not updates:
             raise HTTPException(

@@ -91,6 +91,10 @@ async def get_current_user(
         # AuthError already has proper HTTP status and headers
         logger.warning(f"Authentication failed: {e.detail}")
         raise e
+    except HTTPException as e:
+        # Re-raise HTTPException (including suspension errors) as-is
+        logger.warning(f"HTTP error during authentication: {e.status_code} - {e.detail}")
+        raise e
     except Exception as e:
         # Log the FULL exception details for debugging
         logger.error(f"Unexpected authentication error: {e}", exc_info=True)

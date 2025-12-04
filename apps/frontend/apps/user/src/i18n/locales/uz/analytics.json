@@ -1,0 +1,84 @@
+{
+  "title": "Analitika",
+  "overview": {
+    "title": "Analitika ko'rinishi",
+    "description": "Barcha kanallaringiz uchun to'liq analitika"
+  },
+  "tabs": {
+    "channelOverview": "Kanal ko'rinishi",
+    "postDynamics": "Post dinamikasi",
+    "topPosts": "Top postlar",
+    "specialTimes": "Maxsus vaqtlar",
+    "audienceInsights": "Auditoriya tushunchalari",
+    "engagement": "Faollik",
+    "growth": "O'sish"
+  },
+  "metrics": {
+    "subscribers": "Obunachilar",
+    "views": "Ko'rishlar",
+    "reactions": "Reaksiyalar",
+    "comments": "Izohlar",
+    "shares": "Ulashishlar",
+    "engagement": "Faollik",
+    "engagementRate": "Faollik darajasi",
+    "reach": "Qamrov",
+    "impressions": "Ko'rsatishlar",
+    "avgViews": "O'rtacha ko'rishlar",
+    "avgReactions": "O'rtacha reaksiyalar",
+    "viewsPerPost": "Har bir post uchun ko'rishlar",
+    "reactionsPerPost": "Har bir post uchun reaksiyalar",
+    "growth": "O'sish",
+    "growthRate": "O'sish tezligi",
+    "retention": "Saqlanish",
+    "churnRate": "Yo'qolish darajasi"
+  },
+  "charts": {
+    "subscriberGrowth": "Obunachilar o'sishi",
+    "viewsTrend": "Ko'rishlar trendi",
+    "engagementTrend": "Faollik trendi",
+    "postPerformance": "Post samaradorligi",
+    "audienceDemographics": "Auditoriya demografiyasi",
+    "hourlyActivity": "Soatlik faollik",
+    "dailyActivity": "Kunlik faollik",
+    "weeklyTrend": "Haftalik trend",
+    "monthlyTrend": "Oylik trend"
+  },
+  "topPosts": {
+    "title": "Top postlar",
+    "byViews": "Ko'rishlar bo'yicha",
+    "byReactions": "Reaksiyalar bo'yicha",
+    "byEngagement": "Faollik bo'yicha",
+    "byShares": "Ulashishlar bo'yicha",
+    "period": "Davr"
+  },
+  "specialTimes": {
+    "title": "Post joylash uchun eng yaxshi vaqt",
+    "description": "Auditoriya faolligi asosida optimal vaqt",
+    "bestDay": "Eng yaxshi kun",
+    "bestHour": "Eng yaxshi soat",
+    "peakActivity": "Eng yuqori faollik",
+    "heatmap": "Faollik xaritasi"
+  },
+  "comparison": {
+    "title": "Kanallarni solishtirish",
+    "compareChannels": "Kanallarni solishtirish",
+    "selectChannels": "Solishtirish uchun kanallarni tanlang",
+    "vsAverage": "O'rtachaga nisbatan",
+    "vsPrevious": "Oldingi davrga nisbatan"
+  },
+  "export": {
+    "title": "Analitikani eksport qilish",
+    "format": "Format",
+    "dateRange": "Sana oralig'i",
+    "metrics": "Eksport qilinadigan ko'rsatkichlar",
+    "exportPDF": "PDF eksport",
+    "exportCSV": "CSV eksport",
+    "exportExcel": "Excel eksport"
+  },
+  "filter": {
+    "channel": "Kanal",
+    "allChannels": "Barcha kanallar",
+    "dateRange": "Sana oralig'i",
+    "metric": "Ko'rsatkich"
+  }
+}

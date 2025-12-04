@@ -2,7 +2,7 @@
  * Main Application Entry Point
  *
  * Initializes the React application with theme, error boundaries,
- * Sentry monitoring, and Telegram Web App integration.
+ * Sentry monitoring, i18n internationalization, and Telegram Web App integration.
  */
 
 import React from 'react';
@@ -10,6 +10,9 @@ import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as Sentry from '@sentry/react';
+
+// Initialize i18n before app renders
+import './i18n';
 
 import App from './App';
 import { ErrorBoundary } from '@shared/components/feedback';
@@ -96,12 +99,21 @@ const mockTelegram: { WebApp: TelegramWebApp } = {
 
 // Set up Telegram WebApp
 if (typeof window !== 'undefined') {
-    (window as any).Telegram = (window as any).Telegram || mockTelegram;
+    // Only use mock in development AND if real Telegram is not present
+    const hasRealTelegram = !!(window as any).Telegram?.WebApp?.initData;
+
+    if (!hasRealTelegram && import.meta.env.DEV) {
+        // Development mock - only used when not in real Telegram
+        console.log('🔧 Using mock Telegram WebApp (development mode)');
+        (window as any).Telegram = mockTelegram;
+    } else if (hasRealTelegram) {
+        console.log('✅ Real Telegram WebApp detected with initData');
+    }
 
     // Initialize TWA
     if ((window as any).Telegram?.WebApp) {
-        (window as any).Telegram.WebApp.ready();
-        (window as any).Telegram.WebApp.expand();
+        (window as any).Telegram.WebApp.ready?.();
+        (window as any).Telegram.WebApp.expand?.();
     }
 }
 

@@ -1,0 +1,90 @@
+{
+  "title": "Channels",
+  "subtitle": "Manage your Telegram channels",
+  "addChannel": "Add Channel",
+  "connectChannel": "Connect Channel",
+  "myChannels": "My Channels",
+  "allChannels": "All Channels",
+  "activeChannels": "Active Channels",
+  "inactiveChannels": "Inactive Channels",
+  "list": {
+    "name": "Channel Name",
+    "subscribers": "Subscribers",
+    "posts": "Posts",
+    "views": "Views",
+    "engagement": "Engagement",
+    "lastPost": "Last Post",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "details": {
+    "title": "Channel Details",
+    "overview": "Overview",
+    "statistics": "Statistics",
+    "posts": "Posts",
+    "settings": "Settings",
+    "description": "Description",
+    "username": "Username",
+    "createdAt": "Created At",
+    "lastActivity": "Last Activity",
+    "type": "Channel Type",
+    "public": "Public",
+    "private": "Private"
+  },
+  "stats": {
+    "totalSubscribers": "Total Subscribers",
+    "newSubscribers": "New Subscribers",
+    "lostSubscribers": "Lost Subscribers",
+    "netGrowth": "Net Growth",
+    "totalViews": "Total Views",
+    "avgViewsPerPost": "Avg Views/Post",
+    "totalReactions": "Total Reactions",
+    "avgReactionsPerPost": "Avg Reactions/Post"
+  },
+  "actions": {
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "disconnect": "Disconnect",
+    "refresh": "Refresh",
+    "viewOnTelegram": "View on Telegram",
+    "copyLink": "Copy Link",
+    "exportData": "Export Data"
+  },
+  "connect": {
+    "title": "Connect Channel",
+    "description": "Add a channel to start tracking analytics",
+    "step1": "Add bot as admin",
+    "step1Desc": "Add @AnalyticBot to your channel as an administrator",
+    "step2": "Grant permissions",
+    "step2Desc": "Give the bot permission to read messages",
+    "step3": "Verify connection",
+    "step3Desc": "Click verify to complete the setup",
+    "channelUsername": "Channel Username",
+    "channelUsernamePlaceholder": "@yourchannel",
+    "verify": "Verify Connection",
+    "verifying": "Verifying...",
+    "success": "Channel connected successfully!",
+    "failed": "Failed to connect channel"
+  },
+  "disconnect": {
+    "title": "Disconnect Channel",
+    "confirm": "Are you sure you want to disconnect this channel?",
+    "warning": "All analytics data will be preserved but no new data will be collected.",
+    "success": "Channel disconnected",
+    "failed": "Failed to disconnect channel"
+  },
+  "empty": {
+    "title": "No Channels Yet",
+    "description": "Connect your first Telegram channel to start tracking analytics",
+    "action": "Connect Channel"
+  },
+  "filter": {
+    "search": "Search channels...",
+    "sortBy": "Sort by",
+    "sortByName": "Name",
+    "sortBySubscribers": "Subscribers",
+    "sortByViews": "Views",
+    "sortByRecent": "Recent Activity"
+  }
+}

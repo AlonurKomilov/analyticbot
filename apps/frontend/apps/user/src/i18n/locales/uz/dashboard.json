@@ -1,0 +1,49 @@
+{
+  "title": "Boshqaruv paneli",
+  "welcome": "Xush kelibsiz",
+  "welcomeMessage": "Kanallaringiz bilan nima bo'layotganini ko'ring",
+  "quickStats": {
+    "title": "Tezkor statistika",
+    "totalChannels": "Jami kanallar",
+    "totalSubscribers": "Jami obunachilar",
+    "totalPosts": "Jami postlar",
+    "totalViews": "Jami ko'rishlar",
+    "activeChannels": "Faol kanallar",
+    "todayViews": "Bugungi ko'rishlar",
+    "todayGrowth": "Bugungi o'sish",
+    "weeklyGrowth": "Haftalik o'sish"
+  },
+  "quickAccess": {
+    "title": "Tezkor kirish",
+    "analytics": "Analitika",
+    "analyticsDesc": "Batafsil analitika va statistika",
+    "channels": "Kanallar",
+    "channelsDesc": "Telegram kanallarni boshqarish",
+    "posts": "Postlar",
+    "postsDesc": "Postlarni ko'rish va boshqarish",
+    "scheduler": "Rejalashtiruvchi",
+    "schedulerDesc": "Post va kontentni rejalashtirish"
+  },
+  "recentActivity": {
+    "title": "So'nggi faollik",
+    "noActivity": "Yaqinda faollik yo'q",
+    "viewAll": "Barcha faollikni ko'rish"
+  },
+  "topChannels": {
+    "title": "Top kanallar",
+    "bySubscribers": "Obunachilar bo'yicha",
+    "byViews": "Ko'rishlar bo'yicha",
+    "byEngagement": "Faollik bo'yicha"
+  },
+  "overview": {
+    "title": "Umumiy ko'rinish",
+    "channelOverview": "Kanal ko'rinishi",
+    "performanceSummary": "Samaradorlik xulosasi",
+    "growthTrends": "O'sish tendentsiyalari"
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "markAllRead": "Barchasini o'qilgan deb belgilash",
+    "noNotifications": "Yangi bildirishnoma yo'q"
+  }
+}

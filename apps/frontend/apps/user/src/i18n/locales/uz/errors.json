@@ -1,0 +1,71 @@
+{
+  "general": {
+    "somethingWrong": "Nimadir noto'g'ri ketdi",
+    "tryAgain": "Iltimos, qaytadan urinib ko'ring",
+    "unexpectedError": "Kutilmagan xato yuz berdi",
+    "networkError": "Tarmoq xatosi. Internetga ulanishni tekshiring.",
+    "serverError": "Server xatosi. Keyinroq qaytadan urinib ko'ring.",
+    "notFound": "Topilmadi",
+    "unauthorized": "Ruxsatsiz kirish",
+    "forbidden": "Kirish taqiqlangan",
+    "timeout": "So'rov vaqti tugadi",
+    "rateLimit": "Juda ko'p so'rov. Biroz kuting."
+  },
+  "validation": {
+    "required": "Bu maydon majburiy",
+    "email": "To'g'ri email manzilini kiriting",
+    "minLength": "Kamida {{min}} ta belgi bo'lishi kerak",
+    "maxLength": "Ko'pi bilan {{max}} ta belgi bo'lishi kerak",
+    "passwordMismatch": "Parollar mos kelmaydi",
+    "invalidUrl": "To'g'ri URL kiriting",
+    "invalidPhone": "To'g'ri telefon raqamini kiriting",
+    "invalidDate": "To'g'ri sanani kiriting",
+    "invalidNumber": "To'g'ri raqam kiriting",
+    "minValue": "Kamida {{min}} bo'lishi kerak",
+    "maxValue": "Ko'pi bilan {{max}} bo'lishi kerak"
+  },
+  "auth": {
+    "invalidCredentials": "Noto'g'ri email yoki parol",
+    "accountLocked": "Hisob bloklangan. Qo'llab-quvvatlash xizmatiga murojaat qiling.",
+    "emailNotVerified": "Iltimos, email manzilingizni tasdiqlang",
+    "sessionExpired": "Sessiya muddati tugadi. Qaytadan kiring.",
+    "invalidToken": "Noto'g'ri yoki muddati o'tgan token",
+    "telegramAuthFailed": "Telegram autentifikatsiyasi muvaffaqiyatsiz"
+  },
+  "channels": {
+    "notFound": "Kanal topilmadi",
+    "alreadyConnected": "Kanal allaqachon ulangan",
+    "connectionFailed": "Kanalni ulashda xato",
+    "disconnectionFailed": "Kanalni uzishda xato",
+    "permissionDenied": "Botda kerakli ruxsatlar yo'q",
+    "invalidUsername": "Noto'g'ri kanal nomi"
+  },
+  "posts": {
+    "notFound": "Post topilmadi",
+    "createFailed": "Post yaratishda xato",
+    "updateFailed": "Postni yangilashda xato",
+    "deleteFailed": "Postni o'chirishda xato",
+    "scheduleFailed": "Postni rejalashtirishda xato",
+    "publishFailed": "Postni e'lon qilishda xato"
+  },
+  "settings": {
+    "saveFailed": "Sozlamalarni saqlashda xato",
+    "passwordChangeFailed": "Parolni o'zgartirishda xato",
+    "profileUpdateFailed": "Profilni yangilashda xato"
+  },
+  "api": {
+    "invalidApiKey": "Noto'g'ri API kalit",
+    "quotaExceeded": "API kvotasi oshib ketdi",
+    "invalidRequest": "Noto'g'ri so'rov"
+  },
+  "http": {
+    "400": "Noto'g'ri so'rov",
+    "401": "Davom etish uchun tizimga kiring",
+    "403": "Bunga kirishga ruxsatingiz yo'q",
+    "404": "So'ralgan resurs topilmadi",
+    "500": "Ichki server xatosi",
+    "502": "Gateway xatosi",
+    "503": "Xizmat vaqtincha mavjud emas",
+    "504": "Gateway vaqti tugadi"
+  }
+}

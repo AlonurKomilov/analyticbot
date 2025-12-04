@@ -12,6 +12,7 @@ import {
     AppBar,
     Avatar,
     Box,
+    Chip,
     Divider,
     Drawer,
     IconButton,
@@ -23,6 +24,7 @@ import {
     Menu,
     MenuItem,
     Toolbar,
+    Tooltip,
     Typography,
     useMediaQuery,
     useTheme,
@@ -39,6 +41,7 @@ import {
     Tv as ChannelIcon,
     SmartToy as BotIcon,
     Logout as LogoutIcon,
+    MonetizationOn as CreditsIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ROUTES } from '@config/routes';
@@ -60,6 +63,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Posts', path: ROUTES.POSTS, icon: <ArticleIcon /> },
     { label: 'AI Services', path: ROUTES.AI_SERVICES, icon: <AIIcon /> },
     { label: 'My Bot', path: '/bot/dashboard', icon: <BotIcon /> },
+    { label: 'Credits', path: ROUTES.CREDITS, icon: <CreditsIcon /> },
     { label: 'Payment', path: ROUTES.PAYMENT, icon: <PaymentIcon /> },
     { label: 'Settings', path: ROUTES.SETTINGS, icon: <SettingsIcon /> },
 ];
@@ -70,11 +74,11 @@ const NavigationBar: React.FC = () => {
     const location = useLocation();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = useState(false);
-    
+
     // Profile menu state
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const profileMenuOpen = Boolean(anchorEl);
-    
+
     // Get user and logout from auth context (same as Security page uses)
     const { user, logout } = useAuth();
 
@@ -110,7 +114,7 @@ const NavigationBar: React.FC = () => {
     // Get user initials for avatar
     const getUserInitials = () => {
         if (!user) return '?';
-        
+
         // Try full_name first (from API)
         if (user.full_name) {
             const parts = user.full_name.trim().split(' ');
@@ -119,7 +123,7 @@ const NavigationBar: React.FC = () => {
             }
             return user.full_name[0].toUpperCase();
         }
-        
+
         // Try firstName/lastName
         if (user.firstName && user.lastName) {
             return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
@@ -127,7 +131,7 @@ const NavigationBar: React.FC = () => {
         if (user.firstName) {
             return user.firstName[0].toUpperCase();
         }
-        
+
         // Fallback to email
         if (user.email) {
             return user.email[0].toUpperCase();
@@ -138,12 +142,12 @@ const NavigationBar: React.FC = () => {
     // Get display name
     const getDisplayName = () => {
         if (!user) return 'User';
-        
+
         // Try full_name first (from API)
         if (user.full_name) {
             return user.full_name;
         }
-        
+
         // Try firstName/lastName
         if (user.firstName && user.lastName) {
             return `${user.firstName} ${user.lastName}`;
@@ -151,7 +155,7 @@ const NavigationBar: React.FC = () => {
         if (user.firstName) {
             return user.firstName;
         }
-        
+
         // Fallback to username or email
         return user.username || user.email || 'User';
     };
@@ -202,7 +206,38 @@ const NavigationBar: React.FC = () => {
                     <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                         AnalyticBot
                     </Typography>
-                    
+
+                    {/* Credit Balance Display */}
+                    {user && (
+                        <Tooltip title="Your credit balance" arrow>
+                            <Chip
+                                icon={<CreditsIcon sx={{ fontSize: '1rem' }} />}
+                                label={`${(user.credit_balance ?? 0).toLocaleString()} credits`}
+                                size="small"
+                                onClick={() => navigate(ROUTES.CREDITS)}
+                                sx={{
+                                    mr: 2,
+                                    cursor: 'pointer',
+                                    bgcolor: theme.palette.mode === 'dark'
+                                        ? 'rgba(255, 215, 0, 0.15)'
+                                        : 'rgba(255, 193, 7, 0.15)',
+                                    color: theme.palette.mode === 'dark'
+                                        ? '#FFD700'
+                                        : '#F9A825',
+                                    fontWeight: 600,
+                                    '&:hover': {
+                                        bgcolor: theme.palette.mode === 'dark'
+                                            ? 'rgba(255, 215, 0, 0.25)'
+                                            : 'rgba(255, 193, 7, 0.25)',
+                                    },
+                                    '& .MuiChip-icon': {
+                                        color: 'inherit',
+                                    },
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+
                     {/* Profile Avatar Button */}
                     <IconButton
                         onClick={handleProfileClick}
@@ -224,7 +259,7 @@ const NavigationBar: React.FC = () => {
                             {getUserInitials()}
                         </Avatar>
                     </IconButton>
-                    
+
                     {/* Profile Dropdown Menu */}
                     <Menu
                         id="profile-menu"
@@ -255,13 +290,24 @@ const NavigationBar: React.FC = () => {
                             </Typography>
                         </Box>
                         <Divider />
-                        
+
                         {/* Menu Items */}
                         <MenuItem onClick={() => handleProfileNavigate(ROUTES.PROFILE)}>
                             <ListItemIcon>
                                 <PersonIcon fontSize="small" />
                             </ListItemIcon>
                             Profile
+                        </MenuItem>
+                        <MenuItem onClick={() => handleProfileNavigate(ROUTES.CREDITS)}>
+                            <ListItemIcon>
+                                <CreditsIcon fontSize="small" sx={{ color: '#FFD700' }} />
+                            </ListItemIcon>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                <span>Credits</span>
+                                <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                                    {(user?.credit_balance ?? 0).toLocaleString()}
+                                </Typography>
+                            </Box>
                         </MenuItem>
                         <MenuItem onClick={() => handleProfileNavigate(ROUTES.SETTINGS)}>
                             <ListItemIcon>

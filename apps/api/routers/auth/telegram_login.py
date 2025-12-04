@@ -218,6 +218,28 @@ async def telegram_login(
         # Find user by Telegram ID
         user_data = await user_repo.get_user_by_telegram_id(telegram_data.id)
 
+        # Check if user is suspended
+        if user_data and user_data.get("status") == "suspended":
+            suspension_reason = user_data.get("suspension_reason", "No reason provided")
+            suspended_at = user_data.get("suspended_at")
+            suspended_at_str = (
+                suspended_at.strftime("%Y-%m-%d %H:%M") if suspended_at else "Unknown"
+            )
+
+            logger.warning(
+                f"Suspended user attempted login: {telegram_data.id}, reason: {suspension_reason}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "account_suspended",
+                    "message": "Your account has been suspended",
+                    "reason": suspension_reason,
+                    "suspended_at": suspended_at_str,
+                    "contact": "Please contact support at support@analyticbot.org to appeal this decision.",
+                },
+            )
+
         # If user doesn't exist, create new account
         if not user_data:
             logger.info(f"Creating new user from Telegram login: {telegram_data.id}")
@@ -322,24 +344,67 @@ async def telegram_webapp_login(
     try:
         # Get request body
         body = await request.json()
-        init_data = body.get("initData")
-        user_data = body.get("user", {})
 
-        if not init_data or not user_data:
+        # Debug logging - show full request for troubleshooting
+        logger.info(
+            f"TWA login request: initData={body.get('initData', '')[:50] if body.get('initData') else 'None'}..., user={body.get('user')}"
+        )
+
+        init_data = body.get("initData")
+        user_data = body.get("user") or {}  # Handle None case
+
+        # Validate required data - be explicit about what's missing
+        if not init_data:
+            logger.warning(f"TWA login failed: missing initData. Body: {body}")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing initData")
+
+        if not user_data or not isinstance(user_data, dict):
+            logger.warning(f"TWA login failed: missing/invalid user data. Body: {body}")
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing initData or user data"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing or invalid user data"
             )
 
-        telegram_id = user_data.get("id")
-        if not telegram_id:
+        telegram_id_raw = user_data.get("id")
+        if not telegram_id_raw:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Telegram user ID"
+            )
+
+        # Convert telegram_id to int (Telegram sends it as string sometimes)
+        try:
+            telegram_id = int(telegram_id_raw)
+        except (ValueError, TypeError):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid Telegram user ID format: {telegram_id_raw}",
             )
 
         logger.info(f"TWA login attempt for Telegram ID: {telegram_id}")
 
         # Find or create user
         existing_user = await user_repo.get_user_by_telegram_id(telegram_id)
+
+        # Check if user is suspended
+        if existing_user and existing_user.get("status") == "suspended":
+            suspension_reason = existing_user.get("suspension_reason", "No reason provided")
+            suspended_at = existing_user.get("suspended_at")
+            suspended_at_str = (
+                suspended_at.strftime("%Y-%m-%d %H:%M") if suspended_at else "Unknown"
+            )
+
+            logger.warning(
+                f"Suspended user attempted TWA login: {telegram_id}, reason: {suspension_reason}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "account_suspended",
+                    "message": "Your account has been suspended",
+                    "reason": suspension_reason,
+                    "suspended_at": suspended_at_str,
+                    "contact": "Please contact support at support@analyticbot.org to appeal this decision.",
+                },
+            )
 
         if not existing_user:
             # Create new user from TWA data
@@ -409,6 +474,7 @@ async def telegram_webapp_login(
                 "status": user.status.value,
                 "telegram_id": telegram_id,
                 "telegram_username": user_data.get("username"),
+                "has_password": user.hashed_password is not None,
             },
         )
 
@@ -418,7 +484,7 @@ async def telegram_webapp_login(
         logger.error(f"TWA login error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Telegram Web App login failed",
+            detail=f"Telegram Web App login failed: {str(e)}",
         )
 
 

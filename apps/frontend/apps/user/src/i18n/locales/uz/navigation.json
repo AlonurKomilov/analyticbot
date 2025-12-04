@@ -1,0 +1,67 @@
+{
+  "sidebar": {
+    "dashboard": "Boshqaruv paneli",
+    "analytics": "Analitika",
+    "channels": "Kanallar",
+    "posts": "Postlar",
+    "scheduler": "Rejalashtiruvchi",
+    "reports": "Hisobotlar",
+    "settings": "Sozlamalar",
+    "help": "Yordam",
+    "logout": "Chiqish"
+  },
+  "header": {
+    "search": "Qidirish...",
+    "notifications": "Bildirishnomalar",
+    "profile": "Profil",
+    "settings": "Sozlamalar",
+    "logout": "Chiqish"
+  },
+  "breadcrumb": {
+    "home": "Bosh sahifa",
+    "dashboard": "Boshqaruv paneli",
+    "analytics": "Analitika",
+    "channels": "Kanallar",
+    "posts": "Postlar",
+    "settings": "Sozlamalar"
+  },
+  "footer": {
+    "copyright": "© {{year}} AnalyticBot. Barcha huquqlar himoyalangan.",
+    "privacy": "Maxfiylik siyosati",
+    "terms": "Foydalanish shartlari",
+    "contact": "Biz bilan bog'lanish"
+  },
+  "userMenu": {
+    "profile": "Mening profilim",
+    "settings": "Sozlamalar",
+    "billing": "To'lov",
+    "help": "Yordam va qo'llab-quvvatlash",
+    "logout": "Chiqish"
+  },
+  "mobile": {
+    "menu": "Menyu",
+    "close": "Yopish"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Boshqaruv paneli",
+      "description": "Kanal samaradorligi haqida umumiy ma'lumot"
+    },
+    "analytics": {
+      "title": "Analitika",
+      "description": "Batafsil analitika va statistika"
+    },
+    "channels": {
+      "title": "Kanallar",
+      "description": "Telegram kanallarni boshqarish"
+    },
+    "posts": {
+      "title": "Postlar",
+      "description": "Postlaringizni ko'rish va boshqarish"
+    },
+    "settings": {
+      "title": "Sozlamalar",
+      "description": "Hisob sozlamalarini boshqarish"
+    }
+  }
+}

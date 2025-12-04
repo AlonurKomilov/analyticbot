@@ -1,0 +1,142 @@
+{
+  "title": "Настройки",
+  "subtitle": "Управление аккаунтом и предпочтениями",
+  "tabs": {
+    "profile": "Профиль",
+    "account": "Аккаунт",
+    "notifications": "Уведомления",
+    "appearance": "Внешний вид",
+    "language": "Язык",
+    "security": "Безопасность",
+    "integrations": "Интеграции",
+    "billing": "Оплата",
+    "api": "API"
+  },
+  "profile": {
+    "title": "Настройки профиля",
+    "avatar": "Аватар",
+    "changeAvatar": "Изменить аватар",
+    "removeAvatar": "Удалить аватар",
+    "name": "Полное имя",
+    "email": "Email",
+    "phone": "Номер телефона",
+    "bio": "О себе",
+    "timezone": "Часовой пояс",
+    "save": "Сохранить профиль",
+    "saved": "Профиль успешно сохранен"
+  },
+  "account": {
+    "title": "Настройки аккаунта",
+    "username": "Имя пользователя",
+    "email": "Email",
+    "changeEmail": "Изменить email",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteAccountWarning": "Это действие необратимо. Все ваши данные будут удалены навсегда.",
+    "confirmDelete": "Введите 'УДАЛИТЬ' для подтверждения"
+  },
+  "notifications": {
+    "title": "Настройки уведомлений",
+    "email": {
+      "title": "Email-уведомления",
+      "weeklyReport": "Еженедельный отчет аналитики",
+      "channelAlerts": "Уведомления о каналах",
+      "newFeatures": "Новые функции и обновления",
+      "marketing": "Маркетинг и акции"
+    },
+    "push": {
+      "title": "Push-уведомления",
+      "enabled": "Включить push-уведомления",
+      "subscriberMilestones": "Достижения по подписчикам",
+      "postPerformance": "Уведомления об эффективности постов",
+      "systemAlerts": "Системные уведомления"
+    },
+    "telegram": {
+      "title": "Уведомления в Telegram",
+      "enabled": "Включить Telegram-бота",
+      "dailyDigest": "Ежедневная сводка",
+      "instantAlerts": "Мгновенные уведомления"
+    }
+  },
+  "appearance": {
+    "title": "Внешний вид",
+    "theme": "Тема",
+    "light": "Светлая",
+    "dark": "Темная",
+    "system": "Системная",
+    "colorScheme": "Цветовая схема",
+    "compactMode": "Компактный режим",
+    "animations": "Включить анимации"
+  },
+  "language": {
+    "title": "Настройки языка",
+    "interface": "Язык интерфейса",
+    "dateFormat": "Формат даты",
+    "timeFormat": "Формат времени",
+    "numberFormat": "Формат чисел"
+  },
+  "security": {
+    "title": "Настройки безопасности",
+    "password": {
+      "title": "Пароль",
+      "change": "Изменить пароль",
+      "current": "Текущий пароль",
+      "new": "Новый пароль",
+      "confirm": "Подтвердите пароль",
+      "updated": "Пароль успешно обновлен"
+    },
+    "twoFactor": {
+      "title": "Двухфакторная аутентификация",
+      "enabled": "2FA включена",
+      "disabled": "2FA отключена",
+      "enable": "Включить 2FA",
+      "disable": "Отключить 2FA",
+      "setup": "Настроить двухфакторную аутентификацию",
+      "backupCodes": "Резервные коды"
+    },
+    "sessions": {
+      "title": "Активные сессии",
+      "current": "Текущая сессия",
+      "lastActive": "Последняя активность",
+      "revokeAll": "Завершить все сессии",
+      "revoke": "Завершить"
+    },
+    "loginHistory": {
+      "title": "История входов",
+      "date": "Дата",
+      "device": "Устройство",
+      "location": "Местоположение",
+      "status": "Статус"
+    }
+  },
+  "integrations": {
+    "title": "Интеграции",
+    "telegram": {
+      "title": "Telegram",
+      "connected": "Подключен",
+      "notConnected": "Не подключен",
+      "connect": "Подключить Telegram",
+      "disconnect": "Отключить"
+    }
+  },
+  "billing": {
+    "title": "Оплата и подписка",
+    "currentPlan": "Текущий план",
+    "free": "Бесплатный",
+    "pro": "Pro",
+    "business": "Бизнес",
+    "upgrade": "Улучшить",
+    "manage": "Управление подпиской",
+    "invoices": "Счета",
+    "paymentMethod": "Способ оплаты"
+  },
+  "api": {
+    "title": "Настройки API",
+    "keys": "API-ключи",
+    "createKey": "Создать API-ключ",
+    "keyName": "Название ключа",
+    "created": "Создан",
+    "lastUsed": "Последнее использование",
+    "revoke": "Отозвать",
+    "documentation": "Документация API"
+  }
+}

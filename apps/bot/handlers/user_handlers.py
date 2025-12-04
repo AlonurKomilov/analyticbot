@@ -149,15 +149,29 @@ async def _set_webapp_menu_or_default(message: types.Message, i18n: Any) -> None
 async def cmd_start(message: types.Message, i18n: I18nContext):
     uid = message.from_user.id if message.from_user else None
     uname = message.from_user.username if message.from_user else None
+    full_name = message.from_user.full_name if message.from_user else None
     if uid is not None:
         try:
             user_repo = await get_user_repository()
-            user_data = {
-                "id": uid,
-                "username": uname,
-                "plan_id": 1,  # Default to free plan
-            }
-            await user_repo.create_user(user_data)
+
+            # Check if user already exists (by telegram_id)
+            existing_user = await user_repo.get_user_by_telegram_id(uid)
+            if existing_user:
+                log.info(f"User already exists for telegram_id {uid}")
+            else:
+                # Create new user - DO NOT pass id, let repository generate it from sequence
+                # telegram_id is stored separately, never used as primary key
+                user_data = {
+                    # No "id" field - let repository generate from users_id_seq
+                    "username": uname,
+                    "full_name": full_name,
+                    "plan_id": 1,  # Default to free plan
+                    "telegram_id": uid,  # Store telegram_id in its own column
+                    "auth_provider": "telegram",  # Mark as Telegram user
+                    "status": "active",  # Telegram users are auto-activated
+                }
+                await user_repo.create_user(user_data)
+                log.info(f"Created new user for telegram_id {uid}")
         except Exception as e:
             log.warning("create_user failed: %s", e)
     await _set_webapp_menu_or_default(message, i18n)

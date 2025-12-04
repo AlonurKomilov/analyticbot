@@ -140,7 +140,7 @@ class FastAPIAuthUtils:
             User dictionary from database
 
         Raises:
-            AuthError: If token is invalid or user not found
+            AuthError: If token is invalid or user not found or suspended
         """
         # Verify token
         payload = self.verify_jwt_token(credentials.credentials)
@@ -153,6 +153,17 @@ class FastAPIAuthUtils:
         user = await user_repo.get_user_by_id(int(user_id))
         if not user:
             raise AuthError("User not found")
+
+        # Check if user is suspended - block access immediately
+        if user.get("status") == "suspended":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "account_suspended",
+                    "message": "Your account has been suspended. Access denied.",
+                    "contact": "Please contact support at support@analyticbot.org to appeal this decision.",
+                },
+            )
 
         return user
 

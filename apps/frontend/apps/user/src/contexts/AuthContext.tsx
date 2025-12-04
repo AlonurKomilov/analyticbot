@@ -15,6 +15,7 @@ interface User {
     email: string;
     username?: string;
     is_demo?: boolean;
+    credit_balance?: number;  // User's credit balance
     [key: string]: any;
 }
 
@@ -358,7 +359,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setToken(null);
             setUser(null);
 
-            // Redirect to login page
+            // Check if we're in Telegram Web App
+            const isTWA = !!(window as any).Telegram?.WebApp?.initData;
+
+            if (isTWA) {
+                // In TWA, try to auto-login again instead of showing login page
+                authLogger.info('Logout in TWA - attempting re-authentication');
+
+                // Import and call auto-login
+                const { autoLoginFromTelegram } = await import('@/utils/telegramAuth');
+                const success = await autoLoginFromTelegram();
+
+                if (success) {
+                    // Reload user state from storage
+                    const storedToken = localStorage.getItem('auth_token');
+                    const storedUserStr = localStorage.getItem('auth_user');
+                    if (storedToken && storedUserStr) {
+                        try {
+                            const storedUser = JSON.parse(storedUserStr);
+                            setToken(storedToken);
+                            setUser(storedUser);
+                            authLogger.info('TWA re-authentication successful');
+                            // Navigate to home instead of login
+                            window.location.href = '/';
+                            return;
+                        } catch (e) {
+                            authLogger.error('Failed to parse stored user', { error: e });
+                        }
+                    }
+                }
+
+                // If TWA re-auth failed, still go to login
+                authLogger.warn('TWA re-authentication failed - showing login page');
+            }
+
+            // Redirect to login page (for non-TWA or failed TWA re-auth)
             window.location.href = '/login';
         }
     }, [token]);

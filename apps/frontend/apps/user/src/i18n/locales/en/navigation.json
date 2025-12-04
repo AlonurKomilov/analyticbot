@@ -1,0 +1,67 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "channels": "Channels",
+    "posts": "Posts",
+    "scheduler": "Scheduler",
+    "reports": "Reports",
+    "settings": "Settings",
+    "help": "Help",
+    "logout": "Logout"
+  },
+  "header": {
+    "search": "Search...",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "analytics": "Analytics",
+    "channels": "Channels",
+    "posts": "Posts",
+    "settings": "Settings"
+  },
+  "footer": {
+    "copyright": "© {{year}} AnalyticBot. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact Us"
+  },
+  "userMenu": {
+    "profile": "My Profile",
+    "settings": "Settings",
+    "billing": "Billing",
+    "help": "Help & Support",
+    "logout": "Logout"
+  },
+  "mobile": {
+    "menu": "Menu",
+    "close": "Close"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Overview of your channel performance"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Detailed analytics and insights"
+    },
+    "channels": {
+      "title": "Channels",
+      "description": "Manage your Telegram channels"
+    },
+    "posts": {
+      "title": "Posts",
+      "description": "View and manage your posts"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account settings"
+    }
+  }
+}

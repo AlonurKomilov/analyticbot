@@ -1,0 +1,84 @@
+{
+  "title": "Analytics",
+  "overview": {
+    "title": "Analytics Overview",
+    "description": "Comprehensive analytics for all your channels"
+  },
+  "tabs": {
+    "channelOverview": "Channel Overview",
+    "postDynamics": "Post Dynamics",
+    "topPosts": "Top Posts",
+    "specialTimes": "Special Times",
+    "audienceInsights": "Audience Insights",
+    "engagement": "Engagement",
+    "growth": "Growth"
+  },
+  "metrics": {
+    "subscribers": "Subscribers",
+    "views": "Views",
+    "reactions": "Reactions",
+    "comments": "Comments",
+    "shares": "Shares",
+    "engagement": "Engagement",
+    "engagementRate": "Engagement Rate",
+    "reach": "Reach",
+    "impressions": "Impressions",
+    "avgViews": "Average Views",
+    "avgReactions": "Average Reactions",
+    "viewsPerPost": "Views per Post",
+    "reactionsPerPost": "Reactions per Post",
+    "growth": "Growth",
+    "growthRate": "Growth Rate",
+    "retention": "Retention",
+    "churnRate": "Churn Rate"
+  },
+  "charts": {
+    "subscriberGrowth": "Subscriber Growth",
+    "viewsTrend": "Views Trend",
+    "engagementTrend": "Engagement Trend",
+    "postPerformance": "Post Performance",
+    "audienceDemographics": "Audience Demographics",
+    "hourlyActivity": "Hourly Activity",
+    "dailyActivity": "Daily Activity",
+    "weeklyTrend": "Weekly Trend",
+    "monthlyTrend": "Monthly Trend"
+  },
+  "topPosts": {
+    "title": "Top Posts",
+    "byViews": "By Views",
+    "byReactions": "By Reactions",
+    "byEngagement": "By Engagement",
+    "byShares": "By Shares",
+    "period": "Period"
+  },
+  "specialTimes": {
+    "title": "Best Time to Post",
+    "description": "Optimal posting times based on audience activity",
+    "bestDay": "Best Day",
+    "bestHour": "Best Hour",
+    "peakActivity": "Peak Activity",
+    "heatmap": "Activity Heatmap"
+  },
+  "comparison": {
+    "title": "Channel Comparison",
+    "compareChannels": "Compare Channels",
+    "selectChannels": "Select channels to compare",
+    "vsAverage": "vs. Average",
+    "vsPrevious": "vs. Previous Period"
+  },
+  "export": {
+    "title": "Export Analytics",
+    "format": "Format",
+    "dateRange": "Date Range",
+    "metrics": "Metrics to Export",
+    "exportPDF": "Export PDF",
+    "exportCSV": "Export CSV",
+    "exportExcel": "Export Excel"
+  },
+  "filter": {
+    "channel": "Channel",
+    "allChannels": "All Channels",
+    "dateRange": "Date Range",
+    "metric": "Metric"
+  }
+}

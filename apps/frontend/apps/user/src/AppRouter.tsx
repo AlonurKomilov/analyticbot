@@ -33,6 +33,7 @@ const ChannelsManagementPage = React.lazy(() => import('./pages/channels'));
 const AIServicesPage = React.lazy(() => import('./pages/AIServicesPage'));
 const PredictiveAnalyticsPage = React.lazy(() => import('./pages/PredictiveAnalyticsPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
+const CreditsPage = React.lazy(() => import('./pages/CreditsPage'));
 const SubscriptionPage = React.lazy(() => import('./pages/SubscriptionPage'));
 const PaymentHistoryPage = React.lazy(() => import('./pages/PaymentHistoryPage'));
 const InvoicesPage = React.lazy(() => import('./pages/InvoicesPage'));
@@ -422,6 +423,16 @@ const AppRouter: React.FC = () => {
                                         <ProtectedRoute>
                                             <OptimizedSuspense skeletonType="dashboard">
                                                 <PaymentPage />
+                                            </OptimizedSuspense>
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path={ROUTES.CREDITS}
+                                    element={
+                                        <ProtectedRoute>
+                                            <OptimizedSuspense skeletonType="dashboard">
+                                                <CreditsPage />
                                             </OptimizedSuspense>
                                         </ProtectedRoute>
                                     }

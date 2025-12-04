@@ -10,6 +10,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from apps.bot.handlers import alerts, exports
 from apps.bot.handlers.bot_microhandlers import bot_microhandlers_router
+from apps.bot.middlewares.suspension_middleware import SuspensionCheckMiddleware
 from apps.bot.middlewares.throttle import ThrottleMiddleware
 from config.settings import Settings
 
@@ -25,6 +26,11 @@ class AnalyticBot:
         self.settings = Settings()
 
         # Setup middleware
+        # Suspension check runs first to block suspended users
+        self.dp.message.middleware(SuspensionCheckMiddleware())
+        self.dp.callback_query.middleware(SuspensionCheckMiddleware())
+
+        # Throttling to prevent spam
         self.dp.message.middleware(ThrottleMiddleware())
         self.dp.callback_query.middleware(ThrottleMiddleware())
 

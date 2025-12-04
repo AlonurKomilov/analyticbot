@@ -30,13 +30,17 @@ interface TelegramWebAppData {
  */
 export const isTelegramWebApp = (): boolean => {
     const tg = (window as any).Telegram?.WebApp;
-    const hasInitData = !!tg && !!tg.initData;
+    const hasInitData = !!tg && !!tg.initData && tg.initData.length > 0;
 
     // Debug logging
     console.log('🔍 Telegram WebApp Detection:', {
-        hasTelegramObject: !!tg,
+        hasTelegramObject: !!(window as any).Telegram,
+        hasWebApp: !!tg,
         hasInitData,
         initDataLength: tg?.initData?.length || 0,
+        initDataPreview: tg?.initData ? tg.initData.substring(0, 50) + '...' : 'none',
+        hasInitDataUnsafe: !!tg?.initDataUnsafe,
+        hasUser: !!tg?.initDataUnsafe?.user,
         platform: tg?.platform || 'unknown',
         version: tg?.version || 'unknown'
     });
@@ -153,7 +157,15 @@ export const autoLoginFromTelegram = async (): Promise<boolean> => {
         console.warn('⚠️ TWA auto-login failed: no token received');
         return false;
     } catch (error: any) {
-        console.error('❌ TWA auto-login error:', error.message || error);
+        // Log detailed error info for debugging
+        console.error('❌ TWA auto-login error:', {
+            message: error.message || error,
+            status: error.status,
+            response: error.response,
+            data: error.data,
+            initDataLength: initData?.length,
+            userId: user?.id
+        });
         return false;
     }
 };

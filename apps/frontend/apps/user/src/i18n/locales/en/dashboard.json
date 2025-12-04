@@ -1,0 +1,49 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back",
+  "welcomeMessage": "Here's what's happening with your channels",
+  "quickStats": {
+    "title": "Quick Stats",
+    "totalChannels": "Total Channels",
+    "totalSubscribers": "Total Subscribers",
+    "totalPosts": "Total Posts",
+    "totalViews": "Total Views",
+    "activeChannels": "Active Channels",
+    "todayViews": "Today's Views",
+    "todayGrowth": "Today's Growth",
+    "weeklyGrowth": "Weekly Growth"
+  },
+  "quickAccess": {
+    "title": "Quick Access",
+    "analytics": "Analytics",
+    "analyticsDesc": "Detailed analytics and insights",
+    "channels": "Channels",
+    "channelsDesc": "Manage your Telegram channels",
+    "posts": "Posts",
+    "postsDesc": "View and manage posts",
+    "scheduler": "Scheduler",
+    "schedulerDesc": "Schedule posts and content"
+  },
+  "recentActivity": {
+    "title": "Recent Activity",
+    "noActivity": "No recent activity",
+    "viewAll": "View all activity"
+  },
+  "topChannels": {
+    "title": "Top Channels",
+    "bySubscribers": "By Subscribers",
+    "byViews": "By Views",
+    "byEngagement": "By Engagement"
+  },
+  "overview": {
+    "title": "Overview",
+    "channelOverview": "Channel Overview",
+    "performanceSummary": "Performance Summary",
+    "growthTrends": "Growth Trends"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No new notifications"
+  }
+}

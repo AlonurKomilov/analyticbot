@@ -56,6 +56,8 @@ class UserResponse(BaseModel):
     has_password: bool = False  # True if user can login with email/password
     telegram_id: int | None = None  # Telegram user ID if linked
     telegram_username: str | None = None  # Telegram username if linked
+    # Credit system
+    credit_balance: float = 0.0  # User's current credit balance
 
 
 class PasswordResetRequest(BaseModel):

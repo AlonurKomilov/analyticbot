@@ -82,7 +82,10 @@ class User:
     migration_profile: str | None = None  # Migration profile for special cases
 
     # Security
-    status: UserStatus = UserStatus.PENDING_VERIFICATION
+    # Default to ACTIVE since we don't have email verification system yet
+    # Telegram users are always active (verified by Telegram)
+    # Local users are active when they have a password
+    status: UserStatus = UserStatus.ACTIVE
     is_mfa_enabled: bool = False
     mfa_secret: str | None = None
 

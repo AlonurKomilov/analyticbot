@@ -1,0 +1,84 @@
+{
+  "title": "Аналитика",
+  "overview": {
+    "title": "Обзор аналитики",
+    "description": "Полная аналитика по всем вашим каналам"
+  },
+  "tabs": {
+    "channelOverview": "Обзор каналов",
+    "postDynamics": "Динамика постов",
+    "topPosts": "Топ постов",
+    "specialTimes": "Лучшее время",
+    "audienceInsights": "Аудитория",
+    "engagement": "Вовлечённость",
+    "growth": "Рост"
+  },
+  "metrics": {
+    "subscribers": "Подписчики",
+    "views": "Просмотры",
+    "reactions": "Реакции",
+    "comments": "Комментарии",
+    "shares": "Репосты",
+    "engagement": "Вовлечённость",
+    "engagementRate": "Уровень вовлечённости",
+    "reach": "Охват",
+    "impressions": "Показы",
+    "avgViews": "Средние просмотры",
+    "avgReactions": "Средние реакции",
+    "viewsPerPost": "Просмотров на пост",
+    "reactionsPerPost": "Реакций на пост",
+    "growth": "Рост",
+    "growthRate": "Темп роста",
+    "retention": "Удержание",
+    "churnRate": "Отток"
+  },
+  "charts": {
+    "subscriberGrowth": "Рост подписчиков",
+    "viewsTrend": "Динамика просмотров",
+    "engagementTrend": "Динамика вовлечённости",
+    "postPerformance": "Эффективность постов",
+    "audienceDemographics": "Демография аудитории",
+    "hourlyActivity": "Активность по часам",
+    "dailyActivity": "Активность по дням",
+    "weeklyTrend": "Недельный тренд",
+    "monthlyTrend": "Месячный тренд"
+  },
+  "topPosts": {
+    "title": "Топ постов",
+    "byViews": "По просмотрам",
+    "byReactions": "По реакциям",
+    "byEngagement": "По вовлечённости",
+    "byShares": "По репостам",
+    "period": "Период"
+  },
+  "specialTimes": {
+    "title": "Лучшее время для публикации",
+    "description": "Оптимальное время для постов на основе активности аудитории",
+    "bestDay": "Лучший день",
+    "bestHour": "Лучшее время",
+    "peakActivity": "Пик активности",
+    "heatmap": "Тепловая карта активности"
+  },
+  "comparison": {
+    "title": "Сравнение каналов",
+    "compareChannels": "Сравнить каналы",
+    "selectChannels": "Выберите каналы для сравнения",
+    "vsAverage": "vs. Среднее",
+    "vsPrevious": "vs. Прошлый период"
+  },
+  "export": {
+    "title": "Экспорт аналитики",
+    "format": "Формат",
+    "dateRange": "Диапазон дат",
+    "metrics": "Метрики для экспорта",
+    "exportPDF": "Экспорт PDF",
+    "exportCSV": "Экспорт CSV",
+    "exportExcel": "Экспорт Excel"
+  },
+  "filter": {
+    "channel": "Канал",
+    "allChannels": "Все каналы",
+    "dateRange": "Диапазон дат",
+    "metric": "Метрика"
+  }
+}

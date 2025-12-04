@@ -49,6 +49,7 @@ export const ROUTES = {
 
   // Payment Routes
   PAYMENT: '/payment',
+  CREDITS: '/credits',
   SUBSCRIPTION: '/payment/subscription',
   PAYMENT_HISTORY: '/payment/history',
   INVOICES: '/payment/invoices',
@@ -152,6 +153,15 @@ export const ROUTE_METADATA: Record<string, RouteMetadata> = {
     requiresAuth: true,
     icon: 'payment',
     breadcrumbs: ['Dashboard', 'Payment'],
+  },
+
+  CREDITS: {
+    path: ROUTES.CREDITS,
+    title: 'Credits',
+    description: 'View and manage your credits',
+    requiresAuth: true,
+    icon: 'monetization_on',
+    breadcrumbs: ['Dashboard', 'Credits'],
   },
 
   PROFILE: {

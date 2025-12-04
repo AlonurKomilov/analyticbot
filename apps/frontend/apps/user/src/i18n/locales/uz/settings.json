@@ -1,0 +1,142 @@
+{
+  "title": "Sozlamalar",
+  "subtitle": "Hisob va afzalliklarni boshqarish",
+  "tabs": {
+    "profile": "Profil",
+    "account": "Hisob",
+    "notifications": "Bildirishnomalar",
+    "appearance": "Ko'rinish",
+    "language": "Til",
+    "security": "Xavfsizlik",
+    "integrations": "Integratsiyalar",
+    "billing": "To'lov",
+    "api": "API"
+  },
+  "profile": {
+    "title": "Profil sozlamalari",
+    "avatar": "Avatar",
+    "changeAvatar": "Avatarni o'zgartirish",
+    "removeAvatar": "Avatarni o'chirish",
+    "name": "To'liq ism",
+    "email": "Email",
+    "phone": "Telefon raqami",
+    "bio": "Bio",
+    "timezone": "Vaqt zonasi",
+    "save": "Profilni saqlash",
+    "saved": "Profil muvaffaqiyatli saqlandi"
+  },
+  "account": {
+    "title": "Hisob sozlamalari",
+    "username": "Foydalanuvchi nomi",
+    "email": "Email",
+    "changeEmail": "Emailni o'zgartirish",
+    "deleteAccount": "Hisobni o'chirish",
+    "deleteAccountWarning": "Bu amal qaytarilmaydi. Barcha ma'lumotlaringiz butunlay o'chiriladi.",
+    "confirmDelete": "Tasdiqlash uchun 'O'CHIRISH' deb yozing"
+  },
+  "notifications": {
+    "title": "Bildirishnoma sozlamalari",
+    "email": {
+      "title": "Email bildirishnomalari",
+      "weeklyReport": "Haftalik analitika hisoboti",
+      "channelAlerts": "Kanal ogohlantirishlari",
+      "newFeatures": "Yangi funksiyalar va yangilanishlar",
+      "marketing": "Marketing va aksiyalar"
+    },
+    "push": {
+      "title": "Push bildirishnomalari",
+      "enabled": "Push bildirishnomalarni yoqish",
+      "subscriberMilestones": "Obunachi yutuqlari",
+      "postPerformance": "Post samaradorligi ogohlantirishlari",
+      "systemAlerts": "Tizim ogohlantirishlari"
+    },
+    "telegram": {
+      "title": "Telegram bildirishnomalari",
+      "enabled": "Telegram botni yoqish",
+      "dailyDigest": "Kunlik xulosa",
+      "instantAlerts": "Tezkor ogohlantirishlar"
+    }
+  },
+  "appearance": {
+    "title": "Ko'rinish",
+    "theme": "Mavzu",
+    "light": "Yorug'",
+    "dark": "Qorong'u",
+    "system": "Tizim",
+    "colorScheme": "Rang sxemasi",
+    "compactMode": "Ixcham rejim",
+    "animations": "Animatsiyalarni yoqish"
+  },
+  "language": {
+    "title": "Til sozlamalari",
+    "interface": "Interfeys tili",
+    "dateFormat": "Sana formati",
+    "timeFormat": "Vaqt formati",
+    "numberFormat": "Raqam formati"
+  },
+  "security": {
+    "title": "Xavfsizlik sozlamalari",
+    "password": {
+      "title": "Parol",
+      "change": "Parolni o'zgartirish",
+      "current": "Joriy parol",
+      "new": "Yangi parol",
+      "confirm": "Parolni tasdiqlang",
+      "updated": "Parol muvaffaqiyatli yangilandi"
+    },
+    "twoFactor": {
+      "title": "Ikki bosqichli autentifikatsiya",
+      "enabled": "2FA yoqilgan",
+      "disabled": "2FA o'chirilgan",
+      "enable": "2FA ni yoqish",
+      "disable": "2FA ni o'chirish",
+      "setup": "Ikki bosqichli autentifikatsiyani sozlash",
+      "backupCodes": "Zaxira kodlar"
+    },
+    "sessions": {
+      "title": "Faol sessiyalar",
+      "current": "Joriy sessiya",
+      "lastActive": "Oxirgi faollik",
+      "revokeAll": "Barcha sessiyalarni tugatish",
+      "revoke": "Tugatish"
+    },
+    "loginHistory": {
+      "title": "Kirish tarixi",
+      "date": "Sana",
+      "device": "Qurilma",
+      "location": "Joylashuv",
+      "status": "Holat"
+    }
+  },
+  "integrations": {
+    "title": "Integratsiyalar",
+    "telegram": {
+      "title": "Telegram",
+      "connected": "Ulangan",
+      "notConnected": "Ulanmagan",
+      "connect": "Telegramni ulash",
+      "disconnect": "Uzish"
+    }
+  },
+  "billing": {
+    "title": "To'lov va obuna",
+    "currentPlan": "Joriy reja",
+    "free": "Bepul",
+    "pro": "Pro",
+    "business": "Biznes",
+    "upgrade": "Yangilash",
+    "manage": "Obunani boshqarish",
+    "invoices": "Hisob-fakturalar",
+    "paymentMethod": "To'lov usuli"
+  },
+  "api": {
+    "title": "API sozlamalari",
+    "keys": "API kalitlari",
+    "createKey": "API kalit yaratish",
+    "keyName": "Kalit nomi",
+    "created": "Yaratilgan",
+    "lastUsed": "Oxirgi foydalanish",
+    "revoke": "Bekor qilish",
+    "documentation": "API hujjatlari"
+  }
+}

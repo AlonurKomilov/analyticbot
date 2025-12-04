@@ -1,0 +1,117 @@
+{
+  "title": "Postlar",
+  "subtitle": "Kanal postlarini ko'rish va boshqarish",
+  "allPosts": "Barcha postlar",
+  "scheduledPosts": "Rejalashtirilgan postlar",
+  "publishedPosts": "E'lon qilingan postlar",
+  "draftPosts": "Qoralamalar",
+  "list": {
+    "content": "Kontent",
+    "channel": "Kanal",
+    "views": "Ko'rishlar",
+    "reactions": "Reaksiyalar",
+    "comments": "Izohlar",
+    "shares": "Ulashishlar",
+    "publishedAt": "E'lon qilingan",
+    "scheduledFor": "Rejalashtirilgan",
+    "status": "Holat",
+    "actions": "Amallar"
+  },
+  "status": {
+    "published": "E'lon qilindi",
+    "scheduled": "Rejalashtirilgan",
+    "draft": "Qoralama",
+    "failed": "Xato",
+    "pending": "Kutilmoqda"
+  },
+  "details": {
+    "title": "Post tafsilotlari",
+    "content": "Kontent",
+    "media": "Media",
+    "statistics": "Statistika",
+    "engagement": "Faollik",
+    "reach": "Qamrov"
+  },
+  "stats": {
+    "totalViews": "Jami ko'rishlar",
+    "uniqueViews": "Noyob ko'rishlar",
+    "reactions": "Reaksiyalar",
+    "comments": "Izohlar",
+    "shares": "Ulashishlar",
+    "engagementRate": "Faollik darajasi",
+    "viewsGrowth": "Ko'rishlar o'sishi"
+  },
+  "create": {
+    "title": "Post yaratish",
+    "selectChannel": "Kanalni tanlang",
+    "content": "Kontent",
+    "contentPlaceholder": "Nima ulashmoqchisiz?",
+    "addMedia": "Media qo'shish",
+    "addPhoto": "Rasm qo'shish",
+    "addVideo": "Video qo'shish",
+    "addDocument": "Hujjat qo'shish",
+    "schedule": "Rejalashtirish",
+    "scheduleFor": "Uchun rejalashtirish",
+    "publishNow": "Hozir e'lon qilish",
+    "saveDraft": "Qoralama saqlash",
+    "preview": "Ko'rib chiqish"
+  },
+  "edit": {
+    "title": "Postni tahrirlash",
+    "save": "O'zgarishlarni saqlash",
+    "cancel": "Bekor qilish"
+  },
+  "delete": {
+    "title": "Postni o'chirish",
+    "confirm": "Rostdan ham bu postni o'chirmoqchimisiz?",
+    "warning": "Bu amalni qaytarib bo'lmaydi.",
+    "success": "Post o'chirildi",
+    "failed": "Postni o'chirishda xato"
+  },
+  "schedule": {
+    "title": "Postni rejalashtirish",
+    "date": "Sana",
+    "time": "Vaqt",
+    "timezone": "Vaqt zonasi",
+    "repeat": "Takrorlash",
+    "noRepeat": "Takrorlanmasin",
+    "daily": "Har kuni",
+    "weekly": "Har hafta",
+    "monthly": "Har oy",
+    "confirm": "Rejalashtirish",
+    "success": "Post rejalashtirildi",
+    "failed": "Postni rejalashtirishda xato"
+  },
+  "empty": {
+    "title": "Hozircha postlar yo'q",
+    "description": "Ulangan kanallardan postlar bu yerda ko'rinadi",
+    "scheduled": {
+      "title": "Rejalashtirilgan postlar yo'q",
+      "description": "Avtomatik e'lon qilish uchun postlarni rejalashtiring"
+    },
+    "drafts": {
+      "title": "Qoralamalar yo'q",
+      "description": "Keyinroq tugatish uchun postlarni qoralama sifatida saqlang"
+    }
+  },
+  "filter": {
+    "search": "Postlarni qidirish...",
+    "channel": "Kanal",
+    "allChannels": "Barcha kanallar",
+    "dateRange": "Sana oralig'i",
+    "status": "Holat",
+    "sortBy": "Saralash",
+    "sortByDate": "Sana bo'yicha",
+    "sortByViews": "Ko'rishlar bo'yicha",
+    "sortByEngagement": "Faollik bo'yicha"
+  },
+  "actions": {
+    "view": "Ko'rish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "duplicate": "Nusxa olish",
+    "reschedule": "Qayta rejalashtirish",
+    "viewOnTelegram": "Telegramda ko'rish",
+    "copyLink": "Havolani nusxalash"
+  }
+}

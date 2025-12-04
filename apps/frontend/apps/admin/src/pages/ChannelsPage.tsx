@@ -31,11 +31,14 @@ interface Channel {
   id: number;
   name: string;
   username: string;
-  user_id: number;
-  total_subscribers: number;
-  status: string;
+  owner_id: number;
+  owner_username: string | null;
+  subscriber_count: number;
+  is_active: boolean;
   created_at: string;
-  last_sync: string | null;
+  last_activity: string | null;
+  total_posts: number;
+  total_views: number;
 }
 
 const ChannelsPage: React.FC = () => {
@@ -65,13 +68,12 @@ const ChannelsPage: React.FC = () => {
       channel.username?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'success';
-      case 'suspended': return 'error';
-      case 'syncing': return 'info';
-      default: return 'default';
-    }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'success' : 'error';
+  };
+
+  const getStatusLabel = (isActive: boolean) => {
+    return isActive ? 'active' : 'suspended';
   };
 
   if (loading) {
@@ -136,15 +138,15 @@ const ChannelsPage: React.FC = () => {
                   <TableCell>{channel.id}</TableCell>
                   <TableCell sx={{ fontWeight: 500 }}>{channel.name || '-'}</TableCell>
                   <TableCell>@{channel.username || '-'}</TableCell>
-                  <TableCell>{channel.user_id}</TableCell>
+                  <TableCell>{channel.owner_id}</TableCell>
                   <TableCell>
-                    {channel.total_subscribers?.toLocaleString() || 0}
+                    {channel.subscriber_count?.toLocaleString() || 0}
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={channel.status || 'active'}
+                      label={getStatusLabel(channel.is_active)}
                       size="small"
-                      color={getStatusColor(channel.status) as any}
+                      color={getStatusColor(channel.is_active) as any}
                     />
                   </TableCell>
                   <TableCell>
@@ -153,8 +155,8 @@ const ChannelsPage: React.FC = () => {
                       : '-'}
                   </TableCell>
                   <TableCell>
-                    {channel.last_sync
-                      ? format(new Date(channel.last_sync), 'MMM d, HH:mm')
+                    {channel.last_activity
+                      ? format(new Date(channel.last_activity), 'MMM d, HH:mm')
                       : 'Never'}
                   </TableCell>
                   <TableCell align="right">

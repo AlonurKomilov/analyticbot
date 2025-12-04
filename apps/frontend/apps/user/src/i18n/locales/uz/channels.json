@@ -1,0 +1,90 @@
+{
+  "title": "Kanallar",
+  "subtitle": "Telegram kanallarni boshqarish",
+  "addChannel": "Kanal qo'shish",
+  "connectChannel": "Kanal ulash",
+  "myChannels": "Mening kanallarim",
+  "allChannels": "Barcha kanallar",
+  "activeChannels": "Faol kanallar",
+  "inactiveChannels": "Nofaol kanallar",
+  "list": {
+    "name": "Kanal nomi",
+    "subscribers": "Obunachilar",
+    "posts": "Postlar",
+    "views": "Ko'rishlar",
+    "engagement": "Faollik",
+    "lastPost": "Oxirgi post",
+    "status": "Holat",
+    "actions": "Amallar"
+  },
+  "details": {
+    "title": "Kanal tafsilotlari",
+    "overview": "Umumiy ko'rinish",
+    "statistics": "Statistika",
+    "posts": "Postlar",
+    "settings": "Sozlamalar",
+    "description": "Tavsif",
+    "username": "Foydalanuvchi nomi",
+    "createdAt": "Yaratilgan sana",
+    "lastActivity": "Oxirgi faollik",
+    "type": "Kanal turi",
+    "public": "Ommaviy",
+    "private": "Shaxsiy"
+  },
+  "stats": {
+    "totalSubscribers": "Jami obunachilar",
+    "newSubscribers": "Yangi obunachilar",
+    "lostSubscribers": "Yo'qotilgan obunachilar",
+    "netGrowth": "Sof o'sish",
+    "totalViews": "Jami ko'rishlar",
+    "avgViewsPerPost": "O'rtacha ko'rishlar/post",
+    "totalReactions": "Jami reaksiyalar",
+    "avgReactionsPerPost": "O'rtacha reaksiyalar/post"
+  },
+  "actions": {
+    "view": "Ko'rish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "disconnect": "Uzish",
+    "refresh": "Yangilash",
+    "viewOnTelegram": "Telegramda ko'rish",
+    "copyLink": "Havolani nusxalash",
+    "exportData": "Ma'lumotlarni eksport qilish"
+  },
+  "connect": {
+    "title": "Kanal ulash",
+    "description": "Analitikani kuzatishni boshlash uchun kanal qo'shing",
+    "step1": "Botni admin sifatida qo'shing",
+    "step1Desc": "@AnalyticBot ni kanalingizga administrator sifatida qo'shing",
+    "step2": "Ruxsatlarni bering",
+    "step2Desc": "Botga xabarlarni o'qish ruxsatini bering",
+    "step3": "Ulanishni tasdiqlang",
+    "step3Desc": "Sozlashni yakunlash uchun tasdiqlash tugmasini bosing",
+    "channelUsername": "Kanal nomi",
+    "channelUsernamePlaceholder": "@sizningkanal",
+    "verify": "Ulanishni tekshirish",
+    "verifying": "Tekshirilmoqda...",
+    "success": "Kanal muvaffaqiyatli ulandi!",
+    "failed": "Kanalni ulashda xato"
+  },
+  "disconnect": {
+    "title": "Kanalni uzish",
+    "confirm": "Rostdan ham bu kanalni uzmoqchimisiz?",
+    "warning": "Barcha analitika ma'lumotlari saqlanadi, lekin yangi ma'lumotlar yig'ilmaydi.",
+    "success": "Kanal uzildi",
+    "failed": "Kanalni uzishda xato"
+  },
+  "empty": {
+    "title": "Hozircha kanallar yo'q",
+    "description": "Analitikani kuzatishni boshlash uchun birinchi Telegram kanalingizni ulang",
+    "action": "Kanal ulash"
+  },
+  "filter": {
+    "search": "Kanallarni qidirish...",
+    "sortBy": "Saralash",
+    "sortByName": "Nom bo'yicha",
+    "sortBySubscribers": "Obunachilar bo'yicha",
+    "sortByViews": "Ko'rishlar bo'yicha",
+    "sortByRecent": "So'nggi faollik bo'yicha"
+  }
+}

@@ -21,6 +21,9 @@ export * from './ui';
 // Navigation
 export * from './navigation';
 
+// Language Switcher
+export * from './LanguageSwitcher';
+
 // ========================================
 // Convenient Aliases (matching legacy common/index.ts)
 // ========================================

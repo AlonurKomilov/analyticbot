@@ -1,0 +1,90 @@
+{
+  "title": "Каналы",
+  "subtitle": "Управление Telegram-каналами",
+  "addChannel": "Добавить канал",
+  "connectChannel": "Подключить канал",
+  "myChannels": "Мои каналы",
+  "allChannels": "Все каналы",
+  "activeChannels": "Активные каналы",
+  "inactiveChannels": "Неактивные каналы",
+  "list": {
+    "name": "Название канала",
+    "subscribers": "Подписчики",
+    "posts": "Посты",
+    "views": "Просмотры",
+    "engagement": "Вовлечённость",
+    "lastPost": "Последний пост",
+    "status": "Статус",
+    "actions": "Действия"
+  },
+  "details": {
+    "title": "Детали канала",
+    "overview": "Обзор",
+    "statistics": "Статистика",
+    "posts": "Посты",
+    "settings": "Настройки",
+    "description": "Описание",
+    "username": "Имя пользователя",
+    "createdAt": "Дата создания",
+    "lastActivity": "Последняя активность",
+    "type": "Тип канала",
+    "public": "Публичный",
+    "private": "Приватный"
+  },
+  "stats": {
+    "totalSubscribers": "Всего подписчиков",
+    "newSubscribers": "Новые подписчики",
+    "lostSubscribers": "Отписавшиеся",
+    "netGrowth": "Чистый рост",
+    "totalViews": "Всего просмотров",
+    "avgViewsPerPost": "Ср. просмотров/пост",
+    "totalReactions": "Всего реакций",
+    "avgReactionsPerPost": "Ср. реакций/пост"
+  },
+  "actions": {
+    "view": "Просмотр",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "disconnect": "Отключить",
+    "refresh": "Обновить",
+    "viewOnTelegram": "Открыть в Telegram",
+    "copyLink": "Копировать ссылку",
+    "exportData": "Экспорт данных"
+  },
+  "connect": {
+    "title": "Подключить канал",
+    "description": "Добавьте канал для начала отслеживания аналитики",
+    "step1": "Добавьте бота как администратора",
+    "step1Desc": "Добавьте @AnalyticBot в канал как администратора",
+    "step2": "Предоставьте разрешения",
+    "step2Desc": "Дайте боту разрешение на чтение сообщений",
+    "step3": "Подтвердите подключение",
+    "step3Desc": "Нажмите проверить для завершения настройки",
+    "channelUsername": "Имя канала",
+    "channelUsernamePlaceholder": "@vashkanal",
+    "verify": "Проверить подключение",
+    "verifying": "Проверка...",
+    "success": "Канал успешно подключен!",
+    "failed": "Не удалось подключить канал"
+  },
+  "disconnect": {
+    "title": "Отключить канал",
+    "confirm": "Вы уверены, что хотите отключить этот канал?",
+    "warning": "Все данные аналитики сохранятся, но новые данные собираться не будут.",
+    "success": "Канал отключен",
+    "failed": "Не удалось отключить канал"
+  },
+  "empty": {
+    "title": "Пока нет каналов",
+    "description": "Подключите первый Telegram-канал для начала отслеживания аналитики",
+    "action": "Подключить канал"
+  },
+  "filter": {
+    "search": "Поиск каналов...",
+    "sortBy": "Сортировать по",
+    "sortByName": "Названию",
+    "sortBySubscribers": "Подписчикам",
+    "sortByViews": "Просмотрам",
+    "sortByRecent": "Недавней активности"
+  }
+}

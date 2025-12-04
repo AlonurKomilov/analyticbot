@@ -82,9 +82,19 @@ const ProfilePage: React.FC = () => {
         clearProfileMessages();
     };
 
-    // Handle login method update success
-    const handleLoginMethodSuccess = () => {
+    // Handle login method update success - reload user data
+    const handleLoginMethodSuccess = async () => {
         setProfileSuccess('Login method updated successfully!');
+        // Reload user data from API to get updated has_password status
+        try {
+            const { apiClient } = await import('@/api/client');
+            const userData = await apiClient.get('/auth/me');
+            if (userData) {
+                updateUser(userData as any);
+            }
+        } catch (err) {
+            console.error('Failed to refresh user data:', err);
+        }
     };
 
     return (

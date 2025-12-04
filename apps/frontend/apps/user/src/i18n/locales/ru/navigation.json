@@ -1,0 +1,67 @@
+{
+  "sidebar": {
+    "dashboard": "Панель управления",
+    "analytics": "Аналитика",
+    "channels": "Каналы",
+    "posts": "Посты",
+    "scheduler": "Планировщик",
+    "reports": "Отчеты",
+    "settings": "Настройки",
+    "help": "Помощь",
+    "logout": "Выход"
+  },
+  "header": {
+    "search": "Поиск...",
+    "notifications": "Уведомления",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "logout": "Выход"
+  },
+  "breadcrumb": {
+    "home": "Главная",
+    "dashboard": "Панель управления",
+    "analytics": "Аналитика",
+    "channels": "Каналы",
+    "posts": "Посты",
+    "settings": "Настройки"
+  },
+  "footer": {
+    "copyright": "© {{year}} AnalyticBot. Все права защищены.",
+    "privacy": "Политика конфиденциальности",
+    "terms": "Условия использования",
+    "contact": "Связаться с нами"
+  },
+  "userMenu": {
+    "profile": "Мой профиль",
+    "settings": "Настройки",
+    "billing": "Оплата",
+    "help": "Помощь и поддержка",
+    "logout": "Выход"
+  },
+  "mobile": {
+    "menu": "Меню",
+    "close": "Закрыть"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Панель управления",
+      "description": "Обзор эффективности ваших каналов"
+    },
+    "analytics": {
+      "title": "Аналитика",
+      "description": "Подробная аналитика и статистика"
+    },
+    "channels": {
+      "title": "Каналы",
+      "description": "Управление Telegram-каналами"
+    },
+    "posts": {
+      "title": "Посты",
+      "description": "Просмотр и управление постами"
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Управление настройками аккаунта"
+    }
+  }
+}

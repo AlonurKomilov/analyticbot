@@ -182,7 +182,12 @@ class FeedbackCollectionService:
     async def collect_feedback_batch(self, feedback_list: list[UserFeedback]) -> dict[str, Any]:
         """Collect a batch of feedback"""
         try:
-            results = {"total": len(feedback_list), "collected": 0, "rejected": 0, "errors": []}
+            results = {
+                "total": len(feedback_list),
+                "collected": 0,
+                "rejected": 0,
+                "errors": [],
+            }
 
             for feedback in feedback_list:
                 success = await self.collect_feedback(feedback)
@@ -209,7 +214,9 @@ class FeedbackCollectionService:
             return {"error": str(e)}
 
     async def get_feedback_analysis(
-        self, content_id: str | None = None, time_range: tuple[datetime, datetime] | None = None
+        self,
+        content_id: str | None = None,
+        time_range: tuple[datetime, datetime] | None = None,
     ) -> dict[str, Any]:
         """Get analysis of collected feedback"""
         try:
@@ -273,7 +280,10 @@ class FeedbackCollectionService:
             # Check required fields
             for field in self.validation_config.required_fields:
                 if not getattr(feedback, field, None):
-                    return {"is_valid": False, "reason": f"Missing required field: {field}"}
+                    return {
+                        "is_valid": False,
+                        "reason": f"Missing required field: {field}",
+                    }
 
             # Check content type
             if feedback.content_type not in self.validation_config.allowed_content_types:
@@ -289,7 +299,10 @@ class FeedbackCollectionService:
                     <= feedback.rating
                     <= self.validation_config.max_rating
                 ):
-                    return {"is_valid": False, "reason": f"Rating out of range: {feedback.rating}"}
+                    return {
+                        "is_valid": False,
+                        "reason": f"Rating out of range: {feedback.rating}",
+                    }
 
             # Validate feedback text length
             if feedback.feedback_text:
@@ -300,7 +313,10 @@ class FeedbackCollectionService:
                         "reason": f"Text too short: {text_length} characters",
                     }
                 if text_length > self.validation_config.max_text_length:
-                    return {"is_valid": False, "reason": f"Text too long: {text_length} characters"}
+                    return {
+                        "is_valid": False,
+                        "reason": f"Text too long: {text_length} characters",
+                    }
 
             # Spam detection
             if self.validation_config.spam_detection_enabled and feedback.feedback_text:
@@ -335,7 +351,10 @@ class FeedbackCollectionService:
 
             # Feedback type appropriateness (15%)
             type_score = 0.8  # Default good score
-            if feedback.feedback_type in [FeedbackType.EXPLICIT_RATING, FeedbackType.CORRECTION]:
+            if feedback.feedback_type in [
+                FeedbackType.EXPLICIT_RATING,
+                FeedbackType.CORRECTION,
+            ]:
                 type_score = 1.0  # High value feedback types
             score += type_score * 0.15
             weight_sum += 0.15
@@ -522,10 +541,12 @@ class FeedbackCollectionService:
                 }
 
             # User engagement analysis
-            unique_users = set(f.user_id for f in feedback_list)
+            unique_users = {f.user_id for f in feedback_list}
             analysis["user_engagement"] = {
                 "unique_users": len(unique_users),
-                "feedback_per_user": len(feedback_list) / len(unique_users) if unique_users else 0,
+                "feedback_per_user": (
+                    len(feedback_list) / len(unique_users) if unique_users else 0
+                ),
             }
 
             return analysis
@@ -636,7 +657,7 @@ class FeedbackCollectionService:
             "status": "healthy" if self.is_running else "stopped",
             "is_running": self.is_running,
             "pending_feedback": len(self.pending_feedback),
-            "queue_size": self.processing_queue.qsize()
-            if hasattr(self.processing_queue, "qsize")
-            else 0,
+            "queue_size": (
+                self.processing_queue.qsize() if hasattr(self.processing_queue, "qsize") else 0
+            ),
         }

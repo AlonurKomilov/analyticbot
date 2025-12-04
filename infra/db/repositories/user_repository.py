@@ -58,7 +58,17 @@ class AsyncpgUserRepository(IUserRepository):
         auth_provider = user_data.get("auth_provider", "local")  # Default to 'local'
 
         row = await self._pool.fetchrow(
-            query, user_id, username, email, full_name, hashed_password, role, status, plan_id, telegram_id, auth_provider
+            query,
+            user_id,
+            username,
+            email,
+            full_name,
+            hashed_password,
+            role,
+            status,
+            plan_id,
+            telegram_id,
+            auth_provider,
         )
         return dict(row) if row else {}
 
@@ -96,7 +106,7 @@ class AsyncpgUserRepository(IUserRepository):
 
         query = f"""
             UPDATE users
-            SET {', '.join(set_clauses)}
+            SET {", ".join(set_clauses)}
             WHERE id = ${param_count}
         """
         values.append(user_id)
@@ -255,11 +265,9 @@ class SQLAlchemyUserRepository(IUserRepository):
 
     async def get_user_by_id(self, user_id: int) -> dict | None:
         """Get user by ID - placeholder for SQLAlchemy implementation"""
-        pass
 
     async def get_user_by_telegram_id(self, telegram_id: int) -> dict | None:
         """Get user by Telegram ID"""
-        pass
 
     async def create_user(self, user_data: dict) -> dict:
         """Create new user"""

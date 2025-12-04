@@ -467,7 +467,7 @@ class RollbackManager:
                     "timestamp": datetime.utcnow().isoformat(),
                     "event": "execution_completed",
                     "success": success,
-                    "duration": rollback.duration.total_seconds() if rollback.duration else 0,
+                    "duration": (rollback.duration.total_seconds() if rollback.duration else 0),
                 }
             )
 

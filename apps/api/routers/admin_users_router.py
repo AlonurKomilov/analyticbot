@@ -20,7 +20,10 @@ from apps.api.middleware.auth import (
     require_admin_user,
 )
 from apps.api.services.channel_management_service import ChannelManagementService
-from apps.di.analytics_container import get_channel_management_service, get_database_pool
+from apps.di.analytics_container import (
+    get_channel_management_service,
+    get_database_pool,
+)
 from apps.shared.performance import performance_timer
 
 logger = logging.getLogger(__name__)
@@ -96,7 +99,8 @@ async def get_all_users(
         pool = await get_database_pool()
 
         async with pool.acquire() as conn:
-            users = await conn.fetch("""
+            users = await conn.fetch(
+                """
                 SELECT 
                     u.id,
                     u.email,
@@ -111,7 +115,10 @@ async def get_all_users(
                 GROUP BY u.id, u.email, u.username, u.role, u.status, u.created_at, u.last_login
                 ORDER BY u.created_at DESC
                 LIMIT $1 OFFSET $2
-            """, limit, offset)
+            """,
+                limit,
+                offset,
+            )
 
             return [
                 AdminUserInfo(
@@ -172,9 +179,11 @@ async def get_user_channels_admin(
                     "username": getattr(channel, "username", None),
                     "is_active": channel.is_active,
                     "subscriber_count": channel.subscriber_count,
-                    "created_at": channel.created_at.isoformat()
-                    if channel.created_at
-                    else datetime.now().isoformat(),
+                    "created_at": (
+                        channel.created_at.isoformat()
+                        if channel.created_at
+                        else datetime.now().isoformat()
+                    ),
                     "total_posts": getattr(channel, "total_posts", 0),
                     "total_views": getattr(channel, "total_views", 0),
                 }

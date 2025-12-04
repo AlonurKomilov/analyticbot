@@ -71,7 +71,11 @@ async def main():
     import psycopg2
 
     conn = psycopg2.connect(
-        host="localhost", port=10100, database="analytic_bot", user="analytic", password="change_me"
+        host="localhost",
+        port=10100,
+        database="analytic_bot",
+        user="analytic",
+        password="change_me",
     )
 
     cur = conn.cursor()

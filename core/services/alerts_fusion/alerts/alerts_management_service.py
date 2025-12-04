@@ -18,7 +18,11 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from core.ports.repository_ports import ChannelDailyRepository, ChannelRepository, PostRepository
+from core.ports.repository_ports import (
+    ChannelDailyRepository,
+    ChannelRepository,
+    PostRepository,
+)
 
 from ..protocols import AlertsManagementProtocol
 
@@ -268,7 +272,7 @@ class AlertsManagementService(AlertsManagementProtocol):
                 "total_channels": len(channels),
                 "raw_alerts": len(all_alerts),
                 "aggregated_alerts": aggregated,
-                "channels_with_alerts": len(set(a["channel_id"] for a in all_alerts)),
+                "channels_with_alerts": len({a["channel_id"] for a in all_alerts}),
                 "status": "alerts_aggregated",
             }
 
@@ -416,7 +420,7 @@ class AlertsManagementService(AlertsManagementProtocol):
 
             posts_count = await self._posts.count(channel_id, start_dt, end_dt)
             total_views = await self._posts.sum_views(channel_id, start_dt, end_dt)
-            top_posts = await self._posts.top_by_views(channel_id, start_dt, end_dt, 10)
+            await self._posts.top_by_views(channel_id, start_dt, end_dt, 10)
 
             # Create mock posts structure for compatibility
             posts = [
@@ -699,7 +703,10 @@ class AlertsManagementService(AlertsManagementProtocol):
             }
 
     async def _check_engagement_alerts(
-        self, channel_id: int, current_metrics: dict[str, Any], alert_config: dict[str, Any]
+        self,
+        channel_id: int,
+        current_metrics: dict[str, Any],
+        alert_config: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Check for engagement-related alerts with dynamic thresholds"""
         try:
@@ -759,7 +766,10 @@ class AlertsManagementService(AlertsManagementProtocol):
             return []
 
     async def _check_growth_alerts(
-        self, channel_id: int, current_metrics: dict[str, Any], alert_config: dict[str, Any]
+        self,
+        channel_id: int,
+        current_metrics: dict[str, Any],
+        alert_config: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Check for growth-related alerts with dynamic thresholds"""
         try:
@@ -770,7 +780,7 @@ class AlertsManagementService(AlertsManagementProtocol):
 
             # Get growth rate from metrics
             growth_rate = current_metrics.get("growth_rate", 0)
-            current_subscribers = current_metrics.get("current_followers", 0)
+            current_metrics.get("current_followers", 0)
 
             # Check for negative or stagnant growth
             if growth_rate < 0:
@@ -809,7 +819,10 @@ class AlertsManagementService(AlertsManagementProtocol):
             return []
 
     async def _check_performance_alerts(
-        self, channel_id: int, current_metrics: dict[str, Any], alert_config: dict[str, Any]
+        self,
+        channel_id: int,
+        current_metrics: dict[str, Any],
+        alert_config: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Check for performance-related alerts with dynamic thresholds"""
         try:
@@ -819,7 +832,7 @@ class AlertsManagementService(AlertsManagementProtocol):
             thresholds = await self._get_channel_dynamic_thresholds(channel_id)
 
             # Get current metrics
-            post_count_24h = current_metrics.get("post_count_24h", 0)
+            current_metrics.get("post_count_24h", 0)
             avg_views = current_metrics.get("avg_views", 0)
             content_quality = current_metrics.get("content_quality", 0)
 
@@ -886,7 +899,10 @@ class AlertsManagementService(AlertsManagementProtocol):
             return []
 
     async def _check_statistical_anomalies(
-        self, channel_id: int, current_metrics: dict[str, Any], alert_config: dict[str, Any]
+        self,
+        channel_id: int,
+        current_metrics: dict[str, Any],
+        alert_config: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Check for statistical anomalies"""
         try:
@@ -1381,7 +1397,13 @@ class AlertsManagementService(AlertsManagementProtocol):
         self, alerts: list[dict[str, Any]], min_severity: str
     ) -> list[dict[str, Any]]:
         """Filter alerts by minimum severity level (always allows success alerts)"""
-        severity_order = {"low": 0, "medium": 1, "high": 2, "critical": 3, "success": 999}
+        severity_order = {
+            "low": 0,
+            "medium": 1,
+            "high": 2,
+            "critical": 3,
+            "success": 999,
+        }
         min_level = severity_order.get(min_severity, 1)
 
         filtered = [
@@ -1658,7 +1680,7 @@ class AlertsManagementService(AlertsManagementProtocol):
                 }
 
             # Extract time series
-            dates = [r["date"] for r in results]
+            [r["date"] for r in results]
             views_series = [float(r["views"] or 0) for r in results]
             engagement_series = [float(r["engagement_rate"] or 0) for r in results]
             subscriber_series = [float(r["subscribers"] or 0) for r in results]

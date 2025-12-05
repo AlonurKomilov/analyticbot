@@ -81,8 +81,6 @@ class RetryableError(Exception):
 class NonRetryableError(Exception):
     """Base class for non-retryable errors"""
 
-    pass
-
 
 def categorize_error(error: Exception) -> RetryErrorCategory:
     """
@@ -120,7 +118,12 @@ def categorize_error(error: Exception) -> RetryErrorCategory:
         return RetryErrorCategory.TRANSIENT_NETWORK
 
     # Permanent errors (do not retry)
-    if error_name in ("UserDeactivatedError", "UserDeactivatedBanError", "AuthKeyError", "SessionPasswordNeededError") or isinstance(
+    if error_name in (
+        "UserDeactivatedError",
+        "UserDeactivatedBanError",
+        "AuthKeyError",
+        "SessionPasswordNeededError",
+    ) or isinstance(
         error,
         (
             UserDeactivatedError,
@@ -385,9 +388,7 @@ class RetryStatistics:
             "successful_retries": self.successful_retries,
             "failed_retries": self.failed_retries,
             "success_rate": (
-                self.successful_retries / self.total_retries
-                if self.total_retries > 0
-                else 0.0
+                self.successful_retries / self.total_retries if self.total_retries > 0 else 0.0
             ),
             "errors_by_category": dict(self.errors_by_category),
         }

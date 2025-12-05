@@ -162,9 +162,11 @@ class ModelUpdateService(ModelUpdateProtocol):
                     "current_step": progress.current_step,
                     "success": progress.success,
                     "error_message": progress.error_message,
-                    "estimated_completion": progress.estimated_completion.isoformat()
-                    if progress.estimated_completion
-                    else None,
+                    "estimated_completion": (
+                        progress.estimated_completion.isoformat()
+                        if progress.estimated_completion
+                        else None
+                    ),
                 }
             return None
 
@@ -177,7 +179,11 @@ class ModelUpdateService(ModelUpdateProtocol):
         return await self.executor.cancel_deployment(execution_id, reason)
 
     async def trigger_rollback(
-        self, model_id: str, target_version: str, reason: str, strategy: str | None = None
+        self,
+        model_id: str,
+        target_version: str,
+        reason: str,
+        strategy: str | None = None,
     ) -> str | None:
         """Trigger manual rollback"""
         from .rollback_manager import RollbackStrategy
@@ -211,7 +217,7 @@ class ModelUpdateService(ModelUpdateProtocol):
                     "from_version": rollback.from_version,
                     "to_version": rollback.to_version,
                     "triggered_at": rollback.triggered_at.isoformat(),
-                    "duration": rollback.duration.total_seconds() if rollback.duration else None,
+                    "duration": (rollback.duration.total_seconds() if rollback.duration else None),
                     "error_message": rollback.error_message,
                 }
             return None
@@ -233,8 +239,8 @@ class ModelUpdateService(ModelUpdateProtocol):
                     "strategy": exec.plan.strategy.value,
                     "status": exec.status.value,
                     "started_at": exec.started_at.isoformat(),
-                    "completed_at": exec.completed_at.isoformat() if exec.completed_at else None,
-                    "duration": exec.duration.total_seconds() if exec.duration else None,
+                    "completed_at": (exec.completed_at.isoformat() if exec.completed_at else None),
+                    "duration": (exec.duration.total_seconds() if exec.duration else None),
                     "success": exec.progress.success,
                     "rollback_triggered": exec.rollback_triggered,
                 }
@@ -261,7 +267,7 @@ class ModelUpdateService(ModelUpdateProtocol):
                     "from_version": rollback.from_version,
                     "to_version": rollback.to_version,
                     "triggered_at": rollback.triggered_at.isoformat(),
-                    "duration": rollback.duration.total_seconds() if rollback.duration else None,
+                    "duration": (rollback.duration.total_seconds() if rollback.duration else None),
                 }
                 for rollback in history
             ]
@@ -297,12 +303,12 @@ class ModelUpdateService(ModelUpdateProtocol):
                 "active_rollbacks": len(active_rollbacks),
                 "recent_deployments": len(recent_deployments),
                 "recent_rollbacks": len(recent_rollbacks),
-                "last_deployment": recent_deployments[0].started_at.isoformat()
-                if recent_deployments
-                else None,
-                "last_rollback": recent_rollbacks[0].triggered_at.isoformat()
-                if recent_rollbacks
-                else None,
+                "last_deployment": (
+                    recent_deployments[0].started_at.isoformat() if recent_deployments else None
+                ),
+                "last_rollback": (
+                    recent_rollbacks[0].triggered_at.isoformat() if recent_rollbacks else None
+                ),
                 "rollback_monitoring_enabled": model_id in self.rollback_manager.monitored_models,
             }
 

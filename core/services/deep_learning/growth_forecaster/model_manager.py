@@ -117,7 +117,7 @@ class ModelManager(ModelManagerProtocol):
             # Prepare model information for saving
             model_info = {
                 "model": self.current_model,
-                "version": self.model_metadata.version if self.model_metadata else "1.0.0",
+                "version": (self.model_metadata.version if self.model_metadata else "1.0.0"),
                 "created_at": datetime.utcnow().isoformat(),
                 "config": self.model_config.to_dict() if self.model_config else {},
                 "model_state": self._get_model_state_info(),
@@ -276,9 +276,11 @@ class ModelManager(ModelManagerProtocol):
                 "trainable_parameters": sum(
                     p.numel() for p in self.current_model.parameters() if p.requires_grad
                 ),
-                "device": str(next(self.current_model.parameters()).device)
-                if list(self.current_model.parameters())
-                else "unknown",
+                "device": (
+                    str(next(self.current_model.parameters()).device)
+                    if list(self.current_model.parameters())
+                    else "unknown"
+                ),
                 "training_mode": self.current_model.training,
             }
 

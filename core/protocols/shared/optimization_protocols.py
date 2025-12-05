@@ -19,7 +19,10 @@ class OptimizationProtocol(Protocol):
     """
 
     async def optimize_performance(
-        self, channel_id: int, metrics: dict[str, Any], optimization_type: str = "general"
+        self,
+        channel_id: int,
+        metrics: dict[str, Any],
+        optimization_type: str = "general",
     ) -> dict[str, Any]:
         """
         Optimize performance for given metrics.

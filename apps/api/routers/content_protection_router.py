@@ -27,7 +27,9 @@ from apps.bot.services.premium_emoji_service import PremiumEmojiService
 
 # ✅ Phase 3.3: Use DI container to get services
 from apps.di import get_content_protection_service
-from core.services.bot.content.content_protection_service import ContentProtectionService
+from core.services.bot.content.content_protection_service import (
+    ContentProtectionService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -128,9 +130,9 @@ async def add_image_watermark(
             return APIContentProtectionResponse(
                 protection_id=f"img_{watermarked_path.stem}",
                 protected=True,
-                protection_level=ProtectionLevel.PREMIUM
-                if user_tier != UserTier.FREE
-                else ProtectionLevel.BASIC,
+                protection_level=(
+                    ProtectionLevel.PREMIUM if user_tier != UserTier.FREE else ProtectionLevel.BASIC
+                ),
                 watermarked_file_url=f"/api/content-protection/files/{watermarked_path.name}",
                 processing_time_ms=int(protection_response.total_processing_time_ms),
                 timestamp=datetime.utcnow(),
@@ -286,7 +288,9 @@ async def format_custom_emoji_message(
         await _increment_feature_usage("custom_emojis", current_user["id"], len(request.emoji_ids))
 
         return CustomEmojiResponse(
-            formatted_text=formatted_text, entities=entities, emojis_used=len(request.emoji_ids)
+            formatted_text=formatted_text,
+            entities=entities,
+            emojis_used=len(request.emoji_ids),
         )
 
     except Exception as e:
@@ -392,15 +396,21 @@ async def get_feature_usage(user_id: int, current_user: dict = Depends(get_curre
             "theft_scans": limits.theft_scans_per_month,
         },
         "remaining": {
-            "watermarks": (limits.watermarks_per_month - usage["watermarks"])
-            if limits.watermarks_per_month
-            else "unlimited",
-            "custom_emojis": (limits.custom_emojis_per_month - usage["custom_emojis"])
-            if limits.custom_emojis_per_month
-            else "unlimited",
-            "theft_scans": (limits.theft_scans_per_month - usage["theft_scans"])
-            if limits.theft_scans_per_month
-            else "unlimited",
+            "watermarks": (
+                (limits.watermarks_per_month - usage["watermarks"])
+                if limits.watermarks_per_month
+                else "unlimited"
+            ),
+            "custom_emojis": (
+                (limits.custom_emojis_per_month - usage["custom_emojis"])
+                if limits.custom_emojis_per_month
+                else "unlimited"
+            ),
+            "theft_scans": (
+                (limits.theft_scans_per_month - usage["theft_scans"])
+                if limits.theft_scans_per_month
+                else "unlimited"
+            ),
         },
     }
 
@@ -444,7 +454,8 @@ async def _check_feature_usage(feature: str, user_id: int, user_tier: UserTier):
     feature_limit = getattr(limits, f"{feature}_per_month", None)
     if feature_limit is not None and usage.get(feature, 0) >= feature_limit:
         raise HTTPException(
-            status_code=429, detail=f"Monthly {feature} limit reached for {user_tier.value} tier"
+            status_code=429,
+            detail=f"Monthly {feature} limit reached for {user_tier.value} tier",
         )
 
 

@@ -163,9 +163,18 @@ class VideoWatermarkService:
 
         # Named colors (FFmpeg supports these)
         named_colors = {
-            "white", "black", "red", "green", "blue",
-            "yellow", "cyan", "magenta", "gray", "grey",
-            "orange", "purple",
+            "white",
+            "black",
+            "red",
+            "green",
+            "blue",
+            "yellow",
+            "cyan",
+            "magenta",
+            "gray",
+            "grey",
+            "orange",
+            "purple",
         }
 
         color_lower = color.lower().strip()

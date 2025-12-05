@@ -39,10 +39,12 @@ class CompetitiveAnalysisRequest(BaseModel):
 
     channel_id: int = Field(..., description="Channel ID to analyze")
     competitor_ids: list[int] | None = Field(
-        None, description="List of competitor channel IDs (optional - will auto-discover)"
+        None,
+        description="List of competitor channel IDs (optional - will auto-discover)",
     )
     analysis_depth: str = Field(
-        "standard", description="Analysis depth: 'basic', 'standard', or 'comprehensive'"
+        "standard",
+        description="Analysis depth: 'basic', 'standard', or 'comprehensive'",
     )
     max_competitors: int = Field(5, ge=1, le=10, description="Maximum competitors to analyze")
 

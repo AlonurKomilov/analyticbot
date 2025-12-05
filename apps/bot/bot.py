@@ -20,7 +20,11 @@ if app_settings.LOG_FORMAT == "json":
 
     class _JsonFormatter(logging.Formatter):
         def format(self, record: logging.LogRecord) -> str:
-            base = {"level": record.levelname, "name": record.name, "message": record.getMessage()}
+            base = {
+                "level": record.levelname,
+                "name": record.name,
+                "message": record.getMessage(),
+            }
             if record.exc_info:
                 base["exc_info"] = self.formatException(record.exc_info)
             return json.dumps(base, ensure_ascii=False)

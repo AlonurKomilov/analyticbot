@@ -25,9 +25,9 @@ class Colors:
 
 
 def print_header(text: str):
-    print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*70}{Colors.RESET}")
+    print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.RESET}")
     print(f"{Colors.BOLD}{Colors.BLUE}{text}{Colors.RESET}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{'='*70}{Colors.RESET}\n")
+    print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.RESET}\n")
 
 
 def print_success(text: str):
@@ -118,7 +118,11 @@ def main():
     print_header("2️⃣  Analytics Endpoints (Real API Mode)")
 
     analytics_tests = [
-        ("GET", f"/analytics/historical/overview/{DEMO_CHANNEL_ID}", "Historical Overview"),
+        (
+            "GET",
+            f"/analytics/historical/overview/{DEMO_CHANNEL_ID}",
+            "Historical Overview",
+        ),
         ("GET", f"/analytics/realtime/metrics/{DEMO_CHANNEL_ID}", "Real-time Metrics"),
         ("GET", f"/analytics/posts/dynamics/top-posts/{DEMO_CHANNEL_ID}", "Top Posts"),
         ("GET", f"/analytics/predictive/best-times/{DEMO_CHANNEL_ID}", "Best Times"),
@@ -151,7 +155,12 @@ def main():
             "Churn Predictor",
             {"user_id": DEMO_CHANNEL_ID, "channel_id": DEMO_CHANNEL_ID},
         ),
-        ("POST", "/ai/services/security/analyze", "Security Monitor", {"content": "Test content"}),
+        (
+            "POST",
+            "/ai/services/security/analyze",
+            "Security Monitor",
+            {"content": "Test content"},
+        ),
         ("GET", "/ai/services/churn/stats", "Churn Stats"),
     ]
 
@@ -213,7 +222,12 @@ def main():
             "Theft Detection",
             {"channel_id": DEMO_CHANNEL_ID},
         ),
-        ("POST", "/content/protection/watermark/text", "Text Watermark", {"text": "Test text"}),
+        (
+            "POST",
+            "/content/protection/watermark/text",
+            "Text Watermark",
+            {"text": "Test text"},
+        ),
     ]
 
     for method, path, desc, *data in protection_tests:

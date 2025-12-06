@@ -31,14 +31,16 @@ async def main():
 
     # Get a test channel
     try:
-        channel = await conn.fetchrow("""
+        channel = await conn.fetchrow(
+            """
             SELECT c.id, c.name, cms.mtproto_enabled
             FROM channels c
             LEFT JOIN channel_mtproto_settings cms
                 ON c.id = cms.channel_id
             WHERE c.user_id = 844338517
             LIMIT 1
-        """)
+        """
+        )
 
         if not channel:
             print("❌ No channels found for user 844338517")
@@ -123,11 +125,13 @@ async def main():
     print("   2. Go to Application > Local Storage")
     print("   3. Copy the 'token' value")
     print("   4. Run this command:")
-    print(f"""
+    print(
+        f"""
    curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
      http://localhost:11400/channels/admin-status/check-all \\
      | jq '.results | to_entries[] | select(.value.channel_id == {channel_id})'
-   """)
+   """
+    )
     print('   5. Verify the response includes: "mtproto_disabled": true')
 
     # Step 3: Re-enable MTProto

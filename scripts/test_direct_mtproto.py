@@ -27,20 +27,20 @@ async def test_mtproto():
 
         # Step 1: Get credentials from database
         print("1️⃣ Fetching credentials from database...")
-        conn = await asyncpg.connect('postgresql://analytic:change_me@localhost:10100/analytic_bot')
+        conn = await asyncpg.connect("postgresql://analytic:change_me@localhost:10100/analytic_bot")
 
         creds = await conn.fetchrow(
-            'SELECT telegram_api_id, telegram_api_hash, session_string FROM user_bot_credentials WHERE user_id = $1',
-            844338517
+            "SELECT telegram_api_id, telegram_api_hash, session_string FROM user_bot_credentials WHERE user_id = $1",
+            844338517,
         )
 
         if not creds:
             print("   ❌ No credentials found")
             return
 
-        api_id = creds['telegram_api_id']
-        encrypted_hash = creds['telegram_api_hash']
-        session_string = creds['session_string']
+        api_id = creds["telegram_api_id"]
+        encrypted_hash = creds["telegram_api_hash"]
+        session_string = creds["session_string"]
 
         print("   ✅ Found credentials")
         print(f"      API ID: {api_id}")
@@ -100,10 +100,14 @@ async def test_mtproto():
                 if messages:
                     print("   📝 Recent messages:")
                     for i, msg in enumerate(messages[:5], 1):  # type: ignore
-                        print(f"      {i}. ID: {msg.id} | Date: {msg.date.strftime('%Y-%m-%d %H:%M')}")
-                        print(f"         Views: {getattr(msg, 'views', 0):,} | Forwards: {getattr(msg, 'forwards', 0):,}")
+                        print(
+                            f"      {i}. ID: {msg.id} | Date: {msg.date.strftime('%Y-%m-%d %H:%M')}"
+                        )
+                        print(
+                            f"         Views: {getattr(msg, 'views', 0):,} | Forwards: {getattr(msg, 'forwards', 0):,}"
+                        )
                         if msg.message:
-                            preview = msg.message[:50].replace('\n', ' ')
+                            preview = msg.message[:50].replace("\n", " ")
                             print(f"         Text: {preview}...")
                         print()
 
@@ -120,7 +124,9 @@ async def test_mtproto():
                     print("📊 Data available:")
                     print(f"   • Total messages fetched: {len(messages)}")  # type: ignore
                     print(f"   • Total views: {sum(getattr(m, 'views', 0) for m in messages):,}")  # type: ignore
-                    print(f"   • Date range: {messages[-1].date.strftime('%Y-%m-%d')} to {messages[0].date.strftime('%Y-%m-%d')}")  # type: ignore
+                    print(
+                        f"   • Date range: {messages[-1].date.strftime('%Y-%m-%d')} to {messages[0].date.strftime('%Y-%m-%d')}"
+                    )  # type: ignore
                     print()
                     print("🚀 Next steps:")
                     print("   1. ✅ MTProto setup complete")
@@ -134,6 +140,7 @@ async def test_mtproto():
             except Exception as e:
                 print(f"   ❌ Error accessing channel: {e}")
                 import traceback
+
                 traceback.print_exc()
         else:
             print("   ❌ Client not authorized")
@@ -145,6 +152,7 @@ async def test_mtproto():
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 

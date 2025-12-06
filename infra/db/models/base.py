@@ -17,5 +17,3 @@ class Base(DeclarativeBase):
     - Enable Alembic migrations to detect all tables
     - Maintain consistent table structure
     """
-
-    pass

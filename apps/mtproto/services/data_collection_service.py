@@ -34,11 +34,9 @@ class TelegramClientAdapter:
 
     async def start(self) -> None:
         """Start client (no-op as client is already started)."""
-        pass
 
     async def stop(self) -> None:
         """Stop client (handled by UserMTProtoClient)."""
-        pass
 
     async def is_connected(self) -> bool:
         """Check if client is connected."""
@@ -64,7 +62,7 @@ class TelegramClientAdapter:
             entity = await self._client.get_entity(peer)
         except Exception as e1:
             logger.warning(f"Could not resolve entity for {peer}: {e1}")
-            
+
             # If peer is an int, try alternate formats
             if isinstance(peer, int):
                 # Try negative format
@@ -74,7 +72,7 @@ class TelegramClientAdapter:
                     logger.info(f"Resolved entity using negative ID: {negative_id}")
                 except Exception as e2:
                     logger.debug(f"Negative ID failed: {e2}")
-                    
+
                     # Try without 100 prefix if present
                     id_str = str(abs(peer))
                     if len(id_str) > 10 and id_str.startswith("100"):
@@ -84,7 +82,7 @@ class TelegramClientAdapter:
                             logger.info(f"Resolved entity using raw ID: {raw_id}")
                         except Exception as e3:
                             logger.debug(f"Raw ID failed: {e3}")
-        
+
         if entity:
             peer = entity  # Use resolved entity for iteration
         # Continue with original peer if resolution failed, might still work
@@ -112,7 +110,7 @@ class TelegramClientAdapter:
         entity = None
         try:
             entity = await self._client.get_entity(channel)
-        except Exception as e1:
+        except Exception:
             if isinstance(channel, int):
                 # Try alternate formats
                 try:
@@ -121,7 +119,7 @@ class TelegramClientAdapter:
                     id_str = str(abs(channel))
                     if len(id_str) > 10 and id_str.startswith("100"):
                         entity = await self._client.get_entity(int(id_str[3:]))
-        
+
         if not entity:
             entity = channel  # Fallback to original
 
@@ -539,7 +537,11 @@ class MTProtoDataCollectionService:
             # Try to log the error end state
             try:
                 await self._log_collection_end(
-                    user_id=user_id, total_messages=0, channels_synced=0, total_channels=0, errors=1
+                    user_id=user_id,
+                    total_messages=0,
+                    channels_synced=0,
+                    total_channels=0,
+                    errors=1,
                 )
             except Exception:
                 # Ignore any logging errors during error handling to avoid cascading failures
@@ -705,7 +707,7 @@ class MTProtoDataCollectionService:
 
                 if collection_duration > interval_seconds:
                     logger.warning(
-                        f"⚠️  Collection took {collection_duration/60:.1f}min, "
+                        f"⚠️  Collection took {collection_duration / 60:.1f}min, "
                         f"longer than configured interval of {interval_minutes}min! "
                         f"Collections will run back-to-back with {remaining_wait}s cooldown."
                     )
@@ -715,11 +717,11 @@ class MTProtoDataCollectionService:
                 for i in range(int(remaining_wait)):
                     if not should_run():
                         break
-                    
+
                     # Update heartbeat every 60 seconds during wait to prevent timeout
                     if process_manager and i % 60 == 0:
                         process_manager.heartbeat()
-                    
+
                     await asyncio.sleep(1)
 
         except Exception as e:

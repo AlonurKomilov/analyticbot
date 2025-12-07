@@ -67,7 +67,7 @@ async def lookup_channel(
 
     Lookup a Telegram channel by username and fetch all metadata automatically.
     Use this before adding a channel to preview what will be added.
-    
+
     Uses the **user's own bot/MTProto credentials** to check admin access.
 
     **Parameters:**
@@ -87,20 +87,20 @@ async def lookup_channel(
 
         # Validate and fetch channel info using system bot (for public channel info)
         validation_result = await telegram_service.validate_channel_by_username(username)
-        
+
         # Check admin access using USER'S OWN BOT credentials
         is_admin = None
         admin_error = None
         if validation_result.is_valid and validation_result.telegram_id:
             user_id = current_user["id"]
-            
+
             # Try to check admin using user's bot first, then MTProto
             is_admin, admin_error = await _check_user_admin_access(
                 user_id=user_id,
                 channel_id=validation_result.telegram_id,
                 channel_username=validation_result.username or username,
             )
-            
+
             if is_admin:
                 admin_error = None  # Clear any previous error if admin access confirmed
 
@@ -123,7 +123,8 @@ async def lookup_channel(
             is_verified=validation_result.is_verified,
             is_scam=validation_result.is_scam,
             is_admin=is_admin,
-            error_message=validation_result.error_message or (admin_error if not is_admin else None),
+            error_message=validation_result.error_message
+            or (admin_error if not is_admin else None),
         )
 
     except Exception as e:
@@ -142,16 +143,16 @@ async def _check_user_admin_access(
 ) -> tuple[bool, str | None]:
     """
     Check if user's own bot or MTProto account is admin in the channel.
-    
+
     This checks the user's credentials from user_bot_credentials table,
     NOT the system bot from environment.
     """
     from apps.di import get_container
-    
+
     try:
         container = get_container()
         pool = await container.database.asyncpg_pool()
-        
+
         # Get user's bot credentials
         async with pool.acquire() as conn:
             creds = await conn.fetchrow(
@@ -161,60 +162,78 @@ async def _check_user_admin_access(
                 FROM user_bot_credentials
                 WHERE user_id = $1 AND is_verified = true
                 """,
-                user_id
+                user_id,
             )
-        
+
         if not creds:
-            return False, "No verified bot credentials found. Please set up your bot in Settings."
-        
+            return (
+                False,
+                "No verified bot credentials found. Please set up your bot in Settings.",
+            )
+
         # Try checking with user's bot first
-        bot_token = creds['bot_token']
+        bot_token = creds["bot_token"]
         if bot_token:
             try:
                 # Decrypt bot token if encrypted
                 from core.services.encryption_service import get_encryption_service
+
                 encryption = get_encryption_service()
                 try:
                     decrypted_token = encryption.decrypt(bot_token)
                 except Exception:
                     decrypted_token = bot_token  # May not be encrypted
-                
+
                 is_admin = await _check_bot_admin_via_api(decrypted_token, channel_id)
                 if is_admin:
                     logger.info(f"User {user_id}'s bot is admin in channel {channel_id}")
                     return True, None
             except Exception as e:
                 logger.warning(f"Bot admin check failed: {e}")
-        
+
         # Try MTProto if enabled and session exists
-        if creds['mtproto_enabled'] and creds['session_string']:
+        if creds["mtproto_enabled"] and creds["session_string"]:
             try:
                 # Decrypt MTProto credentials
                 from core.services.encryption_service import get_encryption_service
+
                 encryption = get_encryption_service()
                 try:
-                    decrypted_api_hash = encryption.decrypt(creds['telegram_api_hash']) if creds['telegram_api_hash'] else None
-                    decrypted_session = encryption.decrypt(creds['session_string']) if creds['session_string'] else None
+                    decrypted_api_hash = (
+                        encryption.decrypt(creds["telegram_api_hash"])
+                        if creds["telegram_api_hash"]
+                        else None
+                    )
+                    decrypted_session = (
+                        encryption.decrypt(creds["session_string"])
+                        if creds["session_string"]
+                        else None
+                    )
                 except Exception as decrypt_err:
                     logger.warning(f"Failed to decrypt MTProto credentials: {decrypt_err}")
-                    decrypted_api_hash = creds['telegram_api_hash']
-                    decrypted_session = creds['session_string']
-                
+                    decrypted_api_hash = creds["telegram_api_hash"]
+                    decrypted_session = creds["session_string"]
+
                 is_admin = await _check_mtproto_admin(
-                    api_id=creds['telegram_api_id'],
+                    api_id=creds["telegram_api_id"],
                     api_hash=decrypted_api_hash,
                     session_string=decrypted_session,
                     channel_username=channel_username,
                 )
                 if is_admin:
-                    logger.info(f"User {user_id}'s MTProto account is admin in channel {channel_id}")
+                    logger.info(
+                        f"User {user_id}'s MTProto account is admin in channel {channel_id}"
+                    )
                     return True, None
             except Exception as e:
                 logger.warning(f"MTProto admin check failed: {e}")
-        
-        bot_name = creds.get('bot_username', 'your bot')
-        return False, f"Your bot (@{bot_name}) needs admin access. Add it as administrator to the channel."
-        
+
+        bot_name = creds.get("bot_username", "your bot")
+        return (
+            False,
+            f"Your bot (@{bot_name}) needs admin access. Add it as administrator to the channel.",
+        )
+
     except Exception as e:
         logger.error(f"Error checking user admin access: {e}")
         return False, f"Could not verify admin access: {str(e)}"
@@ -223,7 +242,7 @@ async def _check_user_admin_access(
 async def _check_bot_admin_via_api(bot_token: str, channel_id: int) -> bool:
     """Check if bot is admin using Telegram Bot API"""
     import aiohttp
-    
+
     # Convert channel_id to Bot API format (-100 prefix)
     # Our DB stores IDs with 100 prefix (e.g., 1002678877654)
     # Bot API expects: -1002678877654
@@ -237,14 +256,16 @@ async def _check_bot_admin_via_api(bot_token: str, channel_id: int) -> bool:
     else:
         # Raw ID without 100 prefix - add -100 prefix
         chat_id = int(f"-100{channel_id}")
-    
+
     logger.debug(f"Bot API admin check: channel_id={channel_id} -> chat_id={chat_id}")
-    
+
     url = f"https://api.telegram.org/bot{bot_token}/getChatAdministrators"
-    
+
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json={"chat_id": chat_id}, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.post(
+                url, json={"chat_id": chat_id}, timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     if data.get("ok"):
@@ -255,16 +276,20 @@ async def _check_bot_admin_via_api(bot_token: str, channel_id: int) -> bool:
                             if bot_resp.status == 200:
                                 bot_data = await bot_resp.json()
                                 bot_id = bot_data.get("result", {}).get("id")
-                                
+
                                 admins = data.get("result", [])
                                 for admin in admins:
                                     if admin.get("user", {}).get("id") == bot_id:
-                                        logger.info(f"Bot {bot_id} confirmed as admin in chat {chat_id}")
+                                        logger.info(
+                                            f"Bot {bot_id} confirmed as admin in chat {chat_id}"
+                                        )
                                         return True
                         return False
                 else:
                     error_data = await resp.text()
-                    logger.warning(f"Bot API getChatAdministrators failed: {resp.status} - {error_data}")
+                    logger.warning(
+                        f"Bot API getChatAdministrators failed: {resp.status} - {error_data}"
+                    )
                 return False
     except Exception as e:
         logger.warning(f"Bot API admin check failed: {e}")
@@ -281,32 +306,35 @@ async def _check_mtproto_admin(
     from telethon import TelegramClient
     from telethon.sessions import StringSession
     from telethon.tl.functions.channels import GetParticipantRequest
-    
+
     try:
         client = TelegramClient(StringSession(session_string), api_id, api_hash)
         await client.connect()
-        
+
         if not await client.is_user_authorized():
             await client.disconnect()
             return False
-        
+
         try:
             entity = await client.get_entity(channel_username)
             me = await client.get_me()
-            
+
             participant = await client(GetParticipantRequest(channel=entity, participant=me))
             participant_type = type(participant.participant).__name__
-            
-            is_admin = participant_type in ["ChannelParticipantAdmin", "ChannelParticipantCreator"]
-            
+
+            is_admin = participant_type in [
+                "ChannelParticipantAdmin",
+                "ChannelParticipantCreator",
+            ]
+
             await client.disconnect()
             return is_admin
-            
+
         except Exception as e:
             logger.warning(f"MTProto participant check failed: {e}")
             await client.disconnect()
             return False
-            
+
     except Exception as e:
         logger.warning(f"MTProto connection failed: {e}")
         return False
@@ -348,30 +376,38 @@ async def add_channel(
             # Proceed without validation - channel will be created but may not have full access
         else:
             # Validate channel and get metadata including creation date
-            validation_result = await telegram_service.validate_channel_by_username(channel_username)
-            
+            validation_result = await telegram_service.validate_channel_by_username(
+                channel_username
+            )
+
             if validation_result.is_valid:
                 # Store the Telegram creation date
                 telegram_created_at = validation_result.telegram_created_at
-                logger.info(f"Channel validated: {channel_username}, telegram_created_at: {telegram_created_at}")
-            
+                logger.info(
+                    f"Channel validated: {channel_username}, telegram_created_at: {telegram_created_at}"
+                )
+
             # Check if USER's bot/MTProto is admin (NOT system bot)
             # First try user's own credentials, then fall back to system validation
             # Prefer telegram_id from request (from lookup), then from validation result
-            channel_id = channel_data.telegram_id or (validation_result.telegram_id if validation_result.is_valid else None)
+            channel_id = channel_data.telegram_id or (
+                validation_result.telegram_id if validation_result.is_valid else None
+            )
             is_admin = False
             error_msg = None
-            
+
             if channel_id:
                 is_admin, error_msg = await _check_user_admin_access(
                     user_id=current_user["id"],
                     channel_id=channel_id,
                     channel_username=channel_username.lstrip("@"),
                 )
-            
+
             # If user credentials didn't work, fall back to system check
             if not is_admin and not channel_id:
-                is_admin, error_msg = await telegram_service.check_bot_admin_access(channel_username)
+                is_admin, error_msg = await telegram_service.check_bot_admin_access(
+                    channel_username
+                )
 
             if not is_admin:
                 logger.warning(
@@ -395,15 +431,20 @@ async def add_channel(
             # Set user_id on the channel data
             channel_data_dict = channel_data.dict()
             channel_data_dict["user_id"] = current_user["id"]
-            
+
             # Log incoming data for debugging
-            logger.info(f"Add channel request data: telegram_id={channel_data_dict.get('telegram_id')}, subscriber_count={channel_data_dict.get('subscriber_count')}")
-            
+            logger.info(
+                f"Add channel request data: telegram_id={channel_data_dict.get('telegram_id')}, subscriber_count={channel_data_dict.get('subscriber_count')}"
+            )
+
             # Ensure telegram_id is set (use random fallback if not provided)
             if not channel_data_dict.get("telegram_id"):
                 import random
+
                 channel_data_dict["telegram_id"] = random.randint(1000000000, 9999999999)
-                logger.warning(f"No telegram_id provided, using fallback: {channel_data_dict['telegram_id']}")
+                logger.warning(
+                    f"No telegram_id provided, using fallback: {channel_data_dict['telegram_id']}"
+                )
             else:
                 # Convert Telegram channel ID to proper format for storage
                 # Telegram returns raw channel ID (e.g., 2678877654)
@@ -411,40 +452,46 @@ async def add_channel(
                 # MTProto collector uses abs() everywhere, so positive is the standard
                 raw_id = abs(channel_data_dict["telegram_id"])  # Ensure positive
                 id_str = str(raw_id)
-                
+
                 if not id_str.startswith("100"):
                     # Add 100 prefix for channels (positive format)
                     channel_data_dict["telegram_id"] = int(f"100{raw_id}")
-                    logger.info(f"Converted channel ID: {raw_id} -> {channel_data_dict['telegram_id']}")
+                    logger.info(
+                        f"Converted channel ID: {raw_id} -> {channel_data_dict['telegram_id']}"
+                    )
                 else:
                     # Already has 100 prefix, ensure positive
                     channel_data_dict["telegram_id"] = raw_id
-            
+
             # Clean username - remove @ prefix if present (store without @)
             if channel_data_dict.get("username"):
                 channel_data_dict["username"] = channel_data_dict["username"].lstrip("@")
-            
+
             # Filter to only fields expected by ChannelCreate
             from apps.api.services.channel_management_service import ChannelCreate
+
             valid_fields = {"name", "telegram_id", "username", "description", "user_id"}
             filtered_data = {k: v for k, v in channel_data_dict.items() if k in valid_fields}
-            
+
             channel_create = ChannelCreate(**filtered_data)
             new_channel = await channel_service.add_channel(channel_create)
-            
+
             # Update additional fields that aren't part of ChannelCreate
             if new_channel:
                 try:
                     from datetime import datetime as dt
+
                     from apps.di import get_container
-                    
+
                     container = get_container()
                     pool = await container.database.pool()
-                    
+
                     async with pool.acquire() as conn:
                         # Update telegram_created_at if we have it
                         if telegram_created_at:
-                            created_dt = dt.fromisoformat(telegram_created_at.replace('Z', '+00:00'))
+                            created_dt = dt.fromisoformat(
+                                telegram_created_at.replace("Z", "+00:00")
+                            )
                             await conn.execute(
                                 """
                                 UPDATE channels 
@@ -454,8 +501,10 @@ async def add_channel(
                                 created_dt,
                                 new_channel.telegram_id,
                             )
-                            logger.info(f"Updated telegram_created_at for channel {new_channel.id}: {created_dt}")
-                        
+                            logger.info(
+                                f"Updated telegram_created_at for channel {new_channel.id}: {created_dt}"
+                            )
+
                         # Update subscriber_count if we have it
                         subscriber_count = channel_data_dict.get("subscriber_count", 0)
                         if subscriber_count and subscriber_count > 0:
@@ -468,8 +517,10 @@ async def add_channel(
                                 subscriber_count,
                                 new_channel.telegram_id,
                             )
-                            logger.info(f"Updated subscriber_count for channel {new_channel.id}: {subscriber_count}")
-                        
+                            logger.info(
+                                f"Updated subscriber_count for channel {new_channel.id}: {subscriber_count}"
+                            )
+
                         # Create MTProto settings record with enabled=true by default
                         # First check if record exists
                         existing = await conn.fetchval(

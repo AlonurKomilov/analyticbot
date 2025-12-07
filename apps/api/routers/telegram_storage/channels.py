@@ -32,7 +32,9 @@ router = APIRouter()
 
 
 @router.get(
-    "/channels", response_model=list[StorageChannelResponse], summary="Get user's storage channels"
+    "/channels",
+    response_model=list[StorageChannelResponse],
+    summary="Get user's storage channels",
 )
 async def get_storage_channels(
     only_active: bool = True,
@@ -77,9 +79,9 @@ async def get_storage_channels(
                 is_active=channel.is_active,
                 is_bot_admin=channel.is_bot_admin,
                 created_at=channel.created_at.isoformat(),
-                last_validated_at=channel.last_validated_at.isoformat()
-                if channel.last_validated_at
-                else None,
+                last_validated_at=(
+                    channel.last_validated_at.isoformat() if channel.last_validated_at else None
+                ),
             )
             for channel in channels
         ]
@@ -266,12 +268,16 @@ async def connect_storage_channel(
             channel_username=result.channel_username,
             is_active=result.is_active,
             is_bot_admin=result.is_bot_admin,
-            created_at=result.created_at.isoformat()
-            if result.created_at
-            else datetime.utcnow().isoformat(),
-            last_validated_at=result.last_validated_at.isoformat()
-            if result.last_validated_at
-            else datetime.utcnow().isoformat(),
+            created_at=(
+                result.created_at.isoformat()
+                if result.created_at
+                else datetime.utcnow().isoformat()
+            ),
+            last_validated_at=(
+                result.last_validated_at.isoformat()
+                if result.last_validated_at
+                else datetime.utcnow().isoformat()
+            ),
         )
 
     except HTTPException:

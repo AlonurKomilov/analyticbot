@@ -124,7 +124,7 @@ class SimplifiedPerformanceTester:
                 "memory_percent": psutil.virtual_memory().percent,
                 "memory_available_mb": psutil.virtual_memory().available / 1024 / 1024,
                 "disk_usage_percent": psutil.disk_usage("/").percent,
-                "load_average": psutil.getloadavg() if hasattr(psutil, "getloadavg") else None,
+                "load_average": (psutil.getloadavg() if hasattr(psutil, "getloadavg") else None),
             }
         except Exception as e:
             logger.error(f"Failed to get system metrics: {e}")
@@ -142,12 +142,16 @@ class SimplifiedPerformanceTester:
                 "successful_tests": len(successful_tests),
                 "failed_tests": len(failed_tests),
                 "success_rate": len(successful_tests) / len(self.results) * 100,
-                "avg_response_time": statistics.mean([r["avg_time"] for r in successful_tests])
-                if successful_tests
-                else 0,
-                "avg_throughput": statistics.mean([r["throughput"] for r in successful_tests])
-                if successful_tests
-                else 0,
+                "avg_response_time": (
+                    statistics.mean([r["avg_time"] for r in successful_tests])
+                    if successful_tests
+                    else 0
+                ),
+                "avg_throughput": (
+                    statistics.mean([r["throughput"] for r in successful_tests])
+                    if successful_tests
+                    else 0
+                ),
             },
             "detailed_results": self.results,
             "system_metrics": self.get_system_metrics(),

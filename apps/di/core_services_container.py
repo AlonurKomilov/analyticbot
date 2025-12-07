@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 async def _create_analytics_batch_processor(analytics_repository=None, **kwargs):
     """Create core analytics batch processor (pure business logic)"""
     try:
-        from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+        from core.services.bot.analytics.analytics_batch_processor import (
+            AnalyticsBatchProcessor,
+        )
 
         # Check if repository is required
         if analytics_repository is None:
@@ -60,7 +62,9 @@ async def _create_analytics_fusion_service(**kwargs):
     logger.info("🏭 Creating analytics fusion service...")
     try:
         from core.services.analytics_fusion.infrastructure import DataAccessService
-        from core.services.analytics_fusion.orchestrator import AnalyticsOrchestratorService
+        from core.services.analytics_fusion.orchestrator import (
+            AnalyticsOrchestratorService,
+        )
         from core.services.analytics_fusion.recommendations.posting_time_service import (
             PostingTimeRecommendationService,
         )
@@ -77,7 +81,8 @@ async def _create_analytics_fusion_service(**kwargs):
 
         # Create orchestrator with all services injected
         orchestrator = AnalyticsOrchestratorService(
-            data_access_service=data_access_service, posting_time_service=posting_time_service
+            data_access_service=data_access_service,
+            posting_time_service=posting_time_service,
         )
         logger.info(
             f"✅ AnalyticsOrchestratorService created with posting_time_service={orchestrator.posting_time_service}"
@@ -183,7 +188,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     # Predictive orchestrator with contextual, temporal, modeling, and cross-channel intelligence
     predictive_orchestrator_service = providers.Factory(
         lambda: __import__(
-            "core.services.predictive_intelligence", fromlist=["create_predictive_orchestrator"]
+            "core.services.predictive_intelligence",
+            fromlist=["create_predictive_orchestrator"],
         ).create_predictive_orchestrator(
             analytics_service=None,  # Optional analytics service
             data_access_service=None,  # Optional data access service

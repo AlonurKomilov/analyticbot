@@ -54,7 +54,7 @@ async def get_current_user_profile(request: Request):
 
         step1 = time.time()
         user_id = await get_current_user_id_from_request(request)
-        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1)*1000:.2f}ms")
+        logger.info(f"⏱️ get_current_user_id_from_request took {(time.time() - step1) * 1000:.2f}ms")
 
         # Get token from Authorization header
         auth_header = request.headers.get("Authorization", "")
@@ -63,7 +63,7 @@ async def get_current_user_profile(request: Request):
             token = auth_header[7:]
             security_manager = get_security_manager()
             claims = security_manager.verify_token(token)
-            logger.info(f"⏱️ Token verification took {(time.time() - step2)*1000:.2f}ms")
+            logger.info(f"⏱️ Token verification took {(time.time() - step2) * 1000:.2f}ms")
 
             # Fetch additional user data from database (full_name, telegram info, password status)
             step3 = time.time()
@@ -99,7 +99,7 @@ async def get_current_user_profile(request: Request):
                     telegram_username = row["telegram_username"]
                     credit_balance = float(row["credit_balance"] or 0)
 
-            logger.info(f"⏱️ Database lookup took {(time.time() - step3)*1000:.2f}ms")
+            logger.info(f"⏱️ Database lookup took {(time.time() - step3) * 1000:.2f}ms")
 
             # Extract user info from JWT claims + database
             response = UserResponse(
@@ -156,7 +156,8 @@ async def get_mfa_status(
     except Exception as e:
         logger.error(f"MFA status check error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get MFA status"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get MFA status",
         )
 
 
@@ -223,7 +224,8 @@ async def get_role_hierarchy(current_user: dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Role hierarchy error: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to get role hierarchy"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get role hierarchy",
         )
 
 
@@ -263,7 +265,8 @@ async def update_profile(
             email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
             if not re.match(email_pattern, body["email"]):
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format"
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid email format",
                 )
             updates["email"] = body["email"]
 
@@ -281,7 +284,8 @@ async def update_profile(
 
         if not updates:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="No valid fields to update"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid fields to update",
             )
 
         # Update user in database
@@ -289,7 +293,8 @@ async def update_profile(
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to update profile"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile",
             )
 
         # Get updated user data

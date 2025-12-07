@@ -33,9 +33,7 @@ class ProcessorsContainer(containers.DeclarativeContainer):
         lambda: normalize_message  # Function wrapper
     )
 
-    update_normalizer = providers.Factory(
-        lambda: normalize_update  # Function wrapper
-    )
+    update_normalizer = providers.Factory(lambda: normalize_update)  # Function wrapper
 
     # Processing services would go here
     # message_processor = providers.Factory(MessageProcessor, ...)

@@ -175,7 +175,7 @@ async def setup_mtproto(
             success=True,
             phone_code_hash=phone_code_hash,
             message=(
-                "Verification code sent! Check your Telegram app " "for a message from 'Telegram'."
+                "Verification code sent! Check your Telegram app for a message from 'Telegram'."
             ),
         )
 
@@ -291,8 +291,7 @@ async def resend_mtproto_code(
                 success=True,
                 phone_code_hash=phone_code_hash,
                 message=(
-                    "Verification code sent! Check your Telegram app "
-                    "for a message from 'Telegram'."
+                    "Verification code sent! Check your Telegram app for a message from 'Telegram'."
                 ),
             )
 

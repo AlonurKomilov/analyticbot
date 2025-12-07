@@ -38,7 +38,9 @@ def upgrade() -> None:
 
     # Create indexes for alert subscriptions
     op.create_index(
-        "ix_alert_subscriptions_chat_channel", "alert_subscriptions", ["chat_id", "channel_id"]
+        "ix_alert_subscriptions_chat_channel",
+        "alert_subscriptions",
+        ["chat_id", "channel_id"],
     )
     op.create_index("ix_alert_subscriptions_enabled", "alert_subscriptions", ["enabled"])
     op.create_index("ix_alert_subscriptions_kind", "alert_subscriptions", ["kind"])

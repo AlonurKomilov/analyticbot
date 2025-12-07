@@ -5,7 +5,6 @@ Focused on database repositories and storage services
 No more direct infra imports - uses main container via protocol-based delegation
 """
 
-
 from dependency_injector import containers, providers
 
 from apps.di import get_container

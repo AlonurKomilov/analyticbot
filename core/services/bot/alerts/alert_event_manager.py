@@ -55,9 +55,7 @@ class AlertEventManager:
             self._logger.error(f"Error fetching active alerts for channel {channel_id}: {e}")
             return []
 
-    async def acknowledge_alert(
-        self, alert_id: str, user_id: str
-    ) -> bool:
+    async def acknowledge_alert(self, alert_id: str, user_id: str) -> bool:
         """
         Mark an alert as acknowledged
 
@@ -196,17 +194,14 @@ class AlertEventManager:
             all_alerts = await self.get_alert_history(channel_id, limit=limit * 2)
 
             # Filter by severity
-            filtered_alerts = [
-                alert for alert in all_alerts
-                if alert.get("severity") == severity
-            ][:limit]
+            filtered_alerts = [alert for alert in all_alerts if alert.get("severity") == severity][
+                :limit
+            ]
 
             return filtered_alerts
 
         except Exception as e:
-            self._logger.error(
-                f"Error fetching alerts by severity for channel {channel_id}: {e}"
-            )
+            self._logger.error(f"Error fetching alerts by severity for channel {channel_id}: {e}")
             return []
 
     async def bulk_acknowledge_alerts(

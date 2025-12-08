@@ -291,11 +291,10 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
 
         # Initialize cache with error handling
         try:
-            cache_adapter = await init_cache_adapter()
+            await init_cache_adapter()
             logger.info("✅ V2 cache adapter initialized")
         except Exception as cache_error:
             logger.warning(f"V2 cache initialization failed: {cache_error}")
-            cache_adapter = None
 
         # Create Repository Manager and Data Access Service for new architecture
         from core.services.analytics_fusion.infrastructure.data_access import (
@@ -320,6 +319,7 @@ async def init_analytics_fusion_service() -> AnalyticsOrchestratorService:
         from core.services.analytics_fusion.recommendations.posting_time_service import (
             PostingTimeRecommendationService,
         )
+
         posting_time_service = PostingTimeRecommendationService(db_pool=pool)
         logger.info("✅ PostingTimeRecommendationService created")
 

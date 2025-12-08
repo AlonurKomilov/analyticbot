@@ -197,12 +197,14 @@ async def get_session_health(
 
         async with pool.acquire() as conn:
             creds = await conn.fetchrow(
-                "SELECT session_string FROM user_bot_credentials WHERE user_id = $1", user_id
+                "SELECT session_string FROM user_bot_credentials WHERE user_id = $1",
+                user_id,
             )
 
             if not creds:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="MTProto not configured"
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="MTProto not configured",
                 )
 
             has_session = creds["session_string"] is not None
@@ -580,7 +582,8 @@ async def _get_worker_status(user_id: int) -> WorkerStatus:
                 # If no channel name in metadata, get it from channel_id
                 if not current_channel and last_progress.get("channel_id"):
                     channel_row = await conn.fetchrow(
-                        "SELECT title FROM channels WHERE id = $1", abs(last_progress["channel_id"])
+                        "SELECT title FROM channels WHERE id = $1",
+                        abs(last_progress["channel_id"]),
                     )
                     if channel_row:
                         current_channel = channel_row["title"]
@@ -685,7 +688,8 @@ async def _get_channel_stats(conn, user_id: int) -> list[ChannelCollectionStats]
                 total_posts=row["total_posts"] or 0,
                 latest_post_date=row["latest_post"],
                 oldest_post_date=row["oldest_post"],
-                last_collected=row["last_sync_time"] or row["latest_post"],  # Use actual sync time, fallback to latest post
+                last_collected=row["last_sync_time"]
+                or row["latest_post"],  # Use actual sync time, fallback to latest post
                 collection_enabled=row["collection_enabled"],
             )
         )

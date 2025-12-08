@@ -34,9 +34,7 @@ class AlertConditionEvaluator:
         self._alert_repo = alert_repository
         self._logger = logging.getLogger(__name__)
 
-    async def check_alert_conditions(
-        self, metrics: dict[str, Any], channel_id: str
-    ) -> list[str]:
+    async def check_alert_conditions(self, metrics: dict[str, Any], channel_id: str) -> list[str]:
         """
         Check current metrics against alert conditions
 
@@ -118,9 +116,7 @@ class AlertConditionEvaluator:
         except (ValueError, TypeError):
             return 0.0
 
-    def _evaluate_condition(
-        self, rule: dict[str, Any], metric_value: float
-    ) -> dict[str, Any]:
+    def _evaluate_condition(self, rule: dict[str, Any], metric_value: float) -> dict[str, Any]:
         """
         Evaluate whether alert condition is met
 
@@ -233,15 +229,11 @@ class AlertConditionEvaluator:
             threshold=rule.get("threshold"),
         )
 
-        self._logger.info(
-            f"Created alert {alert_id} for channel {channel_id}: {message}"
-        )
+        self._logger.info(f"Created alert {alert_id} for channel {channel_id}: {message}")
 
         return alert_id
 
-    def _generate_alert_message(
-        self, rule: dict[str, Any], metric_value: float
-    ) -> str:
+    def _generate_alert_message(self, rule: dict[str, Any], metric_value: float) -> str:
         """
         Generate human-readable alert message
 

@@ -66,7 +66,7 @@ class TelegramAlertDeliveryService:
 
                 return {
                     "status": "sent",
-                    "message_id": result.message_id if hasattr(result, "message_id") else None,
+                    "message_id": (result.message_id if hasattr(result, "message_id") else None),
                     "chat_id": chat_id,
                     "attempts": attempt + 1,
                 }

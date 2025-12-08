@@ -24,10 +24,10 @@ async def cleanup_resources():
 @enhanced_retry_task
 def send_post_task(scheduler_id: int):
     async def _run():
-        context = ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
+        ErrorContext().add("task", "send_post_task").add("scheduler_id", scheduler_id)
         try:
             container = get_container()
-            bot = await container.bot.bot_client()
+            await container.bot.bot_client()
             scheduler_repo_result = await container.database.schedule_repo()
 
             # Handle potential coroutines
@@ -101,8 +101,7 @@ def remove_expired_schedulers():
                 # Delete them using delete_old_posts method
                 if len(expired_schedulers) > 0 and hasattr(scheduler_repo, "delete_old_posts"):
                     removed_count = await scheduler_repo.delete_old_posts(
-                        days_old=90,
-                        statuses=["sent", "cancelled", "error", "failed"]
+                        days_old=90, statuses=["sent", "cancelled", "error", "failed"]
                     )
                     logger.info(f"Removed {removed_count} expired schedulers (>90 days old)")
                 else:
@@ -129,7 +128,7 @@ def send_scheduled_message():
         stats = {"processed": 0, "sent": 0, "errors": 0}
         try:
             # Get services from container with fallback handling
-            bot = get_container().bot_client()
+            get_container().bot_client()
             # Use new scheduling services (scheduler_service deprecated)
             schedule_manager = get_container().bot.schedule_manager()
             post_delivery_service = get_container().bot.post_delivery_service()
@@ -206,7 +205,7 @@ def update_post_views_task():
     async def _run() -> str:
         context = ErrorContext().add("task", "update_post_views_task")
         try:
-            bot = get_container().bot_client()
+            get_container().bot_client()
             analytics_service = get_container().analytics_service()
 
             # Safety check
@@ -305,7 +304,7 @@ def maintenance_cleanup():
     """Periodic maintenance: requeue stuck 'sending' posts and cleanup old posts."""
 
     async def _run():
-        bot = get_container().bot_client()
+        get_container().bot_client()
         try:
             # ✅ Issue #3 Phase 3: Real implementation using clean architecture
             logger.info("Starting maintenance_cleanup task")
@@ -333,9 +332,7 @@ def maintenance_cleanup():
                     try:
                         # Update status back to 'pending' so they can be retried
                         if hasattr(scheduler_repo, "update_post_status"):
-                            success = await scheduler_repo.update_post_status(
-                                post["id"], "pending"
-                            )
+                            success = await scheduler_repo.update_post_status(post["id"], "pending")
                             if success:
                                 requeued += 1
                                 logger.debug(f"Requeued stuck post {post['id']}")
@@ -350,16 +347,13 @@ def maintenance_cleanup():
             cleaned = 0
             if hasattr(scheduler_repo, "delete_old_posts"):
                 cleaned = await scheduler_repo.delete_old_posts(
-                    days_old=30,
-                    statuses=["sent", "cancelled", "error"]
+                    days_old=30, statuses=["sent", "cancelled", "error"]
                 )
                 logger.info(f"Cleaned up {cleaned} old posts (>30 days)")
             else:
                 logger.warning("delete_old_posts method not available")
 
-            logger.info(
-                f"Maintenance cleanup completed: {requeued} requeued, {cleaned} cleaned"
-            )
+            logger.info(f"Maintenance cleanup completed: {requeued} requeued, {cleaned} cleaned")
             return f"requeued-{requeued}-cleaned-{cleaned}"
         except Exception as e:
             logger.exception("maintenance_cleanup failed", exc_info=e)

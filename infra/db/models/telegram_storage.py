@@ -38,7 +38,10 @@ class UserStorageChannel(Base):
     user_id = Column(
         Integer,
         ForeignKey(
-            "users.id", ondelete="CASCADE", use_alter=True, name="fk_user_storage_channels_user_id"
+            "users.id",
+            ondelete="CASCADE",
+            use_alter=True,
+            name="fk_user_storage_channels_user_id",
         ),
         nullable=False,
     )
@@ -68,7 +71,12 @@ class UserStorageChannel(Base):
     __table_args__ = (
         Index("idx_user_storage_channels_user_id", "user_id"),
         Index("idx_user_storage_channels_channel_id", "channel_id"),
-        Index("idx_user_storage_channels_user_channel", "user_id", "channel_id", unique=True),
+        Index(
+            "idx_user_storage_channels_user_channel",
+            "user_id",
+            "channel_id",
+            unique=True,
+        ),
     )
 
     def __repr__(self):
@@ -90,7 +98,10 @@ class TelegramMedia(Base):
     user_id = Column(
         Integer,
         ForeignKey(
-            "users.id", ondelete="CASCADE", use_alter=True, name="fk_telegram_media_user_id"
+            "users.id",
+            ondelete="CASCADE",
+            use_alter=True,
+            name="fk_telegram_media_user_id",
         ),
         nullable=False,
     )

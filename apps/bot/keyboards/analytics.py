@@ -57,20 +57,20 @@ class AnalyticsKeyboards:
         pagination_row = []
         if page > 0:
             pagination_row.append(
-                InlineKeyboardButton(text="◀️ Prev", callback_data=f"channels:page:{page-1}")
+                InlineKeyboardButton(text="◀️ Prev", callback_data=f"channels:page:{page - 1}")
             )
 
         # Show page info
         total_pages = (len(channels) + per_page - 1) // per_page
         pagination_row.append(
             InlineKeyboardButton(
-                text=f"{page+1}/{total_pages}", callback_data="analytics:page_info"
+                text=f"{page + 1}/{total_pages}", callback_data="analytics:page_info"
             )
         )
 
         if end_idx < len(channels):
             pagination_row.append(
-                InlineKeyboardButton(text="Next ▶️", callback_data=f"channels:page:{page+1}")
+                InlineKeyboardButton(text="Next ▶️", callback_data=f"channels:page:{page + 1}")
             )
 
         if pagination_row:
@@ -134,10 +134,12 @@ class AnalyticsKeyboards:
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="🔄 Refresh", callback_data=f"analytics:refresh:{channel_id}:{period}"
+                    text="🔄 Refresh",
+                    callback_data=f"analytics:refresh:{channel_id}:{period}",
                 ),
                 InlineKeyboardButton(
-                    text="⏰ Change Period", callback_data=f"analytics:period:{channel_id}"
+                    text="⏰ Change Period",
+                    callback_data=f"analytics:period:{channel_id}",
                 ),
             ]
         )
@@ -188,7 +190,8 @@ class AnalyticsKeyboards:
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="◀️ Back to Analytics", callback_data=f"analytics:overview:{channel_id}:30"
+                    text="◀️ Back to Analytics",
+                    callback_data=f"analytics:overview:{channel_id}:30",
                 )
             ]
         )
@@ -257,19 +260,22 @@ class AnalyticsKeyboards:
         if page > 0:
             pagination_row.append(
                 InlineKeyboardButton(
-                    text="◀️ Prev", callback_data=f"top_posts:page:{channel_id}:{period}:{page-1}"
+                    text="◀️ Prev",
+                    callback_data=f"top_posts:page:{channel_id}:{period}:{page - 1}",
                 )
             )
 
         pagination_row.append(
             InlineKeyboardButton(
-                text="🔄 Refresh", callback_data=f"top_posts:refresh:{channel_id}:{period}"
+                text="🔄 Refresh",
+                callback_data=f"top_posts:refresh:{channel_id}:{period}",
             )
         )
 
         pagination_row.append(
             InlineKeyboardButton(
-                text="Next ▶️", callback_data=f"top_posts:page:{channel_id}:{period}:{page+1}"
+                text="Next ▶️",
+                callback_data=f"top_posts:page:{channel_id}:{period}:{page + 1}",
             )
         )
 

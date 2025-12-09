@@ -401,7 +401,9 @@ class PerformanceMonitoringService:
             if len(self.performance_history[model_id]) > max_history_size:
                 # Keep only the most recent metrics
                 self.performance_history[model_id] = sorted(
-                    self.performance_history[model_id], key=lambda m: m.timestamp, reverse=True
+                    self.performance_history[model_id],
+                    key=lambda m: m.timestamp,
+                    reverse=True,
                 )[:max_history_size]
 
         except Exception as e:

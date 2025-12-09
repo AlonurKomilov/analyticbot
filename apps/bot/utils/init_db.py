@@ -38,7 +38,10 @@ class DatabaseInitializationService:
                     await connection.execute(statement)
                 logger.info("✅ All foreign key constraints added successfully!")
         except Exception as e:
-            logger.error(f"❌ An error occurred during database initialization: {e}", exc_info=True)
+            logger.error(
+                f"❌ An error occurred during database initialization: {e}",
+                exc_info=True,
+            )
         finally:
             await db_manager.close()
             logger.info("Database connection closed.")

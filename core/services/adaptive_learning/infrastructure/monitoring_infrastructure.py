@@ -115,7 +115,7 @@ class MonitoringInfrastructure:
         """Get overall system health overview"""
         try:
             # Get unique services
-            services = list(set(m["service"] for m in self.metrics_history))
+            services = list({m["service"] for m in self.metrics_history})
 
             service_health = {}
             overall_status = "healthy"

@@ -8,7 +8,10 @@ without depending on infrastructure layer.
 import logging
 from typing import Any
 
-from core.ports.mtproto_repository import IMTProtoAuditRepository, IMTProtoChannelRepository
+from core.ports.mtproto_repository import (
+    IMTProtoAuditRepository,
+    IMTProtoChannelRepository,
+)
 from core.ports.user_bot_repository import IUserBotRepository
 
 logger = logging.getLogger(__name__)

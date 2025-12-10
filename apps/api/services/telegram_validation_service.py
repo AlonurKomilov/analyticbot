@@ -113,7 +113,7 @@ class TelegramValidationService:
             username_from_entity = getattr(entity, "username", clean_username)
             is_verified = getattr(entity, "verified", False)
             is_scam = getattr(entity, "scam", False)
-            
+
             # Get channel creation date from entity
             telegram_created_at = None
             entity_date = getattr(entity, "date", None)
@@ -178,20 +178,20 @@ class TelegramValidationService:
             # Try multiple ID formats for robustness
             entity = None
             errors = []
-            
+
             # Method 1: Try with provided ID directly
             try:
                 entity = await self.client._client.get_entity(telegram_id)  # type: ignore
             except Exception as e1:
                 errors.append(f"direct({telegram_id}): {e1}")
-                
+
                 # Method 2: Try with negative format
                 try:
                     negative_id = -abs(telegram_id)
                     entity = await self.client._client.get_entity(negative_id)  # type: ignore
                 except Exception as e2:
                     errors.append(f"negative({negative_id}): {e2}")
-                    
+
                     # Method 3: If ID has 100 prefix, try without it
                     id_str = str(abs(telegram_id))
                     if len(id_str) > 10 and id_str.startswith("100"):
@@ -200,11 +200,11 @@ class TelegramValidationService:
                             entity = await self.client._client.get_entity(raw_id)  # type: ignore
                         except Exception as e3:
                             errors.append(f"raw({raw_id}): {e3}")
-            
+
             if not entity:
                 error_details = "; ".join(errors)
                 return {"error": f"Could not resolve channel: {error_details}"}
-            
+
             full_channel = await self.client.get_full_channel(entity)
 
             metadata = {

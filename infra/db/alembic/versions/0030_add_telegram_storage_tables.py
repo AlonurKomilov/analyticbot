@@ -73,7 +73,12 @@ def upgrade() -> None:
         sa.Column("width", sa.Integer(), nullable=True),  # For images/videos
         sa.Column("height", sa.Integer(), nullable=True),  # For images/videos
         sa.Column("duration", sa.Integer(), nullable=True),  # For videos
-        sa.Column("uploaded_at", sa.DateTime(), nullable=False, server_default=sa.text("NOW()")),
+        sa.Column(
+            "uploaded_at",
+            sa.DateTime(),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
         sa.Column("metadata", sa.JSON(), nullable=True),  # Additional metadata as JSON
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(

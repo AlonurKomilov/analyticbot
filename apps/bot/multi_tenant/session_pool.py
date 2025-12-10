@@ -176,4 +176,3 @@ class SharedAiogramSession(AiohttpSession):
         application shuts down, not when individual bots stop.
         """
         # Do nothing - shared session is managed by BotSessionPool
-        pass

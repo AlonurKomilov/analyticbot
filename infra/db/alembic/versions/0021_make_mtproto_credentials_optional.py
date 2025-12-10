@@ -20,12 +20,18 @@ def upgrade():
     """Make telegram_api_id and telegram_api_hash nullable"""
     # Make telegram_api_id nullable
     op.alter_column(
-        "user_bot_credentials", "telegram_api_id", existing_type=sa.BigInteger(), nullable=True
+        "user_bot_credentials",
+        "telegram_api_id",
+        existing_type=sa.BigInteger(),
+        nullable=True,
     )
 
     # Make telegram_api_hash nullable
     op.alter_column(
-        "user_bot_credentials", "telegram_api_hash", existing_type=sa.String(255), nullable=True
+        "user_bot_credentials",
+        "telegram_api_hash",
+        existing_type=sa.String(255),
+        nullable=True,
     )
 
 
@@ -33,9 +39,15 @@ def downgrade():
     """Revert telegram_api_id and telegram_api_hash to NOT NULL"""
     # Note: This will fail if there are NULL values in the database
     op.alter_column(
-        "user_bot_credentials", "telegram_api_id", existing_type=sa.BigInteger(), nullable=False
+        "user_bot_credentials",
+        "telegram_api_id",
+        existing_type=sa.BigInteger(),
+        nullable=False,
     )
 
     op.alter_column(
-        "user_bot_credentials", "telegram_api_hash", existing_type=sa.String(255), nullable=False
+        "user_bot_credentials",
+        "telegram_api_hash",
+        existing_type=sa.String(255),
+        nullable=False,
     )

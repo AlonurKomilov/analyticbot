@@ -117,17 +117,19 @@ class ChannelAdminCheckService:
                 except Exception as e:
                     last_error = str(e)
                     logger.debug(f"MTProto ID method failed: {e}")
-                    
+
                     # Method 3: Try with negative format (-1002678877654)
                     if not entity:
                         try:
                             negative_id = -abs(telegram_id)
                             entity = await mtproto_client.client.get_entity(negative_id)
                             result["method_used"] = "telegram_id_negative"
-                            logger.debug(f"✓ MTProto get_entity via negative ID {negative_id} succeeded")
+                            logger.debug(
+                                f"✓ MTProto get_entity via negative ID {negative_id} succeeded"
+                            )
                         except Exception as e2:
                             logger.debug(f"MTProto negative ID method failed: {e2}")
-                    
+
                     # Method 4: If ID has 100 prefix, try without it
                     if not entity:
                         id_str = str(abs(telegram_id))

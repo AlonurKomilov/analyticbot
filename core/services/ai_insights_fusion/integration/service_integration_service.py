@@ -30,7 +30,10 @@ class ServiceIntegrationService(ServiceIntegrationProtocol):
     """
 
     def __init__(
-        self, nlg_integration_service=None, ai_chat_service=None, anomaly_analysis_service=None
+        self,
+        nlg_integration_service=None,
+        ai_chat_service=None,
+        anomaly_analysis_service=None,
     ):
         # Use existing extracted services
         self.nlg_integration = nlg_integration_service
@@ -216,7 +219,10 @@ class ServiceIntegrationService(ServiceIntegrationProtocol):
             return {
                 "channel_id": channel_id,
                 "time_period": time_period,
-                "anomaly_integration": {"integration_status": "failed", "error": str(e)},
+                "anomaly_integration": {
+                    "integration_status": "failed",
+                    "error": str(e),
+                },
                 "anomaly_enhanced": False,
             }
 
@@ -266,7 +272,10 @@ class ServiceIntegrationService(ServiceIntegrationProtocol):
             logger.error(f"❌ Full integration failed: {e}")
             return {
                 **insights_data,
-                "service_integration_summary": {"integration_status": "failed", "error": str(e)},
+                "service_integration_summary": {
+                    "integration_status": "failed",
+                    "error": str(e),
+                },
             }
 
     def _get_active_services(self) -> list[str]:

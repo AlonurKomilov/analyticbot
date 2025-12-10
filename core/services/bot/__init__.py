@@ -31,10 +31,14 @@ Usage:
 """
 
 # Analytics services
-from core.services.bot.analytics.analytics_batch_processor import AnalyticsBatchProcessor
+from core.services.bot.analytics.analytics_batch_processor import (
+    AnalyticsBatchProcessor,
+)
 
 # Dashboard services
-from core.services.bot.dashboard.dashboard_service import RealTimeDashboard as DashboardService
+from core.services.bot.dashboard.dashboard_service import (
+    RealTimeDashboard as DashboardService,
+)
 
 # Reporting services
 from core.services.bot.reporting.reporting_service import (

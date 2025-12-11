@@ -8,7 +8,11 @@ import asyncpg
 async def test_pagination():
     # Connect to database
     conn = await asyncpg.connect(
-        host="localhost", port=10100, user="analytic", password="change_me", database="analytic_bot"
+        host="localhost",
+        port=10100,
+        user="analytic",
+        password="change_me",
+        database="analytic_bot",
     )
 
     try:
